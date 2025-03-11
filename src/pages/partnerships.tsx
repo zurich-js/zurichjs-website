@@ -150,16 +150,21 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5 }}
                 className="lg:w-1/2 lg:pr-12 mb-10 lg:mb-0"
               >
-                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
                   Partner with ZurichJS! 🤝
                 </h1>
-                <p className="text-xl mb-6">
+                <p className="text-xl mb-6 text-gray-900">
                   Join forces with Zurich&apos;s most vibrant JavaScript community and connect with talented developers passionate about JS!
                 </p>
-                <p className="text-lg mb-8">
+                <p className="text-lg mb-8 text-gray-900">
                   Support our mission to nurture the JavaScript ecosystem in Zurich while gaining visibility for your brand among developers, tech leads, and decision-makers.
                 </p>
-                <Button href="#partnership-tiers" variant="primary" size="lg">
+                <Button 
+                  href="#partnership-tiers" 
+                  variant="primary" 
+                  size="lg"
+                  className="bg-blue-700 hover:bg-blue-600 text-white"
+                >
                   Explore Partnership Options 🚀
                 </Button>
               </motion.div>
@@ -188,8 +193,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     </div>
                   </div>
                   <div className="text-center">
-                    <p className="font-bold">Our next meetup is coming up soon! 📅</p>
-                    <p className="text-gray-600">Become a partner and get featured at our events!</p>
+                    <p className="font-bold text-gray-900">Our next meetup is coming up soon! 📅</p>
+                    <p className="text-gray-700">Become a partner and get featured at our events!</p>
                   </div>
                 </div>
               </motion.div>
@@ -207,8 +212,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl font-bold mb-3">Why Partner With ZurichJS? ✨</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">Why Partner With ZurichJS? ✨</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
                 Partnering with ZurichJS gives you unique access to connect with the JavaScript community in Zurich.
               </p>
             </motion.div>
@@ -221,11 +226,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="bg-gray-50 p-6 rounded-lg"
               >
-                <div className="text-yellow-500 mb-4">
+                <div className="text-blue-700 mb-4">
                   <Users size={36} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Connect with Top Talent</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Connect with Top Talent</h3>
+                <p className="text-gray-700">
                   Get direct access to a community of 375+ JavaScript developers, from juniors to tech leads and CTOs.
                 </p>
               </motion.div>
@@ -237,11 +242,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="bg-gray-50 p-6 rounded-lg"
               >
-                <div className="text-yellow-500 mb-4">
+                <div className="text-blue-700 mb-4">
                   <Building size={36} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Enhance Your Brand</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Enhance Your Brand</h3>
+                <p className="text-gray-700">
                   Boost your company&apos;s visibility in the tech community and position yourself as a JavaScript supporter.
                 </p>
               </motion.div>
@@ -253,11 +258,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="bg-gray-50 p-6 rounded-lg"
               >
-                <div className="text-yellow-500 mb-4">
+                <div className="text-blue-700 mb-4">
                   <Rocket size={36} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Share Knowledge</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Share Knowledge</h3>
+                <p className="text-gray-700">
                   Showcase your technical expertise with speaking slots and contribute to the growth of the JS ecosystem.
                 </p>
               </motion.div>
@@ -269,11 +274,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5, delay: 0.4 }}
                 className="bg-gray-50 p-6 rounded-lg"
               >
-                <div className="text-yellow-500 mb-4">
+                <div className="text-blue-700 mb-4">
                   <Coffee size={36} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Host Memorable Events</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Host Memorable Events</h3>
+                <p className="text-gray-700">
                   Open your office space for meetups and showcase your company culture to the community.
                 </p>
               </motion.div>
@@ -285,11 +290,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="bg-gray-50 p-6 rounded-lg"
               >
-                <div className="text-yellow-500 mb-4">
+                <div className="text-blue-700 mb-4">
                   <Gift size={36} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Provide Swag & Prizes</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Provide Swag & Prizes</h3>
+                <p className="text-gray-700">
                   Get your branded merchandise into the hands of engaged developers through giveaways and contests.
                 </p>
               </motion.div>
@@ -301,11 +306,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5, delay: 0.6 }}
                 className="bg-gray-50 p-6 rounded-lg"
               >
-                <div className="text-yellow-500 mb-4">
+                <div className="text-blue-700 mb-4">
                   <Users size={36} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Recruit Passionate Devs</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Recruit Passionate Devs</h3>
+                <p className="text-gray-700">
                   Find your next team member from a pool of passionate JavaScript developers interested in growth.
                 </p>
               </motion.div>
@@ -324,8 +329,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 transition={{ duration: 0.5 }}
                 className="text-center mb-12"
               >
-                <h2 className="text-3xl font-bold mb-3">Our Amazing Partners 💛</h2>
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                <h2 className="text-3xl font-bold mb-3 text-blue-700">Our Amazing Partners 💛</h2>
+                <p className="text-xl text-gray-700 max-w-3xl mx-auto">
                   These awesome companies help make ZurichJS possible. Thank you for your support!
                 </p>
               </motion.div>
@@ -367,8 +372,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl font-bold mb-3">Partnership Options 🌟</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">Partnership Options 🌟</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
                 Choose the partnership level that fits your goals and budget!
               </p>
             </motion.div>
@@ -382,10 +387,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className={`bg-white rounded-lg shadow-lg overflow-hidden border ${
-                    tier.highlighted ? 'border-yellow-400 transform -translate-y-2 scale-105' : 'border-gray-200'
+                    tier.highlighted ? 'border-blue-700 transform -translate-y-2 scale-105' : 'border-gray-200'
                   }`}
                 >
-                  <div className={`p-6 ${tier.highlighted ? 'bg-yellow-400' : 'bg-gray-50'}`}>
+                  <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'}`}>
                     <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
                     <p className="text-2xl font-bold">{tier.price}</p>
                   </div>
@@ -393,8 +398,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     <ul className="space-y-3">
                       {tier.benefits.map((benefit, i) => (
                         <li key={i} className="flex items-start">
-                          <CheckCircle className="text-yellow-500 mt-1 mr-2 flex-shrink-0" size={16} />
-                          <span>{benefit}</span>
+                          <CheckCircle className="text-blue-700 mt-1 mr-2 flex-shrink-0" size={16} />
+                          <span className="text-gray-700">{benefit}</span>
                         </li>
                       ))}
                     </ul>
@@ -402,7 +407,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                       <Button 
                         href="#inquiry-form" 
                         variant={tier.highlighted ? 'primary' : 'outline'}
-                        className="w-full"
+                        className={`w-full ${
+                          tier.highlighted 
+                            ? 'bg-blue-700 hover:bg-blue-600 text-white' 
+                            : 'border-blue-700 text-blue-700 hover:bg-blue-50'
+                        }`}
                       >
                         Become a {tier.name.split(' ')[0]} Partner
                       </Button>
@@ -424,7 +433,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="max-w-3xl mx-auto"
             >
-              <h2 className="text-3xl font-bold mb-6 text-center">Let&apos;s Talk Partnership! 🎯</h2>
+              <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">Let&apos;s Talk Partnership! 🎯</h2>
 
               {formState.submitted ? (
                 <motion.div
@@ -433,15 +442,19 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   className="bg-green-50 border border-green-200 text-green-700 p-8 rounded-lg text-center"
                 >
                   <CheckCircle size={64} className="mx-auto mb-4 text-green-500" />
-                  <h3 className="text-2xl font-bold mb-2">Thanks for reaching out!</h3>
-                  <p className="mb-6">
+                  <h3 className="text-2xl font-bold mb-2 text-gray-900">Thanks for reaching out!</h3>
+                  <p className="mb-6 text-gray-700">
                     We&apos;ve received your partnership inquiry and we&apos;re super excited about the possibility of working together! 
                     Our team will reach out to you within 48 hours to discuss next steps.
                   </p>
-                  <p className="mb-6">
+                  <p className="mb-6 text-gray-700">
                     In the meantime, feel free to check out our upcoming events and join our community!
                   </p>
-                  <Button href="/events" variant="secondary">
+                  <Button 
+                    href="/events" 
+                    variant="secondary"
+                    className="bg-blue-700 hover:bg-blue-600 text-white"
+                  >
                     View Upcoming Events
                   </Button>
                 </motion.div>
@@ -461,7 +474,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   )}
 
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold mb-4">Company Information</h3>
+                    <h3 className="text-xl font-bold mb-4 text-gray-900">Company Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="companyName" className="block text-gray-700 mb-2">
@@ -473,7 +486,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           name="companyName"
                           value={formState.companyName}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                           required
                         />
                       </div>
@@ -486,7 +499,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           name="tierInterest"
                           value={formState.tierInterest}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                         >
                           <option value="gold">Gold Partner</option>
                           <option value="silver">Silver Partner</option>
@@ -499,7 +512,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   </div>
 
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold mb-4">Contact Information</h3>
+                    <h3 className="text-xl font-bold mb-4 text-gray-900">Contact Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label htmlFor="contactName" className="block text-gray-700 mb-2">
@@ -511,7 +524,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           name="contactName"
                           value={formState.contactName}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                           required
                         />
                       </div>
@@ -525,7 +538,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           name="email"
                           value={formState.email}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                           required
                         />
                       </div>
@@ -540,7 +553,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                         name="phone"
                         value={formState.phone}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                       />
                     </div>
                   </div>
@@ -555,13 +568,18 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                       value={formState.message}
                       onChange={handleInputChange}
                       rows={5}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                       placeholder="Tell us a bit about your company and what you're hoping to achieve through a partnership with ZurichJS..."
                     />
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="submit" variant="primary" size="lg">
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      size="lg"
+                      className="bg-blue-700 hover:bg-blue-600 text-white"
+                    >
                       Submit Partnership Inquiry 🚀
                     </Button>
                   </div>
@@ -581,8 +599,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl font-bold mb-3">What Our Partners Say 💬</h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">What Our Partners Say 💬</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
                 Hear from companies that have partnered with ZurichJS!
               </p>
             </motion.div>
@@ -605,8 +623,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold">Sarah Schmidt</h3>
-                    <p className="text-sm text-gray-500">HR Manager, Ginetta</p>
+                    <h3 className="font-bold text-gray-900">Sarah Schmidt</h3>
+                    <p className="text-sm text-gray-600">HR Manager, Ginetta</p>
                   </div>
                 </div>
                 <p className="text-gray-700">
@@ -631,8 +649,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold">Michael Weber</h3>
-                    <p className="text-sm text-gray-500">CTO, Smallpdf</p>
+                    <h3 className="font-bold text-gray-900">Michael Weber</h3>
+                    <p className="text-sm text-gray-600">CTO, Smallpdf</p>
                   </div>
                 </div>
                 <p className="text-gray-700">
@@ -657,8 +675,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold">Anna Müller</h3>
-                    <p className="text-sm text-gray-500">Developer Relations, Google</p>
+                    <h3 className="font-bold text-gray-900">Anna Müller</h3>
+                    <p className="text-sm text-gray-600">Developer Relations, Google</p>
                   </div>
                 </div>
                 <p className="text-gray-700">
@@ -679,11 +697,16 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Grow with ZurichJS? 🚀</h2>
-              <p className="text-xl mb-8 max-w-3xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">Ready to Grow with ZurichJS? 🚀</h2>
+              <p className="text-xl mb-8 max-w-3xl mx-auto text-gray-900">
                 Let&apos;s join forces to create an even more vibrant JavaScript community in Zurich!
               </p>
-              <Button href="#inquiry-form" variant="primary" size="lg" className="bg-black text-yellow-400 hover:bg-gray-800">
+              <Button 
+                href="#inquiry-form" 
+                variant="primary" 
+                size="lg" 
+                className="bg-blue-700 text-white hover:bg-blue-600"
+              >
                 Become a Partner Today! 💛
               </Button>
             </motion.div>

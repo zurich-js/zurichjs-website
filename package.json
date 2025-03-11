@@ -9,14 +9,19 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sanity/image-url": "^1.1.0",
     "framer-motion": "^12.4.13",
+    "lodash.get": "^4.4.2",
     "lucide-react": "^0.479.0",
+    "meetup-api-client": "^0.1.14",
     "next": "14.2.24",
+    "next-sanity": "^9.9.0",
     "react": "^18",
     "react-dom": "^18",
     "react-intersection-observer": "^9.16.0"
   },
   "devDependencies": {
+    "@types/lodash.get": "^4.4.9",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

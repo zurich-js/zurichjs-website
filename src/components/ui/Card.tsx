@@ -42,7 +42,7 @@ export default function Card({
         {...props}
       >
         <Link href={`/events/${eventItem.id}`} className="block">
-          <div className="relative h-48 w-full">
+          <div className="relative h-64 w-full">
             <Image
               src={eventItem.image || '/images/events/default.jpg'}
               alt={`${eventItem.title} - ZurichJS event`}
@@ -70,7 +70,7 @@ export default function Card({
               <div className="flex items-center text-gray-700">
                 <Users size={16} className="mr-1" />
                 <span className="text-sm">
-                  {eventItem.attendees} JavaScript enthusiasts joining! 🎉
+                  {eventItem.attendees}+ JavaScript enthusiasts joining! 🎉
                 </span>
               </div>
             )}

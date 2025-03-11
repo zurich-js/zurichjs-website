@@ -9,6 +9,8 @@ import SpeakerGrid from '@/components/sections/SpeakerGrid';
 import Partners from '@/components/sections/Partners';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
+import { getStats, getUpcomingEvents } from '@/sanity/queries';
+
 
 // Define TypeScript interfaces for our data structures
 interface Event {
@@ -74,7 +76,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
             aria-hidden="true"
           />
         </div>
-        
+
         <div className="container mx-auto px-6 py-20 md:py-28 relative z-10">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/2 md:pr-12">
@@ -98,21 +100,20 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
                   Zurich&apos;s vibrant community for JavaScript enthusiasts 🚀
                 </h2>
                 <p className="text-lg mb-8 text-black">
-                  Whether you&apos;re coding with React, Angular, Vue, vanilla JS, or Node.js – 
-                  this community is for everyone building amazing things with JavaScript! Join us to connect, 
+                  Whether you&apos;re coding with React, Angular, Vue, vanilla JS, or Node.js –
+                  this community is for everyone building amazing things with JavaScript! Join us to connect,
                   learn, and grow alongside fellow developers from all backgrounds in Zurich!
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button href="/events" variant="primary" size="lg" className="bg-blue-700 hover:bg-blue-800 text-white">
+                  <Button href="/events" variant="primary" size="lg">
                     Join Next Meetup 🎉
                   </Button>
-                  <Button href="/cfp" variant="secondary" size="lg" className="bg-blue-700 hover:bg-blue-800 text-white">
+                  <Button href="/cfp" variant="secondary" size="lg">
                     Submit a Talk 🎤
                   </Button>
                 </div>
               </motion.div>
             </div>
-            
             <div className="md:w-1/2 mt-12 md:mt-0">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
@@ -158,9 +159,8 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
                     transition={{ duration: 2, ease: "easeInOut", delay: 1.2 }}
                   />
                 </svg>
-                
                 {/* Next meetup date overlay */}
-                <motion.div 
+                <motion.div
                   className="absolute top-0 right-0 bg-black text-yellow-400 px-4 py-2 rounded-lg font-mono"
                   initial={{ x: 50, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -172,7 +172,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
               </motion.div>
             </div>
           </div>
-          
+
           {/* Stats Counter */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -187,46 +187,31 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
 
       {/* Upcoming Events Section */}
       <UpcomingEvents events={upcomingEvents} />
-      
+
       {/* Community Values Section */}
       <CommunityValues />
-      
+
       {/* Featured Speakers */}
       <SpeakerGrid speakers={featuredSpeakers} />
-      
+
       {/* Partners Section - with Zurich blue header */}
       <Partners partners={partners} />
-      
+
       {/* Join CTA */}
       <JoinCTA />
     </Layout>
   );
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   // This would be replaced with actual CMS fetching
+
+  const stats = await getStats();
+  const upcomingEvents = await getUpcomingEvents();
+
   return {
     props: {
-      upcomingEvents: [
-        {
-          id: '1',
-          title: 'Zurich JS Meetup #3: Revitalizing JS spring season 💐',
-          date: 'Mar 20, 2025',
-          time: '6:00 PM CET',
-          location: 'Ginetta, Zurich',
-          image: '/images/events/event-3.jpg',
-          attendees: 60,
-        },
-        {
-          id: '2',
-          title: 'Zurich JS Meetup #4: April stands for AI & Awesome Innovations 🤖',
-          date: 'Apr 17, 2025',
-          time: '6:00 PM CEST',
-          location: 'Smallpdf AG, Zurich',
-          image: '/images/events/event-4.jpg',
-          attendees: 0,
-        }
-      ],
+      upcomingEvents,
       featuredSpeakers: [
         {
           id: '1',
@@ -250,26 +235,56 @@ export async function getStaticProps() {
           talks: 1,
         },
       ],
-      stats: {
-        members: 375,
-        eventsHosted: 50,
-        speakersToDate: 120,
-        totalAttendees: 2500,
-      },
+      stats,
       partners: [
         {
           id: '1',
           name: 'Ginetta',
-          logo: '/images/partners/ginetta.svg',
+          logo: '/images/partners/ginetta.png',
           url: 'https://ginetta.net',
         },
         {
           id: '2',
+          name: 'Novu AG',
+          logo: '/images/partners/novu.png',
+          url: 'https://novu.ch/',
+        },
+        {
+          id: '3',
+          name: 'Get Your Guide',
+          logo: '/images/partners/get-your-guide.png',
+          url: 'https://www.gyg.com/',
+        },
+        {
+          id: '4',
           name: 'Smallpdf',
-          logo: '/images/partners/smallpdf.svg',
+          logo: '/images/partners/smallpdf.png',
           url: 'https://smallpdf.com',
         },
-        // More partners...
+        {
+          id: '5',
+          name: 'React Paris',
+          logo: '/images/partners/react-paris.png',
+          url: 'https://reactparis.com/',
+        },
+        {
+          id: '6',
+          name: 'Code Blossom',
+          logo: '/images/partners/code-blossom.png',
+          url: 'https://www.code-blossom.com/',
+        },
+        {
+          id: '7',
+          name: 'CityJS',
+          logo: '/images/partners/city-js.png',
+          url: 'https://cityjsconf.org/',
+        },
+        {
+          id: '8',
+          name: 'Grusp',
+          logo: '/images/partners/grusp.png',
+          url: 'https://www.grusp.org/',
+        },
       ]
     },
   };

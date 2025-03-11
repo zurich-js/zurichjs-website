@@ -33,7 +33,7 @@ export default function Stats({
       icon: <Users size={24} />,
       label: 'Community Rockstars',
       value: stats.members,
-      description: 'JS enthusiasts & counting!'
+      description: 'JS enthusiasts across all our groups & counting!'
     },
     {
       icon: <Calendar size={24} />,

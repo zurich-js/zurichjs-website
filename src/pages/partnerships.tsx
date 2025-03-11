@@ -453,7 +453,6 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   <Button 
                     href="/events" 
                     variant="secondary"
-                    className="bg-blue-700 hover:bg-blue-600 text-white"
                   >
                     View Upcoming Events
                   </Button>

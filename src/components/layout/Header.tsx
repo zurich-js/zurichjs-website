@@ -60,7 +60,7 @@ export default function Header() {
                 <li key={item.path}>
                   <Link 
                     href={item.path}
-                    className={`hover:text-yellow-500 transition-colors ${
+                    className={`hover:text-blue-600 transition-colors ${
                       router.pathname === item.path ? 'font-bold' : ''
                     }`}
                   >
@@ -96,7 +96,7 @@ export default function Header() {
                 <li key={item.path}>
                   <Link 
                     href={item.path}
-                    className={`block py-2 hover:text-yellow-500 transition-colors ${
+                    className={`block py-2 hover:text-blue-600 transition-colors ${
                       router.pathname === item.path ? 'font-bold' : ''
                     }`}
                   >

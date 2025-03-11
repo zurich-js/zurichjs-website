@@ -78,7 +78,6 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
           <Button 
             href="/partnerships" 
             variant="secondary"
-            className="bg-blue-700 hover:bg-blue-800 text-white"
           >
             Become a Partner 🚀
           </Button>

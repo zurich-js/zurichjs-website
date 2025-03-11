@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users, ChevronRight, Search } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
+import { getPastEvents } from '@/sanity/queries';
+import { getUpcomingEvents } from '@/sanity/queries';
 // import { trackEventView } from '@/lib/analytics';
 
 // Define our TypeScript interfaces
@@ -19,7 +21,7 @@ interface Speaker {
 interface EventTalk {
   id: string;
   title: string;
-  speaker: Speaker;
+  speakers: Speaker[];
   description?: string;
   time?: string;
 }
@@ -49,6 +51,7 @@ interface EventsPageProps {
 }
 
 export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) {
+
   // State for filtering and searching
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,7 +78,9 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
       event.description.toLowerCase().includes(query) ||
       event.talks.some(talk => 
         talk.title.toLowerCase().includes(query) || 
-        talk.speaker.name.toLowerCase().includes(query)
+        talk.speakers.some(speaker => 
+          speaker.name.toLowerCase().includes(query)
+        )
       )
     );
     
@@ -210,18 +215,24 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                           <h4 className="font-bold mb-3 text-gray-900">Amazing Speakers: 🎤</h4>
                           <div className="space-y-3">
                             {event.talks.map(talk => (
-                              <div key={talk.id} className="flex items-center">
-                                <div className="w-10 h-10 relative rounded-full overflow-hidden mr-3 flex-shrink-0">
-                                  <Image
-                                    src={talk.speaker.image}
-                                    alt={talk.speaker.name}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="font-bold text-gray-900">{talk.title}</p>
-                                  <p className="text-sm text-gray-700">{talk.speaker.name}, {talk.speaker.title}</p>
+                              <div key={talk.id}>
+                                <p className="font-bold text-gray-900 mb-2">{talk.title}</p>
+                                <div className="space-y-2">
+                                  {talk.speakers.map(speaker => (
+                                    <div key={speaker.id} className="flex items-center">
+                                      <div className="w-10 h-10 relative rounded-full overflow-hidden mr-3 flex-shrink-0">
+                                        <Image
+                                          src={speaker.image}
+                                          alt={speaker.name}
+                                          fill
+                                          className="object-cover"
+                                        />
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-gray-700">{speaker.name}, {speaker.title}</p>
+                                      </div>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
                             ))}
@@ -238,7 +249,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             RSVP Now - {event.attendees} attending! 🚀
                           </Button>
                           <Button 
-                            href={`/events/${event.slug}`} 
+                            href={`/events/${event.id}`} 
                             variant="outline"
                             className="border-blue-700 text-blue-700 hover:bg-blue-50"
                           >
@@ -305,8 +316,8 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                     transition={{ duration: 0.5, delay: index % 3 * 0.1 }}
                     className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
                   >
-                    <Link href={`/events/${event.slug}`} className="block">
-                      <div className="relative h-48 w-full">
+                    <Link href={`/events/${event.id}`} className="block">
+                      <div className="relative h-64 w-full">
                         <Image
                           src={event.image}
                           alt={event.title}
@@ -341,17 +352,22 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                         
                         {isClient && event.talks.length > 0 && (
                           <div className="mb-4">
-                            <p className="font-bold text-sm mb-2 text-gray-900">Speakers:</p>
+                            <p className="font-bold text-sm mb-2 text-gray-900">
+                              {event.talks.reduce((total, talk) => total + talk.speakers.length, 0) === 1 
+                                ? "Speaker:" 
+                                : "Speakers:"}
+                            </p>
                             <div className="flex -space-x-2">
                               {event.talks.slice(0, 3).map((talk, i) => (
                                 <div 
                                   key={talk.id} 
-                                  className="w-8 h-8 rounded-full overflow-hidden border-2 border-white relative"
+                                  className="w-16 h-16 rounded-full overflow-hidden border-2 border-white relative"
                                   style={{ zIndex: 10 - i }}
+                                  title={talk.speakers[0].name}
                                 >
                                   <Image
-                                    src={talk.speaker.image}
-                                    alt={talk.speaker.name}
+                                    src={talk.speakers[0].image}
+                                    alt={talk.speakers[0].name}
                                     fill
                                     className="object-cover"
                                   />
@@ -400,7 +416,6 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 <Button
                   onClick={() => setSearchQuery('')}
                   variant="secondary"
-                  className="bg-blue-700 hover:bg-blue-600 text-white"
                 >
                   Clear Search
                 </Button>
@@ -606,356 +621,14 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   );
 }
 
-export async function getStaticProps() {
-  // This would be replaced with actual CMS fetching
+export async function getServerSideProps() {
+  const upcomingEvents = await getUpcomingEvents();
+  const pastEvents = await getPastEvents();
+
   return {
     props: {
-      upcomingEvents: [
-        {
-          id: '1',
-          title: 'Zurich JS Meetup #3: Revitalizing JS spring season',
-          slug: 'zurichjs-meetup-3-revitalizing-js-spring-season',
-          date: 'Mar 20, 2025',
-          time: '6:00 PM CET',
-          location: 'Ginetta, Zurich',
-          address: 'Josefstrasse 219, 8005 Zürich',
-          description: 'It\'s JS time again, folks! 🌱 Join us for an evening of JavaScript goodness with amazing talks, networking, and pizza! We\'ve got two fantastic speakers lined up and plenty of time to connect with fellow JS enthusiasts.',
-          image: '/images/events/event-3.jpg',
-          attendees: 60,
-          maxAttendees: 80,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123456',
-          companyUrl: 'https://ginetta.net',
-          featured: true,
-          upcoming: true,
-          talks: [
-            {
-              id: 't1',
-              title: 'Building Accessible React Components: Best Practices',
-              speaker: {
-                id: 's1',
-                name: 'Anna Schmidt',
-                title: 'Senior Frontend Developer at WebApp Inc.',
-                image: '/images/speakers/speaker-3.jpg',
-              },
-              time: '6:30 PM',
-              description: 'Learn how to create React components that are accessible to everyone. Anna will dive into practical techniques, ARIA attributes, and testing strategies.'
-            },
-            {
-              id: 't2',
-              title: 'JavaScript Performance Optimization in 2025',
-              speaker: {
-                id: 's2',
-                name: 'David Wilson',
-                title: 'Performance Engineer at SpeedyCode',
-                image: '/images/speakers/speaker-4.jpg',
-              },
-              time: '7:15 PM',
-              description: 'David will show us cutting-edge techniques for optimizing JavaScript performance in modern browsers. Expect practical tips you can apply immediately!'
-            },
-            {
-              id: 't3',
-              title: 'Lightning Talks: Community Showcase',
-              speaker: {
-                id: 's3',
-                name: 'Various Speakers',
-                title: 'ZurichJS Community Members',
-                image: '/images/speakers/default.jpg',
-              },
-              time: '8:00 PM',
-              description: '3-5 lightning talks from community members! Got something cool to share? Reach out to us!'
-            }
-          ]
-        },
-        {
-          id: '2',
-          title: 'Zurich JS Meetup #4: April stands for AI',
-          slug: 'zurichjs-meetup-4-april-stands-for-ai',
-          date: 'Apr 17, 2025',
-          time: '6:00 PM CEST',
-          location: 'Smallpdf AG, Zurich',
-          address: 'Förrlibuckstrasse 190, 8005 Zürich',
-          description: 'AI meets JavaScript! 🤖 This special meetup focuses on the intersection of AI and JS. Learn about machine learning in the browser, JS-powered AI tools, and how to integrate AI capabilities into your web applications.',
-          image: '/images/events/event-4.jpg',
-          attendees: 43,
-          maxAttendees: 100,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123457',
-          companyUrl: 'https://smallpdf.com',
-          upcoming: true,
-          talks: [
-            {
-              id: 't4',
-              title: 'Machine Learning in the Browser with TensorFlow.js',
-              speaker: {
-                id: 's4',
-                name: 'Michael Chen',
-                title: 'AI Engineer at DataScience Corp',
-                image: '/images/speakers/speaker-2.jpg',
-              },
-              description: 'Discover how to run machine learning models directly in the browser! Michael will demonstrate real-world applications and performance tips.'
-            },
-            {
-              id: 't5',
-              title: 'Building AI-Powered JavaScript Applications',
-              speaker: {
-                id: 's5',
-                name: 'Sarah Johnson',
-                title: 'Lead Developer at AIStartup',
-                image: '/images/speakers/speaker-1.jpg',
-              },
-              description: 'Sarah will walk us through how to integrate AI capabilities into your JavaScript applications using modern APIs and services.'
-            }
-          ]
-        },
-        {
-          id: '3',
-          title: 'Zurich JS Meetup #5: TypeScript Deep Dive',
-          slug: 'zurichjs-meetup-5-typescript-deep-dive',
-          date: 'May 22, 2025',
-          time: '6:30 PM CEST',
-          location: 'Google Zurich',
-          address: 'Brandschenkestrasse 110, 8002 Zürich',
-          description: 'TypeScript lovers unite! 🎯 Ready for a type-safe evening of coding goodness? We\'re diving deep into the world of TypeScript with expert speakers, hands-on examples, and plenty of "Aha!" moments. From advanced types to real-world patterns, this meetup will level up your TS game!',
-          image: '/images/events/event-5.jpg',
-          attendees: 28,
-          maxAttendees: 120,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123458',
-          companyUrl: 'https://google.com',
-          upcoming: true,
-          talks: [
-            {
-              id: 't6',
-              title: 'Type-Level Programming: The Magic of TypeScript',
-              speaker: {
-                id: 's6',
-                name: 'Laura Müller',
-                title: 'TypeScript Specialist at EnterpriseApp',
-                image: '/images/speakers/speaker-5.jpg',
-              },
-              description: 'Explore the mind-bending world of type-level programming! Laura will show how TypeScript\'s type system is actually a functional language of its own.'
-            },
-            {
-              id: 't7',
-              title: 'From JavaScript to TypeScript: Migration Success Stories',
-              speaker: {
-                id: 's7',
-                name: 'Robert Zhang',
-                title: 'Engineering Manager at GlobalApp',
-                image: '/images/speakers/speaker-6.jpg',
-              },
-              description: 'Real-world case studies of successful JS to TS migrations. Learn practical strategies for converting your codebase while maintaining team velocity.'
-            }
-          ]
-        }
-      ],
-      pastEvents: [
-        {
-          id: '4',
-          title: 'Zurich JS Meetup #2: Frontend Frameworks Showdown',
-          slug: 'zurichjs-meetup-2-frontend-frameworks-showdown',
-          date: 'Feb 12, 2025',
-          time: '6:00 PM CET',
-          location: 'Microsoft Switzerland',
-          address: 'Richtistrasse 3, 8304 Wallisellen',
-          description: 'Framework battle royale! 🥊 React vs. Vue vs. Angular vs. Svelte! Our speakers showed off the best (and worst!) of today\'s popular frontend frameworks. We compared performance, developer experience, and ecosystem support in this epic showdown!',
-          image: '/images/events/event-2.jpg',
-          attendees: 75,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123455',
-          companyUrl: 'https://microsoft.com',
-          upcoming: false,
-          talks: [
-            {
-              id: 't8',
-              title: 'React in 2025: Beyond the Hook Revolution',
-              speaker: {
-                id: 's8',
-                name: 'Sophie Dupont',
-                title: 'React Team Lead at DevShop',
-                image: '/images/speakers/speaker-7.jpg',
-              },
-              description: 'Sophie explored React\'s latest features and patterns, showing how the library has evolved while maintaining its core principles.'
-            },
-            {
-              id: 't9',
-              title: 'Vue.js: The Progressive Framework for Modern Apps',
-              speaker: {
-                id: 's9',
-                name: 'James Thompson',
-                title: 'Vue.js Expert at AppStudio',
-                image: '/images/speakers/speaker-8.jpg',
-              },
-              description: 'James demonstrated Vue\'s elegant approach to reactivity and component design, highlighting what makes it special in 2025.'
-            },
-            {
-              id: 't10',
-              title: 'Framework Benchmarks: A Scientific Comparison',
-              speaker: {
-                id: 's10',
-                name: 'Marco Rossi',
-                title: 'Performance Engineer at TechBench',
-                image: '/images/team/marco.jpg',
-              },
-              description: 'Marco presented real-world performance data comparing all major frameworks across different scenarios and metrics.'
-            }
-          ]
-        },
-        {
-          id: '5',
-          title: 'Zurich JS Meetup #1: 2025 JavaScript Kickoff!',
-          slug: 'zurichjs-meetup-1-2025-javascript-kickoff',
-          date: 'Jan 15, 2025',
-          time: '6:30 PM CET',
-          location: 'Vercel Office Zurich',
-          address: 'Bahnhofstrasse 104, 8001 Zürich',
-          description: 'We kicked off 2025 with a bang! 🎆 Our first meetup of the year featured talks on the State of JavaScript in 2025, upcoming ECMAScript features, and web performance optimization techniques. Plus we announced our exciting plans for the ZurichJS community this year!',
-          image: '/images/events/event-1.jpg',
-          attendees: 68,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123454',
-          companyUrl: 'https://vercel.com',
-          upcoming: false,
-          talks: [
-            {
-              id: 't11',
-              title: 'State of JavaScript 2025: Trends and Predictions',
-              speaker: {
-                id: 's11',
-                name: 'Faris Aziz',
-                title: 'Founder of ZurichJS',
-                image: '/images/team/faris.jpg',
-              },
-              description: 'Faris presented the results of the annual State of JavaScript survey and shared insights on where the ecosystem is heading.'
-            },
-            {
-              id: 't12',
-              title: 'ECMAScript 2025: New Features You\'ll Love',
-              speaker: {
-                id: 's12',
-                name: 'Lena Müller',
-                title: 'JavaScript Standards Contributor',
-                image: '/images/team/lena.jpg',
-              },
-              description: 'Lena walked us through the exciting new JavaScript language features landing in ECMAScript 2025 and how to use them today.'
-            }
-          ]
-        },
-        {
-          id: '6',
-          title: 'Zurich JS Workshop: Building Modern Web Apps',
-          slug: 'zurichjs-workshop-building-modern-web-apps',
-          date: 'Dec 5, 2024',
-          time: '9:00 AM - 5:00 PM CET',
-          location: 'Technopark Zurich',
-          address: 'Technoparkstrasse 1, 8005 Zürich',
-          description: 'A full-day hands-on workshop for JavaScript developers! 💻 Participants built a complete web application from scratch using modern tools and best practices. We covered frontend, backend, testing, and deployment in this intensive, collaborative session.',
-          image: '/images/events/workshop-1.jpg',
-          attendees: 45,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123453',
-          upcoming: false,
-          talks: [
-            {
-              id: 't13',
-              title: 'Full-Day JavaScript Workshop',
-              speaker: {
-                id: 's13',
-                name: 'The ZurichJS Team',
-                title: 'JavaScript Experts',
-                image: '/images/about/community-photo.jpg',
-              },
-              description: 'An immersive, hands-on workshop covering modern JavaScript application development from start to finish.'
-            }
-          ]
-        },
-        {
-          id: '7',
-          title: 'Zurich JS Special: JavaScript Security Summit',
-          slug: 'zurichjs-special-javascript-security-summit',
-          date: 'Nov 18, 2024',
-          time: '6:30 PM CET',
-          location: 'ETH Zurich',
-          address: 'Rämistrasse 101, 8092 Zürich',
-          description: 'Security-focused JavaScript special event! 🔒 We explored common vulnerabilities in JS applications and how to protect against them. From XSS to supply chain attacks, this meetup was all about building more secure JavaScript applications.',
-          image: '/images/events/event-security.jpg',
-          attendees: 82,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123452',
-          upcoming: false,
-          talks: [
-            {
-              id: 't14',
-              title: 'Common JavaScript Security Vulnerabilities and How to Avoid Them',
-              speaker: {
-                id: 's14',
-                name: 'Dr. Thomas Weber',
-                title: 'Security Researcher at CyberShield',
-                image: '/images/speakers/speaker-security.jpg',
-              },
-              description: 'Dr. Weber presented the most common security issues in JavaScript applications and practical strategies to mitigate them.'
-            },
-            {
-              id: 't15',
-              title: 'Securing Your npm Supply Chain',
-              speaker: {
-                id: 's15',
-                name: 'Elena Kowalski',
-                title: 'DevSecOps Engineer at SecureCode',
-                image: '/images/speakers/speaker-security-2.jpg',
-              },
-              description: 'Elena explained how to protect your applications from supply chain attacks and ensure the security of your dependencies.'
-            }
-          ]
-        },
-        {
-          id: '8',
-          title: 'Zurich JS Meetup: Node.js Performance Masterclass',
-          slug: 'zurichjs-meetup-nodejs-performance-masterclass',
-          date: 'Oct 24, 2024',
-          time: '6:00 PM CEST',
-          location: 'Amazon Web Services Zurich',
-          address: 'Schulstrasse 1, 8304 Wallisellen',
-          description: 'Node.js performance extravaganza! ⚡ We dove deep into optimizing server-side JavaScript applications. From memory management to async patterns, this meetup was packed with expert advice for making your Node.js apps blazing fast.',
-          image: '/images/events/event-node.jpg',
-          attendees: 65,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123451',
-          upcoming: false,
-          talks: [
-            {
-              id: 't16',
-              title: 'Node.js Performance Monitoring and Debugging',
-              speaker: {
-                id: 's16',
-                name: 'Alex Fernandez',
-                title: 'Backend Architect at CloudScale',
-                image: '/images/speakers/speaker-node.jpg',
-              },
-              description: 'Alex demonstrated practical tools and techniques for identifying and resolving performance bottlenecks in Node.js applications.'
-            },
-            {
-              id: 't17',
-              title: 'Scaling Node.js: Lessons from Production',
-              speaker: {
-                id: 's17',
-                name: 'Priya Sharma',
-                title: 'Lead DevOps Engineer at MegaApp',
-                image: '/images/speakers/speaker-node-2.jpg',
-              },
-              description: 'Priya shared real-world experience scaling Node.js applications to handle millions of users and the lessons learned along the way.'
-            }
-          ]
-        },
-        {
-          id: '9',
-          title: 'Zurich JS Social: Summer JavaScript Mixer',
-          slug: 'zurichjs-social-summer-javascript-mixer',
-          date: 'Aug 15, 2024',
-          time: '7:00 PM CEST',
-          location: 'Rathaus Café',
-          address: 'Limmatquai 61, 8001 Zürich',
-          description: 'Summer JavaScript social event! 🍹 No formal talks, just good vibes, great conversations, and connecting with fellow JS enthusiasts! We enjoyed drinks, snacks, and casual discussions about all things JavaScript on this beautiful summer evening.',
-          image: '/images/events/event-social.jpg',
-          attendees: 40,
-          meetupUrl: 'https://meetup.com/zurichjs/events/123450',
-          upcoming: false,
-          talks: []
-        }
-      ]
+      upcomingEvents,
+      pastEvents
     },
   };
 }

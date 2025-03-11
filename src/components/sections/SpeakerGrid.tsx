@@ -87,7 +87,6 @@ export default function SpeakerGrid({
             href="/cfp" 
             variant="secondary" 
             size="lg"
-            className="bg-blue-700 hover:bg-blue-800 text-white"
           >
             Become a Speaker 💻
           </Button>

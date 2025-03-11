@@ -17,8 +17,47 @@ export const getStats = async () => {
   };
 };
 
-// @ts-ignore: Allow any type for event parameter
-const mapEventData = (event: any) => {
+// Define types for Sanity data structures
+interface SanityImage {
+  asset: {
+    url: string;
+  };
+}
+
+interface SanitySpeaker {
+  id: { current: string };
+  name: string;
+  title: string;
+  image: SanityImage;
+  [key: string]: unknown;
+}
+
+interface SanityTalk {
+  id: { current: string };
+  title: string;
+  description: string;
+  type: string;
+  tags: string[];
+  speakers: SanitySpeaker[];
+  [key: string]: unknown;
+}
+
+interface SanityEvent {
+  id: { current: string };
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  address: string;
+  attendees: number;
+  image: SanityImage;
+  description: string;
+  meetupUrl: string;
+  talks: SanityTalk[];
+  [key: string]: unknown;
+}
+
+const mapEventData = (event: SanityEvent) => {
   return {
     id: get(event, "id.current", ""),
     title: get(event, "title", ""),
@@ -30,15 +69,13 @@ const mapEventData = (event: any) => {
     image: get(event, "image.asset.url", null),
     description: get(event, "description", ""),
     meetupUrl: get(event, "meetupUrl", ""),
-    // @ts-ignore: Allow any type for talk parameter
-    talks: get(event, "talks", [])?.map((talk: any) => ({
+    talks: get(event, "talks", [])?.map((talk: SanityTalk) => ({
       id: get(talk, "id.current", ""),
       title: get(talk, "title", ""),
       description: get(talk, "description", ""),
       type: get(talk, "type", ""),
       tags: get(talk, "tags", []),
-      // @ts-ignore: Allow any type for speaker parameter
-      speakers: get(talk, "speakers", [])?.map((speaker: any) => ({
+      speakers: get(talk, "speakers", [])?.map((speaker: SanitySpeaker) => ({
         id: get(speaker, "id.current", ""),
         name: get(speaker, "name", ""),
         title: get(speaker, "title", ""),

@@ -65,7 +65,7 @@ interface EventDetailPageProps {
 export default function EventDetail({ event }: EventDetailPageProps) {
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  
+
   // Set up client-side rendering flag to prevent hydration issues
   useEffect(() => {
     setIsClient(true);
@@ -76,7 +76,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const shareEvent = async () => {
     const shareUrl = `${window.location.origin}/events/${event.slug}`;
     const shareText = `Join me at ${event.title} on ${event.date} with ZurichJS!`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -92,7 +92,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       copyToClipboard(shareUrl);
     }
   };
-  
+
   // Copy to clipboard function
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -105,8 +105,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     <Layout>
       <Head>
         <title>{event.title} | ZurichJS</title>
-        <meta 
-          name="description" 
+        <meta
+          name="description"
           content={`Join us for ${event.title} on ${event.date} at ${event.location}. ${event.description.slice(0, 120)}...`}
         />
         <meta property="og:title" content={`${event.title} | ZurichJS`} />
@@ -126,7 +126,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 Back to all events
               </Link>
             </div>
-            
+
             <div className="flex flex-col lg:flex-row items-start gap-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -140,7 +140,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 <h1 className="text-3xl md:text-4xl font-bold mb-4">
                   {event.title}
                 </h1>
-                
+
                 <div className="flex flex-wrap gap-3 mb-6">
                   <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                     <Calendar size={16} className="mr-1.5" />
@@ -161,15 +161,15 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </div>
                   )}
                 </div>
-                
+
                 <p className="text-lg mb-6">
                   {event.description}
                 </p>
-                
+
                 <div className="flex flex-wrap gap-3">
                   {event.upcoming && (
-                    <Button 
-                      href={event.meetupUrl} 
+                    <Button
+                      href={event.meetupUrl}
                       variant="primary"
                       size="lg"
                       className="bg-black text-yellow-400 hover:bg-gray-800"
@@ -177,9 +177,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       RSVP on Meetup 🚀
                     </Button>
                   )}
-                  
+
                   {isClient && (
-                    <Button 
+                    <Button
                       onClick={shareEvent}
                       variant="outline"
                       className="border-black text-black hover:bg-black hover:text-yellow-400"
@@ -190,7 +190,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   )}
                 </div>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -248,12 +248,12 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                   className="object-cover"
                                 />
                               </div>
-                              
+
                               {talk.speakers.length > 1 && (
                                 <div className="flex mt-2 justify-center md:justify-start">
                                   {talk.speakers.slice(1).map((speaker, idx) => (
-                                    <div 
-                                      key={speaker.id} 
+                                    <div
+                                      key={speaker.id}
                                       className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white -ml-2 first:ml-0"
                                       style={{ zIndex: 10 - idx }}
                                     >
@@ -270,7 +270,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                             </div>
                             <div className="md:w-3/4">
                               <h3 className="text-xl font-bold mb-2">{talk.title}</h3>
-                              
+
                               <div className="mb-3">
                                 {talk.speakers.map((speaker, idx) => (
                                   <div key={speaker.id} className={idx > 0 ? 'mt-1' : ''}>
@@ -281,21 +281,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                   </div>
                                 ))}
                               </div>
-                              
+
                               {talk.time && (
                                 <div className="mb-3 text-gray-600 flex items-center">
                                   <Clock size={14} className="mr-1" />
                                   <span>{talk.time}</span>
                                 </div>
                               )}
-                              
+
                               {talk.description && (
                                 <p className="text-gray-700 mb-4">{talk.description}</p>
                               )}
-                              
+
                               <div className="flex flex-wrap gap-2">
                                 {!event.upcoming && talk.slidesUrl && (
-                                  <a 
+                                  <a
                                     href={talk.slidesUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -305,9 +305,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     Slides
                                   </a>
                                 )}
-                                
+
                                 {!event.upcoming && talk.videoUrl && (
-                                  <a 
+                                  <a
                                     href={talk.videoUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -317,7 +317,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     Video Recording
                                   </a>
                                 )}
-                                
+
                                 {talk.speakers.map(speaker => (
                                   <Link
                                     key={speaker.id}
@@ -325,7 +325,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     className="inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
                                   >
                                     <ExternalLink size={14} className="mr-1" />
-                                    {speaker.name}'s Profile
+                                    {speaker.name}&apos;s Profile
                                   </Link>
                                 ))}
                               </div>
@@ -336,7 +336,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </div>
                   </motion.div>
                 )}
-                
+
                 {/* Submit a Talk CTA (for upcoming events) */}
                 {event.upcoming && (
                   <motion.div
@@ -348,14 +348,14 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   >
                     <h3 className="text-xl font-bold mb-3">Want to give a talk? 🎤</h3>
                     <p className="mb-4">
-                      We're always looking for awesome JavaScript enthusiasts to share their knowledge! Got a talk idea for this or future events? Let us know!
+                      We&apos;re always looking for awesome JavaScript enthusiasts to share their knowledge! Got a talk idea for this or future events? Let us know!
                     </p>
                     <Button href="/cfp" variant="primary" className="bg-black text-yellow-400 hover:bg-gray-800">
                       Submit a Talk Proposal
                     </Button>
                   </motion.div>
                 )}
-                
+
                 {/* Photos (for past events) */}
                 {!event.upcoming && (
                   <motion.div
@@ -391,7 +391,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </div>
                   </motion.div>
                 )}
-                
+
                 {/* Related Events */}
                 {event.relatedEvents && event.relatedEvents.length > 0 && (
                   <motion.div
@@ -404,7 +404,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       You Might Also Like 💛
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {event.relatedEvents.map((relatedEvent, index) => (
+                      {event.relatedEvents.map((relatedEvent) => (
                         <Link
                           key={relatedEvent.id}
                           href={`/events/${relatedEvent.slug}`}
@@ -428,7 +428,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   </motion.div>
                 )}
               </div>
-              
+
               {/* Sidebar */}
               <div className="lg:w-1/3">
                 {/* Venue Details */}
@@ -443,10 +443,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <MapPin className="mr-2 text-yellow-500" size={20} />
                     Venue Details
                   </h3>
-                  
+
                   <p className="font-bold mb-1">{event.location}</p>
                   {event.address && <p className="text-gray-600 mb-4">{event.address}</p>}
-                  
+
                   <div className="relative h-48 w-full rounded overflow-hidden mb-4">
                     {/* <Image
                       src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event.address || event.location)}&zoom=15&size=600x300&markers=color:yellow%7C${encodeURIComponent(event.address || event.location)}&key=YOUR_GOOGLE_MAPS_API_KEY`}
@@ -455,7 +455,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       className="object-cover"
                     /> */}
                   </div>
-                  
+
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address || event.location)}`}
                     target="_blank"
@@ -466,7 +466,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <ExternalLink size={14} className="ml-1" />
                   </a>
                 </motion.div>
-                
+
                 {/* Hosted By */}
                 {event.companyName && (
                   <motion.div
@@ -480,7 +480,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <Building className="mr-2 text-yellow-500" size={20} />
                       Hosted By
                     </h3>
-                    
+
                     <div className="flex items-center mb-4">
                       {event.companyLogo ? (
                         <div className="relative w-12 h-12 mr-3">
@@ -499,11 +499,11 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         <p className="text-sm text-gray-600">Event Host</p>
                       </div>
                     </div>
-                    
+
                     <p className="text-gray-600 mb-4">
                       A big thank you to {event.companyName} for providing the venue and refreshments for this meetup! 🙏
                     </p>
-                    
+
                     {event.companyUrl && (
                       <a
                         href={event.companyUrl}
@@ -517,7 +517,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     )}
                   </motion.div>
                 )}
-                
+
                 {/* Time & Schedule */}
                 {event.talks.length > 0 && (
                   <motion.div
@@ -531,7 +531,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <Clock className="mr-2 text-yellow-500" size={20} />
                       Event Schedule
                     </h3>
-                    
+
                     <ul className="space-y-4">
                       <li className="flex">
                         <span className="text-yellow-500 font-mono w-16">5:45 PM</span>
@@ -558,7 +558,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </ul>
                   </motion.div>
                 )}
-                
+
                 {/* What to Bring */}
                 {event.upcoming && (
                   <motion.div
@@ -589,7 +589,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </ul>
                   </motion.div>
                 )}
-                
+
                 {/* Call to Action */}
                 {event.upcoming && (
                   <motion.div
@@ -601,7 +601,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   >
                     <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
                     <p className="mb-4">
-                      Don't miss this amazing JavaScript event! RSVP now to secure your spot.
+                      Don&apos;t miss this amazing JavaScript event! RSVP now to secure your spot.
                     </p>
                     <Button
                       href={event.meetupUrl}
@@ -620,7 +620,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
             </div>
           </div>
         </section>
-        
+
         {/* Newsletter Section */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-6">
@@ -665,10 +665,10 @@ export async function getStaticPaths() {
   const pastEvents = await getPastEvents();
 
   const paths = [
-    ...upcomingEvents.map((event: any) => ({
+    ...upcomingEvents.map((event: EventDetails) => ({
       params: { id: event.id },
     })),
-    ...pastEvents.map((event: any) => ({
+    ...pastEvents.map((event: EventDetails) => ({
       params: { id: event.id },
     })),
   ];

@@ -17,6 +17,7 @@ export const getStats = async () => {
   };
 };
 
+// @ts-ignore: Allow any type for event parameter
 const mapEventData = (event: any) => {
   return {
     id: get(event, "id.current", ""),
@@ -29,12 +30,14 @@ const mapEventData = (event: any) => {
     image: get(event, "image.asset.url", null),
     description: get(event, "description", ""),
     meetupUrl: get(event, "meetupUrl", ""),
+    // @ts-ignore: Allow any type for talk parameter
     talks: get(event, "talks", [])?.map((talk: any) => ({
       id: get(talk, "id.current", ""),
       title: get(talk, "title", ""),
       description: get(talk, "description", ""),
       type: get(talk, "type", ""),
       tags: get(talk, "tags", []),
+      // @ts-ignore: Allow any type for speaker parameter
       speakers: get(talk, "speakers", [])?.map((speaker: any) => ({
         id: get(speaker, "id.current", ""),
         name: get(speaker, "name", ""),

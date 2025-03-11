@@ -7,7 +7,35 @@ import { Calendar, MapPin, Clock, ExternalLink, Twitter, Github, Linkedin, Video
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 
-export default function SpeakerDetail({ speaker }) {
+// Define types for the speaker and talk data
+interface Talk {
+  id: string;
+  title: string;
+  date: string;
+  location?: string;
+  duration?: number;
+  description?: string;
+  eventId?: string;
+  slidesUrl?: string | null;
+  videoUrl?: string | null;
+  upcoming: boolean;
+  coverImage?: string;
+}
+
+interface Speaker {
+  id: string;
+  name: string;
+  title: string;
+  image: string;
+  bio: string;
+  twitter?: string;
+  github?: string;
+  linkedin?: string;
+  skills?: string[];
+  talks: Talk[];
+}
+
+export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
   const router = useRouter();
 
   // Show loading state while fetching data
@@ -241,7 +269,7 @@ export default function SpeakerDetail({ speaker }) {
                 <div className="md:w-2/3 p-8">
                   <h2 className="text-2xl md:text-3xl font-bold mb-4">Want to be our next speaker? 🎤</h2>
                   <p className="text-lg mb-6">
-                    If you're passionate about JavaScript and have knowledge to share, we'd love to have you speak at one of our upcoming meetups!
+                    If you&apos;re passionate about JavaScript and have knowledge to share, we&apos;d love to have you speak at one of our upcoming meetups!
                   </p>
                   <Button href="/cfp" variant="primary" size="lg" className="bg-black text-yellow-400 hover:bg-gray-800">
                     Submit Your Talk Proposal 🚀
@@ -277,15 +305,15 @@ export async function getStaticPaths() {
   };
 }
 
-export async function getStaticProps({ params }) {
-  // In a real application, this would fetch from your CMS based on the ID
-  const speakers = {
+export async function getStaticProps({ params }: { params: { id: string } }) {
+  // Add type for speakers object keys
+  const speakers: Record<string, Speaker> = {
     '1': {
       id: '1',
       name: 'Sarah Johnson',
       title: 'Senior Frontend Developer at TechCorp',
       image: '/images/speakers/speaker-1.jpg',
-      bio: 'Sarah is a frontend specialist with expertise in React and modern JavaScript frameworks. With over 8 years of experience, she focuses on creating accessible, performant user interfaces. She's a regular contributor to open source projects and enjoys mentoring junior developers.',
+      bio: "Sarah is a frontend specialist with expertise in React and modern JavaScript frameworks. With over 8 years of experience, she focuses on creating accessible, performant user interfaces. She's a regular contributor to open source projects and enjoys mentoring junior developers.",
       twitter: 'sarahjohnson',
       github: 'sarahj',
       linkedin: 'https://linkedin.com/in/sarahjohnson',
@@ -311,7 +339,7 @@ export async function getStaticProps({ params }) {
       name: 'Michael Chen',
       title: 'JavaScript Architect at WebSolutions',
       image: '/images/speakers/speaker-2.jpg',
-      bio: 'Michael specializes in building scalable backend systems with Node.js and has been working with JavaScript for over a decade. He's passionate about software architecture, performance optimization, and developer tooling. In his spare time, he contributes to various open-source projects and writes technical articles.',
+      bio: "Michael specializes in building scalable backend systems with Node.js and has been working with JavaScript for over a decade. He's passionate about software architecture, performance optimization, and developer tooling. In his spare time, he contributes to various open-source projects and writes technical articles.",
       twitter: 'michaelchen',
       github: 'mchen',
       linkedin: 'https://linkedin.com/in/michaelchen',
@@ -349,7 +377,7 @@ export async function getStaticProps({ params }) {
       name: 'Anna Schmidt',
       title: 'React Team Lead at Startup.io',
       image: '/images/speakers/speaker-3.jpg',
-      bio: 'Anna leads the frontend team at a fast-growing startup, where she implements modern React solutions and establishes engineering best practices. She has a background in UX design which informs her development approach, and she's particularly interested in state management solutions and component architecture.',
+      bio: "Anna leads the frontend team at a fast-growing startup, where she implements modern React solutions and establishes engineering best practices. She has a background in UX design which informs her development approach, and she's particularly interested in state management solutions and component architecture.",
       twitter: 'annaschmidt',
       github: 'asc',
       linkedin: 'https://linkedin.com/in/annaschmidt',

@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Building, Users, Gift, Coffee, Rocket, CheckCircle, MapPin } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
-import { trackPartnershipInquiry } from '@/lib/analytics';
 
 // Define our TypeScript interfaces
 interface Partner {
@@ -125,12 +124,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
       return;
     }
-    
-    // Track the partnership inquiry in analytics
-    if (typeof trackPartnershipInquiry === 'function') {
-      trackPartnershipInquiry(formState.companyName);
-    }
-    
+
     // Simulate successful submission
     setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
     

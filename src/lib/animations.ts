@@ -238,31 +238,9 @@ export const bgPatternAnimation = {
   }
 };
 
-// Animated counting for statistics
-export function useCountAnimation(end, duration = 2) {
-  const controls = useAnimation();
-  const [ref, inView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1
-  });
-  
-  useEffect(() => {
-    if (inView) {
-      controls.start({
-        value: end,
-        transition: {
-          duration: duration,
-          ease: "easeOut"
-        }
-      });
-    }
-  }, [controls, inView, end, duration]);
-  
-  return { ref, controls };
-}
 
 // Staggered grid animation
-export function useStaggeredAnimation(childCount) {
+export function useStaggeredAnimation() {
   const controls = useAnimation();
   const [ref, inView] = useInView({
     triggerOnce: true,
@@ -298,16 +276,3 @@ export const jsTextAnimation = {
     }
   }
 };
-
-// Confetti animation for celebrations (new events, etc.)
-export function triggerConfetti() {
-  // This would be implemented with a library like canvas-confetti
-  // But here's a placeholder for the function
-  if (typeof window !== 'undefined' && window.confetti) {
-    window.confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
-  }
-}

@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 
-export default function AnimatedLogo({ size = 'md', className = '' }) {
+type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
+
+export default function AnimatedLogo({ size = 'md', className = '' }: { size?: LogoSize, className?: string }) {
   // Logo styling based on size
   const sizeStyles = {
     sm: 'w-10 h-10',

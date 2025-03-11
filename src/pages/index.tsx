@@ -120,14 +120,42 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
                 transition={{ duration: 0.7, delay: 0.3 }}
                 className="relative"
               >
-                {/* Large JS Logo Animation */}
-                <svg width="100%" height="100%" viewBox="0 0 300 300" className="drop-shadow-lg" aria-label="ZurichJS Logo">
+                {/* ZurichJS Logo Animation */}
+                <svg width="100%" height="100%" viewBox="0 0 750 749" className="drop-shadow-lg" aria-label="ZurichJS Logo">
                   <motion.path
-                    d="M75 250V50h100v50H125v150h-50zm150 0l-30-50h-20v50h-50V50h100c27.614 0 50 22.386 50 50v50c0 27.614-22.386 50-50 50h-20l40 50h-70zm0-150v-50h-50v50h50z"
-                    fill="currentColor"
+                    d="M747.5 1.50018L747.5 749L0.5 748.999L747.5 1.50018Z"
+                    fill="#F1E271"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
                     transition={{ duration: 2, ease: "easeInOut" }}
+                  />
+                  <motion.path
+                    d="M0.5 749V1.5L374 375.5L0.5 749Z"
+                    fill="#248BCC"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 2, ease: "easeInOut", delay: 0.3 }}
+                  />
+                  <motion.path
+                    d="M748 1.5L374 375.5L0.5 1.5H748Z"
+                    fill="white"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 2, ease: "easeInOut", delay: 0.6 }}
+                  />
+                  <motion.path
+                    d="M376 643L414 620C419.5 629 429.5 647 448.5 644C467.5 641 469.5 629 469.5 620V455H516C516.333 510 517 613.858 517 621.5C517 642 504.5 686 449 686C400 686 383 658 376 643Z"
+                    fill="black"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 2, ease: "easeInOut", delay: 0.9 }}
+                  />
+                  <motion.path
+                    d="M580.5 616L542 638C547.5 647.333 560 666.417 582 676.5C606 687.5 643.5 690 669.5 678C692.515 667.378 706 646 706 622.5C706 595 699.5 571.5 653 551C615.5 534.468 602.5 530 602.5 513.5C602.5 508.5 605.5 493 627 493C644 493 652.5 506.5 655.5 513.5L692.5 489.5C684.5 476.5 668 452 627 452C586 452 556 476.5 556 513.5C556 550.5 579.615 572.667 619 587.5C657.5 602 659 613.199 659 620C659 627.5 654 644.5 627.5 644.5C600 644.5 585.667 625.667 580.5 616Z"
+                    fill="black"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 2, ease: "easeInOut", delay: 1.2 }}
                   />
                 </svg>
                 

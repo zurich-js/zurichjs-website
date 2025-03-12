@@ -204,7 +204,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
   );
 }
 
-export async function getServerSideProps() {
+export async function getStaticProps() {
   // This would be replaced with actual CMS fetching
 
   const stats = await getStats();

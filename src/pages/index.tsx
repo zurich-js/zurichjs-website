@@ -9,7 +9,7 @@ import SpeakerGrid from '@/components/sections/SpeakerGrid';
 import Partners from '@/components/sections/Partners';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
-import { getStats, getUpcomingEvents } from '@/sanity/queries';
+import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
 
 
 // Define TypeScript interfaces for our data structures
@@ -208,33 +208,12 @@ export async function getServerSideProps() {
 
   const stats = await getStats();
   const upcomingEvents = await getUpcomingEvents();
+  const speakers = await getSpeakers();
 
   return {
     props: {
       upcomingEvents,
-      featuredSpeakers: [
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          title: 'Senior Frontend Developer at TechCorp',
-          image: '/images/speakers/speaker-1.jpg',
-          talks: 3,
-        },
-        {
-          id: '2',
-          name: 'Michael Chen',
-          title: 'JavaScript Architect at WebSolutions',
-          image: '/images/speakers/speaker-2.jpg',
-          talks: 2,
-        },
-        {
-          id: '3',
-          name: 'Anna Schmidt',
-          title: 'React Team Lead at Startup.io',
-          image: '/images/speakers/speaker-3.jpg',
-          talks: 1,
-        },
-      ],
+      featuredSpeakers: speakers.slice(0, 3),
       stats,
       partners: [
         {

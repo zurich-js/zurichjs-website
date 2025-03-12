@@ -3,15 +3,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin } from 'lucide-react';
+import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin, Users, TrendingUp, Clock, Award } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
+import { getSpeakers, getTalks } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
 interface Talk {
   id: string;
   title: string;
   date: string;
+  durationMinutes: number;
+  tags: string[];
 }
 
 interface Speaker {
@@ -23,24 +26,54 @@ interface Speaker {
   github?: string;
   linkedin?: string;
   talks: Talk[];
-}
-
-interface LatestTalk extends Talk {
-  eventId: string;
-  location: string;
-}
-
-interface FeaturedSpeaker extends Speaker {
-  bio: string;
-  latestTalk: LatestTalk;
+  website?: string;
 }
 
 interface SpeakersProps {
   speakers: Speaker[];
-  featuredSpeaker?: FeaturedSpeaker;
+  speakerStats: SpeakerStats;
+  upcomingTalks: UpcomingTalk[];
 }
 
-export default function Speakers({ speakers, featuredSpeaker }: SpeakersProps) {
+interface SpeakerStats {
+  totalSpeakers: number;
+  totalTalks: number;
+  topLocation: string;
+  totalTalkMinutes: number;
+}
+
+interface UpcomingTalk {
+  id: string;
+  title: string;
+  speakerName: string;
+  speakerId: string;
+  date: string;
+  location: string;
+}
+
+// Add these interfaces for the talk data structure
+interface TalkData {
+  title: string;
+  events?: EventData[];
+  speakers?: SpeakerData[];
+}
+
+interface EventData {
+  id: string;
+  date: string;
+  location: string;
+}
+
+interface SpeakerData {
+  id: string;
+  name: string;
+}
+
+interface TalkWithEventDate extends UpcomingTalk {
+  eventDate: Date;
+}
+
+export default function Speakers({ speakers, speakerStats, upcomingTalks }: SpeakersProps) {
   // Add client-side state to prevent hydration mismatch
   const [isClient, setIsClient] = useState(false);
   
@@ -57,7 +90,7 @@ export default function Speakers({ speakers, featuredSpeaker }: SpeakersProps) {
       </Head>
 
       <div className="pt-20">
-        {/* Hero Section with Featured Speaker */}
+        {/* Hero Section with Topic Insights */}
         <section className="bg-yellow-400 py-16">
           <div className="container mx-auto px-6">
             <motion.div
@@ -74,90 +107,104 @@ export default function Speakers({ speakers, featuredSpeaker }: SpeakersProps) {
               </p>
             </motion.div>
 
-            {/* Only render featured speaker on client-side to prevent hydration mismatch */}
-            {isClient && featuredSpeaker && (
+            {/* Community Dashboard - Replacement for Featured Speaker */}
+            {isClient && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="bg-white rounded-xl shadow-xl overflow-hidden"
               >
-                <div className="flex flex-col md:flex-row">
-                  <div className="md:w-1/3 h-64 md:h-auto relative">
-                    <Image
-                      src={featuredSpeaker.image}
-                      alt={featuredSpeaker.name}
-                      fill
-                      className="object-cover"
-                    />
+                <div className="p-8">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                      <span className="inline-block bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+                        ZurichJS Community
+                      </span>
+                      <h2 className="text-3xl font-bold">Community Spotlight</h2>
+                      <p className="text-gray-600">Our growing JavaScript community in Zurich</p>
+                    </div>
+                    <div className="mt-4 md:mt-0">
+                      <Button href="/join" variant="secondary" className="flex items-center">
+                        Join Our Community <ExternalLink size={16} className="ml-2" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="md:w-2/3 p-8">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                  
+                  {/* Community Stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <Users size={24} className="text-blue-600" />
+                      </div>
                       <div>
-                        <span className="inline-block bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
-                          Featured Speaker
-                        </span>
-                        <h2 className="text-3xl font-bold">{featuredSpeaker.name}</h2>
-                        <p className="text-gray-600">{featuredSpeaker.title}</p>
-                      </div>
-                      <div className="flex space-x-3 mt-4 md:mt-0">
-                        {featuredSpeaker.twitter && (
-                          <a 
-                            href={`https://twitter.com/${featuredSpeaker.twitter}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-600 hover:text-blue-400"
-                            aria-label="Twitter profile"
-                          >
-                            <Twitter size={20} />
-                          </a>
-                        )}
-                        {featuredSpeaker.github && (
-                          <a 
-                            href={`https://github.com/${featuredSpeaker.github}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-600 hover:text-black"
-                            aria-label="GitHub profile"
-                          >
-                            <Github size={20} />
-                          </a>
-                        )}
-                        {featuredSpeaker.linkedin && (
-                          <a 
-                            href={featuredSpeaker.linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-600 hover:text-blue-700"
-                            aria-label="LinkedIn profile"
-                          >
-                            <Linkedin size={20} />
-                          </a>
-                        )}
+                        <p className="text-gray-500 text-sm">Total Speakers</p>
+                        <h3 className="text-2xl font-bold">{speakerStats?.totalSpeakers}</h3>
                       </div>
                     </div>
                     
-                    <p className="text-gray-700 mb-6">{featuredSpeaker.bio}</p>
-                    
-                    <div className="mb-6">
-                      <h3 className="font-bold mb-2">Latest Talk:</h3>
-                      <div className="bg-gray-50 p-4 rounded-lg">
-                        <Link href={`/events/${featuredSpeaker.latestTalk.eventId}`} className="text-lg font-medium hover:text-yellow-600">
-                          {featuredSpeaker.latestTalk.title}
-                        </Link>
-                        <div className="flex items-center text-gray-500 mt-2">
-                          <Calendar size={16} className="mr-1" />
-                          <span className="text-sm mr-4">{featuredSpeaker.latestTalk.date}</span>
-                          <MapPin size={16} className="mr-1" />
-                          <span className="text-sm">{featuredSpeaker.latestTalk.location}</span>
-                        </div>
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                        <TrendingUp size={24} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Total Talks</p>
+                        <h3 className="text-2xl font-bold">{speakerStats?.totalTalks}</h3>
                       </div>
                     </div>
                     
-                    <Link href={`/speakers/${featuredSpeaker.id}`} className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center">
-                      View all talks by {featuredSpeaker.name} <ExternalLink size={16} className="ml-1" />
-                    </Link>
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                        <MapPin size={24} className="text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Top Location</p>
+                        <h3 className="text-lg font-bold">{speakerStats?.topLocation}</h3>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-4 flex items-center">
+                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                        <Clock size={24} className="text-yellow-600" />
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-sm">Total Talk Minutes</p>
+                        <h3 className="text-2xl font-bold">{speakerStats?.totalTalkMinutes}</h3>
+                      </div>
+                    </div>
                   </div>
+                  
+                  {/* Upcoming Talks Section */}
+                  {upcomingTalks && upcomingTalks.length > 0 && (
+                    <div className="bg-gray-50 p-6 rounded-lg">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold text-lg">Upcoming Talks</h3>
+                        <Link href="/events" className="text-yellow-600 hover:text-yellow-700 text-sm font-medium flex items-center">
+                          View All Events <ExternalLink size={14} className="ml-1" />
+                        </Link>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        {upcomingTalks.map((talk) => (
+                          <div key={talk.id} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <Link href={`/events/${talk.id}`} className="block">
+                              <h4 className="font-bold text-lg hover:text-yellow-600 transition-colors">{talk.title}</h4>
+                              <div className="flex items-center mt-2 text-sm text-gray-500">
+                                <Award size={16} className="mr-1" />
+                                <Link href={`/speakers/${talk.speakerId}`} className="mr-4 hover:text-yellow-600">
+                                  {talk.speakerName}
+                                </Link>
+                                <Calendar size={16} className="mr-1" />
+                                <span className="mr-4">{talk.date}</span>
+                                <MapPin size={16} className="mr-1" />
+                                <span>{talk.location}</span>
+                              </div>
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -205,6 +252,12 @@ export default function Speakers({ speakers, featuredSpeaker }: SpeakersProps) {
                         fill
                         className="object-cover"
                       />
+                      {/* Badge positioned absolutely on top right of image */}
+                      {isClient && (
+                        <div className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded shadow-sm">
+                          {speaker.talks.length > 0 ? `${speaker.talks.length} talk${speaker.talks.length > 1 ? 's' : ''} 🎤` : 'No talks yet'}
+                        </div>
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="text-lg font-bold">{speaker.name}</h3>
@@ -212,36 +265,55 @@ export default function Speakers({ speakers, featuredSpeaker }: SpeakersProps) {
                       
                       {/* Only render this on client-side to prevent hydration mismatch */}
                       {isClient && (
-                        <div className="flex justify-between items-center">
-                          <div className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">
-                            {speaker.talks.length} {speaker.talks.length === 1 ? 'talk' : 'talks'}
-                          </div>
-                          <div className="flex space-x-2">
-                            {speaker.twitter && (
-                              <a 
-                                href={`https://twitter.com/${speaker.twitter}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-500 hover:text-blue-400"
-                                aria-label="Twitter profile"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Twitter size={16} />
-                              </a>
-                            )}
-                            {speaker.github && (
-                              <a 
-                                href={`https://github.com/${speaker.github}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-500 hover:text-black"
-                                aria-label="GitHub profile"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Github size={16} />
-                              </a>
-                            )}
-                          </div>
+                        <div className="flex space-x-2">
+                          {speaker.twitter && (
+                            <a 
+                              href={`https://twitter.com/${speaker.twitter}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:text-blue-400"
+                              aria-label="Twitter profile"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Twitter size={16} />
+                            </a>
+                          )}
+                          {speaker.github && (
+                            <a 
+                              href={`https://github.com/${speaker.github}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:text-black"
+                              aria-label="GitHub profile"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Github size={16} />
+                            </a>
+                          )}
+                          {speaker.linkedin && (
+                            <a 
+                              href={`https://linkedin.com/in/${speaker.linkedin}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:text-blue-700"
+                              aria-label="LinkedIn profile"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Linkedin size={16} />
+                            </a>
+                          )}
+                          {speaker.website && (
+                            <a 
+                              href={speaker.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:text-yellow-600"
+                              aria-label="Personal website"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <ExternalLink size={16} />
+                            </a>
+                          )}
                         </div>
                       )}
                     </div>
@@ -278,184 +350,57 @@ export default function Speakers({ speakers, featuredSpeaker }: SpeakersProps) {
 }
 
 export async function getStaticProps() {
-  // This would be replaced with actual CMS fetching logic
+  const speakers = await getSpeakers();
+  const talks = await getTalks();
+
+  // Calculate total talks across all speakers
+  const totalTalks = speakers.reduce((sum: number, speaker: Speaker) => sum + speaker.talks.length, 0);
+  
+  // Calculate total talk minutes
+  const totalTalkMinutes = speakers.reduce((sum: number, speaker: Speaker) => {
+    return sum + speaker.talks.reduce((talkSum: number, talk: Talk) => talkSum + (talk.durationMinutes ?? 0), 0);
+  }, 0);
+  
+  // Example community statistics
+  const speakerStats = {
+    totalSpeakers: speakers.length,
+    totalTalks: totalTalks,
+    topLocation: "Ginetta, Zurich",
+    totalTalkMinutes: totalTalkMinutes
+  };
+  
+  // Get upcoming talks from the talks data
+  const now = new Date();
+  const upcomingTalks: UpcomingTalk[] = talks
+    .filter((talk: TalkData) => talk.events && talk.events.length > 0)
+    .flatMap((talk: TalkData) => 
+      talk.events!.map((event: EventData) => ({
+        id: event.id,
+        title: talk.title,
+        speakerName: talk.speakers && talk.speakers.length > 0 ? talk.speakers[0].name : 'Unknown Speaker',
+        speakerId: talk.speakers && talk.speakers.length > 0 ? talk.speakers[0].id : '',
+        date: event.date,
+        location: event.location,
+        eventDate: new Date(event.date)
+      } as TalkWithEventDate))
+    )
+    .filter((talk: TalkWithEventDate) => talk.eventDate > now)
+    .sort((a: TalkWithEventDate, b: TalkWithEventDate) => a.eventDate.getTime() - b.eventDate.getTime())
+    .slice(0, 3)
+    .map(({ id, title, speakerName, speakerId, date, location }: TalkWithEventDate) => ({
+      id,
+      title,
+      speakerName,
+      speakerId,
+      date,
+      location
+    }));
+
   return {
     props: {
-      speakers: [
-        {
-          id: '1',
-          name: 'Sarah Johnson',
-          title: 'Senior Frontend Developer at TechCorp',
-          image: '/images/speakers/speaker-1.jpg',
-          twitter: 'sarahjohnson',
-          github: 'sarahj',
-          talks: [
-            {
-              id: '101',
-              title: 'Modern React Patterns',
-              date: 'Jan 15, 2025',
-            }
-          ],
-        },
-        {
-          id: '2',
-          name: 'Michael Chen',
-          title: 'JavaScript Architect at WebSolutions',
-          image: '/images/speakers/speaker-2.jpg',
-          twitter: 'michaelchen',
-          github: 'mchen',
-          talks: [
-            {
-              id: '102',
-              title: 'Building Scalable Node.js Applications',
-              date: 'Nov 20, 2024',
-            },
-            {
-              id: '103',
-              title: 'TypeScript Best Practices',
-              date: 'Jul 5, 2024',
-            }
-          ],
-        },
-        {
-          id: '3',
-          name: 'Anna Schmidt',
-          title: 'React Team Lead at Startup.io',
-          image: '/images/speakers/speaker-3.jpg',
-          twitter: 'annaschmidt',
-          github: 'asc',
-          talks: [
-            {
-              id: '104',
-              title: 'State Management in 2025',
-              date: 'Dec 10, 2024',
-            }
-          ],
-        },
-        {
-          id: '4',
-          name: 'David Wilson',
-          title: 'Full Stack Developer at CodeLabs',
-          image: '/images/speakers/speaker-4.jpg',
-          twitter: 'davidw',
-          github: 'dwilson',
-          talks: [
-            {
-              id: '105',
-              title: 'Web Performance Optimization',
-              date: 'Feb 5, 2025',
-            },
-            {
-              id: '106',
-              title: 'Testing JavaScript Applications',
-              date: 'Sep 18, 2024',
-            },
-            {
-              id: '107',
-              title: 'CSS-in-JS Solutions Compared',
-              date: 'Apr 22, 2024',
-            }
-          ],
-        },
-        {
-          id: '5',
-          name: 'Laura Müller',
-          title: 'Frontend Developer at SwissTech',
-          image: '/images/speakers/speaker-5.jpg',
-          twitter: 'lauramueller',
-          github: 'lmueller',
-          talks: [
-            {
-              id: '108',
-              title: 'Svelte for React Developers',
-              date: 'Oct 7, 2024',
-            }
-          ],
-        },
-        {
-          id: '6',
-          name: 'Robert Zhang',
-          title: 'Engineering Manager at GlobalApp',
-          image: '/images/speakers/speaker-6.jpg',
-          twitter: 'robzhang',
-          github: 'rzhang',
-          talks: [
-            {
-              id: '109',
-              title: 'Building Micro-Frontends',
-              date: 'Aug 15, 2024',
-            },
-            {
-              id: '110',
-              title: 'JavaScript Monorepos',
-              date: 'Mar 3, 2024',
-            }
-          ],
-        },
-        {
-          id: '7',
-          name: 'Sophie Dupont',
-          title: 'UX Engineer at DesignFirm',
-          image: '/images/speakers/speaker-7.jpg',
-          twitter: 'sophiedupont',
-          github: 'sdupont',
-          talks: [
-            {
-              id: '111',
-              title: 'Animations with Framer Motion',
-              date: 'Jun 12, 2024',
-            }
-          ],
-        },
-        {
-          id: '8',
-          name: 'James Thompson',
-          title: 'Vue.js Expert at AppStudio',
-          image: '/images/speakers/speaker-8.jpg',
-          twitter: 'jamesthompson',
-          github: 'jthompson',
-          talks: [
-            {
-              id: '112',
-              title: 'Vue.js 4 Deep Dive',
-              date: 'Jan 30, 2025',
-            }
-          ],
-        },
-      ],
-      featuredSpeaker: {
-        id: '4',
-        name: 'David Wilson',
-        title: 'Full Stack Developer at CodeLabs',
-        image: '/images/speakers/speaker-4.jpg',
-        twitter: 'davidw',
-        github: 'dwilson',
-        linkedin: 'https://linkedin.com/in/davidwilson',
-        bio: 'David is a passionate JavaScript developer with over 10 years of experience building web applications. He specializes in frontend performance optimization and testing methodologies. When not coding, he enjoys hiking and playing the guitar.',
-        latestTalk: {
-          title: 'Web Performance Optimization: Techniques for 2025',
-          eventId: '10',
-          date: 'Feb 5, 2025',
-          location: 'Ginetta, Zurich'
-        },
-        talks: [
-          {
-            id: '105',
-            title: 'Web Performance Optimization',
-            date: 'Feb 5, 2025',
-          },
-          {
-            id: '106',
-            title: 'Testing JavaScript Applications',
-            date: 'Sep 18, 2024',
-          },
-          {
-            id: '107',
-            title: 'CSS-in-JS Solutions Compared',
-            date: 'Apr 22, 2024',
-          }
-        ],
-      }
+      speakers,
+      speakerStats,
+      upcomingTalks
     },
   };
 }

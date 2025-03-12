@@ -70,7 +70,7 @@ export default function SpeakerGrid({
             >
               <Card 
                 type="speaker" 
-                item={speaker} 
+                item={speaker}
               />
             </motion.div>
           ))}

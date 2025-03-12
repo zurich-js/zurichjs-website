@@ -163,6 +163,92 @@ export const getEventById = async (eventId: string) => {
   return event ? mapEventData(event) : null;
 };
 
+export const getSpeakers = async () => {
+  // First fetch all speakers with their talks
+  const speakers = await client.fetch(`
+    *[_type == "speaker"] {
+      ...,
+      "id": id.current,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      "talks": *[_type == "talk" && references(^._id)]{
+        "id": id.current,
+        title,
+        description,
+        type,
+        tags,
+        durationMinutes,
+      }
+    }`);
+
+  // Map the data and add talk count
+  const speakersWithTalkCount = speakers.map((speaker: any) => ({
+    id: get(speaker, "id", ""),
+    name: get(speaker, "name", ""),
+    title: get(speaker, "title", ""),
+    image: get(speaker, "image.asset.url", null) ?? '/images/speakers/default.png',
+    bio: get(speaker, "bio", ""),
+    website: get(speaker, "website", ""),
+    twitter: get(speaker, "twitter", ""),
+    github: get(speaker, "github", ""),
+    linkedin: get(speaker, "linkedin", ""),
+    talks: get(speaker, "talks", []),
+    talkCount: get(speaker, "talks", []).length
+  }));
+
+  // Sort by talk count in descending order
+  return speakersWithTalkCount.sort((a: any, b: any) => b.talkCount - a.talkCount);
+};
+
+export const getTalks = async () => {
+  // Fetch all talks with references to events they were presented at
+  const talks = await client.fetch(`
+    *[_type == "talk"] {
+      ...,
+      "id": id.current,
+      "events": *[_type == "events" && references(^._id)] {
+        "id": id.current,
+        title,
+        date,
+        location
+      },
+      speakers[]-> {
+        ...,
+        "id": id.current,
+        "image": {
+          "asset": {
+            "url": image.asset->url
+          }
+        }
+      }
+    }`);
+
+  // Map the data to a consistent format
+  return talks.map((talk: SanityTalk & { events: any[] }) => ({
+    id: get(talk, "id", ""),
+    title: get(talk, "title", ""),
+    description: get(talk, "description", ""),
+    type: get(talk, "type", ""),
+    tags: get(talk, "tags", []),
+    durationMinutes: get(talk, "durationMinutes", 0),
+    events: get(talk, "events", []).map(event => ({
+      id: get(event, "id", ""),
+      title: get(event, "title", ""),
+      date: event.date ? format(new Date(event.date), "MMMM d, yyyy") : "",
+      location: get(event, "location", "")
+    })),
+    speakers: get(talk, "speakers", [])?.map((speaker: SanitySpeaker) => ({
+      id: get(speaker, "id.current", ""),
+      name: get(speaker, "name", ""),
+      title: get(speaker, "title", ""),
+      image: get(speaker, "image.asset.url", null) ?? '/images/speakers/default.png',
+    })) || [],
+  }));
+};
+
 
 
 

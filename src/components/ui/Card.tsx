@@ -20,6 +20,7 @@ interface Speaker {
   title: string;
   image: string;
   talks: number;
+  talkCount?: number;
 }
 
 interface CardProps {
@@ -110,11 +111,16 @@ export default function Card({
               <div className="inline-block bg-blue-700 text-white text-xs px-2 py-1 rounded-full mb-2">
                 JS Wizard 🧙‍♂️
               </div>
+              {(speakerItem.talkCount !== undefined && speakerItem.talkCount > 0) && (
+                <div className="inline-block ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
+                  {speakerItem.talkCount} {speakerItem.talkCount === 1 ? 'talk' : 'talks'} 🎤
+                </div>
+              )}
             </div>
           </div>
           <div className="p-4">
-            <h3 className="text-lg font-bold text-gray-900">{speakerItem.name}</h3>
-            <p className="text-sm mb-2 text-gray-700">{speakerItem.title}</p>
+            <h3 className="text-lg font-bold text-gray-900 line-clamp-1">{speakerItem.name}</h3>
+            <p className="text-sm mb-2 text-gray-700 line-clamp-1">{speakerItem.title}</p>
             {speakerItem.talks > 0 && (
               <div className="mt-2 inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
                 {speakerItem.talks} amazing {speakerItem.talks === 1 ? 'talk' : 'talks'} 🎤

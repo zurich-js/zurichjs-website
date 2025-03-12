@@ -7,36 +7,8 @@ import { Calendar, MapPin, Clock, ExternalLink, Twitter, Github, Linkedin, Video
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getSpeakers } from '@/sanity/queries';
+import { Speaker } from '@/types';
 
-// Define types for the speaker and talk data
-interface Talk {
-    id: string;
-    title: string;
-    date: string;
-    location?: string;
-    duration?: number;
-    description?: string;
-    eventId?: string;
-    slidesUrl?: string | null;
-    videoUrl?: string | null;
-    upcoming: boolean;
-    coverImage?: string;
-    tags?: string[];
-    type?: string;
-}
-
-interface Speaker {
-    id: string;
-    name: string;
-    title: string;
-    image: string;
-    bio: string;
-    twitter?: string;
-    github?: string;
-    linkedin?: string;
-    skills?: string[];
-    talks: Talk[];
-}
 
 export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
     const router = useRouter();
@@ -134,17 +106,6 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                 <div className="text-gray-700 mb-8">
                                     <p className="md:text-lg">{speaker.bio}</p>
                                 </div>
-
-                                <div className="flex flex-wrap gap-3">
-                                    {speaker.skills && speaker.skills.map((skill) => (
-                                        <span
-                                            key={skill}
-                                            className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
-                                        >
-                                            {skill}
-                                        </span>
-                                    ))}
-                                </div>
                             </motion.div>
                         </div>
                     </div>
@@ -173,50 +134,20 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                     className="bg-gray-50 rounded-lg shadow-md overflow-hidden"
                                 >
                                     <div className="md:flex">
-                                        {talk.coverImage && (
-                                            <div className="md:w-1/4 h-48 md:h-auto relative">
-                                                <Image
-                                                    src={talk.coverImage}
-                                                    alt={talk.title}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                        )}
-                                        <div className={`p-6 ${talk.coverImage ? 'md:w-3/4' : 'w-full'}`}>
-                                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
-                                                <h3 className="text-xl font-bold">{talk.title}</h3>
-                                                <div className="mt-2 md:mt-0">
-                                                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${talk.upcoming
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-gray-100 text-gray-800'
-                                                        }`}>
-                                                        {talk.upcoming ? 'Upcoming' : 'Past Talk'}
-                                                    </span>
-                                                </div>
-                                            </div>
+
+                                        <div className={`p-6 w-full`}>
 
                                             <div className="flex flex-wrap items-center text-gray-500 gap-x-4 gap-y-2 mb-4">
-                                                {talk.date && <div className="flex items-center">
-                                                    <Calendar size={16} className="mr-1" />
-                                                    <span className="text-sm">{talk.date}</span>
-                                                </div>}
-                                                {talk.location && (
-                                                    <div className="flex items-center">
-                                                        <MapPin size={16} className="mr-1" />
-                                                        <span className="text-sm">{talk.location}</span>
-                                                    </div>
-                                                )}
-                                                {talk.duration && (
+                                                {talk.durationMinutes && (
                                                     <div className="flex items-center">
                                                         <Clock size={16} className="mr-1" />
-                                                        <span className="text-sm">{talk.duration} min</span>
+                                                        <span className="text-sm">{talk.durationMinutes} min</span>
                                                     </div>
                                                 )}
-                                                {talk.type && (
+                                                {talk.durationMinutes && (
                                                     <div className="flex items-center">
                                                         <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                                            {talk.type}
+                                                            {talk.durationMinutes < 10 ? 'Lightning Talk' : 'Regular Talk'}
                                                         </span>
                                                     </div>
                                                 )}
@@ -239,15 +170,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                 </div>
                                             )}
 
-                                            <div className="flex flex-wrap gap-3">
-                                                {talk.eventId && (
-                                                    <Link
-                                                        href={`/events/${talk.eventId}`}
-                                                        className="flex items-center text-yellow-600 hover:text-yellow-700 font-medium"
-                                                    >
-                                                        Event Details <ExternalLink size={16} className="ml-1" />
-                                                    </Link>
-                                                )}
+                                            {/* <div className="flex flex-wrap gap-3">
                                                 {talk.slidesUrl && (
                                                     <a
                                                         href={talk.slidesUrl}
@@ -268,7 +191,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                         Watch Video <Video size={16} className="ml-1" />
                                                     </a>
                                                 )}
-                                            </div>
+                                            </div> */}
                                         </div>
                                     </div>
                                 </motion.div>

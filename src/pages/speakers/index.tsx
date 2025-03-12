@@ -7,27 +7,7 @@ import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin, Users, Trend
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getSpeakers, getTalks } from '@/sanity/queries';
-
-// Define our TypeScript interfaces
-interface Talk {
-  id: string;
-  title: string;
-  date: string;
-  durationMinutes: number;
-  tags: string[];
-}
-
-interface Speaker {
-  id: string;
-  name: string;
-  title: string;
-  image: string;
-  twitter?: string;
-  github?: string;
-  linkedin?: string;
-  talks: Talk[];
-  website?: string;
-}
+import { Speaker, Talk } from '@/types';
 
 interface SpeakersProps {
   speakers: Speaker[];

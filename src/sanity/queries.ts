@@ -1,6 +1,7 @@
 import { client } from "./client";
 import get from "lodash.get";
 import { format } from "date-fns";
+import { Speaker, Talk } from "@/types";
 
 export const getStats = async () => {
   const [{
@@ -163,7 +164,10 @@ export const getEventById = async (eventId: string) => {
   return event ? mapEventData(event) : null;
 };
 
-export const getSpeakers = async () => {
+// Add additional interfaces for the return types
+
+
+export const getSpeakers = async (): Promise<Speaker[]> => {
   // First fetch all speakers with their talks
   const speakers = await client.fetch(`
     *[_type == "speaker"] {
@@ -185,7 +189,7 @@ export const getSpeakers = async () => {
     }`);
 
   // Map the data and add talk count
-  const speakersWithTalkCount = speakers.map((speaker: any) => ({
+  const speakersWithTalkCount = speakers.map((speaker: SanitySpeaker & { talks: SanityTalk[] }) => ({
     id: get(speaker, "id", ""),
     name: get(speaker, "name", ""),
     title: get(speaker, "title", ""),
@@ -200,10 +204,10 @@ export const getSpeakers = async () => {
   }));
 
   // Sort by talk count in descending order
-  return speakersWithTalkCount.sort((a: any, b: any) => b.talkCount - a.talkCount);
+  return speakersWithTalkCount.sort((a: Speaker, b: Speaker) => b.talkCount - a.talkCount);
 };
 
-export const getTalks = async () => {
+export const getTalks = async (): Promise<Talk[]> => {
   // Fetch all talks with references to events they were presented at
   const talks = await client.fetch(`
     *[_type == "talk"] {
@@ -227,7 +231,7 @@ export const getTalks = async () => {
     }`);
 
   // Map the data to a consistent format
-  return talks.map((talk: SanityTalk & { events: any[] }) => ({
+  return talks.map((talk: SanityTalk & { events: Array<{ id: string; title: string; date: string; location: string }> }) => ({
     id: get(talk, "id", ""),
     title: get(talk, "title", ""),
     description: get(talk, "description", ""),

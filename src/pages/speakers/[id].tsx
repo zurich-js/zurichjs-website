@@ -1,9 +1,8 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, ExternalLink, Twitter, Github, Linkedin, Video, FileText } from 'lucide-react';
+import { Clock, Twitter, Github, Linkedin } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getSpeakers } from '@/sanity/queries';

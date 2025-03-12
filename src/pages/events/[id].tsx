@@ -64,6 +64,7 @@ interface EventDetailPageProps {
 export default function EventDetail({ event }: EventDetailPageProps) {
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [mapUrl, setMapUrl] = useState('');
   
   // Calculate if event is upcoming
   const isUpcoming = new Date(event.date) > new Date();
@@ -81,6 +82,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     setIsClient(true);
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const response = await fetch(`/api/google-maps?location=${encodeURIComponent(event.address || event.location)}`);
+      const data = await response.json();
+      setMapUrl(data.url);
+    })();
+  }, [event.address])
 
   // Share event function
   const shareEvent = async () => {
@@ -469,7 +477,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
                   <div className="relative h-48 w-full rounded overflow-hidden mb-4">
                     <Image
-                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event.address || event.location)}&zoom=15&size=600x300&markers=color:yellow%7C${encodeURIComponent(event.address || event.location)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+                      src={mapUrl}
                       alt={`Map of ${event.location}`}
                       fill
                       className="object-cover"

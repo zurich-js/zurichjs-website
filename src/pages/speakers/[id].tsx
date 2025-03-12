@@ -11,7 +11,7 @@ import { Speaker } from '@/types';
 
 export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
     const router = useRouter();
-    console.log('speaker', speaker);
+
     // Show loading state while fetching data
     if (router.isFallback) {
         return (
@@ -137,7 +137,6 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                         className="bg-gray-50 rounded-lg shadow-md overflow-hidden"
                                     >
                                         <div className="md:flex">
-
                                             <div className="p-6 w-full">
                                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
                                                     <h3 className="text-xl font-bold">{talk.title}</h3>
@@ -183,29 +182,6 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                         ))}
                                                     </div>
                                                 )}
-
-                                                {/* <div className="flex flex-wrap gap-3">
-                                                {talk.slidesUrl && (
-                                                    <a
-                                                        href={talk.slidesUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center text-blue-600 hover:text-blue-700 font-medium"
-                                                    >
-                                                        Slides <FileText size={16} className="ml-1" />
-                                                    </a>
-                                                )}
-                                                {talk.videoUrl && (
-                                                    <a
-                                                        href={talk.videoUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center text-red-600 hover:text-red-700 font-medium"
-                                                    >
-                                                        Watch Video <Video size={16} className="ml-1" />
-                                                    </a>
-                                                )}
-                                            </div> */}
                                             </div>
                                         </div>
                                     </motion.div>

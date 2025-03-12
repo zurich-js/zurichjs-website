@@ -3,21 +3,6 @@ import get from "lodash.get";
 import { format } from "date-fns";
 import { Speaker, Talk } from "@/types";
 
-export const getStats = async () => {
-  const [{
-    members,
-    eventsHosted,
-    speakersToDate,
-    totalAttendees,
-  }] = await client.fetch(`*[_type == "stats"]`);
-  return {
-    members,
-    eventsHosted,
-    speakersToDate,
-    totalAttendees,
-  };
-};
-
 // Define types for Sanity data structures
 interface SanityImage {
   asset: {
@@ -76,6 +61,7 @@ const mapEventData = (event: SanityEvent) => {
       description: get(talk, "description", ""),
       type: get(talk, "type", ""),
       tags: get(talk, "tags", []),
+      durationMinutes: get(talk, "durationMinutes", 0),
       speakers: get(talk, "speakers", [])?.map((speaker: SanitySpeaker) => ({
         id: get(speaker, "id.current", ""),
         name: get(speaker, "name", ""),
@@ -259,6 +245,21 @@ export const getTalks = async (): Promise<Talk[]> => {
   }));
 };
 
+export const getStats = async () => {
+  const stats = await client.fetch(`{
+    "members": *[_type == "stats"][0].members,
+    "totalAttendees": *[_type == "stats"][0].totalAttendees,
+    "eventCount": count(*[_type == "events"]),
+    "speakerCount": count(*[_type == "speaker"])
+  }`);
+
+  return {
+    members: stats.members,
+    totalAttendees: stats.totalAttendees,
+    eventsHosted: stats.eventCount || 0,
+    speakersToDate: stats.speakerCount || 0
+  };
+};
 
 
 

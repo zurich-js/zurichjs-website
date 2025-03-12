@@ -26,6 +26,7 @@ interface EventTalk {
   speakers: Speaker[];
   description?: string;
   time?: string;
+  durationMinutes?: number; // Duration in minutes
   slidesUrl?: string;
   videoUrl?: string;
 }
@@ -47,8 +48,6 @@ interface EventDetails {
   companyName?: string;
   companyLogo?: string;
   talks: EventTalk[];
-  upcoming: boolean;
-  featured?: boolean;
   relatedEvents?: {
     id: string;
     slug: string;
@@ -65,6 +64,17 @@ interface EventDetailPageProps {
 export default function EventDetail({ event }: EventDetailPageProps) {
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  // Calculate if event is upcoming
+  const isUpcoming = new Date(event.date) > new Date();
+
+  // Calculate available talk slots based on duration
+  const regularTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes >= 10);
+  const lightningTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes < 10);
+  
+  const hasRegularSlotAvailable = isUpcoming && regularTalks.length < 2;
+  const hasLightningSlotAvailable = isUpcoming && lightningTalks.length < 1;
+  const hasSlotsAvailable = hasRegularSlotAvailable || hasLightningSlotAvailable;
 
   // Set up client-side rendering flag to prevent hydration issues
   useEffect(() => {
@@ -135,7 +145,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 className="lg:w-1/2"
               >
                 <div className="bg-black text-yellow-400 inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
-                  {event.upcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
+                  {isUpcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-4">
                   {event.title}
@@ -154,7 +164,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <MapPin size={16} className="mr-1.5" />
                     <span>{event.location}</span>
                   </div>
-                  {event.upcoming && (
+                  {isUpcoming && (
                     <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                       <Users size={16} className="mr-1.5" />
                       <span>{event.attendees} attending</span>
@@ -167,7 +177,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  {event.upcoming && (
+                  {isUpcoming && (
                     <Button
                       href={event.meetupUrl}
                       variant="primary"
@@ -197,7 +207,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="lg:w-1/2"
               >
-                <div className="relative h-64 md:h-80 w-full rounded-lg overflow-hidden shadow-lg">
+                <div className="relative h-64 md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
                   <Image
                     src={event.image}
                     alt={event.title}
@@ -269,7 +279,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                               )}
                             </div>
                             <div className="md:w-3/4">
-                              <h3 className="text-xl font-bold mb-2">{talk.title}</h3>
+                              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
+                                <h3 className="text-xl font-bold">{talk.title}</h3>
+                                <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                                  (!talk.durationMinutes || talk.durationMinutes < 10) 
+                                    ? 'bg-yellow-100 text-yellow-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {(!talk.durationMinutes || talk.durationMinutes < 10) ? '⚡ Lightning Talk' : '🎤 Regular Talk'}
+                                </span>
+                              </div>
 
                               <div className="mb-3">
                                 {talk.speakers.map((speaker, idx) => (
@@ -282,19 +301,28 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                 ))}
                               </div>
 
-                              {talk.time && (
-                                <div className="mb-3 text-gray-600 flex items-center">
-                                  <Clock size={14} className="mr-1" />
-                                  <span>{talk.time}</span>
-                                </div>
-                              )}
+                              <div className="mb-3 text-gray-600 flex items-center gap-3">
+                                {talk.time && (
+                                  <div className="flex items-center">
+                                    <Clock size={14} className="mr-1" />
+                                    <span>{talk.time}</span>
+                                  </div>
+                                )}
+                                {talk.durationMinutes && (
+                                  <div className="flex items-center">
+                                    <span className="text-sm">
+                                      {talk.durationMinutes} min{talk.durationMinutes !== 1 ? 's' : ''}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
 
                               {talk.description && (
                                 <p className="text-gray-700 mb-4">{talk.description}</p>
                               )}
 
                               <div className="flex flex-wrap gap-2">
-                                {!event.upcoming && talk.slidesUrl && (
+                                {!isUpcoming && talk.slidesUrl && (
                                   <a
                                     href={talk.slidesUrl}
                                     target="_blank"
@@ -306,7 +334,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                   </a>
                                 )}
 
-                                {!event.upcoming && talk.videoUrl && (
+                                {!isUpcoming && talk.videoUrl && (
                                   <a
                                     href={talk.videoUrl}
                                     target="_blank"
@@ -338,7 +366,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
 
                 {/* Submit a Talk CTA (for upcoming events) */}
-                {event.upcoming && (
+                {isUpcoming && hasSlotsAvailable && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -348,7 +376,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   >
                     <h3 className="text-xl font-bold mb-3">Want to give a talk? 🎤</h3>
                     <p className="mb-4">
-                      We&apos;re always looking for awesome JavaScript enthusiasts to share their knowledge! Got a talk idea for this or future events? Let us know!
+                      We&apos;re looking for JavaScript enthusiasts to share their knowledge at this event!
+                      {hasRegularSlotAvailable && hasLightningSlotAvailable && (
+                        <span> We have slots available for <strong>both regular talks (20-30 mins)</strong> and <strong>lightning talks (5-10 mins)</strong>.</span>
+                      )}
+                      {hasRegularSlotAvailable && !hasLightningSlotAvailable && (
+                        <span> We have <strong>{2 - regularTalks.length} slot{regularTalks.length === 1 ? '' : 's'} available for regular talks (20-30 mins)</strong>.</span>
+                      )}
+                      {!hasRegularSlotAvailable && hasLightningSlotAvailable && (
+                        <span> We have <strong>1 slot available for a lightning talk (5-10 mins)</strong>.</span>
+                      )}
                     </p>
                     <Button href="/cfp" variant="primary" className="bg-black text-yellow-400 hover:bg-gray-800">
                       Submit a Talk Proposal
@@ -356,39 +393,22 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   </motion.div>
                 )}
 
-                {/* Photos (for past events) */}
-                {!event.upcoming && (
+                {/* No Slots Available Message */}
+                {isUpcoming && !hasSlotsAvailable && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="mb-12"
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
                   >
-                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-400">
-                      Event Photos 📸
-                    </h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {/* Sample event photos - would be dynamic in production */}
-                      {[1, 2, 3, 4, 5, 6].map((num) => (
-                        <div key={num} className="relative h-48 rounded-lg overflow-hidden">
-                          <Image
-                            src={`/images/events/photos/event-${event.id}-photo-${num}.jpg`}
-                            alt={`${event.title} photo ${num}`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-4 text-center">
-                      <Button
-                        href={`https://flickr.com/zurichjs/albums/${event.id}`}
-                        variant="outline"
-                      >
-                        View All Photos
-                      </Button>
-                    </div>
+                    <h3 className="text-xl font-bold mb-3">All talk slots are filled! 🎉</h3>
+                    <p className="mb-4">
+                      We&apos;ve reached our maximum number of talks for this event. Please check our future events for speaking opportunities or submit a proposal for consideration at upcoming meetups.
+                    </p>
+                    <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-yellow-400">
+                      Submit for Future Events
+                    </Button>
                   </motion.div>
                 )}
 
@@ -448,12 +468,12 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   {event.address && <p className="text-gray-600 mb-4">{event.address}</p>}
 
                   <div className="relative h-48 w-full rounded overflow-hidden mb-4">
-                    {/* <Image
-                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event.address || event.location)}&zoom=15&size=600x300&markers=color:yellow%7C${encodeURIComponent(event.address || event.location)}&key=YOUR_GOOGLE_MAPS_API_KEY`}
+                    <Image
+                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event.address || event.location)}&zoom=15&size=600x300&markers=color:yellow%7C${encodeURIComponent(event.address || event.location)}&key=AIzaSyB8ygeJDxMJGhwmz5YmFv1MlWOCFCkCyM4`}
                       alt={`Map of ${event.location}`}
                       fill
                       className="object-cover"
-                    /> */}
+                    />
                   </div>
 
                   <a
@@ -518,49 +538,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   </motion.div>
                 )}
 
-                {/* Time & Schedule */}
-                {event.talks.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-white p-6 rounded-lg shadow-md mb-6"
-                  >
-                    <h3 className="text-xl font-bold mb-3 flex items-center">
-                      <Clock className="mr-2 text-yellow-500" size={20} />
-                      Event Schedule
-                    </h3>
-
-                    <ul className="space-y-4">
-                      <li className="flex">
-                        <span className="text-yellow-500 font-mono w-16">5:45 PM</span>
-                        <span>Doors open & networking</span>
-                      </li>
-                      <li className="flex">
-                        <span className="text-yellow-500 font-mono w-16">6:15 PM</span>
-                        <span>Welcome & announcements</span>
-                      </li>
-                      {event.talks.map((talk, index) => (
-                        <li key={talk.id} className="flex">
-                          <span className="text-yellow-500 font-mono w-16">{talk.time || `6:${30 + index * 30} PM`}</span>
-                          <span>{talk.title} - {talk.speakers.map(speaker => speaker.name).join(', ')}</span>
-                        </li>
-                      ))}
-                      <li className="flex">
-                        <span className="text-yellow-500 font-mono w-16">8:30 PM</span>
-                        <span>Networking & pizza! 🍕</span>
-                      </li>
-                      <li className="flex">
-                        <span className="text-yellow-500 font-mono w-16">10:00 PM</span>
-                        <span>Event ends</span>
-                      </li>
-                    </ul>
-                  </motion.div>
-                )}
-
                 {/* What to Bring */}
-                {event.upcoming && (
+                {isUpcoming && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -591,7 +570,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
 
                 {/* Call to Action */}
-                {event.upcoming && (
+                {isUpcoming && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}

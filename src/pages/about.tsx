@@ -190,7 +190,8 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
               </p>
             </motion.div>
 
-            <div className="relative">
+            {/* Desktop Timeline - Hidden on mobile */}
+            <div className="relative hidden md:block">
               {/* Timeline line */}
               <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-blue-700"></div>
 
@@ -235,6 +236,49 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </div>
+
+            {/* Mobile Timeline - Visible only on mobile */}
+            <div className="md:hidden">
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 top-0 h-full w-1 bg-blue-700"></div>
+
+                {/* Timeline events - Mobile version */}
+                <div className="relative">
+                  {milestones.map((milestone, index) => (
+                    <motion.div
+                      key={milestone.year}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.2 }}
+                      className="pl-12 relative mb-12"
+                    >
+                      {/* Timeline dot */}
+                      <div className="absolute left-0 top-6 transform -translate-x-1/2 bg-blue-700 rounded-full w-8 h-8 border-4 border-white shadow-md z-10"></div>
+                      
+                      <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-2">
+                        {milestone.year}
+                      </span>
+                      <h3 className="text-xl font-bold mb-2 text-gray-900">{milestone.title}</h3>
+                      <p className="text-gray-700 mb-4">{milestone.description}</p>
+                      
+                      {/* Image for mobile */}
+                      {milestone.image && (
+                        <div className="relative h-48 w-full rounded-lg overflow-hidden shadow-lg mb-4">
+                          <Image
+                            src={milestone.image}
+                            alt={milestone.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -354,7 +398,6 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                     <h3 className="text-xl font-bold mb-1 text-gray-900">{member.name}</h3>
                     <p className="text-blue-700 mb-4">{member.role}</p>
                     <p className="text-gray-700 mb-4">{member.bio}</p>
-                    
                     <div className="flex space-x-4">
                       {member.twitter && (
                         <a 
@@ -526,67 +569,57 @@ export async function getStaticProps() {
           role: 'Founder & Lead Organizer',
           image: '/images/team/faris.jpg',
           bio: 'JavaScript enthusiast who loves bringing people together! Started ZurichJS to create a space where devs of all levels could share their passion for JS.',
-          twitter: 'farisaziz',
-          github: 'farisaziz',
-          linkedin: 'https://linkedin.com/in/farisaziz',
+          twitter: 'farisaziz12',
+          github: 'farisaziz12',
+          linkedin: 'https://linkedin.com/in/farisaziz12',
         },
         {
           id: '2',
-          name: 'Lena Müller',
-          role: 'Community Manager',
-          image: '/images/team/lena.jpg',
-          bio: 'Frontend specialist with a knack for making everyone feel welcome! Passionate about inclusive tech communities and React.',
-          twitter: 'lenamueller',
-          github: 'lenamueller',
-          linkedin: 'https://linkedin.com/in/lenamueller',
-        },
-        {
-          id: '3',
-          name: 'Marco Rossi',
-          role: 'Tech Coordinator',
-          image: '/images/team/marco.jpg',
-          bio: 'Full-stack developer who ensures our meetups run smoothly! Loves Node.js, teaching, and helping new speakers prepare their talks.',
-          twitter: 'marcorossi',
-          github: 'marcorossi',
-          linkedin: 'https://linkedin.com/in/marcorossi',
+          name: 'Bogdan Mihai Ilie',
+          role: 'Founder & Lead Organizer',
+          image: '/images/team/bogdan.jpg',
+          bio: 'Frontend specialist with a knack for making everyone feel welcome! Passionate about inclusive tech communities and Vue.',
+          twitter: 'nosthrillz',
+          github: 'nosthrillz',
+          linkedin: 'https://linkedin.com/in/ilie-bogdan',
         },
       ],
       milestones: [
         {
           year: 'November 2024',
           title: 'Zurich JS is Born!',
-          description: 'Our first meetup with 34 developers in a novu! We saw an opportunity to redefine what a JavaScript community could be in the Zurich area. For our first meetup, we even had Nico Martin, a well-known AI Google Developer Expert, as our speaker.',
+          description: 'Our first meetup brought together 34 developers at novu! We seized the opportunity to redefine what a JavaScript community could be in the Zurich area. We were honored to have Nico Martin, a renowned AI Google Developer Expert, as our inaugural speaker.',
           image: '/images/community/meetup-1.png',
         },
         {
           year: 'January 2025',
           title: 'Our Community Grows',
-          description: 'Reached 100 followers on LinkedIn. Our Meetup group activity picked up to 80-90 active members.',
-          image: '/images/community/meetup-logo.png',
+          description: 'We reached 100 followers on LinkedIn while our Meetup group flourished to 80-90 active members. The momentum was building!',
+          image: '/images/community/web-zurich-dinner.png',
         },
         {
           year: 'February 2025',
           title: 'Zurich JS Makes International & Local Friends',
-          description: 'We hosted our second meetup with Evangelia, flying from Thessaloniki, Greece just for our meetup. We also began our partnership with Web Zurich!',
+          description: 'For our second meetup, we welcomed Evangelia who flew in specially from Thessaloniki, Greece. This month also marked the beginning of our valuable partnership with Web Zurich!',
           image: '/images/community/meetup-2.png',
         },
         {
           year: 'March 2025',
           title: 'Partnerships to the Moon!',
-          description: 'We dipped our toes in the international conference world and started our partnership with React Paris, Code Blossom, on top of our existing conference partnerships with CityJS and Grusp.',
+          description: 'We expanded into the international conference scene, establishing partnerships with React Paris and Code Blossom, complementing our existing collaborations with CityJS and Grusp.',
           image: '/images/community/meetup-3.jpeg',
         },
         {
           year: 'March 2025',
           title: 'ZurichJS x Vue Zurich',
-          description: 'We acquired the Vue Zurich meetup and merged it with our community. With our first speaker being Adam Berecz, a well-known Vue.js expert from Hungary and the founder of Vueform',
+          description: 'We proudly merged with the Vue Zurich meetup, welcoming their community into ours. We celebrated with Adam Berecz, a distinguished Vue.js expert from Hungary and founder of Vueform, as our featured speaker.',
           image: '/images/community/vue-zurich.jpeg',
         },
         {
           year: 'April 2025',
           title: 'ZurichJS Comes to Smallpdf',
-          description: "Smallpdf welcomed us with open arms, hosting our 4th meetup at their office and becoming one of our gracious hosts alongside Ginetta, novu ag, and Get Your Guide in Zurich.",
-          image: '/images/events/event-4.png',
+          description: 'Smallpdf graciously hosted our 4th meetup, joining our roster of generous venue partners alongside Ginetta, novu ag, and GetYourGuide in Zurich.',
+          image: '/images/community/meetup-3-crowd.jpg',
         },
       ],
       stats: {

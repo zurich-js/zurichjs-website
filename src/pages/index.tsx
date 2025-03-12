@@ -10,6 +10,7 @@ import Partners from '@/components/sections/Partners';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
 import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
+import { getPartners } from '@/data';
 
 
 // Define TypeScript interfaces for our data structures
@@ -209,62 +210,13 @@ export async function getServerSideProps() {
   const stats = await getStats();
   const upcomingEvents = await getUpcomingEvents();
   const speakers = await getSpeakers();
-
+  const partners = getPartners();
   return {
     props: {
       upcomingEvents,
       featuredSpeakers: speakers.slice(0, 3),
       stats,
-      partners: [
-        {
-          id: '1',
-          name: 'Ginetta',
-          logo: '/images/partners/ginetta.png',
-          url: 'https://ginetta.net',
-        },
-        {
-          id: '2',
-          name: 'Novu AG',
-          logo: '/images/partners/novu.png',
-          url: 'https://novu.ch/',
-        },
-        {
-          id: '3',
-          name: 'Get Your Guide',
-          logo: '/images/partners/get-your-guide.png',
-          url: 'https://www.gyg.com/',
-        },
-        {
-          id: '4',
-          name: 'Smallpdf',
-          logo: '/images/partners/smallpdf.png',
-          url: 'https://smallpdf.com',
-        },
-        {
-          id: '5',
-          name: 'React Paris',
-          logo: '/images/partners/react-paris.png',
-          url: 'https://reactparis.com/',
-        },
-        {
-          id: '6',
-          name: 'Code Blossom',
-          logo: '/images/partners/code-blossom.png',
-          url: 'https://www.code-blossom.com/',
-        },
-        {
-          id: '7',
-          name: 'CityJS',
-          logo: '/images/partners/city-js.png',
-          url: 'https://cityjsconf.org/',
-        },
-        {
-          id: '8',
-          name: 'Grusp',
-          logo: '/images/partners/grusp.png',
-          url: 'https://www.grusp.org/',
-        },
-      ]
+      partners
     },
   };
 }

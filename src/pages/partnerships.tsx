@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Building, Users, Gift, Coffee, Rocket, CheckCircle, MapPin } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
+import { getPartners } from '@/data';
+import { getUpcomingEvents } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
 interface Partner {
@@ -176,14 +178,14 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 className="lg:w-1/2"
               >
                 <div className="bg-white p-6 rounded-lg shadow-lg">
-                  <div className="relative h-56 w-full mb-4 rounded overflow-hidden">
+                  <div className="relative h-64 w-full mb-4 rounded overflow-hidden">
                     <Image
                       src={upcomingEvent.image}
                       alt="ZurichJS Meetup"
                       fill
-                      className="object-cover"
+                      className="object-cover object-top"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
                       <h3 className="text-xl font-bold">{upcomingEvent.title}</h3>
                       <div className="flex items-center mt-2 text-sm">
@@ -588,103 +590,6 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
           </div>
         </section>
 
-        {/* Testimonials */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">What Our Partners Say 💬</h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                Hear from companies that have partnered with ZurichJS!
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-gray-50 p-6 rounded-lg shadow-md"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 relative mr-4">
-                    <Image
-                      src="/images/partners/ginetta.svg"
-                      alt="Ginetta"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Sarah Schmidt</h3>
-                    <p className="text-sm text-gray-600">HR Manager, Ginetta</p>
-                  </div>
-                </div>
-                <p className="text-gray-700">
-                  &quot;Hosting ZurichJS meetups has been fantastic for our employer branding! We&apos;ve connected with amazing talent and even hired two developers who first visited our office during a meetup. The community is engaged and passionate!&quot;
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-gray-50 p-6 rounded-lg shadow-md"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 relative mr-4">
-                    <Image
-                      src="/images/partners/smallpdf.svg"
-                      alt="Smallpdf"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Michael Weber</h3>
-                    <p className="text-sm text-gray-600">CTO, Smallpdf</p>
-                  </div>
-                </div>
-                <p className="text-gray-700">
-                  &quot;Being a Gold Partner for ZurichJS has significantly increased our visibility in the tech community. Our engineers love sharing knowledge through talks, and it&apos;s helped us position ourselves as a tech-forward company in Zurich.&quot;
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-gray-50 p-6 rounded-lg shadow-md"
-              >
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 relative mr-4">
-                    <Image
-                      src="/images/partners/google.svg"
-                      alt="Google"
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900">Anna Müller</h3>
-                    <p className="text-sm text-gray-600">Developer Relations, Google</p>
-                  </div>
-                </div>
-                <p className="text-gray-700">
-                  &quot;ZurichJS has been an incredible channel for us to connect with the developer community. The passion and energy at these meetups is contagious! We love supporting events that bring together such a vibrant tech ecosystem.&quot;
-                </p>
-              </motion.div>
-            </div>
-          </div>
-        </section>
 
         {/* Final CTA */}
         <section className="py-16 bg-yellow-400">
@@ -717,53 +622,13 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 }
 
 export async function getStaticProps() {
-  // This would be replaced with actual CMS fetching
+
+  const partners = getPartners();
+  const upcomingEvent = await getUpcomingEvents();
   return {
     props: {
-      partners: [
-        {
-          id: '1',
-          name: 'Ginetta',
-          logo: '/images/partners/ginetta.svg',
-          url: 'https://ginetta.net',
-        },
-        {
-          id: '2',
-          name: 'Smallpdf',
-          logo: '/images/partners/smallpdf.svg',
-          url: 'https://smallpdf.com',
-        },
-        {
-          id: '3',
-          name: 'Google',
-          logo: '/images/partners/google.svg',
-          url: 'https://google.com',
-        },
-        {
-          id: '4',
-          name: 'Mozilla',
-          logo: '/images/partners/mozilla.svg',
-          url: 'https://mozilla.org',
-        },
-        {
-          id: '5',
-          name: 'Microsoft',
-          logo: '/images/partners/microsoft.svg',
-          url: 'https://microsoft.com',
-        },
-        {
-          id: '6',
-          name: 'Vercel',
-          logo: '/images/partners/vercel.svg',
-          url: 'https://vercel.com',
-        },
-      ],
-      upcomingEvent: {
-        title: 'Zurich JS Meetup #3: Revitalizing JS spring season',
-        date: 'Mar 20, 2025',
-        location: 'Ginetta, Zurich',
-        image: '/images/events/event-3.jpg',
-      }
+      partners,
+      upcomingEvent: upcomingEvent[0],
     },
   };
 }

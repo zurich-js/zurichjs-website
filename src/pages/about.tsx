@@ -74,7 +74,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                 <div className="bg-white p-4 rounded-lg shadow-lg">
                   <div className="relative h-64 w-full rounded overflow-hidden">
                     <Image
-                      src="/images/about/community-photo.jpg"
+                      src="/images/community/pic-1.png"
                       alt="ZurichJS Community"
                       fill
                       className="object-cover"
@@ -553,40 +553,40 @@ export async function getStaticProps() {
       ],
       milestones: [
         {
-          year: '2015',
-          title: 'ZurichJS is Born!',
-          description: 'Our first meetup with just 15 developers in a tiny café! JavaScript was taking off, and we wanted to create a community for fellow enthusiasts.',
-          image: '/images/about/milestone-2015.jpg',
+          year: 'November 2024',
+          title: 'Zurich JS is Born!',
+          description: 'Our first meetup with 34 developers in a novu! We saw an opportunity to redefine what a JavaScript community could be in the Zurich area. For our first meetup, we even had Nico Martin, a well-known AI Google Developer Expert, as our speaker.',
+          image: '/images/community/meetup-1.png',
         },
         {
-          year: '2017',
+          year: 'January 2025',
           title: 'Our Community Grows',
-          description: 'Reached 100 members and started hosting regular events with speakers from local companies. Our Slack channel became a hub for JS discussions!',
-          image: '/images/about/milestone-2017.jpg',
+          description: 'Reached 100 followers on LinkedIn. Our Meetup group activity picked up to 80-90 active members.',
+          image: '/images/community/meetup-logo.png',
         },
         {
-          year: '2019',
-          title: 'First ZurichJS Conference',
-          description: 'Hosted our first mini-conference with 8 speakers and over 150 attendees! Topics ranged from React to Node.js, TypeScript, and testing.',
-          image: '/images/about/milestone-2019.jpg',
+          year: 'February 2025',
+          title: 'Zurich JS Makes International & Local Friends',
+          description: 'We hosted our second meetup with Evangelia, flying from Thessaloniki, Greece just for our meetup. We also began our partnership with Web Zurich!',
+          image: '/images/community/meetup-2.png',
         },
         {
-          year: '2021',
-          title: 'Virtual Meetups Era',
-          description: 'Adapted to the changing world with virtual meetups, reaching JavaScript developers beyond Zurich and bringing in international speakers!',
-          image: '/images/about/milestone-2021.jpg',
+          year: 'March 2025',
+          title: 'Partnerships to the Moon!',
+          description: 'We dipped our toes in the international conference world and started our partnership with React Paris, Code Blossom, on top of our existing conference partnerships with CityJS and Grusp.',
+          image: '/images/community/meetup-3.jpeg',
         },
         {
-          year: '2023',
-          title: 'Return to In-Person + Hybrid',
-          description: 'Back to in-person events while keeping virtual options! Celebrated hitting 300 members with a special anniversary meetup.',
-          image: '/images/about/milestone-2023.jpg',
+          year: 'March 2025',
+          title: 'ZurichJS x Vue Zurich',
+          description: 'We acquired the Vue Zurich meetup and merged it with our community. With our first speaker being Adam Berecz, a well-known Vue.js expert from Hungary and the founder of Vueform',
+          image: '/images/community/vue-zurich.jpeg',
         },
         {
-          year: '2025',
-          title: 'The Journey Continues!',
-          description: 'Looking ahead to more awesome events, growing our community, and exploring the ever-evolving JavaScript ecosystem together!',
-          image: '/images/about/milestone-2025.jpg',
+          year: 'April 2025',
+          title: 'ZurichJS Comes to Smallpdf',
+          description: "Smallpdf welcomed us with open arms, hosting our 4th meetup at their office and becoming one of our gracious hosts alongside Ginetta, novu ag, and Get Your Guide in Zurich.",
+          image: '/images/events/event-4.png',
         },
       ],
       stats: {

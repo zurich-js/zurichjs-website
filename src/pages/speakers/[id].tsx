@@ -123,53 +123,68 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                         </motion.div>
 
                         <div className="space-y-8">
-                            {speaker.talks.map((talk, index) => (
-                                <motion.div
-                                    key={talk.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    className="bg-gray-50 rounded-lg shadow-md overflow-hidden"
-                                >
-                                    <div className="md:flex">
+                            {speaker.talks.map((talk, index) => {
 
-                                        <div className={`p-6 w-full`}>
+                                const upcoming = talk.events?.some(event => new Date(event.date) > new Date());
 
-                                            <div className="flex flex-wrap items-center text-gray-500 gap-x-4 gap-y-2 mb-4">
-                                                {talk.durationMinutes && (
-                                                    <div className="flex items-center">
-                                                        <Clock size={16} className="mr-1" />
-                                                        <span className="text-sm">{talk.durationMinutes} min</span>
-                                                    </div>
-                                                )}
-                                                {talk.durationMinutes && (
-                                                    <div className="flex items-center">
-                                                        <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                                            {talk.durationMinutes < 10 ? 'Lightning Talk' : 'Regular Talk'}
+                                return (
+                                    <motion.div
+                                        key={talk.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
+                                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                                        className="bg-gray-50 rounded-lg shadow-md overflow-hidden"
+                                    >
+                                        <div className="md:flex">
+
+                                            <div className="p-6 w-full">
+                                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
+                                                    <h3 className="text-xl font-bold">{talk.title}</h3>
+                                                    <div className="mt-2 md:mt-0">
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${upcoming
+                                                            ? 'bg-green-100 text-green-800'
+                                                            : 'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                            {upcoming ? 'Upcoming' : 'Past Talk'}
                                                         </span>
                                                     </div>
-                                                )}
-                                            </div>
-
-                                            {talk.description && (
-                                                <p className="text-gray-700 mb-4">{talk.description}</p>
-                                            )}
-
-                                            {talk.tags && talk.tags.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mb-4">
-                                                    {talk.tags.map((tag) => (
-                                                        <span
-                                                            key={tag}
-                                                            className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium"
-                                                        >
-                                                            {tag}
-                                                        </span>
-                                                    ))}
                                                 </div>
-                                            )}
 
-                                            {/* <div className="flex flex-wrap gap-3">
+                                                <div className="flex flex-wrap items-center text-gray-500 gap-x-4 gap-y-2 mb-4">
+                                                    {talk.durationMinutes && (
+                                                        <div className="flex items-center">
+                                                            <Clock size={16} className="mr-1" />
+                                                            <span className="text-sm">{talk.durationMinutes} min</span>
+                                                        </div>
+                                                    )}
+                                                    {talk.durationMinutes && (
+                                                        <div className="flex items-center">
+                                                            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                                                                {talk.durationMinutes < 10 ? 'Lightning Talk' : 'Regular Talk'}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {talk.description && (
+                                                    <p className="text-gray-700 mb-4">{talk.description}</p>
+                                                )}
+
+                                                {talk.tags && talk.tags.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 mb-4">
+                                                        {talk.tags.map((tag) => (
+                                                            <span
+                                                                key={tag}
+                                                                className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium"
+                                                            >
+                                                                {tag}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* <div className="flex flex-wrap gap-3">
                                                 {talk.slidesUrl && (
                                                     <a
                                                         href={talk.slidesUrl}
@@ -191,10 +206,11 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                     </a>
                                                 )}
                                             </div> */}
+                                            </div>
                                         </div>
-                                    </div>
-                                </motion.div>
-                            ))}
+                                    </motion.div>
+                                )
+                            })}
                         </div>
                     </div>
                 </section>

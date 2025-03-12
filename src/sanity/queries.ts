@@ -185,6 +185,12 @@ export const getSpeakers = async (): Promise<Speaker[]> => {
         type,
         tags,
         durationMinutes,
+        "events": *[_type == "events" && references(^._id)]{
+          "id": id.current,
+          title,
+          date,
+          location
+        }
       }
     }`);
 

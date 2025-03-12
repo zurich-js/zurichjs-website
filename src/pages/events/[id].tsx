@@ -469,7 +469,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
                   <div className="relative h-48 w-full rounded overflow-hidden mb-4">
                     <Image
-                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event.address || event.location)}&zoom=15&size=600x300&markers=color:yellow%7C${encodeURIComponent(event.address || event.location)}&key=AIzaSyB8ygeJDxMJGhwmz5YmFv1MlWOCFCkCyM4`}
+                      src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(event.address || event.location)}&zoom=15&size=600x300&markers=color:yellow%7C${encodeURIComponent(event.address || event.location)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
                       alt={`Map of ${event.location}`}
                       fill
                       className="object-cover"

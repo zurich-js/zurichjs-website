@@ -92,7 +92,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   // Share event function
   const shareEvent = async () => {
-    const shareUrl = `${window.location.origin}/events/${event.slug}`;
+    const shareUrl = `${window.location.origin}/events/${event.id}`;
     const shareText = `Join me at ${event.title} on ${event.date} with ZurichJS!`;
 
     if (navigator.share) {

@@ -1,5 +1,4 @@
 import { client } from "./client";
-import get from "lodash.get";
 import { format } from "date-fns";
 import { Speaker, Talk } from "@/types";
 
@@ -45,28 +44,28 @@ interface SanityEvent {
 
 const mapEventData = (event: SanityEvent) => {
   return {
-    id: get(event, "id.current", "") as string,
-    title: get(event, "title", ""),
+    id: event.id?.current || "",
+    title: event.title || "",
     date: event.date ? format(new Date(event.date), "MMMM d, yyyy") : "",
-    time: get(event, "time", ""),
-    location: get(event, "location", ""),
-    address: get(event, "address", ""),
-    attendees: get(event, "attendees", 0),
-    image: get(event, "image.asset.url", null),
-    description: get(event, "description", ""),
-    meetupUrl: get(event, "meetupUrl", ""),
-    talks: get(event, "talks", [])?.map((talk: SanityTalk) => ({
-      id: get(talk, "id.current", ""),
-      title: get(talk, "title", ""),
-      description: get(talk, "description", ""),
-      type: get(talk, "type", ""),
-      tags: get(talk, "tags", []),
-      durationMinutes: get(talk, "durationMinutes", 0),
-      speakers: get(talk, "speakers", [])?.map((speaker: SanitySpeaker) => ({
-        id: get(speaker, "id.current", ""),
-        name: get(speaker, "name", ""),
-        title: get(speaker, "title", ""),
-        image: get(speaker, "image.asset.url", null) ?? '/images/speakers/default.png',
+    time: event.time || "",
+    location: event.location || "",
+    address: event.address || "",
+    attendees: event.attendees || 0,
+    image: event.image?.asset?.url || null,
+    description: event.description || "",
+    meetupUrl: event.meetupUrl || "",
+    talks: event.talks?.map((talk: SanityTalk) => ({
+      id: talk.id?.current || "",
+      title: talk.title || "",
+      description: talk.description || "",
+      type: talk.type || "",
+      tags: talk.tags || [],
+      durationMinutes: talk.durationMinutes || 0,
+      speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
+        id: speaker.id?.current || "",
+        name: speaker.name || "",
+        title: speaker.title || "",
+        image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
       })) || [],
     })) || [],
   };
@@ -184,17 +183,17 @@ export const getSpeakers = async (): Promise<Speaker[]> => {
 
   // Map the data and add talk count
   const speakersWithTalkCount = speakers.map((speaker: SanitySpeaker & { talks: SanityTalk[] }) => ({
-    id: get(speaker, "id", ""),
-    name: get(speaker, "name", ""),
-    title: get(speaker, "title", ""),
-    image: get(speaker, "image.asset.url", null) ?? '/images/speakers/default.png',
-    bio: get(speaker, "bio", ""),
-    website: get(speaker, "website", ""),
-    twitter: get(speaker, "twitter", ""),
-    github: get(speaker, "github", ""),
-    linkedin: get(speaker, "linkedin", ""),
-    talks: get(speaker, "talks", []),
-    talkCount: get(speaker, "talks", []).length
+    id: speaker.id || "",
+    name: speaker.name || "",
+    title: speaker.title || "",
+    image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    bio: speaker.bio || "",
+    website: speaker.website || "",
+    twitter: speaker.twitter || "",
+    github: speaker.github || "",
+    linkedin: speaker.linkedin || "",
+    talks: speaker.talks || [],
+    talkCount: (speaker.talks || []).length
   }));
 
   // Sort by talk count in descending order
@@ -226,23 +225,23 @@ export const getTalks = async (): Promise<Talk[]> => {
 
   // Map the data to a consistent format
   return talks.map((talk: SanityTalk & { events: Array<{ id: string; title: string; date: string; location: string }> }) => ({
-    id: get(talk, "id", ""),
-    title: get(talk, "title", ""),
-    description: get(talk, "description", ""),
-    type: get(talk, "type", ""),
-    tags: get(talk, "tags", []),
-    durationMinutes: get(talk, "durationMinutes", 0),
-    events: get(talk, "events", []).map(event => ({
-      id: get(event, "id", ""),
-      title: get(event, "title", ""),
+    id: talk.id || "",
+    title: talk.title || "",
+    description: talk.description || "",
+    type: talk.type || "",
+    tags: talk.tags || [],
+    durationMinutes: talk.durationMinutes || 0,
+    events: (talk.events || []).map(event => ({
+      id: event.id || "",
+      title: event.title || "",
       date: event.date ? format(new Date(event.date), "MMMM d, yyyy") : "",
-      location: get(event, "location", "")
+      location: event.location || ""
     })),
-    speakers: get(talk, "speakers", [])?.map((speaker: SanitySpeaker) => ({
-      id: get(speaker, "id.current", ""),
-      name: get(speaker, "name", ""),
-      title: get(speaker, "title", ""),
-      image: get(speaker, "image.asset.url", null) ?? '/images/speakers/default.png',
+    speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
+      id: speaker.id?.current || "",
+      name: speaker.name || "",
+      title: speaker.title || "",
+      image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
     })) || [],
   }));
 };

@@ -32,6 +32,7 @@ export default function Header() {
     { name: 'Speakers', path: '/speakers' },
     { name: 'CFP', path: '/cfp' },
     { name: 'Partnerships', path: '/partnerships' },
+    { name: 'Support', path: '/support' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];

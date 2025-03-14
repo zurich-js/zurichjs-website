@@ -30,7 +30,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
         openGraph={{
           title: "Contact ZurichJS | JavaScript Community in Zurich",
           description: "Get in touch with the ZurichJS team - we're happy to answer your questions about our JavaScript community in Zurich.",
-          image: "/images/community/pic-1.png",
+          image: "/api/og/contact",
           type: "website"
         }}
       />

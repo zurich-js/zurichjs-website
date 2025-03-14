@@ -6,13 +6,23 @@ export const config = {
 };
 
 export default async function handler() {
+  console.log('Starting OG image generation for speakers');
   try {
     // Fetch speakers data
+    console.log('Fetching speakers data');
     const speakers = await getSpeakers();
+    console.log(`Fetched ${speakers.length} speakers`);
     
     // Limit to a reasonable number for the grid
     const displaySpeakers = speakers.slice(0, 6);
+    console.log(`Using ${displaySpeakers.length} speakers for display`);
     
+    // Log speaker data for debugging
+    displaySpeakers.forEach((speaker, index) => {
+      console.log(`Speaker ${index + 1}: ${speaker.name || 'Unknown'}, Image: ${speaker.image ? 'Yes' : 'No'}`);
+    });
+    
+    console.log('Generating image response');
     return new ImageResponse(
       (
         <div
@@ -117,6 +127,14 @@ export default async function handler() {
     );
   } catch (error) {
     console.error('Error generating OG image:', error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
     return new Response(`Failed to generate image: ${error instanceof Error ? error.message : 'Unknown error'}`, { 
       status: 500 
     });

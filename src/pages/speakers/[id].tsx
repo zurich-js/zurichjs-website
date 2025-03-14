@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
@@ -7,6 +6,7 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getSpeakers } from '@/sanity/queries';
 import { Speaker } from '@/types';
+import SEO from '@/components/SEO';
 
 
 export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
@@ -26,16 +26,42 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
         );
     }
 
+    // SEO metadata
+    const title = `${speaker.name} | Speaker at ZurichJS`;
+    const description = speaker.bio 
+        ? `${speaker.bio.substring(0, 150)}${speaker.bio.length > 150 ? '...' : ''}`
+        : `${speaker.name} is a speaker at ZurichJS events, sharing expertise on ${speaker.talks.map(talk => talk.tags?.join(', ')).join(', ')}.`;
+    
     return (
         <Layout>
-            <Head>
-                <title>{speaker.name} | Speaker | ZurichJS</title>
-                <meta name="description" content={`${speaker.name} is a speaker at ZurichJS. Learn more about their talks and expertise in JavaScript.`} />
-            </Head>
+            <SEO
+                title={title}
+                description={description}
+                canonical={`https://zurichjs.com/speakers/${speaker.id}`}
+                openGraph={{
+                    title,
+                    description,
+                    type: 'profile',
+                    url: `https://zurichjs.org/speakers/${speaker.id}`,
+                    image: speaker.image,
+                    profile: {
+                        firstName: speaker.name.split(' ')[0],
+                        lastName: speaker.name.split(' ').slice(1).join(' '),
+                        username: speaker.twitter || undefined,
+                    }
+                }}
+                twitter={{
+                    cardType: 'summary_large_image',
+                    handle: speaker.twitter ? `@${speaker.twitter}` : '',
+                }}
+                additionalMetaTags={[
+                    { name: 'keywords', content: `${speaker.name}, JavaScript, ZurichJS, tech talks, ${speaker.talks.flatMap(talk => talk.tags || []).join(', ')}` }
+                ]}
+            />
 
             <div className="pt-20">
                 {/* Speaker Hero Section */}
-                <section className="bg-yellow-400 py-16">
+                <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
                     <div className="container mx-auto px-6">
                         <div className="flex flex-col md:flex-row items-center bg-white rounded-xl shadow-xl overflow-hidden">
                             <div className="md:w-1/3 h-80 relative w-full">

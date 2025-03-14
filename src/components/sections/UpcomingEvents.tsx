@@ -1,17 +1,7 @@
 import { motion } from 'framer-motion';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
-
-// Define TypeScript interfaces
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  image: string;
-  attendees: number;
-}
+import type { Event } from '@/sanity/queries';
 
 interface UpcomingEventsProps {
   events: Event[];

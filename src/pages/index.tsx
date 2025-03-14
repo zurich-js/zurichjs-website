@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
@@ -9,20 +8,11 @@ import SpeakerGrid from '@/components/sections/SpeakerGrid';
 import Partners from '@/components/sections/Partners';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
+import type { Event } from '@/sanity/queries';
 import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
 import { getPartners } from '@/data';
+import SEO from '@/components/SEO';
 
-
-// Define TypeScript interfaces for our data structures
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  image: string;
-  attendees: number;
-}
 
 interface Speaker {
   id: string;
@@ -54,122 +44,112 @@ interface HomeProps {
 }
 
 export default function Home({ upcomingEvents, featuredSpeakers, stats, partners }: HomeProps) {
+  // Get the next event date dynamically
+  const nextEventDate = upcomingEvents && upcomingEvents.length > 0 
+    ? new Date(upcomingEvents[0].date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    : 'Coming soon';
+
   return (
     <Layout>
-      <Head>
-        <title>ZurichJS | JavaScript Community in Zurich, Switzerland</title>
-        <meta name="description" content="ZurichJS is the community for JavaScript enthusiasts in Zurich. Join us for regular meetups, workshops, and networking with fellow developers." />
-      </Head>
+      <SEO 
+        title="ZurichJS | JavaScript Community in Zurich, Switzerland"
+        description="ZurichJS is the community for JavaScript enthusiasts in Zurich. Join us for regular meetups, workshops, and networking with fellow developers."
+        openGraph={{
+          title: "ZurichJS | JavaScript Community in Zurich",
+          description: "Join Zurich's vibrant community for JavaScript enthusiasts. Connect, learn, and grow with fellow developers.",
+          image: '/api/og/home',
+          type: 'website'
+        }}
+      />
+      
 
       {/* Hero Section with Animation */}
-      <section className="relative overflow-hidden bg-yellow-400 text-gray-900">
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 z-0 opacity-20">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.2 }}
-            transition={{ duration: 1 }}
-            className="absolute inset-0"
-            style={{
-              backgroundImage: "url('/images/hero-bg.svg')",
-              backgroundSize: "cover"
-            }}
-            aria-hidden="true"
-          />
-        </div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900">
 
         <div className="container mx-auto px-6 py-20 md:py-28 relative z-10">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 md:pr-12">
+          <div className="flex flex-col md:flex-row items-center justify-between">
+            <div className="md:w-3/5 md:pr-12">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <h1 className="text-5xl md:text-6xl font-bold mb-6 text-black">
+                <h1 className="text-6xl md:text-7xl font-extrabold text-black mb-4">
                   <span className="block">Zurich</span>
-                  <motion.span
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="text-7xl md:text-8xl font-black"
-                  >
-                    JS
-                  </motion.span>
+                  <span className="text-7xl md:text-8xl font-black bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700">JS</span>
                 </h1>
+                
                 <h2 className="text-2xl md:text-3xl font-medium mb-6 text-black">
-                  Zurich&apos;s vibrant community for JavaScript enthusiasts 🚀
+                  Where Zurich&apos;s JavaScript wizards unite! ✨
                 </h2>
-                <p className="text-lg mb-8 text-black">
-                  Whether you&apos;re coding with React, Angular, Vue, vanilla JS, or Node.js –
-                  this community is for everyone building amazing things with JavaScript! Join us to connect,
-                  learn, and grow alongside fellow developers from all backgrounds in Zurich!
+                <p className="text-lg mb-8 text-black max-w-2xl">
+                  From React ninjas to Node gurus, TypeScript enthusiasts to vanilla JS lovers – 
+                  we&apos;re building a vibrant community of developers who create amazing things with JavaScript.
+                  Connect, learn, and level up your skills in Switzerland&apos;s most dynamic tech community!
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button href="/events" variant="primary" size="lg">
+                  <Button href="/events" variant="primary" size="lg" className="transform hover:scale-105 transition-transform">
                     Join Next Meetup 🎉
                   </Button>
-                  <Button href="/cfp" variant="secondary" size="lg">
+                  <Button href="/cfp" variant="secondary" size="lg" className="transform hover:scale-105 transition-transform">
                     Submit a Talk 🎤
                   </Button>
                 </div>
               </motion.div>
             </div>
-            <div className="md:w-1/2 mt-12 md:mt-0">
+            
+            <div className="md:w-2/5 mt-12 md:mt-0">
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="relative"
+                className="relative bg-white rounded-xl shadow-xl overflow-hidden border-4 border-gray-900"
               >
-                {/* ZurichJS Logo Animation */}
-                <svg width="100%" height="100%" viewBox="0 0 750 749" className="drop-shadow-lg" aria-label="ZurichJS Logo">
-                  <motion.path
-                    d="M747.5 1.50018L747.5 749L0.5 748.999L747.5 1.50018Z"
-                    fill="#F1E271"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeInOut" }}
-                  />
-                  <motion.path
-                    d="M0.5 749V1.5L374 375.5L0.5 749Z"
-                    fill="#248BCC"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeInOut", delay: 0.3 }}
-                  />
-                  <motion.path
-                    d="M748 1.5L374 375.5L0.5 1.5H748Z"
-                    fill="white"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeInOut", delay: 0.6 }}
-                  />
-                  <motion.path
-                    d="M376 643L414 620C419.5 629 429.5 647 448.5 644C467.5 641 469.5 629 469.5 620V455H516C516.333 510 517 613.858 517 621.5C517 642 504.5 686 449 686C400 686 383 658 376 643Z"
-                    fill="black"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeInOut", delay: 0.9 }}
-                  />
-                  <motion.path
-                    d="M580.5 616L542 638C547.5 647.333 560 666.417 582 676.5C606 687.5 643.5 690 669.5 678C692.515 667.378 706 646 706 622.5C706 595 699.5 571.5 653 551C615.5 534.468 602.5 530 602.5 513.5C602.5 508.5 605.5 493 627 493C644 493 652.5 506.5 655.5 513.5L692.5 489.5C684.5 476.5 668 452 627 452C586 452 556 476.5 556 513.5C556 550.5 579.615 572.667 619 587.5C657.5 602 659 613.199 659 620C659 627.5 654 644.5 627.5 644.5C600 644.5 585.667 625.667 580.5 616Z"
-                    fill="black"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeInOut", delay: 1.2 }}
-                  />
-                </svg>
-                {/* Next meetup date overlay */}
-                <motion.div
-                  className="absolute top-0 right-0 bg-black text-yellow-400 px-4 py-2 rounded-lg font-mono"
-                  initial={{ x: 50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 1.5 }}
-                  aria-label="Next meetup date"
-                >
-                  Mar 20, 2025
-                </motion.div>
+                {/* Next event card */}
+                {upcomingEvents && upcomingEvents.length > 0 ? (
+                  <div className="relative p-6">
+                    <div className="absolute -top-1 -right-1 bg-black text-yellow-400 px-4 py-2 rounded-bl-lg font-mono z-10 transform rotate-2 shadow-md">
+                      Next Event
+                    </div>
+                    <div className="pt-8">
+                      <h3 className="text-2xl font-bold mb-3">{upcomingEvents[0].title}</h3>
+                      <div className="flex items-center mb-3 text-gray-800">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="font-medium">{nextEventDate}</span>
+                      </div>
+                      <div className="flex items-center mb-4 text-gray-800">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className="font-medium">{upcomingEvents[0].location}</span>
+                      </div>
+                      <div className="flex items-center text-sm bg-gray-100 p-3 rounded-lg">
+                        <svg className="w-5 h-5 mr-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span className="font-medium">{upcomingEvents[0].attendees || 0} developers joining</span>
+                      </div>
+                      <motion.div 
+                        whileHover={{ scale: 1.03 }}
+                        className="mt-4"
+                      >
+                        <a 
+                          href={upcomingEvents[0].meetupUrl || `/events/${upcomingEvents[0].id}`}
+                          className="block bg-yellow-400 text-black font-bold py-3 px-4 rounded-lg text-center shadow-md hover:bg-yellow-500 transition-colors"
+                        >
+                          Reserve Your Spot →
+                        </a>
+                      </motion.div>
+                    </div>
+                  </div>
+                ) : null}
               </motion.div>
             </div>
           </div>
@@ -183,6 +163,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
           >
             <Stats stats={stats} />
           </motion.div>
+
         </div>
       </section>
 

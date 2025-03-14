@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -8,6 +7,7 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getPastEvents } from '@/sanity/queries';
 import { getUpcomingEvents } from '@/sanity/queries';
+import SEO from '@/components/SEO';
 // import { trackEventView } from '@/lib/analytics';
 
 // Define our TypeScript interfaces
@@ -107,17 +107,20 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
   return (
     <Layout>
-      <Head>
-        <title>{activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'} | ZurichJS</title>
-        <meta 
-          name="description" 
-          content="Join the vibrant JavaScript community in Zurich! Check out our upcoming meetups, workshops, and talks for JavaScript enthusiasts of all levels."
-        />
-      </Head>
+      <SEO 
+        title={`${activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'} | ZurichJS`}
+        description="Join the vibrant JavaScript community in Zurich! Check out our upcoming meetups, workshops, and talks for JavaScript enthusiasts of all levels."
+        openGraph={{
+          type: 'website',
+          title: `${activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'} | ZurichJS`,
+          description: "Join the vibrant JavaScript community in Zurich! Check out our upcoming meetups, workshops, and talks for JavaScript enthusiasts of all levels.",
+          image: upcomingEvents[0]?.image || '/api/og/home',
+        }}
+      />
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-yellow-400 py-16">
+        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

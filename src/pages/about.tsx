@@ -1,9 +1,9 @@
-import Head from 'next/head';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Code, Users, Calendar, Heart, Sparkles, Coffee, MessageSquare } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
+import SEO from '@/components/SEO';
 
 // Define our TypeScript interfaces
 interface TeamMember {
@@ -38,10 +38,16 @@ interface AboutPageProps {
 export default function About({ teamMembers, milestones, stats }: AboutPageProps) {
   return (
     <Layout>
-      <Head>
-        <title>About ZurichJS | JavaScript Community in Zurich</title>
-        <meta name="description" content="Learn about ZurichJS - the vibrant JavaScript community in Zurich bringing together developers, enthusiasts and tech lovers since 2015." />
-      </Head>
+      <SEO 
+        title="About ZurichJS | JavaScript Community in Zurich"
+        description="Learn about ZurichJS - the vibrant JavaScript community in Zurich bringing together developers, enthusiasts and tech lovers since 2024."
+        openGraph={{
+          title: "About ZurichJS | JavaScript Community in Zurich",
+          description: "Learn about ZurichJS - the vibrant JavaScript community in Zurich bringing together developers, enthusiasts and tech lovers since 2024.",
+          image: "/images/community/pic-1.png",
+          type: "website"
+        }}
+      />
 
       <div className="pt-20">
         {/* Hero Section */}

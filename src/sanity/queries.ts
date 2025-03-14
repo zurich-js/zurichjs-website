@@ -45,7 +45,7 @@ interface SanityEvent {
 
 const mapEventData = (event: SanityEvent) => {
   return {
-    id: get(event, "id.current", ""),
+    id: get(event, "id.current", "") as string,
     title: get(event, "title", ""),
     date: event.date ? format(new Date(event.date), "MMMM d, yyyy") : "",
     time: get(event, "time", ""),
@@ -71,6 +71,8 @@ const mapEventData = (event: SanityEvent) => {
     })) || [],
   };
 };
+
+export type Event = ReturnType<typeof mapEventData>;
 
 export const getUpcomingEvents = async () => {
   const events = await client.fetch(`*[_type == "events" && date > now()] {

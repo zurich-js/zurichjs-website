@@ -8,11 +8,12 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
+  const isHomePage = router.pathname === '/';
 
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 50);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -47,7 +48,7 @@ export default function Header() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex items-center"
+              className={`flex items-center ${isHomePage && !scrolled ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
             >
               <span className="font-bold text-3xl">Zurich<span className="font-black">JS</span></span>
             </motion.div>

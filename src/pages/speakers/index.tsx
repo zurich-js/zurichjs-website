@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -6,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin, Users, TrendingUp, Clock, Award } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
+import SEO from '@/components/SEO';
 import { getSpeakers, getTalks } from '@/sanity/queries';
 import { Speaker, Talk } from '@/types';
 
@@ -64,14 +64,20 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
 
   return (
     <Layout>
-      <Head>
-        <title>Speakers | ZurichJS</title>
-        <meta name="description" content="Meet the amazing speakers who have shared their JavaScript knowledge at ZurichJS meetups." />
-      </Head>
+      <SEO 
+        title="Speakers | ZurichJS"
+        description="Meet the amazing speakers who have shared their JavaScript knowledge at ZurichJS meetups."
+        openGraph={{
+          title: "ZurichJS Speakers",
+          description: "Meet the amazing speakers who have shared their JavaScript knowledge at ZurichJS meetups.",
+          image: `/api/og/speakers`, // Dynamic OG image
+          type: "website"
+        }}
+      />
 
       <div className="pt-20">
         {/* Hero Section with Topic Insights */}
-        <section className="bg-yellow-400 py-16">
+        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

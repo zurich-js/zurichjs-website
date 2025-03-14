@@ -1,9 +1,9 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
-import Head from 'next/head';
 import { motion } from 'framer-motion';
 import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
+import SEO from '@/components/SEO';
 
 interface FormState {
   firstName: string;
@@ -98,7 +98,7 @@ export default function CFP() {
     // Form validation
     if (!formState.firstName || !formState.lastName || !formState.email || 
         !formState.linkedinProfile || !formState.jobTitle || 
-        !formState.title || !formState.description) {
+        !formState.title || !formState.description || !formState.speakerImage) {
       setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
       return;
     }
@@ -170,29 +170,35 @@ export default function CFP() {
 
   return (
     <Layout>
-      <Head>
-        <title>Submit a Talk | ZurichJS</title>
-        <meta name="description" content="Submit your talk proposal for an upcoming ZurichJS meetup. Share your JavaScript knowledge with the community!" />
-      </Head>
+      <SEO 
+        title="Submit a Talk | ZurichJS"
+        description="Submit your talk proposal for an upcoming ZurichJS meetup. Share your JavaScript knowledge with the community!"
+        openGraph={{
+          title: "Submit a Talk | ZurichJS",
+          description: "Share your JavaScript knowledge with the ZurichJS community by submitting a talk proposal for our upcoming meetups.",
+          image: "/api/og/cfp",
+          type: "website"
+        }}
+      />
 
-      <div className="pt-20 bg-gray-50">
+      <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-yellow-400 py-16">
+        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
           <div className="container mx-auto px-6">
             <div className="flex flex-col md:flex-row items-center">
-              <div className="md:w-1/2 mb-10 md:mb-0">
+              <div className="md:w-1/2 mb-10 md:mb-0 mr-4">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  <h1 className="text-4xl md:text-5xl font-bold mb-3 md:mb-4">
                     Call for Papers 🎤
                   </h1>
-                  <p className="text-xl mb-6">
+                  <p className="text-lg md:text-xl mb-4 md:mb-6">
                     Share your JavaScript knowledge with the ZurichJS community!
                   </p>
-                  <p className="text-lg mb-8">
+                  <p className="text-base md:text-lg mb-6 md:mb-8">
                     We&apos;re constantly looking for speakers for our upcoming meetups.
                     Whether you&apos;re a seasoned presenter or a first-timer, we&apos;d love to hear from you!
                   </p>
@@ -205,7 +211,7 @@ export default function CFP() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="bg-white p-8 rounded-lg shadow-lg"
                 >
-                  <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex flex-col sm:flex-row gap-6">
                     <div className="flex items-start">
                       <Mic className="text-yellow-500 mr-3 flex-shrink-0" />
                       <div>
@@ -450,7 +456,7 @@ export default function CFP() {
                   
                   <div className="mb-6">
                     <label htmlFor="speakerImage" className="block text-gray-700 mb-2">
-                      Profile Image (optional)
+                      Profile Image *
                     </label>
                     <div className="flex items-center">
                       <div className="flex-1">
@@ -467,6 +473,7 @@ export default function CFP() {
                             onChange={handleImageChange}
                             accept="image/*"
                             className="hidden"
+                            required
                           />
                         </label>
                       </div>

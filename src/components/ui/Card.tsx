@@ -2,17 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, Sparkles } from 'lucide-react';
-
-// Define TypeScript interfaces
-interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  image: string;
-  attendees: number;
-}
+import type { Event } from '@/sanity/queries';
 
 interface Speaker {
   id: string;
@@ -45,7 +35,7 @@ export default function Card({
         <Link href={`/events/${eventItem.id}`} className="block">
           <div className="relative h-64 w-full">
             <Image
-              src={eventItem.image || '/images/events/default.jpg'}
+              src={(eventItem.image || '/images/events/default.jpg') as string}
               alt={`${eventItem.title} - ZurichJS event`}
               fill
               className="object-cover"

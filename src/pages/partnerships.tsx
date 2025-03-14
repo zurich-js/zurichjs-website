@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import SEO from '@/components/SEO';
 import Image from 'next/image';
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
@@ -136,10 +136,16 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
   return (
     <Layout>
-      <Head>
-        <title>Partnership Opportunities | ZurichJS</title>
-        <meta name="description" content="Support the ZurichJS community and connect with JavaScript developers in Zurich. Explore our partnership opportunities and help grow the tech community." />
-      </Head>
+      <SEO 
+        title="Partnership Opportunities | ZurichJS"
+        description="Support the ZurichJS community and connect with JavaScript developers in Zurich. Explore our partnership opportunities and help grow the tech community."
+        openGraph={{
+          title: "Partner with ZurichJS",
+          description: "Support the ZurichJS community and connect with JavaScript developers in Zurich.",
+          image: "/api/og/partnerships",
+          type: "website"
+        }}
+      />
 
       <div className="pt-20">
         {/* Hero Section */}

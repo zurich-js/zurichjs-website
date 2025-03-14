@@ -1,4 +1,3 @@
-import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -7,6 +6,7 @@ import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, Building, Chevron
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getEventById, getUpcomingEvents, getPastEvents } from '@/sanity/queries';
+import SEO from '@/components/SEO';
 
 // Define our TypeScript interfaces
 interface Speaker {
@@ -121,22 +121,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   return (
     <Layout>
-      <Head>
-        <title>{event.title} | ZurichJS</title>
-        <meta
-          name="description"
-          content={`Join us for ${event.title} on ${event.date} at ${event.location}. ${event.description.slice(0, 120)}...`}
-        />
-        <meta property="og:title" content={`${event.title} | ZurichJS`} />
-        <meta property="og:description" content={event.description.slice(0, 120) + '...'} />
-        <meta property="og:image" content={`https://zurichjs.ch${event.image}`} />
-        <meta property="og:type" content="event" />
-        <meta property="og:url" content={`https://zurichjs.ch/events/${event.slug}`} />
-      </Head>
+      <SEO 
+        title={`${event.title} | ZurichJS`}
+        description={`Join us for ${event.title} on ${event.date} at ${event.location}. ${event.description.slice(0, 120)}...`}
+        openGraph={{
+          title: `${event.title} | ZurichJS`,
+          description: event.description.slice(0, 120) + '...',
+          type: 'website',
+          image: event.image,
+          url: `/events/${event.id}`
+        }}
+      />
 
-      <div className="pt-20">
+      <div className="pt-20 bg-gradient-to-br from-yellow-400 to-amber-500">
         {/* Hero Section */}
-        <section className="bg-yellow-400 py-12">
+        <section className="py-12">
           <div className="container mx-auto px-6">
             <div className="mb-4">
               <Link href="/events" className="inline-flex items-center text-black hover:underline">

@@ -183,15 +183,8 @@ export const getSpeakers = async (): Promise<Speaker[]> => {
 
   // Map the data and add talk count
   const speakersWithTalkCount = speakers.map((speaker: SanitySpeaker & { talks: SanityTalk[] }) => ({
-    id: speaker.id || "",
-    name: speaker.name || "",
-    title: speaker.title || "",
+    ...speaker,
     image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
-    bio: speaker.bio || "",
-    website: speaker.website || "",
-    twitter: speaker.twitter || "",
-    github: speaker.github || "",
-    linkedin: speaker.linkedin || "",
     talks: speaker.talks || [],
     talkCount: (speaker.talks || []).length
   }));

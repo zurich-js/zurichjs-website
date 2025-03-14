@@ -4,7 +4,7 @@ import { getSpeakers } from '@/sanity/queries'
 import { getPartners } from '@/data'
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 }
 
 export default async function handler() {

@@ -2,7 +2,7 @@ import { ImageResponse } from '@vercel/og';
 import { getSpeakers } from '@/sanity/queries';
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 };
 
 export default async function handler() {

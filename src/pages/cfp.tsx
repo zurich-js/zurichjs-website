@@ -1,37 +1,49 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import Head from 'next/head';
 import { motion } from 'framer-motion';
-import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag } from 'lucide-react';
+import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 
 interface FormState {
-  name: string;
+  firstName: string;
+  lastName: string;
+  jobTitle: string;
   email: string;
+  linkedinProfile: string;
+  githubProfile: string;
+  twitterHandle: string;
+  speakerImage: File | null;
   title: string;
   description: string;
   talkLength: string;
   talkLevel: 'beginner' | 'intermediate' | 'advanced';
   topics: string[];
-  githubProfile: string;
-  twitterHandle: string;
   submitted: boolean;
+  isSubmitting: boolean;
   error: string;
+  imagePreview: string | null;
 }
 
 export default function CFP() {
   const [formState, setFormState] = useState<FormState>({
-    name: '',
+    firstName: '',
+    lastName: '',
+    jobTitle: '',
     email: '',
-    title: '',
-    description: '',
-    talkLength: '30',
-    talkLevel: 'intermediate',
-    topics: [],
+    linkedinProfile: '',
     githubProfile: '',
     twitterHandle: '',
+    speakerImage: null,
+    title: '',
+    description: '',
+    talkLength: '25',
+    talkLevel: 'intermediate',
+    topics: [],
     submitted: false,
+    isSubmitting: false,
     error: '',
+    imagePreview: null,
   });
 
   const talkTopics = [
@@ -65,26 +77,95 @@ export default function CFP() {
     setFormState((prev) => ({ ...prev, topics: newTopics }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Create a preview URL for the image
+      const previewUrl = URL.createObjectURL(file);
+      
+      setFormState((prev) => ({ 
+        ...prev, 
+        speakerImage: file,
+        imagePreview: previewUrl
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Here you would connect to your API or CMS to save the submission
-    
+
     // Form validation
-    if (!formState.name || !formState.email || !formState.title || !formState.description) {
+    if (!formState.firstName || !formState.lastName || !formState.email || 
+        !formState.linkedinProfile || !formState.jobTitle || 
+        !formState.title || !formState.description) {
       setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
       return;
     }
-    
+
     if (formState.topics.length === 0) {
       setFormState((prev) => ({ ...prev, error: 'Please select at least one topic' }));
       return;
     }
-    
-    // Simulate successful submission
-    setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
-    
-    // In reality, you would submit to your API here
-    // submitToCMS(formState);
+
+    // Set loading state
+    setFormState((prev) => ({ ...prev, isSubmitting: true, error: '' }));
+
+    try {
+      // Create form data for file upload
+      const formData = new FormData();
+      
+      // Combine first and last name
+      const fullName = `${formState.firstName} ${formState.lastName}`;
+      
+      // Add all form fields to formData
+      formData.append('name', fullName);
+      formData.append('firstName', formState.firstName);
+      formData.append('lastName', formState.lastName);
+      formData.append('jobTitle', formState.jobTitle);
+      formData.append('email', formState.email);
+      formData.append('linkedinProfile', formState.linkedinProfile);
+      formData.append('githubProfile', formState.githubProfile || '');
+      formData.append('twitterHandle', formState.twitterHandle || '');
+      formData.append('title', formState.title);
+      formData.append('description', formState.description);
+      formData.append('talkLength', formState.talkLength);
+      formData.append('talkLevel', formState.talkLevel);
+      formData.append('topics', JSON.stringify(formState.topics));
+      
+      // Add the image if one was selected
+      if (formState.speakerImage) {
+        formData.append('speakerImage', formState.speakerImage);
+      }
+
+      // Submit to our API endpoint
+      const response = await fetch('/api/submit-talk', {
+        method: 'POST',
+        body: formData, // Using FormData instead of JSON
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'An error occurred while submitting your talk');
+      }
+
+      // Show success state
+      setFormState((prev) => ({
+        ...prev,
+        submitted: true,
+        isSubmitting: false,
+        error: ''
+      }));
+
+    } catch (error: unknown) {
+      console.error('Submission error:', error);
+      setFormState((prev) => ({
+        ...prev,
+        isSubmitting: false,
+        error: error instanceof Error ? error.message : 'An error occurred while submitting your talk'
+      }));
+    }
   };
 
   return (
@@ -112,7 +193,7 @@ export default function CFP() {
                     Share your JavaScript knowledge with the ZurichJS community!
                   </p>
                   <p className="text-lg mb-8">
-                    We&apos;re constantly looking for speakers for our upcoming meetups. 
+                    We&apos;re constantly looking for speakers for our upcoming meetups.
                     Whether you&apos;re a seasoned presenter or a first-timer, we&apos;d love to hear from you!
                   </p>
                 </motion.div>
@@ -173,7 +254,7 @@ export default function CFP() {
                 <FileText className="text-yellow-500 mb-4" size={32} />
                 <h3 className="text-xl font-bold mb-2">Talk Content</h3>
                 <p className="text-gray-600">
-                  Your talk should focus on JavaScript or related web technologies. 
+                  Your talk should focus on JavaScript or related web technologies.
                   We welcome topics from beginner to advanced levels.
                 </p>
               </motion.div>
@@ -188,8 +269,8 @@ export default function CFP() {
                 <Clock className="text-yellow-500 mb-4" size={32} />
                 <h3 className="text-xl font-bold mb-2">Talk Length</h3>
                 <p className="text-gray-600">
-                  We offer slots for lightning talks (10 min), standard talks (30 min), 
-                  and deep dives (45 min).
+                  We offer slots for lightning talks (5 min), standard talks (25 min),
+                  and deep dives (35 min).
                 </p>
               </motion.div>
 
@@ -203,7 +284,7 @@ export default function CFP() {
                 <Calendar className="text-yellow-500 mb-4" size={32} />
                 <h3 className="text-xl font-bold mb-2">Upcoming Events</h3>
                 <p className="text-gray-600">
-                  We typically host meetups monthly. Your talk will be scheduled 
+                  We typically host meetups monthly. Your talk will be scheduled
                   based on the theme and availability.
                 </p>
               </motion.div>
@@ -232,7 +313,7 @@ export default function CFP() {
                   <CheckCircle size={64} className="mx-auto mb-4 text-green-500" />
                   <h3 className="text-2xl font-bold mb-2">Thank You for Your Submission!</h3>
                   <p className="mb-6">
-                    We&apos;ve received your talk proposal and will review it shortly. 
+                    We&apos;ve received your talk proposal and will review it shortly.
                     Our team will contact you within the next 2 weeks regarding the status of your submission.
                   </p>
                   <Button href="/" variant="secondary">
@@ -247,6 +328,7 @@ export default function CFP() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   onSubmit={handleSubmit}
                   className="bg-white p-8 rounded-lg shadow-md"
+                  encType="multipart/form-data"
                 >
                   {formState.error && (
                     <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">
@@ -256,43 +338,88 @@ export default function CFP() {
 
                   <div className="mb-6">
                     <h3 className="text-xl font-bold mb-4">Speaker Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
-                        <label htmlFor="name" className="block text-gray-700 mb-2">
-                          Name *
+                        <label htmlFor="firstName" className="block text-gray-700 mb-2">
+                          First Name *
                         </label>
                         <input
                           type="text"
-                          id="name"
-                          name="name"
-                          value={formState.name}
+                          id="firstName"
+                          name="firstName"
+                          value={formState.firstName}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
                           required
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="block text-gray-700 mb-2">
-                          Email *
+                        <label htmlFor="lastName" className="block text-gray-700 mb-2">
+                          Last Name *
                         </label>
                         <input
-                          type="email"
-                          id="email"
-                          name="email"
-                          value={formState.email}
+                          type="text"
+                          id="lastName"
+                          name="lastName"
+                          value={formState.lastName}
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
                           required
                         />
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mb-6">
+                    
+                    <div className="mb-4">
+                      <label htmlFor="jobTitle" className="block text-gray-700 mb-2">
+                        Job Title *
+                      </label>
+                      <input
+                        type="text"
+                        id="jobTitle"
+                        name="jobTitle"
+                        value={formState.jobTitle}
+                        onChange={handleInputChange}
+                        placeholder="Senior Frontend Developer, Tech Lead, etc."
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label htmlFor="email" className="block text-gray-700 mb-2">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        value={formState.email}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label htmlFor="linkedinProfile" className="block text-gray-700 mb-2">
+                        LinkedIn Profile URL *
+                      </label>
+                      <input
+                        type="url"
+                        id="linkedinProfile"
+                        name="linkedinProfile"
+                        value={formState.linkedinProfile}
+                        onChange={handleInputChange}
+                        placeholder="https://linkedin.com/in/your-profile"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        required
+                      />
+                    </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label htmlFor="githubProfile" className="block text-gray-700 mb-2">
-                          GitHub Profile
+                          GitHub Profile (optional)
                         </label>
                         <input
                           type="text"
@@ -306,7 +433,7 @@ export default function CFP() {
                       </div>
                       <div>
                         <label htmlFor="twitterHandle" className="block text-gray-700 mb-2">
-                          Twitter Handle
+                          Twitter Handle (optional)
                         </label>
                         <input
                           type="text"
@@ -319,6 +446,42 @@ export default function CFP() {
                         />
                       </div>
                     </div>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <label htmlFor="speakerImage" className="block text-gray-700 mb-2">
+                      Profile Image (optional)
+                    </label>
+                    <div className="flex items-center">
+                      <div className="flex-1">
+                        <label 
+                          htmlFor="speakerImage" 
+                          className="flex items-center gap-2 w-full px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                        >
+                          <Upload size={18} />
+                          <span>{formState.speakerImage ? formState.speakerImage.name : 'Choose an image'}</span>
+                          <input
+                            type="file"
+                            id="speakerImage"
+                            name="speakerImage"
+                            onChange={handleImageChange}
+                            accept="image/*"
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                      
+                      {formState.imagePreview && (
+                        <div className="ml-4 w-16 h-16 relative flex-shrink-0">
+                          <img 
+                            src={formState.imagePreview} 
+                            alt="Profile preview" 
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Recommended: Square image, at least 400x400px</p>
                   </div>
 
                   <div className="mb-6">
@@ -365,9 +528,9 @@ export default function CFP() {
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
                           required
                         >
-                          <option value="10">Lightning Talk (10 min)</option>
-                          <option value="30">Standard Talk (30 min)</option>
-                          <option value="45">Deep Dive (45 min)</option>
+                          <option value="5">Lightning Talk (5 min)</option>
+                          <option value="25">Standard Talk (25 min)</option>
+                          <option value="35">Deep Dive (35 min)</option>
                         </select>
                       </div>
                       <div>
@@ -399,11 +562,10 @@ export default function CFP() {
                         <div
                           key={topic}
                           onClick={() => handleTopicChange(topic)}
-                          className={`cursor-pointer flex items-center px-3 py-1.5 rounded-full ${
-                            formState.topics.includes(topic)
+                          className={`cursor-pointer flex items-center px-3 py-1.5 rounded-full ${formState.topics.includes(topic)
                               ? 'bg-yellow-400 text-black'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
+                            }`}
                         >
                           <Tag size={14} className="mr-1" />
                           {topic}
@@ -413,8 +575,23 @@ export default function CFP() {
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="submit" variant="primary" size="lg">
-                      Submit Your Talk 🎤
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      size="lg"
+                      disabled={formState.isSubmitting}
+                    >
+                      {formState.isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </>
+                      ) : (
+                        'Submit Your Talk 🎤'
+                      )}
                     </Button>
                   </div>
                 </motion.form>

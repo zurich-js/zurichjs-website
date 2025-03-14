@@ -80,7 +80,7 @@ export default async function handler() {
               }}>
                 {speaker.image ? (
                   <img
-                    src="https://cdn.sanity.io/images/viqjrovw/production/a8f4c06973e34c942c9c73ed6a62bb4055bb6816-1280x1865.png"
+                    src={`${speaker.image}?h=150`}
                     alt={speaker.name}
                     width={120}
                     height={120}

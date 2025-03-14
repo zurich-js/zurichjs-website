@@ -149,7 +149,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-yellow-400 py-16">
+        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
           <div className="container mx-auto px-6">
             <div className="flex flex-col lg:flex-row items-center">
               <motion.div

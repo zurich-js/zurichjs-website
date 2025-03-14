@@ -144,7 +144,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </Link>
             </div>
 
-            <div className="flex flex-col lg:flex-row items-start gap-8">
+            <div className="flex flex-col lg:flex-row gap-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -214,7 +214,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="lg:w-1/2"
               >
-                <div className="relative h-64 md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
+                <div className="relative display-none md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
                   <Image
                     src={event.image}
                     alt={event.title}

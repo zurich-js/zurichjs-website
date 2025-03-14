@@ -23,8 +23,6 @@ export default async function handler(req: Request) {
     }));
     
 
-    console.log(partnersWithAbsoluteUrls);
-
     // Generate a random index for partner rotation
     // This will rotate partners on each generation instead of time-based rotation
     const totalGroups = Math.max(1, Math.ceil(partnersWithAbsoluteUrls.length / 6));

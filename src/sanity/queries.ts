@@ -157,7 +157,7 @@ export const getEventById = async (eventId: string) => {
 export const getSpeakers = async (): Promise<Speaker[]> => {
   // First fetch all speakers with their talks
   const speakers = await client.fetch(`
-    *[_type == "speaker"] {
+    *[_type == "speaker" && isVisible == true] {
       ...,
       "id": id.current,
       "image": {

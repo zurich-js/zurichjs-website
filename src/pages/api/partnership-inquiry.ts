@@ -16,7 +16,7 @@ export default async function handler(
   }
 
   try {
-    const { companyName, contactName, email, phone, message, tierInterest } = req.body;
+    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } = req.body;
     
     // Basic validation
     if (!companyName || !contactName || !email) {
@@ -35,6 +35,11 @@ export default async function handler(
         Email: ${email}
         Phone: ${phone || 'Not provided'}
         Message: ${message || 'No message provided'}
+        ${tierInterest === 'venue' ? `
+        Venue Details:
+        - Can provide food/drinks: ${venueDetails?.canProvideFoodDrinks ? 'Yes' : 'No'}
+        - Venue capacity: ${venueDetails?.venueCapacity || 'Not specified'}
+        ` : ''}
       `,
       priority: 0
     };

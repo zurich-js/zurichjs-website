@@ -111,7 +111,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                       <p className="text-gray-600">Our growing JavaScript community in Zurich</p>
                     </div>
                     <div className="mt-4 md:mt-0">
-                      <Button href="/join" variant="secondary" className="flex items-center">
+                      <Button href="https://meetup.com/zurich-js" external variant="secondary" className="flex items-center">
                         Join Our Community <ExternalLink size={16} className="ml-2" />
                       </Button>
                     </div>
@@ -162,9 +162,9 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                   
                   {/* Upcoming Talks Section */}
                   {upcomingTalks && upcomingTalks.length > 0 && (
-                    <div className="bg-gray-50 p-6 rounded-lg">
-                      <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-lg">Upcoming Talks</h3>
+                    <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                        <h3 className="font-bold text-lg mb-2 sm:mb-0">Upcoming Talks</h3>
                         <Link href="/events" className="text-yellow-600 hover:text-yellow-700 text-sm font-medium flex items-center">
                           View All Events <ExternalLink size={14} className="ml-1" />
                         </Link>
@@ -175,15 +175,21 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                           <div key={talk.id} className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                             <Link href={`/events/${talk.id}`} className="block">
                               <h4 className="font-bold text-lg hover:text-yellow-600 transition-colors">{talk.title}</h4>
-                              <div className="flex items-center mt-2 text-sm text-gray-500">
-                                <Award size={16} className="mr-1" />
-                                <Link href={`/speakers/${talk.speakerId}`} className="mr-4 hover:text-yellow-600">
-                                  {talk.speakerName}
-                                </Link>
-                                <Calendar size={16} className="mr-1" />
-                                <span className="mr-4">{talk.date}</span>
-                                <MapPin size={16} className="mr-1" />
-                                <span>{talk.location}</span>
+                              <div className="flex flex-col sm:flex-row sm:items-center mt-2 text-sm text-gray-500">
+                                <div className="flex items-center mb-2 sm:mb-0">
+                                  <Award size={16} className="mr-1 flex-shrink-0" />
+                                  <Link href={`/speakers/${talk.speakerId}`} className="mr-4 hover:text-yellow-600 truncate">
+                                    {talk.speakerName}
+                                  </Link>
+                                </div>
+                                <div className="flex items-center mb-2 sm:mb-0">
+                                  <Calendar size={16} className="mr-1 flex-shrink-0" />
+                                  <span className="mr-4">{talk.date}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <MapPin size={16} className="mr-1 flex-shrink-0" />
+                                  <span className="truncate">{talk.location}</span>
+                                </div>
                               </div>
                             </Link>
                           </div>
@@ -324,7 +330,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
               <p className="text-xl mb-8 max-w-2xl mx-auto">
                 Join our lineup of amazing speakers! Submit your talk proposal and inspire the ZurichJS community.
               </p>
-              <Button href="/cfp" variant="primary" size="lg" className="bg-yellow-400 text-black hover:bg-yellow-300">
+              <Button href="/cfp" variant="primary" size="lg" className="bg-gradient-to-br from-yellow-400 to-amber-500 text-black hover:bg-yellow-600">
                 Submit a Talk Proposal 🚀
               </Button>
             </motion.div>

@@ -5,6 +5,7 @@ import { sendGTMEvent } from '@next/third-parties/google';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 interface FormState {
   firstName: string;
@@ -27,6 +28,8 @@ interface FormState {
 }
 
 export default function CFP() {
+  useReferrerTracking();
+
   const [formState, setFormState] = useState<FormState>({
     firstName: '',
     lastName: '',

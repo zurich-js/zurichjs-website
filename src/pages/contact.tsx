@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import Link from 'next/link';
 import { sendGTMEvent } from '@next/third-parties/google';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 // Define our TypeScript interfaces
 interface ContactPerson {
@@ -23,6 +24,8 @@ interface ContactPageProps {
 }
 
 export default function Contact({ contactPeople }: ContactPageProps) {
+  useReferrerTracking();
+
   // Track email clicks
   const trackEmailClick = (email: string, name?: string) => {
     sendGTMEvent({

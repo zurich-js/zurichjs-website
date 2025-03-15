@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import { getStats } from '@/sanity/queries';
 import { sendGTMEvent } from '@next/third-parties/google';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 // Define our TypeScript interfaces
 interface TeamMember {
@@ -38,6 +39,7 @@ interface AboutPageProps {
 }
 
 export default function About({ teamMembers, milestones, stats }: AboutPageProps) {
+  useReferrerTracking();
   // Track CTA button clicks
   const trackCTAClick = (buttonName: string) => {
     sendGTMEvent({

@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
 import Link from 'next/link';
 import { sendGTMEvent } from '@next/third-parties/google';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 // Define our TypeScript interfaces
 interface SupportTier {
@@ -27,6 +28,7 @@ interface SupportPageProps {
 }
 
 export default function Support({ recentSupporters, eventsHosted }: SupportPageProps) {
+  useReferrerTracking();
 
   // Define support tiers with updated names and prices
   const supportTiers: SupportTier[] = [

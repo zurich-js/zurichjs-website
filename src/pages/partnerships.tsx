@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import { getPartners } from '@/data';
 import { getUpcomingEvents } from '@/sanity/queries';
 import { sendGTMEvent } from '@next/third-parties/google';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 // Define our TypeScript interfaces
 interface Partner {
@@ -47,6 +48,9 @@ interface PartnershipPageProps {
 }
 
 export default function Partnerships({ partners, upcomingEvent }: PartnershipPageProps) {
+  useReferrerTracking();  
+
+
   // Form state
   const [formState, setFormState] = useState<FormState>({
     companyName: '',

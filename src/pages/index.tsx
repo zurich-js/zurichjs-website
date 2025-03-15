@@ -12,6 +12,7 @@ import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
 import { getPartners } from '@/data';
 import SEO from '@/components/SEO';
 import { sendGTMEvent } from '@next/third-parties/google';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 
 interface Speaker {
@@ -44,6 +45,8 @@ interface HomeProps {
 }
 
 export default function Home({ upcomingEvents, featuredSpeakers, stats, partners }: HomeProps) {
+  useReferrerTracking();  
+  
   // Get the next event date dynamically
   const nextEventDate = upcomingEvents && upcomingEvents.length > 0 
     ? new Date(upcomingEvents[0].date).toLocaleDateString('en-US', {

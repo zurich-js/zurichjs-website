@@ -122,7 +122,7 @@ const SEO = ({
         <>
           <meta name="twitter:card" content={twitter.cardType || 'summary'} />
           {twitter.handle && <meta name="twitter:creator" content={twitter.handle} />}
-          <meta name="twitter:site" content={twitter.site || '@zurichjs'} />
+          {twitter.site && <meta name="twitter:site" content={twitter.site} />}
           <meta name="twitter:title" content={og.title} />
           <meta name="twitter:description" content={og.description} />
           {og.image && <meta name="twitter:image" content={og.image} />}

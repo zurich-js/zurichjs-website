@@ -12,6 +12,7 @@ interface BaseButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
+  external?: boolean;
 }
 
 // Props specific to button element
@@ -36,6 +37,7 @@ export default function Button({
   size = 'md',
   onClick,
   className = '',
+  external = false,
   ...props 
 }: ButtonProps) {
   // Define button styles based on variant and size
@@ -69,7 +71,12 @@ export default function Button({
   // Return link or button based on href prop
   if (href) {
     return (
-      <Link href={href} className={buttonStyles} >
+      <Link 
+        href={href} 
+        className={buttonStyles}
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener noreferrer' : undefined}
+      >
         {buttonContent}
       </Link>
     );

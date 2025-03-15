@@ -64,7 +64,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                   Our JavaScript Story 💛
                 </h1>
                 <p className="text-xl mb-6 text-gray-900">
-                  Welcome to ZurichJS – the heart of JavaScript awesomeness in Zurich since 2015!
+                  Welcome to ZurichJS – the heart of JavaScript awesomeness in Zurich since 2024!
                 </p>
                 <p className="text-lg mb-8 text-gray-900">
                   We&apos;re a thriving community of JS enthusiasts who love to code, learn, and connect. From React wizards to Node.js ninjas, TypeScript pros to vanilla JS lovers – everyone building with JavaScript has a home here!

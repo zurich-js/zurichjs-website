@@ -62,40 +62,43 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   const partnershipTiers: PartnershipTier[] = [
     {
       name: 'Gold Partner',
-      price: 'CHF 2,000 / year',
+      price: 'CHF 2,000 / year or CHF 200 / month',
       benefits: [
-        'Logo prominently displayed on website',
+        'Prominent logo display on website and event materials',
         'Recognition at all events',
-        'Option to speak at one meetup per year',
-        '5-minute company pitch at two events',
-        'Booth space at larger events',
+        'Opportunities to speak at meetups',
+        'Company pitches during events',
+        'Booth space at larger gatherings',
         'Job postings on our website and newsletter',
-        'Social media shoutouts (6x per year)',
-        'Access to our community Slack channel',
+        'Regular social media mentions',
+        'Inclusion in digital swag bags',
+        'Option to host online workshops',
+        'Priority in suggesting event themes and speakers',
+        'Access to our international network of web experts',
       ],
       highlighted: true,
     },
     {
       name: 'Silver Partner',
-      price: 'CHF 1,000 / year',
+      price: 'CHF 1,200 / year or CHF 120 / month',
       benefits: [
-        'Logo displayed on website',
+        'Logo display on website and event materials',
         'Recognition at all events',
-        '5-minute company pitch at one event',
+        'Opportunities for company pitches at events',
         'Job postings on our website',
-        'Social media shoutouts (3x per year)',
-        'Access to our community Slack channel',
+        'Social media mentions',
+        'Inclusion in digital swag bags',
+        'Input on event themes and speaker suggestions',
       ],
     },
     {
       name: 'Community Partner',
-      price: 'CHF 500 / year',
+      price: 'CHF 600 / year or CHF 60 / month',
       benefits: [
-        'Logo displayed on website',
+        'Logo display on our website',
         'Recognition at events',
         'Job postings on our website',
-        'Social media shoutout (1x per year)',
-        'Access to our community Slack channel',
+        'Social media mentions',
       ],
     },
     {
@@ -104,9 +107,22 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       benefits: [
         'Logo displayed for specific event',
         'Special recognition at hosted event',
-        '5-minute company intro at the hosted event',
+        'Company introduction at the hosted event',
         'Social media mention for the event',
         'Opportunity to distribute company swag',
+      ],
+    },
+    {
+      name: 'Custom Partner',
+      price: 'Negotiable',
+      benefits: [
+        'Tailored packages to meet specific sponsor needs',
+        'Exclusive sponsorship of events or workshops',
+        'Extended speaking opportunities',
+        'Customized branding options',
+        'Additional social media campaigns',
+        'Dedicated email promotions',
+        'Direct access to our network of international web experts',
       ],
     },
   ];
@@ -118,7 +134,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   };
 
   // Handle form submission
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // Form validation
@@ -127,11 +143,49 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       return;
     }
 
-    // Simulate successful submission
-    setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
+    try {
+      // Send the form data to our API endpoint
+      const response = await fetch('/api/partnership-inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyName: formState.companyName,
+          contactName: formState.contactName,
+          email: formState.email,
+          phone: formState.phone,
+          message: formState.message,
+          tierInterest: formState.tierInterest
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update form state on success
+        setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error('Failed to submit partnership inquiry:', error);
+      setFormState((prev) => ({ 
+        ...prev, 
+        error: 'There was an issue submitting your inquiry. Please try again.' 
+      }));
+    }
+  };
+
+  // Add a function to handle tier selection from buttons
+  const selectTier = (tier: string) => {
+    setFormState((prev) => ({ ...prev, tierInterest: tier }));
     
-    // In reality, you would submit to your API here
-    // sendPartnershipInquiry(formState);
+    // Scroll to the form
+    const formElement = document.getElementById('inquiry-form');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -322,13 +376,61 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   Find your next team member from a pool of passionate JavaScript developers interested in growth.
                 </p>
               </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+                className="bg-gray-50 p-6 rounded-lg"
+              >
+                <div className="text-blue-700 mb-4">
+                  <CheckCircle size={36} />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Build Credibility</h3>
+                <p className="text-gray-700">
+                  Establish your company as a trusted voice in the JavaScript ecosystem through consistent community engagement.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                className="bg-gray-50 p-6 rounded-lg"
+              >
+                <div className="text-blue-700 mb-4">
+                  <MapPin size={36} />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Local Impact</h3>
+                <p className="text-gray-700">
+                  Make a meaningful contribution to Zurich&apos;s tech scene and help foster innovation in the local community.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.9 }}
+                className="bg-gray-50 p-6 rounded-lg"
+              >
+                <div className="text-blue-700 mb-4">
+                  <Rocket size={36} />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Stay Ahead</h3>
+                <p className="text-gray-700">
+                  Keep your team updated with the latest JavaScript trends and technologies through our community events.
+                </p>
+              </motion.div>
             </div>
           </div>
         </section>
 
         {/* Current Partners */}
         {partners.length > 0 && (
-          <section className="py-16 bg-gray-50">
+          <section className="py-16 bg-white">
             <div className="container mx-auto px-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -350,8 +452,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     href={partner.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full max-w-[180px] h-28 relative"
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    className="block w-full max-w-[180px] h-28 relative group"
+                    whileHover={{ 
+                      y: -5, 
+                      transition: { duration: 0.2 } 
+                    }}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -361,7 +466,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                       src={partner.logo}
                       alt={partner.name}
                       fill
-                      className="object-contain"
+                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
                     />
                   </motion.a>
                 ))}
@@ -386,47 +491,91 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {partnershipTiers.map((tier, index) => (
-                <motion.div
-                  key={tier.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`bg-white rounded-lg shadow-lg overflow-hidden border ${
-                    tier.highlighted ? 'border-blue-700 transform -translate-y-2 scale-105' : 'border-gray-200'
-                  }`}
-                >
-                  <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'}`}>
-                    <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
-                    <p className="text-2xl font-bold">{tier.price}</p>
-                  </div>
-                  <div className="p-6">
-                    <ul className="space-y-3">
-                      {tier.benefits.map((benefit, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle className="text-blue-700 mt-1 mr-2 flex-shrink-0" size={16} />
-                          <span className="text-gray-700">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-8">
-                      <Button 
-                        href="#inquiry-form" 
-                        variant={tier.highlighted ? 'primary' : 'outline'}
-                        className={`w-full ${
-                          tier.highlighted 
-                            ? 'bg-blue-700 hover:bg-blue-600 text-white' 
-                            : 'border-blue-700 text-blue-700 hover:bg-blue-50'
-                        }`}
-                      >
-                        Become a {tier.name.split(' ')[0]} Partner
-                      </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {partnershipTiers.map((tier, index) => {
+                // Calculate savings for yearly vs monthly payments
+                const hasBothPrices = tier.price.includes('/') && tier.price.includes('month');
+                let yearlyPrice = '';
+                let monthlyPrice = '';
+                let yearlySavings = 0;
+                
+                if (hasBothPrices) {
+                  const priceText = tier.price;
+                  const yearMatch = priceText.match(/CHF\s+([\d,]+)/);
+                  const monthMatch = priceText.match(/CHF\s+([\d,]+)\s+\/\s+month/);
+                  
+                  if (yearMatch && monthMatch) {
+                    const yearlyAmount = parseInt(yearMatch[1].replace(',', ''));
+                    const monthlyAmount = parseInt(monthMatch[1].replace(',', ''));
+                    
+                    yearlyPrice = `CHF ${yearMatch[1]}`;
+                    monthlyPrice = `CHF ${monthMatch[1]}/month`;
+                    yearlySavings = (monthlyAmount * 12) - yearlyAmount;
+                  }
+                } else {
+                  yearlyPrice = tier.price;
+                }
+                
+                return (
+                  <motion.div
+                    key={tier.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className={`bg-white rounded-lg shadow-lg overflow-hidden border flex flex-col h-full ${
+                      tier.highlighted ? 'border-blue-700 transform -translate-y-2 scale-105' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'} relative`}>
+                      <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
+                      
+                      {hasBothPrices ? (
+                        <div className="mt-2">
+                          <div className="text-2xl font-bold">{yearlyPrice}/year</div>
+                          <div className="text-sm mt-2">
+                            or {monthlyPrice}
+                          </div>
+                          {yearlySavings > 0 && (
+                            <div className={`text-sm mt-2 font-medium ${tier.highlighted ? 'text-yellow-300' : 'text-green-600'}`}>
+                              Save CHF {yearlySavings} with yearly payment!
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-2xl font-bold">{yearlyPrice}</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    
+                    <div className="p-6 flex-grow flex flex-col">
+                      <ul className="space-y-3 mb-6 flex-grow">
+                        {tier.benefits.map((benefit, i) => (
+                          <li key={i} className="flex items-start">
+                            <CheckCircle className="text-blue-700 mt-1 mr-2 flex-shrink-0" size={16} />
+                            <span className="text-gray-700">{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      <div className="mt-auto">
+                        <Button 
+                          onClick={() => selectTier(tier.name.toLowerCase().split(' ')[0])}
+                          variant={tier.highlighted ? 'primary' : 'outline'}
+                          className={`w-full text-sm transition-colors ${
+                            tier.highlighted 
+                              ? 'bg-blue-700 text-white hover:bg-blue-600' 
+                              : 'border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white'
+                          }`}
+                        >
+                          Become a {tier.name.split(' ')[0]} Partner
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -512,7 +661,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           <option value="silver">Silver Partner</option>
                           <option value="community">Community Partner</option>
                           <option value="venue">Venue Host</option>
-                          <option value="custom">Custom Partnership</option>
+                          <option value="custom">Custom Partner</option>
                         </select>
                       </div>
                     </div>
@@ -598,7 +747,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
 
         {/* Final CTA */}
-        <section className="py-16 bg-yellow-400">
+        <section className="py-16 bg-gradient-to-br from-yellow-400 to-amber-500">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -612,7 +761,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 Let&apos;s join forces to create an even more vibrant JavaScript community in Zurich!
               </p>
               <Button 
-                href="#inquiry-form" 
+                onClick={() => selectTier('gold')}
                 variant="primary" 
                 size="lg" 
                 className="bg-blue-700 text-white hover:bg-blue-600"

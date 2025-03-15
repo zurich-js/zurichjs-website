@@ -13,7 +13,7 @@ export default async function handler(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const title = searchParams.get('title') || 'Support ZurichJS';
     const tagline = searchParams.get('tagline') || 'Help us grow the JavaScript community!';
-    const contact = searchParams.get('contact') || 'support@zurichjs.org';
+    const contact = searchParams.get('contact') || 'hello@zurichjs.com';
     
     // Randomly select emojis
     const randomEmojis = Array(4).fill(0).map(() => 

@@ -91,7 +91,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   Your support allows us to organize regular meetups, invite speakers, provide snacks, and create an inclusive space for JavaScript enthusiasts to learn and connect.
                 </p>
                 <a 
-                  href="https://buymeacoffee.com/zurichjs" 
+                  href="https://buymeacoffee.com/zurichjs/membership" 
                   className="bg-gray-900 hover:bg-gray-800 text-white py-3 px-6 rounded-lg"
                   target="_blank" 
                   rel="noopener noreferrer"
@@ -174,7 +174,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     <p className="text-lg font-semibold text-amber-600 mb-4">{tier.price}</p>
                   </div>
                   <a 
-                    href="https://buymeacoffee.com/zurichjs" 
+                    href="https://buymeacoffee.com/zurichjs/membership" 
                     className="bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg mt-auto"
                     target="_blank" 
                     rel="noopener noreferrer"
@@ -234,9 +234,10 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     Be the first to support ZurichJS and help us kick off our community fund!
                   </p>
                   <Button 
-                    href="#support-options" 
+                    href="https://buymeacoffee.com/zurichjs/membership" 
                     variant="outline" 
                     className="border-amber-500 text-amber-500 hover:bg-amber-50"
+                    external
                   >
                     Support Now
                   </Button>
@@ -264,9 +265,10 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   Be the first to support ZurichJS and help us kick off our community fund!
                 </p>
                 <Button 
-                  href="#support-options" 
+                  href="https://buymeacoffee.com/zurichjs/membership" 
                   variant="outline" 
                   className="border-amber-500 text-amber-500 hover:bg-amber-50"
+                  external
                 >
                   Support Now
                 </Button>
@@ -327,7 +329,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               >
                 <h3 className="text-xl font-bold mb-2 text-gray-900">Can I cancel my monthly support?</h3>
                 <p className="text-gray-700">
-                  Yes, you can cancel your monthly support at any time. Just email us at support@zurichjs.com and we&apos;ll help you manage your subscription.
+                  Yes, you can cancel your monthly support at any time. Just email us at hello@zurichjs.com and we&apos;ll help you manage your subscription.
                 </p>
               </motion.div>
 
@@ -362,7 +364,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 Your support, whether big or small, helps us create amazing experiences for JavaScript enthusiasts in Zurich.
               </p>
               <a 
-                href="https://buymeacoffee.com/zurichjs" 
+                href="https://buymeacoffee.com/zurichjs/membership" 
                 className="bg-gray-900 text-white py-3 px-6 rounded-lg"
                 target="_blank" 
                 rel="noopener noreferrer"

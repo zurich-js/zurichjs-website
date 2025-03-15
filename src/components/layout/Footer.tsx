@@ -17,7 +17,7 @@ export default function Footer() {
               learn, and grow with fellow developers.
             </p>
             <div className="flex space-x-4">
-              <motion.a 
+              {/* <motion.a 
                 href="https://twitter.com/zurichjs" 
                 target="_blank"
                 rel="noopener noreferrer"
@@ -26,7 +26,7 @@ export default function Footer() {
                 aria-label="Twitter"
               >
                 <Twitter size={20} />
-              </motion.a>
+              </motion.a> */}
               <motion.a 
                 href="https://linkedin.com/company/zurichjs" 
                 target="_blank"
@@ -37,7 +37,7 @@ export default function Footer() {
               >
                 <Linkedin size={20} />
               </motion.a>
-              <motion.a 
+              {/* <motion.a 
                 href="https://github.com/zurichjs" 
                 target="_blank"
                 rel="noopener noreferrer"
@@ -46,7 +46,7 @@ export default function Footer() {
                 aria-label="GitHub"
               >
                 <Github size={20} />
-              </motion.a>
+              </motion.a> */}
             </div>
           </div>
 
@@ -97,10 +97,10 @@ export default function Footer() {
               <li className="flex items-center">
                 <Mail size={18} className="mr-2 text-yellow-400" />
                 <a 
-                  href="mailto:info@zurichjs.ch" 
+                  href="mailto:hello@zurichjs.com" 
                   className="hover:text-yellow-400 transition-colors"
                 >
-                  info@zurichjs.ch
+                  hello@zurichjs.com
                 </a>
               </li>
             </ul>

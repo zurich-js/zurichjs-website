@@ -7,6 +7,7 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getPartners } from '@/data';
 import { getUpcomingEvents } from '@/sanity/queries';
+import { sendGTMEvent } from '@next/third-parties/google';
 
 // Define our TypeScript interfaces
 interface Partner {
@@ -162,6 +163,14 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
     }
 
     try {
+      // Send GTM event for form submission attempt
+      sendGTMEvent({ 
+        event: 'partnership_form_submit',
+        formData: {
+          tierInterest: formState.tierInterest
+        }
+      });
+
       // Send the form data to our API endpoint
       const response = await fetch('/api/partnership-inquiry', {
         method: 'POST',
@@ -190,6 +199,14 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       if (data.success) {
         // Update form state on success
         setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
+        
+        // Send GTM event for successful form submission
+        sendGTMEvent({ 
+          event: 'partnership_form_success',
+          formData: {
+            tierInterest: formState.tierInterest
+          }
+        });
       } else {
         throw new Error(data.message);
       }
@@ -199,6 +216,15 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
         ...prev, 
         error: 'There was an issue submitting your inquiry. Please try again.' 
       }));
+      
+      // Send GTM event for form submission error
+      sendGTMEvent({ 
+        event: 'partnership_form_error',
+        formData: {
+          tierInterest: formState.tierInterest,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error'
+        }
+      });
     }
   };
 
@@ -206,11 +232,29 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   const selectTier = (tier: string) => {
     setFormState((prev) => ({ ...prev, tierInterest: tier }));
     
+    // Send GTM event for tier selection
+    sendGTMEvent({ 
+      event: 'partnership_tier_selected',
+      tierData: {
+        tier: tier
+      }
+    });
+    
     // Scroll to the form
     const formElement = document.getElementById('inquiry-form');
     if (formElement) {
       formElement.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  // Add tracking for partner logo clicks
+  const handlePartnerClick = (partnerName: string) => {
+    sendGTMEvent({
+      event: 'partner_click',
+      partnerData: {
+        name: partnerName
+      }
+    });
   };
 
   return (
@@ -486,6 +530,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
+                    onClick={() => handlePartnerClick(partner.name)}
                   >
                     <Image
                       src={partner.logo}
@@ -586,7 +631,17 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                       
                       <div className="mt-auto">
                         <Button 
-                          onClick={() => selectTier(tier.name.toLowerCase().split(' ')[0])}
+                          onClick={() => {
+                            selectTier(tier.name.toLowerCase().split(' ')[0]);
+                            // Additional GTM event for tier card CTA click
+                            sendGTMEvent({
+                              event: 'partnership_tier_cta_click',
+                              tierData: {
+                                name: tier.name,
+                                price: tier.price
+                              }
+                            });
+                          }}
                           variant={tier.highlighted ? 'primary' : 'outline'}
                           className={`w-full text-sm transition-colors ${
                             tier.highlighted 
@@ -821,7 +876,13 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 Let&apos;s join forces to create an even more vibrant JavaScript community in Zurich!
               </p>
               <Button 
-                onClick={() => selectTier('gold')}
+                onClick={() => {
+                  selectTier('gold');
+                  // Additional GTM event for final CTA click
+                  sendGTMEvent({
+                    event: 'partnership_final_cta_click'
+                  });
+                }}
                 variant="primary" 
                 size="lg" 
                 className="bg-blue-700 text-white hover:bg-blue-600"

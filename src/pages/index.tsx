@@ -4,7 +4,6 @@ import Button from '@/components/ui/Button';
 import Stats from '@/components/ui/Stats';
 import UpcomingEvents from '@/components/sections/UpcomingEvents';
 import SpeakerGrid from '@/components/sections/SpeakerGrid';
-// Updated Partners component with customizable title color
 import Partners from '@/components/sections/Partners';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
@@ -12,6 +11,7 @@ import type { Event } from '@/sanity/queries';
 import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
 import { getPartners } from '@/data';
 import SEO from '@/components/SEO';
+import { sendGTMEvent } from '@next/third-parties/google';
 
 
 interface Speaker {
@@ -53,6 +53,23 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
       })
     : 'Coming soon';
 
+  // Track event handlers
+  const handleJoinMeetupClick = () => {
+    sendGTMEvent({ event: 'button_click', name: 'join_next_meetup' });
+  };
+
+  const handleSubmitTalkClick = () => {
+    sendGTMEvent({ event: 'button_click', name: 'submit_talk' });
+  };
+
+  const handleReserveSpotClick = (eventTitle: string) => {
+    sendGTMEvent({ 
+      event: 'event_rsvp', 
+      name: 'reserve_spot',
+      eventTitle: eventTitle 
+    });
+  };
+
   return (
     <Layout>
       <SEO 
@@ -92,10 +109,22 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
                   Connect, learn, and level up your skills in Switzerland&apos;s most dynamic tech community!
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button href="/events" variant="primary" size="lg" className="transform hover:scale-105 transition-transform">
+                  <Button 
+                    href="/events" 
+                    variant="primary" 
+                    size="lg" 
+                    className="transform hover:scale-105 transition-transform"
+                    onClick={handleJoinMeetupClick}
+                  >
                     Join Next Meetup 🎉
                   </Button>
-                  <Button href="/cfp" variant="secondary" size="lg" className="transform hover:scale-105 transition-transform">
+                  <Button 
+                    href="/cfp" 
+                    variant="secondary" 
+                    size="lg" 
+                    className="transform hover:scale-105 transition-transform"
+                    onClick={handleSubmitTalkClick}
+                  >
                     Submit a Talk 🎤
                   </Button>
                 </div>
@@ -143,6 +172,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
                         <a 
                           href={upcomingEvents[0].meetupUrl || `/events/${upcomingEvents[0].id}`}
                           className="block bg-yellow-400 text-black font-bold py-3 px-4 rounded-lg text-center shadow-md hover:bg-yellow-500 transition-colors"
+                          onClick={() => handleReserveSpotClick(upcomingEvents[0].title)}
                         >
                           Reserve Your Spot →
                         </a>

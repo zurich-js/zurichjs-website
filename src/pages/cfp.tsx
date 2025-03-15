@@ -1,6 +1,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload } from 'lucide-react';
+import { sendGTMEvent } from '@next/third-parties/google';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
@@ -74,6 +75,14 @@ export default function CFP() {
     const newTopics = formState.topics.includes(topic)
       ? formState.topics.filter((t) => t !== topic)
       : [...formState.topics, topic];
+    
+    // Track topic selection/deselection
+    sendGTMEvent({
+      event: 'topic_selection',
+      action: formState.topics.includes(topic) ? 'deselect' : 'select',
+      topic: topic
+    });
+    
     setFormState((prev) => ({ ...prev, topics: newTopics }));
   };
 
@@ -83,6 +92,13 @@ export default function CFP() {
       
       // Create a preview URL for the image
       const previewUrl = URL.createObjectURL(file);
+      
+      // Track image upload
+      sendGTMEvent({
+        event: 'image_upload',
+        fileSize: file.size,
+        fileType: file.type
+      });
       
       setFormState((prev) => ({ 
         ...prev, 
@@ -99,11 +115,24 @@ export default function CFP() {
     if (!formState.firstName || !formState.lastName || !formState.email || 
         !formState.linkedinProfile || !formState.jobTitle || 
         !formState.title || !formState.description || !formState.speakerImage) {
+      
+      // Track validation error
+      sendGTMEvent({
+        event: 'form_error',
+        errorType: 'missing_required_fields'
+      });
+      
       setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
       return;
     }
 
     if (formState.topics.length === 0) {
+      // Track validation error
+      sendGTMEvent({
+        event: 'form_error',
+        errorType: 'no_topics_selected'
+      });
+      
       setFormState((prev) => ({ ...prev, error: 'Please select at least one topic' }));
       return;
     }
@@ -138,6 +167,14 @@ export default function CFP() {
         formData.append('speakerImage', formState.speakerImage);
       }
 
+      // Track form submission attempt
+      sendGTMEvent({
+        event: 'form_submit',
+        talkLength: formState.talkLength,
+        talkLevel: formState.talkLevel,
+        topicsCount: formState.topics.length
+      });
+
       // Submit to our API endpoint
       const response = await fetch('/api/submit-talk', {
         method: 'POST',
@@ -150,6 +187,12 @@ export default function CFP() {
         throw new Error(data.error || 'An error occurred while submitting your talk');
       }
 
+      // Track successful submission
+      sendGTMEvent({
+        event: 'form_submit_success',
+        talkTitle: formState.title
+      });
+
       // Show success state
       setFormState((prev) => ({
         ...prev,
@@ -160,6 +203,13 @@ export default function CFP() {
 
     } catch (error: unknown) {
       console.error('Submission error:', error);
+      
+      // Track submission error
+      sendGTMEvent({
+        event: 'form_submit_error',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      });
+      
       setFormState((prev) => ({
         ...prev,
         isSubmitting: false,

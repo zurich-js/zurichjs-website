@@ -5,6 +5,7 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import Link from 'next/link';
+import { sendGTMEvent } from '@next/third-parties/google';
 
 // Define our TypeScript interfaces
 interface ContactPerson {
@@ -22,6 +23,30 @@ interface ContactPageProps {
 }
 
 export default function Contact({ contactPeople }: ContactPageProps) {
+  // Track email clicks
+  const trackEmailClick = (email: string, name?: string) => {
+    sendGTMEvent({
+      event: 'contact_email_click',
+      email,
+      name: name || 'General',
+    });
+  };
+
+  // Track LinkedIn clicks
+  const trackLinkedInClick = (name: string) => {
+    sendGTMEvent({
+      event: 'contact_linkedin_click',
+      name,
+    });
+  };
+
+  // Track Meetup clicks
+  const trackMeetupClick = () => {
+    sendGTMEvent({
+      event: 'contact_meetup_click',
+    });
+  };
+
   return (
     <Layout>
       <SEO 
@@ -89,6 +114,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 <a 
                   href="mailto:hello@zurichjs.com" 
                   className="text-blue-700 font-medium hover:underline"
+                  onClick={() => trackEmailClick('hello@zurichjs.com')}
                 >
                   hello@zurichjs.com
                 </a>
@@ -113,6 +139,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-700 font-medium hover:underline"
+                  onClick={() => trackLinkedInClick('ZurichJS Company')}
                 >
                   linkedin.com/company/zurichjs
                 </a>
@@ -137,6 +164,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-700 font-medium hover:underline"
+                  onClick={trackMeetupClick}
                 >
                   meetup.com/zurich-js
                 </a>
@@ -184,6 +212,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                         <a 
                           href={`mailto:${person.email}`}
                           className="flex items-center gap-2 text-gray-700 hover:text-blue-700"
+                          onClick={() => trackEmailClick(person.email!, person.name)}
                         >
                           <Mail size={18} />
                           <span>{person.email}</span>
@@ -195,6 +224,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 text-gray-700 hover:text-blue-700"
+                          onClick={() => trackLinkedInClick(person.name)}
                         >
                           <Linkedin size={18} />
                           <span>LinkedIn Profile</span>
@@ -316,6 +346,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                   variant="primary" 
                   size="lg" 
                   className="bg-blue-700 text-white hover:bg-blue-600"
+                  onClick={() => trackEmailClick('hello@zurichjs.com')}
                 >
                   Email Us Now
                 </Button>
@@ -324,6 +355,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                   variant="outline" 
                   size="lg" 
                   className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-black"
+                  onClick={trackMeetupClick}
                 >
                   Join Our Meetup
                 </Button>

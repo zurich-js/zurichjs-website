@@ -5,6 +5,7 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
 import Link from 'next/link';
+import { sendGTMEvent } from '@next/third-parties/google';
 
 // Define our TypeScript interfaces
 interface SupportTier {
@@ -56,6 +57,14 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
     },
   ];
 
+  // Function to track support button clicks
+  const trackSupportClick = (tierName: string) => {
+    sendGTMEvent({
+      event: 'support_click',
+      tier_name: tierName,
+      value: tierName === 'Coffee' ? 5 : tierName === 'Supporter' ? 10 : tierName === 'Enthusiast' ? 20 : 30
+    });
+  };
 
   return (
     <Layout>
@@ -95,6 +104,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   className="bg-gray-900 hover:bg-gray-800 text-white py-3 px-6 rounded-lg"
                   target="_blank" 
                   rel="noopener noreferrer"
+                  onClick={() => trackSupportClick('Hero')}
                 >
                   Buy Us a Coffee ☕
                 </a>
@@ -178,6 +188,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     className="bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg mt-auto"
                     target="_blank" 
                     rel="noopener noreferrer"
+                    onClick={() => trackSupportClick(tier.name)}
                   >
                     Support Now
                   </a>
@@ -238,6 +249,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     variant="outline" 
                     className="border-amber-500 text-amber-500 hover:bg-amber-50"
                     external
+                    onClick={() => trackSupportClick('Recent Supporters')}
                   >
                     Support Now
                   </Button>
@@ -269,6 +281,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   variant="outline" 
                   className="border-amber-500 text-amber-500 hover:bg-amber-50"
                   external
+                  onClick={() => trackSupportClick('First Supporter')}
                 >
                   Support Now
                 </Button>
@@ -368,6 +381,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 className="bg-gray-900 text-white py-3 px-6 rounded-lg"
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => trackSupportClick('Final CTA')}
               >
                 Support ZurichJS Today! ☕
               </a>

@@ -4,6 +4,8 @@ import { Code, Users, Calendar, Heart, Sparkles, Coffee, MessageSquare } from 'l
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
+import { getStats } from '@/sanity/queries';
+import { sendGTMEvent } from '@next/third-parties/google';
 
 // Define our TypeScript interfaces
 interface TeamMember {
@@ -36,6 +38,15 @@ interface AboutPageProps {
 }
 
 export default function About({ teamMembers, milestones, stats }: AboutPageProps) {
+  // Track CTA button clicks
+  const trackCTAClick = (buttonName: string) => {
+    sendGTMEvent({
+      event: 'cta_click',
+      button_name: buttonName,
+      page: 'about'
+    });
+  };
+
   return (
     <Layout>
       <SEO 
@@ -295,7 +306,10 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              whileInView={{ 
+                opacity: 1, 
+                y: 0,
+              }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
@@ -544,6 +558,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                   variant="primary" 
                   size="lg" 
                   className="bg-blue-700 text-white hover:bg-blue-600"
+                  onClick={() => trackCTAClick('join_meetup')}
                 >
                   Join Our Meetup Group 🎉
                 </Button>
@@ -552,6 +567,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                   variant="outline" 
                   size="lg" 
                   className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-black"
+                  onClick={() => trackCTAClick('discover_events')}
                 >
                   Discover Upcoming Events
                 </Button>
@@ -565,6 +581,9 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
 }
 
 export async function getStaticProps() {
+  // Get stats using the same function as the homepage
+  const stats = await getStats();
+  
   // This would be replaced with actual CMS fetching
   return {
     props: {
@@ -628,12 +647,7 @@ export async function getStaticProps() {
           image: '/images/community/meetup-3-crowd.jpg',
         },
       ],
-      stats: {
-        members: 375,
-        eventsHosted: 50,
-        speakersToDate: 120,
-        totalAttendees: 2500,
-      }
+      stats
     },
   };
 }

@@ -6,6 +6,8 @@ import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import useEvents from '@/hooks/useEvents';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FeatureFlags } from '@/constants';
 
 interface FormState {
   firstName: string;
@@ -30,6 +32,7 @@ interface FormState {
 export default function CFP() {
   useReferrerTracking();
   const { track } = useEvents();
+  const showDeepDiveOption = useFeatureFlagEnabled(FeatureFlags.CfpDeepDiveOption);
 
   const [formState, setFormState] = useState<FormState>({
     firstName: '',
@@ -584,7 +587,9 @@ export default function CFP() {
                         >
                           <option value="5">Lightning Talk (5 min)</option>
                           <option value="25">Standard Talk (25 min)</option>
-                          <option value="35">Deep Dive (35 min)</option>
+                          {showDeepDiveOption && (
+                            <option value="35">Deep Dive (35 min)</option>
+                          )}
                         </select>
                       </div>
                       <div>

@@ -325,8 +325,8 @@ export default function CFP() {
                 <Clock className="text-yellow-500 mb-4" size={32} />
                 <h3 className="text-xl font-bold mb-2">Talk Length</h3>
                 <p className="text-gray-600">
-                  We offer slots for lightning talks (5 min), standard talks (25 min),
-                  and deep dives (35 min).
+                  We offer slots for lightning talks (5 min) and standard talks (25 min)
+                  {showDeepDiveOption ? ', and deep dives (35 min)' : '.'}
                 </p>
               </motion.div>
 

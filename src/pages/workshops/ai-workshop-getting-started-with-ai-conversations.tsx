@@ -7,18 +7,9 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import { getSpeakerById } from '@/sanity/queries';
+import useEvents from '@/hooks/useEvents';
+import { Speaker } from '@/types';
 
-// Define our TypeScript interfaces
-interface Speaker {
-  id: string;
-  name: string;
-  title: string;
-  image: string;
-  bio?: string;
-  twitter?: string;
-  github?: string;
-  linkedin?: string;
-}
 
 interface WorkshopDetails {
   id: string;
@@ -28,7 +19,6 @@ interface WorkshopDetails {
   timeInfo: string;
   locationInfo: string;
   description: string;
-  image: string;
   priceInfo: string;
   maxAttendees: number;
   speaker: Speaker;
@@ -49,6 +39,7 @@ interface WorkshopPageProps {
 export default function WorkshopPage({ speaker }: WorkshopPageProps) {
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const { track } = useEvents();
   
   // Sample workshop data - this would come from your CMS in a real implementation
   const workshop: WorkshopDetails = {
@@ -59,7 +50,6 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     timeInfo: "90 minutes",
     locationInfo: "Zurich (Venue TBD)",
     description: "Join us for our first-ever hands-on workshop focused on AI conversations. In this interactive session, you'll learn how to effectively utilize Claude AI, understand its unique capabilities compared to other large language models, and build your very own AI chatbot. This workshop is perfect for JavaScript developers interested in AI integration, regardless of your experience level with AI technologies.",
-    image: "/images/workshops/ai-workshop.jpg",
     priceInfo: "CHF 30-50 per person (price decreases with more participants)",
     maxAttendees: 25,
     speaker: speaker,
@@ -104,6 +94,12 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
   useEffect(() => {
     setIsClient(true);
     
+    // Track page view
+    track('workshop_page_viewed', {
+      workshop_id: workshop.id,
+      workshop_title: workshop.title
+    });
+    
     // Initialize GetWaitlist when client is ready
     if (typeof window !== 'undefined') {
       // Load the GetWaitlist script dynamically
@@ -140,12 +136,22 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     const shareUrl = `${window.location.origin}/workshops/${workshop.id}`;
     const shareText = `Join me at ${workshop.title} with ZurichJS!`;
 
+    track('workshop_share_clicked', {
+      workshop_id: workshop.id,
+      workshop_title: workshop.title
+    });
+
     if (navigator.share) {
       try {
         await navigator.share({
           title: workshop.title,
           text: shareText,
           url: shareUrl,
+        });
+        track('workshop_share_completed', {
+          workshop_id: workshop.id,
+          workshop_title: workshop.title,
+          share_method: 'native'
         });
       } catch (err) {
         console.error('Error sharing:', err);
@@ -161,11 +167,22 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     navigator.clipboard.writeText(text).then(() => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
+      
+      track('workshop_share_completed', {
+        workshop_id: workshop.id,
+        workshop_title: workshop.title,
+        share_method: 'clipboard'
+      });
     });
   };
 
   // Scroll to waitlist function
   const scrollToWaitlist = () => {
+    track('workshop_waitlist_button_clicked', {
+      workshop_id: workshop.id,
+      workshop_title: workshop.title
+    });
+    
     const waitlistElement = document.getElementById('getWaitlistContainer');
     if (waitlistElement) {
       // Get the element's position
@@ -194,7 +211,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
           title: `${workshop.title} | ZurichJS Workshop`,
           description: workshop.description.slice(0, 120) + '...',
           type: 'website',
-          image: workshop.image,
+          image: `/api/og/workshop?title=${encodeURIComponent(workshop.title)}&subtitle=${encodeURIComponent(workshop.subtitle)}&speakerName=${encodeURIComponent(workshop.speaker.name)}&speakerImage=${encodeURIComponent(workshop.speaker.image)}`,
           url: `/workshops/${workshop.id}`
         }}
       />
@@ -319,7 +336,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         <p className="text-sm text-gray-600">{workshop.speaker.title}</p>
                       </div>
                     </div>
-                    <p className="text-sm italic text-gray-600">"Join me to explore the exciting world of AI conversations and learn practical skills you can apply immediately."</p>
+                    <p className="text-sm italic text-gray-600">&quot;Join me to explore the exciting world of AI conversations and learn practical skills you can apply immediately.&quot;</p>
                   </div>
                 </div>
               </motion.div>

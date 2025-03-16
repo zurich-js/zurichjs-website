@@ -5,8 +5,8 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import { getStats } from '@/sanity/queries';
-import { sendGTMEvent } from '@next/third-parties/google';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
+import useEvents from '@/hooks/useEvents';
 
 // Define our TypeScript interfaces
 interface TeamMember {
@@ -40,10 +40,11 @@ interface AboutPageProps {
 
 export default function About({ teamMembers, milestones, stats }: AboutPageProps) {
   useReferrerTracking();
+  const { track } = useEvents();
+  
   // Track CTA button clicks
   const trackCTAClick = (buttonName: string) => {
-    sendGTMEvent({
-      event: 'cta_click',
+    track('cta_click', {
       button_name: buttonName,
       page: 'about'
     });

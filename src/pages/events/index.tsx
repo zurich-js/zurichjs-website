@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button';
 import { getPastEvents } from '@/sanity/queries';
 import { getUpcomingEvents } from '@/sanity/queries';
 import SEO from '@/components/SEO';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FeatureFlags } from '@/constants';
 // import { trackEventView } from '@/lib/analytics';
 
 // Define our TypeScript interfaces
@@ -57,6 +59,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredEvents, setFilteredEvents] = useState<EventDetails[]>(upcomingEvents);
   const [isClient, setIsClient] = useState(false);
+  const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
   
   // Set up client-side rendering flag to prevent hydration issues
   useEffect(() => {
@@ -587,38 +590,40 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
         </section>
 
         {/* Email Updates */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="bg-yellow-400 rounded-lg p-8 shadow-md"
-            >
-              <div className="md:flex items-center justify-between">
-                <div className="md:w-3/5 mb-6 md:mb-0">
-                  <h2 className="text-2xl font-bold mb-2 text-gray-900">Never Miss a JavaScript Gathering! 📬</h2>
-                  <p className="text-lg text-gray-900">
-                    Subscribe to our newsletter and be the first to know about upcoming events, speaker announcements, and community news!
-                  </p>
-                </div>
-                <div className="md:w-2/5">
-                  <div className="flex">
-                    <input
-                      type="email"
-                      placeholder="your@email.com"
-                      className="flex-grow px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-700"
-                    />
-                    <button className="bg-blue-700 text-white px-6 py-3 rounded-r-md font-bold hover:bg-blue-600 transition-colors">
-                      Subscribe 🚀
-                    </button>
+        {showNewsletter && (
+          <section className="py-16 bg-gray-50">
+            <div className="container mx-auto px-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="bg-yellow-400 rounded-lg p-8 shadow-md"
+              >
+                <div className="md:flex items-center justify-between">
+                  <div className="md:w-3/5 mb-6 md:mb-0">
+                    <h2 className="text-2xl font-bold mb-2 text-gray-900">Never Miss a JavaScript Gathering! 📬</h2>
+                    <p className="text-lg text-gray-900">
+                      Subscribe to our newsletter and be the first to know about upcoming events, speaker announcements, and community news!
+                    </p>
+                  </div>
+                  <div className="md:w-2/5">
+                    <div className="flex">
+                      <input
+                        type="email"
+                        placeholder="your@email.com"
+                        className="flex-grow px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      />
+                      <button className="bg-blue-700 text-white px-6 py-3 rounded-r-md font-bold hover:bg-blue-600 transition-colors">
+                        Subscribe 🚀
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
+              </motion.div>
+            </div>
+          </section>
+        )}
       </div>
     </Layout>
   );

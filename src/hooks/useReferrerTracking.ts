@@ -1,7 +1,7 @@
 // useReferrerTracking.js
 import { useEffect } from 'react';
-import { sendGTMEvent } from '@next/third-parties/google';
 import { useRouter } from 'next/router';
+import useEvents from './useEvents';
 
 /**
  * A custom hook to track referrer information using Google Tag Manager
@@ -38,6 +38,7 @@ export default function useReferrerTracking({
 }: ReferrerOptions = {}) {
   const router = useRouter();
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const { track } = useEvents();
   
   // Store the referrer information
   const referrerInfo: ReferrerInfo = {
@@ -80,9 +81,8 @@ export default function useReferrerTracking({
     referrerInfo.isExternal = !!isExternal;
     referrerInfo.currentPath = currentPath;
     
-    // Send to GTM
-    sendGTMEvent({
-      event: eventName,
+    // Send event using useEvents hook
+    track(eventName, {
       referrer: referrer || '(direct)',
       isExternal: isExternal,
       page: currentPath,

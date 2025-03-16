@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import Button from '../ui/Button';
 import Newsletter from '../ui/Newsletter';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { FeatureFlags } from '@/constants';
 
 // Define TypeScript interfaces
 interface Benefit {
@@ -36,6 +38,8 @@ export default function JoinCTA({
   newsletterTitle = "Stay in the JS Loop! 📬",
   buttonUrl = "https://meetup.com/zurichjs"
 }: JoinCTAProps) {
+  const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
+  
   return (
     <section className="py-20 bg-gray-900 text-white">
       <div className="container mx-auto px-6">
@@ -74,22 +78,24 @@ export default function JoinCTA({
             </Button>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:w-1/2 bg-gray-800 p-8 rounded-lg"
-          >
-            <h3 className="text-2xl font-bold mb-4">{newsletterTitle}</h3>
-            <p className="mb-6">
-              Never miss a ZurichJS gathering! Subscribe to our newsletter for exclusive updates on upcoming meetups, special guests, and the latest JavaScript magic happening in Zurich! 🌟
-            </p>
-            <Newsletter />
-            <p className="mt-4 text-sm text-gray-400">
-              PS: We promise not to spam your inbox - just pure JavaScript goodness delivered fresh! 💌
-            </p>
-          </motion.div>
+          {showNewsletter && (
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="lg:w-1/2 bg-gray-800 p-8 rounded-lg"
+            >
+              <h3 className="text-2xl font-bold mb-4">{newsletterTitle}</h3>
+              <p className="mb-6">
+                Never miss a ZurichJS gathering! Subscribe to our newsletter for exclusive updates on upcoming meetups, special guests, and the latest JavaScript magic happening in Zurich! 🌟
+              </p>
+              <Newsletter />
+              <p className="mt-4 text-sm text-gray-400">
+                PS: We promise not to spam your inbox - just pure JavaScript goodness delivered fresh! 💌
+              </p>
+            </motion.div>
+          )}
         </div>
       </div>
     </section>

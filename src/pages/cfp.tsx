@@ -1,11 +1,11 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload } from 'lucide-react';
-import { sendGTMEvent } from '@next/third-parties/google';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
+import useEvents from '@/hooks/useEvents';
 
 interface FormState {
   firstName: string;
@@ -29,6 +29,7 @@ interface FormState {
 
 export default function CFP() {
   useReferrerTracking();
+  const { track } = useEvents();
 
   const [formState, setFormState] = useState<FormState>({
     firstName: '',
@@ -80,8 +81,7 @@ export default function CFP() {
       : [...formState.topics, topic];
     
     // Track topic selection/deselection
-    sendGTMEvent({
-      event: 'topic_selection',
+    track('topic_selection', {
       action: formState.topics.includes(topic) ? 'deselect' : 'select',
       topic: topic
     });
@@ -97,8 +97,7 @@ export default function CFP() {
       const previewUrl = URL.createObjectURL(file);
       
       // Track image upload
-      sendGTMEvent({
-        event: 'image_upload',
+      track('image_upload', {
         fileSize: file.size,
         fileType: file.type
       });
@@ -120,8 +119,7 @@ export default function CFP() {
         !formState.title || !formState.description || !formState.speakerImage) {
       
       // Track validation error
-      sendGTMEvent({
-        event: 'form_error',
+      track('form_error', {
         errorType: 'missing_required_fields'
       });
       
@@ -131,8 +129,7 @@ export default function CFP() {
 
     if (formState.topics.length === 0) {
       // Track validation error
-      sendGTMEvent({
-        event: 'form_error',
+      track('form_error', {
         errorType: 'no_topics_selected'
       });
       
@@ -171,8 +168,7 @@ export default function CFP() {
       }
 
       // Track form submission attempt
-      sendGTMEvent({
-        event: 'form_submit',
+      track('form_submit', {
         talkLength: formState.talkLength,
         talkLevel: formState.talkLevel,
         topicsCount: formState.topics.length
@@ -191,8 +187,7 @@ export default function CFP() {
       }
 
       // Track successful submission
-      sendGTMEvent({
-        event: 'form_submit_success',
+      track('form_submit_success', {
         talkTitle: formState.title
       });
 
@@ -208,8 +203,7 @@ export default function CFP() {
       console.error('Submission error:', error);
       
       // Track submission error
-      sendGTMEvent({
-        event: 'form_submit_error',
+      track('form_submit_error', {
         errorMessage: error instanceof Error ? error.message : 'Unknown error'
       });
       

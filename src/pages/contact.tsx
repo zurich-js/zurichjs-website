@@ -5,8 +5,8 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
 import Link from 'next/link';
-import { sendGTMEvent } from '@next/third-parties/google';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
+import useEvents from '@/hooks/useEvents';
 
 // Define our TypeScript interfaces
 interface ContactPerson {
@@ -25,11 +25,11 @@ interface ContactPageProps {
 
 export default function Contact({ contactPeople }: ContactPageProps) {
   useReferrerTracking();
+  const { track } = useEvents();
 
   // Track email clicks
   const trackEmailClick = (email: string, name?: string) => {
-    sendGTMEvent({
-      event: 'contact_email_click',
+    track('contact_email_click', {
       email,
       name: name || 'General',
     });
@@ -37,17 +37,14 @@ export default function Contact({ contactPeople }: ContactPageProps) {
 
   // Track LinkedIn clicks
   const trackLinkedInClick = (name: string) => {
-    sendGTMEvent({
-      event: 'contact_linkedin_click',
+    track('contact_linkedin_click', {
       name,
     });
   };
 
   // Track Meetup clicks
   const trackMeetupClick = () => {
-    sendGTMEvent({
-      event: 'contact_meetup_click',
-    });
+    track('contact_meetup_click');
   };
 
   return (

@@ -7,8 +7,8 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getPartners } from '@/data';
 import { getUpcomingEvents } from '@/sanity/queries';
-import { sendGTMEvent } from '@next/third-parties/google';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
+import useEvents from '@/hooks/useEvents';
 
 // Define our TypeScript interfaces
 interface Partner {
@@ -49,7 +49,7 @@ interface PartnershipPageProps {
 
 export default function Partnerships({ partners, upcomingEvent }: PartnershipPageProps) {
   useReferrerTracking();  
-
+  const { track } = useEvents();
 
   // Form state
   const [formState, setFormState] = useState<FormState>({
@@ -72,6 +72,53 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   // Define partnership tiers
   const partnershipTiers: PartnershipTier[] = [
     {
+      name: 'Custom Partner',
+      price: 'Negotiable',
+      benefits: [
+        'Tailored packages to meet specific sponsor needs',
+        'Exclusive sponsorship of events or workshops',
+        'Extended speaking opportunities',
+        'Customized branding options',
+        'Additional social media campaigns',
+        'Dedicated email promotions',
+        'Direct access to our network of international web experts',
+      ],
+    },
+    {
+      name: 'Venue Host',
+      price: 'Free (provide venue)',
+      benefits: [
+        'Logo displayed for specific event',
+        'Special recognition at hosted event',
+        'Company introduction at the hosted event',
+        'Social media mention for the event',
+        'Opportunity to distribute company swag',
+      ],
+    },
+    {
+      name: 'Community Partner',
+      price: 'CHF 600 / year or CHF 60 / month',
+      benefits: [
+        'Logo display on our website',
+        'Recognition at events',
+        'Job postings on our website',
+        'Social media mentions',
+      ],
+    },
+    {
+      name: 'Silver Partner',
+      price: 'CHF 1,200 / year or CHF 120 / month',
+      benefits: [
+        'Logo display on website and event materials',
+        'Recognition at all events',
+        'Opportunities for company pitches at events',
+        'Job postings on our website',
+        'Social media mentions',
+        'Inclusion in digital swag bags',
+        'Input on event themes and speaker suggestions',
+      ],
+    },
+    {
       name: 'Gold Partner',
       price: 'CHF 2,000 / year or CHF 200 / month',
       benefits: [
@@ -88,53 +135,6 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
         'Access to our international network of web experts',
       ],
       highlighted: true,
-    },
-    {
-      name: 'Silver Partner',
-      price: 'CHF 1,200 / year or CHF 120 / month',
-      benefits: [
-        'Logo display on website and event materials',
-        'Recognition at all events',
-        'Opportunities for company pitches at events',
-        'Job postings on our website',
-        'Social media mentions',
-        'Inclusion in digital swag bags',
-        'Input on event themes and speaker suggestions',
-      ],
-    },
-    {
-      name: 'Community Partner',
-      price: 'CHF 600 / year or CHF 60 / month',
-      benefits: [
-        'Logo display on our website',
-        'Recognition at events',
-        'Job postings on our website',
-        'Social media mentions',
-      ],
-    },
-    {
-      name: 'Venue Host',
-      price: 'Free (provide venue)',
-      benefits: [
-        'Logo displayed for specific event',
-        'Special recognition at hosted event',
-        'Company introduction at the hosted event',
-        'Social media mention for the event',
-        'Opportunity to distribute company swag',
-      ],
-    },
-    {
-      name: 'Custom Partner',
-      price: 'Negotiable',
-      benefits: [
-        'Tailored packages to meet specific sponsor needs',
-        'Exclusive sponsorship of events or workshops',
-        'Extended speaking opportunities',
-        'Customized branding options',
-        'Additional social media campaigns',
-        'Dedicated email promotions',
-        'Direct access to our network of international web experts',
-      ],
     },
   ];
 
@@ -167,12 +167,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
     }
 
     try {
-      // Send GTM event for form submission attempt
-      sendGTMEvent({ 
-        event: 'partnership_form_submit',
-        formData: {
-          tierInterest: formState.tierInterest
-        }
+      // Track form submission attempt
+      track('partnership_form_submit', {
+        tierInterest: formState.tierInterest
       });
 
       // Send the form data to our API endpoint
@@ -204,12 +201,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
         // Update form state on success
         setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
         
-        // Send GTM event for successful form submission
-        sendGTMEvent({ 
-          event: 'partnership_form_success',
-          formData: {
-            tierInterest: formState.tierInterest
-          }
+        // Track successful form submission
+        track('partnership_form_success', {
+          tierInterest: formState.tierInterest
         });
       } else {
         throw new Error(data.message);
@@ -221,13 +215,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
         error: 'There was an issue submitting your inquiry. Please try again.' 
       }));
       
-      // Send GTM event for form submission error
-      sendGTMEvent({ 
-        event: 'partnership_form_error',
-        formData: {
-          tierInterest: formState.tierInterest,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error'
-        }
+      // Track form submission error
+      track('partnership_form_error', {
+        tierInterest: formState.tierInterest,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   };
@@ -236,12 +227,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   const selectTier = (tier: string) => {
     setFormState((prev) => ({ ...prev, tierInterest: tier }));
     
-    // Send GTM event for tier selection
-    sendGTMEvent({ 
-      event: 'partnership_tier_selected',
-      tierData: {
-        tier: tier
-      }
+    // Track tier selection
+    track('partnership_tier_selected', {
+      tier: tier
     });
     
     // Scroll to the form
@@ -253,11 +241,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
   // Add tracking for partner logo clicks
   const handlePartnerClick = (partnerName: string) => {
-    sendGTMEvent({
-      event: 'partner_click',
-      partnerData: {
-        name: partnerName
-      }
+    track('partner_click', {
+      name: partnerName
     });
   };
 
@@ -637,13 +622,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                         <Button 
                           onClick={() => {
                             selectTier(tier.name.toLowerCase().split(' ')[0]);
-                            // Additional GTM event for tier card CTA click
-                            sendGTMEvent({
-                              event: 'partnership_tier_cta_click',
-                              tierData: {
-                                name: tier.name,
-                                price: tier.price
-                              }
+                            // Additional tracking for tier card CTA click
+                            track('partnership_tier_cta_click', {
+                              name: tier.name,
+                              price: tier.price
                             });
                           }}
                           variant={tier.highlighted ? 'primary' : 'outline'}
@@ -882,10 +864,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               <Button 
                 onClick={() => {
                   selectTier('gold');
-                  // Additional GTM event for final CTA click
-                  sendGTMEvent({
-                    event: 'partnership_final_cta_click'
-                  });
+                  // Additional tracking for final CTA click
+                  track('partnership_final_cta_click');
                 }}
                 variant="primary" 
                 size="lg" 

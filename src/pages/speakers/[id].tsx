@@ -11,7 +11,6 @@ import SEO from '@/components/SEO';
 
 export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
     const router = useRouter();
-
     // Show loading state while fetching data
     if (router.isFallback) {
         return (
@@ -64,18 +63,20 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                 <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
                     <div className="container mx-auto px-6">
                         <div className="flex flex-col md:flex-row items-center bg-white rounded-xl shadow-xl overflow-hidden">
-                            <div className="md:w-1/3 h-80 relative w-full">
+                            <div className="md:w-1/3 w-full h-64 md:h-96 relative">
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.5 }}
-                                    className="h-full"
+                                    className="absolute inset-0"
                                 >
                                     <Image
-                                        src={speaker.image}
+                                        src={speaker.image || '/images/placeholder-speaker.jpg'}
                                         alt={speaker.name}
                                         fill
                                         className="object-cover"
+                                        sizes="(max-width: 768px) 100vw, 33vw"
+                                        priority
                                     />
                                 </motion.div>
                             </div>
@@ -129,7 +130,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                 </div>
 
                                 <div className="text-gray-700 mb-8">
-                                    <p className="md:text-lg">{speaker.bio}</p>
+                                    <p className="md:text-md whitespace-pre-line">{speaker.bio}</p>
                                 </div>
                             </motion.div>
                         </div>

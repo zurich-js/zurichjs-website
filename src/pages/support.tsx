@@ -5,8 +5,8 @@ import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
 import Link from 'next/link';
-import { sendGTMEvent } from '@next/third-parties/google';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
+import useEvents from '@/hooks/useEvents';
 
 // Define our TypeScript interfaces
 interface SupportTier {
@@ -29,6 +29,7 @@ interface SupportPageProps {
 
 export default function Support({ recentSupporters, eventsHosted }: SupportPageProps) {
   useReferrerTracking();
+  const { track } = useEvents();
 
   // Define support tiers with updated names and prices
   const supportTiers: SupportTier[] = [
@@ -61,8 +62,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 
   // Function to track support button clicks
   const trackSupportClick = (tierName: string) => {
-    sendGTMEvent({
-      event: 'support_click',
+    track('support_click', {
       tier_name: tierName,
       value: tierName === 'Coffee' ? 5 : tierName === 'Supporter' ? 10 : tierName === 'Enthusiast' ? 20 : 30
     });

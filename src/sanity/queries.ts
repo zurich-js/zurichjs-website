@@ -255,6 +255,42 @@ export const getStats = async () => {
   };
 };
 
+export const getSpeakerById = async (speakerId: string): Promise<Speaker | null> => {
+  const [speaker] = await client.fetch(`
+    *[_type == "speaker" && id.current == $speakerId] {
+      ...,
+      "id": id.current,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      "talks": *[_type == "talk" && references(^._id)]{
+        "id": id.current,
+        title,
+        description,
+        type,
+        tags,
+        durationMinutes,
+        "events": *[_type == "events" && references(^._id)]{
+          "id": id.current,
+          title,
+          date,
+          location
+        }
+      }
+    }`, { speakerId });
+
+  if (!speaker) return null;
+
+  return {
+    ...speaker,
+    image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    talks: speaker.talks || [],
+    talkCount: (speaker.talks || []).length
+  };
+};
+
 
 
 

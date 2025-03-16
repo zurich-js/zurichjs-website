@@ -88,6 +88,8 @@ export default async function handler(req: NextRequest) {
               style={{
                 flex: '2',
                 paddingRight: '32px',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
               <div
@@ -99,6 +101,7 @@ export default async function handler(req: NextRequest) {
               >
                 <div
                   style={{
+                    display: 'flex',
                     backgroundColor: '#000000',
                     color: '#FFCA28',
                     padding: '8px 16px',
@@ -175,6 +178,8 @@ export default async function handler(req: NextRequest) {
                   marginBottom: '16px',
                   border: '4px solid #FFCA28',
                   display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center'
                 }}
               >
                 {speakerImage ? (

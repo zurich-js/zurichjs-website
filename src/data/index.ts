@@ -48,5 +48,11 @@ export const getPartners = () => {
             logo: '/images/partners/grusp.png',
             url: 'https://www.grusp.org/',
         },
+        {
+            id: '9',
+            name: 'Voxxed Days Zurich',
+            logo: '/images/partners/voxxed-days-zurich.png',
+            url: 'https://zurich.voxxeddays.com/',
+        }
     ]
 }

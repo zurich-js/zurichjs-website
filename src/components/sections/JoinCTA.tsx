@@ -36,7 +36,7 @@ export default function JoinCTA({
     }
   ],
   newsletterTitle = "Stay in the JS Loop! 📬",
-  buttonUrl = "https://meetup.com/zurichjs"
+  buttonUrl = "https://meetup.com/zurich-js"
 }: JoinCTAProps) {
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
   

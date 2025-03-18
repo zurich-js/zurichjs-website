@@ -53,6 +53,12 @@ export const getPartners = () => {
             name: 'Voxxed Days Zurich',
             logo: '/images/partners/voxxed-days-zurich.png',
             url: 'https://zurich.voxxeddays.com/',
+        },
+        {
+            id: '10',
+            name: 'Web Zurich',
+            logo: '/images/partners/webzurich.png',
+            url: 'https://webzurich.ch/',
         }
     ]
 }

@@ -151,8 +151,12 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
 
                         <div className="space-y-8">
                             {speaker.talks.map((talk, index) => {
-
-                                const upcoming = talk.events?.some(event => new Date(event.date) > new Date());
+                                // Check if the talk has any events
+                                const hasEvents = talk.events && talk.events.length > 0;
+                                // A talk is upcoming if it has at least one event in the future
+                                const upcoming = hasEvents && talk.events?.some(event => new Date(event.date) > new Date());
+                                // A talk without events should be shown as "Coming Soon"
+                                const comingSoon = !hasEvents;
 
                                 return (
                                     <motion.div
@@ -168,11 +172,14 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
                                                     <h3 className="text-xl font-bold">{talk.title}</h3>
                                                     <div className="mt-2 md:mt-0">
-                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${upcoming
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-gray-100 text-gray-800'
-                                                            }`}>
-                                                            {upcoming ? 'Upcoming' : 'Past Talk'}
+                                                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                                                            comingSoon
+                                                                ? 'bg-purple-100 text-purple-800'
+                                                                : upcoming
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : 'bg-gray-100 text-gray-800'
+                                                        }`}>
+                                                            {comingSoon ? 'Coming Soon' : upcoming ? 'Upcoming' : 'Past Talk'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -194,21 +201,46 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                 </div>
 
                                                 {talk.description && (
-                                                    <p className="text-gray-700 mb-4">{talk.description}</p>
+                                                    <p className="text-gray-700 mb-4 whitespace-pre-line">{talk.description}</p>
                                                 )}
 
-                                                {talk.tags && talk.tags.length > 0 && (
-                                                    <div className="flex flex-wrap gap-2 mb-4">
-                                                        {talk.tags.map((tag) => (
-                                                            <span
-                                                                key={tag}
-                                                                className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium"
-                                                            >
-                                                                {tag}
-                                                            </span>
-                                                        ))}
+                                {/* Display events where this talk was/will be presented */}
+                                {hasEvents && (
+                                    <div className="mb-4">
+                                        <h4 className="text-sm font-semibold text-gray-600 mb-2">Presented at:</h4>
+                                        <div className="space-y-2">
+                                            {talk.events?.map(event => (
+                                                <a 
+                                                    key={event.id} 
+                                                    href={`/events/${event.id}`}
+                                                    className="block bg-white p-2 rounded border border-gray-200 hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <div className="font-medium">{event.title}</div>
+                                                    <div className="text-sm text-gray-500">
+                                                        {new Date(event.date).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric'
+                                                        })}
                                                     </div>
-                                                )}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {talk.tags && talk.tags.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {talk.tags.map((tag) => (
+                                            <span
+                                                key={tag}
+                                                className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium"
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                                             </div>
                                         </div>
                                     </motion.div>

@@ -59,6 +59,12 @@ export const getPartners = () => {
             name: 'Web Zurich',
             logo: '/images/partners/webzurich.png',
             url: 'https://webzurich.ch/',
+        },
+        {
+            id: '11',
+            name: 'Swiss Dev Jobs',
+            logo: '/images/partners/sdj-rectangle.png',
+            url: 'https://swissdevjobs.ch/jobs/JavaScript/all',
         }
     ]
 }

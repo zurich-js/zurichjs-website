@@ -95,7 +95,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                     <div className="flex space-x-4 mt-4 md:mt-0">
                                         {speaker.twitter && (
                                             <a
-                                                href={`https://twitter.com/${speaker.twitter}`}
+                                                href={speaker.twitter}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-gray-600 hover:text-blue-400 transition-colors"
@@ -106,7 +106,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                         )}
                                         {speaker.github && (
                                             <a
-                                                href={`https://github.com/${speaker.github}`}
+                                                href={speaker.github}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-gray-600 hover:text-black transition-colors"

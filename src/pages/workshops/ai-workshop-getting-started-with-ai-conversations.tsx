@@ -509,7 +509,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                       <div className="flex space-x-2">
                         {workshop.speaker.twitter && (
                           <a 
-                            href={`https://twitter.com/${workshop.speaker.twitter}`}
+                            href={workshop.speaker.twitter}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-400 hover:text-blue-600"
@@ -521,7 +521,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         )}
                         {workshop.speaker.github && (
                           <a 
-                            href={`https://github.com/${workshop.speaker.github}`}
+                            href={workshop.speaker.github}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-700 hover:text-black"
@@ -533,7 +533,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         )}
                         {workshop.speaker.linkedin && (
                           <a 
-                            href={`https://linkedin.com/in/${workshop.speaker.linkedin}`}
+                            href={workshop.speaker.linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-700 hover:text-blue-900"

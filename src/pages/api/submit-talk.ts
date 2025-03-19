@@ -180,7 +180,7 @@ export default async function handler(
       }
       
       if (typeof twitterHandle === 'string') {
-        updateFields.twitter = `https://twitter.com/${(twitterHandle as string).replace('@', '')}`;
+        updateFields.twitter = `https://twitter.com/${(twitterHandle).replace('@', '')}`;
       }
       
       // Update image if a new one was uploaded

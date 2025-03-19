@@ -260,7 +260,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                         <div className="flex space-x-2">
                           {speaker.twitter && (
                             <a 
-                              href={`https://twitter.com/${speaker.twitter}`}
+                              href={speaker.twitter}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-gray-500 hover:text-blue-400"
@@ -272,7 +272,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                           )}
                           {speaker.github && (
                             <a 
-                              href={`https://github.com/${speaker.github}`}
+                              href={speaker.github}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-gray-500 hover:text-black"
@@ -284,7 +284,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                           )}
                           {speaker.linkedin && (
                             <a 
-                              href={`https://linkedin.com/in/${speaker.linkedin}`}
+                              href={speaker.linkedin}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-gray-500 hover:text-blue-700"

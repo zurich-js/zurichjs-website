@@ -424,7 +424,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                     <div className="flex space-x-4">
                       {member.twitter && (
                         <a 
-                          href={`https://twitter.com/${member.twitter}`}
+                          href={member.twitter}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-gray-400 hover:text-blue-400"
@@ -437,7 +437,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
                       )}
                       {member.github && (
                         <a 
-                          href={`https://github.com/${member.github}`}
+                          href={member.github}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-gray-400 hover:text-black"
@@ -597,8 +597,8 @@ export async function getStaticProps() {
           role: 'Founder & Lead Organizer',
           image: '/images/team/faris.jpg',
           bio: 'JavaScript enthusiast who loves bringing people together! Started ZurichJS to create a space where devs of all levels could share their passion for JS.',
-          twitter: 'farisaziz12',
-          github: 'farisaziz12',
+          twitter: 'https://x.com/farisaziz12',
+          github: 'https://github.com/farisaziz12',
           linkedin: 'https://linkedin.com/in/farisaziz12',
         },
         {
@@ -607,8 +607,8 @@ export async function getStaticProps() {
           role: 'Founder & Lead Organizer',
           image: '/images/team/bogdan.jpg',
           bio: 'Frontend specialist with a knack for making everyone feel welcome! Passionate about inclusive tech communities and Vue.',
-          twitter: 'nosthrillz',
-          github: 'nosthrillz',
+          twitter: 'https://x.com/nosthrillz',
+          github: 'https://github.com/nosthrillz',
           linkedin: 'https://linkedin.com/in/ilie-bogdan',
         },
       ],

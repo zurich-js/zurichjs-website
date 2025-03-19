@@ -9,6 +9,7 @@ import { getEventById, getUpcomingEvents, getPastEvents } from '@/sanity/queries
 import SEO from '@/components/SEO';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { FeatureFlags } from '@/constants';
+import React from 'react';
 
 // Define our TypeScript interfaces
 interface Speaker {
@@ -259,59 +260,30 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                           className="bg-white p-6 rounded-lg shadow-md"
                         >
                           <div className="flex flex-col md:flex-row gap-6">
-                            <div className="md:w-1/4">
-                              <div className="relative w-24 h-24 md:w-full md:h-32 rounded-lg overflow-hidden mx-auto md:mx-0">
-                                <Image
-                                  src={talk.speakers[0]?.image || '/images/speakers/default.jpg'}
-                                  alt={talk.speakers[0]?.name || 'Speaker'}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-
-                              {talk.speakers.length > 1 && (
-                                <div className="flex mt-2 justify-center md:justify-start">
-                                  {talk.speakers.slice(1).map((speaker, idx) => (
-                                    <div
-                                      key={speaker.id}
-                                      className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-white -ml-2 first:ml-0"
-                                      style={{ zIndex: 10 - idx }}
-                                    >
-                                      <Image
-                                        src={speaker.image}
-                                        alt={speaker.name}
-                                        fill
-                                        className="object-cover"
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <div className="md:w-3/4">
-                              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-2">
+                            <div className="w-full">
+                              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-4">
                                 <h3 className="text-xl font-bold">{talk.title}</h3>
                                 <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
                                   (!talk.durationMinutes || talk.durationMinutes < 10) 
                                     ? 'bg-yellow-100 text-yellow-800' 
                                     : 'bg-blue-100 text-blue-800'
                                 }`}>
-                                  {(!talk.durationMinutes || talk.durationMinutes < 10) ? '⚡ Lightning Talk' : '🎤 Regular Talk'}
+                                  {(!talk.durationMinutes || talk.durationMinutes < 15) ? '⚡ Lightning Talk' : '🎤 Regular Talk'}
                                 </span>
                               </div>
 
-                              <div className="mb-3">
-                                {talk.speakers.map((speaker, idx) => (
-                                  <div key={speaker.id} className={idx > 0 ? 'mt-1' : ''}>
-                                    <div className="flex items-center">
-                                      <span className="font-bold mr-2">{speaker.name}</span>
-                                      <span className="text-gray-600 text-sm">{speaker.title}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+                              {talk.description && (
+                                <p className="text-gray-700 mb-4">
+                                  {talk.description?.split('\n').map((line, i) => (
+                                    <React.Fragment key={i}>
+                                      {line}
+                                      {i < talk.description!.split('\n').length - 1 && <br />}
+                                    </React.Fragment>
+                                  ))}
+                                </p>
+                              )}
 
-                              <div className="mb-3 text-gray-600 flex items-center gap-3">
+                              <div className="mb-4 text-gray-600 flex items-center gap-3">
                                 {talk.time && (
                                   <div className="flex items-center">
                                     <Clock size={14} className="mr-1" />
@@ -327,9 +299,34 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                 )}
                               </div>
 
-                              {talk.description && (
-                                <p className="text-gray-700 mb-4">{talk.description}</p>
-                              )}
+                              <div className="space-y-3 mb-4">
+                                <h4 className="font-semibold text-gray-700">
+                                  {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
+                                </h4>
+                                {talk.speakers.map((speaker) => (
+                                  <div key={speaker.id} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                    <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                                      <Image
+                                        src={speaker.image || '/images/speakers/default.jpg'}
+                                        alt={speaker.name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                    <div className="flex-grow">
+                                      <div className="font-bold">{speaker.name}</div>
+                                      <div className="text-gray-600 text-sm">{speaker.title}</div>
+                                    </div>
+                                    <Link
+                                      href={`/speakers/${speaker.id}`}
+                                      className="flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                                    >
+                                      <ExternalLink size={14} className="mr-1" />
+                                      View Profile
+                                    </Link>
+                                  </div>
+                                ))}
+                              </div>
 
                               <div className="flex flex-wrap gap-2">
                                 {!isUpcoming && talk.slidesUrl && (
@@ -355,17 +352,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     Video Recording
                                   </a>
                                 )}
-
-                                {talk.speakers.map(speaker => (
-                                  <Link
-                                    key={speaker.id}
-                                    href={`/speakers/${speaker.id}`}
-                                    className="inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
-                                  >
-                                    <ExternalLink size={14} className="mr-1" />
-                                    {speaker.name}&apos;s Profile
-                                  </Link>
-                                ))}
                               </div>
                             </div>
                           </div>

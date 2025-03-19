@@ -5,7 +5,7 @@ import { Clock, Twitter, Github, Linkedin } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getSpeakers } from '@/sanity/queries';
-import { Speaker } from '@/types';
+import { Speaker, Talk } from '@/types';
 import SEO from '@/components/SEO';
 
 
@@ -150,7 +150,17 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                         </motion.div>
 
                         <div className="space-y-8">
-                            {speaker.talks.map((talk, index) => {
+                            {speaker.talks
+                                // Sort talks by date (most recent/upcoming first)
+                                .toSorted((a, b) => {
+                                    // Get the latest event date for each talk
+                                    const getLatestDate = (talk: Talk) => {
+                                        if (!talk.events || talk.events.length === 0) return new Date(0); // Talks with no events go last
+                                        return new Date(Math.max(...talk.events.map(event => new Date(event.date).getTime())));
+                                    };
+                                    return getLatestDate(b).getTime() - getLatestDate(a).getTime();
+                                })
+                                .map((talk, index) => {
                                 // Check if the talk has any events
                                 const hasEvents = talk.events && talk.events.length > 0;
                                 // A talk is upcoming if it has at least one event in the future
@@ -170,8 +180,21 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                         <div className="md:flex">
                                             <div className="p-6 w-full">
                                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3">
-                                                    <h3 className="text-xl font-bold">{talk.title}</h3>
-                                                    <div className="mt-2 md:mt-0">
+                                                    <h3 className="text-xl font-bold md:max-w-[60%]">{talk.title}</h3>
+                                                    <div className="mt-2 md:mt-0 flex flex-wrap items-center gap-3">
+                                                        {talk.durationMinutes && (
+                                                            <div className="flex items-center bg-gray-100 rounded-lg px-3 py-1.5 shadow-sm">
+                                                                <Clock size={16} className="text-yellow-500 mr-2" />
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-sm font-bold text-gray-800">
+                                                                        {talk.durationMinutes} minutes
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-600">
+                                                                        {talk.durationMinutes < 15 ? 'Lightning Talk' : 'Regular Talk'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                                                             comingSoon
                                                                 ? 'bg-purple-100 text-purple-800'
@@ -185,19 +208,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                 </div>
 
                                                 <div className="flex flex-wrap items-center text-gray-500 gap-x-4 gap-y-2 mb-4">
-                                                    {talk.durationMinutes && (
-                                                        <div className="flex items-center">
-                                                            <Clock size={16} className="mr-1" />
-                                                            <span className="text-sm">{talk.durationMinutes} min</span>
-                                                        </div>
-                                                    )}
-                                                    {talk.durationMinutes && (
-                                                        <div className="flex items-center">
-                                                            <span className="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                                                                {talk.durationMinutes < 10 ? 'Lightning Talk' : 'Regular Talk'}
-                                                            </span>
-                                                        </div>
-                                                    )}
+                                                    {/* Removed duration from here as it's now in the header */}
                                                 </div>
 
                                                 {talk.description && (

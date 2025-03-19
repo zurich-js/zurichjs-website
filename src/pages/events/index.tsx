@@ -364,24 +364,26 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                                 : "Speakers:"}
                             </p>
                             <div className="flex -space-x-2">
-                              {event.talks.slice(0, 3).map((talk, i) => (
-                                <div 
-                                  key={talk.id} 
-                                  className="w-16 h-16 rounded-full overflow-hidden border-2 border-white relative"
-                                  style={{ zIndex: 10 - i }}
-                                  title={talk.speakers[0].name}
-                                >
-                                  <Image
-                                    src={talk.speakers[0].image}
-                                    alt={talk.speakers[0].name}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                              ))}
-                              {event.talks.length > 3 && (
+                              {event.talks.flatMap(talk => 
+                                talk.speakers.map(speaker => (
+                                  <div 
+                                    key={`${talk.id}-${speaker.id}`} 
+                                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-white relative"
+                                    style={{ zIndex: 10 - index }}
+                                    title={speaker.name}
+                                  >
+                                    <Image
+                                      src={speaker.image}
+                                      alt={speaker.name}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                ))
+                              )}
+                              {event.talks.reduce((total, talk) => total + talk.speakers.length, 0) > 3 && (
                                 <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-700" style={{ zIndex: 7 }}>
-                                  +{event.talks.length - 3}
+                                  +{event.talks.reduce((total, talk) => total + talk.speakers.length, 0) - 3}
                                 </div>
                               )}
                             </div>

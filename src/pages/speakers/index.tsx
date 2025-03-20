@@ -341,7 +341,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
 }
 
 export async function getStaticProps() {
-  const speakers = await getSpeakers();
+  const speakers = await getSpeakers({ shouldFilterVisible: true });
   const talks = await getTalks();
 
   // Calculate total talks across all speakers

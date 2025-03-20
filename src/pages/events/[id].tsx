@@ -220,6 +220,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
                       <div className="text-center">
                         <div className="text-5xl mb-3">⚛️</div>
+                        <h3 className="text-xl font-bold text-white mb-3">{event.title}</h3>
                         <div className="mt-3 flex justify-center space-x-3">
                           <span className="text-2xl">🚀</span>
                           <span className="text-2xl">💻</span>

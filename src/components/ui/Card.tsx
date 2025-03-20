@@ -34,12 +34,25 @@ export default function Card({
       >
         <Link href={`/events/${eventItem.id}`} className="block">
           <div className="relative h-64 w-full">
-            <Image
-              src={(eventItem.image || '/images/events/default.jpg') as string}
-              alt={`${eventItem.title} - ZurichJS event`}
-              fill
-              className="object-cover"
-            />
+            {eventItem.image ? (
+              <Image
+                src={eventItem.image as string}
+                alt={`${eventItem.title} - ZurichJS event`}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
+                <div className="text-center">
+                  <div className="text-5xl mb-3">⚛️</div>
+                  <div className="mt-3 flex justify-center space-x-3">
+                    <span className="text-2xl">🚀</span>
+                    <span className="text-2xl">💻</span>
+                    <span className="text-2xl">🔥</span>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
               <span className="bg-blue-700 text-xs text-white px-2 py-1 rounded-full mb-2 inline-block">

@@ -169,7 +169,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  {isUpcoming && (
                     <Button
                       href={event.meetupUrl}
                       variant="primary"
@@ -177,6 +176,15 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       className="bg-black text-yellow-400 hover:bg-gray-800"
                     >
                       RSVP on Meetup 🚀
+                    </Button>
+                  ) : isUpcoming && (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="bg-black text-yellow-400 hover:bg-gray-800 cursor-not-allowed"
+                      disabled
+                    >
+                      Hold tight! RSVP coming soon ⏳
                     </Button>
                   )}
 
@@ -478,16 +486,28 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   >
                     <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
                     <p className="mb-4">
-                      Don&apos;t miss this amazing JavaScript event! RSVP now to secure your spot.
+                      Don&apos;t miss this amazing JavaScript event! 
+                      {event.meetupUrl ? ' RSVP now to secure your spot.' : ' We\'re finalizing the details - check back soon!'}
                     </p>
-                    <Button
-                      href={event.meetupUrl}
-                      variant="primary"
-                      size="lg"
-                      className="w-full bg-black text-yellow-400 hover:bg-gray-800"
-                    >
-                      RSVP on Meetup
-                    </Button>
+                    {event.meetupUrl ? (
+                      <Button
+                        href={event.meetupUrl}
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-black text-yellow-400 hover:bg-gray-800"
+                      >
+                        RSVP on Meetup
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-black text-yellow-400 hover:bg-gray-800 cursor-not-allowed opacity-80"
+                        disabled
+                      >
+                        RSVP Coming Soon
+                      </Button>
+                    )}
                   </motion.div>
                 )}
               </div>

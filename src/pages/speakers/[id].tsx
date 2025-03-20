@@ -156,7 +156,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                     // Get the latest event date for each talk
                                     const getLatestDate = (talk: Talk) => {
                                         if (!talk.events || talk.events.length === 0) return new Date(0); // Talks with no events go last
-                                        return new Date(Math.max(...talk.events.map(event => new Date(event.date).getTime())));
+                                        return new Date(Math.max(...talk.events.map(event => new Date(event.datetime).getTime())));
                                     };
                                     return getLatestDate(b).getTime() - getLatestDate(a).getTime();
                                 })
@@ -164,7 +164,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                 // Check if the talk has any events
                                 const hasEvents = talk.events && talk.events.length > 0;
                                 // A talk is upcoming if it has at least one event in the future
-                                const upcoming = hasEvents && talk.events?.some(event => new Date(event.date) > new Date());
+                                const upcoming = hasEvents && talk.events?.some(event => new Date(event.datetime) > new Date());
                                 // A talk without events should be shown as "Coming Soon"
                                 const comingSoon = !hasEvents;
 
@@ -228,7 +228,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                                 >
                                                     <div className="font-medium">{event.title}</div>
                                                     <div className="text-sm text-gray-500">
-                                                        {new Date(event.date).toLocaleDateString('en-US', {
+                                                        {new Date(event.datetime).toLocaleDateString('en-GB', {
                                                             year: 'numeric',
                                                             month: 'long',
                                                             day: 'numeric'

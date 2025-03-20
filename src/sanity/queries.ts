@@ -42,13 +42,9 @@ interface SanityEvent {
 }
 
 const mapEventData = (event: SanityEvent) => {
-  const eventDateTime = event.datetime ? new Date(event.datetime) : null;
-  
   return {
     id: event.id?.current || "",
     title: event.title || "",
-    date: eventDateTime ? format(eventDateTime, "MMMM d, yyyy") : "",
-    time: eventDateTime ? format(eventDateTime, "h:mm a") : "",
     datetime: event.datetime || "",
     location: event.location || "",
     address: event.address || "",
@@ -62,7 +58,7 @@ const mapEventData = (event: SanityEvent) => {
       description: talk.description || "",
       type: talk.type || "",
       tags: talk.tags || [],
-      durationMinutes: talk.durationMinutes || 0,
+      durationMinutes: talk.durationMinutes as number || 0,
       speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
         id: speaker.id?.current || "",
         name: speaker.name || "",
@@ -98,7 +94,7 @@ export const getUpcomingEvents = async () => {
     }
   }`);
 
-  console.log(events);
+
   return events.map(mapEventData);
 };
 

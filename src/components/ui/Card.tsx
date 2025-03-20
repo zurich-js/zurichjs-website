@@ -51,7 +51,13 @@ export default function Card({
           <div className="p-4">
             <div className="flex items-center text-blue-700 mb-2 font-medium">
               <Calendar size={16} className="mr-1" />
-              <span className="text-sm">{eventItem.date} • {eventItem.time}</span>
+              <span className="text-sm">
+                {eventItem.datetime ? new Date(eventItem.datetime).toLocaleDateString('en-GB', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric'
+                }) : 'Date TBA'}
+              </span>
             </div>
             <div className="flex items-center text-gray-700 mb-2">
               <MapPin size={16} className="mr-1" />

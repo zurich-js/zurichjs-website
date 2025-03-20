@@ -2,66 +2,18 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, Building, ChevronLeft } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
-import { getEventById, getUpcomingEvents, getPastEvents } from '@/sanity/queries';
+import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
 import SEO from '@/components/SEO';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { FeatureFlags } from '@/constants';
 import React from 'react';
 
-// Define our TypeScript interfaces
-interface Speaker {
-  id: string;
-  name: string;
-  title: string;
-  image: string;
-  bio?: string;
-  twitter?: string;
-  github?: string;
-  linkedin?: string;
-}
-
-interface EventTalk {
-  id: string;
-  title: string;
-  speakers: Speaker[];
-  description?: string;
-  time?: string;
-  durationMinutes?: number; // Duration in minutes
-  slidesUrl?: string;
-  videoUrl?: string;
-}
-
-interface EventDetails {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  time: string;
-  location: string;
-  address?: string;
-  description: string;
-  image: string;
-  attendees: number;
-  maxAttendees?: number;
-  meetupUrl: string;
-  companyUrl?: string;
-  companyName?: string;
-  companyLogo?: string;
-  talks: EventTalk[];
-  relatedEvents?: {
-    id: string;
-    slug: string;
-    title: string;
-    date: string;
-    image: string;
-  }[];
-}
 
 interface EventDetailPageProps {
-  event: EventDetails;
+  event: Event;
 }
 
 export default function EventDetail({ event }: EventDetailPageProps) {
@@ -71,7 +23,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
   
   // Calculate if event is upcoming
-  const isUpcoming = new Date(event.date) > new Date();
+  const isUpcoming = new Date(event.datetime) > new Date();
 
   // Calculate available talk slots based on duration
   const regularTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes >= 10);
@@ -97,7 +49,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   // Share event function
   const shareEvent = async () => {
     const shareUrl = `${window.location.origin}/events/${event.id}`;
-    const shareText = `Join me at ${event.title} on ${event.date} with ZurichJS!`;
+    
+    // Format the date for sharing
+    const eventDate = new Date(event.datetime);
+    const formattedDate = eventDate.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const shareText = `Join me at ${event.title} on ${formattedDate} with ZurichJS!`;
 
     if (navigator.share) {
       try {
@@ -127,12 +89,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     <Layout>
       <SEO 
         title={`${event.title} | ZurichJS`}
-        description={`Join us for ${event.title} on ${event.date} at ${event.location}. ${event.description.slice(0, 120)}...`}
+        description={`Join us for ${event.title} on ${new Date(event.datetime).toLocaleDateString('en-GB', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })} at ${event.location}. ${event.description.slice(0, 120)}...`}
         openGraph={{
           title: `${event.title} | ZurichJS`,
           description: event.description.slice(0, 120) + '...',
           type: 'website',
-          image: event.image,
+          image: event.image || '',
           url: `/events/${event.id}`
         }}
       />
@@ -165,11 +132,25 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 <div className="flex flex-wrap gap-3 mb-6">
                   <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                     <Calendar size={16} className="mr-1.5" />
-                    <span>{event.date}</span>
+                      <span>{isClient 
+                        ? new Date(event.datetime).toLocaleDateString('en-GB', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })
+                        : new Date(event.datetime).toISOString().split('T')[0] // Fallback for SSR
+                      }</span>
                   </div>
                   <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                     <Clock size={16} className="mr-1.5" />
-                    <span>{event.time}</span>
+                    <span>{isClient
+                      ? new Date(event.datetime).toLocaleTimeString('en-GB', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : new Date(event.datetime).toISOString().split('T')[1].substring(0, 5) // Fallback for SSR
+                    }</span>
                   </div>
                   <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                     <MapPin size={16} className="mr-1.5" />
@@ -220,7 +201,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               >
                 <div className="relative display-none md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
                   <Image
-                    src={event.image}
+                    src={event.image || '/images/events/default.jpg'}
                     alt={event.title}
                     fill
                     className="object-cover"
@@ -284,12 +265,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                               )}
 
                               <div className="mb-4 text-gray-600 flex items-center gap-3">
-                                {talk.time && (
-                                  <div className="flex items-center">
-                                    <Clock size={14} className="mr-1" />
-                                    <span>{talk.time}</span>
-                                  </div>
-                                )}
                                 {talk.durationMinutes && (
                                   <div className="flex items-center bg-gray-100 px-2 py-0.5 rounded-md">
                                     <Clock size={12} className="mr-1 text-gray-500" />
@@ -330,7 +305,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                               </div>
 
                               <div className="flex flex-wrap gap-2">
-                                {!isUpcoming && talk.slidesUrl && (
+                                {/* {!isUpcoming && talk.slidesUrl && (
                                   <a
                                     href={talk.slidesUrl}
                                     target="_blank"
@@ -352,7 +327,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     <ExternalLink size={14} className="mr-1" />
                                     Video Recording
                                   </a>
-                                )}
+                                )} */}
                               </div>
                             </div>
                           </div>
@@ -408,42 +383,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </Button>
                   </motion.div>
                 )}
-
-                {/* Related Events */}
-                {event.relatedEvents && event.relatedEvents.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                  >
-                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-400">
-                      You Might Also Like 💛
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {event.relatedEvents.map((relatedEvent) => (
-                        <Link
-                          key={relatedEvent.id}
-                          href={`/events/${relatedEvent.slug}`}
-                          className="flex items-center gap-4 p-4 rounded-lg bg-white shadow-md hover:shadow-lg transition-shadow"
-                        >
-                          <div className="relative w-16 h-16 rounded overflow-hidden flex-shrink-0">
-                            <Image
-                              src={relatedEvent.image}
-                              alt={relatedEvent.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div>
-                            <h3 className="font-bold">{relatedEvent.title}</h3>
-                            <p className="text-sm text-gray-600">{relatedEvent.date}</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
               </div>
 
               {/* Sidebar */}
@@ -483,57 +422,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <ExternalLink size={14} className="ml-1" />
                   </a>
                 </motion.div>
-
-                {/* Hosted By */}
-                {event.companyName && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="bg-white p-6 rounded-lg shadow-md mb-6"
-                  >
-                    <h3 className="text-xl font-bold mb-3 flex items-center">
-                      <Building className="mr-2 text-yellow-500" size={20} />
-                      Hosted By
-                    </h3>
-
-                    <div className="flex items-center mb-4">
-                      {event.companyLogo ? (
-                        <div className="relative w-12 h-12 mr-3">
-                          <Image
-                            src={event.companyLogo}
-                            alt={event.companyName}
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <Building className="mr-3 text-gray-400" size={32} />
-                      )}
-                      <div>
-                        <p className="font-bold">{event.companyName}</p>
-                        <p className="text-sm text-gray-600">Event Host</p>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 mb-4">
-                      A big thank you to {event.companyName} for providing the venue and refreshments for this meetup! 🙏
-                    </p>
-
-                    {event.companyUrl && (
-                      <a
-                        href={event.companyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center"
-                      >
-                        Visit {event.companyName}
-                        <ExternalLink size={14} className="ml-1" />
-                      </a>
-                    )}
-                  </motion.div>
-                )}
 
                 {/* What to Bring */}
                 {isUpcoming && (
@@ -643,10 +531,10 @@ export async function getStaticPaths() {
   const pastEvents = await getPastEvents();
 
   const paths = [
-    ...upcomingEvents.map((event: EventDetails) => ({
+    ...upcomingEvents.map((event: Event) => ({
       params: { id: event.id },
     })),
-    ...pastEvents.map((event: EventDetails) => ({
+    ...pastEvents.map((event: Event) => ({
       params: { id: event.id },
     })),
   ];

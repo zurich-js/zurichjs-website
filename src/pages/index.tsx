@@ -50,7 +50,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
 
   // Get the next event date dynamically
   const nextEventDate = upcomingEvents && upcomingEvents.length > 0
-    ? new Date(upcomingEvents[0].date).toLocaleDateString('en-US', {
+    ? new Date(upcomingEvents[0].datetime).toLocaleDateString('en-GB', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'

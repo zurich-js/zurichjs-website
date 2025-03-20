@@ -2,54 +2,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, ChevronRight, Search } from 'lucide-react';
+import { Calendar, MapPin, Users, ChevronRight, Search, Clock } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
-import { getPastEvents } from '@/sanity/queries';
-import { getUpcomingEvents } from '@/sanity/queries';
+import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
 import SEO from '@/components/SEO';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { FeatureFlags } from '@/constants';
-// import { trackEventView } from '@/lib/analytics';
-
-// Define our TypeScript interfaces
-interface Speaker {
-  id: string;
-  name: string;
-  title: string;
-  image: string;
-}
-
-interface EventTalk {
-  id: string;
-  title: string;
-  speakers: Speaker[];
-  description?: string;
-  time?: string;
-}
-
-interface EventDetails {
-  id: string;
-  title: string;
-  slug: string;
-  date: string;
-  time: string;
-  location: string;
-  address?: string;
-  description: string;
-  image: string;
-  attendees: number;
-  maxAttendees?: number;
-  meetupUrl: string;
-  companyUrl?: string;
-  talks: EventTalk[];
-  upcoming: boolean;
-  featured?: boolean;
-}
 
 interface EventsPageProps {
-  upcomingEvents: EventDetails[];
-  pastEvents: EventDetails[];
+  upcomingEvents: Event[];
+  pastEvents: Event[];
 }
 
 export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) {
@@ -57,7 +20,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   // State for filtering and searching
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredEvents, setFilteredEvents] = useState<EventDetails[]>(upcomingEvents);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>(upcomingEvents);
   const [isClient, setIsClient] = useState(false);
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
 
@@ -152,124 +115,6 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
           </div>
         </section>
 
-        {/* Featured Event (if any) */}
-        {isClient && upcomingEvents.some(event => event.featured) && (
-          <section className="py-12 bg-white">
-            <div className="container mx-auto px-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="mb-8"
-              >
-                <h2 className="text-3xl font-bold mb-2 text-gray-900">Don&apos;t Miss This! 🌟</h2>
-                <p className="text-xl text-gray-800">
-                  Our featured JavaScript meetup is coming up soon!
-                </p>
-              </motion.div>
-
-              {upcomingEvents
-                .filter(event => event.featured)
-                .map(event => (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-gray-50 rounded-xl shadow-lg overflow-hidden"
-                  >
-                    <div className="md:flex">
-                      <div className="md:w-2/5 relative">
-                        <div className="h-64 md:h-full relative">
-                          <Image
-                            src={event.image}
-                            alt={event.title}
-                            fill
-                            className="object-cover"
-                          />
-                          <div className="absolute top-4 left-4">
-                            <span className="bg-yellow-400 text-black px-4 py-2 rounded-full font-bold">
-                              Featured Event!
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="md:w-3/5 p-6 md:p-8">
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                            <Calendar className="inline-block mr-1 h-4 w-4" />
-                            {event.date}
-                          </span>
-                          <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                            <Clock className="inline-block mr-1 h-4 w-4" />
-                            {event.time}
-                          </span>
-                          <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                            <MapPin className="inline-block mr-1 h-4 w-4" />
-                            {event.location}
-                          </span>
-                        </div>
-
-                        <h3 className="text-2xl font-bold mb-3 text-gray-900">{event.title}</h3>
-                        <p className="text-gray-800 mb-6">
-                          {event.description}
-                        </p>
-
-                        <div className="mb-6">
-                          <h4 className="font-bold mb-3 text-gray-900">Amazing Speakers: 🎤</h4>
-                          <div className="space-y-3">
-                            {event.talks.map(talk => (
-                              <div key={talk.id}>
-                                <p className="font-bold text-gray-900 mb-2">{talk.title}</p>
-                                <div className="space-y-2">
-                                  {talk.speakers.map(speaker => (
-                                    <div key={speaker.id} className="flex items-center">
-                                      <div className="w-10 h-10 relative rounded-full overflow-hidden mr-3 flex-shrink-0">
-                                        <Image
-                                          src={speaker.image}
-                                          alt={speaker.name}
-                                          fill
-                                          className="object-cover"
-                                        />
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-700">{speaker.name}, {speaker.title}</p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <Button
-                            href={event.meetupUrl}
-                            variant="primary"
-                            size="lg"
-                            className="bg-blue-700 hover:bg-blue-600 text-white"
-                          >
-                            RSVP Now - {event.attendees} attending! 🚀
-                          </Button>
-                          <Button
-                            href={`/events/${event.id}`}
-                            variant="outline"
-                            className="border-blue-700 text-blue-700 hover:bg-blue-50"
-                          >
-                            Event Details
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-            </div>
-          </section>
-        )}
-
         {/* Events List */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-6">
@@ -323,12 +168,12 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                     <Link href={`/events/${event.id}`} className="block flex-grow flex flex-col h-full">
                       <div className="relative h-64 w-full">
                         <Image
-                          src={event.image}
+                          src={event.image || '/images/events/default.jpg'}
                           alt={event.title}
                           fill
                           className="object-cover"
                         />
-                        {isClient && event.upcoming && (
+                        {isClient && event.datetime > new Date().toISOString() && (
                           <div className="absolute top-4 left-4">
                             <span className="bg-blue-700 text-white px-3 py-1 rounded-full text-sm font-medium">
                               Upcoming! 🗓️
@@ -341,8 +186,22 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
                         <div className="flex flex-col text-sm text-gray-700 mb-3">
                           <div className="flex items-center mb-1">
-                            <Calendar size={14} className="mr-1 text-blue-700" />
-                            <span>{event.date}</span>
+                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                              <Calendar className="inline-block mr-1 h-4 w-4" />
+                              {isClient ? new Date(event.datetime).toLocaleDateString('en-GB', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              }) : ''}
+                            </span>
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                              <Clock className="inline-block mr-1 h-4 w-4" />
+                              {isClient ? new Date(event.datetime).toLocaleTimeString('en-GB', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              }) : ''}
+                            </span>
                           </div>
                           <div className="flex items-center">
                             <MapPin size={14} className="mr-1 text-blue-700" />
@@ -384,7 +243,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             </div>
                           )}
 
-                          {isClient && event.upcoming && (
+                          {isClient && event.datetime > new Date().toISOString() && (
                             <div className="flex items-center text-sm">
                               <Users size={14} className="mr-1 text-blue-700" />
                               <span className="text-blue-700 font-medium">{event.attendees} attending</span>

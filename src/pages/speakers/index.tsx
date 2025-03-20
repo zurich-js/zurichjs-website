@@ -6,7 +6,7 @@ import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin, Users, Trend
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import SEO from '@/components/SEO';
-import { getSpeakers, getTalks } from '@/sanity/queries';
+import { Event, getSpeakers, getTalks } from '@/sanity/queries';
 import { Speaker, Talk } from '@/types';
 
 interface SpeakersProps {
@@ -34,14 +34,8 @@ interface UpcomingTalk {
 // Add these interfaces for the talk data structure
 interface TalkData {
   title: string;
-  events?: EventData[];
+  events?: Event[];
   speakers?: SpeakerData[];
-}
-
-interface EventData {
-  id: string;
-  date: string;
-  location: string;
 }
 
 interface SpeakerData {
@@ -184,7 +178,12 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                                 </div>
                                 <div className="flex items-center mb-2 sm:mb-0">
                                   <Calendar size={16} className="mr-1 flex-shrink-0" />
-                                  <span className="mr-4">{talk.date}</span>
+                                  <span className="mr-4">{new Date(talk.date).toLocaleDateString('en-GB', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}</span>
                                 </div>
                                 <div className="flex items-center">
                                   <MapPin size={16} className="mr-1 flex-shrink-0" />
@@ -366,14 +365,14 @@ export async function getStaticProps() {
   const upcomingTalks: UpcomingTalk[] = talks
     .filter((talk: TalkData) => talk.events && talk.events.length > 0)
     .flatMap((talk: TalkData) => 
-      talk.events!.map((event: EventData) => ({
+      talk.events!.map((event: Event) => ({
         id: event.id,
         title: talk.title,
         speakerName: talk.speakers && talk.speakers.length > 0 ? talk.speakers[0].name : 'Unknown Speaker',
         speakerId: talk.speakers && talk.speakers.length > 0 ? talk.speakers[0].id : '',
-        date: event.date,
+        date: event.datetime,
         location: event.location,
-        eventDate: new Date(event.date)
+        eventDate: new Date(event.datetime)
       } as TalkWithEventDate))
     )
     .filter((talk: TalkWithEventDate) => talk.eventDate > now)

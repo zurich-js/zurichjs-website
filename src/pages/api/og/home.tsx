@@ -88,7 +88,7 @@ export default async function handler() {
                   color: '#333',
                 }}
               >
-                {new Date(nextEvent.date).toLocaleDateString('en-US', {
+                {new Date(nextEvent.datetime).toLocaleDateString('en-GB', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',

@@ -1,3 +1,5 @@
+import { Event } from "@/sanity/queries";
+
 export interface Speaker {
   id: string;
   name: string;
@@ -21,20 +23,6 @@ export interface Talk {
   durationMinutes?: number;
   events?: Event[];
   speakers: SpeakerSummary[];
-}
-
-export interface Event {
-  id: string;
-  title: string;
-  date: string;
-  time?: string;
-  location: string;
-  address?: string;
-  attendees?: number;
-  image?: string | null;
-  description?: string;
-  meetupUrl?: string;
-  talks?: Talk[];
 }
 
 export interface SpeakerSummary {

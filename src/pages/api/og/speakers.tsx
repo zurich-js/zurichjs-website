@@ -10,7 +10,7 @@ export default async function handler() {
   try {
     // Fetch speakers data
     console.log('Fetching speakers data');
-    const speakers = await getSpeakers();
+    const speakers = await getSpeakers({ shouldFilterVisible: true });
     console.log(`Fetched ${speakers.length} speakers`);
     
     // Limit to a reasonable number for the grid

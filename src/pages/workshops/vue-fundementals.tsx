@@ -51,7 +51,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         locationInfo: "TBD",
         description: "Dive into the world of Vue.js with this comprehensive workshop designed for developers looking to master this powerful and flexible JavaScript framework. Learn how to build reactive, component-based applications with Vue 3's Composition API. This workshop covers essential concepts, best practices, and real-world patterns to help you create maintainable and scalable Vue applications. Through hands-on exercises and practical examples, you'll gain the confidence to implement Vue.js in your projects and leverage its ecosystem effectively.",
         priceInfo: "CHF 120 per person",
-        maxAttendees: 25,
+        maxAttendees: 15,
         speaker: speaker,
         topics: [
             {
@@ -181,9 +181,27 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Scroll to registration function
     const scrollToRegistration = () => {
-        const registrationElement = document.getElementById('registrationContainer');
+        track('workshop_waitlist_button_clicked', {
+            workshop_id: workshop.id,
+            workshop_title: workshop.title
+        });
+
+        const registrationElement = document.getElementById('getWaitlistContainer');
         if (registrationElement) {
-            registrationElement.scrollIntoView({ behavior: 'smooth' });
+            // Get the element's position
+            const elementPosition = registrationElement.getBoundingClientRect().top + window.pageYOffset;
+
+            // Scroll to a position 100px above the element
+            window.scrollTo({
+                top: elementPosition - 100,
+                behavior: 'smooth'
+            });
+
+            // Add a highlight effect
+            registrationElement.classList.add('highlight-pulse');
+            setTimeout(() => {
+                registrationElement.classList.remove('highlight-pulse');
+            }, 2000);
         }
     };
 
@@ -206,9 +224,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 <section className="py-12">
                     <div className="container mx-auto px-6">
                         <div className="mb-4">
-                            <Link href="/events" className="inline-flex items-center text-black hover:underline">
+                            <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
                                 <ChevronLeft size={16} className="mr-1" />
-                                Back to all events
+                                Back to all workshops
                             </Link>
                         </div>
 
@@ -520,7 +538,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </h3>
 
                                     <p className="mb-4">
-                                        This workshop has limited seats to ensure a quality learning experience. Register now to secure your spot!
+                                        This workshop has limited seats to ensure a quality learning experience. Join the waitlist to be notified when registration opens!
                                     </p>
 
                                     <div className="mb-6">
@@ -529,20 +547,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <p className="text-sm text-gray-500 mt-1">Includes workshop materials and code samples</p>
                                     </div>
 
-                                    <a
-                                        href="https://ti.to/zurichjs/vuejs-fundamentals-workshop"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-bold text-center hover:bg-yellow-300 transition-colors"
-                                        onClick={() => {
-                                            track('workshop_registration_clicked', {
-                                                workshop_id: workshop.id,
-                                                workshop_title: workshop.title
-                                            });
-                                        }}
-                                    >
-                                        Register Now
-                                    </a>
+                                    {/* GetWaitlist Component */}
+                                    <div 
+                                        id="getWaitlistContainer" 
+                                        data-waitlist_id="26500" 
+                                        data-widget_type="WIDGET_1"
+                                        className="transition-all duration-300"
+                                    ></div>
 
                                     <p className="text-sm text-gray-500 mt-2 text-center">
                                         Workshop ticket is sold separately from conference tickets
@@ -752,7 +763,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         >
                             <h2 className="text-3xl font-bold mb-4 text-yellow-400">Ready to Master Vue.js? 🚀</h2>
                             <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
-                                Join us for this workshop and learn how to build modern, reactive web applications with Vue.js!
+                                Join our workshop waitlist today and be the first to know when registration opens!
                             </p>
 
                             <div className="flex justify-center">
@@ -764,7 +775,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         scrollToRegistration();
                                     }}
                                 >
-                                    Register Now
+                                    Join the Waitlist
                                 </a>
                             </div>
                         </motion.div>

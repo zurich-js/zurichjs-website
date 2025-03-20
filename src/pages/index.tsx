@@ -226,7 +226,7 @@ export async function getStaticProps() {
 
   const stats = await getStats();
   const upcomingEvents = await getUpcomingEvents();
-  const speakers = await getSpeakers();
+  const speakers = await getSpeakers({ shouldFilterVisible: true });
   const partners = getPartners();
   return {
     props: {

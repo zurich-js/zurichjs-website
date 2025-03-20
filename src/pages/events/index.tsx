@@ -167,12 +167,25 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                   >
                     <Link href={`/events/${event.id}`} className="flex-grow flex flex-col h-full">
                       <div className="relative h-64 w-full">
-                        <Image
-                          src={event.image || '/images/events/default.jpg'}
-                          alt={event.title}
-                          fill
-                          className="object-cover"
-                        />
+                        {event.image ? (
+                          <Image
+                            src={event.image}
+                            alt={event.title}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
+                            <div className="text-center">
+                              <div className="text-5xl mb-3">⚛️</div>
+                              <div className="mt-3 flex justify-center space-x-3">
+                                <span className="text-2xl">🚀</span>
+                                <span className="text-2xl">💻</span>
+                                <span className="text-2xl">🔥</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="p-6 flex flex-col flex-grow">
                         <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">{event.title}</h3>
@@ -239,7 +252,11 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                           {isClient && event.datetime > new Date().toISOString() && (
                             <div className="flex items-center text-sm">
                               <Users size={14} className="mr-1 text-blue-700" />
-                              <span className="text-blue-700 font-medium">{event.attendees} attending</span>
+                              <span className="text-blue-700 font-medium">
+                                {event.attendees === 0 
+                                  ? "Be one of the first to RSVP!" 
+                                  : `${event.attendees} attending`}
+                              </span>
                             </div>
                           )}
 

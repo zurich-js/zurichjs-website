@@ -40,7 +40,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const { track } = useEvents();
-  
+
   // Sample workshop data - this would come from your CMS in a real implementation
   const workshop: WorkshopDetails = {
     id: "ai-conversations-workshop-2025",
@@ -50,8 +50,8 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     timeInfo: "90 minutes",
     locationInfo: "Zurich (Venue TBD)",
     description: "Join us for our first-ever hands-on workshop focused on AI conversations. In this interactive session, you'll learn how to effectively utilize Claude AI, understand its unique capabilities compared to other large language models, and build your very own AI chatbot. This workshop is perfect for JavaScript developers interested in AI integration, regardless of your experience level with AI technologies.",
-    priceInfo: "CHF 30-50 per person (price decreases with more participants)",
-    maxAttendees: 25,
+    priceInfo: "CHF 50 per person",
+    maxAttendees: 20,
     speaker: speaker,
     topics: [
       {
@@ -93,13 +93,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
   // Set up client-side rendering flag to prevent hydration issues
   useEffect(() => {
     setIsClient(true);
-    
+
     // Track page view
     track('workshop_page_viewed', {
       workshop_id: workshop.id,
       workshop_title: workshop.title
     });
-    
+
     // Initialize GetWaitlist when client is ready
     if (typeof window !== 'undefined') {
       // Load the GetWaitlist script dynamically
@@ -107,14 +107,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
       script.src = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.js';
       script.async = true;
       document.body.appendChild(script);
-      
+
       // Add the stylesheet
       const link = document.createElement('link');
       link.rel = 'stylesheet';
       link.type = 'text/css';
       link.href = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.css';
       document.head.appendChild(link);
-      
+
       // Add custom CSS for highlight effect
       const style = document.createElement('style');
       style.textContent = `
@@ -167,7 +167,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     navigator.clipboard.writeText(text).then(() => {
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
-      
+
       track('workshop_share_completed', {
         workshop_id: workshop.id,
         workshop_title: workshop.title,
@@ -182,18 +182,18 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
       workshop_id: workshop.id,
       workshop_title: workshop.title
     });
-    
+
     const waitlistElement = document.getElementById('getWaitlistContainer');
     if (waitlistElement) {
       // Get the element's position
       const elementPosition = waitlistElement.getBoundingClientRect().top + window.pageYOffset;
-      
+
       // Scroll to a position 100px above the element
       window.scrollTo({
         top: elementPosition - 100,
         behavior: 'smooth'
       });
-      
+
       // Add a highlight effect
       waitlistElement.classList.add('highlight-pulse');
       setTimeout(() => {
@@ -204,7 +204,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title={`${workshop.title} | ZurichJS Workshop`}
         description={`Join us for ${workshop.title}: ${workshop.subtitle}. ${workshop.description.slice(0, 120)}...`}
         openGraph={{
@@ -221,9 +221,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         <section className="py-12">
           <div className="container mx-auto px-6">
             <div className="mb-4">
-              <Link href="/events" className="inline-flex items-center text-black hover:underline">
+              <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
                 <ChevronLeft size={16} className="mr-1" />
-                Back to all events
+                Back to all workshops
               </Link>
             </div>
 
@@ -289,7 +289,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
               >
                 <div className="relative rounded-lg overflow-hidden shadow-lg bg-white p-6">
                   <h3 className="text-xl font-bold mb-4 text-black">Workshop Highlights</h3>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-start">
                       <div className="bg-yellow-400 p-2 rounded-full mr-3">
@@ -300,7 +300,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         <p className="text-gray-600 text-sm">Build a real AI chatbot during the session</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start">
                       <div className="bg-yellow-400 p-2 rounded-full mr-3">
                         <Users size={18} className="text-black" />
@@ -310,7 +310,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         <p className="text-gray-600 text-sm">Limited to 25 attendees for personalized attention</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start">
                       <div className="bg-yellow-400 p-2 rounded-full mr-3">
                         <BookOpen size={18} className="text-black" />
@@ -321,7 +321,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 pt-4 border-t border-gray-200">
                     <div className="flex items-center mb-2">
                       <Image
@@ -463,21 +463,21 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     <Users className="mr-2 text-yellow-500" size={20} />
                     Join the Waitlist
                   </h3>
-                  
+
                   <p className="mb-4">
                     This workshop has limited seats to ensure a quality learning experience. Sign up for the waitlist to be notified when registration opens!
                   </p>
-                  
+
                   <div className="mb-6">
                     <p className="font-semibold">Expected Price:</p>
                     <p className="text-gray-700">{workshop.priceInfo}</p>
                     <p className="text-sm text-gray-500 mt-1">The more people sign up, the lower we can make the price!</p>
                   </div>
-                  
+
                   {/* GetWaitlist Component */}
-                  <div 
-                    id="getWaitlistContainer" 
-                    data-waitlist_id="26341" 
+                  <div
+                    id="getWaitlistContainer"
+                    data-waitlist_id="26341"
                     data-widget_type="WIDGET_1"
                     className="transition-all duration-300"
                   ></div>
@@ -492,7 +492,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                   className="bg-white p-6 rounded-lg shadow-md mb-6"
                 >
                   <h3 className="text-xl font-bold mb-3">Workshop Instructor</h3>
-                  
+
                   <div className="flex items-start">
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden mr-4">
                       <Image
@@ -505,41 +505,41 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     <div>
                       <h4 className="font-bold text-lg">{workshop.speaker.name}</h4>
                       <p className="text-gray-600 mb-2">{workshop.speaker.title}</p>
-                      
+
                       <div className="flex space-x-2">
                         {workshop.speaker.twitter && (
-                          <a 
+                          <a
                             href={workshop.speaker.twitter}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-400 hover:text-blue-600"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                              <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
                             </svg>
                           </a>
                         )}
                         {workshop.speaker.github && (
-                          <a 
+                          <a
                             href={workshop.speaker.github}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-gray-700 hover:text-black"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                              <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
                             </svg>
                           </a>
                         )}
                         {workshop.speaker.linkedin && (
-                          <a 
+                          <a
                             href={workshop.speaker.linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-700 hover:text-blue-900"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                             </svg>
                           </a>
                         )}
@@ -557,23 +557,23 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                   className="bg-white p-6 rounded-lg shadow-md mb-6"
                 >
                   <h3 className="text-xl font-bold mb-3">Workshop Details</h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <p className="font-semibold text-gray-700">Format:</p>
                       <p>Hands-on interactive workshop</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold text-gray-700">What to bring:</p>
                       <p>Laptop with Node.js installed</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold text-gray-700">Experience level:</p>
                       <p>Beginner to intermediate</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold text-gray-700">Materials:</p>
                       <p>All workshop materials and sample code will be provided</p>
@@ -590,23 +590,23 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                   className="bg-white p-6 rounded-lg shadow-md"
                 >
                   <h3 className="text-xl font-bold mb-3">FAQs</h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <p className="font-semibold">When will the workshop take place?</p>
                       <p className="text-gray-700">We&apos;re planning for Q2 2025. Exact date and time will be announced once we gauge interest.</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold">How much will it cost?</p>
                       <p className="text-gray-700">Between CHF 30-50 per person. The more participants, the lower the price.</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold">Is this suitable for beginners?</p>
                       <p className="text-gray-700">Absolutely! We only require basic JavaScript knowledge.</p>
                     </div>
-                    
+
                     <div>
                       <p className="font-semibold">Will there be recordings available?</p>
                       <p className="text-gray-700">This is a hands-on workshop, so we recommend attending in person for the best experience.</p>
@@ -632,10 +632,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
               <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
                 Join our workshop waitlist today and be the first to know when registration opens!
               </p>
-              
+
               <div className="flex justify-center">
-                <a 
-                  href="#getWaitlistContainer" 
+                <a
+                  href="#getWaitlistContainer"
                   className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
@@ -657,13 +657,13 @@ export async function getStaticProps() {
   // Fetch the speaker data using the getSpeakerById function
   const speaker = await getSpeakerById('adele-kuzmiakova');
 
-  
+
   if (!speaker) {
     return {
       notFound: true,
     };
   }
-  
+
   return {
     props: {
       speaker,

@@ -12,28 +12,28 @@ import useEvents from '@/hooks/useEvents';
 import { Speaker } from '@/types';
 
 interface WorkshopDetails {
-  id: string;
-  title: string;
-  subtitle: string;
-  dateInfo: string;
-  timeInfo: string;
-  locationInfo: string;
-  description: string;
-  priceInfo: string;
-  maxAttendees: number;
-  speaker: Speaker;
-  topics: {
+    id: string;
     title: string;
+    subtitle: string;
+    dateInfo: string;
+    timeInfo: string;
+    locationInfo: string;
     description: string;
-    icon: React.ReactNode;
-  }[];
-  takeaways: string[];
-  targetAudience: string[];
-  prerequisites: string[];
+    priceInfo: string;
+    maxAttendees: number;
+    speaker: Speaker;
+    topics: {
+        title: string;
+        description: string;
+        icon: React.ReactNode;
+    }[];
+    takeaways: string[];
+    targetAudience: string[];
+    prerequisites: string[];
 }
 
 interface WorkshopPageProps {
-  speaker: Speaker;
+    speaker: Speaker;
 }
 
 
@@ -51,8 +51,8 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         timeInfo: "Duration: 2-3 hours",
         locationInfo: "TBD",
         description: "Prepare your web applications for the European Accessibility Act (EAA) with this comprehensive workshop on web accessibility fundamentals. Learn how to create inclusive digital experiences that comply with accessibility standards and regulations. This workshop covers essential concepts, practical techniques, and best practices to help you build accessible websites and applications. Through hands-on exercises and real-world examples, you'll gain the knowledge and skills to make your digital products accessible to everyone, including people with disabilities.",
-        priceInfo: "CHF 80 per person",
-        maxAttendees: 25,
+        priceInfo: "CHF 120 per person",
+        maxAttendees: 15,
         speaker: speaker,
         topics: [
             {
@@ -99,12 +99,66 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     useEffect(() => {
         setIsClient(true);
+
+        // Track page view
+        track('workshop_page_viewed', {
+            workshop_id: workshop.id,
+            workshop_title: workshop.title
+        });
+
+        // Initialize GetWaitlist when client is ready
+        if (typeof window !== 'undefined') {
+            // Load the GetWaitlist script dynamically
+            const script = document.createElement('script');
+            script.src = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.js';
+            script.async = true;
+            document.body.appendChild(script);
+
+            // Add the stylesheet
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.type = 'text/css';
+            link.href = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.css';
+            document.head.appendChild(link);
+
+            // Add custom CSS for highlight effect
+            const style = document.createElement('style');
+            style.textContent = `
+            @keyframes pulse-highlight {
+              0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+              70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
+              100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+            }
+            .highlight-pulse {
+              animation: pulse-highlight 1.5s ease-in-out;
+            }
+          `;
+            document.head.appendChild(style);
+        }
     }, []);
 
-    const scrollToRegistration = () => {
-        const registrationElement = document.getElementById('registrationContainer');
-        if (registrationElement) {
-            registrationElement.scrollIntoView({ behavior: 'smooth' });
+    const scrollToWaitlist = () => {
+        track('workshop_waitlist_button_clicked', {
+            workshop_id: workshop.id,
+            workshop_title: workshop.title
+        });
+
+        const waitlistElement = document.getElementById('getWaitlistContainer');
+        if (waitlistElement) {
+            // Get the element's position
+            const elementPosition = waitlistElement.getBoundingClientRect().top + window.pageYOffset;
+
+            // Scroll to a position 100px above the element
+            window.scrollTo({
+                top: elementPosition - 100,
+                behavior: 'smooth'
+            });
+
+            // Add a highlight effect
+            waitlistElement.classList.add('highlight-pulse');
+            setTimeout(() => {
+                waitlistElement.classList.remove('highlight-pulse');
+            }, 2000);
         }
     };
 
@@ -154,9 +208,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 <section className="py-12">
                     <div className="container mx-auto px-6">
                         <div className="mb-4">
-                            <Link href="/events" className="inline-flex items-center text-black hover:underline">
+                            <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
                                 <ChevronLeft size={16} className="mr-1" />
-                                Back to all events
+                                Back to all workshops
                             </Link>
                         </div>
 
@@ -464,37 +518,26 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 >
                                     <h3 className="text-xl font-bold mb-3 flex items-center">
                                         <Users className="mr-2 text-yellow-500" size={20} />
-                                        Register for the Workshop
+                                        Join the Waitlist
                                     </h3>
 
                                     <p className="mb-4">
-                                        This workshop has limited seats to ensure a quality learning experience. Register now to secure your spot!
+                                        This workshop has limited seats to ensure a quality learning experience. Sign up for the waitlist to be notified when registration opens!
                                     </p>
 
                                     <div className="mb-6">
-                                        <p className="font-semibold">Price:</p>
+                                        <p className="font-semibold">Expected Price:</p>
                                         <p className="text-gray-700">{workshop.priceInfo}</p>
                                         <p className="text-sm text-gray-500 mt-1">Includes workshop materials and code samples</p>
                                     </div>
 
-                                    <a
-                                        href="https://ti.to/zurichjs/accessibility-fundamentals-workshop"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block w-full bg-yellow-400 text-black py-3 px-4 rounded-lg font-bold text-center hover:bg-yellow-300 transition-colors"
-                                        onClick={() => {
-                                            track('workshop_registration_clicked', {
-                                                workshop_id: workshop.id,
-                                                workshop_title: workshop.title
-                                            });
-                                        }}
-                                    >
-                                        Register Now
-                                    </a>
-
-                                    <p className="text-sm text-gray-500 mt-2 text-center">
-                                        Workshop ticket is sold separately from conference tickets
-                                    </p>
+                                    {/* GetWaitlist Component */}
+                                    <div
+                                        id="getWaitlistContainer"
+                                        data-waitlist_id="26498"
+                                        data-widget_type="WIDGET_1"
+                                        className="transition-all duration-300"
+                                    ></div>
                                 </motion.div>
 
                                 {/* Workshop Format */}
@@ -509,11 +552,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <LayoutTemplate className="mr-2 text-yellow-500" size={20} />
                                         Workshop Format
                                     </h3>
-                                    
+
                                     <p className="mb-4">
                                         This workshop is designed to provide a comprehensive introduction to web accessibility through a mix of theory and hands-on practice. You&apos;ll learn how to identify and fix common accessibility issues in real-world scenarios.
                                     </p>
-                                    
+
                                     <ul className="list-disc pl-5 space-y-2 text-gray-700">
                                         <li>Interactive learning with practical demonstrations</li>
                                         <li>Hands-on exercises to apply accessibility techniques</li>
@@ -705,14 +748,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                             <div className="flex justify-center">
                                 <a
-                                    href="#registrationContainer"
+                                    href="#getWaitlistContainer"
                                     className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        scrollToRegistration();
+                                        scrollToWaitlist();
                                     }}
                                 >
-                                    Register Now
+                                    Join the Waitlist
                                 </a>
                             </div>
                         </motion.div>

@@ -32,10 +32,11 @@ export default function Header() {
     { name: 'Speakers', path: '/speakers' },
     { name: 'CFP', path: '/cfp' },
     { name: 'Partnerships', path: '/partnerships' },
-    { name: 'Support', path: '/support' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
+
+  const coffeeItem = { name: '☕ Buy us a coffee', path: '/buy-us-a-coffee' };
 
   return (
     <header 
@@ -57,7 +58,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:block">
-            <ul className="flex space-x-8">
+            <ul className="flex space-x-8 items-center">
               {navItems.map((item) => (
                 <li key={item.path}>
                   <Link 
@@ -70,6 +71,14 @@ export default function Header() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link 
+                  href={coffeeItem.path}
+                  className={`bg-yellow-400 text-black px-4 py-2 rounded-full font-medium hover:bg-yellow-300 transition-colors ${scrolled ? '' : 'border border-black'}`}
+                >
+                  {coffeeItem.name}
+                </Link>
+              </li>
             </ul>
           </nav>
 
@@ -106,6 +115,14 @@ export default function Header() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link 
+                  href={coffeeItem.path}
+                  className="block py-2 bg-yellow-400 text-black px-4 rounded-full font-medium hover:bg-yellow-300 transition-colors"
+                >
+                  {coffeeItem.name}
+                </Link>
+              </li>
             </ul>
           </nav>
         </motion.div>

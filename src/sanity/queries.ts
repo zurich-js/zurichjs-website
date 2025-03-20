@@ -152,10 +152,14 @@ export const getEventById = async (eventId: string) => {
 // Add additional interfaces for the return types
 
 
-export const getSpeakers = async (): Promise<Speaker[]> => {
+export const getSpeakers = async ({
+  shouldFilterVisible = true
+}: {
+  shouldFilterVisible?: boolean
+}): Promise<Speaker[]> => {
   // First fetch all speakers with their talks
   const speakers = await client.fetch(`
-    *[_type == "speaker" && isVisible == true] {
+    *[_type == "speaker" ${shouldFilterVisible ? '&& isVisible == true' : ''}] {
       ...,
       "id": id.current,
       "image": {

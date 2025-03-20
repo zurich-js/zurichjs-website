@@ -297,7 +297,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
 }
 
 export async function getStaticPaths() {
-    const speakers = await getSpeakers();
+    const speakers = await getSpeakers({ shouldFilterVisible: true });
     const speakerIds = speakers.map((speaker: Speaker) => speaker.id);
 
     const paths = speakerIds.map((id: string) => ({
@@ -311,7 +311,7 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({ params }: { params: { id: string } }) {
-    const speakers = await getSpeakers();
+    const speakers = await getSpeakers({ shouldFilterVisible: true });
 
     // Get the speaker data
     const speaker = speakers.find((speaker: Speaker) => speaker.id === params.id);

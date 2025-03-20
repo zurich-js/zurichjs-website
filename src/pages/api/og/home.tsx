@@ -115,7 +115,7 @@ export default async function handler() {
       )
     } else {
       // If no upcoming event, show ZurichJS stats
-      const speakers = await getSpeakers()
+      const speakers = await getSpeakers({ shouldFilterVisible: true })
       const partners = await getPartners()
       
       return new ImageResponse(

@@ -30,8 +30,7 @@ interface SanityTalk {
 interface SanityEvent {
   id: { current: string };
   title: string;
-  date: string;
-  time: string;
+  datetime: string;
   location: string;
   address: string;
   attendees: number;
@@ -43,11 +42,14 @@ interface SanityEvent {
 }
 
 const mapEventData = (event: SanityEvent) => {
+  const eventDateTime = event.datetime ? new Date(event.datetime) : null;
+  
   return {
     id: event.id?.current || "",
     title: event.title || "",
-    date: event.date ? format(new Date(event.date), "MMMM d, yyyy") : "",
-    time: event.time || "",
+    date: eventDateTime ? format(eventDateTime, "MMMM d, yyyy") : "",
+    time: eventDateTime ? format(eventDateTime, "h:mm a") : "",
+    datetime: event.datetime || "",
     location: event.location || "",
     address: event.address || "",
     attendees: event.attendees || 0,
@@ -74,7 +76,7 @@ const mapEventData = (event: SanityEvent) => {
 export type Event = ReturnType<typeof mapEventData>;
 
 export const getUpcomingEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && date > now()] {
+  const events = await client.fetch(`*[_type == "events" && datetime > now()] {
     ...,
     "image": {
       "asset": {
@@ -96,12 +98,12 @@ export const getUpcomingEvents = async () => {
     }
   }`);
 
-
+  console.log(events);
   return events.map(mapEventData);
 };
 
 export const getPastEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && date < now()] {
+  const events = await client.fetch(`*[_type == "events" && datetime < now()] {
     ...,
     "image": {
       "asset": {
@@ -175,7 +177,7 @@ export const getSpeakers = async (): Promise<Speaker[]> => {
         "events": *[_type == "events" && references(^._id)]{
           "id": id.current,
           title,
-          date,
+          datetime,
           location
         }
       }
@@ -202,7 +204,7 @@ export const getTalks = async (): Promise<Talk[]> => {
       "events": *[_type == "events" && references(^._id)] {
         "id": id.current,
         title,
-        date,
+        datetime,
         location
       },
       speakers[]-> {
@@ -217,7 +219,7 @@ export const getTalks = async (): Promise<Talk[]> => {
     }`);
 
   // Map the data to a consistent format
-  return talks.map((talk: SanityTalk & { events: Array<{ id: string; title: string; date: string; location: string }> }) => ({
+  return talks.map((talk: SanityTalk & { events: Array<{ id: string; title: string; datetime: string; location: string }> }) => ({
     id: talk.id || "",
     title: talk.title || "",
     description: talk.description || "",
@@ -227,7 +229,7 @@ export const getTalks = async (): Promise<Talk[]> => {
     events: (talk.events || []).map(event => ({
       id: event.id || "",
       title: event.title || "",
-      date: event.date ? format(new Date(event.date), "MMMM d, yyyy") : "",
+      date: event.datetime ? format(new Date(event.datetime), "MMMM d, yyyy") : "",
       location: event.location || ""
     })),
     speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
@@ -275,7 +277,7 @@ export const getSpeakerById = async (speakerId: string): Promise<Speaker | null>
         "events": *[_type == "events" && references(^._id)]{
           "id": id.current,
           title,
-          date,
+          datetime,
           location
         }
       }

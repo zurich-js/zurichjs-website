@@ -60,7 +60,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   const [filteredEvents, setFilteredEvents] = useState<EventDetails[]>(upcomingEvents);
   const [isClient, setIsClient] = useState(false);
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
-  
+
   // Set up client-side rendering flag to prevent hydration issues
   useEffect(() => {
     setIsClient(true);
@@ -69,24 +69,24 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   // Update filtered events when tab changes or search query updates
   useEffect(() => {
     const events = activeTab === 'upcoming' ? upcomingEvents : pastEvents;
-    
+
     if (searchQuery.trim() === '') {
       setFilteredEvents(events);
       return;
     }
-    
+
     const query = searchQuery.toLowerCase();
-    const filtered = events.filter(event => 
-      event.title.toLowerCase().includes(query) || 
+    const filtered = events.filter(event =>
+      event.title.toLowerCase().includes(query) ||
       event.description.toLowerCase().includes(query) ||
-      event.talks.some(talk => 
-        talk.title.toLowerCase().includes(query) || 
-        talk.speakers.some(speaker => 
+      event.talks.some(talk =>
+        talk.title.toLowerCase().includes(query) ||
+        talk.speakers.some(speaker =>
           speaker.name.toLowerCase().includes(query)
         )
       )
     );
-    
+
     setFilteredEvents(filtered);
   }, [activeTab, searchQuery, upcomingEvents, pastEvents]);
 
@@ -110,7 +110,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title={`${activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'} | ZurichJS`}
         description="Join the vibrant JavaScript community in Zurich! Check out our upcoming meetups, workshops, and talks for JavaScript enthusiasts of all levels."
         openGraph={{
@@ -137,11 +137,11 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
               <p className="text-xl max-w-3xl mx-auto mb-8 text-gray-900">
                 Awesome meetups for JS enthusiasts of all levels! Join us to learn, share, and connect with fellow developers in our super friendly community.
               </p>
-              
+
               {upcomingEvents.length > 0 && (
-                <Button 
-                  href={upcomingEvents[0].meetupUrl} 
-                  variant="primary" 
+                <Button
+                  href={upcomingEvents[0].meetupUrl}
+                  variant="primary"
                   size="lg"
                   className="bg-blue-700 hover:bg-blue-600 text-white"
                 >
@@ -211,12 +211,12 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             {event.location}
                           </span>
                         </div>
-                        
+
                         <h3 className="text-2xl font-bold mb-3 text-gray-900">{event.title}</h3>
                         <p className="text-gray-800 mb-6">
                           {event.description}
                         </p>
-                        
+
                         <div className="mb-6">
                           <h4 className="font-bold mb-3 text-gray-900">Amazing Speakers: 🎤</h4>
                           <div className="space-y-3">
@@ -244,18 +244,18 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             ))}
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <Button 
-                            href={event.meetupUrl} 
+                          <Button
+                            href={event.meetupUrl}
                             variant="primary"
                             size="lg"
                             className="bg-blue-700 hover:bg-blue-600 text-white"
                           >
                             RSVP Now - {event.attendees} attending! 🚀
                           </Button>
-                          <Button 
-                            href={`/events/${event.id}`} 
+                          <Button
+                            href={`/events/${event.id}`}
                             variant="outline"
                             className="border-blue-700 text-blue-700 hover:bg-blue-50"
                           >
@@ -277,27 +277,25 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
               <div className="flex mb-4 md:mb-0 bg-white rounded-lg shadow-sm p-1">
                 <button
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    activeTab === 'upcoming'
+                  className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'upcoming'
                       ? 'bg-blue-700 text-white font-bold'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                    }`}
                   onClick={() => handleTabChange('upcoming')}
                 >
                   Upcoming Meetups 🚀
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    activeTab === 'past'
+                  className={`px-4 py-2 rounded-md transition-colors ${activeTab === 'past'
                       ? 'bg-blue-700 text-white font-bold'
                       : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                    }`}
                   onClick={() => handleTabChange('past')}
                 >
                   Past JavaScript Fun ⭐
                 </button>
               </div>
-              
+
               <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -320,9 +318,9 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index % 3 * 0.1 }}
-                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                    className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
-                    <Link href={`/events/${event.id}`} className="block">
+                    <Link href={`/events/${event.id}`} className="block flex-grow flex flex-col h-full">
                       <div className="relative h-64 w-full">
                         <Image
                           src={event.image}
@@ -338,11 +336,11 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                           </div>
                         )}
                       </div>
-                      <div className="p-6">
+                      <div className="p-6 flex flex-col flex-grow">
                         <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">{event.title}</h3>
-                        
-                        <div className="flex flex-wrap text-sm text-gray-700 mb-3 gap-y-1">
-                          <div className="flex items-center mr-4">
+
+                        <div className="flex flex-col text-sm text-gray-700 mb-3">
+                          <div className="flex items-center mb-1">
                             <Calendar size={14} className="mr-1 text-blue-700" />
                             <span>{event.date}</span>
                           </div>
@@ -351,55 +349,52 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             <span>{event.location}</span>
                           </div>
                         </div>
-                        
+
                         <p className="text-gray-700 mb-4 line-clamp-2">
                           {event.description}
                         </p>
-                        
-                        {isClient && event.talks.length > 0 && (
-                          <div className="mb-4">
-                            <p className="font-bold text-sm mb-2 text-gray-900">
-                              {event.talks.reduce((total, talk) => total + talk.speakers.length, 0) === 1 
-                                ? "Speaker:" 
-                                : "Speakers:"}
-                            </p>
-                            <div className="flex -space-x-2">
-                              {event.talks.flatMap(talk => 
-                                talk.speakers.map(speaker => (
-                                  <div 
-                                    key={`${talk.id}-${speaker.id}`} 
-                                    className="w-16 h-16 rounded-full overflow-hidden border-2 border-white relative"
-                                    style={{ zIndex: 10 - index }}
-                                    title={speaker.name}
-                                  >
-                                    <Image
-                                      src={speaker.image}
-                                      alt={speaker.name}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  </div>
-                                ))
-                              )}
-                              {event.talks.reduce((total, talk) => total + talk.speakers.length, 0) > 3 && (
-                                <div className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-700" style={{ zIndex: 7 }}>
-                                  +{event.talks.reduce((total, talk) => total + talk.speakers.length, 0) - 3}
-                                </div>
-                              )}
+
+                        <div className="mt-auto">
+                          {isClient && event.talks.length > 0 && (
+                            <div className="mb-4">
+                              <p className="font-bold text-sm mb-2 text-gray-900">
+                                {event.talks.reduce((total, talk) => total + talk.speakers.length, 0) === 1
+                                  ? "Speaker:"
+                                  : "Speakers:"}
+                              </p>
+                              <div className="flex -space-x-2">
+                                {event.talks.flatMap(talk =>
+                                  talk.speakers.map(speaker => (
+                                    <div
+                                      key={`${talk.id}-${speaker.id}`}
+                                      className="w-16 h-16 rounded-full overflow-hidden border-2 border-white relative"
+                                      style={{ zIndex: 10 - index }}
+                                      title={speaker.name}
+                                    >
+                                      <Image
+                                        src={speaker.image}
+                                        alt={speaker.name}
+                                        fill
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  ))
+                                )}
+                              </div>
                             </div>
+                          )}
+
+                          {isClient && event.upcoming && (
+                            <div className="flex items-center text-sm">
+                              <Users size={14} className="mr-1 text-blue-700" />
+                              <span className="text-blue-700 font-medium">{event.attendees} attending</span>
+                            </div>
+                          )}
+
+                          <div className="mt-4 flex items-center text-blue-700 font-medium text-sm">
+                            <span>View details</span>
+                            <ChevronRight size={16} className="ml-1" />
                           </div>
-                        )}
-                        
-                        {isClient && event.upcoming && (
-                          <div className="flex items-center text-sm">
-                            <Users size={14} className="mr-1 text-blue-700" />
-                            <span className="text-blue-700 font-medium">{event.attendees} attending</span>
-                          </div>
-                        )}
-                        
-                        <div className="mt-4 flex items-center text-blue-700 font-medium text-sm">
-                          <span>View details</span>
-                          <ChevronRight size={16} className="ml-1" />
                         </div>
                       </div>
                     </Link>
@@ -429,7 +424,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 </Button>
               </div>
             )}
-            
+
             {/* Show more button (for past events) */}
             {activeTab === 'past' && filteredEvents.length >= 9 && (
               <motion.div
@@ -439,8 +434,8 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 transition={{ duration: 0.5 }}
                 className="text-center mt-10"
               >
-                <Button 
-                  href="/events/archive" 
+                <Button
+                  href="/events/archive"
                   variant="outline"
                   className="border-blue-700 text-blue-700 hover:bg-blue-50"
                 >
@@ -647,7 +642,7 @@ export async function trackEventView(page: string) {
   // This function would normally be imported from your analytics library
   // For now, it's just a placeholder
   console.log(`Tracked view of ${page}`);
-  
+
   // In a real implementation:
   // analytics.trackPageView({
   //   page,

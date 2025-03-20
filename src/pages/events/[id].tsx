@@ -291,8 +291,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                   </div>
                                 )}
                                 {talk.durationMinutes && (
-                                  <div className="flex items-center">
-                                    <span className="text-sm">
+                                  <div className="flex items-center bg-gray-100 px-2 py-0.5 rounded-md">
+                                    <Clock size={12} className="mr-1 text-gray-500" />
+                                    <span className="text-sm font-medium">
                                       {talk.durationMinutes} min{talk.durationMinutes !== 1 ? 's' : ''}
                                     </span>
                                   </div>

@@ -65,6 +65,12 @@ export const getPartners = () => {
             name: 'Swiss Dev Jobs',
             logo: '/images/partners/sdj-rectangle.png',
             url: 'https://swissdevjobs.ch/jobs/JavaScript/all',
+        },
+        {
+            id: '12',
+            name: 'dotJS',
+            logo: '/images/partners/dotjs.png',
+            url: 'https://www.dotjs.io/',
         }
     ]
 }

@@ -280,7 +280,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                   {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
                                 </h4>
                                 {talk.speakers.map((speaker) => (
-                                  <div key={speaker.id} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                  <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                     <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                                       <Image
                                         src={speaker.image || '/images/speakers/default.jpg'}
@@ -289,13 +289,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                         className="object-cover"
                                       />
                                     </div>
-                                    <div className="flex-grow">
+                                    <div className="flex-grow mt-2 sm:mt-0">
                                       <div className="font-bold">{speaker.name}</div>
                                       <div className="text-gray-600 text-sm">{speaker.title}</div>
                                     </div>
                                     <Link
                                       href={`/speakers/${speaker.id}`}
-                                      className="flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                                      className="mt-2 sm:mt-0 flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
                                     >
                                       <ExternalLink size={14} className="mr-1" />
                                       View Profile

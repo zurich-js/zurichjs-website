@@ -165,7 +165,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                     transition={{ duration: 0.5, delay: index % 3 * 0.1 }}
                     className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
-                    <Link href={`/events/${event.id}`} className="block flex-grow flex flex-col h-full">
+                    <Link href={`/events/${event.id}`} className="flex-grow flex flex-col h-full">
                       <div className="relative h-64 w-full">
                         <Image
                           src={event.image || '/images/events/default.jpg'}
@@ -173,20 +173,13 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                           fill
                           className="object-cover"
                         />
-                        {isClient && event.datetime > new Date().toISOString() && (
-                          <div className="absolute top-4 left-4">
-                            <span className="bg-blue-700 text-white px-3 py-1 rounded-full text-sm font-medium">
-                              Upcoming! 🗓️
-                            </span>
-                          </div>
-                        )}
                       </div>
                       <div className="p-6 flex flex-col flex-grow">
                         <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">{event.title}</h3>
 
                         <div className="flex flex-col text-sm text-gray-700 mb-3">
-                          <div className="flex items-center mb-1">
-                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                          <div className="flex items-center mb-1 space-x-2">
+                            <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                               <Calendar className="inline-block mr-1 h-4 w-4" />
                               {isClient ? new Date(event.datetime).toLocaleDateString('en-GB', {
                                 weekday: 'long',
@@ -195,7 +188,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                                 day: 'numeric'
                               }) : ''}
                             </span>
-                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                               <Clock className="inline-block mr-1 h-4 w-4" />
                               {isClient ? new Date(event.datetime).toLocaleTimeString('en-GB', {
                                 hour: '2-digit',

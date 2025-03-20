@@ -54,6 +54,9 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
       month: 'short',
       day: 'numeric',
       year: 'numeric'
+    }) + ' at ' + new Date(upcomingEvents[0].datetime).toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
     : 'Coming soon';
 

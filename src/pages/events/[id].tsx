@@ -169,6 +169,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
+                  {isUpcoming && event.meetupUrl ? (
                     <Button
                       href={event.meetupUrl}
                       variant="primary"

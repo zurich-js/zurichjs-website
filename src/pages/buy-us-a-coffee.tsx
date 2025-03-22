@@ -1,9 +1,8 @@
 import SEO from '@/components/SEO';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Coffee, Heart, Star, Users, Code, Calendar } from 'lucide-react';
+import { Coffee, Star, Users, Code, Calendar } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
 import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
 import Link from 'next/link';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
@@ -258,11 +257,18 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                           {supporter.amount}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-500 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {supporter.date}
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-500 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {supporter.date}
+                        </div>
+                        <div className="text-red-500">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </div>

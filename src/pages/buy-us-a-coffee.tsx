@@ -1,4 +1,5 @@
 import SEO from '@/components/SEO';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Coffee, Heart, Star, Users, Code, Calendar } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
@@ -23,6 +24,8 @@ interface SupportPageProps {
     name: string;
     amount: string;
     date: string;
+    photo?: string;
+    link?: string;
   }>;
   eventsHosted: number;
 }
@@ -70,7 +73,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title="Support ZurichJS | JavaScript Community in Zurich"
         description="Support the ZurichJS community and help us continue organizing events, workshops, and building the JavaScript ecosystem in Zurich."
         openGraph={{
@@ -101,17 +104,17 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 <p className="text-lg mb-8 text-gray-900">
                   Your support allows us to organize regular meetups, invite speakers, provide snacks, and create an inclusive space for JavaScript enthusiasts to learn and connect.
                 </p>
-                <a 
-                  href="https://buymeacoffee.com/zurichjs/membership" 
+                <a
+                  href="https://buymeacoffee.com/zurichjs/membership"
                   className="bg-gray-900 hover:bg-gray-800 text-white py-3 px-6 rounded-lg"
-                  target="_blank" 
+                  target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackSupportClick('Hero')}
                 >
                   Buy Us a Coffee ☕
                 </a>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -185,10 +188,10 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     <p className="text-gray-700 mb-4">{tier.description}</p>
                     <p className="text-lg font-semibold text-amber-600 mb-4">{tier.price}</p>
                   </div>
-                  <a 
-                    href="https://buymeacoffee.com/zurichjs/membership" 
+                  <a
+                    href="https://buymeacoffee.com/zurichjs/membership"
                     className="bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg mt-auto"
-                    target="_blank" 
+                    target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => trackSupportClick(tier.name)}
                   >
@@ -217,50 +220,58 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 </p>
               </motion.div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {recentSupporters.map((supporter, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-white p-4 rounded-lg shadow-md"
-                  >
-                    <div className="flex items-center">
-                      <Heart size={16} className="text-red-500 mr-2" />
-                      <p className="font-medium text-gray-900">{supporter.name}</p>
+                  <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                    {supporter.photo ? (
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={supporter.photo}
+                          alt={supporter.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-32 bg-gradient-to-r from-amber-400 to-yellow-300 flex items-center justify-center">
+                        <span className="text-4xl">🙏</span>
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <div className="flex justify-between items-center mb-3">
+                        <div>
+                          {supporter.link ? (
+                            <a 
+                              href={supporter.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="font-bold text-lg hover:text-amber-600 hover:underline transition-colors"
+                              aria-label={`Visit ${supporter.name}'s profile (opens in new tab)`}
+                            >
+                              {supporter.name}
+                            </a>
+                          ) : (
+                            <h3 className="font-bold text-lg">{supporter.name}</h3>
+                          )}
+                        </div>
+                        <span className="bg-amber-100 text-amber-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                          {supporter.amount}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-500 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {supporter.date}
+                      </div>
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-sm text-gray-600">{supporter.date}</span>
-                      <span className="font-semibold text-amber-600">{supporter.amount}</span>
-                    </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-
-              {recentSupporters.length === 0 && (
-                <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-lg mx-auto">
-                  <Heart size={32} className="mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-xl font-bold mb-2 text-amber-500">Be the first one!</h3>
-                  <p className="text-gray-700 mb-4">
-                    Be the first to support ZurichJS and help us kick off our community fund!
-                  </p>
-                  <Button 
-                    href="https://buymeacoffee.com/zurichjs/membership" 
-                    variant="outline" 
-                    className="border-amber-500 text-amber-500 hover:bg-amber-50"
-                    external
-                    onClick={() => trackSupportClick('Recent Supporters')}
-                  >
-                    Support Now
-                  </Button>
-                </div>
-              )}
             </div>
           </section>
         ) : (
-          <section className="py-16 bg-gray-50">
+          <section className="py-16 bg-gradient-to-r from-amber-50 to-yellow-50">
             <div className="container mx-auto px-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -272,21 +283,16 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 <h2 className="text-3xl font-bold mb-3 text-gray-900">Recent Supporters 💛</h2>
               </motion.div>
 
-              <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-lg mx-auto">
-                <Heart size={32} className="mx-auto mb-4 text-amber-500" />
-                <h3 className="text-xl font-bold mb-2">Be the first one!</h3>
-                <p className="text-gray-700 mb-4">
-                  Be the first to support ZurichJS and help us kick off our community fund!
-                </p>
-                <Button 
-                  href="https://buymeacoffee.com/zurichjs/membership" 
-                  variant="outline" 
-                  className="border-amber-500 text-amber-500 hover:bg-amber-50"
-                  external
-                  onClick={() => trackSupportClick('First Supporter')}
+              <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-8 rounded-lg text-center shadow-inner">
+                <div className="text-4xl mb-4">🌟</div>
+                <h3 className="text-xl font-bold mb-2">Be the First Supporter!</h3>
+                <p className="text-gray-600 mb-4">Your contribution will help us grow the ZurichJS community.</p>
+                <button 
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold py-2 px-6 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md"
+                  onClick={() => document.getElementById('bmc-wbtn')?.click()}
                 >
                   Support Now
-                </Button>
+                </button>
               </div>
             </div>
           </section>
@@ -378,10 +384,10 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               <p className="text-xl mb-8 max-w-3xl mx-auto text-gray-900">
                 Your support, whether big or small, helps us create amazing experiences for JavaScript enthusiasts in Zurich.
               </p>
-              <a 
-                href="https://buymeacoffee.com/zurichjs/membership" 
+              <a
+                href="https://buymeacoffee.com/zurichjs/membership"
                 className="bg-gray-900 text-white py-3 px-6 rounded-lg"
-                target="_blank" 
+                target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSupportClick('Final CTA')}
               >
@@ -398,23 +404,29 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 export async function getStaticProps() {
   // Fetch upcoming events
   const upcomingEvents = await getUpcomingEvents();
-  
+
   // Fetch past events to count the number of events hosted
   const pastEvents = await getPastEvents();
   const eventsHosted = pastEvents.length;
 
   // Sample recent supporters data
   // In production, you would fetch this from your database
-  const recentSupporters: Array<{ name: string; amount: string; date: string }> = [
-    // Comment this out initially to show the "Be the first one" message
-    // { name: 'Alex Johnson', amount: '€10', date: 'March 10, 2025' },
-    // { name: 'Maria Garcia', amount: '€25', date: 'March 8, 2025' },
-    // { name: 'Daniel Weber', amount: '€5', date: 'March 5, 2025' },
-    // { name: 'Sophia Müller', amount: '€10 monthly', date: 'March 1, 2025' },
-    // { name: 'Thomas Keller', amount: '€50', date: 'February 27, 2025' },
-    // { name: 'Emma Schmidt', amount: '€15', date: 'February 22, 2025' },
-  ];
-  
+  const recentSupporters: Array<{
+    name: string;
+    amount: string;
+    date: string;
+    photo?: string;
+    link?: string;
+  }> = [
+      {
+        name: 'MountainAsh',
+        amount: '€50',
+        date: 'March 21, 2025',
+        photo: '/images/supporter/mountainash.png',
+        link: 'https://mountainash.id.au/',
+      },
+    ];
+
   return {
     props: {
       upcomingEvent: upcomingEvents[0],

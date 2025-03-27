@@ -76,7 +76,7 @@ export default function UpcomingEvents({
           className="mt-12 text-center"
         >
           <Button 
-            href="https://meetup.com/zurichjs" 
+            href="https://meetup.com/zurich-js" 
             variant="primary" 
             size="lg"
             className="bg-blue-700 hover:bg-blue-600 text-white"

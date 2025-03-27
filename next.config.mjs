@@ -17,6 +17,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/support',
+        destination: '/buy-us-a-coffee',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

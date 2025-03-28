@@ -71,6 +71,12 @@ export const getPartners = () => {
             name: 'dotJS',
             logo: '/images/partners/dotjs.png',
             url: 'https://www.dotjs.io/',
-        }
+        },
+        {
+            id: '13',
+            name: 'JetBrains',
+            logo: '/images/partners/jetbrains.png',
+            url: 'https://www.jetbrains.com/',
+        },
     ]
 }

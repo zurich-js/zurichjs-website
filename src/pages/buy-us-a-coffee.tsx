@@ -1,7 +1,7 @@
 import SEO from '@/components/SEO';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Coffee, Star, Users, Code, Calendar } from 'lucide-react';
+import { Coffee, Star, Users, Code, Calendar, Twitter, Github, Linkedin, Globe } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
 import Link from 'next/link';
@@ -21,7 +21,6 @@ interface SupportTier {
 interface SupportPageProps {
   recentSupporters: Array<{
     name: string;
-    amount: string;
     date: string;
     photo?: string;
     link?: string;
@@ -238,24 +237,57 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     )}
                     <div className="p-5">
                       <div className="flex justify-between items-center mb-3">
-                        <div>
-                          {supporter.link ? (
-                            <a 
-                              href={supporter.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="font-bold text-lg hover:text-amber-600 hover:underline transition-colors"
-                              aria-label={`Visit ${supporter.name}'s profile (opens in new tab)`}
-                            >
-                              {supporter.name}
-                            </a>
-                          ) : (
-                            <h3 className="font-bold text-lg">{supporter.name}</h3>
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-bold text-lg">{supporter.name}</h3>
+                          {supporter.link && (
+                            <div className="flex items-center">
+                              {supporter.link.includes('twitter.com') && (
+                                <a 
+                                  href={supporter.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-600 hover:text-blue-400 transition-colors"
+                                  aria-label={`${supporter.name}'s Twitter (opens in new tab)`}
+                                >
+                                  <Twitter size={16} />
+                                </a>
+                              )}
+                              {supporter.link.includes('github.com') && (
+                                <a 
+                                  href={supporter.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-600 hover:text-black transition-colors"
+                                  aria-label={`${supporter.name}'s GitHub (opens in new tab)`}
+                                >
+                                  <Github size={16} />
+                                </a>
+                              )}
+                              {supporter.link.includes('linkedin.com') && (
+                                <a 
+                                  href={supporter.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-600 hover:text-blue-700 transition-colors"
+                                  aria-label={`${supporter.name}'s LinkedIn (opens in new tab)`}
+                                >
+                                  <Linkedin size={16} />
+                                </a>
+                              )}
+                              {!supporter.link.match(/twitter\.com|github\.com|linkedin\.com/) && (
+                                <a 
+                                  href={supporter.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-gray-600 hover:text-amber-600 transition-colors"
+                                  aria-label={`${supporter.name}'s website (opens in new tab)`}
+                                >
+                                  <Globe size={16} />
+                                </a>
+                              )}
+                            </div>
                           )}
                         </div>
-                        <span className="bg-amber-100 text-amber-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
-                          {supporter.amount}
-                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-500 flex items-center">
@@ -419,17 +451,21 @@ export async function getStaticProps() {
   // In production, you would fetch this from your database
   const recentSupporters: Array<{
     name: string;
-    amount: string;
     date: string;
     photo?: string;
     link?: string;
   }> = [
       {
         name: 'MountainAsh',
-        amount: '€50',
         date: 'March 21, 2025',
         photo: '/images/supporter/mountainash.png',
         link: 'https://mountainash.id.au/',
+      },
+      {
+        name: 'Patrick Stillhart',
+        date: 'March 25, 2025',
+        photo: '/images/supporter/patrick-stillhart.png',
+        link: 'https://stillh.art/',
       },
     ];
 

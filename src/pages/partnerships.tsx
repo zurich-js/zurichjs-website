@@ -35,6 +35,7 @@ interface FormState {
   tierInterest: string;
   submitted: boolean;
   error: string;
+  isSubmitting: boolean;
 }
 
 interface PartnershipPageProps {
@@ -61,6 +62,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
     tierInterest: 'gold',
     submitted: false,
     error: '',
+    isSubmitting: false,
   });
 
   // Add state for venue-specific fields
@@ -166,6 +168,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
     }
 
     try {
+      // Set loading state
+      setFormState((prev) => ({ ...prev, isSubmitting: true, error: '' }));
+      
       // Track form submission attempt
       track('partnership_form_submit', {
         tierInterest: formState.tierInterest
@@ -198,7 +203,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       
       if (data.success) {
         // Update form state on success
-        setFormState((prev) => ({ ...prev, submitted: true, error: '' }));
+        setFormState((prev) => ({ ...prev, submitted: true, error: '', isSubmitting: false }));
         
         // Track successful form submission
         track('partnership_form_success', {
@@ -211,7 +216,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       console.error('Failed to submit partnership inquiry:', error);
       setFormState((prev) => ({ 
         ...prev, 
-        error: 'There was an issue submitting your inquiry. Please try again.' 
+        error: 'There was an issue submitting your inquiry. Please try again.',
+        isSubmitting: false
       }));
       
       // Track form submission error
@@ -834,9 +840,22 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                       type="submit" 
                       variant="primary" 
                       size="lg"
-                      className="bg-blue-700 hover:bg-blue-600 text-white"
+                      disabled={formState.isSubmitting}
+                      className={`bg-blue-700 hover:bg-blue-600 text-white ${
+                        formState.isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
                     >
-                      Submit Partnership Inquiry 🚀
+                      {formState.isSubmitting ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Submitting...
+                        </span>
+                      ) : (
+                        'Submit Partnership Inquiry 🚀'
+                      )}
                     </Button>
                   </div>
                 </motion.form>

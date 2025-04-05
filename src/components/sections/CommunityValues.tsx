@@ -20,7 +20,7 @@ export default function CommunityValues({
   titleClassName = 'text-gray-900',
   cardClassName = 'bg-white',
   iconColor = 'text-blue-600',
-  backgroundColor = 'bg-gradient-to-br from-yellow-400 to-amber-500'
+  backgroundColor = 'bg-gradient-to-br from-js to-js-dark'
 }: CommunityValuesProps) {
   
   const values: CommunityValue[] = [

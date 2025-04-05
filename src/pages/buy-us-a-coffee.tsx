@@ -84,7 +84,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
+        <section className="bg-gradient-to-br from-js to-js-dark py-16">
           <div className="container mx-auto px-6">
             <div className="flex flex-col lg:flex-row items-center">
               <motion.div
@@ -179,7 +179,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className={`bg-white p-6 rounded-lg shadow-md border-2 border-amber-500 flex flex-col justify-between`}
+                  className={`bg-white p-6 rounded-lg shadow-md border-2 border-js-dark flex flex-col justify-between`}
                 >
                   <div>
                     <h3 className="text-xl font-bold mb-2 text-gray-900">{tier.name}</h3>
@@ -326,7 +326,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 <h3 className="text-xl font-bold mb-2">Be the First Supporter!</h3>
                 <p className="text-gray-600 mb-4">Your contribution will help us grow the ZurichJS community.</p>
                 <button 
-                  className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold py-2 px-6 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md"
+                  className="bg-gradient-to-r from-js-dark to-yellow-500 text-white font-bold py-2 px-6 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md"
                   onClick={() => document.getElementById('bmc-wbtn')?.click()}
                 >
                   Support Now
@@ -409,7 +409,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
         </section>
 
         {/* Final CTA */}
-        <section className="py-16 bg-gradient-to-br from-yellow-400 to-amber-500">
+        <section className="py-16 bg-gradient-to-br from-js to-js-dark">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

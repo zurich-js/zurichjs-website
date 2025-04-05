@@ -71,7 +71,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
 
       <div className="pt-20">
         {/* Hero Section with Topic Insights */}
-        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
+        <section className="bg-gradient-to-br from-js to-js-dark py-16">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -329,7 +329,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
               <p className="text-xl mb-8 max-w-2xl mx-auto">
                 Join our lineup of amazing speakers! Submit your talk proposal and inspire the ZurichJS community.
               </p>
-              <Button href="/cfp" variant="primary" size="lg" className="bg-gradient-to-br from-yellow-400 to-amber-500 text-black hover:bg-yellow-600">
+              <Button href="/cfp" variant="primary" size="lg" className="bg-gradient-to-br from-js to-js-dark text-black hover:bg-yellow-600">
                 Submit a Talk Proposal 🚀
               </Button>
             </motion.div>

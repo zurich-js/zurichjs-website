@@ -104,7 +104,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         }}
       />
 
-      <div className="pt-20 bg-gradient-to-br from-yellow-400 to-amber-500">
+      <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
         <section className="py-12">
           <div className="container mx-auto px-6">
@@ -122,7 +122,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 transition={{ duration: 0.5 }}
                 className="lg:w-1/2"
               >
-                <div className="bg-black text-yellow-400 inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
+                <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
                   {isUpcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-4">
@@ -174,7 +174,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       href={event.meetupUrl}
                       variant="primary"
                       size="lg"
-                      className="bg-black text-yellow-400 hover:bg-gray-800"
+                      className="bg-black text-js hover:bg-gray-800"
                     >
                       RSVP on Meetup 🚀
                     </Button>
@@ -182,7 +182,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <Button
                       variant="primary"
                       size="lg"
-                      className="bg-black text-yellow-400 hover:bg-gray-800 cursor-not-allowed"
+                      className="bg-black text-js hover:bg-gray-800 cursor-not-allowed"
                       disabled
                     >
                       Hold tight! RSVP coming soon ⏳
@@ -193,7 +193,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <Button
                       onClick={shareEvent}
                       variant="outline"
-                      className="border-black text-black hover:bg-black hover:text-yellow-400"
+                      className="border-black text-black hover:bg-black hover:text-js"
                     >
                       <Share2 size={16} className="mr-1.5" />
                       {copySuccess ? 'Link copied! 👍' : 'Share event'}
@@ -250,7 +250,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     transition={{ duration: 0.5 }}
                     className="mb-12"
                   >
-                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-400">
+                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-js">
                       Amazing Talks at This Event 🎤
                     </h2>
                     <div className="space-y-8">
@@ -382,7 +382,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         <span> We have <strong>1 slot available for a lightning talk (5-10 mins)</strong>.</span>
                       )}
                     </p>
-                    <Button href="/cfp" variant="primary" className="bg-black text-yellow-400 hover:bg-gray-800">
+                    <Button href="/cfp" variant="primary" className="bg-black text-js hover:bg-gray-800">
                       Submit a Talk Proposal
                     </Button>
                   </motion.div>
@@ -401,7 +401,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     <p className="mb-4">
                       We&apos;ve reached our maximum number of talks for this event. Please check our future events for speaking opportunities or submit a proposal for consideration at upcoming meetups.
                     </p>
-                    <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-yellow-400">
+                    <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-js">
                       Submit for Future Events
                     </Button>
                   </motion.div>
@@ -484,7 +484,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: 0.4 }}
-                    className="bg-yellow-400 p-6 rounded-lg shadow-md text-center"
+                    className="bg-js p-6 rounded-lg shadow-md text-center"
                   >
                     <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
                     <p className="mb-4">
@@ -496,7 +496,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         href={event.meetupUrl}
                         variant="primary"
                         size="lg"
-                        className="w-full bg-black text-yellow-400 hover:bg-gray-800"
+                        className="w-full bg-black text-js hover:bg-gray-800"
                       >
                         RSVP on Meetup
                       </Button>
@@ -504,7 +504,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <Button
                         variant="primary"
                         size="lg"
-                        className="w-full bg-black text-yellow-400 hover:bg-gray-800 cursor-not-allowed opacity-80"
+                        className="w-full bg-black text-js hover:bg-gray-800 cursor-not-allowed opacity-80"
                         disabled
                       >
                         RSVP Coming Soon
@@ -530,7 +530,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               >
                 <div className="md:flex items-center justify-between">
                   <div className="md:w-3/5 mb-6 md:mb-0">
-                    <h2 className="text-2xl font-bold mb-2 text-yellow-400">Never Miss a JavaScript Gathering! 📬</h2>
+                    <h2 className="text-2xl font-bold mb-2 text-js">Never Miss a JavaScript Gathering! 📬</h2>
                     <p className="text-lg">
                       Subscribe to our newsletter and be the first to know about upcoming events, speaker announcements, and community news!
                     </p>
@@ -540,9 +540,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <input
                         type="email"
                         placeholder="your@email.com"
-                        className="flex-grow px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="flex-grow px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-js"
                       />
-                      <button className="bg-yellow-400 text-black px-6 py-3 rounded-r-md font-bold hover:bg-yellow-300 transition-colors">
+                      <button className="bg-js text-black px-6 py-3 rounded-r-md font-bold hover:bg-yellow-300 transition-colors">
                         Subscribe 🚀
                       </button>
                     </div>

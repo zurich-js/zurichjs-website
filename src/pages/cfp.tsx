@@ -233,7 +233,7 @@ export default function CFP() {
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
+        <section className="bg-gradient-to-br from-js to-js-dark py-16">
           <div className="container mx-auto px-6">
             <div className="flex flex-col md:flex-row items-center">
               <div className="md:w-1/2 mb-10 md:mb-0 mr-4">
@@ -405,7 +405,7 @@ export default function CFP() {
                           name="firstName"
                           value={formState.firstName}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                           required
                         />
                       </div>
@@ -419,7 +419,7 @@ export default function CFP() {
                           name="lastName"
                           value={formState.lastName}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                           required
                         />
                       </div>
@@ -436,7 +436,7 @@ export default function CFP() {
                         value={formState.jobTitle}
                         onChange={handleInputChange}
                         placeholder="Senior Frontend Developer, Tech Lead, etc."
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         required
                       />
                     </div>
@@ -451,7 +451,7 @@ export default function CFP() {
                         name="email"
                         value={formState.email}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         required
                       />
                     </div>
@@ -467,7 +467,7 @@ export default function CFP() {
                         value={formState.linkedinProfile}
                         onChange={handleInputChange}
                         placeholder="https://linkedin.com/in/your-profile"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         required
                       />
                     </div>
@@ -484,7 +484,7 @@ export default function CFP() {
                           value={formState.githubProfile}
                           onChange={handleInputChange}
                           placeholder="username"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         />
                       </div>
                       <div>
@@ -498,7 +498,7 @@ export default function CFP() {
                           value={formState.twitterHandle}
                           onChange={handleInputChange}
                           placeholder="@username"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         />
                       </div>
                     </div>
@@ -553,7 +553,7 @@ export default function CFP() {
                         name="title"
                         value={formState.title}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         required
                       />
                     </div>
@@ -567,7 +567,7 @@ export default function CFP() {
                         value={formState.description}
                         onChange={handleInputChange}
                         rows={5}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         required
                         placeholder="Tell us about your talk idea and what attendees will learn..."
                       />
@@ -582,7 +582,7 @@ export default function CFP() {
                           name="talkLength"
                           value={formState.talkLength}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                           required
                         >
                           <option value="5">Lightning Talk (5 min)</option>
@@ -601,7 +601,7 @@ export default function CFP() {
                           name="talkLevel"
                           value={formState.talkLevel}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                           required
                         >
                           <option value="beginner">Beginner-friendly</option>
@@ -622,7 +622,7 @@ export default function CFP() {
                           key={topic}
                           onClick={() => handleTopicChange(topic)}
                           className={`cursor-pointer flex items-center px-3 py-1.5 rounded-full ${formState.topics.includes(topic)
-                              ? 'bg-yellow-400 text-black'
+                              ? 'bg-js text-black'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                             }`}
                         >

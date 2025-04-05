@@ -86,7 +86,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
+        <section className="bg-gradient-to-br from-js to-js-dark py-16">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -326,7 +326,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
               className="flex flex-col lg:flex-row items-center justify-between"
             >
               <div className="lg:w-2/3 mb-8 lg:mb-0 lg:pr-10">
-                <h2 className="text-3xl font-bold mb-4 text-yellow-400">Got JavaScript Wisdom to Share? 💡</h2>
+                <h2 className="text-3xl font-bold mb-4 text-js">Got JavaScript Wisdom to Share? 💡</h2>
                 <p className="text-xl mb-6">
                   We&apos;re always looking for awesome speakers to share their JavaScript knowledge, stories, and experiments!
                 </p>
@@ -437,7 +437,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-yellow-400 p-6 rounded-lg shadow-sm"
+                className="bg-js p-6 rounded-lg shadow-sm"
               >
                 <h3 className="text-xl font-bold mb-3 text-gray-900">Interested? 🚀</h3>
                 <p className="mb-6 text-gray-900">
@@ -464,7 +464,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5 }}
-                className="bg-yellow-400 rounded-lg p-8 shadow-md"
+                className="bg-js rounded-lg p-8 shadow-md"
               >
                 <div className="md:flex items-center justify-between">
                   <div className="md:w-3/5 mb-6 md:mb-0">

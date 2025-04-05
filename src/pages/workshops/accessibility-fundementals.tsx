@@ -203,7 +203,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 }}
             />
 
-            <div className="pt-20 bg-gradient-to-br from-yellow-400 to-amber-500">
+            <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
                 {/* Hero Section */}
                 <section className="py-12">
                     <div className="container mx-auto px-6">
@@ -221,7 +221,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 transition={{ duration: 0.5 }}
                                 className="lg:w-1/2"
                             >
-                                <div className="bg-black text-yellow-400 inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
+                                <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
                                     🌐 Accessibility Workshop
                                 </div>
                                 <h1 className="text-3xl md:text-4xl font-bold mb-2 text-black">
@@ -259,7 +259,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <Button
                                             onClick={shareWorkshop}
                                             variant="outline"
-                                            className="border-black text-black hover:bg-black hover:text-yellow-400"
+                                            className="border-black text-black hover:bg-black hover:text-js"
                                         >
                                             <Share2 size={16} className="mr-1.5" />
                                             {copySuccess ? 'Link copied! 👍' : 'Share workshop'}
@@ -279,7 +279,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                                     <div className="space-y-4">
                                         <div className="flex items-start">
-                                            <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                                            <div className="bg-js p-2 rounded-full mr-3">
                                                 <Code size={18} className="text-black" />
                                             </div>
                                             <div>
@@ -289,7 +289,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         </div>
 
                                         <div className="flex items-start">
-                                            <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                                            <div className="bg-js p-2 rounded-full mr-3">
                                                 <Users size={18} className="text-black" />
                                             </div>
                                             <div>
@@ -299,7 +299,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         </div>
 
                                         <div className="flex items-start">
-                                            <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                                            <div className="bg-js p-2 rounded-full mr-3">
                                                 <BookOpen size={18} className="text-black" />
                                             </div>
                                             <div>
@@ -345,7 +345,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     transition={{ duration: 0.5 }}
                                     className="mb-12"
                                 >
-                                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-400 text-black">
+                                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-js text-black">
                                         Topics We&apos;ll Cover 🧠
                                     </h2>
                                     <div className="grid md:grid-cols-2 gap-6">
@@ -594,7 +594,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                                         href={workshop.speaker.twitter}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-yellow-400 hover:text-yellow-600"
+                                                        className="text-js hover:text-yellow-600"
                                                     >
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                                             <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
@@ -741,7 +741,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             transition={{ duration: 0.5 }}
                             className="text-center"
                         >
-                            <h2 className="text-3xl font-bold mb-4 text-yellow-400">Ready to Make Your Digital Products Accessible? 🚀</h2>
+                            <h2 className="text-3xl font-bold mb-4 text-js">Ready to Make Your Digital Products Accessible? 🚀</h2>
                             <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
                                 Join us for this workshop and learn how to create inclusive digital experiences that comply with accessibility standards and regulations!
                             </p>
@@ -749,7 +749,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             <div className="flex justify-center">
                                 <a
                                     href="#getWaitlistContainer"
-                                    className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
+                                    className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         scrollToWaitlist();

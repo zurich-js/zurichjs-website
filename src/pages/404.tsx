@@ -49,7 +49,7 @@ export default function Custom404() {
         description="Oops! The page you're looking for doesn't exist."
       />
 
-      <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900 font-mono p-4 pt-24">
+      <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-js to-js-dark text-gray-900 font-mono p-4 pt-24">
         <main className="flex flex-col items-center justify-center max-w-3xl">
           {/* Console-like error display */}
           <div className="w-full mb-8 rounded-lg overflow-hidden shadow-2xl">
@@ -107,14 +107,14 @@ export default function Custom404() {
           </div>
 
           <h1 className="text-4xl font-bold mb-4 text-center text-black">
-            <span className="bg-gray-900 text-yellow-400 px-2 py-1 rounded">404</span> - Page Not Found
+            <span className="bg-gray-900 text-js px-2 py-1 rounded">404</span> - Page Not Found
           </h1>
 
           <p className="text-xl mb-6 text-center text-black">
-            Looks like this page is <span className="bg-gray-900 px-2 py-1 rounded text-yellow-400">undefined</span>
+            Looks like this page is <span className="bg-gray-900 px-2 py-1 rounded text-js">undefined</span>
           </p>
 
-          <Link href="/" className="bg-gray-900 text-yellow-400 px-6 py-3 rounded-md hover:bg-gray-800 transition-all transform hover:-translate-y-1 font-bold">
+          <Link href="/" className="bg-gray-900 text-js px-6 py-3 rounded-md hover:bg-gray-800 transition-all transform hover:-translate-y-1 font-bold">
             {`console.log('Take me home')`}
           </Link>
 

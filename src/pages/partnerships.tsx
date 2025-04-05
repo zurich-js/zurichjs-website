@@ -266,7 +266,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
+        <section className="bg-gradient-to-br from-js to-js-dark py-16">
           <div className="container mx-auto px-6">
             <div className="flex flex-col lg:flex-row items-center">
               <motion.div
@@ -866,7 +866,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
 
         {/* Final CTA */}
-        <section className="py-16 bg-gradient-to-br from-yellow-400 to-amber-500">
+        <section className="py-16 bg-gradient-to-br from-js to-js-dark">
           <div className="container mx-auto px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

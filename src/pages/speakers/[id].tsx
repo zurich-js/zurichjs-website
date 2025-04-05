@@ -60,7 +60,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
 
             <div className="pt-20">
                 {/* Speaker Hero Section */}
-                <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
+                <section className="bg-gradient-to-br from-js to-js-dark py-16">
                     <div className="container mx-auto px-6">
                         <div className="flex flex-col md:flex-row items-center bg-white rounded-xl shadow-xl overflow-hidden">
                             <div className="md:w-1/3 w-full h-64 md:h-96 relative">
@@ -269,7 +269,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="bg-yellow-400 rounded-xl shadow-lg overflow-hidden"
+                            className="bg-js rounded-xl shadow-lg overflow-hidden"
                         >
                             <div className="md:flex">
                                 <div className="md:w-2/3 p-8">
@@ -277,7 +277,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                     <p className="text-lg mb-6">
                                         If you&apos;re passionate about JavaScript and have knowledge to share, we&apos;d love to have you speak at one of our upcoming meetups!
                                     </p>
-                                    <Button href="/cfp" variant="primary" size="lg" className="bg-black text-yellow-400 hover:bg-gray-800">
+                                    <Button href="/cfp" variant="primary" size="lg" className="bg-black text-js hover:bg-gray-800">
                                         Submit Your Talk Proposal 🚀
                                     </Button>
                                 </div>

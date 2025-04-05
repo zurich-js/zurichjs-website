@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* About */}
           <div>
-            <h3 className="text-2xl font-bold text-yellow-400 mb-4">ZurichJS</h3>
+            <h3 className="text-2xl font-bold text-js mb-4">ZurichJS</h3>
             <p className="mb-6">
               Zurich&apos;s vibrant community for JavaScript enthusiasts. Join us to connect, 
               learn, and grow with fellow developers.
@@ -22,7 +22,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ y: -3, color: '#1DA1F2' }}
-                className="hover:text-yellow-400 transition-colors"
+                className="hover:text-js transition-colors"
                 aria-label="Twitter"
               >
                 <Twitter size={20} />
@@ -32,7 +32,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ y: -3, color: '#0A66C2' }}
-                className="hover:text-yellow-400 transition-colors"
+                className="hover:text-js transition-colors"
                 aria-label="LinkedIn"
               >
                 <Linkedin size={20} />
@@ -42,7 +42,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ y: -3, color: '#6e5494' }}
-                className="hover:text-yellow-400 transition-colors"
+                className="hover:text-js transition-colors"
                 aria-label="GitHub"
               >
                 <Github size={20} />
@@ -52,30 +52,30 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-xl font-bold text-yellow-400 mb-4">Quick Links</h3>
+            <h3 className="text-xl font-bold text-js mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/events" className="hover:text-yellow-400 transition-colors">
+                <Link href="/events" className="hover:text-js transition-colors">
                   Events
                 </Link>
               </li>
               <li>
-                <Link href="/speakers" className="hover:text-yellow-400 transition-colors">
+                <Link href="/speakers" className="hover:text-js transition-colors">
                   Speakers
                 </Link>
               </li>
               <li>
-                <Link href="/cfp" className="hover:text-yellow-400 transition-colors">
+                <Link href="/cfp" className="hover:text-js transition-colors">
                   Call for Papers
                 </Link>
               </li>
               <li>
-                <Link href="/partnerships" className="hover:text-yellow-400 transition-colors">
+                <Link href="/partnerships" className="hover:text-js transition-colors">
                   Partnerships
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-yellow-400 transition-colors">
+                <Link href="/about" className="hover:text-js transition-colors">
                   About Us
                 </Link>
               </li>
@@ -84,21 +84,21 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-xl font-bold text-yellow-400 mb-4">Contact</h3>
+            <h3 className="text-xl font-bold text-js mb-4">Contact</h3>
             <ul className="space-y-3">
               <li className="flex items-center">
-                <MapPin size={18} className="mr-2 text-yellow-400" />
+                <MapPin size={18} className="mr-2 text-js" />
                 <span>Zurich, Switzerland</span>
               </li>
               <li className="flex items-center">
-                <Calendar size={18} className="mr-2 text-yellow-400" />
+                <Calendar size={18} className="mr-2 text-js" />
                 <span>Regular meetups throughout the year</span>
               </li>
               <li className="flex items-center">
-                <Mail size={18} className="mr-2 text-yellow-400" />
+                <Mail size={18} className="mr-2 text-js" />
                 <a 
                   href="mailto:hello@zurichjs.com" 
-                  className="hover:text-yellow-400 transition-colors"
+                  className="hover:text-js transition-colors"
                 >
                   hello@zurichjs.com
                 </a>

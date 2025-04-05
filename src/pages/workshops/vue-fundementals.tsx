@@ -219,7 +219,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 }}
             />
 
-            <div className="pt-20 bg-gradient-to-br from-yellow-400 to-amber-500">
+            <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
                 {/* Hero Section */}
                 <section className="py-12">
                     <div className="container mx-auto px-6">
@@ -237,7 +237,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 transition={{ duration: 0.5 }}
                                 className="lg:w-1/2"
                             >
-                                <div className="bg-black text-yellow-400 inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
+                                <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
                                     🚀 Foundations Workshop
                                 </div>
                                 <h1 className="text-3xl md:text-4xl font-bold mb-2 text-black">
@@ -275,7 +275,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <Button
                                             onClick={shareWorkshop}
                                             variant="outline"
-                                            className="border-black text-black hover:bg-black hover:text-yellow-400"
+                                            className="border-black text-black hover:bg-black hover:text-js"
                                         >
                                             <Share2 size={16} className="mr-1.5" />
                                             {copySuccess ? 'Link copied! 👍' : 'Share workshop'}
@@ -295,7 +295,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                                     <div className="space-y-4">
                                         <div className="flex items-start">
-                                            <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                                            <div className="bg-js p-2 rounded-full mr-3">
                                                 <Code size={18} className="text-black" />
                                             </div>
                                             <div>
@@ -305,7 +305,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         </div>
 
                                         <div className="flex items-start">
-                                            <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                                            <div className="bg-js p-2 rounded-full mr-3">
                                                 <Users size={18} className="text-black" />
                                             </div>
                                             <div>
@@ -315,7 +315,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         </div>
 
                                         <div className="flex items-start">
-                                            <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                                            <div className="bg-js p-2 rounded-full mr-3">
                                                 <BookOpen size={18} className="text-black" />
                                             </div>
                                             <div>
@@ -361,7 +361,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     transition={{ duration: 0.5 }}
                                     className="mb-12"
                                 >
-                                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-400 text-black">
+                                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-js text-black">
                                         Topics We&apos;ll Cover 🧠
                                     </h2>
                                     <div className="grid md:grid-cols-2 gap-6">
@@ -761,7 +761,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             transition={{ duration: 0.5 }}
                             className="text-center"
                         >
-                            <h2 className="text-3xl font-bold mb-4 text-yellow-400">Ready to Master Vue.js? 🚀</h2>
+                            <h2 className="text-3xl font-bold mb-4 text-js">Ready to Master Vue.js? 🚀</h2>
                             <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
                                 Join our workshop waitlist today and be the first to know when registration opens!
                             </p>
@@ -769,7 +769,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             <div className="flex justify-center">
                                 <a
                                     href="#registrationContainer"
-                                    className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
+                                    className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         scrollToRegistration();

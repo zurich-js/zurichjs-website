@@ -98,7 +98,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
         }}
       />
 
-      <div className="pt-20 bg-gradient-to-br from-yellow-400 to-amber-500">
+      <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
         <section className="py-16">
           <div className="container mx-auto px-6">
@@ -133,7 +133,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                   <Link href={`/workshops/${workshop.id}`} className="block">
                     <div className="relative h-48 overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black bg-opacity-80 z-10 flex items-center justify-center">
-                        <div className="bg-black bg-opacity-70 text-yellow-400 px-3 py-1 rounded-full text-sm font-bold">
+                        <div className="bg-black bg-opacity-70 text-js px-3 py-1 rounded-full text-sm font-bold">
                           {workshop.tag}
                         </div>
                       </div>
@@ -215,7 +215,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <h2 className="text-3xl font-bold mb-4 text-yellow-400">Ready to Level Up Your Skills? 🚀</h2>
+              <h2 className="text-3xl font-bold mb-4 text-js">Ready to Level Up Your Skills? 🚀</h2>
               <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
                 Our workshops are designed to provide practical, hands-on learning experiences that you can immediately apply to your projects.
               </p>
@@ -223,13 +223,13 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
               <div className="flex flex-col md:flex-row gap-4 justify-center">
                 <Link 
                   href="/events" 
-                  className="bg-transparent border-2 border-yellow-400 text-yellow-400 px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-400 hover:text-black transition-colors"
+                  className="bg-transparent border-2 border-js text-js px-8 py-3 rounded-lg font-bold text-lg hover:bg-js hover:text-black transition-colors"
                 >
                   View All Events
                 </Link>
                 <Link 
                   href="/contact" 
-                  className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
+                  className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
                 >
                   Request Custom Workshop
                 </Link>

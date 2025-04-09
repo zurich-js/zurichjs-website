@@ -11,6 +11,12 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        js: {
+          DEFAULT: "#F1E271",
+          dark: "#EDC936",
+          darker: "#c5a301",
+        },
+        zurich: "#258BCC",
       },
     },
   },

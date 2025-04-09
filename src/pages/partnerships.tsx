@@ -9,6 +9,7 @@ import { getPartners } from '@/data';
 import { getUpcomingEvents } from '@/sanity/queries';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import useEvents from '@/hooks/useEvents';
+import Section from '@/components/Section';
 
 // Define our TypeScript interfaces
 interface Partner {
@@ -49,7 +50,7 @@ interface PartnershipPageProps {
 }
 
 export default function Partnerships({ partners, upcomingEvent }: PartnershipPageProps) {
-  useReferrerTracking();  
+  useReferrerTracking();
   const { track } = useEvents();
 
   // Form state
@@ -160,7 +161,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   // Handle form submission
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     // Form validation
     if (!formState.companyName || !formState.contactName || !formState.email) {
       setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
@@ -170,7 +171,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
     try {
       // Set loading state
       setFormState((prev) => ({ ...prev, isSubmitting: true, error: '' }));
-      
+
       // Track form submission attempt
       track('partnership_form_submit', {
         tierInterest: formState.tierInterest
@@ -200,11 +201,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         // Update form state on success
         setFormState((prev) => ({ ...prev, submitted: true, error: '', isSubmitting: false }));
-        
+
         // Track successful form submission
         track('partnership_form_success', {
           tierInterest: formState.tierInterest
@@ -214,12 +215,12 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       }
     } catch (error) {
       console.error('Failed to submit partnership inquiry:', error);
-      setFormState((prev) => ({ 
-        ...prev, 
+      setFormState((prev) => ({
+        ...prev,
         error: 'There was an issue submitting your inquiry. Please try again.',
         isSubmitting: false
       }));
-      
+
       // Track form submission error
       track('partnership_form_error', {
         tierInterest: formState.tierInterest,
@@ -231,12 +232,12 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   // Add a function to handle tier selection from buttons
   const selectTier = (tier: string) => {
     setFormState((prev) => ({ ...prev, tierInterest: tier }));
-    
+
     // Track tier selection
     track('partnership_tier_selected', {
       tier: tier
     });
-    
+
     // Scroll to the form
     const formElement = document.getElementById('inquiry-form');
     if (formElement) {
@@ -253,7 +254,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title="Partnership Opportunities | ZurichJS"
         description="Support the ZurichJS community and connect with JavaScript developers in Zurich. Explore our partnership opportunities and help grow the tech community."
         openGraph={{
@@ -264,10 +265,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
         }}
       />
 
-      <div className="pt-20">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-yellow-400 to-amber-500 py-16">
-          <div className="container mx-auto px-6">
+      <Section variant="gradient" padding="lg" className="mt-20">
             <div className="flex flex-col lg:flex-row items-center">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -284,16 +282,16 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 <p className="text-lg mb-8 text-gray-900">
                   Support our mission to nurture the JavaScript ecosystem in Zurich while gaining visibility for your brand among developers, tech leads, and decision-makers.
                 </p>
-                <Button 
-                  href="#partnership-tiers" 
-                  variant="primary" 
+                <Button
+                  href="#partnership-tiers"
+                  variant="primary"
                   size="lg"
                   className="bg-blue-700 hover:bg-blue-600 text-white"
                 >
                   Explore Partnership Options 🚀
                 </Button>
               </motion.div>
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -324,12 +322,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 </div>
               </motion.div>
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* Why Partner With Us */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -488,13 +484,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 </p>
               </motion.div>
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* Current Partners */}
         {partners.length > 0 && (
-          <section className="py-16 bg-white">
-            <div className="container mx-auto px-6">
+          <Section variant="white">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -516,9 +510,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block w-full max-w-[180px] h-28 relative group"
-                    whileHover={{ 
-                      y: -5, 
-                      transition: { duration: 0.2 } 
+                    whileHover={{
+                      y: -5,
+                      transition: { duration: 0.2 }
                     }}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -535,13 +529,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   </motion.a>
                 ))}
               </div>
-            </div>
-          </section>
+          </Section>
         )}
 
         {/* Partnership Tiers */}
-        <section id="partnership-tiers" className="py-16 bg-white">
-          <div className="container mx-auto px-6">
+        <Section variant="white" id="partnership-tiers">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -562,16 +554,16 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 let yearlyPrice = '';
                 let monthlyPrice = '';
                 let yearlySavings = 0;
-                
+
                 if (hasBothPrices) {
                   const priceText = tier.price;
                   const yearMatch = priceText.match(/CHF\s+([\d,]+)/);
                   const monthMatch = priceText.match(/CHF\s+([\d,]+)\s+\/\s+month/);
-                  
+
                   if (yearMatch && monthMatch) {
                     const yearlyAmount = parseInt(yearMatch[1].replace(',', ''));
                     const monthlyAmount = parseInt(monthMatch[1].replace(',', ''));
-                    
+
                     yearlyPrice = `CHF ${yearMatch[1]}`;
                     monthlyPrice = `CHF ${monthMatch[1]}/month`;
                     yearlySavings = (monthlyAmount * 12) - yearlyAmount;
@@ -579,7 +571,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 } else {
                   yearlyPrice = tier.price;
                 }
-                
+
                 return (
                   <motion.div
                     key={tier.name}
@@ -593,7 +585,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   >
                     <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'} relative`}>
                       <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
-                      
+
                       {hasBothPrices ? (
                         <div className="mt-2">
                           <div className="text-2xl font-bold">{yearlyPrice}/year</div>
@@ -612,7 +604,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="p-6 flex-grow flex flex-col">
                       <ul className="space-y-3 mb-6 flex-grow">
                         {tier.benefits.map((benefit, i) => (
@@ -622,9 +614,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           </li>
                         ))}
                       </ul>
-                      
+
                       <div className="mt-auto">
-                        <Button 
+                        <Button
                           onClick={() => {
                             selectTier(tier.name.toLowerCase().split(' ')[0]);
                             // Additional tracking for tier card CTA click
@@ -648,12 +640,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 );
               })}
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* Partnership Inquiry Form */}
-        <section id="inquiry-form" className="py-16 bg-gray-50">
-          <div className="container mx-auto px-6">
+        <Section variant="gray" id="inquiry-form">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -672,14 +662,14 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   <CheckCircle size={64} className="mx-auto mb-4 text-green-500" />
                   <h3 className="text-2xl font-bold mb-2 text-gray-900">Thanks for reaching out!</h3>
                   <p className="mb-6 text-gray-700">
-                    We&apos;ve received your partnership inquiry and we&apos;re super excited about the possibility of working together! 
+                    We&apos;ve received your partnership inquiry and we&apos;re super excited about the possibility of working together!
                     Our team will reach out to you within 48 hours to discuss next steps.
                   </p>
                   <p className="mb-6 text-gray-700">
                     In the meantime, feel free to check out our upcoming events and join our community!
                   </p>
-                  <Button 
-                    href="/events" 
+                  <Button
+                    href="/events"
                     variant="secondary"
                   >
                     View Upcoming Events
@@ -804,7 +794,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   {formState.tierInterest === 'venue' && (
                     <div className="mb-6 p-4 bg-blue-50 rounded-md border border-blue-100">
                       <h3 className="text-xl font-bold mb-4 text-gray-900">Venue Information</h3>
-                      
+
                       <div className="mb-4">
                         <label className="flex items-center text-gray-700">
                           <input
@@ -817,7 +807,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                           <span>Can you provide food/drinks for the event?</span>
                         </label>
                       </div>
-                      
+
                       <div>
                         <label htmlFor="venueCapacity" className="block text-gray-700 mb-2">
                           What is the capacity of your venue?
@@ -836,9 +826,9 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   )}
 
                   <div className="flex justify-end">
-                    <Button 
-                      type="submit" 
-                      variant="primary" 
+                    <Button
+                      type="submit"
+                      variant="primary"
                       size="lg"
                       disabled={formState.isSubmitting}
                       className={`bg-blue-700 hover:bg-blue-600 text-white ${
@@ -861,13 +851,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                 </motion.form>
               )}
             </motion.div>
-          </div>
-        </section>
-
+        </Section>
 
         {/* Final CTA */}
-        <section className="py-16 bg-gradient-to-br from-yellow-400 to-amber-500">
-          <div className="container mx-auto px-6">
+        <Section variant="black" padding="lg">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -875,26 +862,24 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900">Ready to Grow with ZurichJS? 🚀</h2>
-              <p className="text-xl mb-8 max-w-3xl mx-auto text-gray-900">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Grow with ZurichJS? 🚀</h2>
+              <p className="text-xl mb-8 max-w-3xl mx-auto">
                 Let&apos;s join forces to create an even more vibrant JavaScript community in Zurich!
               </p>
-              <Button 
+              <Button
                 onClick={() => {
                   selectTier('gold');
                   // Additional tracking for final CTA click
                   track('partnership_final_cta_click');
                 }}
-                variant="primary" 
-                size="lg" 
+                variant="primary"
+                size="lg"
                 className="bg-blue-700 text-white hover:bg-blue-600"
               >
                 Become a Partner Today! 💛
               </Button>
             </motion.div>
-          </div>
-        </section>
-      </div>
+        </Section>
     </Layout>
   );
 }

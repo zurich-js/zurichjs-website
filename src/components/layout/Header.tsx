@@ -39,9 +39,9 @@ export default function Header() {
   const coffeeItem = { name: '☕ Buy us a coffee', path: '/buy-us-a-coffee' };
 
   return (
-    <header 
+    <header
       className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-black text-yellow-400 shadow-md py-2' : 'bg-transparent text-black py-4'
+        scrolled ? 'bg-black text-js shadow-md py-2' : 'bg-transparent text-black py-4'
       }`}
     >
       <div className="container mx-auto px-6">
@@ -61,7 +61,7 @@ export default function Header() {
             <ul className="flex space-x-8 items-center">
               {navItems.map((item) => (
                 <li key={item.path}>
-                  <Link 
+                  <Link
                     href={item.path}
                     className={`hover:text-blue-600 transition-colors ${
                       router.pathname === item.path ? 'font-bold' : ''
@@ -72,9 +72,9 @@ export default function Header() {
                 </li>
               ))}
               <li>
-                <Link 
+                <Link
                   href={coffeeItem.path}
-                  className={`bg-yellow-400 text-black px-4 py-2 rounded-full font-medium hover:bg-yellow-300 transition-colors ${scrolled ? '' : 'border border-black'}`}
+                  className={`bg-js-dark text-black px-4 py-2 rounded-full font-medium hover:bg-js transition-colors ${scrolled ? '' : 'border border-black'}`}
                 >
                   {coffeeItem.name}
                 </Link>
@@ -99,13 +99,13 @@ export default function Header() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-black text-yellow-400"
+          className="md:hidden bg-black text-js"
         >
           <nav className="container mx-auto px-6 py-4">
             <ul className="space-y-4">
               {navItems.map((item) => (
                 <li key={item.path}>
-                  <Link 
+                  <Link
                     href={item.path}
                     className={`block py-2 hover:text-blue-600 transition-colors ${
                       router.pathname === item.path ? 'font-bold' : ''
@@ -116,9 +116,9 @@ export default function Header() {
                 </li>
               ))}
               <li>
-                <Link 
+                <Link
                   href={coffeeItem.path}
-                  className="block py-2 bg-yellow-400 text-black px-4 rounded-full font-medium hover:bg-yellow-300 transition-colors"
+                  className="block py-2 bg-js text-black px-4 rounded-full font-medium hover:bg-yellow-300 transition-colors"
                 >
                   {coffeeItem.name}
                 </Link>

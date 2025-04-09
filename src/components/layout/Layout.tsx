@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-yellow-400 to-amber-500">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">
       <Header />
       <main className="flex-grow">{children}
 

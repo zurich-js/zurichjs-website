@@ -9,6 +9,7 @@ import SEO from '@/components/SEO';
 import { getSpeakerById } from '@/sanity/queries';
 import useEvents from '@/hooks/useEvents';
 import { Speaker } from '@/types';
+import Section from '@/components/Section';
 
 
 interface WorkshopDetails {
@@ -216,10 +217,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         }}
       />
 
-      <div className="pt-20 bg-gradient-to-br from-yellow-400 to-amber-500">
+      <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-6">
+        <Section variant="gradient">
             <div className="mb-4">
               <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
                 <ChevronLeft size={16} className="mr-1" />
@@ -234,7 +234,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 transition={{ duration: 0.5 }}
                 className="lg:w-1/2"
               >
-                <div className="bg-black text-yellow-400 inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
+                <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
                   🚀 New Workshop Series!
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold mb-2 text-black">
@@ -272,7 +272,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     <Button
                       onClick={shareWorkshop}
                       variant="outline"
-                      className="border-black text-black hover:bg-black hover:text-yellow-400"
+                      className="border-black text-black hover:bg-black hover:text-js"
                     >
                       <Share2 size={16} className="mr-1.5" />
                       {copySuccess ? 'Link copied! 👍' : 'Share workshop'}
@@ -292,7 +292,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                   <div className="space-y-4">
                     <div className="flex items-start">
-                      <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                      <div className="bg-js p-2 rounded-full mr-3">
                         <Code size={18} className="text-black" />
                       </div>
                       <div>
@@ -302,7 +302,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     </div>
 
                     <div className="flex items-start">
-                      <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                      <div className="bg-js p-2 rounded-full mr-3">
                         <Users size={18} className="text-black" />
                       </div>
                       <div>
@@ -312,7 +312,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     </div>
 
                     <div className="flex items-start">
-                      <div className="bg-yellow-400 p-2 rounded-full mr-3">
+                      <div className="bg-js p-2 rounded-full mr-3">
                         <BookOpen size={18} className="text-black" />
                       </div>
                       <div>
@@ -341,12 +341,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 </div>
               </motion.div>
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* Workshop Details */}
-        <section className="py-16">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <div className="flex flex-col lg:flex-row gap-10">
               {/* Main Content */}
               <div className="lg:w-2/3">
@@ -358,7 +356,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                   transition={{ duration: 0.5 }}
                   className="mb-12"
                 >
-                  <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-yellow-400 text-black">
+                  <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-js text-black">
                     What You&apos;ll Learn 🧠
                   </h2>
                   <div className="grid md:grid-cols-3 gap-6">
@@ -614,13 +612,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                   </div>
                 </motion.div>
               </div>
-            </div>
           </div>
-        </section>
+        </Section>
 
         {/* Call to Action */}
-        <section className="py-16 bg-black">
-          <div className="container mx-auto px-6">
+        <Section variant="black">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -628,7 +624,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
               transition={{ duration: 0.5 }}
               className="text-center"
             >
-              <h2 className="text-3xl font-bold mb-4 text-yellow-400">Ready to Level Up Your AI Skills? 🚀</h2>
+              <h2 className="text-3xl font-bold mb-4 text-js">Ready to Level Up Your AI Skills? 🚀</h2>
               <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
                 Join our workshop waitlist today and be the first to know when registration opens!
               </p>
@@ -636,7 +632,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
               <div className="flex justify-center">
                 <a
                   href="#getWaitlistContainer"
-                  className="bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
+                  className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
                   onClick={(e) => {
                     e.preventDefault();
                     scrollToWaitlist();
@@ -646,8 +642,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 </a>
               </div>
             </motion.div>
-          </div>
-        </section>
+        </Section>
       </div>
     </Layout>
   );

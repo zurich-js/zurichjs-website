@@ -22,12 +22,12 @@ interface StatsProps {
   backgroundColor?: string;
 }
 
-export default function Stats({ 
-  stats, 
+export default function Stats({
+  stats,
   iconColor = 'text-blue-400',
   backgroundColor = 'bg-black bg-opacity-80'
 }: StatsProps) {
-  
+
   const statItems: StatItem[] = [
     {
       icon: <Users size={24} />,
@@ -56,8 +56,8 @@ export default function Stats({
   ];
 
   return (
-    <div className={`${backgroundColor} text-white rounded-xl shadow-xl p-6 backdrop-blur-sm`}>
-      <motion.div 
+    <div className={`${backgroundColor} text-white rounded-xl shadow-xl p-6 backdrop-blur-sm max-w-screen-lg mx-auto`}>
+      <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
@@ -68,7 +68,7 @@ export default function Stats({
           <span className="ml-2 text-sm font-medium">Our JavaScript community is thriving! 💛</span>
         </div>
       </motion.div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {statItems.map((item, index) => (
           <motion.div
@@ -82,8 +82,8 @@ export default function Stats({
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ 
-                duration: 0.8, 
+              transition={{
+                duration: 0.8,
                 delay: 0.5 + (index * 0.1),
                 type: "spring",
                 stiffness: 100
@@ -91,7 +91,7 @@ export default function Stats({
               className="text-3xl font-bold relative"
             >
               {item.value.toLocaleString()}
-              <span className="absolute -top-1 -right-2 text-yellow-400 text-sm">
+              <span className="absolute -top-1 -right-2 text-js text-sm">
                 {index === 0 ? '✨' : ''}
               </span>
             </motion.div>

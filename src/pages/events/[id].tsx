@@ -10,6 +10,7 @@ import SEO from '@/components/SEO';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { FeatureFlags } from '@/constants';
 import React from 'react';
+import Section from '@/components/Section';
 
 
 interface EventDetailPageProps {
@@ -21,14 +22,14 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const [copySuccess, setCopySuccess] = useState(false);
   const [mapUrl, setMapUrl] = useState('');
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
-  
+
   // Calculate if event is upcoming
   const isUpcoming = new Date(event.datetime) > new Date();
 
   // Calculate available talk slots based on duration
   const regularTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes >= 10);
   const lightningTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes < 10);
-  
+
   const hasRegularSlotAvailable = isUpcoming && regularTalks.length < 2;
   const hasLightningSlotAvailable = isUpcoming && lightningTalks.length < 1;
   const hasSlotsAvailable = hasRegularSlotAvailable || hasLightningSlotAvailable;
@@ -49,7 +50,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   // Share event function
   const shareEvent = async () => {
     const shareUrl = `${window.location.origin}/events/${event.id}`;
-    
+
     // Format the date for sharing
     const eventDate = new Date(event.datetime);
     const formattedDate = eventDate.toLocaleDateString('en-GB', {
@@ -58,7 +59,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       month: 'long',
       day: 'numeric'
     });
-    
+
     const shareText = `Join me at ${event.title} on ${formattedDate} with ZurichJS!`;
 
     if (navigator.share) {
@@ -87,7 +88,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title={`${event.title} | ZurichJS`}
         description={`Join us for ${event.title} on ${new Date(event.datetime).toLocaleDateString('en-GB', {
           weekday: 'long',
@@ -106,138 +107,135 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
       <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-6">
-            <div className="mb-4">
-              <Link href="/events" className="inline-flex items-center text-black hover:underline">
-                <ChevronLeft size={16} className="mr-1" />
-                Back to all events
-              </Link>
-            </div>
+        <Section variant="white">
+          <div className="mb-4">
+            <Link href="/events" className="inline-flex items-center text-black hover:underline">
+              <ChevronLeft size={16} className="mr-1" />
+              Back to all events
+            </Link>
+          </div>
 
-            <div className="flex flex-col lg:flex-row gap-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="lg:w-1/2"
-              >
-                <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
-                  {isUpcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                  {event.title}
-                </h1>
+          <div className="flex flex-col lg:flex-row gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="lg:w-1/2"
+            >
+              <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
+                {isUpcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                {event.title}
+              </h1>
 
-                <div className="flex flex-wrap gap-3 mb-6">
-                  <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
-                    <Calendar size={16} className="mr-1.5" />
-                      <span>{isClient 
-                        ? new Date(event.datetime).toLocaleDateString('en-GB', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                        : new Date(event.datetime).toISOString().split('T')[0] // Fallback for SSR
-                      }</span>
-                  </div>
-                  <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
-                    <Clock size={16} className="mr-1.5" />
+              <div className="flex flex-wrap gap-3 mb-6">
+                <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
+                  <Calendar size={16} className="mr-1.5" />
                     <span>{isClient
-                      ? new Date(event.datetime).toLocaleTimeString('en-GB', {
-                          hour: '2-digit',
-                          minute: '2-digit'
+                      ? new Date(event.datetime).toLocaleDateString('en-GB', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
                         })
-                      : new Date(event.datetime).toISOString().split('T')[1].substring(0, 5) // Fallback for SSR
+                      : new Date(event.datetime).toISOString().split('T')[0] // Fallback for SSR
                     }</span>
-                  </div>
+                </div>
+                <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
+                  <Clock size={16} className="mr-1.5" />
+                  <span>{isClient
+                    ? new Date(event.datetime).toLocaleTimeString('en-GB', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : new Date(event.datetime).toISOString().split('T')[1].substring(0, 5) // Fallback for SSR
+                  }</span>
+                </div>
+                <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
+                  <MapPin size={16} className="mr-1.5" />
+                  <span>{event.location}</span>
+                </div>
+                {isUpcoming && (
                   <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
-                    <MapPin size={16} className="mr-1.5" />
-                    <span>{event.location}</span>
+                    <Users size={16} className="mr-1.5" />
+                    {event.attendees > 0 ? <span>{event.attendees} attending</span> : <span>Be one of the first to sign up!</span>}
                   </div>
-                  {isUpcoming && (
-                    <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
-                      <Users size={16} className="mr-1.5" />
-                      {event.attendees > 0 ? <span>{event.attendees} attending</span> : <span>Be one of the first to sign up!</span>}
-                    </div>
-                  )}
-                </div>
+                )}
+              </div>
 
-                <p className="text-lg mb-6">
-                  {event.description}
-                </p>
+              <p className="text-lg mb-6">
+                {event.description}
+              </p>
 
-                <div className="flex flex-wrap gap-3">
-                  {isUpcoming && event.meetupUrl ? (
-                    <Button
-                      href={event.meetupUrl}
-                      variant="primary"
-                      size="lg"
-                      className="bg-black text-js hover:bg-gray-800"
-                    >
-                      RSVP on Meetup 🚀
-                    </Button>
-                  ) : isUpcoming && (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="bg-black text-js hover:bg-gray-800 cursor-not-allowed"
-                      disabled
-                    >
-                      Hold tight! RSVP coming soon ⏳
-                    </Button>
-                  )}
+              <div className="flex flex-wrap gap-3">
+                {isUpcoming && event.meetupUrl ? (
+                  <Button
+                    href={event.meetupUrl}
+                    variant="primary"
+                    size="lg"
+                    className="bg-black text-js hover:bg-gray-800"
+                  >
+                    RSVP on Meetup 🚀
+                  </Button>
+                ) : isUpcoming && (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="bg-black text-js hover:bg-gray-800 cursor-not-allowed"
+                    disabled
+                  >
+                    Hold tight! RSVP coming soon ⏳
+                  </Button>
+                )}
 
-                  {isClient && (
-                    <Button
-                      onClick={shareEvent}
-                      variant="outline"
-                      className="border-black text-black hover:bg-black hover:text-js"
-                    >
-                      <Share2 size={16} className="mr-1.5" />
-                      {copySuccess ? 'Link copied! 👍' : 'Share event'}
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
+                {isClient && (
+                  <Button
+                    onClick={shareEvent}
+                    variant="outline"
+                    className="border-black text-black hover:bg-black hover:text-js"
+                  >
+                    <Share2 size={16} className="mr-1.5" />
+                    {copySuccess ? 'Link copied! 👍' : 'Share event'}
+                  </Button>
+                )}
+              </div>
+            </motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="lg:w-1/2"
-              >
-                <div className="relative display-none md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
-                  {event.image ? (
-                    <Image
-                      src={event.image}
-                      alt={event.title}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
-                      <div className="text-center">
-                        <div className="text-5xl mb-3">⚛️</div>
-                        <h3 className="text-xl font-bold text-white mb-3">{event.title}</h3>
-                        <div className="mt-3 flex justify-center space-x-3">
-                          <span className="text-2xl">🚀</span>
-                          <span className="text-2xl">💻</span>
-                          <span className="text-2xl">🔥</span>
-                        </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="lg:w-1/2"
+            >
+              <div className="relative display-none md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
+                {event.image ? (
+                  <Image
+                    src={event.image}
+                    alt={event.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
+                    <div className="text-center">
+                      <div className="text-5xl mb-3">⚛️</div>
+                      <h3 className="text-xl font-bold text-white mb-3">{event.title}</h3>
+                      <div className="mt-3 flex justify-center space-x-3">
+                        <span className="text-2xl">🚀</span>
+                        <span className="text-2xl">💻</span>
+                        <span className="text-2xl">🔥</span>
                       </div>
                     </div>
-                  )}
-                </div>
-              </motion.div>
-            </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           </div>
-        </section>
+        </Section>
 
         {/* Event Details */}
-        <section className="py-16">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <div className="flex flex-col lg:flex-row gap-10">
               {/* Main Content */}
               <div className="lg:w-2/3">
@@ -488,7 +486,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   >
                     <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
                     <p className="mb-4">
-                      Don&apos;t miss this amazing JavaScript event! 
+                      Don&apos;t miss this amazing JavaScript event!
                       {event.meetupUrl ? ' RSVP now to secure your spot.' : ' We\'re finalizing the details - check back soon!'}
                     </p>
                     {event.meetupUrl ? (
@@ -514,19 +512,53 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
               </div>
             </div>
-          </div>
-        </section>
+        </Section>
+
+        {/* Speaker Details */}
+        <Section variant="white">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">Meet Our Speaker</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                Get to know the amazing person who will be sharing their knowledge with us!
+              </p>
+            </motion.div>
+
+            {/* Speaker content */}
+        </Section>
+
+        {/* Related Events */}
+        <Section variant="gray">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">More Awesome Events</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                Check out these other exciting events happening soon!
+              </p>
+            </motion.div>
+
+            {/* Related events content */}
+        </Section>
 
         {/* Newsletter Section */}
         {showNewsletter && (
-          <section className="py-16 bg-gray-50">
-            <div className="container mx-auto px-6">
+            <Section variant="gray">
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="bg-black text-white rounded-lg p-8 shadow-md"
+                  initial={{opacity: 0, y: 20}}
+                  whileInView={{opacity: 1, y: 0}}
+                  viewport={{once: true}}
+                  transition={{duration: 0.5}}
+                  className="bg-black text-white rounded-lg p-8 shadow-md"
               >
                 <div className="md:flex items-center justify-between">
                   <div className="md:w-3/5 mb-6 md:mb-0">
@@ -538,20 +570,19 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <div className="md:w-2/5">
                     <div className="flex">
                       <input
-                        type="email"
-                        placeholder="your@email.com"
-                        className="flex-grow px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-js"
+                          type="email"
+                          placeholder="your@email.com"
+                          className="flex-grow px-4 py-3 rounded-l-md focus:outline-none focus:ring-2 focus:ring-js"
                       />
                       <button className="bg-js text-black px-6 py-3 rounded-r-md font-bold hover:bg-yellow-300 transition-colors">
-                        Subscribe 🚀
+                        Subscribe
                       </button>
                     </div>
                   </div>
                 </div>
               </motion.div>
-            </div>
-          </section>
-        )}
+            </Section>
+          )}
       </div>
     </Layout>
   );
@@ -564,10 +595,10 @@ export async function getStaticPaths() {
 
   const paths = [
     ...upcomingEvents.map((event: Event) => ({
-      params: { id: event.id },
+      params: {id: event.id},
     })),
     ...pastEvents.map((event: Event) => ({
-      params: { id: event.id },
+      params: {id: event.id},
     })),
   ];
 
@@ -577,12 +608,12 @@ export async function getStaticPaths() {
   };
 }
 
-export async function getStaticProps({ params }: { params: { id: string } }) {
+export async function getStaticProps({params}: { params: { id: string } }) {
   // This would be replaced with actual CMS fetching based on the id
-  const { id } = params;
+  const {id} = params;
   const event = await getEventById(id);
 
   return {
-    props: { event },
+    props: {event},
   };
 }

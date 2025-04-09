@@ -36,6 +36,7 @@ interface WorkshopPageProps {
     speaker: Speaker;
 }
 
+
 export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     const [isClient, setIsClient] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -43,50 +44,52 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "nextjs-react-performance-workshop-2024",
-        title: "Unleashing NextJS/React Performance & Resiliency",
-        subtitle: "A Practical & Pragmatic Workshop for Developers",
+        id: "vuejs-fundamentals-workshop-2024",
+        title: "Vue.js Fundamentals",
+        subtitle: "Building Modern Web Applications with Vue 3",
         dateInfo: "TBD",
-        timeInfo: "Duration: 1.5-2.5 hours",
+        timeInfo: "Duration: 2-3 hours",
         locationInfo: "TBD",
-        description: "Getting pragmatic with building performant and resilient React applications. This workshop will delve into React and NextJs to create scalable, high-performance web applications made for the real world, exploring architectural patterns, rendering techniques, and optimization strategies. We'll tackle data fetching management, performance measurement, and state management, offering tools and insights for efficient coding and stakeholder communication. Practical exercises and real-world examples will equip developers with the skills to build and maintain solid web solutions, additionally, emphasizing the importance of observability and monitoring post-deployment.",
-        priceInfo: "CHF 150 per person",
+        description: "Dive into the world of Vue.js with this comprehensive workshop designed for developers looking to master this powerful and flexible JavaScript framework. Learn how to build reactive, component-based applications with Vue 3's Composition API. This workshop covers essential concepts, best practices, and real-world patterns to help you create maintainable and scalable Vue applications. Through hands-on exercises and practical examples, you'll gain the confidence to implement Vue.js in your projects and leverage its ecosystem effectively.",
+        priceInfo: "CHF 120 per person",
         maxAttendees: 15,
         speaker: speaker,
         topics: [
             {
-                title: "Web Performance Pitfalls",
-                description: "Learn to identify and avoid common performance issues in React applications.",
-                icon: <Code className="text-yellow-500" size={24} />
+                title: "Vue 3 Fundamentals",
+                description: "Master the core concepts of Vue 3 and the Composition API.",
+                icon: <Code className="text-green-500" size={24} />
             },
             {
-                title: "React Reconciliation",
-                description: "Dive deep into how React updates the DOM and optimize rendering.",
-                icon: <MessageSquare className="text-yellow-500" size={24} />
+                title: "Component Architecture",
+                description: "Learn to build reusable and maintainable components.",
+                icon: <MessageSquare className="text-green-500" size={24} />
             },
             {
-                title: "Data Fetching at Scale",
-                description: "Master efficient data fetching strategies with React Query.",
-                icon: <BookOpen className="text-yellow-500" size={24} />
+                title: "State Management",
+                description: "Explore state management patterns with Pinia and Vuex.",
+                icon: <BookOpen className="text-green-500" size={24} />
             }
         ],
         takeaways: [
-            "Deeper understanding of React reconciliation and rendering",
-            "Hands-on experience through practical coding labs",
-            "Pragmatic performance optimization techniques",
-            "Strategies for building resilient applications",
-            "Insights into monitoring and observability post-deployment",
+            "Solid understanding of Vue 3 and the Composition API",
+            "Ability to build component-based applications",
+            "Knowledge of Vue's reactivity system",
+            "Practical experience with Vue Router",
+            "Understanding of state management patterns",
+            "Best practices for testing Vue components",
             "Comprehensive learning materials and code samples"
         ],
         targetAudience: [
-            "Front-End Engineers (beginners to experienced)",
-            "Technical Leads and Engineering Managers",
-            "Developers working with React and NextJS in production environments"
+            "JavaScript developers new to Vue.js",
+            "React or Angular developers looking to learn Vue",
+            "Web developers wanting to upgrade their skills",
+            "Frontend engineers interested in modern frameworks"
         ],
         prerequisites: [
-            "Intermediate understanding of JavaScript (ES6+)",
-            "Working knowledge of React (hooks, component lifecycle)",
-            "Experience with production applications",
+            "Basic understanding of HTML, CSS, and JavaScript",
+            "Familiarity with ES6+ syntax",
+            "Experience with web development concepts",
             "Laptop with Node.js installed (latest LTS version)"
         ]
     };
@@ -120,9 +123,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             const style = document.createElement('style');
             style.textContent = `
         @keyframes pulse-highlight {
-          0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
-          70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+          0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+          70% { box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
         .highlight-pulse {
           animation: pulse-highlight 1.5s ease-in-out;
@@ -306,7 +309,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
                                     <div>
                                         <h4 className="font-semibold">Focused Workshop</h4>
-                                        <p className="text-gray-600 text-sm">Compact 1.5-2.5 hour session with maximum learning value</p>
+                                        <p className="text-gray-600 text-sm">Compact 2-3 hour session with maximum learning value</p>
                                     </div>
                                 </div>
 
@@ -332,16 +335,17 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     />
                                     <div>
                                         <p className="font-semibold">{workshop.speaker.name}</p>
-                                        <p className="text-sm text-gray-600">Staff Frontend Engineer & Engineering Manager</p>
+                                        <p className="text-sm text-gray-600">Senior Frontend Engineer & Vue.js Expert</p>
                                     </div>
                                 </div>
-                                <p className="text-sm italic text-gray-600">&quot;Join me to explore practical strategies for building performant and
-                                    resilient React applications that stand up to real-world challenges.&quot;</p>
+                                <p className="text-sm italic text-gray-600">&quot;Join me to explore the power and elegance of Vue.js and learn how to
+                                    build modern, reactive web applications with confidence.&quot;</p>
                             </div>
                         </div>
                     </motion.div>
                 </div>
             </Section>
+
 
             {/* Workshop Details */}
             <Section>
@@ -368,10 +372,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="bg-white p-6 rounded-lg shadow-md"
                                 >
                                     <h3 className="text-lg font-bold mb-2">
-                                        Web Performance Pitfalls & Balancing Pragmatism
+                                        Vue 3 Core Concepts
                                     </h3>
                                     <p className="text-gray-600">
-                                        Identify common performance issues and learn when to optimize and when it might be over-engineering.
+                                        Understand the fundamentals of Vue 3, including the Composition API, reactivity system, and component
+                                        lifecycle.
                                     </p>
                                 </motion.div>
 
@@ -383,10 +388,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="bg-white p-6 rounded-lg shadow-md"
                                 >
                                     <h3 className="text-lg font-bold mb-2">
-                                        Software Resilience Patterns
+                                        Component Architecture
                                     </h3>
                                     <p className="text-gray-600">
-                                        Explore strategies to build applications that can handle unexpected issues gracefully.
+                                        Learn how to design and build reusable, maintainable components with proper props, events, and slots.
                                     </p>
                                 </motion.div>
 
@@ -398,10 +403,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="bg-white p-6 rounded-lg shadow-md"
                                 >
                                     <h3 className="text-lg font-bold mb-2">
-                                        Diving Deep into React Reconciliation
+                                        Vue Router Essentials
                                     </h3>
                                     <p className="text-gray-600">
-                                        Understand how React updates the DOM and optimize your components for better rendering performance.
+                                        Master client-side routing with Vue Router, including nested routes, route guards, and lazy loading.
                                     </p>
                                 </motion.div>
 
@@ -413,10 +418,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="bg-white p-6 rounded-lg shadow-md"
                                 >
                                     <h3 className="text-lg font-bold mb-2">
-                                        Managing Component Architecture
+                                        State Management with Pinia
                                     </h3>
                                     <p className="text-gray-600">
-                                        Learn best practices for structuring your components for maintainability and performance.
+                                        Explore modern state management patterns using Pinia, Vue&apos;s official state management library.
                                     </p>
                                 </motion.div>
 
@@ -428,10 +433,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="bg-white p-6 rounded-lg shadow-md"
                                 >
                                     <h3 className="text-lg font-bold mb-2">
-                                        Case Study - Data Fetching at Scale (feat. React Query)
+                                        Composables and Reusability
                                     </h3>
                                     <p className="text-gray-600">
-                                        Explore efficient data fetching strategies using React Query for large-scale applications.
+                                        Learn to create and use composables to share logic between components and improve code organization.
                                     </p>
                                 </motion.div>
 
@@ -443,10 +448,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="bg-white p-6 rounded-lg shadow-md"
                                 >
                                     <h3 className="text-lg font-bold mb-2">
-                                        Post deployment - Observability/Monitoring & Feature Flags
+                                        Testing Vue Components
                                     </h3>
                                     <p className="text-gray-600">
-                                        Learn how to monitor your application&apos;s health and implement feature flags for safer deployments.
+                                        Discover best practices for testing Vue components using Vitest and Vue Test Utils.
                                     </p>
                                 </motion.div>
                             </div>
@@ -455,9 +460,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         {/* Takeaways */}
                         <motion.div
                             initial={{opacity: 0, y: 20}}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.1}}
                             className="mb-12 bg-white p-6 rounded-lg shadow-md"
                         >
                             <h2 className="text-2xl font-bold mb-4">
@@ -475,10 +480,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                         {/* Who Should Attend */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.2}}
                             className="mb-12 bg-white p-6 rounded-lg shadow-md"
                         >
                             <h2 className="text-2xl font-bold mb-4">
@@ -496,10 +501,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                         {/* Prerequisites */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.3}}
                             className="mb-12 bg-white p-6 rounded-lg shadow-md"
                         >
                             <h2 className="text-2xl font-bold mb-4">
@@ -520,20 +525,21 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     <div className="lg:w-1/3">
                         {/* Workshop Registration */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5}}
                             id="registrationContainer"
                             className="bg-white p-6 rounded-lg shadow-md mb-6"
                         >
                             <h3 className="text-xl font-bold mb-3 flex items-center">
-                                <Users className="mr-2 text-yellow-500" size={20} />
+                                <Users className="mr-2 text-yellow-500" size={20}/>
                                 Register for the Workshop
                             </h3>
 
                             <p className="mb-4">
-                                This workshop has limited seats to ensure a quality learning experience. Join the waitlist to be notified when registration opens!
+                                This workshop has limited seats to ensure a quality learning experience. Join the waitlist to be notified when
+                                registration opens!
                             </p>
 
                             <div className="mb-6">
@@ -545,7 +551,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             {/* GetWaitlist Component */}
                             <div
                                 id="getWaitlistContainer"
-                                data-waitlist_id="26499"
+                                data-waitlist_id="26500"
                                 data-widget_type="WIDGET_1"
                                 className="transition-all duration-300"
                             ></div>
@@ -557,35 +563,36 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                         {/* Workshop Format */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.1}}
                             className="bg-white p-6 rounded-lg shadow-md mb-6"
                         >
                             <h3 className="text-xl font-bold mb-3 flex items-center">
-                                <LayoutTemplate className="mr-2 text-yellow-500" size={20} />
+                                <LayoutTemplate className="mr-2 text-yellow-500" size={20}/>
                                 Workshop Format
                             </h3>
 
                             <p className="mb-4">
-                                This compact, focused workshop is designed to deliver maximum value in a condensed timeframe. The session is structured to be intensive and hands-on, allowing you to immediately apply what you learn.
+                                This workshop is designed to provide a comprehensive introduction to Vue.js through a mix of theory and hands-on
+                                practice. You&apos;ll build a complete Vue application from scratch during the session.
                             </p>
 
                             <ul className="list-disc pl-5 space-y-2 text-gray-700">
-                                <li>Concentrated learning experience without unnecessary breaks</li>
-                                <li>Practical exercises that mirror real-world scenarios</li>
-                                <li>Take-home resources for continued learning</li>
+                                <li>Interactive learning with live coding demonstrations</li>
+                                <li>Practical exercises to reinforce concepts</li>
+                                <li>Q&A sessions throughout the workshop</li>
                                 <li>Small group size for personalized attention</li>
                             </ul>
                         </motion.div>
 
                         {/* Speaker Info */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.1}}
                             className="bg-white p-6 rounded-lg shadow-md mb-6"
                         >
                             <h3 className="text-xl font-bold mb-3">Workshop Instructor</h3>
@@ -601,7 +608,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-lg">{workshop.speaker.name}</h4>
-                                    <p className="text-gray-600 mb-2">Staff Frontend Engineer & Engineering Manager</p>
+                                    <p className="text-gray-600 mb-2">Senior Frontend Engineer & Vue.js Expert</p>
 
                                     <div className="flex space-x-2">
                                         {workshop.speaker.twitter && (
@@ -611,8 +618,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                                 rel="noopener noreferrer"
                                                 className="text-blue-400 hover:text-blue-600"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                                     fill="currentColor">
+                                                    <path
+                                                        d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723 10.054 10.054 0 01-3.127 1.184 4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                                                 </svg>
                                             </a>
                                         )}
@@ -623,8 +632,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                                 rel="noopener noreferrer"
                                                 className="text-gray-700 hover:text-black"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                                     fill="currentColor">
+                                                    <path
+                                                        d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
                                                 </svg>
                                             </a>
                                         )}
@@ -635,21 +646,25 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                                 rel="noopener noreferrer"
                                                 className="text-blue-700 hover:text-blue-900"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                                     fill="currentColor">
+                                                    <path
+                                                        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                                                 </svg>
                                             </a>
                                         )}
                                         <a
-                                            href="https://faziz-dev.com"
+                                            href="https://aleksej.dev"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-gray-700 hover:text-black"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                                 stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <circle cx="12" cy="12" r="10"></circle>
                                                 <line x1="2" y1="12" x2="22" y2="12"></line>
-                                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                                <path
+                                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
                                             </svg>
                                         </a>
                                     </div>
@@ -658,20 +673,23 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                             <div className="mt-4">
                                 <p className="text-sm text-gray-700">
-                                    Faris comes from a boot camp and self-taught background, having contributed to open-source projects in his spare time. His passion for technology extends beyond coding; he loves consulting on web projects and aiding start-ups with technical strategy. He has grown his expertise in web architectures and frontend codebases.
+                                    Aleksej is a passionate frontend developer with extensive experience in Vue.js and modern web technologies. He has
+                                    been working with Vue since its early versions and has contributed to numerous production applications.
                                 </p>
                                 <p className="text-sm text-gray-700 mt-2">
-                                    Having worked in many industries, including Connected TV, Fintech, Digital Asset Management, SaaS, and Fitness, Faris has found his niche in start-ups. Some of his previous work has revolved around building large-scale full-stack solutions for notable companies like Fiit, Discovery, GCN, Eurosport, Navro (formerly Paytrix) and SmallPDF, serving millions of users globally.
+                                    With a background in both startups and enterprise environments, Aleksej brings practical insights into building
+                                    scalable and maintainable Vue applications. He is known for his ability to explain complex concepts in an
+                                    accessible way, making him an ideal instructor for developers at all skill levels.
                                 </p>
                             </div>
                         </motion.div>
 
                         {/* Workshop Details */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.2}}
                             className="bg-white p-6 rounded-lg shadow-md mb-6"
                         >
                             <h3 className="text-xl font-bold mb-3">Workshop Details</h3>
@@ -679,7 +697,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             <div className="space-y-4">
                                 <div>
                                     <p className="font-semibold text-gray-700">Format:</p>
-                                    <p>Foundations workshop (1.5-2.5 hours)</p>
+                                    <p>Foundations workshop (2-3 hours)</p>
                                 </div>
 
                                 <div>
@@ -694,7 +712,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                                 <div>
                                     <p className="font-semibold text-gray-700">Experience level:</p>
-                                    <p>Intermediate</p>
+                                    <p>Beginner to Intermediate</p>
                                 </div>
 
                                 <div>
@@ -706,38 +724,43 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                         {/* FAQ */}
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{duration: 0.5, delay: 0.3}}
                             className="bg-white p-6 rounded-lg shadow-md"
                         >
                             <h3 className="text-xl font-bold mb-3">FAQs</h3>
 
                             <div className="space-y-4">
                                 <div>
-                                    <p className="font-semibold">Is this workshop suitable for beginners?</p>
-                                    <p className="text-gray-700">This workshop is designed for developers with intermediate JavaScript knowledge and some experience with React. If you&apos;re a complete beginner, we recommend gaining some basic React experience first.</p>
+                                    <p className="font-semibold">Is this workshop suitable for complete beginners?</p>
+                                    <p className="text-gray-700">Yes, this workshop is designed for developers with basic JavaScript knowledge who
+                                        want to learn Vue.js. No prior Vue experience is required.</p>
+                                </div>
+
+                                <div>
+                                    <p className="font-semibold">I know React/Angular. Will this workshop be useful for me?</p>
+                                    <p className="text-gray-700">Absolutely! We&apos;ll cover Vue&apos;s unique approach and highlight similarities
+                                        and differences with other frameworks to help you leverage your existing knowledge.</p>
                                 </div>
 
                                 <div>
                                     <p className="font-semibold">Do I need to bring my own laptop?</p>
-                                    <p className="text-gray-700">Yes, please bring a laptop with the latest LTS version of Node.js installed to participate in the hands-on coding labs.</p>
-                                </div>
-
-                                <div>
-                                    <p className="font-semibold">Is lunch provided?</p>
-                                    <p className="text-gray-700">No, this is a compact 1.5-2.5 hour workshop. Light refreshments may be available depending on the venue.</p>
+                                    <p className="text-gray-700">Yes, please bring a laptop with the latest LTS version of Node.js installed to
+                                        participate in the hands-on coding exercises.</p>
                                 </div>
 
                                 <div>
                                     <p className="font-semibold">Will there be recordings available?</p>
-                                    <p className="text-gray-700">This is a hands-on workshop, so we recommend attending in person for the best experience. Workshop materials will be provided to all participants.</p>
+                                    <p className="text-gray-700">This is a hands-on workshop, so we recommend attending in person for the best
+                                        experience. Workshop materials will be provided to all participants.</p>
                                 </div>
 
                                 <div>
                                     <p className="font-semibold">Is this workshop related to the conference?</p>
-                                    <p className="text-gray-700">This is a foundations workshop organized by ZurichJS. The workshop ticket is sold separately from conference tickets.</p>
+                                    <p className="text-gray-700">This is a foundations workshop organized by ZurichJS. The workshop ticket is sold
+                                        separately from conference tickets.</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -747,39 +770,40 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
             {/* Call to Action */}
             <Section variant="black">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                        className="text-center"
-                    >
-                        <h2 className="text-3xl font-bold mb-4 text-js">Ready to Level Up Your NextJS & React Skills? 🚀</h2>
-                        <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
-                            Join our workshop waitlist today and be the first to know when registration opens!
-                        </p>
+                <motion.div
+                    initial={{opacity: 0, y: 20}}
+                    whileInView={{opacity: 1, y: 0}}
+                    viewport={{once: true}}
+                    transition={{duration: 0.5}}
+                    className="text-center"
+                >
+                    <h2 className="text-3xl font-bold mb-4 text-js">Ready to Master Vue.js? 🚀</h2>
+                    <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
+                        Join our workshop waitlist today and be the first to know when registration opens!
+                    </p>
 
-                        <div className="flex justify-center">
-                            <a
-                                href="#registrationContainer"
-                                className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    scrollToRegistration();
-                                }}
-                            >
-                                Join the Waitlist
-                            </a>
-                        </div>
-                    </motion.div>
-            </Section>
-        </Layout>
-    );
+                    <div className="flex justify-center">
+                        <a
+                            href="#registrationContainer"
+                            className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                scrollToRegistration();
+                            }}
+                        >
+                            Join the Waitlist
+                        </a>
+                    </div>
+                </motion.div>
+        </Section>
+</Layout>
+)
+    ;
 }
 
 export async function getStaticProps() {
     // Fetch the speaker data using the getSpeakerById function
-    const speaker = await getSpeakerById('faris-aziz');
+    const speaker = await getSpeakerById('aleksej-dix');
 
     if (!speaker) {
         return {

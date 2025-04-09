@@ -7,6 +7,7 @@ import SEO from '@/components/SEO';
 import Link from 'next/link';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import useEvents from '@/hooks/useEvents';
+import Section from '@/components/Section';
 
 // Define our TypeScript interfaces
 interface ContactPerson {
@@ -49,7 +50,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title="Contact ZurichJS | JavaScript Community in Zurich"
         description="Get in touch with the ZurichJS team - we're happy to answer your questions about our JavaScript community in Zurich."
         openGraph={{
@@ -62,27 +63,24 @@ export default function Contact({ contactPeople }: ContactPageProps) {
 
       <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-js to-js-dark py-16">
-          <div className="container mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-                Get in Touch 👋
-              </h1>
-              <p className="text-xl mb-6 text-gray-900 max-w-3xl mx-auto">
-                Have questions about ZurichJS? Want to speak at one of our events? Looking to sponsor or collaborate? We&apos;d love to hear from you!
-              </p>
-            </motion.div>
-          </div>
-        </section>
+        <Section variant="gradient">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              Get in touch
+            </h1>
+            <p className="text-xl mb-6 text-gray-900 max-w-3xl mx-auto">
+              Have questions about ZurichJS? Want to speak at one of our events? Looking to sponsor or collaborate? We&apos;d love to hear from you!
+            </p>
+          </motion.div>
+        </Section>
 
         {/* Contact Options */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -90,7 +88,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
               transition={{ duration: 0.5 }}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">How to Reach Us 📬</h2>
+              <h2 className="text-3xl font-bold mb-3 text-gray-900">How to reach us</h2>
               <p className="text-xl text-gray-700 max-w-3xl mx-auto">
                 Choose the way that works best for you to connect with our JavaScript community.
               </p>
@@ -111,8 +109,8 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 <p className="text-gray-700 mb-4">
                   Send us an email and we&apos;ll get back to you as soon as possible.
                 </p>
-                <a 
-                  href="mailto:hello@zurichjs.com" 
+                <a
+                  href="mailto:hello@zurichjs.com"
                   className="text-blue-700 font-medium hover:underline"
                   onClick={() => trackEmailClick('hello@zurichjs.com')}
                 >
@@ -134,8 +132,8 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 <p className="text-gray-700 mb-4">
                   Connect with us on LinkedIn for updates and networking opportunities.
                 </p>
-                <a 
-                  href="https://www.linkedin.com/company/zurichjs" 
+                <a
+                  href="https://www.linkedin.com/company/zurichjs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-700 font-medium hover:underline"
@@ -159,8 +157,8 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 <p className="text-gray-700 mb-4">
                   Join our Meetup group to attend events and message us directly.
                 </p>
-                <a 
-                  href="https://meetup.com/zurich-js" 
+                <a
+                  href="https://meetup.com/zurich-js"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-700 font-medium hover:underline"
@@ -207,26 +205,26 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                     <h3 className="text-xl font-bold mb-1 text-gray-900">{person.name}</h3>
                     <p className="text-blue-700 mb-4">{person.role}</p>
                     <p className="text-gray-700 mb-4">{person.bio}</p>
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col lg:flex-row gap-3">
                       {person.email && (
-                        <a 
+                        <a
                           href={`mailto:${person.email}`}
                           className="flex items-center gap-2 text-gray-700 hover:text-blue-700"
                           onClick={() => trackEmailClick(person.email!, person.name)}
                         >
-                          <Mail size={18} />
+                          <Mail size={18} className="shrink-0" />
                           <span>{person.email}</span>
                         </a>
                       )}
                       {person.linkedin && (
-                        <a 
+                        <a
                           href={person.linkedin}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-2 text-gray-700 hover:text-blue-700"
                           onClick={() => trackLinkedInClick(person.name)}
                         >
-                          <Linkedin size={18} />
+                          <Linkedin size={18} className="shrink-0" />
                           <span>LinkedIn Profile</span>
                         </a>
                       )}
@@ -235,12 +233,10 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* FAQ Section */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-6">
+        <Section variant="gray">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -319,13 +315,11 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                   Currently, as a community-run event, we don&apos;t have the resources to cover travel and accommodation for speakers. However, this is something we&apos;re actively working on with potential sponsors to make speaking opportunities more accessible in the future.
                 </p>
               </motion.div>
-            </div>
           </div>
-        </section>
+        </Section>
 
         {/* CTA Section */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -341,19 +335,19 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 We&apos;re excited to hear from you and welcome you to our JavaScript community in Zurich.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  href="mailto:hello@zurichjs.com" 
-                  variant="primary" 
-                  size="lg" 
+                <Button
+                  href="mailto:hello@zurichjs.com"
+                  variant="primary"
+                  size="lg"
                   className="bg-blue-700 text-white hover:bg-blue-600"
                   onClick={() => trackEmailClick('hello@zurichjs.com')}
                 >
                   Email Us Now
                 </Button>
-                <Button 
-                  href="https://meetup.com/zurich-js" 
-                  variant="outline" 
-                  size="lg" 
+                <Button
+                  href="https://meetup.com/zurich-js"
+                  variant="outline"
+                  size="lg"
                   className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-black"
                   onClick={trackMeetupClick}
                 >
@@ -361,8 +355,7 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 </Button>
               </div>
             </motion.div>
-          </div>
-        </section>
+        </Section>
       </div>
     </Layout>
   );

@@ -9,6 +9,7 @@ import SEO from '@/components/SEO';
 import { getSpeakerById } from '@/sanity/queries';
 import useEvents from '@/hooks/useEvents';
 import { Speaker } from '@/types';
+import Section from '@/components/Section';
 
 
 interface WorkshopDetails {
@@ -218,8 +219,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
       <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
-        <section className="py-12">
-          <div className="container mx-auto px-6">
+        <Section variant="gradient">
             <div className="mb-4">
               <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
                 <ChevronLeft size={16} className="mr-1" />
@@ -341,12 +341,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 </div>
               </motion.div>
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* Workshop Details */}
-        <section className="py-16">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <div className="flex flex-col lg:flex-row gap-10">
               {/* Main Content */}
               <div className="lg:w-2/3">
@@ -614,13 +612,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                   </div>
                 </motion.div>
               </div>
-            </div>
           </div>
-        </section>
+        </Section>
 
         {/* Call to Action */}
-        <section className="py-16 bg-black">
-          <div className="container mx-auto px-6">
+        <Section variant="black">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -646,8 +642,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 </a>
               </div>
             </motion.div>
-          </div>
-        </section>
+        </Section>
       </div>
     </Layout>
   );

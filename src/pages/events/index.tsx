@@ -9,6 +9,7 @@ import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
 import SEO from '@/components/SEO';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { FeatureFlags } from '@/constants';
+import Section from '@/components/Section';
 
 interface EventsPageProps {
   upcomingEvents: Event[];
@@ -84,40 +85,36 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
         }}
       />
 
-      <div className="pt-20">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-js to-js-dark py-16">
-          <div className="container mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-                JavaScript Gatherings in Zurich! 🎉
-              </h1>
-              <p className="text-xl max-w-3xl mx-auto mb-8 text-gray-900">
-                Awesome meetups for JS enthusiasts of all levels! Join us to learn, share, and connect with fellow developers in our super friendly community.
-              </p>
+        <Section variant="gradient" padding="lg" className="mt-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              JavaScript Gatherings in Zurich! 🎉
+            </h1>
+            <p className="text-xl max-w-3xl mx-auto mb-8 text-gray-900">
+              Awesome meetups for JS enthusiasts of all levels! Join us to learn, share, and connect with fellow developers in our super friendly community.
+            </p>
 
-              {upcomingEvents.length > 0 && (
-                <Button
-                  href={upcomingEvents[0].meetupUrl}
-                  variant="primary"
-                  size="lg"
-                  className="bg-blue-700 hover:bg-blue-600 text-white"
-                >
-                  RSVP for our next meetup! 🚀
-                </Button>
-              )}
-            </motion.div>
-          </div>
-        </section>
+            {upcomingEvents.length > 0 && (
+              <Button
+                href={upcomingEvents[0].meetupUrl}
+                variant="primary"
+                size="lg"
+                className="bg-blue-700 hover:bg-blue-600 text-white"
+              >
+                RSVP for our next meetup! 🚀
+              </Button>
+            )}
+          </motion.div>
+        </Section>
 
         {/* Events List */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-6">
+        <Section variant="gray">
             {/* Tabs and Search */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
               <div className="flex mb-4 md:mb-0 bg-white rounded-lg shadow-sm p-1">
@@ -155,7 +152,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
             {/* Events grid */}
             {filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-[repeat(auto-fit,_minmax(250px,1fr))] gap-6">
                 {filteredEvents.map((event, index) => (
                   <motion.div
                     key={event.id}
@@ -172,7 +169,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             src={event.image}
                             alt={event.title}
                             fill
-                            className="object-cover"
+                            className="object-cover object-left"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
@@ -253,8 +250,8 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             <div className="flex items-center text-sm">
                               <Users size={14} className="mr-1 text-blue-700" />
                               <span className="text-blue-700 font-medium">
-                                {event.attendees === 0 
-                                  ? "Be one of the first to RSVP!" 
+                                {event.attendees === 0
+                                  ? "Be one of the first to RSVP!"
                                   : `${event.attendees} attending`}
                               </span>
                             </div>
@@ -312,12 +309,10 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 </Button>
               </motion.div>
             )}
-          </div>
-        </section>
+        </Section>
 
         {/* Submit a Talk CTA */}
-        <section className="py-16 bg-black text-white">
-          <div className="container mx-auto px-6">
+        <Section variant="black">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -326,7 +321,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
               className="flex flex-col lg:flex-row items-center justify-between"
             >
               <div className="lg:w-2/3 mb-8 lg:mb-0 lg:pr-10">
-                <h2 className="text-3xl font-bold mb-4 text-js">Got JavaScript Wisdom to Share? 💡</h2>
+                <h2 className="text-3xl font-bold mb-4">Got JavaScript Wisdom to Share?</h2>
                 <p className="text-xl mb-6">
                   We&apos;re always looking for awesome speakers to share their JavaScript knowledge, stories, and experiments!
                 </p>
@@ -360,12 +355,10 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 </Button>
               </div>
             </motion.div>
-          </div>
-        </section>
+        </Section>
 
         {/* Host a Meetup */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-6">
+        <Section variant="white">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -452,13 +445,11 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                 </Button>
               </motion.div>
             </div>
-          </div>
-        </section>
+        </Section>
 
         {/* Email Updates */}
         {showNewsletter && (
-          <section className="py-16 bg-gray-50">
-            <div className="container mx-auto px-6">
+          <Section variant="gray">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -487,10 +478,8 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                   </div>
                 </div>
               </motion.div>
-            </div>
-          </section>
+          </Section>
         )}
-      </div>
     </Layout>
   );
 }

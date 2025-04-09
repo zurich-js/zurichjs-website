@@ -8,11 +8,12 @@ import SEO from '@/components/SEO';
 import { GetStaticProps } from 'next';
 import { getSpeakers } from '@/sanity/queries';
 import type { Speaker } from '@/types';
+import Section from "@/components/Section";
 
 // Workshop data
 const workshops = [
   {
-    id: 'accessibility-fundementals',
+    id: 'accessibility-fundamentals',
     title: 'Web Accessibility Fundamentals',
     subtitle: 'Building Inclusive Digital Experiences',
     description: 'Learn how to create accessible web applications that comply with WCAG standards and the European Accessibility Act.',
@@ -54,7 +55,7 @@ const workshops = [
     speakerId: 'faris-aziz'
   },
   {
-    id: 'vue-fundementals',
+    id: 'vue-fundamentals',
     title: 'Vue.js Fundamentals',
     subtitle: 'Building Modern Web Applications',
     description: 'Learn the core concepts of Vue.js and how to build reactive, component-based web applications from the ground up.',
@@ -86,7 +87,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
 
   return (
     <Layout>
-      <SEO 
+      <SEO
         title="JavaScript Workshops | ZurichJS"
         description="Join our hands-on JavaScript workshops covering React, Vue, accessibility, AI integration, and more. Limited spots available!"
         openGraph={{
@@ -98,37 +99,35 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
         }}
       />
 
-      <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
-        {/* Hero Section */}
-        <section className="py-16">
-          <div className="container mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">ZurichJS Workshops</h1>
-              <p className="text-xl md:text-2xl max-w-3xl mx-auto text-gray-800">
-                Hands-on learning experiences to level up your JavaScript skills
-              </p>
-            </motion.div>
+      <Section variant="gradient" padding="lg">
+        <motion.div
+            initial={{opacity: 0, y: 20}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.5}}
+            className="text-center mb-12"
+        >
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">ZurichJS Workshops</h1>
+          <p className="text-xl md:text-2xl max-w-3xl mx-auto text-gray-800">
+            Hands-on learning experiences to level up your JavaScript skills
+          </p>
+        </motion.div>
+      </Section>
 
-            {/* Workshops Grid */}
-            <div className="grid md:grid-cols-2 gap-8 mt-12">
-              {workshops.map((workshop, index) => {
-                const speaker = speakersMap[workshop.speakerId];
-                const IconComponent = workshop.icon;
-                
-                return (
+      <Section variant="white">
+        <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,1fr))] gap-4">
+          {workshops.map((workshop, index) => {
+            const speaker = speakersMap[workshop.speakerId];
+            const IconComponent = workshop.icon;
+
+            return (
                 <motion.div
-                  key={workshop.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden"
-                  onMouseEnter={() => setHoveredWorkshop(workshop.id)}
-                  onMouseLeave={() => setHoveredWorkshop(null)}
+                    key={workshop.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="bg-white rounded-lg shadow-lg overflow-hidden"
+                    onMouseEnter={() => setHoveredWorkshop(workshop.id)}
+                    onMouseLeave={() => setHoveredWorkshop(null)}
                 >
                   <Link href={`/workshops/${workshop.id}`} className="block">
                     <div className="relative h-48 overflow-hidden">
@@ -137,20 +136,20 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                           {workshop.tag}
                         </div>
                       </div>
-                      <div 
-                        className={`w-full h-full transition-transform duration-500 flex items-center justify-center ${
-                          hoveredWorkshop === workshop.id ? 'scale-110' : 'scale-100'
-                        }`}
-                        style={{ backgroundColor: `${workshop.iconColor}15` }} // Very light version of the icon color
+                      <div
+                          className={`w-full h-full transition-transform duration-500 flex items-center justify-center ${
+                              hoveredWorkshop === workshop.id ? 'scale-110' : 'scale-100'
+                          }`}
+                          style={{ backgroundColor: `${workshop.iconColor}15` }} // Very light version of the icon color
                       >
                         <IconComponent size={96} color={workshop.iconColor} strokeWidth={1.5} />
                       </div>
                     </div>
-                    
+
                     <div className="p-6">
                       <h2 className="text-2xl font-bold mb-2 text-gray-900">{workshop.title}</h2>
                       <p className="text-lg mb-4 text-gray-700">{workshop.subtitle}</p>
-                      
+
                       <div className="flex flex-wrap gap-3 mb-4">
                         <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full text-sm">
                           <Calendar size={16} className="mr-1.5 text-yellow-600" />
@@ -161,7 +160,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                           <span className="text-gray-700">{workshop.timeInfo}</span>
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-3 mb-6">
                         <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full text-sm">
                           <MapPin size={16} className="mr-1.5 text-yellow-600" />
@@ -172,27 +171,27 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                           <span className="text-gray-700">Limited to {workshop.maxAttendees} attendees</span>
                         </div>
                       </div>
-                      
+
                       <p className="text-gray-600 mb-6 line-clamp-2">
                         {workshop.description}
                       </p>
-                      
+
                       <div className="flex items-center justify-between">
                         {speaker && (
-                          <div className="flex items-center">
-                            <Image
-                              src={speaker.image}
-                              alt={speaker.name}
-                              width={40}
-                              height={40}
-                              className="rounded-full mr-3"
-                            />
-                            <span className="font-medium">{speaker.name}</span>
-                          </div>
+                            <div className="flex items-center">
+                              <Image
+                                  src={speaker.image}
+                                  alt={speaker.name}
+                                  width={40}
+                                  height={40}
+                                  className="rounded-full mr-3"
+                              />
+                              <span className="font-medium">{speaker.name}</span>
+                            </div>
                         )}
-                        
+
                         <div className={`text-yellow-600 font-bold flex items-center transition-transform duration-300 ${
-                          hoveredWorkshop === workshop.id ? 'translate-x-1' : ''
+                            hoveredWorkshop === workshop.id ? 'translate-x-1' : ''
                         }`}>
                           View Details <ArrowRight size={16} className="ml-1" />
                         </div>
@@ -200,51 +199,47 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                     </div>
                   </Link>
                 </motion.div>
-              )})}
-            </div>
-          </div>
-        </section>
-        
-        {/* Call to Action */}
-        <section className="py-16 bg-black">
-          <div className="container mx-auto px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
+            )})}
+        </div>
+      </Section>
+
+      <Section variant="black" padding="lg">
+        <motion.div
+            initial={{opacity: 0, y: 20}}
+            whileInView={{opacity: 1, y: 0}}
+            viewport={{once: true}}
+            transition={{duration: 0.5}}
+            className="text-center"
+        >
+          <h2 className="text-3xl font-bold mb-4">Ready to Level Up Your Skills? 🚀</h2>
+          <p className="text-xl mb-8 max-w-3xl mx-auto">
+            Our workshops are designed to provide practical, hands-on learning experiences that you can immediately apply to your projects.
+          </p>
+
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <Link
+                href="/events"
+                className="bg-transparent border-2 border-js px-8 py-3 rounded-lg font-bold transition-colors"
             >
-              <h2 className="text-3xl font-bold mb-4 text-js">Ready to Level Up Your Skills? 🚀</h2>
-              <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto">
-                Our workshops are designed to provide practical, hands-on learning experiences that you can immediately apply to your projects.
-              </p>
-              
-              <div className="flex flex-col md:flex-row gap-4 justify-center">
-                <Link 
-                  href="/events" 
-                  className="bg-transparent border-2 border-js text-js px-8 py-3 rounded-lg font-bold text-lg hover:bg-js hover:text-black transition-colors"
-                >
-                  View All Events
-                </Link>
-                <Link 
-                  href="/contact" 
-                  className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
-                >
-                  Request Custom Workshop
-                </Link>
-              </div>
-            </motion.div>
+              View All Events
+            </Link>
+            <Link
+                href="/contact"
+                className="bg-js text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors"
+            >
+              Request Custom Workshop
+            </Link>
           </div>
-        </section>
-      </div>
+        </motion.div>
+      </Section>
+
     </Layout>
   );
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const speakers = await getSpeakers({ shouldFilterVisible: false });
-  
+  const speakers = await getSpeakers({shouldFilterVisible: false});
+
   return {
     props: {
       speakers

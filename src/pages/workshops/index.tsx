@@ -83,8 +83,6 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
     return map;
   }, {} as Record<string, Speaker>);
 
-  console.log(speakersMap);
-
   return (
     <Layout>
       <SEO

@@ -113,7 +113,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
       <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
-        <Section variant="white">
+        <Section variant="gradient">
           <div className="mb-4">
             <Link href="/events" className="inline-flex items-center text-black hover:underline">
               <ChevronLeft size={16} className="mr-1" />
@@ -238,10 +238,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </div>
             </motion.div>
           </div>
-        </Section>
-
-        {/* Event Details */}
-        <Section variant="white">
             <div className="flex flex-col lg:flex-row gap-10">
               {/* Main Content */}
               <div className="lg:w-2/3">
@@ -278,7 +274,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     transition={{ duration: 0.5 }}
                     className="mb-12"
                   >
-                    <h2 className="text-2xl font-bold mb-6 pb-2 border-b-2 border-js">
+                    <h2 className="text-2xl font-bold mb-6 pb-2">
                       Amazing Talks at This Event 🎤
                     </h2>
                     <div className="space-y-8">
@@ -564,45 +560,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
             </div>
         </Section>
 
-        {/* Speaker Details */}
-        <Section variant="white">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">Meet Our Speaker</h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                Get to know the amazing person who will be sharing their knowledge with us!
-              </p>
-            </motion.div>
-
-            {/* Speaker content */}
-        </Section>
-
-        {/* Related Events */}
-        <Section variant="gray">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">More Awesome Events</h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                Check out these other exciting events happening soon!
-              </p>
-            </motion.div>
-
-            {/* Related events content */}
-        </Section>
-
         {/* Newsletter Section */}
         {showNewsletter && !isFeedbackMode && (
-          <Section variant="gray">
+          <Section variant="gradient">
               <motion.div
                   initial={{opacity: 0, y: 20}}
                   whileInView={{opacity: 1, y: 0}}

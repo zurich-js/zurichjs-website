@@ -42,8 +42,6 @@ export default function AdminFeedbackLinks({ speakers }: AdminFeedbackLinksProps
     const [eventLinks, setEventLinks] = useState<Record<string, string>>({});
     const [isMounted, setIsMounted] = useState(false);
 
-    console.log({speakers})
-
     // For sending emails
     const [emailSubject, setEmailSubject] = useState('Your ZurichJS Talk Feedback');
     const [emailBody, setEmailBody] = useState(

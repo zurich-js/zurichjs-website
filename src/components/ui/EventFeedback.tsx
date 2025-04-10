@@ -219,8 +219,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
   if (!isFeedbackMode) {
     return null;
   }
-  
-  console.log({event})
+
 
   return (
     <motion.div

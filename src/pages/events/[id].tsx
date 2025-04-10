@@ -11,6 +11,8 @@ import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { FeatureFlags } from '@/constants';
 import React from 'react';
 import Section from '@/components/Section';
+import EventFeedback from '@/components/ui/EventFeedback';
+import { useRouter } from 'next/router';
 
 
 interface EventDetailPageProps {
@@ -18,11 +20,15 @@ interface EventDetailPageProps {
 }
 
 export default function EventDetail({ event }: EventDetailPageProps) {
+  const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [mapUrl, setMapUrl] = useState('');
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
-
+  
+  // Check if we're in feedback mode
+  const isFeedbackMode = router.query.feedback === 'true';
+  
   // Calculate if event is upcoming
   const isUpcoming = new Date(event.datetime) > new Date();
 
@@ -239,6 +245,30 @@ export default function EventDetail({ event }: EventDetailPageProps) {
             <div className="flex flex-col lg:flex-row gap-10">
               {/* Main Content */}
               <div className="lg:w-2/3">
+                {/* Feedback Section - Only shows when in feedback mode */}
+                <EventFeedback 
+                  event={event} 
+                  isFeedbackMode={isFeedbackMode} 
+                />
+
+                {/* Feedback Button for Past Events */}
+                {!isUpcoming && !isFeedbackMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-10"
+                  >
+                    <Link
+                      href={`/events/${event.id}?feedback=true`}
+                      className="inline-flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                    >
+                      Leave Feedback for This Event
+                    </Link>
+                  </motion.div>
+                )}
+
                 {/* Talks */}
                 {event.talks.length > 0 && (
                   <motion.div
@@ -326,7 +356,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                               </div>
 
                               <div className="flex flex-wrap gap-2">
-                                {/* {!isUpcoming && talk.slidesUrl && (
+                                {/* Talk links here (slides, video recordings, etc.) */}
+                                {!isUpcoming && talk.slidesUrl && (
                                   <a
                                     href={talk.slidesUrl}
                                     target="_blank"
@@ -348,7 +379,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     <ExternalLink size={14} className="mr-1" />
                                     Video Recording
                                   </a>
-                                )} */}
+                                )}
                               </div>
                             </div>
                           </div>
@@ -359,7 +390,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
 
                 {/* Submit a Talk CTA (for upcoming events) */}
-                {isUpcoming && hasSlotsAvailable && (
+                {isUpcoming && hasSlotsAvailable && !isFeedbackMode && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -387,7 +418,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
 
                 {/* No Slots Available Message */}
-                {isUpcoming && !hasSlotsAvailable && (
+                {isUpcoming && !hasSlotsAvailable && !isFeedbackMode && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -445,7 +476,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </motion.div>
 
                 {/* What to Bring */}
-                {isUpcoming && (
+                {isUpcoming && !isFeedbackMode && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -476,7 +507,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
 
                 {/* Call to Action */}
-                {isUpcoming && (
+                {isUpcoming && !isFeedbackMode && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -508,6 +539,25 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         RSVP Coming Soon
                       </Button>
                     )}
+                  </motion.div>
+                )}
+
+                {/* Feedback Mode Notice */}
+                {isFeedbackMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="bg-blue-50 p-6 rounded-lg shadow-md"
+                  >
+                    <h3 className="text-xl font-bold mb-3">Feedback Mode 📝</h3>
+                    <p className="mb-4">
+                      You&apos;re currently in feedback mode. Please rate the talks to help us improve future events and provide valuable insights to our speakers.
+                    </p>
+                    <p className="text-sm text-blue-600">
+                      Your feedback will remain anonymous to speakers and will only be used to improve our community events. You can submit feedback at any time.
+                    </p>
                   </motion.div>
                 )}
               </div>
@@ -551,8 +601,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         </Section>
 
         {/* Newsletter Section */}
-        {showNewsletter && (
-            <Section variant="gray">
+        {showNewsletter && !isFeedbackMode && (
+          <Section variant="gray">
               <motion.div
                   initial={{opacity: 0, y: 20}}
                   whileInView={{opacity: 1, y: 0}}

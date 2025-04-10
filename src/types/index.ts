@@ -1,11 +1,13 @@
 import { Event } from "@/sanity/queries";
 
 export interface Speaker {
+  _id: string;
   id: string;
   name: string;
   title: string;
   image: string;
   bio?: string;
+  email?: string;
   website?: string;
   twitter?: string;
   github?: string;
@@ -15,6 +17,7 @@ export interface Speaker {
 }
 
 export interface Talk {
+  _id: string;
   id: string;
   title: string;
   description: string;

@@ -10,6 +10,7 @@ interface SanityImage {
 }
 
 interface SanitySpeaker {
+  _id: string;
   id: { current: string };
   name: string;
   title: string;
@@ -18,16 +19,20 @@ interface SanitySpeaker {
 }
 
 interface SanityTalk {
+  _id: string;
   id: { current: string };
   title: string;
   description: string;
   type: string;
   tags: string[];
+  slidesUrl: string;
+  videoUrl: string;
   speakers: SanitySpeaker[];
   [key: string]: unknown;
 }
 
 interface SanityEvent {
+  _id: string;
   id: { current: string };
   title: string;
   datetime: string;
@@ -43,6 +48,7 @@ interface SanityEvent {
 
 const mapEventData = (event: SanityEvent) => {
   return {
+    _id: event._id || "",
     id: event.id?.current || "",
     title: event.title || "",
     datetime: event.datetime || "",
@@ -59,6 +65,8 @@ const mapEventData = (event: SanityEvent) => {
       type: talk.type || "",
       tags: talk.tags || [],
       durationMinutes: talk.durationMinutes as number || 0,
+      slidesUrl: talk.slidesUrl || "",
+      videoUrl: talk.videoUrl || "",
       speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
         id: speaker.id?.current || "",
         name: speaker.name || "",
@@ -220,6 +228,7 @@ export const getTalks = async (): Promise<Talk[]> => {
 
   // Map the data to a consistent format
   return talks.map((talk: SanityTalk & { events: Array<{ id: string; title: string; datetime: string; location: string }> }) => ({
+    _id: talk._id || "",
     id: talk.id || "",
     title: talk.title || "",
     description: talk.description || "",
@@ -262,6 +271,7 @@ export const getSpeakerById = async (speakerId: string): Promise<Speaker | null>
     *[_type == "speaker" && id.current == $speakerId] {
       ...,
       "id": id.current,
+      email,
       "image": {
         "asset": {
           "url": image.asset->url
@@ -286,12 +296,309 @@ export const getSpeakerById = async (speakerId: string): Promise<Speaker | null>
   if (!speaker) return null;
 
   return {
+    _id: speaker._id,
     ...speaker,
     image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
     talks: speaker.talks || [],
     talkCount: (speaker.talks || []).length
   };
 };
+
+export const getTalkById = async (talkId: string): Promise<Talk | null> => {
+  const [talk] = await client.fetch(`
+    *[_type == "talk" && id.current == $talkId] {
+      ...,
+      "id": id.current,
+      "events": *[_type == "events" && references(^._id)] {
+        "id": id.current,
+        title,
+        datetime,
+        location
+      },
+      speakers[]-> {
+        ...,
+        "id": id.current,
+        "image": {
+          "asset": {
+            "url": image.asset->url
+          }
+        }
+      }
+    }`, { talkId });
+
+  if (!talk) return null;
+
+  return {
+    _id: talk._id || "",
+    id: talk.id || "",
+    title: talk.title || "",
+    description: talk.description || "",
+    type: talk.type || "",
+    tags: talk.tags || [],
+    durationMinutes: talk.durationMinutes || 0,
+    events: (talk.events || []).map((event: Event) => ({
+      id: event.id || "",
+      title: event.title || "",
+      date: event.datetime ? format(new Date(event.datetime), "MMMM d, yyyy") : "",
+      location: event.location || ""
+    })),
+    speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
+      id: speaker.id || "",
+      name: speaker.name || "",
+      title: speaker.title || "",
+      image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    })) || [],
+  };
+};
+
+// Define types for feedback data
+export interface FeedbackItem {
+  _id: string;
+  rating: number;
+  comment?: string;
+  submittedAt: string;
+  event: {
+    _id: string;
+    title: string;
+    datetime: string;
+  };
+  talk: {
+    _id: string;
+    title: string;
+  };
+  speaker: {
+    _id: string;
+    name: string;
+    image: string;
+  };
+}
+
+export interface EventFeedbackStats {
+  _id: string;
+  title: string;
+  date: string;
+  feedbackCount: number;
+  averageRating: number;
+  talkCount: number;
+}
+
+// Interface for raw event data from Sanity
+interface SanityEventStats {
+  _id: string;
+  title?: string;
+  datetime?: string;
+  feedbackCount?: number;
+  averageRating?: number;
+  talkCount?: number;
+}
+
+export interface SpeakerFeedbackStats {
+  _id: string;
+  name: string;
+  image: string;
+  feedbackCount: number;
+  averageRating: number;
+}
+
+export interface TalkFeedbackStats {
+  _id: string;
+  title: string;
+  speakerId: string;
+  speakerName: string;
+  speakerImage: string;
+  eventId: string;
+  eventTitle: string;
+  eventDate: string;
+  feedbackCount: number;
+  averageRating: number;
+}
+
+/**
+ * Get all feedback items
+ * 
+ * @returns Promise with array of feedback items
+ */
+export const getFeedback = async (): Promise<FeedbackItem[]> => {
+  return client.fetch(`
+    *[_type == "feedback"] {
+      _id,
+      rating,
+      comment,
+      submittedAt,
+      "event": event->{
+        _id,
+        title,
+        datetime
+      },
+      "talk": talk->{
+        _id,
+        title
+      },
+      "speaker": speaker->{
+        _id,
+        name,
+        "image": image.asset->url
+      }
+    } | order(submittedAt desc)
+  `);
+};
+
+/**
+ * Get event feedback statistics for all events with feedback
+ * 
+ * @returns Promise with array of event feedback statistics
+ */
+export const getEventFeedbackStats = async (): Promise<EventFeedbackStats[]> => {
+  const eventStats = await client.fetch(`
+    *[_type == "events" && count(*[_type == "feedback" && references(^._id)]) > 0] {
+      _id,
+      title,
+      datetime,
+      "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
+      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating),
+      "talkCount": count(*[_type == "talk" && references(^._id)])
+    } | order(datetime desc)
+  `);
+  
+  return eventStats.map((event: SanityEventStats) => ({
+    _id: event._id,
+    title: event.title || "",
+    date: event.datetime || "",
+    feedbackCount: event.feedbackCount || 0,
+    averageRating: event.averageRating || 0,
+    talkCount: event.talkCount || 0
+  }));
+};
+
+/**
+ * Get speaker feedback statistics for all speakers with feedback
+ * 
+ * @returns Promise with array of speaker feedback statistics
+ */
+export const getSpeakerFeedbackStats = async (): Promise<SpeakerFeedbackStats[]> => {
+  return client.fetch(`
+    *[_type == "speaker" && count(*[_type == "feedback" && references(^._id)]) > 0] {
+      _id,
+      name,
+      "image": image.asset->url,
+      "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
+      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating)
+    } | order(name asc)
+  `);
+};
+
+/**
+ * Get talk feedback statistics for all talks with feedback
+ * 
+ * @returns Promise with array of talk feedback statistics
+ */
+export const getTalkFeedbackStats = async (): Promise<TalkFeedbackStats[]> => {
+  return client.fetch(`    *[_type == "talk" && count(*[_type == "feedback" && references(^._id)]) > 0] {
+      _id,
+      title,
+      "speakerId": *[_type == "speaker" && _id in ^.speakers[]._ref][0]._id,
+      "speakerName": *[_type == "speaker" && _id in ^.speakers[]._ref][0].name,
+      "speakerImage": *[_type == "speaker" && _id in ^.speakers[]._ref][0].image.asset->url,
+      "eventId": event->_id,
+      "eventTitle": event->title,
+      "eventDate": event->datetime,
+      "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
+      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating)
+    } | order(eventDate desc)
+  `);
+};
+
+/**
+ * Get feedback statistics for a specific event
+ * 
+ * @param eventId - ID of the event
+ * @returns Promise with event feedback statistics or null if not found
+ */
+export const getEventFeedbackById = async (eventId: string): Promise<EventFeedbackStats | null> => {
+  const [eventStats] = await client.fetch(`
+    *[_type == "events" && _id == $eventId] {
+      _id,
+      title,
+      datetime,
+      "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
+      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating),
+      "talkCount": count(*[_type == "talk" && references(^._id)])
+    }
+  `, { eventId });
+  
+  if (!eventStats) return null;
+  
+  return {
+    _id: eventStats._id,
+    title: eventStats.title || "",
+    date: eventStats.datetime || "",
+    feedbackCount: eventStats.feedbackCount || 0,
+    averageRating: eventStats.averageRating || 0,
+    talkCount: eventStats.talkCount || 0
+  };
+};
+
+/**
+ * Get all feedback items for a specific event
+ * 
+ * @param eventId - ID of the event
+ * @returns Promise with array of feedback items
+ */
+export const getFeedbackByEventId = async (eventId: string): Promise<FeedbackItem[]> => {
+  return client.fetch(`
+    *[_type == "feedback" && event._ref == $eventId] {
+      _id,
+      rating,
+      comment,
+      submittedAt,
+      "event": event->{
+        _id,
+        title,
+        datetime
+      },
+      "talk": talk->{
+        _id,
+        title
+      },
+      "speaker": speaker->{
+        _id,
+        name,
+        "image": image.asset->url
+      }
+    } | order(submittedAt desc)
+  `, { eventId });
+};
+
+/**
+ * Get all feedback items for a specific speaker
+ * 
+ * @param speakerId - ID of the speaker
+ * @returns Promise with array of feedback items
+ */
+export const getFeedbackBySpeakerId = async (speakerId: string): Promise<FeedbackItem[]> => {
+  return client.fetch(`    *[_type == "feedback" && speaker->id.current == $speakerId] {
+      _id,
+      rating,
+      comment,
+      submittedAt,
+      "event": event->,
+      "talk": talk->{
+        _id,
+        title
+      },
+      "speaker": speaker->{
+        _id,
+        id,
+        name,
+        "image": image.asset->url
+      }
+    } | order(submittedAt desc)
+  `, { speakerId });
+};
+
+
+
+
 
 
 

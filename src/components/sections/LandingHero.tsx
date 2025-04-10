@@ -4,11 +4,24 @@ import Button from "@/components/ui/Button";
 import Stats from "@/components/ui/Stats";
 import Section from "@/components/Section";
 import useEvents from "@/hooks/useEvents";
+import { Event } from "@/sanity/queries";
+
+interface StatsData {
+    members: number;
+    eventsHosted: number;
+    speakersToDate: number;
+    totalAttendees: number;
+}
+
+interface LandingHeroProps {
+    upcomingEvents: Event[];
+    stats: StatsData;
+}
 
 export default function LandingHero({
     upcomingEvents,
     stats
-}) {
+}: LandingHeroProps) {
     const { track } = useEvents();
 
     // Get the next event date dynamically

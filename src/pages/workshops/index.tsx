@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, Users, ArrowRight, Accessibility, Brain, Rocket, Layers } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, ArrowRight } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import SEO from '@/components/SEO';
 import { GetStaticProps } from 'next';
@@ -21,7 +21,7 @@ const workshops = [
     timeInfo: 'TBD',
     locationInfo: 'TBD',
     maxAttendees: 15,
-    icon: Accessibility,
+    image: '/images/workshops/web-accessibility.png',
     iconColor: '#0284c7', // sky-600
     tag: '🌐 Accessibility',
     speakerId: 'aleksej-dix'
@@ -35,7 +35,7 @@ const workshops = [
     timeInfo: 'TBD',
     locationInfo: 'TBD',
     maxAttendees: 15,
-    icon: Brain,
+    image: '/images/workshops/ai-powered-js-apps.png',
     iconColor: '#7c3aed', // violet-600
     tag: '🚀 AI Workshop',
     speakerId: 'adele-kuzmiakova'
@@ -49,25 +49,11 @@ const workshops = [
     timeInfo: 'TBD',
     locationInfo: 'TBD',
     maxAttendees: 15,
-    icon: Rocket,
+    image: '/images/workshops/react-performance.png',
     iconColor: '#2563eb', // blue-600
     tag: '🚀 React & Next.js Performance Foundations',
     speakerId: 'faris-aziz'
   },
-  {
-    id: 'vue-fundamentals',
-    title: 'Vue.js Fundamentals',
-    subtitle: 'Building Modern Web Applications',
-    description: 'Learn the core concepts of Vue.js and how to build reactive, component-based web applications from the ground up.',
-    dateInfo: 'TBD',
-    timeInfo: 'TBD',
-    locationInfo: 'TBD',
-    maxAttendees: 15,
-    icon: Layers,
-    iconColor: '#059669', // emerald-600
-    tag: '🚀 Vue.js Fundamentals',
-    speakerId: 'aleksej-dix'
-  }
 ];
 
 interface WorkshopsPageProps {
@@ -112,10 +98,9 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
       </Section>
 
       <Section variant="white">
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,1fr))] gap-4">
+        <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,1fr))] gap-8">
           {workshops.map((workshop, index) => {
             const speaker = speakersMap[workshop.speakerId];
-            const IconComponent = workshop.icon;
 
             return (
                 <motion.div
@@ -123,75 +108,80 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-white rounded-lg shadow-lg overflow-hidden"
+                    className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition-shadow duration-300"
                     onMouseEnter={() => setHoveredWorkshop(workshop.id)}
                     onMouseLeave={() => setHoveredWorkshop(null)}
                 >
-                  <Link href={`/workshops/${workshop.id}`} className="block">
-                    <div className="relative h-48 overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-black bg-opacity-80 z-10 flex items-center justify-center">
-                        <div className="bg-black bg-opacity-70 text-js px-3 py-1 rounded-full text-sm font-bold">
-                          {workshop.tag}
-                        </div>
+                  <Link href={`/workshops/${workshop.id}`} className="block h-full flex flex-col">
+                    <div className="relative h-80 overflow-hidden">
+                      <div className="absolute top-4 left-4 z-10">
                       </div>
                       <div
-                          className={`w-full h-full transition-transform duration-500 flex items-center justify-center ${
+                          className={`w-full h-full transition-transform duration-500 ${
                               hoveredWorkshop === workshop.id ? 'scale-110' : 'scale-100'
                           }`}
-                          style={{ backgroundColor: `${workshop.iconColor}15` }} // Very light version of the icon color
                       >
-                        <IconComponent size={96} color={workshop.iconColor} strokeWidth={1.5} />
+                        <Image 
+                          src={workshop.image}
+                          alt={workshop.title}
+                          fill
+                          className="object-cover"
+                          priority
+                        />
                       </div>
                     </div>
 
-                    <div className="p-6">
-                      <h2 className="text-2xl font-bold mb-2 text-gray-900">{workshop.title}</h2>
-                      <p className="text-lg mb-4 text-gray-700">{workshop.subtitle}</p>
+                    <div className="p-6 flex flex-col flex-grow">
+                      <div>
+                        <h2 className="text-2xl font-bold mb-1 text-gray-900">{workshop.title}</h2>
+                        <p className="text-md font-medium mb-5 text-gray-600">{workshop.subtitle}</p>
 
-                      <div className="flex flex-wrap gap-3 mb-4">
-                        <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full text-sm">
-                          <Calendar size={16} className="mr-1.5 text-yellow-600" />
-                          <span className="text-gray-700">{workshop.dateInfo}</span>
+                        <div className="grid grid-cols-2 gap-3 mb-5">
+                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
+                            <Calendar size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                            <span className="text-gray-700">{workshop.dateInfo}</span>
+                          </div>
+                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
+                            <Clock size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                            <span className="text-gray-700">{workshop.timeInfo}</span>
+                          </div>
+                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
+                            <MapPin size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                            <span className="text-gray-700">{workshop.locationInfo}</span>
+                          </div>
+                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
+                            <Users size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                            <span className="text-gray-700">Max {workshop.maxAttendees}</span>
+                          </div>
                         </div>
-                        <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full text-sm">
-                          <Clock size={16} className="mr-1.5 text-yellow-600" />
-                          <span className="text-gray-700">{workshop.timeInfo}</span>
-                        </div>
+
+                        <p className="text-gray-600 mb-6 line-clamp-2 min-h-[3rem]">
+                          {workshop.description}
+                        </p>
                       </div>
 
-                      <div className="flex flex-wrap gap-3 mb-6">
-                        <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full text-sm">
-                          <MapPin size={16} className="mr-1.5 text-yellow-600" />
-                          <span className="text-gray-700">{workshop.locationInfo}</span>
-                        </div>
-                        <div className="flex items-center bg-yellow-50 px-3 py-1.5 rounded-full text-sm">
-                          <Users size={16} className="mr-1.5 text-yellow-600" />
-                          <span className="text-gray-700">Limited to {workshop.maxAttendees} attendees</span>
-                        </div>
-                      </div>
-
-                      <p className="text-gray-600 mb-6 line-clamp-2">
-                        {workshop.description}
-                      </p>
-
-                      <div className="flex items-center justify-between">
+                      <div className="border-t border-gray-100 pt-5 mt-auto flex items-center justify-between">
                         {speaker && (
                             <div className="flex items-center">
-                              <Image
-                                  src={speaker.image}
-                                  alt={speaker.name}
-                                  width={40}
-                                  height={40}
-                                  className="rounded-full mr-3"
-                              />
-                              <span className="font-medium">{speaker.name}</span>
+                              <div className="relative mr-3 w-12 h-12 overflow-hidden rounded-full border-2 border-yellow-500">
+                                <Image
+                                    src={speaker.image}
+                                    alt={speaker.name}
+                                    fill
+                                    className="object-cover"
+                                />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm text-gray-900">{speaker.name}</span>
+                                <span className="text-xs text-gray-500">Instructor</span>
+                              </div>
                             </div>
                         )}
 
                         <div className={`text-yellow-600 font-bold flex items-center transition-transform duration-300 ${
                             hoveredWorkshop === workshop.id ? 'translate-x-1' : ''
                         }`}>
-                          View Details <ArrowRight size={16} className="ml-1" />
+                          View Details <ArrowRight size={18} className="ml-1" />
                         </div>
                       </div>
                     </div>

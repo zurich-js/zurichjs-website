@@ -7,72 +7,23 @@ import Link from 'next/link';
 import SEO from '@/components/SEO';
 import {
     getFeedback,
-    getEventFeedbackStats,
-    getSpeakerFeedbackStats,
-    getTalkFeedbackStats,
+    FeedbackItem,
+    EventFeedbackStats,
+    SpeakerFeedbackStats,
+    TalkFeedbackStats
 } from '@/sanity/queries';
 
-interface FeedbackData {
-    _id: string;
-    rating: number;
-    comment: string;
-    submittedAt: string;
-    event: {
-        _id: string;
-        title: string;
-        datetime: string;
-    };
-    talk: {
-        _id: string;
-        title: string;
-    };
-    speaker: {
-        _id: string;
-        name: string;
-        image: string;
-    };
-    [key: string]: unknown;
-}
-
-interface SpeakerStats {
-    _id: string;
-    name: string;
-    image: string;
-    feedbackCount: number;
-    averageRating: number;
-    [key: string]: unknown;
-}
-
-interface TalkStats {
-    _id: string;
-    title: string;
-    speakerName: string;
-    speakerId: string;
-    speakerImage: string;
-    eventTitle: string;
-    eventId: string;
-    eventDate: string;
-    feedbackCount: number;
-    averageRating: number;
-    [key: string]: unknown;
-}
-
-interface EventStats {
-    _id: string;
-    title: string;
-    date: string;
-    feedbackCount: number;
-    averageRating: number;
-    talkCount: number;
-    [key: string]: unknown;
-}
-
 interface FeedbackAnalyticsProps {
-    feedbackData: FeedbackData[];
-    eventStats: EventStats[];
-    speakerStats: SpeakerStats[];
-    talkStats: TalkStats[];
+    feedbackData: FeedbackItem[];
+    eventStats: EventFeedbackStats[];
+    speakerStats: SpeakerFeedbackStats[];
+    talkStats: TalkFeedbackStats[];
 }
+
+// Helper type for accessing nested properties
+// Use a more permissive type to avoid TypeScript errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ObjectWithProperties = any;
 
 export default function FeedbackAnalytics({
     feedbackData,
@@ -105,14 +56,25 @@ export default function FeedbackAnalytics({
         }
     };
 
+    // Helper to get nested property using dot notation (e.g. "event.title")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getNestedProperty = (obj: any, path: string): any => {
+        return path.split('.').reduce((acc, part) => {
+            if (acc === null || acc === undefined || typeof acc !== 'object') {
+                return null;
+            }
+            return acc[part];
+        }, obj);
+    };
+
     // Sort and filter function
-    const getSortedAndFilteredItems = <T extends Record<string, unknown>>(
+    const getSortedAndFilteredItems = <T extends ObjectWithProperties>(
         items: T[],
         field: string,
         direction: 'asc' | 'desc',
         filterValue: string,
         filterFields: string[]
-    ) => {
+    ): T[] => {
         // First filter
         let filteredItems = items;
         if (filterValue.trim()) {
@@ -145,16 +107,6 @@ export default function FeedbackAnalytics({
             // Default comparison
             return direction === 'asc' ? 1 : -1;
         });
-    };
-
-    // Helper to get nested property using dot notation (e.g. "event.title")
-    const getNestedProperty = (obj: Record<string, unknown>, path: string): unknown => {
-        return path.split('.').reduce<unknown>((acc, part) => {
-            if (acc === null || acc === undefined || typeof acc !== 'object') {
-                return null;
-            }
-            return (acc as Record<string, unknown>)[part];
-        }, obj);
     };
 
     // Export feedback data as CSV
@@ -261,8 +213,8 @@ export default function FeedbackAnalytics({
                         <button
                             onClick={() => setActiveTab('overview')}
                             className={`inline-flex items-center px-4 py-2 font-medium text-sm border-b-2 ${activeTab === 'overview'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             Overview
@@ -270,8 +222,8 @@ export default function FeedbackAnalytics({
                         <button
                             onClick={() => setActiveTab('events')}
                             className={`inline-flex items-center px-4 py-2 font-medium text-sm border-b-2 ${activeTab === 'events'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             Events ({eventStats.length})
@@ -279,8 +231,8 @@ export default function FeedbackAnalytics({
                         <button
                             onClick={() => setActiveTab('speakers')}
                             className={`inline-flex items-center px-4 py-2 font-medium text-sm border-b-2 ${activeTab === 'speakers'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             Speakers ({speakerStats.length})
@@ -288,8 +240,8 @@ export default function FeedbackAnalytics({
                         <button
                             onClick={() => setActiveTab('talks')}
                             className={`inline-flex items-center px-4 py-2 font-medium text-sm border-b-2 ${activeTab === 'talks'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             Talks ({talkStats.length})
@@ -297,8 +249,8 @@ export default function FeedbackAnalytics({
                         <button
                             onClick={() => setActiveTab('allFeedback')}
                             className={`inline-flex items-center px-4 py-2 font-medium text-sm border-b-2 ${activeTab === 'allFeedback'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                 }`}
                         >
                             All Feedback ({feedbackData.length})
@@ -524,7 +476,7 @@ export default function FeedbackAnalytics({
                                     filteredEvents.map((event) => (
                                         <tr key={event._id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <Link href={`/events/${event._id}`} className="font-medium text-blue-600 hover:underline">
+                                                <Link href={`/events/${event.id}`} className="font-medium text-blue-600 hover:underline">
                                                     {event.title}
                                                 </Link>
                                             </td>
@@ -616,7 +568,7 @@ export default function FeedbackAnalytics({
                                                         />
                                                     </div>
                                                     <div className="ml-4">
-                                                        <Link href={`/speakers/${speaker._id}`} className="font-medium text-blue-600 hover:underline">
+                                                        <Link href={`/speakers/${speaker.id}`} className="font-medium text-blue-600 hover:underline">
                                                             {speaker.name}
                                                         </Link>
                                                     </div>
@@ -796,8 +748,14 @@ export default function FeedbackAnalytics({
                                                     <span className="ml-2 text-gray-600">{feedback.speaker.name}</span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-                                                {feedback.rating} <Star className="ml-1 h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                            <div className="flex items-center">
+                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                    <Star
+                                                        key={star}
+                                                        size={16}
+                                                        className={star <= feedback.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                                                    />
+                                                ))}
                                             </div>
                                         </div>
 
@@ -807,7 +765,7 @@ export default function FeedbackAnalytics({
                                                 {new Date(feedback.event.datetime).toLocaleDateString()}
                                             </span>
                                             <Link
-                                                href={`/events/${feedback.event._id}`}
+                                                href={`/events/${feedback.event.id.current}`}
                                                 className="text-blue-600 hover:underline"
                                             >
                                                 {feedback.event.title}
@@ -839,11 +797,136 @@ export const getServerSideProps: GetServerSideProps = async () => {
     // For simplicity, this example doesn't include authentication
 
     try {
-        // Fetch all feedback data using our new query functions
+        // Fetch all feedback data only, and calculate stats in the server
         const feedbackData = await getFeedback();
-        const eventStats = await getEventFeedbackStats();
-        const speakerStats = await getSpeakerFeedbackStats();
-        const talkStats = await getTalkFeedbackStats();
+
+        // Calculate event stats
+        const eventMap = new Map<string, {
+            _id: string;
+            id: string;
+            title: string;
+            date: string;
+            feedbackCount: number;
+            totalRating: number;
+            talkIds: Set<string>;
+        }>();
+
+        // Calculate speaker stats
+        const speakerMap = new Map<string, {
+            _id: string;
+            id: string;
+            name: string;
+            image: string;
+            feedbackCount: number;
+            totalRating: number;
+        }>();
+
+        // Calculate talk stats
+        const talkMap = new Map<string, {
+            _id: string;
+            id: string;
+            title: string;
+            speakerId: string;
+            speakerName: string;
+            speakerImage: string;
+            eventId: string;
+            eventTitle: string;
+            eventDate: string;
+            feedbackCount: number;
+            totalRating: number;
+        }>();
+
+        // Process all feedback to calculate stats
+        feedbackData.forEach(feedback => {
+            // Event stats
+            const eventId = feedback.event._id;
+            console.log(feedback.event);
+            if (!eventMap.has(eventId)) {
+                eventMap.set(eventId, {
+                    _id: eventId,
+                    id: feedback.event.id.current,
+                    title: feedback.event.title,
+                    date: feedback.event.datetime,
+                    feedbackCount: 0,
+                    totalRating: 0,
+                    talkIds: new Set()
+                });
+            }
+            const eventStats = eventMap.get(eventId)!;
+            eventStats.feedbackCount += 1;
+            eventStats.totalRating += feedback.rating;
+            eventStats.talkIds.add(feedback.talk._id);
+
+            // Speaker stats
+            const speakerId = feedback.speaker._id;
+            if (!speakerMap.has(speakerId)) {
+                speakerMap.set(speakerId, {
+                    _id: speakerId,
+                    id: feedback.speaker.id.current,
+                    name: feedback.speaker.name,
+                    image: feedback.speaker.image,
+                    feedbackCount: 0,
+                    totalRating: 0
+                });
+            }
+            const speakerStats = speakerMap.get(speakerId)!;
+            speakerStats.feedbackCount += 1;
+            speakerStats.totalRating += feedback.rating;
+
+            // Talk stats
+            const talkId = feedback.talk._id;
+            if (!talkMap.has(talkId)) {
+                talkMap.set(talkId, {
+                    _id: talkId,
+                    id: feedback.talk.id.current,
+                    title: feedback.talk.title,
+                    speakerId: feedback.speaker._id,
+                    speakerName: feedback.speaker.name,
+                    speakerImage: feedback.speaker.image,
+                    eventId: feedback.event._id,
+                    eventTitle: feedback.event.title,
+                    eventDate: feedback.event.datetime,
+                    feedbackCount: 0,
+                    totalRating: 0
+                });
+            }
+            const talkStats = talkMap.get(talkId)!;
+            talkStats.feedbackCount += 1;
+            talkStats.totalRating += feedback.rating;
+        });
+
+        // Convert maps to arrays with calculated average ratings
+        const eventStats: EventFeedbackStats[] = Array.from(eventMap.values()).map(event => ({
+            _id: event._id,
+            id: event.id,
+            title: event.title,
+            date: event.date,
+            feedbackCount: event.feedbackCount,
+            averageRating: event.feedbackCount > 0 ? event.totalRating / event.feedbackCount : 0,
+            talkCount: event.talkIds.size
+        }));
+
+        const speakerStats: SpeakerFeedbackStats[] = Array.from(speakerMap.values()).map(speaker => ({
+            _id: speaker._id,
+            id: speaker.id,
+            name: speaker.name,
+            image: speaker.image,
+            feedbackCount: speaker.feedbackCount,
+            averageRating: speaker.feedbackCount > 0 ? speaker.totalRating / speaker.feedbackCount : 0
+        }));
+
+        const talkStats: TalkFeedbackStats[] = Array.from(talkMap.values()).map(talk => ({
+            _id: talk._id,
+            title: talk.title,
+            speakerId: talk.speakerId,
+            speakerName: talk.speakerName,
+            speakerImage: talk.speakerImage,
+            eventId: talk.eventId,
+            eventTitle: talk.eventTitle,
+            eventDate: talk.eventDate,
+            feedbackCount: talk.feedbackCount,
+            averageRating: talk.feedbackCount > 0 ? talk.totalRating / talk.feedbackCount : 0
+        }));
 
         return {
             props: {

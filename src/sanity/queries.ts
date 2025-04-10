@@ -354,20 +354,32 @@ export const getTalkById = async (talkId: string): Promise<Talk | null> => {
 // Define types for feedback data
 export interface FeedbackItem {
   _id: string;
+  id: {
+    current: string;
+  };
   rating: number;
   comment?: string;
   submittedAt: string;
   event: {
     _id: string;
+    id: {
+      current: string;
+    };
     title: string;
     datetime: string;
   };
   talk: {
     _id: string;
+    id: {
+      current: string;
+    };
     title: string;
   };
   speaker: {
     _id: string;
+    id: {
+      current: string;
+    };
     name: string;
     image: string;
   };
@@ -375,6 +387,7 @@ export interface FeedbackItem {
 
 export interface EventFeedbackStats {
   _id: string;
+  id: string;
   title: string;
   date: string;
   feedbackCount: number;
@@ -394,6 +407,7 @@ interface SanityEventStats {
 
 export interface SpeakerFeedbackStats {
   _id: string;
+  id: string;
   name: string;
   image: string;
   feedbackCount: number;
@@ -422,20 +436,24 @@ export const getFeedback = async (): Promise<FeedbackItem[]> => {
   return client.fetch(`
     *[_type == "feedback"] {
       _id,
+      id,
       rating,
       comment,
       submittedAt,
       "event": event->{
         _id,
+        id,
         title,
         datetime
       },
       "talk": talk->{
         _id,
+        id,
         title
       },
       "speaker": speaker->{
         _id,
+        id,
         name,
         "image": image.asset->url
       }
@@ -455,7 +473,7 @@ export const getEventFeedbackStats = async (): Promise<EventFeedbackStats[]> => 
       title,
       datetime,
       "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
-      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating),
+      "averageRating": round(array::avg(*[_type == "feedback" && references(^._id)].rating), 2),
       "talkCount": count(*[_type == "talk" && references(^._id)])
     } | order(datetime desc)
   `);
@@ -482,7 +500,7 @@ export const getSpeakerFeedbackStats = async (): Promise<SpeakerFeedbackStats[]>
       name,
       "image": image.asset->url,
       "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
-      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating)
+      "averageRating": round(array::avg(*[_type == "feedback" && references(^._id)].rating), 2)
     } | order(name asc)
   `);
 };
@@ -503,7 +521,7 @@ export const getTalkFeedbackStats = async (): Promise<TalkFeedbackStats[]> => {
       "eventTitle": event->title,
       "eventDate": event->datetime,
       "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
-      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating)
+      "averageRating": round(array::avg(*[_type == "feedback" && references(^._id)].rating), 2)
     } | order(eventDate desc)
   `);
 };
@@ -521,7 +539,7 @@ export const getEventFeedbackById = async (eventId: string): Promise<EventFeedba
       title,
       datetime,
       "feedbackCount": count(*[_type == "feedback" && references(^._id)]),
-      "averageRating": avg(*[_type == "feedback" && references(^._id)].rating),
+      "averageRating": round(array::avg(*[_type == "feedback" && references(^._id)].rating), 2),
       "talkCount": count(*[_type == "talk" && references(^._id)])
     }
   `, { eventId });
@@ -530,6 +548,7 @@ export const getEventFeedbackById = async (eventId: string): Promise<EventFeedba
   
   return {
     _id: eventStats._id,
+    id: eventStats.id.current,
     title: eventStats.title || "",
     date: eventStats.datetime || "",
     feedbackCount: eventStats.feedbackCount || 0,

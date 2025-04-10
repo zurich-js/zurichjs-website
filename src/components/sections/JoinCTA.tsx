@@ -14,6 +14,7 @@ interface Benefit {
 interface JoinCTAProps {
   benefits?: Benefit[];
   newsletterTitle?: string;
+  buttonUrl?: string;
 }
 
 export default function JoinCTA({

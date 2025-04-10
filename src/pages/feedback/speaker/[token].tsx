@@ -301,20 +301,162 @@ export default function SpeakerFeedbackPage() {
             
             <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl shadow-md p-6 flex flex-col justify-center">
               <h3 className="text-xl font-semibold mb-4">Feedback Impact</h3>
-              <p className="mb-6">
-                Thank you for being part of the ZurichJS community! Your presentations have had a significant impact on our attendees. 
-                This feedback helps you improve and helps us create better events.
-              </p>
-              <div className="flex items-center">
-                <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                  </svg>
-                </div>
-                <p className="ml-4 text-sm font-medium">
-                  We&apos;d love to have you speak again at future events!
-                </p>
-              </div>
+              {(() => {
+                // Determine the feedback impact message and actions based on data
+                const avgRating = summary.averageRating;
+                const totalFeedback = summary.totalFeedback;
+                
+                // Not enough feedback to give a meaningful assessment
+                if (totalFeedback < 3) {
+                  return (
+                    <>
+                      <p className="mb-6">
+                        Thank you for being part of the ZurichJS community! 
+                        We have limited feedback for your {totalFeedback === 1 ? 'talk' : 'talks'} so far.
+                        As we collect more responses, we&apos;ll be able to provide more meaningful insights. We encourage you to reach out to attendees to submit more feedback.
+                      </p>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                        </div>
+                        <p className="ml-4 text-sm font-medium">
+                          <a href="https://zurichjs.com/contact" className="underline hover:text-yellow-200 transition-colors">
+                            Contact our organizers
+                          </a> to discuss your speaking experience.
+                        </p>
+                      </div>
+                    </>
+                  );
+                }
+                
+                // Excellent feedback (4.5+)
+                if (avgRating >= 4.5) {
+                  return (
+                    <>
+                      <p className="mb-6">
+                        Wow! Your presentations have made an exceptional impact on our attendees. 
+                        With an impressive average rating of {avgRating.toFixed(1)}, you&apos;re among our most valued speakers.
+                        The ZurichJS community has really connected with your content and presentation style.
+                      </p>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                          </svg>
+                        </div>
+                        <p className="ml-4 text-sm font-medium">
+                          We&apos;d love to have you speak again! 
+                          <a href="https://zurichjs.org/call-for-papers" className="underline hover:text-yellow-200 transition-colors ml-1">
+                            Submit a new talk proposal
+                          </a>
+                        </p>
+                      </div>
+                    </>
+                  );
+                }
+                
+                // Good feedback (3.7 - 4.4)
+                if (avgRating >= 3.7) {
+                  return (
+                    <>
+                      <p className="mb-6">
+                        Thank you for your valuable contributions to the ZurichJS community! 
+                        With a solid average rating of {avgRating.toFixed(1)}, attendees have clearly 
+                        appreciated your presentations. Your talks have been well-received and have 
+                        added significant value to our events.
+                      </p>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                          </svg>
+                        </div>
+                        <p className="ml-4 text-sm font-medium">
+                          We&apos;d love to have you speak again! 
+                          <a href="https://zurichjs.org/call-for-papers" className="underline hover:text-yellow-200 transition-colors ml-1">
+                            Submit a new talk proposal
+                          </a>
+                        </p>
+                      </div>
+                    </>
+                  );
+                }
+                
+                // Needs improvement (3.0 - 3.6)
+                if (avgRating >= 3.0) {
+                  return (
+                    <>
+                      <p className="mb-6">
+                        Thank you for contributing to the ZurichJS community! Your presentations have received 
+                        an average rating of {avgRating.toFixed(1)}. While attendees found value in your talks, 
+                        there may be opportunities to enhance your presentation style or content to create an even 
+                        stronger connection with our audience.
+                      </p>
+                      <div className="flex items-center mb-3">
+                        <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        {/* <p className="ml-4 text-sm font-medium">
+                          <a href="https://zurichjs.org/speaker-resources" className="underline hover:text-yellow-200 transition-colors">
+                            Access our speaker resources
+                          </a> for helpful presentation tips.
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                        </div>
+                        <p className="ml-4 text-sm font-medium">
+                          <a href="https://zurichjs.org/speaker-coaching" className="underline hover:text-yellow-200 transition-colors">
+                            Request feedback from our organizers
+                          </a> to level up your talks.
+                        </p> */}
+                      </div>
+                    </>
+                  );
+                }
+                
+                // Significant improvement needed (< 3.0)
+                return (
+                  <>
+                    <p className="mb-6">
+                      Thank you for being part of the ZurichJS community! 
+                      We have limited feedback for your {totalFeedback === 1 ? 'talk' : 'talks'} so far.
+                      As we collect more responses, we&apos;ll be able to provide more meaningful insights.
+                    </p>
+                    {/* <div className="flex items-center mb-3">
+                      <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                      </div>
+                      <p className="ml-4 text-sm font-medium">
+                        <a href="https://zurichjs.org/speaker-coaching" className="underline hover:text-yellow-200 transition-colors">
+                          Schedule a coaching session
+                        </a> with our organizers for personalized feedback.
+                      </p>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      </div>
+                      <p className="ml-4 text-sm font-medium">
+                        <a href="https://zurichjs.org/speaker-resources" className="underline hover:text-yellow-200 transition-colors">
+                          Review our presentation guidelines
+                        </a> for practical improvement tips.
+                      </p>
+                    </div> */}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </motion.div>

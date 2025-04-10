@@ -126,7 +126,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="lg:w-1/2"
+              className="lg:w-1/2 w-full"
             >
               <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
                 {isUpcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
@@ -212,9 +212,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="lg:w-1/2"
+              className="lg:w-1/2 w-full"
             >
-              <div className="relative display-none md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
+              <div className="relative h-64 sm:h-80 md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
                 {event.image ? (
                   <Image
                     src={event.image}
@@ -238,326 +238,330 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </div>
             </motion.div>
           </div>
-            <div className="flex flex-col lg:flex-row gap-10">
-              {/* Main Content */}
-              <div className="lg:w-2/3">
-                {/* Feedback Section - Only shows when in feedback mode */}
-                <EventFeedback 
-                  event={event} 
-                  isFeedbackMode={isFeedbackMode} 
-                />
+          
+          {/* Add spacing between the event image and content below */}
+          <div className="mt-16"></div>
 
-                {/* Feedback Button for Past Events */}
-                {!isUpcoming && !isFeedbackMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className="mb-10"
-                  >
-                    <Link
-                      href={`/events/${event.id}?feedback=true`}
-                      className="inline-flex items-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md font-medium transition-colors"
-                    >
-                      Leave Feedback for This Event
-                    </Link>
-                  </motion.div>
-                )}
+          <div className="flex flex-col lg:flex-row gap-10">
+            {/* Main Content */}
+            <div className="lg:w-2/3">
+              {/* Feedback Section - Only shows when in feedback mode */}
+              <EventFeedback 
+                event={event} 
+                isFeedbackMode={isFeedbackMode} 
+              />
 
-                {/* Talks */}
-                {event.talks.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    className="mb-12"
-                  >
-                    <h2 className="text-2xl font-bold mb-6 pb-2">
-                      Amazing Talks at This Event 🎤
-                    </h2>
-                    <div className="space-y-8">
-                      {event.talks.map((talk, index) => (
-                        <motion.div
-                          key={talk.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.5, delay: index * 0.1 }}
-                          className="bg-white p-6 rounded-lg shadow-md"
-                        >
-                          <div className="flex flex-col md:flex-row gap-6">
-                            <div className="w-full">
-                              <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-4">
-                                <h3 className="text-xl font-bold">{talk.title}</h3>
-                                <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
-                                  (!talk.durationMinutes || talk.durationMinutes < 10) 
-                                    ? 'bg-yellow-100 text-yellow-800' 
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {(!talk.durationMinutes || talk.durationMinutes < 15) ? '⚡ Lightning Talk' : '🎤 Regular Talk'}
-                                </span>
-                              </div>
-
-                              {talk.description && (
-                                <p className="text-gray-700 mb-4">
-                                  {talk.description?.split('\n').map((line, i) => (
-                                    <React.Fragment key={i}>
-                                      {line}
-                                      {i < talk.description!.split('\n').length - 1 && <br />}
-                                    </React.Fragment>
-                                  ))}
-                                </p>
-                              )}
-
-                              <div className="mb-4 text-gray-600 flex items-center gap-3">
-                                {talk.durationMinutes && (
-                                  <div className="flex items-center bg-gray-100 px-2 py-0.5 rounded-md">
-                                    <Clock size={12} className="mr-1 text-gray-500" />
-                                    <span className="text-sm font-medium">
-                                      {talk.durationMinutes} min{talk.durationMinutes !== 1 ? 's' : ''}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="space-y-3 mb-4">
-                                <h4 className="font-semibold text-gray-700">
-                                  {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
-                                </h4>
-                                {talk.speakers.map((speaker) => (
-                                  <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                                    <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                                      <Image
-                                        src={speaker.image || '/images/speakers/default.jpg'}
-                                        alt={speaker.name}
-                                        fill
-                                        className="object-cover"
-                                      />
-                                    </div>
-                                    <div className="flex-grow mt-2 sm:mt-0">
-                                      <div className="font-bold">{speaker.name}</div>
-                                      <div className="text-gray-600 text-sm">{speaker.title}</div>
-                                    </div>
-                                    <Link
-                                      href={`/speakers/${speaker.id}`}
-                                      className="mt-2 sm:mt-0 flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
-                                    >
-                                      <ExternalLink size={14} className="mr-1" />
-                                      View Profile
-                                    </Link>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="flex flex-wrap gap-2">
-                                {/* Talk links here (slides, video recordings, etc.) */}
-                                {!isUpcoming && talk.slidesUrl && (
-                                  <a
-                                    href={talk.slidesUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors"
-                                  >
-                                    <ExternalLink size={14} className="mr-1" />
-                                    Slides
-                                  </a>
-                                )}
-
-                                {!isUpcoming && talk.videoUrl && (
-                                  <a
-                                    href={talk.videoUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
-                                  >
-                                    <ExternalLink size={14} className="mr-1" />
-                                    Video Recording
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Submit a Talk CTA (for upcoming events) */}
-                {isUpcoming && hasSlotsAvailable && !isFeedbackMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
-                  >
-                    <h3 className="text-xl font-bold mb-3">Want to give a talk? 🎤</h3>
-                    <p className="mb-4">
-                      We&apos;re looking for JavaScript enthusiasts to share their knowledge at this event!
-                      {hasRegularSlotAvailable && hasLightningSlotAvailable && (
-                        <span> We have slots available for <strong>both regular talks (20-30 mins)</strong> and <strong>lightning talks (5-10 mins)</strong>.</span>
-                      )}
-                      {hasRegularSlotAvailable && !hasLightningSlotAvailable && (
-                        <span> We have <strong>{2 - regularTalks.length} slot{regularTalks.length === 1 ? '' : 's'} available for regular talks (20-30 mins)</strong>.</span>
-                      )}
-                      {!hasRegularSlotAvailable && hasLightningSlotAvailable && (
-                        <span> We have <strong>1 slot available for a lightning talk (5-10 mins)</strong>.</span>
-                      )}
-                    </p>
-                    <Button href="/cfp" variant="primary" className="bg-black text-js hover:bg-gray-800">
-                      Submit a Talk Proposal
-                    </Button>
-                  </motion.div>
-                )}
-
-                {/* No Slots Available Message */}
-                {isUpcoming && !hasSlotsAvailable && !isFeedbackMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
-                  >
-                    <h3 className="text-xl font-bold mb-3">All talk slots are filled! 🎉</h3>
-                    <p className="mb-4">
-                      We&apos;ve reached our maximum number of talks for this event. Please check our future events for speaking opportunities or submit a proposal for consideration at upcoming meetups.
-                    </p>
-                    <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-js">
-                      Submit for Future Events
-                    </Button>
-                  </motion.div>
-                )}
-              </div>
-
-              {/* Sidebar */}
-              <div className="lg:w-1/3">
-                {/* Venue Details */}
+              {/* Feedback Button for Past Events */}
+              {!isUpcoming && !isFeedbackMode && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
-                  className="bg-white p-6 rounded-lg shadow-md mb-6"
+                  className="mb-10"
                 >
-                  <h3 className="text-xl font-bold mb-3 flex items-center">
-                    <MapPin className="mr-2 text-yellow-500" size={20} />
-                    Venue Details
-                  </h3>
-
-                  <p className="font-bold mb-1">{event.location}</p>
-                  {event.address && <p className="text-gray-600 mb-4">{event.address}</p>}
-
-                  <div className="relative h-48 w-full rounded overflow-hidden mb-4">
-                    <Image
-                      src={mapUrl}
-                      alt={`Map of ${event.location}`}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address || event.location)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center"
+                  <Link
+                    href={`/events/${event.id}?feedback=true`}
+                    className="inline-flex items-center bg-zurich hover:bg-blue-500 text-white px-4 py-2 rounded-md font-medium transition-colors"
                   >
-                    Get Directions
-                    <ExternalLink size={14} className="ml-1" />
-                  </a>
+                    Leave Feedback for This Event
+                  </Link>
                 </motion.div>
+              )}
 
-                {/* What to Bring */}
-                {isUpcoming && !isFeedbackMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.3 }}
-                    className="bg-white p-6 rounded-lg shadow-md mb-6"
-                  >
-                    <h3 className="text-xl font-bold mb-3">What to Bring 💼</h3>
-                    <ul className="space-y-2">
-                      <li className="flex items-start">
-                        <span className="text-yellow-500 mr-2">•</span>
-                        <span>Your curious JavaScript mind!</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-yellow-500 mr-2">•</span>
-                        <span>Questions for speakers</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-yellow-500 mr-2">•</span>
-                        <span>Business cards for networking</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-yellow-500 mr-2">•</span>
-                        <span>Laptop (optional)</span>
-                      </li>
-                    </ul>
-                  </motion.div>
-                )}
+              {/* Talks */}
+              {event.talks.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-12"
+                >
+                  <h2 className="text-2xl font-bold mb-6 py-2">
+                    Amazing Talks at This Event 🎤
+                  </h2>
+                  <div className="space-y-8">
+                    {event.talks.map((talk, index) => (
+                      <motion.div
+                        key={talk.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                        className="bg-white p-6 rounded-lg shadow-md"
+                      >
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="w-full">
+                            <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-4">
+                              <h3 className="text-xl font-bold">{talk.title}</h3>
+                              <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
+                                (!talk.durationMinutes || talk.durationMinutes < 10) 
+                                  ? 'bg-yellow-100 text-yellow-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {(!talk.durationMinutes || talk.durationMinutes < 15) ? '⚡ Lightning Talk' : '🎤 Regular Talk'}
+                              </span>
+                            </div>
 
-                {/* Call to Action */}
-                {isUpcoming && !isFeedbackMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="bg-js p-6 rounded-lg shadow-md text-center"
-                  >
-                    <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
-                    <p className="mb-4">
-                      Don&apos;t miss this amazing JavaScript event!
-                      {event.meetupUrl ? ' RSVP now to secure your spot.' : ' We\'re finalizing the details - check back soon!'}
-                    </p>
-                    {event.meetupUrl ? (
-                      <Button
-                        href={event.meetupUrl}
-                        variant="primary"
-                        size="lg"
-                        className="w-full bg-black text-js hover:bg-gray-800"
-                      >
-                        RSVP on Meetup
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="primary"
-                        size="lg"
-                        className="w-full bg-black text-js hover:bg-gray-800 cursor-not-allowed opacity-80"
-                        disabled
-                      >
-                        RSVP Coming Soon
-                      </Button>
+                            {talk.description && (
+                              <p className="text-gray-700 mb-4">
+                                {talk.description?.split('\n').map((line, i) => (
+                                  <React.Fragment key={i}>
+                                    {line}
+                                    {i < talk.description!.split('\n').length - 1 && <br />}
+                                  </React.Fragment>
+                                ))}
+                              </p>
+                            )}
+
+                            <div className="mb-4 text-gray-600 flex items-center gap-3">
+                              {talk.durationMinutes && (
+                                <div className="flex items-center bg-gray-100 px-2 py-0.5 rounded-md">
+                                  <Clock size={12} className="mr-1 text-gray-500" />
+                                  <span className="text-sm font-medium">
+                                    {talk.durationMinutes} min{talk.durationMinutes !== 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-3 mb-4">
+                              <h4 className="font-semibold text-gray-700">
+                                {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
+                              </h4>
+                              {talk.speakers.map((speaker) => (
+                                <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                  <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                                    <Image
+                                      src={speaker.image || '/images/speakers/default.jpg'}
+                                      alt={speaker.name}
+                                      fill
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex-grow mt-2 sm:mt-0">
+                                    <div className="font-bold">{speaker.name}</div>
+                                    <div className="text-gray-600 text-sm">{speaker.title}</div>
+                                  </div>
+                                  <Link
+                                    href={`/speakers/${speaker.id}`}
+                                    className="mt-2 sm:mt-0 flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                                  >
+                                    <ExternalLink size={14} className="mr-1" />
+                                    View Profile
+                                  </Link>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              {/* Talk links here (slides, video recordings, etc.) */}
+                              {!isUpcoming && talk.slidesUrl && (
+                                <a
+                                  href={talk.slidesUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors"
+                                >
+                                  <ExternalLink size={14} className="mr-1" />
+                                  Slides
+                                </a>
+                              )}
+
+                              {!isUpcoming && talk.videoUrl && (
+                                <a
+                                  href={talk.videoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
+                                >
+                                  <ExternalLink size={14} className="mr-1" />
+                                  Video Recording
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Submit a Talk CTA (for upcoming events) */}
+              {isUpcoming && hasSlotsAvailable && !isFeedbackMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
+                >
+                  <h3 className="text-xl font-bold mb-3">Want to give a talk? 🎤</h3>
+                  <p className="mb-4">
+                    We&apos;re looking for JavaScript enthusiasts to share their knowledge at this event!
+                    {hasRegularSlotAvailable && hasLightningSlotAvailable && (
+                      <span> We have slots available for <strong>both regular talks (20-30 mins)</strong> and <strong>lightning talks (5-10 mins)</strong>.</span>
                     )}
-                  </motion.div>
-                )}
+                    {hasRegularSlotAvailable && !hasLightningSlotAvailable && (
+                      <span> We have <strong>{2 - regularTalks.length} slot{regularTalks.length === 1 ? '' : 's'} available for regular talks (20-30 mins)</strong>.</span>
+                    )}
+                    {!hasRegularSlotAvailable && hasLightningSlotAvailable && (
+                      <span> We have <strong>1 slot available for a lightning talk (5-10 mins)</strong>.</span>
+                    )}
+                  </p>
+                  <Button href="/cfp" variant="primary" className="bg-black text-js hover:bg-gray-800">
+                    Submit a Talk Proposal
+                  </Button>
+                </motion.div>
+              )}
 
-                {/* Feedback Mode Notice */}
-                {isFeedbackMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.4 }}
-                    className="bg-blue-50 p-6 rounded-lg shadow-md"
-                  >
-                    <h3 className="text-xl font-bold mb-3">Feedback Mode 📝</h3>
-                    <p className="mb-4">
-                      You&apos;re currently in feedback mode. Please rate the talks to help us improve future events and provide valuable insights to our speakers.
-                    </p>
-                    <p className="text-sm text-blue-600">
-                      Your feedback will remain anonymous to speakers and will only be used to improve our community events. You can submit feedback at any time.
-                    </p>
-                  </motion.div>
-                )}
-              </div>
+              {/* No Slots Available Message */}
+              {isUpcoming && !hasSlotsAvailable && !isFeedbackMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
+                >
+                  <h3 className="text-xl font-bold mb-3">All talk slots are filled! 🎉</h3>
+                  <p className="mb-4">
+                    We&apos;ve reached our maximum number of talks for this event. Please check our future events for speaking opportunities or submit a proposal for consideration at upcoming meetups.
+                  </p>
+                  <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-js">
+                    Submit for Future Events
+                  </Button>
+                </motion.div>
+              )}
             </div>
+
+            {/* Sidebar */}
+            <div className="lg:w-1/3 mt-10 lg:mt-0">
+              {/* Venue Details */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="bg-white p-6 rounded-lg shadow-md mb-8"
+              >
+                <h3 className="text-xl font-bold mb-4 flex items-center">
+                  <MapPin className="mr-2 text-yellow-500" size={20} />
+                  Venue Details
+                </h3>
+
+                <p className="font-bold mb-2">{event.location}</p>
+                {event.address && <p className="text-gray-600 mb-5">{event.address}</p>}
+
+                <div className="relative h-48 sm:h-56 w-full rounded-lg overflow-hidden mb-5">
+                  <Image
+                    src={mapUrl}
+                    alt={`Map of ${event.location}`}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address || event.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center"
+                >
+                  Get Directions
+                  <ExternalLink size={14} className="ml-1" />
+                </a>
+              </motion.div>
+
+              {/* What to Bring */}
+              {isUpcoming && !isFeedbackMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="bg-white p-6 rounded-lg shadow-md mb-8"
+                >
+                  <h3 className="text-xl font-bold mb-3">What to Bring 💼</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-yellow-500 mr-2">•</span>
+                      <span>Your curious JavaScript mind!</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-yellow-500 mr-2">•</span>
+                      <span>Questions for speakers</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-yellow-500 mr-2">•</span>
+                      <span>Business cards for networking</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-yellow-500 mr-2">•</span>
+                      <span>Laptop (optional)</span>
+                    </li>
+                  </ul>
+                </motion.div>
+              )}
+
+              {/* Call to Action */}
+              {isUpcoming && !isFeedbackMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="bg-js p-6 rounded-lg shadow-md text-center"
+                >
+                  <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
+                  <p className="mb-4">
+                    Don&apos;t miss this amazing JavaScript event!
+                    {event.meetupUrl ? ' RSVP now to secure your spot.' : ' We\'re finalizing the details - check back soon!'}
+                  </p>
+                  {event.meetupUrl ? (
+                    <Button
+                      href={event.meetupUrl}
+                      variant="primary"
+                      size="lg"
+                      className="w-full bg-black text-js hover:bg-gray-800"
+                    >
+                      RSVP on Meetup
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full bg-black text-js hover:bg-gray-800 cursor-not-allowed opacity-80"
+                      disabled
+                    >
+                      RSVP Coming Soon
+                    </Button>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Feedback Mode Notice */}
+              {isFeedbackMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="bg-blue-50 p-6 rounded-lg shadow-md"
+                >
+                  <h3 className="text-xl font-bold mb-3">Feedback Mode 📝</h3>
+                  <p className="mb-4">
+                    You&apos;re currently in feedback mode. Please rate the talks to help us improve future events and provide valuable insights to our speakers.
+                  </p>
+                  <p className="text-sm text-blue-600">
+                    Your feedback will remain anonymous to speakers and will only be used to improve our community events. You can submit feedback at any time.
+                  </p>
+                </motion.div>
+              )}
+            </div>
+          </div>
         </Section>
 
         {/* Newsletter Section */}

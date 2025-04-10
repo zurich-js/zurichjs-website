@@ -75,11 +75,40 @@ const FeedbackForm = ({
     return (
       <div className="p-4 bg-green-50 rounded-lg border border-green-200 text-center">
         <CheckCircle className="mx-auto text-green-500 mb-2" size={32} />
-        <h4 className="font-bold text-lg mb-1">Thank you for your feedback!</h4>
-        <p className="text-gray-600">Your insights help our speakers improve and our community grow.</p>
+        <h4 className="font-bold text-lg mb-1">Thank you for your feedback on &ldquo;{talkTitle}&rdquo;!</h4>
+        <p className="text-gray-600">Your insights help {speakerName} improve and our community grow.</p>
       </div>
     );
   }
+
+  // Comment presets for quick selection
+  const commentPresets = [
+    { label: "Great talk!", value: "Great talk! I enjoyed the content and delivery." },
+    { label: "Insightful", value: "Very insightful presentation with valuable information." },
+    { label: "Clear explanation", value: "The concepts were explained clearly and concisely." },
+    { label: "Good examples", value: "I appreciated the practical examples shown." },
+    { label: "Needs improvement", value: "The talk could use some improvement in structure and delivery." }
+  ];
+
+  const applyPreset = (preset: string) => {
+    // Check if any preset is already in the comment
+    const existingPresetIndex = commentPresets.findIndex(p => 
+      comment.includes(p.value)
+    );
+    
+    if (existingPresetIndex !== -1) {
+      // Replace the existing preset with the new one
+      const existingPreset = commentPresets[existingPresetIndex].value;
+      const newComment = comment.replace(existingPreset, preset);
+      setComment(newComment);
+    } else if (comment.trim()) {
+      // No preset found, but there's some text - add on a new line
+      setComment(comment => `${comment}\n${preset}`);
+    } else {
+      // Empty comment - just set it
+      setComment(preset);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded-lg border border-gray-200">
@@ -116,6 +145,18 @@ const FeedbackForm = ({
         <label htmlFor={`comment-${talkId}`} className="block text-sm font-medium text-gray-700 mb-1">
           Comments (optional)
         </label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {commentPresets.map((preset, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => applyPreset(preset.value)}
+              className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700"
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
         <textarea
           id={`comment-${talkId}`}
           value={comment}

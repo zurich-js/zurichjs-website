@@ -34,15 +34,29 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   useEffect(() => {
     const events = activeTab === 'upcoming' ? upcomingEvents : pastEvents;
 
+    // Sort events by date
+    const sortedEvents = [...events].sort((a, b) => {
+      // If either event doesn't have a datetime, handle appropriately
+      if (!a.datetime) return 1; // No date goes to the end
+      if (!b.datetime) return -1; // No date goes to the end
+      
+      // For upcoming events, sort by earliest date first
+      if (activeTab === 'upcoming') {
+        return new Date(a.datetime).getTime() - new Date(b.datetime).getTime();
+      }
+      // For past events, sort by most recent first
+      return new Date(b.datetime).getTime() - new Date(a.datetime).getTime();
+    });
+
     if (searchQuery.trim() === '') {
-      setFilteredEvents(events);
+      setFilteredEvents(sortedEvents);
       return;
     }
 
     const query = searchQuery.toLowerCase();
-    const filtered = events.filter(event =>
+    const filtered = sortedEvents.filter(event =>
       event.title.toLowerCase().includes(query) ||
-      event.description.toLowerCase().includes(query) ||
+      event.description?.toLowerCase().includes(query) ||
       event.talks.some(talk =>
         talk.title.toLowerCase().includes(query) ||
         talk.speakers.some(speaker =>
@@ -152,7 +166,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
             {/* Events grid */}
             {filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-[repeat(auto-fit,_minmax(250px,1fr))] gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.map((event, index) => (
                   <motion.div
                     key={event.id}
@@ -163,13 +177,13 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                     className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col h-full"
                   >
                     <Link href={`/events/${event.id}`} className="flex-grow flex flex-col h-full">
-                      <div className="relative h-64 w-full">
+                      <div className="relative h-48 md:h-60 lg:h-64 w-full">
                         {event.image ? (
                           <Image
                             src={event.image}
                             alt={event.title}
                             fill
-                            className="object-cover object-left"
+                            className="object-cover object-center"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
@@ -185,36 +199,54 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                         )}
                       </div>
                       <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="text-xl font-bold mb-2 line-clamp-2 text-gray-900">{event.title}</h3>
+                        <h3 className="text-xl font-bold mb-3 line-clamp-2 text-gray-900">{event.title}</h3>
 
-                        <div className="flex flex-col text-sm text-gray-700 mb-3">
-                          <div className="flex items-center mb-1 space-x-2">
+                        <div className="flex flex-col space-y-3 mb-4">
+                          <div className="flex flex-wrap gap-2">
                             <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                               <Calendar className="inline-block mr-1 h-4 w-4" />
-                              {isClient ? new Date(event.datetime).toLocaleDateString('en-GB', {
-                                weekday: 'long',
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              }) : ''}
+                              {isClient ? (
+                                event.datetime ? 
+                                new Date(event.datetime).toLocaleDateString('en-GB', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric'
+                                }) : 
+                                'Date TBD'
+                              ) : ''}
                             </span>
                             <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
                               <Clock className="inline-block mr-1 h-4 w-4" />
-                              {isClient ? new Date(event.datetime).toLocaleTimeString('en-GB', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              }) : ''}
+                              {isClient ? (
+                                event.datetime ? 
+                                new Date(event.datetime).toLocaleTimeString('en-GB', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                }) : 
+                                'Time TBD'
+                              ) : ''}
                             </span>
                           </div>
-                          <div className="flex items-center">
-                            <MapPin size={14} className="mr-1 text-blue-700" />
-                            <span>{event.location}</span>
+                          <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full text-sm font-medium w-fit">
+                            <MapPin size={14} className="mr-1 text-gray-700" />
+                            <span className="truncate">{event.location || 'Location TBD'}</span>
                           </div>
                         </div>
 
-                        <p className="text-gray-700 mb-4 line-clamp-2">
-                          {event.description}
-                        </p>
+                        {event.description ? (
+                          <p className="text-gray-700 mb-4 line-clamp-3 text-sm">
+                            {event.description}
+                          </p>
+                        ) : (
+                          <div className="mb-4">
+                            <p className="text-gray-700 line-clamp-3 text-sm italic">
+                              We&apos;re working on bringing this event to life! Check back soon for more details on this exciting JavaScript gathering.
+                            </p>
+                            <div className="mt-2 flex items-center text-blue-600 text-xs">
+                              <span className="animate-pulse">⏳ Coming soon...</span>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="mt-auto">
                           {isClient && event.talks.length > 0 && (
@@ -247,9 +279,9 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                           )}
 
                           {isClient && event.datetime > new Date().toISOString() && (
-                            <div className="flex items-center text-sm">
+                            <div className="flex items-center text-sm font-medium mb-3">
                               <Users size={14} className="mr-1 text-blue-700" />
-                              <span className="text-blue-700 font-medium">
+                              <span className="text-blue-700">
                                 {event.attendees === 0
                                   ? "Be one of the first to RSVP!"
                                   : `${event.attendees} attending`}
@@ -257,7 +289,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                             </div>
                           )}
 
-                          <div className="mt-4 flex items-center text-blue-700 font-medium text-sm">
+                          <div className="mt-2 flex items-center text-blue-700 font-medium text-sm">
                             <span>View details</span>
                             <ChevronRight size={16} className="ml-1" />
                           </div>

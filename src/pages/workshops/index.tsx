@@ -98,7 +98,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
       </Section>
 
       <Section variant="white">
-        <div className="grid grid-cols-[repeat(auto-fit,_minmax(400px,1fr))] gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {workshops.map((workshop, index) => {
             const speaker = speakersMap[workshop.speakerId];
 
@@ -113,7 +113,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                     onMouseLeave={() => setHoveredWorkshop(null)}
                 >
                   <Link href={`/workshops/${workshop.id}`} className="block h-full flex flex-col">
-                    <div className="relative h-80 overflow-hidden">
+                    <div className="relative h-48 md:h-64 lg:h-72 overflow-hidden">
                       <div className="absolute top-4 left-4 z-10">
                       </div>
                       <div
@@ -131,39 +131,39 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                       </div>
                     </div>
 
-                    <div className="p-6 flex flex-col flex-grow">
+                    <div className="p-4 md:p-6 flex flex-col flex-grow">
                       <div>
-                        <h2 className="text-2xl font-bold mb-1 text-gray-900">{workshop.title}</h2>
-                        <p className="text-md font-medium mb-5 text-gray-600">{workshop.subtitle}</p>
+                        <h2 className="text-xl md:text-2xl font-bold mb-1 text-gray-900">{workshop.title}</h2>
+                        <p className="text-sm md:text-md font-medium mb-3 md:mb-5 text-gray-600">{workshop.subtitle}</p>
 
-                        <div className="grid grid-cols-2 gap-3 mb-5">
-                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
-                            <Calendar size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-5">
+                          <div className="flex items-center bg-gray-50 px-2 py-2 rounded-lg text-xs md:text-sm border border-gray-100">
+                            <Calendar size={14} className="mr-1 md:mr-2 text-yellow-600 flex-shrink-0" />
                             <span className="text-gray-700">{workshop.dateInfo}</span>
                           </div>
-                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
-                            <Clock size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                          <div className="flex items-center bg-gray-50 px-2 py-2 rounded-lg text-xs md:text-sm border border-gray-100">
+                            <Clock size={14} className="mr-1 md:mr-2 text-yellow-600 flex-shrink-0" />
                             <span className="text-gray-700">{workshop.timeInfo}</span>
                           </div>
-                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
-                            <MapPin size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                          <div className="flex items-center bg-gray-50 px-2 py-2 rounded-lg text-xs md:text-sm border border-gray-100">
+                            <MapPin size={14} className="mr-1 md:mr-2 text-yellow-600 flex-shrink-0" />
                             <span className="text-gray-700">{workshop.locationInfo}</span>
                           </div>
-                          <div className="flex items-center bg-gray-50 px-3 py-2 rounded-lg text-sm border border-gray-100">
-                            <Users size={16} className="mr-2 text-yellow-600 flex-shrink-0" />
+                          <div className="flex items-center bg-gray-50 px-2 py-2 rounded-lg text-xs md:text-sm border border-gray-100">
+                            <Users size={14} className="mr-1 md:mr-2 text-yellow-600 flex-shrink-0" />
                             <span className="text-gray-700">Max {workshop.maxAttendees}</span>
                           </div>
                         </div>
 
-                        <p className="text-gray-600 mb-6 line-clamp-2 min-h-[3rem]">
+                        <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6 line-clamp-2 min-h-[2.5rem] md:min-h-[3rem]">
                           {workshop.description}
                         </p>
                       </div>
 
-                      <div className="border-t border-gray-100 pt-5 mt-auto flex items-center justify-between">
+                      <div className="border-t border-gray-100 pt-3 md:pt-5 mt-auto flex items-center justify-between">
                         {speaker && (
                             <div className="flex items-center">
-                              <div className="relative mr-3 w-12 h-12 overflow-hidden rounded-full border-2 border-yellow-500">
+                              <div className="relative mr-2 md:mr-3 w-8 h-8 md:w-12 md:h-12 overflow-hidden rounded-full border-2 border-yellow-500">
                                 <Image
                                     src={speaker.image}
                                     alt={speaker.name}
@@ -172,16 +172,16 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                                 />
                               </div>
                               <div className="flex flex-col">
-                                <span className="font-bold text-sm text-gray-900">{speaker.name}</span>
+                                <span className="font-bold text-xs md:text-sm text-gray-900">{speaker.name}</span>
                                 <span className="text-xs text-gray-500">Instructor</span>
                               </div>
                             </div>
                         )}
 
-                        <div className={`text-yellow-600 font-bold flex items-center transition-transform duration-300 ${
+                        <div className={`text-yellow-600 font-bold text-xs md:text-base flex items-center transition-transform duration-300 ${
                             hoveredWorkshop === workshop.id ? 'translate-x-1' : ''
                         }`}>
-                          View Details <ArrowRight size={18} className="ml-1" />
+                          View Details <ArrowRight size={16} className="ml-1" />
                         </div>
                       </div>
                     </div>

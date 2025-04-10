@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, Building } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
@@ -138,29 +138,29 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               <div className="flex flex-wrap gap-3 mb-6">
                 <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                   <Calendar size={16} className="mr-1.5" />
-                    <span>{isClient
+                    <span>{isClient && event.datetime
                       ? new Date(event.datetime).toLocaleDateString('en-GB', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
                         })
-                      : new Date(event.datetime).toISOString().split('T')[0] // Fallback for SSR
-                    }</span>
+                      : 'Date TBD'}
+                    </span>
                 </div>
                 <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                   <Clock size={16} className="mr-1.5" />
-                  <span>{isClient
+                  <span>{isClient && event.datetime
                     ? new Date(event.datetime).toLocaleTimeString('en-GB', {
                         hour: '2-digit',
                         minute: '2-digit'
                       })
-                    : new Date(event.datetime).toISOString().split('T')[1].substring(0, 5) // Fallback for SSR
-                  }</span>
+                    : 'Time TBD'}
+                  </span>
                 </div>
                 <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                   <MapPin size={16} className="mr-1.5" />
-                  <span>{event.location}</span>
+                  <span>{event.location || 'Location TBD'}</span>
                 </div>
                 {isUpcoming && (
                   <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
@@ -170,9 +170,18 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 )}
               </div>
 
-              <p className="text-lg mb-6">
-                {event.description}
-              </p>
+              {event.description ? (
+                <p className="text-lg mb-6">
+                  {event.description}
+                </p>
+              ) : (
+                <div className="text-lg mb-6">
+                  <p className="italic">We&apos;re working on bringing this event to life! Check back soon for more details on this exciting JavaScript gathering.</p>
+                  <div className="mt-2 flex items-center text-black text-sm">
+                    <span className="animate-pulse">⏳ Coming soon...</span>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-3">
                 {isUpcoming && event.meetupUrl ? (
@@ -452,27 +461,59 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   Venue Details
                 </h3>
 
-                <p className="font-bold mb-2">{event.location}</p>
-                {event.address && <p className="text-gray-600 mb-5">{event.address}</p>}
+                {event.location && !event.location.toLowerCase().includes('tbd') ? (
+                  <>
+                    <p className="font-bold mb-2">{event.location}</p>
+                    {event.address && <p className="text-gray-600 mb-5">{event.address}</p>}
 
-                <div className="relative h-48 sm:h-56 w-full rounded-lg overflow-hidden mb-5">
-                  <Image
-                    src={mapUrl}
-                    alt={`Map of ${event.location}`}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+                    <div className="relative h-48 sm:h-56 w-full rounded-lg overflow-hidden mb-5">
+                      {mapUrl ? (
+                        <Image
+                          src={mapUrl}
+                          alt={`Map of ${event.location}`}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <p className="text-gray-500">Map loading...</p>
+                        </div>
+                      )}
+                    </div>
 
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address || event.location)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center"
-                >
-                  Get Directions
-                  <ExternalLink size={14} className="ml-1" />
-                </a>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address || event.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-yellow-600 hover:text-yellow-700 font-medium flex items-center"
+                    >
+                      Get Directions
+                      <ExternalLink size={14} className="ml-1" />
+                    </a>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-3 italic">Venue details coming soon!</p>
+                    <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center mb-5">
+                      <div className="text-center">
+                        <MapPin size={40} className="mx-auto mb-2 text-gray-400" />
+                        <p className="text-gray-500">Location to be announced</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500 animate-pulse mb-4">⏳ We&apos;re finalizing the perfect spot...</p>
+                    
+                    <div className="mt-4 bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-700 mb-2">Want to host this event? 🏢</h4>
+                      <p className="text-sm text-gray-700 mb-3">
+                        Have a cool office space? Hosting a ZurichJS meetup is a great way to showcase your company and connect with the JavaScript community!
+                      </p>
+                      <Link href="/partnerships#partnership-tiers" className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors">
+                        <Building size={16} className="mr-2" />
+                        Partner with us as a Venue Host
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </motion.div>
 
               {/* What to Bring */}
@@ -518,7 +559,11 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
                   <p className="mb-4">
                     Don&apos;t miss this amazing JavaScript event!
-                    {event.meetupUrl ? ' RSVP now to secure your spot.' : ' We\'re finalizing the details - check back soon!'}
+                    {event.datetime ? (
+                      event.meetupUrl ? ' RSVP now to secure your spot.' : ' We&apos;re finalizing the details - check back soon!'
+                    ) : (
+                      ' We&apos;re still working on the details but save some space in your calendar!'
+                    )}
                   </p>
                   {event.meetupUrl ? (
                     <Button

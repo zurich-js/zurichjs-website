@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Section from '../Section';
-
+import { Event } from '@/sanity/queries';
 interface UpcomingEventsProps {
-  events: any[];
+  events: Event[];
   textClassName?: string;
   titleClassName?: string;
 }

@@ -1,7 +1,4 @@
-import { motion } from 'framer-motion';
 import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
-import Stats from '@/components/ui/Stats';
 import UpcomingEvents from '@/components/sections/UpcomingEvents';
 import SpeakerGrid from '@/components/sections/SpeakerGrid';
 import Partners from '@/components/sections/Partners';
@@ -11,10 +8,7 @@ import type { Event } from '@/sanity/queries';
 import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
 import { getPartners } from '@/data';
 import SEO from '@/components/SEO';
-import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
-import Image from 'next/image';
-import Section from '@/components/Section';
 import LandingHero from "@/components/sections/LandingHero";
 
 

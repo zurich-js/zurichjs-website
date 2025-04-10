@@ -8,7 +8,6 @@ import Link from 'next/link';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import useEvents from '@/hooks/useEvents';
 import Section from '@/components/Section';
-import Button from "@/components/ui/Button";
 
 // Define our TypeScript interfaces
 interface SupportTier {
@@ -105,12 +104,15 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               </p>
               <a
                   href="https://buymeacoffee.com/zurichjs/membership"
-                  className="bg-gray-900 hover:bg-gray-800 text-white py-3 px-6 rounded-lg w-fit"
+                  className="bg-js-dark hover:bg-js text-black font-medium py-3 px-8 rounded-full 
+                  shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 
+                  w-fit flex items-center gap-2 md:text-lg"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackSupportClick('Hero')}
               >
-                Buy Us a Coffee ☕
+                <Coffee size={20} className="animate-bounce" />
+                <span>Buy Us a Coffee</span>
               </a>
             </motion.div>
 
@@ -187,12 +189,18 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     </div>
                     <a
                         href="https://buymeacoffee.com/zurichjs/membership"
-                        className="bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-lg mt-auto"
+                        className={`
+                          ${tier.highlighted ? 'bg-js-dark hover:bg-js text-black' : 'bg-gray-900 hover:bg-gray-800 text-white'} 
+                          py-2 px-4 rounded-full mt-auto w-full text-center font-medium 
+                          transition-all duration-300 transform hover:scale-105 hover:shadow-md
+                          flex items-center justify-center gap-2
+                        `}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => trackSupportClick(tier.name)}
                     >
-                      Support Now
+                      {tier.highlighted && <Coffee size={16} />}
+                      <span>Support Now</span>
                     </a>
                   </motion.div>
               ))}
@@ -324,7 +332,8 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 <h3 className="text-xl font-bold mb-2">Be the First Supporter!</h3>
                 <p className="text-gray-600 mb-4">Your contribution will help us grow the ZurichJS community.</p>
                 <button
-                    className="bg-gradient-to-r from-js-dark to-yellow-500 text-white font-bold py-2 px-6 rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-colors shadow-md"
+                    className="bg-gradient-to-r from-js-dark to-yellow-500 text-white font-bold py-2 px-6 rounded-full
+                    hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                     onClick={() => document.getElementById('bmc-wbtn')?.click()}
                 >
                   Support Now
@@ -423,7 +432,8 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
             </p>
             <a
                 href="https://buymeacoffee.com/zurichjs/membership"
-                className="text-black py-3 px-6 rounded-lg bg-js-dark hover:bg-js-dark/80 transition-colors"
+                className="text-black py-3 px-8 rounded-full bg-js-dark hover:bg-js transition-all duration-300 
+                transform hover:scale-105 hover:shadow-md font-medium"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSupportClick('Final CTA')}

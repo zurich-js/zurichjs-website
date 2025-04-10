@@ -13,8 +13,13 @@ export default function Header() {
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 30);
     };
+    
+    // Check scroll position immediately on mount
+    handleScroll();
+    
+    // Add event listener for future scrolls
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -57,7 +62,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:block">
+          <nav className="hidden lg:block">
             <ul className="flex space-x-8 items-center">
               {navItems.map((item) => (
                 <li key={item.path}>
@@ -74,9 +79,15 @@ export default function Header() {
               <li>
                 <Link
                   href={coffeeItem.path}
-                  className={`bg-js-dark text-black px-4 py-2 rounded-full font-medium hover:bg-js transition-colors ${scrolled ? '' : 'border border-black'}`}
+                  className={`
+                    bg-js-dark text-black px-4 py-2 rounded-full font-medium 
+                    hover:bg-js hover:shadow-md transition-all duration-300 
+                    transform hover:scale-105 flex items-center gap-1
+                    ${scrolled ? 'shadow-sm' : 'border border-black hover:border-transparent'}
+                  `}
                 >
-                  {coffeeItem.name}
+                  <span>☕</span>
+                  <span className="md:hidden xl:inline">Buy us a coffee</span>
                 </Link>
               </li>
             </ul>
@@ -85,7 +96,7 @@ export default function Header() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden focus:outline-none"
+            className="lg:hidden focus:outline-none"
             aria-label="Toggle menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -99,7 +110,7 @@ export default function Header() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-black text-js"
+          className="lg:hidden bg-black text-js"
         >
           <nav className="container mx-auto px-6 py-4">
             <ul className="space-y-4">
@@ -118,9 +129,15 @@ export default function Header() {
               <li>
                 <Link
                   href={coffeeItem.path}
-                  className="block py-2 bg-js text-black px-4 rounded-full font-medium hover:bg-yellow-300 transition-colors"
+                  className={`
+                    bg-js-dark text-black px-4 py-2 rounded-full font-medium 
+                    hover:bg-js hover:shadow-md transition-all duration-300 
+                    transform hover:scale-105 flex items-center gap-1
+                    ${scrolled ? 'shadow-sm' : 'border border-black hover:border-transparent'}
+                  `}
                 >
-                  {coffeeItem.name}
+                  <span>☕</span>
+                  <span>Buy us a coffee</span>
                 </Link>
               </li>
             </ul>

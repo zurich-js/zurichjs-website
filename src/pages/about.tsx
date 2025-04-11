@@ -525,7 +525,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
             transition={{ duration: 0.5 }}
             className="bg-black text-white rounded-xl shadow-lg p-8 text-center"
           >
-            <h2 className="text-3xl font-bold mb-4 text-blue-400">Ready to Join the JS Revolution? ��</h2>
+            <h2 className="text-3xl font-bold mb-4 text-blue-400">Ready to Join the JS Revolution? 🚀🧑‍💻</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
               Become part of our vibrant JavaScript community and connect with fellow developers in Zurich!
             </p>

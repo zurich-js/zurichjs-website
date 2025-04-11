@@ -16,6 +16,11 @@ export default function UpcomingEvents({
     return null;
   }
 
+  // Sort events by datetime in ascending order (earliest first)
+  const sortedEvents = [...events].sort((a, b) => 
+    new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+  );
+
   return (
     <Section variant="white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
@@ -49,7 +54,7 @@ export default function UpcomingEvents({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event, index) => (
+        {sortedEvents.map((event, index) => (
           <motion.div
             key={event.id}
             initial={{ opacity: 0, y: 20 }}

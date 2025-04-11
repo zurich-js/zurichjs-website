@@ -348,7 +348,7 @@ export default function SpeakerFeedbackPage() {
                         </div>
                         <p className="ml-4 text-sm font-medium">
                           We&apos;d love to have you speak again! 
-                          <a href="https://zurichjs.org/call-for-papers" className="underline hover:text-yellow-200 transition-colors ml-1">
+                          <a href="https://zurichjs.com/cfp" className="underline hover:text-yellow-200 transition-colors ml-1">
                             Submit a new talk proposal
                           </a>
                         </p>
@@ -375,7 +375,7 @@ export default function SpeakerFeedbackPage() {
                         </div>
                         <p className="ml-4 text-sm font-medium">
                           We&apos;d love to have you speak again! 
-                          <a href="https://zurichjs.org/call-for-papers" className="underline hover:text-yellow-200 transition-colors ml-1">
+                          <a href="https://zurichjs.com/cfp" className="underline hover:text-yellow-200 transition-colors ml-1">
                             Submit a new talk proposal
                           </a>
                         </p>

@@ -1,4 +1,5 @@
 import { ImageResponse } from '@vercel/og';
+
 import { getPartners } from '@/data';
 
 export const config = {

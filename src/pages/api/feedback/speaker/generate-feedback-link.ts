@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { generateSpeakerToken, generateSpeakerFeedbackUrl } from '@/utils/tokens';
+
 import { getSpeakerById } from '@/sanity/queries';
+import { generateSpeakerToken, generateSpeakerFeedbackUrl } from '@/utils/tokens';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

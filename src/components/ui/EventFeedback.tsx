@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Star, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Star, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 interface FeedbackFormProps {
   eventId: string;

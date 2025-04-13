@@ -1,8 +1,9 @@
 import {motion} from "framer-motion";
 import Image from "next/image";
+
+import Section from "@/components/Section";
 import Button from "@/components/ui/Button";
 import Stats from "@/components/ui/Stats";
-import Section from "@/components/Section";
 import useEvents from "@/hooks/useEvents";
 import { Event } from "@/sanity/queries";
 

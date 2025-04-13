@@ -1,13 +1,14 @@
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Code, Users, Calendar, Heart, Sparkles, Coffee, MessageSquare } from 'lucide-react';
+import Image from 'next/image';
+
 import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
-import SEO from '@/components/SEO';
-import { getStats } from '@/sanity/queries';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import useEvents from '@/hooks/useEvents';
 import Section from '@/components/Section';
+import SEO from '@/components/SEO';
+import Button from '@/components/ui/Button';
+import useEvents from '@/hooks/useEvents';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
+import { getStats } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
 interface TeamMember {

@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Users, ArrowRight } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import SEO from '@/components/SEO';
 import { GetStaticProps } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
+
+import Layout from '@/components/layout/Layout';
+import Section from "@/components/Section";
+import SEO from '@/components/SEO';
 import { getSpeakers } from '@/sanity/queries';
 import type { Speaker } from '@/types';
-import Section from "@/components/Section";
 
 // Workshop data
 const workshops = [

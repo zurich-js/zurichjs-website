@@ -1,13 +1,14 @@
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Mail, Linkedin, MessageSquare, Users } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
-import SEO from '@/components/SEO';
+import Image from 'next/image';
 import Link from 'next/link';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import useEvents from '@/hooks/useEvents';
+
+import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
+import SEO from '@/components/SEO';
+import Button from '@/components/ui/Button';
+import useEvents from '@/hooks/useEvents';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 // Define our TypeScript interfaces
 interface ContactPerson {

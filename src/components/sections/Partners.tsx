@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import Button from '../ui/Button';
+
 import Section from "@/components/Section";
+
+import Button from '../ui/Button';
 
 // Define TypeScript interfaces for partners data
 interface Partner {

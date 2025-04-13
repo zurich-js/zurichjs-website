@@ -1,7 +1,9 @@
-import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';
-import { createClient } from '@sanity/client';
 import crypto from 'crypto';
+
+import { createClient } from '@sanity/client';
 import { NextApiRequest, NextApiResponse } from 'next';
+
+import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';
 
 // Initialize Sanity client
 const sanityClient = createClient({

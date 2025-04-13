@@ -1,6 +1,7 @@
-import { verifyToken } from '@/utils/tokens';
 import { NextApiRequest, NextApiResponse } from 'next';
+
 import { getFeedbackBySpeakerId } from '@/sanity/queries';
+import { verifyToken } from '@/utils/tokens';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {

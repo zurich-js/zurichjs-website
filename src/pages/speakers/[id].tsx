@@ -1,13 +1,14 @@
-import Image from 'next/image';
-import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { Clock, Twitter, Github, Linkedin } from 'lucide-react';
+import Image from 'next/image';
+import { useRouter } from 'next/router';
+
 import Layout from '@/components/layout/Layout';
+import Section from "@/components/Section";
+import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import { getSpeakers } from '@/sanity/queries';
 import { Speaker, Talk } from '@/types';
-import SEO from '@/components/SEO';
-import Section from "@/components/Section";
 
 
 export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {

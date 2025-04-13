@@ -1,6 +1,8 @@
-import { client } from "./client";
 import { format } from "date-fns";
+
 import { Speaker, Talk } from "@/types";
+
+import { client } from "./client";
 
 // Define types for Sanity data structures
 interface SanityImage {

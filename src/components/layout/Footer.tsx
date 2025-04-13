@@ -1,6 +1,7 @@
-import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Linkedin, MapPin, Calendar, Mail } from 'lucide-react';
+import Link from 'next/link';
+
 import Section from "@/components/Section";
 
 export default function Footer() {

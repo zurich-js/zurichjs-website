@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { GetServerSideProps } from 'next';
-import Layout from '@/components/layout/Layout';
 import { Copy, Check, Search, RefreshCw, Mail, Calendar } from 'lucide-react';
+import { GetServerSideProps } from 'next';
+import { useState, useEffect } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import SEO from '@/components/SEO';
 import { getSpeakers } from '@/sanity/queries';
 

@@ -1,13 +1,14 @@
-import SEO from '@/components/SEO';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Coffee, Star, Users, Code, Calendar, Twitter, Github, Linkedin, Globe } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
+import Image from 'next/image';
 import Link from 'next/link';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import useEvents from '@/hooks/useEvents';
+
+import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
+import SEO from '@/components/SEO';
+import useEvents from '@/hooks/useEvents';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
+import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
 interface SupportTier {

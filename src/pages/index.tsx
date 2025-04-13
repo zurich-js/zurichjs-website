@@ -1,15 +1,15 @@
 import Layout from '@/components/layout/Layout';
-import UpcomingEvents from '@/components/sections/UpcomingEvents';
-import SpeakerGrid from '@/components/sections/SpeakerGrid';
-import Partners from '@/components/sections/Partners';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
+import LandingHero from "@/components/sections/LandingHero";
+import Partners from '@/components/sections/Partners';
+import SpeakerGrid from '@/components/sections/SpeakerGrid';
+import UpcomingEvents from '@/components/sections/UpcomingEvents';
+import SEO from '@/components/SEO';
+import { getPartners } from '@/data';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 import type { Event } from '@/sanity/queries';
 import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
-import { getPartners } from '@/data';
-import SEO from '@/components/SEO';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import LandingHero from "@/components/sections/LandingHero";
 
 
 interface Speaker {

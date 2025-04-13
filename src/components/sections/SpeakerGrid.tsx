@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
+
+import Section from '../Section';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import Section from '../Section';
 
 // Define TypeScript interfaces for the component
 interface Speaker {

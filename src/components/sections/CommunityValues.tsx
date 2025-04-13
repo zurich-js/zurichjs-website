@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Code, Users, Lightbulb, Globe, Heart, Star } from 'lucide-react';
+
 import Section from "@/components/Section";
 
 // Define TypeScript interfaces

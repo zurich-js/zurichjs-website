@@ -1,7 +1,8 @@
 import { ImageResponse } from '@vercel/og'
+
+import { getPartners } from '@/data'
 import { getUpcomingEvents } from '@/sanity/queries'
 import { getSpeakers } from '@/sanity/queries'
-import { getPartners } from '@/data'
 
 export const config = {
   runtime: 'edge',

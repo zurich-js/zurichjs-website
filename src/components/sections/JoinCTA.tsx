@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import { useFeatureFlagEnabled } from 'posthog-js/react';
+
+import Section from "@/components/Section";
+import { FeatureFlags } from '@/constants';
+
 import Button from '../ui/Button';
 import Newsletter from '../ui/Newsletter';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { FeatureFlags } from '@/constants';
-import Section from "@/components/Section";
 
 // Define TypeScript interfaces
 interface Benefit {

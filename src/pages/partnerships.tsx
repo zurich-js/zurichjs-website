@@ -1,15 +1,16 @@
-import SEO from '@/components/SEO';
-import Image from 'next/image';
-import { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Building, Users, Gift, Coffee, Rocket, CheckCircle, MapPin } from 'lucide-react';
+import Image from 'next/image';
+import { useState, ChangeEvent, FormEvent } from 'react';
+
 import Layout from '@/components/layout/Layout';
+import Section from '@/components/Section';
+import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import { getPartners } from '@/data';
-import { getUpcomingEvents } from '@/sanity/queries';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
 import useEvents from '@/hooks/useEvents';
-import Section from '@/components/Section';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
+import { getUpcomingEvents } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
 interface Partner {

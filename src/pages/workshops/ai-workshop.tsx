@@ -1,15 +1,16 @@
+import { motion } from 'framer-motion';
+import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, Code, MessageSquare, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, Code, MessageSquare, BookOpen } from 'lucide-react';
+
 import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
-import SEO from '@/components/SEO';
-import { getSpeakerById } from '@/sanity/queries';
-import useEvents from '@/hooks/useEvents';
-import { Speaker } from '@/types';
 import Section from '@/components/Section';
+import SEO from '@/components/SEO';
+import Button from '@/components/ui/Button';
+import useEvents from '@/hooks/useEvents';
+import { getSpeakerById } from '@/sanity/queries';
+import { Speaker } from '@/types';
 
 
 interface WorkshopDetails {

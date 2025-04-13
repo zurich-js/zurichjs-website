@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
+
+import { Event } from '@/sanity/queries';
+
+import Section from '../Section';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import Section from '../Section';
-import { Event } from '@/sanity/queries';
 interface UpcomingEventsProps {
   events: Event[];
   textClassName?: string;

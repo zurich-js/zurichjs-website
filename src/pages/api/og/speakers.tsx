@@ -1,4 +1,5 @@
 import { ImageResponse } from '@vercel/og';
+
 import { getSpeakers } from '@/sanity/queries';
 
 export const config = {

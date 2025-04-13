@@ -1,8 +1,10 @@
-import Header from './Header';
-import Footer from './Footer';
 import { motion } from 'framer-motion';
-import Button from '../ui/Button';
 import { useState, useEffect } from 'react';
+
+import Button from '../ui/Button';
+
+import Footer from './Footer';
+import Header from './Header';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [showSupportButton, setShowSupportButton] = useState(false);

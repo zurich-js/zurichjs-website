@@ -1,14 +1,15 @@
+import { motion } from 'framer-motion';
+import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin, Users, TrendingUp, Clock, Award, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, ExternalLink, Twitter, Github, Linkedin, Users, TrendingUp, Clock, Award, ChevronRight } from 'lucide-react';
+
 import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
+import Section from '@/components/Section';
 import SEO from '@/components/SEO';
+import Button from '@/components/ui/Button';
 import { Event, getSpeakers, getTalks } from '@/sanity/queries';
 import { Speaker, Talk } from '@/types';
-import Section from '@/components/Section';
 
 interface SpeakersProps {
   speakers: Speaker[];

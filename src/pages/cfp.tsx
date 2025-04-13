@@ -1,14 +1,17 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
-import SEO from '@/components/SEO';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import useEvents from '@/hooks/useEvents';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { FeatureFlags } from '@/constants';
+import { useState, ChangeEvent, FormEvent } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
+import SEO from '@/components/SEO';
+import Button from '@/components/ui/Button';
+import { FeatureFlags } from '@/constants';
+import useEvents from '@/hooks/useEvents';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
+
+
 
 interface FormState {
   firstName: string;

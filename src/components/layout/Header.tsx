@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useState, useEffect } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,8 +63,8 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:block">
-            <ul className="flex space-x-8 items-center">
+          <nav className="hidden lg:flex items-center">
+            <ul className="flex space-x-8 items-center mr-4">
               {navItems.map((item) => (
                 <li key={item.path}>
                   <Link
@@ -91,16 +92,53 @@ export default function Header() {
                 </Link>
               </li>
             </ul>
+            
+            {/* Auth buttons for desktop */}
+            <div className="flex items-center gap-4">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className={`
+                    px-4 py-2 rounded-full font-medium 
+                    transition-all duration-300 transform hover:scale-105
+                    ${scrolled ? 'bg-js-dark text-black hover:bg-js' : 'bg-black text-js hover:bg-gray-800'}
+                  `}>
+                    Sign In
+                  </button>
+                </SignInButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton 
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: 'w-8 h-8'
+                    }
+                  }}
+                  afterSignOutUrl="/"
+                />
+              </SignedIn>
+            </div>
           </nav>
 
           {/* Mobile menu button */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden focus:outline-none"
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="lg:hidden flex items-center">
+            <SignedIn>
+              <UserButton 
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: 'w-8 h-8 mr-3'
+                  }
+                }}
+                afterSignOutUrl="/"
+              />
+            </SignedIn>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -140,6 +178,17 @@ export default function Header() {
                   <span>Buy us a coffee</span>
                 </Link>
               </li>
+              
+              {/* Auth button for mobile */}
+              <SignedOut>
+                <li className="mt-2">
+                  <SignInButton mode="modal">
+                    <button className="bg-js-dark text-black px-4 py-2 rounded-full font-medium w-full">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                </li>
+              </SignedOut>
             </ul>
           </nav>
         </motion.div>

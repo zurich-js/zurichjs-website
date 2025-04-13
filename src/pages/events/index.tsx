@@ -1,15 +1,17 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, ChevronRight, Search, Clock } from 'lucide-react';
-import Layout from '@/components/layout/Layout';
-import Button from '@/components/ui/Button';
-import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
-import SEO from '@/components/SEO';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { FeatureFlags } from '@/constants';
+import { useState, useEffect } from 'react';
+
+import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
+import SEO from '@/components/SEO';
+import Button from '@/components/ui/Button';
+import { FeatureFlags } from '@/constants';
+import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
+
 
 interface EventsPageProps {
   upcomingEvents: Event[];

@@ -1,10 +1,13 @@
 import "@/styles/globals.css";
-import type { AppProps } from "next/app";
+import {
+  ClerkProvider,
+} from '@clerk/nextjs'
 import { GoogleAnalytics } from '@next/third-parties/google'
-import { useEffect } from 'react'
+import type { AppProps } from "next/app";
 import { Router } from 'next/router'
-import { PostHogProvider } from 'posthog-js/react'
 import posthog from 'posthog-js'
+import { PostHogProvider } from 'posthog-js/react'
+import { useEffect } from 'react'
 
 export default function App({ Component, pageProps }: AppProps) {
 
@@ -30,7 +33,10 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <PostHogProvider client={posthog}>
       <GoogleAnalytics gaId="G-GWWBJT7QS5" />
-      <Component {...pageProps} />
+      <ClerkProvider>
+          <Component {...pageProps} />
+      </ClerkProvider>
     </PostHogProvider>
   );
 }
+

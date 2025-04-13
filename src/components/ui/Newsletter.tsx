@@ -1,6 +1,6 @@
-import { useState, FormEvent, ChangeEvent } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Sparkles } from 'lucide-react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 
 interface NewsletterProps {
   title?: string;

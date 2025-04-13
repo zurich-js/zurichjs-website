@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ReactNode, MouseEvent, ButtonHTMLAttributes, AnchorHTMLAttributes } from 'react';
-import { motion } from 'framer-motion';
 
 // Define our variant and size types
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';

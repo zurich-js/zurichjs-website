@@ -1,11 +1,12 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import useEvents from '@/hooks/useEvents';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
+import { useEffect, useState } from 'react';
+
 import Layout from '@/components/layout/Layout';
 import SEO from '@/components/SEO';
+import useEvents from '@/hooks/useEvents';
+import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 export default function Custom404() {
   const [randomError, setRandomError] = useState('');

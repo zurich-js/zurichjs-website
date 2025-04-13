@@ -1,7 +1,7 @@
 // lib/animations.js
-import { useInView } from 'react-intersection-observer';
 import { useAnimation } from 'framer-motion';
 import { useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 // Animation variants for common components
 export const animationVariants = {

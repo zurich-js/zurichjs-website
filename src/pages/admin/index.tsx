@@ -1,11 +1,11 @@
+import { OrganizationSwitcher } from '@clerk/nextjs';
+import { getAuth, clerkClient } from '@clerk/nextjs/server';
 import { motion } from 'framer-motion';
 import { MessageSquare, BarChart } from 'lucide-react';
-import Link from 'next/link';
 import { GetServerSideProps } from 'next';
+import Link from 'next/link';
 
 import Layout from '@/components/layout/Layout';
-import { getAuth, clerkClient } from '@clerk/nextjs/server';
-import { OrganizationSwitcher } from '@clerk/nextjs';
 
 const adminRoutes = [
     {

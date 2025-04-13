@@ -129,6 +129,25 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         .highlight-pulse {
           animation: pulse-highlight 1.5s ease-in-out;
         }
+        /* Fix for mobile overflow */
+        body, html {
+          overflow-x: hidden;
+          max-width: 100%;
+        }
+        /* Ensure GetWaitlist widget is responsive */
+        #getWaitlistContainer iframe {
+          max-width: 100% !important;
+          width: 100% !important;
+        }
+        #getWaitlistContainer {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        /* Hide horizontal scrollbar */
+        ::-webkit-scrollbar-horizontal {
+          display: none;
+        }
       `;
             document.head.appendChild(style);
         }
@@ -220,55 +239,55 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             />
 
             {/* Hero Section */}
-            <Section variant="gradient" padding="lg" className="mt-20">
-                <div className="mb-4">
-                    <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
+            <Section variant="gradient" padding="lg" className="mt-16 sm:mt-20">
+                <div className="mb-3 sm:mb-4">
+                    <Link href="/workshops" className="inline-flex items-center text-black hover:underline text-sm sm:text-base">
                         <ChevronLeft size={16} className="mr-1"/>
                         Back to all workshops
                     </Link>
                 </div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
+                <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
                     <motion.div
                         initial={{opacity: 0, y: 20}}
                         animate={{opacity: 1, y: 0}}
                         transition={{duration: 0.5}}
                         className="lg:w-1/2"
                     >
-                        <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
+                        <div className="bg-black text-js inline-block px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-bold mb-3 sm:mb-4">
                             🚀 Premium Workshop
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-bold mb-3 text-black leading-tight">
+                        <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold mb-2 sm:mb-3 text-black leading-tight">
                             {workshop.title}
                         </h1>
-                        <h2 className="text-xl md:text-2xl mb-5 text-gray-800 font-medium">
+                        <h2 className="text-lg sm:text-xl md:text-2xl mb-4 sm:mb-5 text-gray-800 font-medium">
                             {workshop.subtitle}
                         </h2>
 
-                        <div className="flex flex-wrap gap-4 mb-6">
-                            <div className="flex items-center bg-white shadow-sm px-4 py-2 rounded-lg text-sm">
-                                <Calendar size={18} className="mr-2 text-purple-600"/>
+                        <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 sm:mb-6">
+                            <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm">
+                                <Calendar size={16} className="mr-1.5 sm:mr-2 text-purple-600"/>
                                 <div>
                                     <p className="font-semibold">Date</p>
                                     <p>{workshop.dateInfo}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center bg-white shadow-sm px-4 py-2 rounded-lg text-sm">
-                                <Clock size={18} className="mr-2 text-purple-600"/>
+                            <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm">
+                                <Clock size={16} className="mr-1.5 sm:mr-2 text-purple-600"/>
                                 <div>
                                     <p className="font-semibold">Duration</p>
                                     <p>{workshop.timeInfo}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center bg-white shadow-sm px-4 py-2 rounded-lg text-sm">
-                                <MapPin size={18} className="mr-2 text-purple-600"/>
+                            <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm">
+                                <MapPin size={16} className="mr-1.5 sm:mr-2 text-purple-600"/>
                                 <div>
                                     <p className="font-semibold">Location</p>
                                     <p>{workshop.locationInfo}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center bg-white shadow-sm px-4 py-2 rounded-lg text-sm">
-                                <Users size={18} className="mr-2 text-purple-600"/>
+                            <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm">
+                                <Users size={16} className="mr-1.5 sm:mr-2 text-purple-600"/>
                                 <div>
                                     <p className="font-semibold">Capacity</p>
                                     <p>Limited to {workshop.maxAttendees} attendees</p>
@@ -276,27 +295,27 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             </div>
                         </div>
 
-                        <div className="bg-white bg-opacity-80 p-5 rounded-lg shadow-sm mb-6">
-                            <h3 className="text-lg font-bold mb-2 text-black">Workshop Overview</h3>
-                            <p className="text-gray-800 leading-relaxed">
+                        <div className="bg-white bg-opacity-80 p-3 sm:p-5 rounded-lg shadow-sm mb-4 sm:mb-6">
+                            <h3 className="text-base sm:text-lg font-bold mb-1.5 sm:mb-2 text-black">Workshop Overview</h3>
+                            <p className="text-gray-800 leading-relaxed text-sm sm:text-base">
                                 {workshop.description}
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
                             {isClient && (
                                 <Button
                                     onClick={shareWorkshop}
                                     variant="outline"
-                                    className="border-black text-black hover:bg-black hover:text-js"
+                                    className="border-black text-black hover:bg-black hover:text-js text-xs sm:text-sm py-1.5 sm:py-2"
                                 >
-                                    <Share2 size={16} className="mr-1.5"/>
+                                    <Share2 size={14} className="mr-1.5"/>
                                     {copySuccess ? 'Link copied! 👍' : 'Share workshop'}
                                 </Button>
                             )}
                             <Button
                                 onClick={scrollToRegistration}
-                                className="bg-black text-js hover:bg-gray-800"
+                                className="bg-black text-js hover:bg-gray-800 text-xs sm:text-sm py-1.5 sm:py-2"
                             >
                                 Register Now
                             </Button>
@@ -307,13 +326,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         initial={{opacity: 0, scale: 0.95}}
                         animate={{opacity: 1, scale: 1}}
                         transition={{duration: 0.5, delay: 0.2}}
-                        className="lg:w-1/3 lg:ml-auto"
+                        className="lg:w-1/3 lg:ml-auto mt-6 sm:mt-8 lg:mt-0"
                     >
-                        <div className="sticky top-24 rounded-xl overflow-hidden shadow-xl bg-white p-6 border-l-4 border-green-600">
-                            <div className="absolute -right-8 -top-8 bg-js rounded-full w-24 h-24 opacity-30"></div>
-                            <h3 className="text-xl font-bold mb-4 text-black relative">Workshop at a Glance</h3>
+                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-4 sm:p-6 border-l-4 border-green-600 lg:sticky lg:top-24 relative">
+                            <div className="absolute right-0 top-0 bg-js rounded-full w-16 sm:w-24 h-16 sm:h-24 opacity-30"></div>
+                            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-black relative">Workshop at a Glance</h3>
 
-                            <div className="space-y-5">
+                            <div className="space-y-3 sm:space-y-5">
                                 <div className="flex items-start relative z-10">
                                     <div className="bg-js p-2 rounded-full mr-3 shadow-md">
                                         <Clock size={20} className="text-black"/>
@@ -374,7 +393,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
             {/* Workshop Details */}
             <Section>
-                <div className="flex flex-col lg:flex-row gap-10">
+                <div className="flex flex-col lg:flex-row gap-6 sm:gap-10">
                     {/* Main Content */}
                     <div className="lg:w-2/3">
                         {/* Workshop Topics */}
@@ -383,15 +402,15 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             whileInView={{opacity: 1, y: 0}}
                             viewport={{once: true}}
                             transition={{duration: 0.5}}
-                            className="mb-12"
+                            className="mb-8 sm:mb-12"
                         >
-                            <div className="flex items-center mb-6">
-                                <div className="h-1 w-10 bg-green-600 mr-3"></div>
-                                <h2 className="text-3xl font-bold text-black">Topics We&apos;ll Cover</h2>
-                                <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
+                            <div className="flex items-center mb-4 sm:mb-6">
+                                <div className="h-1 w-6 sm:w-10 bg-green-600 mr-2 sm:mr-3"></div>
+                                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black">Topics We&apos;ll Cover</h2>
+                                <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
 
-                            <div className="grid md:grid-cols-2 gap-6">
+                            <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                                 <motion.div
                                     initial={{opacity: 0, y: 20}}
                                     whileInView={{opacity: 1, y: 0}}
@@ -536,15 +555,15 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.1 }}
-                            className="mb-12 bg-white p-8 rounded-lg shadow-md border-t-4 border-js"
+                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-js"
                         >
-                            <div className="flex items-center mb-6">
-                                <div className="h-1 w-10 bg-js mr-3"></div>
-                                <h2 className="text-2xl font-bold text-black">What You&apos;ll Take Away</h2>
-                                <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
+                            <div className="flex items-center mb-4 sm:mb-6">
+                                <div className="h-1 w-6 sm:w-10 bg-js mr-2 sm:mr-3"></div>
+                                <h2 className="text-xl sm:text-2xl font-bold text-black">What You&apos;ll Take Away</h2>
+                                <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
                             
-                            <div className="grid md:grid-cols-2 gap-5">
+                            <div className="grid md:grid-cols-2 gap-3 sm:gap-5">
                                 {workshop.takeaways.map((takeaway, index) => (
                                     <div key={index} className="flex items-start bg-gray-50 p-4 rounded-lg">
                                         <div className="bg-js h-6 w-6 rounded-full flex items-center justify-center text-black font-bold mr-3 flex-shrink-0">
@@ -568,24 +587,24 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="mb-12 bg-white p-8 rounded-lg shadow-md border-t-4 border-green-500"
+                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-green-500"
                         >
-                            <div className="flex items-center mb-6">
-                                <div className="h-1 w-10 bg-green-500 mr-3"></div>
-                                <h2 className="text-2xl font-bold text-black">Who Should Attend</h2>
-                                <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
+                            <div className="flex items-center mb-4 sm:mb-6">
+                                <div className="h-1 w-6 sm:w-10 bg-green-500 mr-2 sm:mr-3"></div>
+                                <h2 className="text-xl sm:text-2xl font-bold text-black">Who Should Attend</h2>
+                                <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
                             
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                                 {workshop.targetAudience.map((audience, index) => (
-                                    <div key={index} className="bg-green-50 rounded-lg p-5">
-                                        <Users className="mb-3 text-green-600" size={24} />
-                                        <p className="font-medium text-gray-800">{audience}</p>
+                                    <div key={index} className="bg-green-50 rounded-lg p-3 sm:p-5">
+                                        <Users className="mb-2 sm:mb-3 text-green-600" size={20} />
+                                        <p className="font-medium text-gray-800 text-sm sm:text-base">{audience}</p>
                                     </div>
                                 ))}
                             </div>
                             
-                            <div className="mt-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                            <div className="mt-4 sm:mt-6 bg-green-50 border-l-4 border-green-500 p-3 sm:p-4 rounded-lg">
                                 <p className="text-sm font-medium text-gray-800">
                                     <span className="text-green-600 font-bold">Perfect for:</span> Developers looking to leverage multithreading for performance-critical Node.js applications.
                                 </p>
@@ -602,18 +621,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
                             id="registrationContainer"
-                            className="bg-white p-6 rounded-lg shadow-lg mb-8 border-t-4 border-js"
+                            className="bg-white p-4 sm:p-6 rounded-lg shadow-md sm:shadow-lg mb-6 sm:mb-8 border-t-4 border-js relative"
                         >
-                            <div className="absolute -right-3 -top-3 bg-js text-black text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                                Limited Spots!
-                            </div>
-                            
-                            <h3 className="text-xl font-bold mb-4 flex items-center text-black">
-                                <Users className="mr-2 text-js" size={22} />
+                            <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center text-black">
+                                <Users className="mr-2 text-js" size={20} />
                                 Secure Your Spot
                             </h3>
 
-                            <div className="bg-gray-50 p-4 rounded-lg mb-5">
+                            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-5">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="font-semibold text-gray-800">Workshop Price:</span>
                                     <span className="text-black font-bold text-lg">{workshop.priceInfo}</span>
@@ -649,7 +664,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 id="getWaitlistContainer"
                                 data-waitlist_id="26500"
                                 data-widget_type="WIDGET_1"
-                                className="transition-all duration-300"
+                                className="transition-all duration-300 overflow-x-hidden w-full"
                             ></div>
 
                             <p className="text-sm text-gray-500 mt-3 text-center">
@@ -667,24 +682,24 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5 }}
-                    className="text-center py-4"
+                    className="text-center py-3 sm:py-4"
                 >
-                    <div className="inline-block bg-gradient-to-r from-green-500 to-yellow-500 p-1 rounded-xl mb-8">
-                        <div className="bg-black rounded-xl px-4 py-2">
-                            <p className="text-white text-sm font-bold">June 18, 2024 • 18:30-20:30 • Limited to 15 participants</p>
+                    <div className="inline-block bg-gradient-to-r from-green-500 to-yellow-500 p-1 rounded-lg sm:rounded-xl mb-5 sm:mb-8">
+                        <div className="bg-black rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
+                            <p className="text-white text-xs sm:text-sm font-bold">June 18, 2024 • 18:30-20:30 • Limited to 15 participants</p>
                         </div>
                     </div>
 
-                    <h2 className="text-4xl font-bold mb-5 text-js">Unlock the Full Power of Node.js Threads! 🚀</h2>
-                    <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-5 text-js">Unlock the Full Power of Node.js Threads! 🚀</h2>
+                    <p className="text-base sm:text-lg md:text-xl mb-5 sm:mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
                         Join this exclusive workshop to discover how Node.js evolved beyond its single-threaded origins. 
                         Learn practical multi-threading techniques from a Node.js expert!
                     </p>
 
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-5">
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-5">
                         <a
                             href="#registrationContainer"
-                            className="bg-js text-black px-8 py-4 rounded-lg font-bold text-lg hover:bg-yellow-300 transition-colors w-full sm:w-auto"
+                            className="bg-js text-black px-4 sm:px-8 py-2.5 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-yellow-300 transition-colors w-full sm:w-auto"
                             onClick={(e) => {
                                 e.preventDefault();
                                 scrollToRegistration();
@@ -694,14 +709,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         </a>
                         <button
                             onClick={shareWorkshop}
-                            className="bg-gray-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-700 transition-colors w-full sm:w-auto"
+                            className="bg-gray-800 text-white px-4 sm:px-8 py-2.5 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-gray-700 transition-colors w-full sm:w-auto mt-3 sm:mt-0"
                         >
-                            <Share2 size={18} className="inline mr-2"/> 
+                            <Share2 size={16} className="inline mr-2"/> 
                             Share with Your Team
                         </button>
                     </div>
 
-                    <div className="mt-8 bg-gray-800 rounded-lg p-4 max-w-xl mx-auto">
+                    <div className="mt-6 sm:mt-8 bg-gray-800 rounded-lg p-3 sm:p-4 max-w-xl mx-auto">
                         <p className="text-white text-sm">
                             &quot;This workshop cuts through the confusion about Node.js threading models. You&apos;ll walk away with practical skills to build more performant applications using multiple threads.&quot;
                         </p>

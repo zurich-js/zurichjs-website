@@ -7,6 +7,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Handle protected routes
   if (isProtectedRoute(req)) {
     await auth.protect((has) => {
+
       return has({ permission: 'org:zurichjs:admin' }) 
     })
   }

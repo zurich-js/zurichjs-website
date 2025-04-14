@@ -3,13 +3,18 @@ import { NextResponse } from 'next/server'
 
 const isProtectedRoute = createRouteMatcher(['/admin/(.*)'])
 
+const ZURICHJS_ORG_ID = process.env.ZURICHJS_ADMIN_ORG_ID
+
+
 export default clerkMiddleware(async (auth, req) => {
+
   // Handle protected routes
   if (isProtectedRoute(req)) {
-    await auth.protect((has) => {
+    const { orgId } = await auth()
 
-      return has({ permission: 'org:zurichjs:admin' }) 
-    })
+    if (orgId !== ZURICHJS_ORG_ID) {
+      return NextResponse.redirect(new URL('/', req.url))
+    }
   }
 
   return NextResponse.next()

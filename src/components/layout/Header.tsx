@@ -63,7 +63,8 @@ export default function Header() {
       name: 'Participate',
       id: 'participate',
       items: [
-        { name: 'CFP', path: '/cfp' },
+        { name: 'Call for Speakers', path: '/cfp' },
+        { name: 'Call for Volunteers', path: '/cfv' },
         { name: 'Partnerships', path: '/partnerships' },
       ]
     },

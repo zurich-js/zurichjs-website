@@ -1,6 +1,21 @@
+// Import Chart.js modules first
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartData,
+  TooltipItem
+} from 'chart.js';
 import { motion } from 'framer-motion';
-import { Code, Users, Calendar, Heart, Sparkles, Coffee, MessageSquare } from 'lucide-react';
+import { Code, Users, Calendar, Heart, Sparkles, Coffee, MessageSquare, TrendingUp, ArrowUp, BarChart4, PartyPopper, Info, X } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { useMemo, useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
@@ -8,7 +23,24 @@ import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
-import { getStats } from '@/sanity/queries';
+import { getPastEvents, getStats } from '@/sanity/queries';
+import { Event } from '@/sanity/queries';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+// Dynamically import the Chart component with no SSR to avoid hydration issues
+const Chart = dynamic(() => import('react-chartjs-2').then(mod => mod.Line), {
+  ssr: false
+});
 
 // Define our TypeScript interfaces
 interface TeamMember {
@@ -40,11 +72,32 @@ interface AboutPageProps {
     speakersToDate: number;
     totalAttendees: number;
   };
+  pastEvents: Event[];
 }
 
-export default function About({ teamMembers, milestones, stats }: AboutPageProps) {
+export default function About({ teamMembers, milestones, stats, pastEvents }: AboutPageProps) {
   useReferrerTracking();
   const { track } = useEvents();
+  // State for mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  // State to control metrics explanation visibility
+  const [showMetricsExplanation, setShowMetricsExplanation] = useState(false);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Set initial value
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Track CTA button clicks
   const trackCTAClick = (buttonName: string) => {
@@ -53,6 +106,180 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
       page: 'about'
     });
   };
+
+  // Track when metrics info is viewed
+  const handleToggleMetricsExplanation = () => {
+    setShowMetricsExplanation(!showMetricsExplanation);
+    if (!showMetricsExplanation) {
+      track('view_explanation', {
+        explanation_type: 'growth_metrics',
+        page: 'about'
+      });
+    }
+  };
+
+  // Filter events that should be excluded from stats
+  const filteredEvents = useMemo(() => {
+    return pastEvents.filter(event => !event.excludeFromStats);
+  }, [pastEvents]);
+
+  // Calculate additional stats from past events
+  const eventStats = useMemo(() => {
+    if (!filteredEvents || filteredEvents.length === 0) {
+      return {
+        averageAttendees: 0,
+        highestAttendance: 0,
+        highestAttendanceEvent: '',
+        growthRate: 0,
+        totalEvents: 0,
+        attendanceGrowth: 0
+      };
+    }
+
+    // Sort events by date
+    const sortedEvents = [...filteredEvents].sort((a, b) => 
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+
+    // Calculate average attendees
+    const totalAttendees = sortedEvents.reduce((sum, event) => sum + event.attendees, 0);
+    const averageAttendees = Math.round(totalAttendees / sortedEvents.length);
+    
+    // Find event with highest attendance
+    const highestAttendanceEvent = sortedEvents.reduce((max, event) => 
+      event.attendees > max.attendees ? event : max, sortedEvents[0]);
+    
+    // Calculate growth rate if we have more than one event
+    let growthRate = 0;
+    let attendanceGrowth = 0;
+    
+    if (sortedEvents.length > 1) {
+      const firstEvent = sortedEvents[0];
+      const lastEvent = sortedEvents[sortedEvents.length - 1];
+      
+      if (firstEvent.attendees > 0) {
+        // Calculate percentage growth from first to last event
+        attendanceGrowth = lastEvent.attendees - firstEvent.attendees;
+        growthRate = Math.round((attendanceGrowth / firstEvent.attendees) * 100);
+      }
+    }
+
+    return {
+      averageAttendees,
+      highestAttendance: highestAttendanceEvent.attendees,
+      highestAttendanceEvent: highestAttendanceEvent.title,
+      growthRate,
+      totalEvents: sortedEvents.length,
+      attendanceGrowth
+    };
+  }, [filteredEvents]);
+
+  // Prepare chart data from past events
+  const attendanceChartData = useMemo<ChartData<'line'>>(() => {
+    // Sort events by date
+    const sortedEvents = [...filteredEvents].sort((a, b) => 
+      new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+    );
+
+    return {
+      labels: sortedEvents.map(event => {
+        const date = new Date(event.datetime);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      }),
+      datasets: [
+        {
+          label: 'Event Attendees',
+          data: sortedEvents.map(event => event.attendees),
+          fill: false,
+          backgroundColor: '#2563eb', // blue-600
+          borderColor: '#2563eb',
+          tension: 0.4,
+          pointRadius: 6,
+          pointHoverRadius: 8
+        }
+      ]
+    };
+  }, [filteredEvents]);
+
+  // Chart options
+  const chartOptions = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+          labels: {
+            color: '#f8fafc', // slate-50
+            font: {
+              size: 14,
+              weight: 'bold' as const
+            },
+            boxWidth: 16, // Smaller box for mobile
+            padding: 10
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1e293b', // slate-800
+          titleColor: '#f8fafc', // slate-50
+          bodyColor: '#f8fafc', // slate-50
+          padding: 12,
+          cornerRadius: 6,
+          displayColors: false,
+          bodyFont: {
+            size: 14 // Larger font for better mobile readability
+          },
+          callbacks: {
+            title: (items: TooltipItem<'line'>[]) => {
+              if (!items.length) return '';
+              const index = items[0].dataIndex;
+              const sortedEvents = [...filteredEvents].sort((a, b) => 
+                new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+              );
+              const event = sortedEvents[index];
+              return event ? event.title : '';
+            }
+          }
+        },
+        title: {
+          display: false
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            color: 'rgba(248, 250, 252, 0.1)', // slate-50 with opacity
+            display: !isMobile // Hide grid on mobile
+          },
+          ticks: {
+            color: '#f8fafc', // slate-50
+            maxRotation: 45, // Angle labels for better mobile display
+            minRotation: 45,
+            font: {
+              size: isMobile ? 10 : 12 // Smaller font on mobile
+            },
+            autoSkip: true,
+            maxTicksLimit: isMobile ? 4 : 10 // Fewer ticks on mobile
+          }
+        },
+        y: {
+          grid: {
+            color: 'rgba(248, 250, 252, 0.1)', // slate-50 with opacity
+            display: !isMobile // Hide grid on mobile
+          },
+          ticks: {
+            color: '#f8fafc', // slate-50
+            precision: 0,
+            font: {
+              size: isMobile ? 10 : 12 // Smaller font on mobile
+            },
+            maxTicksLimit: isMobile ? 5 : 8 // Fewer ticks on mobile
+          },
+          beginAtZero: true
+        }
+      }
+    };
+  }, [isMobile, filteredEvents]);
 
   return (
       <Layout>
@@ -350,6 +577,164 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
           </div>
         </Section>
 
+        {/* Growth Stats Section */}
+        <Section variant="black">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold mb-3">Our Growth Journey 📈</h2>
+            <p className="text-xl max-w-3xl mx-auto">
+              Watch how our meetup attendance has grown as the ZurichJS community expands!
+            </p>
+          </motion.div>
+
+          {/* Additional Event Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-gray-900 p-5 rounded-lg"
+            >
+              <div className="text-blue-400 mb-2">
+                <BarChart4 size={28} />
+              </div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">{eventStats.averageAttendees}</div>
+              <div className="text-sm md:text-base text-gray-400">Avg. Attendees</div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-gray-900 p-5 rounded-lg"
+            >
+              <div className="text-blue-400 mb-2">
+                <PartyPopper size={28} />
+              </div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">{eventStats.highestAttendance}</div>
+              <div className="text-sm md:text-base text-gray-400">Highest Attendance</div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-gray-900 p-5 rounded-lg"
+            >
+              <div className="text-blue-400 mb-2">
+                <ArrowUp size={28} />
+              </div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                {eventStats.growthRate > 0 ? '+' : ''}{eventStats.growthRate}%
+              </div>
+              <div className="text-sm md:text-base text-gray-400">Attendance Growth</div>
+              <div className="mt-2 text-xs text-gray-500">
+                Percentage increase from our first to latest meetup
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="bg-gray-900 p-5 rounded-lg"
+            >
+              <div className="text-blue-400 mb-2">
+                <Users size={28} />
+              </div>
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                {eventStats.attendanceGrowth > 0 ? '+' : ''}{eventStats.attendanceGrowth}
+              </div>
+              <div className="text-sm md:text-base text-gray-400">New Attendees</div>
+              <div className="mt-2 text-xs text-gray-500">
+                Additional attendees gained since our first meetup
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Attendance Chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-gray-900 p-6 rounded-lg shadow-lg"
+          >
+            <div className="flex items-center justify-center mb-6">
+              <TrendingUp size={28} className="text-blue-400 mr-2" />
+              <h3 className="text-2xl font-semibold">Meetup Attendance Growth</h3>
+            </div>
+            
+            <div className="h-80 w-full">
+              {filteredEvents.length > 0 ? (
+                <Chart data={attendanceChartData} options={chartOptions} />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-lg text-gray-400">No past events data available</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-6 text-center text-gray-400">
+              {eventStats.highestAttendanceEvent && (
+                <p className="mb-2">
+                  Our biggest event so far was <strong className="text-blue-400">{eventStats.highestAttendanceEvent}</strong> with {eventStats.highestAttendance} attendees!
+                </p>
+              )}
+              <p className="mb-4">As our community grows, so does our impact on the JavaScript ecosystem in Zurich!</p>
+              
+              <button 
+                onClick={handleToggleMetricsExplanation}
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-gray-300 text-sm"
+              >
+                {showMetricsExplanation ? (
+                  <>
+                    <X size={16} className="mr-2" />
+                    Hide metrics explanation
+                  </>
+                ) : (
+                  <>
+                    <Info size={16} className="mr-2" />
+                    Understand our growth metrics
+                  </>
+                )}
+              </button>
+              
+              {showMetricsExplanation && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="max-w-2xl mx-auto mt-4 text-sm text-gray-500 bg-gray-800 p-4 rounded-lg"
+                >
+                  <h4 className="font-semibold text-gray-300 mb-2">Understanding Our Growth Metrics</h4>
+                  <ul className="list-disc pl-5 space-y-2 text-left">
+                    <li><span className="text-blue-400 font-medium">Attendance Growth:</span> Shows the percentage increase in attendees from our first meetup to our most recent one ({eventStats.growthRate}%).</li>
+                    <li><span className="text-blue-400 font-medium">New Attendees:</span> Represents the additional number of people who have joined our meetups since we began ({eventStats.attendanceGrowth} people).</li>
+                    <li><span className="text-blue-400 font-medium">Average Attendees:</span> The mean number of participants across all our events ({eventStats.averageAttendees} people per meetup).</li>
+                  </ul>
+                  <p className="mt-3 italic">These statistics help us track our community&apos;s expansion and engagement over time.</p>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Mobile note */}
+          <div className="mt-4 text-center text-sm text-gray-500 md:hidden">
+            <p>Tip: Rotate your device for a better view of the chart</p>
+          </div>
+        </Section>
+
         {/* Meet the Team */}
         <Section variant="white">
           <motion.div
@@ -559,6 +944,7 @@ export default function About({ teamMembers, milestones, stats }: AboutPageProps
 export async function getStaticProps() {
   // Get stats using the same function as the homepage
   const stats = await getStats();
+  const pastEvents = await getPastEvents();
 
   // This would be replaced with actual CMS fetching
   return {
@@ -642,7 +1028,8 @@ export async function getStaticProps() {
           image: '/images/community/meetup-3-crowd.jpg',
         },
       ],
-      stats
+      stats,
+      pastEvents
     },
   };
 }

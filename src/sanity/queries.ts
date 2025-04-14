@@ -45,6 +45,7 @@ interface SanityEvent {
   description: string;
   meetupUrl: string;
   talks: SanityTalk[];
+  excludeFromStats?: boolean;
   [key: string]: unknown;
 }
 
@@ -60,6 +61,7 @@ const mapEventData = (event: SanityEvent) => {
     image: event.image?.asset?.url || null,
     description: event.description || "",
     meetupUrl: event.meetupUrl || "",
+    excludeFromStats: event.excludeFromStats || false,
     talks: event.talks?.map((talk: SanityTalk) => ({
       id: talk.id?.current || "",
       title: talk.title || "",
@@ -89,6 +91,7 @@ export const getUpcomingEvents = async () => {
         "url": image.asset->url
       }
     },
+    excludeFromStats,
     talks[]-> {
       ...,
       "id": id,
@@ -116,6 +119,7 @@ export const getPastEvents = async () => {
         "url": image.asset->url
       }
     },
+    excludeFromStats,
     talks[]-> {
       ...,
       "id": id,
@@ -141,6 +145,7 @@ export const getEventById = async (eventId: string) => {
         "url": image.asset->url
       }
     },
+    excludeFromStats,
     talks[]-> {
       ...,
       "id": id,

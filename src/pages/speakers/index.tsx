@@ -326,7 +326,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                   <Link href={`/speakers/${speaker.id}`} className="block h-full flex flex-col">
                     <div className="relative h-40 sm:h-56 w-full">
                       <Image
-                        src={speaker.image}
+                        src={`${speaker.image}?h=400`}
                         alt={speaker.name}
                         fill
                         className="object-cover"

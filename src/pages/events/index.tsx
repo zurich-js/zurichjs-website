@@ -182,7 +182,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                       <div className="relative h-48 md:h-60 lg:h-64 w-full">
                         {event.image ? (
                           <Image
-                            src={event.image}
+                            src={`${event.image}?h=400`}
                             alt={event.title}
                             fill
                             className="object-cover object-center"

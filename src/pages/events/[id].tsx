@@ -346,7 +346,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                 <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                   <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                                     <Image
-                                      src={speaker.image || '/images/speakers/default.jpg'}
+                                      src={speaker.image ? `${speaker.image}?h=150` : '/images/speakers/default.jpg'}
                                       alt={speaker.name}
                                       fill
                                       className="object-cover"

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
@@ -230,10 +231,13 @@ export default function SpeakerFeedbackPage() {
             className="flex flex-col md:flex-row items-center gap-8"
           >
             <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl">
-              <img 
-                src={speaker?.image || '/images/speakers/default.png'}
-                alt={speaker?.name}
-                className="w-full h-full object-cover"
+              <Image 
+                src={speaker?.image ? `${speaker?.image}?h=300` : '/images/speakers/default.png'}
+                alt={speaker?.name || 'Speaker'}
+                className="object-cover"
+                fill
+                sizes="(max-width: 768px) 7rem, 9rem"
+                priority
               />
             </div>
             <div>

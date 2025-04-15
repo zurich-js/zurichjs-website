@@ -563,7 +563,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <p className="mb-4">
                     Don&apos;t miss this amazing JavaScript event!
                     {event.datetime ? (
-                      event.meetupUrl ? ' RSVP now to secure your spot.' : ' We&apos;re finalizing the details - check back soon!'
+                      event.meetupUrl ? ' RSVP now to secure your spot.' : " We're finalizing the details - check back soon!"
                     ) : (
                       ' We&apos;re still working on the details but save some space in your calendar!'
                     )}

@@ -97,7 +97,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
           type: 'website',
           title: `${activeTab === 'upcoming' ? 'Upcoming Events' : 'Past Events'} | ZurichJS`,
           description: "Join the vibrant JavaScript community in Zurich! Check out our upcoming meetups, workshops, and talks for JavaScript enthusiasts of all levels.",
-          image: `${upcomingEvents[0]?.image}?h=300` || '/api/og/home',
+          image: upcomingEvents[0]?.image ? `${upcomingEvents[0]?.image}?h=300` : '/api/og/home',
         }}
       />
 

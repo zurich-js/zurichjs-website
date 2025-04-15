@@ -109,7 +109,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
           title: `${event.title} | ZurichJS`,
           description: event.description.slice(0, 120) + '...',
           type: 'website',
-          image: event.image || '',
+          image: event.image ? `${event.image}?h=300` : '',
           url: `/events/${event.id}`
         }}
       />

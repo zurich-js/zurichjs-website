@@ -44,7 +44,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                     description,
                     type: 'profile',
                     url: `https://zurichjs.org/speakers/${speaker.id}`,
-                    image: speaker.image,
+                    image: speaker.image ? `${speaker.image}?h=300` : '',
                     profile: {
                         firstName: speaker.name.split(' ')[0],
                         lastName: speaker.name.split(' ').slice(1).join(' '),

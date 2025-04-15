@@ -131,8 +131,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               transition={{ duration: 0.5 }}
               className="lg:w-1/2 w-full"
             >
-              <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold mb-4">
-                {isUpcoming ? '🔥 Upcoming Event!' : '📅 Past Event'}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {isUpcoming ? (
+                  <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold">
+                    🔥 Upcoming Event!
+                  </div>
+                ) : (
+                  <div className="bg-black text-js inline-block px-3 py-1 rounded-full text-sm font-bold">
+                    📅 Past Event
+                  </div>
+                )}
+                {event.isProMeetup && (
+                  <div className="bg-zurich text-white inline-block px-3 py-1 rounded-full text-sm font-bold">
+                    🌟 Pro Meetup
+                  </div>
+                )}
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-4">
                 {event.title}
@@ -187,14 +200,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               )}
 
               <div className="flex flex-wrap gap-3">
-                {isUpcoming && event.meetupUrl ? (
+                {isUpcoming && (event.isProMeetup ? event.ticketSaleUrl : event.meetupUrl) ? (
                   <Button
-                    href={event.meetupUrl}
+                    href={event.isProMeetup ? event.ticketSaleUrl : event.meetupUrl}
                     variant="primary"
                     size="lg"
-                    className="bg-black text-js hover:bg-gray-800"
+                    className={`${event.isProMeetup ? 'bg-zurich' : 'bg-black'} text-js hover:${event.isProMeetup ? 'bg-blue-600' : 'bg-gray-800'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    RSVP on Meetup 🚀
+                    {event.isProMeetup ? 'Get Tickets' : 'RSVP on Meetup 🚀'}
                   </Button>
                 ) : isUpcoming && (
                   <Button
@@ -203,7 +218,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     className="bg-black text-js hover:bg-gray-800 cursor-not-allowed"
                     disabled
                   >
-                    Hold tight! RSVP coming soon ⏳
+                    Hold tight! {event.isProMeetup ? 'Tickets' : 'RSVP'} coming soon ⏳
                   </Button>
                 )}
 
@@ -369,9 +384,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
                             <div className="flex flex-wrap gap-2">
                               {/* Talk links here (slides, video recordings, etc.) */}
-                              {!isUpcoming && talk.slidesUrl && (
+                              {!isUpcoming && talk.slides && (
                                 <a
-                                  href={talk.slidesUrl}
+                                  href={talk.slides}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors"
@@ -423,7 +438,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <span> We have <strong>1 slot available for a lightning talk (5-10 mins)</strong>.</span>
                     )}
                   </p>
-                  <Button href="/cfp" variant="primary" className="bg-black text-js hover:bg-gray-800">
+                  <Button href="/cfp" variant="primary" className="bg-black text-js hover:bg-gray-800" target="_blank" rel="noopener noreferrer">
                     Submit a Talk Proposal
                   </Button>
                 </motion.div>
@@ -442,7 +457,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <p className="mb-4">
                     We&apos;ve reached our maximum number of talks for this event. Please check our future events for speaking opportunities or submit a proposal for consideration at upcoming meetups.
                   </p>
-                  <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-js">
+                  <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-js" target="_blank" rel="noopener noreferrer">
                     Submit for Future Events
                   </Button>
                 </motion.div>
@@ -510,7 +525,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <p className="text-sm text-gray-700 mb-3">
                         Have a cool office space? Hosting a ZurichJS meetup is a great way to showcase your company and connect with the JavaScript community!
                       </p>
-                      <Link href="/partnerships#partnership-tiers" className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors">
+                      <Link href="/partnerships#partnership-tiers" className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors" target="_blank" rel="noopener noreferrer">
                         <Building size={16} className="mr-2" />
                         Partner with us as a Venue Host
                       </Link>
@@ -550,6 +565,57 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </motion.div>
               )}
 
+              {/* Pro Meetup Info */}
+              {event.isProMeetup && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-blue-50 p-6 rounded-lg shadow-md mb-8 border-l-4 border-zurich"
+                >
+                  <h3 className="text-xl font-bold mb-4 text-zurich flex items-center">
+                    <span className="mr-2">🌟</span>
+                    Pro Meetup Event
+                  </h3>
+                  <div className="text-gray-700">
+                    <p className="mb-3">
+                      This is a premium ZurichJS Pro Meetup featuring world-class speakers and exclusive content.
+                    </p>
+                    <details className="mb-3">
+                      <summary className="font-medium text-zurich cursor-pointer">What is a Pro Meetup?</summary>
+                      <div className="mt-2 pl-4 text-sm">
+                        <p className="mb-2">
+                          Pro Meetups are premium JavaScript events featuring world-class speakers who often travel from abroad to share their expertise with our community.
+                        </p>
+                        <p className="mb-2">
+                          These special events require:
+                        </p>
+                        <ul className="list-disc pl-5 mb-2 space-y-1">
+                          <li>Ticket purchase to secure your spot and support speaker travel costs</li>
+                          <li>Higher commitment to attend to prevent no-shows</li>
+                          <li>Additional venue and catering arrangements</li>
+                        </ul>
+                        <p>
+                          Your support helps us bring exceptional JavaScript talent to Zurich and create memorable learning experiences!
+                        </p>
+                      </div>
+                    </details>
+                    {isUpcoming && event.ticketSaleUrl && (
+                      <Button
+                        href={event.ticketSaleUrl}
+                        variant="primary"
+                        className="bg-zurich hover:bg-blue-600 text-white"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Get Your Tickets Now
+                      </Button>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
               {/* Call to Action */}
               {isUpcoming && !isFeedbackMode && (
                 <motion.div
@@ -557,35 +623,65 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  className="bg-js p-6 rounded-lg shadow-md text-center"
+                  className={`${event.isProMeetup ? 'bg-blue-100' : 'bg-js'} p-6 rounded-lg shadow-md text-center`}
                 >
                   <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
                   <p className="mb-4">
                     Don&apos;t miss this amazing JavaScript event!
                     {event.datetime ? (
-                      event.meetupUrl ? ' RSVP now to secure your spot.' : " We're finalizing the details - check back soon!"
+                      event.isProMeetup ? (
+                        event.ticketSaleUrl ? ' Secure your ticket now!' : " We're finalizing ticket sales - check back soon!"
+                      ) : (
+                        event.meetupUrl ? ' RSVP now to secure your spot.' : " We're finalizing the details - check back soon!"
+                      )
                     ) : (
                       ' We&apos;re still working on the details but save some space in your calendar!'
                     )}
                   </p>
-                  {event.meetupUrl ? (
-                    <Button
-                      href={event.meetupUrl}
-                      variant="primary"
-                      size="lg"
-                      className="w-full bg-black text-js hover:bg-gray-800"
-                    >
-                      RSVP on Meetup
-                    </Button>
+                  {event.isProMeetup ? (
+                    event.ticketSaleUrl ? (
+                      <Button
+                        href={event.ticketSaleUrl}
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-zurich text-white hover:bg-blue-600"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Get Tickets
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-zurich text-white hover:bg-blue-600 cursor-not-allowed opacity-80"
+                        disabled
+                      >
+                        Tickets Coming Soon
+                      </Button>
+                    )
                   ) : (
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="w-full bg-black text-js hover:bg-gray-800 cursor-not-allowed opacity-80"
-                      disabled
-                    >
-                      RSVP Coming Soon
-                    </Button>
+                    event.meetupUrl ? (
+                      <Button
+                        href={event.meetupUrl}
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-black text-js hover:bg-gray-800"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        RSVP on Meetup
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full bg-black text-js hover:bg-gray-800 cursor-not-allowed opacity-80"
+                        disabled
+                      >
+                        RSVP Coming Soon
+                      </Button>
+                    )
                   )}
                 </motion.div>
               )}

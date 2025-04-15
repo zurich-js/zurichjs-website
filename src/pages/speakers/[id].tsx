@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Clock, Twitter, Github, Linkedin } from 'lucide-react';
+import { Clock, Twitter, Github, Linkedin, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
@@ -210,6 +210,35 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
 
                                                 {talk.description && (
                                                     <p className="text-gray-700 mb-4 whitespace-pre-line">{talk.description}</p>
+                                                )}
+
+                                                {/* Add slides and video links if available */}
+                                                {(talk.slides || talk.videoUrl) && (
+                                                    <div className="flex flex-wrap gap-2 mb-4">
+                                                        {talk.slides && (
+                                                            <a
+                                                                href={talk.slides}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors"
+                                                            >
+                                                                <ExternalLink size={14} className="mr-1"/>
+                                                                Slides
+                                                            </a>
+                                                        )}
+
+                                                        {talk.videoUrl && (
+                                                            <a
+                                                                href={talk.videoUrl}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
+                                                            >
+                                                                <ExternalLink size={14} className="mr-1"/>
+                                                                Video Recording
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 )}
 
                                                 {/* Display events where this talk was/will be presented */}

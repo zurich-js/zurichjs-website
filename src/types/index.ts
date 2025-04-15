@@ -26,6 +26,8 @@ export interface Talk {
   durationMinutes?: number;
   events?: Event[];
   speakers: SpeakerSummary[];
+  slides?: string;
+  videoUrl?: string;
 }
 
 export interface SpeakerSummary {

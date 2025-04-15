@@ -118,12 +118,14 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
             {upcomingEvents.length > 0 && (
               <Button
-                href={upcomingEvents[0].meetupUrl}
+                href={upcomingEvents[0].isProMeetup ? upcomingEvents[0].ticketSaleUrl : upcomingEvents[0].meetupUrl}
                 variant="primary"
                 size="lg"
-                className="bg-blue-700 hover:bg-blue-600 text-white"
+                className={`${upcomingEvents[0].isProMeetup ? 'bg-zurich' : 'bg-blue-700'} hover:${upcomingEvents[0].isProMeetup ? 'bg-blue-600' : 'bg-blue-600'} text-white`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                RSVP for our next meetup! 🚀
+                {upcomingEvents[0].isProMeetup ? 'Get tickets for our next Pro Meetup! 🎟️' : 'RSVP for our next meetup! 🚀'}
               </Button>
             )}
           </motion.div>
@@ -201,7 +203,14 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                         )}
                       </div>
                       <div className="p-6 flex flex-col flex-grow">
-                        <h3 className="text-xl font-bold mb-3 line-clamp-2 text-gray-900">{event.title}</h3>
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-xl font-bold line-clamp-2 text-gray-900">{event.title}</h3>
+                          {event.isProMeetup && (
+                            <span className="bg-zurich text-white px-2 py-1 rounded-md text-xs font-bold ml-2 whitespace-nowrap">
+                              🌟 Pro Meetup
+                            </span>
+                          )}
+                        </div>
 
                         <div className="flex flex-col space-y-3 mb-4">
                           <div className="flex flex-wrap gap-2">

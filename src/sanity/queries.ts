@@ -27,7 +27,7 @@ interface SanityTalk {
   description: string;
   type: string;
   tags: string[];
-  slidesUrl: string;
+  slides: string;
   videoUrl: string;
   speakers: SanitySpeaker[];
   [key: string]: unknown;
@@ -42,6 +42,8 @@ interface SanityEvent {
   address: string;
   attendees: number;
   image: SanityImage;
+  isProMeetup: boolean;
+  ticketSaleUrl: string;
   description: string;
   meetupUrl: string;
   talks: SanityTalk[];
@@ -60,7 +62,9 @@ const mapEventData = (event: SanityEvent) => {
     attendees: event.attendees || 0,
     image: event.image?.asset?.url || null,
     description: event.description || "",
+    isProMeetup: event.isProMeetup || false,
     meetupUrl: event.meetupUrl || "",
+    ticketSaleUrl: event.ticketSaleUrl || "",
     excludeFromStats: event.excludeFromStats || false,
     talks: event.talks?.map((talk: SanityTalk) => ({
       id: talk.id?.current || "",
@@ -69,7 +73,7 @@ const mapEventData = (event: SanityEvent) => {
       type: talk.type || "",
       tags: talk.tags || [],
       durationMinutes: talk.durationMinutes as number || 0,
-      slidesUrl: talk.slidesUrl || "",
+      slides: talk.slides || "",
       videoUrl: talk.videoUrl || "",
       speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
         id: speaker.id?.current || "",
@@ -188,6 +192,7 @@ export const getSpeakers = async ({
         description,
         type,
         tags,
+        videoUrl,
         durationMinutes,
         "events": *[_type == "events" && references(^._id)]{
           "id": id.current,

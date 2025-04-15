@@ -20,7 +20,6 @@ interface WorkshopDetails {
     timeInfo: string;
     locationInfo: string;
     description: string;
-    priceInfo: string;
     maxAttendees: number;
     speaker: Speaker;
     topics: {
@@ -39,7 +38,6 @@ interface WorkshopPageProps {
 
 export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     const [isClient, setIsClient] = useState(false);
-    const [copySuccess, setCopySuccess] = useState(false);
     const { track } = useEvents();
 
     // Workshop data
@@ -51,7 +49,6 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         timeInfo: "18:30 - 20:30 (2 hours)",
         locationInfo: "Zürich (Venue TBD)",
         description: "Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. This workshop explores the world of multithreaded Node.js, showing how it is no longer a single-threaded environment. It introduces the Worker Threads API for offloading CPU-intensive tasks and the MessagePort API for thread communication. It discusses the challenges of cloning and transferring objects between threads and introduces tools like Piscina to simplify multithreading. Finally, it showcases Watt, a Node.js application server that leverages worker threads for isolated service execution and network-less HTTP communication.",
-        priceInfo: "Early bird: CHF 100",
         maxAttendees: 15,
         speaker: speaker,
         topics: [
@@ -103,22 +100,21 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             workshop_title: workshop.title
         });
 
-        // Initialize GetWaitlist when client is ready
+        // Initialize TixTree when client is ready
         if (typeof window !== 'undefined') {
-            // Load the GetWaitlist script dynamically
-            const script = document.createElement('script');
-            script.src = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.js';
-            script.async = true;
-            document.body.appendChild(script);
+            // Only add script if it doesn't already exist
+            if (!document.getElementById('tixtree-script')) {
+                // Load the TixTree script dynamically
+                const script = document.createElement('script');
+                script.src = 'https://www.tixtree.com/widgets/tixtree.js';
+                script.id = 'tixtree-script';
+                script.dataset.type = 'event';
+                script.dataset.id = 'workshop-nodejs-more-threads-than-you-think-2f54bcd4d4e9';
+                script.async = true;
+                document.body.appendChild(script);
+            }
 
-            // Add the stylesheet
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-            link.href = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.css';
-            document.head.appendChild(link);
-
-            // Add custom CSS for highlight effect and waitlist container width
+            // Add custom CSS for highlight effect
             const style = document.createElement('style');
             style.textContent = `
         @keyframes pulse-highlight {
@@ -134,19 +130,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
           overflow-x: hidden;
           max-width: 100%;
         }
-        /* Ensure GetWaitlist widget is responsive and centered */
-        #getWaitlistContainer iframe {
-          max-width: 100% !important;
+        /* Ensure TixTree widget is responsive */
+        #tixtree-wrapper {
           width: 100% !important;
           margin: 0 auto !important;
           display: block !important;
-        }
-        #getWaitlistContainer {
-          width: 100% !important;
-          margin: 0 auto !important;
-          padding: 0 !important;
-          display: flex !important;
-          justify-content: center !important;
         }
         /* Hide horizontal scrollbar */
         ::-webkit-scrollbar-horizontal {
@@ -191,9 +179,6 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     // Copy to clipboard function
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text).then(() => {
-            setCopySuccess(true);
-            setTimeout(() => setCopySuccess(false), 2000);
-
             track('workshop_share_completed', {
                 workshop_id: workshop.id,
                 workshop_title: workshop.title,
@@ -204,12 +189,12 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Scroll to registration function
     const scrollToRegistration = () => {
-        track('workshop_waitlist_button_clicked', {
+        track('workshop_registration_button_clicked', {
             workshop_id: workshop.id,
             workshop_title: workshop.title
         });
 
-        const registrationElement = document.getElementById('getWaitlistContainer');
+        const registrationElement = document.getElementById('registrationContainer');
         if (registrationElement) {
             // Get the element's position
             const elementPosition = registrationElement.getBoundingClientRect().top + window.pageYOffset;
@@ -221,10 +206,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             });
 
             // Add a highlight effect
-            registrationElement.classList.add('highlight-pulse');
-            setTimeout(() => {
-                registrationElement.classList.remove('highlight-pulse');
-            }, 2000);
+            const tixtreeElement = document.getElementById('tixtree-wrapper');
+            if (tixtreeElement) {
+                tixtreeElement.classList.add('highlight-pulse');
+                setTimeout(() => {
+                    tixtreeElement.classList.remove('highlight-pulse');
+                }, 2000);
+            }
         }
     };
 
@@ -307,14 +295,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     className="border-black text-black hover:bg-black hover:text-js text-sm sm:text-base py-2 sm:py-2.5"
                                 >
                                     <Share2 size={16} className="mr-1.5"/>
-                                    {copySuccess ? 'Link copied! 👍' : 'Share workshop'}
+                                    Share workshop
                                 </Button>
                             )}
                             <Button
                                 onClick={scrollToRegistration}
                                 className="bg-black text-js hover:bg-gray-800 text-sm sm:text-base py-2 sm:py-2.5"
                             >
-                                Register Now
+                                Get Your Ticket
                             </Button>
                         </div>
                     </motion.div>
@@ -351,15 +339,20 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
                                     
                                     <div className="bg-green-50 p-5 rounded-lg border-l-2 border-green-400">
-                                        <p className="text-base italic text-gray-700">&quot;Let me show you how Node.js is more than just a single-threaded runtime - it&apos;s a powerful platform for concurrent and parallel programming.&quot;</p>
+                                        <h4 className="font-bold text-sm mb-2 text-green-800">EXPERTISE</h4>
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Node.js Internals</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Performance Optimization</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Threading Models</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Async Patterns</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div className="bg-gray-50 p-5 rounded-lg mt-6 border border-gray-100">
-                                <p className="font-bold text-green-600 text-lg">{workshop.priceInfo}</p>
-                                <p className="text-base text-gray-500">Limited spots available</p>
-                                <p className="text-sm text-gray-600 mt-2">Prices will increase as the event approaches</p>
+                                <p className="font-medium text-gray-700">Limited to {workshop.maxAttendees} attendees</p>
+                                <p className="text-sm text-gray-600 mt-2">See ticket options below.</p>
                             </div>
                         </div>
                     </motion.div>
@@ -623,10 +616,6 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-4 sm:mb-5">
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="font-semibold text-gray-800 text-base">Workshop Price:</span>
-                                    <span className="text-black font-bold text-lg">{workshop.priceInfo}</span>
-                                </div>
-                                <div className="flex justify-between items-center mb-2">
                                     <span className="font-semibold text-gray-800 text-base">Date:</span>
                                     <span className="text-black text-base">{workshop.dateInfo}</span>
                                 </div>
@@ -650,7 +639,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-4">
                                 <p className="font-medium text-gray-800">
-                                    <span className="text-yellow-600 font-bold">Coming Soon!</span> Ticket sales will be opening shortly. Join the waitlist now to be notified when tickets are available. Refer your friends to improve your position on the waitlist!
+                                    Only {workshop.maxAttendees} spots available for this hands-on technical workshop.
                                 </p>
                             </div>
 
@@ -658,12 +647,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
                             </p>
 
-                            {/* GetWaitlist Component */}
+                            {/* TixTree Widget */}
                             <div
-                                id="getWaitlistContainer"
-                                data-waitlist_id="27398"
-                                data-widget_type="WIDGET_1"
-                                className="transition-all duration-300 overflow-x-hidden w-full flex justify-center"
+                                id="tixtree-wrapper"
+                                className="transition-all duration-300 overflow-x-hidden w-full"
                             ></div>
                         </motion.div>
                     </div>
@@ -700,7 +687,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 scrollToRegistration();
                             }}
                         >
-                            Join the Waitlist
+                            Get Your Ticket
                         </a>
                         <button
                             onClick={shareWorkshop}
@@ -713,9 +700,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                     <div className="mt-6 sm:mt-8 bg-gray-800 rounded-lg p-3 sm:p-4 max-w-xl mx-auto">
                         <p className="text-white text-base">
-                            &quot;This workshop cuts through the confusion about Node.js threading models. You&apos;ll walk away with practical skills to build more performant applications using multiple threads.&quot;
+                            Master the art of multi-threaded programming in Node.js and take your applications to the next level of performance and scalability.
                         </p>
-                        <p className="text-js font-bold mt-2 text-base">— {workshop.speaker.name}, Workshop Instructor</p>
+                        <p className="text-js font-bold mt-2 text-base">Join us on {workshop.dateInfo}</p>
                     </div>
                 </motion.div>
             </Section>

@@ -118,7 +118,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             link.href = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.css';
             document.head.appendChild(link);
 
-            // Add custom CSS for highlight effect
+            // Add custom CSS for highlight effect and waitlist container width
             const style = document.createElement('style');
             style.textContent = `
         @keyframes pulse-highlight {
@@ -134,15 +134,19 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
           overflow-x: hidden;
           max-width: 100%;
         }
-        /* Ensure GetWaitlist widget is responsive */
+        /* Ensure GetWaitlist widget is responsive and centered */
         #getWaitlistContainer iframe {
           max-width: 100% !important;
           width: 100% !important;
+          margin: 0 auto !important;
+          display: block !important;
         }
         #getWaitlistContainer {
           width: 100% !important;
-          margin: 0 !important;
+          margin: 0 auto !important;
           padding: 0 !important;
+          display: flex !important;
+          justify-content: center !important;
         }
         /* Hide horizontal scrollbar */
         ::-webkit-scrollbar-horizontal {
@@ -631,6 +635,12 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 </div>
                             </div>
 
+                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-4">
+                                <p className="font-medium text-gray-800">
+                                    <span className="text-yellow-600 font-bold">Coming Soon!</span> Ticket sales will be opening shortly. Join the waitlist now to be notified when tickets are available. Refer your friends to improve your position on the waitlist!
+                                </p>
+                            </div>
+
                             <p className="mb-4 font-medium text-base">
                                 Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
                             </p>
@@ -638,9 +648,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             {/* GetWaitlist Component */}
                             <div
                                 id="getWaitlistContainer"
-                                data-waitlist_id="26500"
+                                data-waitlist_id="27398"
                                 data-widget_type="WIDGET_1"
-                                className="transition-all duration-300 overflow-x-hidden w-full"
+                                className="transition-all duration-300 overflow-x-hidden w-full flex justify-center"
                             ></div>
 
                             <p className="text-sm sm:text-base text-gray-500 mt-3 text-center">
@@ -681,7 +691,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 scrollToRegistration();
                             }}
                         >
-                            Reserve Your Spot Now
+                            Join the Waitlist
                         </a>
                         <button
                             onClick={shareWorkshop}

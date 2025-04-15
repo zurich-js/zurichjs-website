@@ -325,25 +325,38 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         transition={{duration: 0.5, delay: 0.2}}
                         className="lg:w-1/2 mt-6 sm:mt-8 lg:mt-0"
                     >
-                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-4 sm:p-6 border-l-4 border-green-600 lg:sticky lg:top-24 relative">
-                            <div className="absolute right-0 top-0 bg-js rounded-full w-16 sm:w-24 h-16 sm:h-24 opacity-30"></div>
+                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-5 sm:p-8 border-l-4 border-green-600 lg:sticky lg:top-24 relative">
+                            <div className="absolute right-0 top-0 bg-js rounded-full w-16 sm:w-24 h-16 sm:h-24 opacity-20"></div>
+                            <div className="absolute -bottom-10 -left-10 bg-gradient-to-tr from-green-200 to-transparent rounded-full w-32 h-32 opacity-30"></div>
                             
-                            <div className="flex items-start mb-6">
-                                <Image
-                                    src={workshop.speaker.image}
-                                    alt={workshop.speaker.name}
-                                    width={90}
-                                    height={90}
-                                    className="rounded-full mr-4 border-2 border-green-100"
-                                />
-                                <div>
-                                    <p className="font-bold text-xl text-black">{workshop.speaker.name}</p>
-                                    <p className="text-base text-gray-600 mb-2">Node.js Core Team Member & Author</p>
-                                    <p className="text-base italic text-gray-700 bg-green-50 p-3 rounded-lg">&quot;Let me show you how Node.js is more than just a single-threaded runtime - it&apos;s a powerful platform for concurrent and parallel programming.&quot;</p>
+                            <div className="flex flex-col items-center mb-6">
+                                <div className="relative mb-5">
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-green-400 to-js rounded-full opacity-30 blur-lg transform scale-110"></div>
+                                    <Image
+                                        src={workshop.speaker.image}
+                                        alt={workshop.speaker.name}
+                                        width={220}
+                                        height={220}
+                                        className="rounded-full border-4 border-white shadow-lg relative z-10"
+                                    />
+                                </div>
+                                <div className="text-center">
+                                    <h3 className="font-bold text-2xl text-black mb-1">{workshop.speaker.name}</h3>
+                                    <p className="text-lg text-gray-600 mb-3">{workshop.speaker.title}</p>
+                                    
+                                    <div className="flex flex-wrap gap-2 justify-center mb-5">
+                                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Node.js Core Team</span>
+                                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Published Author</span>
+                                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Founder & CTO</span>
+                                    </div>
+                                    
+                                    <div className="bg-green-50 p-5 rounded-lg border-l-2 border-green-400">
+                                        <p className="text-base italic text-gray-700">&quot;Let me show you how Node.js is more than just a single-threaded runtime - it&apos;s a powerful platform for concurrent and parallel programming.&quot;</p>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div className="bg-gray-50 p-4 rounded-lg mb-5">
+                            <div className="bg-gray-50 p-5 rounded-lg mt-6 border border-gray-100">
                                 <p className="font-bold text-green-600 text-lg">{workshop.priceInfo}</p>
                                 <p className="text-base text-gray-500">Limited spots available</p>
                                 <p className="text-sm text-gray-600 mt-2">Prices will increase as the event approaches</p>

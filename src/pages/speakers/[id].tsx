@@ -72,7 +72,7 @@ export default function SpeakerDetail({ speaker }: { speaker: Speaker }) {
                                 className="absolute inset-0"
                             >
                                 <Image
-                                    src={speaker.image ? `${speaker.image}?h=500` : '/images/placeholder-speaker.jpg'}
+                                    src={speaker.image ? `${speaker.image}?h=600` : '/images/placeholder-speaker.jpg'}
                                     alt={speaker.name}
                                     fill
                                     className="object-cover"

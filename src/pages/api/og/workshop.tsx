@@ -184,7 +184,7 @@ export default async function handler(req: NextRequest) {
               >
                 {speakerImage ? (
                   <img
-                    src={absoluteSpeakerImage}
+                    src={`${absoluteSpeakerImage}?h=150`}
                     alt={speakerName}
                     width={180}
                     height={180}

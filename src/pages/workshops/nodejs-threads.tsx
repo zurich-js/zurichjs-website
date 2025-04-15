@@ -665,10 +665,6 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 data-widget_type="WIDGET_1"
                                 className="transition-all duration-300 overflow-x-hidden w-full flex justify-center"
                             ></div>
-
-                            <p className="text-sm sm:text-base text-gray-500 mt-3 text-center">
-                                Workshop ticket is sold separately from conference tickets
-                            </p>
                         </motion.div>
                     </div>
                 </div>

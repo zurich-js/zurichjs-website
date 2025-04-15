@@ -268,7 +268,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                                       title={speaker.name}
                                     >
                                       <Image
-                                        src={speaker.image}
+                                        src={`${speaker.image}?h=150`}
                                         alt={speaker.name}
                                         fill
                                         className="object-cover"

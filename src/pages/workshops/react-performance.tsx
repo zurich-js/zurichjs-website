@@ -48,7 +48,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         title: "Unleashing NextJS/React Performance & Resiliency",
         subtitle: "A Practical & Pragmatic Workshop for Developers",
         dateInfo: "June 15, 2024",
-        timeInfo: "Duration: 2 hours",
+        timeInfo: "Duration: 3 hours",
         locationInfo: "Technopark Zürich",
         description: "Getting pragmatic with building performant and resilient React applications. This workshop will delve into React and NextJs to create scalable, high-performance web applications made for the real world, exploring architectural patterns, rendering techniques, and optimization strategies. We'll tackle data fetching management, performance measurement, and state management, offering tools and insights for efficient coding and stakeholder communication. Practical exercises and real-world examples will equip developers with the skills to build and maintain solid web solutions, additionally, emphasizing the importance of observability and monitoring post-deployment.",
         priceInfo: "CHF 150 per person",

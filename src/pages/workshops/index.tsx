@@ -11,8 +11,26 @@ import SEO from '@/components/SEO';
 import { getSpeakers } from '@/sanity/queries';
 import type { Speaker } from '@/types';
 
+// Define workshop state type
+type WorkshopState = 'confirmed' | 'interest';
+
 // Workshop data
 const workshops = [
+  {
+    id: 'nodejs-threads',
+    title: 'Node.js: More Threads Than You Think',
+    subtitle: 'Exploring the Multi-Threaded Capabilities of Node.js',
+    description: 'Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. Learn about Worker Threads API, thread communication, and advanced multithreading tools.',
+    dateInfo: 'June 18, 2024',
+    timeInfo: '18:30 - 20:30',
+    locationInfo: 'Zürich (Venue TBD)',
+    maxAttendees: 15,
+    image: '/images/workshops/nodejs-threads.png',
+    iconColor: '#16a34a', // green-600
+    tag: '🧵 Multithreading',
+    speakerId: 'matteo-collina',
+    state: 'confirmed' as WorkshopState
+  },
   {
     id: 'accessibility-fundamentals',
     title: 'Web Accessibility Fundamentals',
@@ -25,7 +43,8 @@ const workshops = [
     image: '/images/workshops/web-accessibility.png',
     iconColor: '#0284c7', // sky-600
     tag: '🌐 Accessibility',
-    speakerId: 'aleksej-dix'
+    speakerId: 'aleksej-dix',
+    state: 'interest' as WorkshopState
   },
   {
     id: 'ai-workshop',
@@ -39,7 +58,8 @@ const workshops = [
     image: '/images/workshops/ai-powered-js-apps.png',
     iconColor: '#7c3aed', // violet-600
     tag: '🚀 AI Workshop',
-    speakerId: 'adele-kuzmiakova'
+    speakerId: 'adele-kuzmiakova',
+    state: 'interest' as WorkshopState
   },
   {
     id: 'react-performance',
@@ -53,7 +73,8 @@ const workshops = [
     image: '/images/workshops/react-performance.png',
     iconColor: '#2563eb', // blue-600
     tag: '🚀 React & Next.js Performance Foundations',
-    speakerId: 'faris-aziz'
+    speakerId: 'faris-aziz',
+    state: 'interest' as WorkshopState
   },
 ];
 
@@ -69,6 +90,24 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
     map[speaker.id] = speaker;
     return map;
   }, {} as Record<string, Speaker>);
+
+  // Function to render workshop state badge
+  const renderWorkshopStateBadge = (state: WorkshopState) => {
+    if (state === 'confirmed') {
+      return (
+        <span className="absolute bottom-4 right-4 z-20 bg-zurich text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md backdrop-blur-sm bg-opacity-90 border border-zurich/70">
+          <span className="flex items-center">🎟️ Confirmed</span>
+        </span>
+      );
+    } else if (state === 'interest') {
+      return (
+        <span className="absolute bottom-4 right-4 z-20 bg-black text-js px-3 py-1.5 rounded-lg text-xs font-bold shadow-md backdrop-blur-sm bg-opacity-90 border border-js/50">
+          <span className="flex items-center">📋 Gauging Interest</span>
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <Layout>
@@ -99,6 +138,21 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
       </Section>
 
       <Section variant="white">
+        <div className="mb-8 flex flex-col sm:flex-row justify-start items-start sm:items-center gap-6">
+          <div className="flex items-center space-x-2">
+            <div className="bg-zurich text-white px-2 py-1 rounded-md text-xs font-bold flex items-center">
+              <span>🎟️ Confirmed</span>
+            </div>
+            <span className="text-gray-600 text-sm">Tickets available now</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold flex items-center">
+              <span>📋 Gauging Interest</span>
+            </div>
+            <span className="text-gray-600 text-sm">Join waitlist to help make it happen</span>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {workshops.map((workshop, index) => {
             const speaker = speakersMap[workshop.speakerId];
@@ -115,13 +169,13 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                 >
                   <Link href={`/workshops/${workshop.id}`} className="block h-full flex flex-col">
                     <div className="relative h-48 md:h-64 lg:h-72 overflow-hidden">
-                      <div className="absolute top-4 left-4 z-10">
-                      </div>
+                      {renderWorkshopStateBadge(workshop.state)}
                       <div
                           className={`w-full h-full transition-transform duration-500 ${
                               hoveredWorkshop === workshop.id ? 'scale-110' : 'scale-100'
                           }`}
                       >
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-[1]"></div>
                         <Image 
                           src={workshop.image}
                           alt={workshop.title}
@@ -182,7 +236,11 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                         <div className={`text-yellow-600 font-bold text-xs md:text-base flex items-center transition-transform duration-300 ${
                             hoveredWorkshop === workshop.id ? 'translate-x-1' : ''
                         }`}>
-                          View Details <ArrowRight size={16} className="ml-1" />
+                          {workshop.state === 'confirmed' ? (
+                            <span>Buy Tickets <ArrowRight size={16} className="ml-1" /></span>
+                          ) : (
+                            <span>Join Waitlist <ArrowRight size={16} className="ml-1" /></span>
+                          )}
                         </div>
                       </div>
                     </div>

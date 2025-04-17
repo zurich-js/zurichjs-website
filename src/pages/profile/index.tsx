@@ -43,6 +43,35 @@ export default function Profile() {
             </p>
           </div>
 
+          {/* Slack CTA Banner */}
+          <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl shadow-lg p-8 mb-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 -mt-8 -mr-8 bg-purple-200 rounded-full opacity-70"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 -mb-6 -ml-6 bg-blue-200 rounded-full opacity-70"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
+              <div className="text-left mb-4 md:mb-0">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Connect With Our Community!</h2>
+                <p className="text-gray-700">Join our Slack workspace to engage directly with speakers, participate in polls, ask questions, and help shape the future of ZurichJS. It&apos;s where our community comes alive!</p>
+              </div>
+              <Button 
+                href="https://join.slack.com/t/zurichjs/shared_invite/zt-33h65a5nr-ReVlKRBWJ0SDRIZsveuoMQ"
+                variant="primary"
+                className="bg-[#4A154B] hover:bg-[#611f64] focus:ring-purple-500 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base shadow-md transform transition-transform duration-200 hover:scale-105 whitespace-nowrap"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 mr-1 sm:mr-2" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
+                  <g fill="none" fillRule="evenodd">
+                    <path d="M19.712.133a5.381 5.381 0 0 0-5.376 5.387 5.381 5.381 0 0 0 5.376 5.386h5.376V5.52A5.381 5.381 0 0 0 19.712.133m0 14.365H5.376A5.381 5.381 0 0 0 0 19.884a5.381 5.381 0 0 0 5.376 5.387h14.336a5.381 5.381 0 0 0 5.376-5.387 5.381 5.381 0 0 0-5.376-5.386" fill="#36C5F0"/>
+                    <path d="M53.76 19.884a5.381 5.381 0 0 0-5.376-5.386 5.381 5.381 0 0 0-5.376 5.386v5.387h5.376a5.381 5.381 0 0 0 5.376-5.387m-14.336 0V5.52A5.381 5.381 0 0 0 34.048.133a5.381 5.381 0 0 0-5.376 5.387v14.364a5.381 5.381 0 0 0 5.376 5.387 5.381 5.381 0 0 0 5.376-5.387" fill="#2EB67D"/>
+                    <path d="M34.048 54a5.381 5.381 0 0 0 5.376-5.387 5.381 5.381 0 0 0-5.376-5.386h-5.376v5.386A5.381 5.381 0 0 0 34.048 54m0-14.365h14.336a5.381 5.381 0 0 0 5.376-5.386 5.381 5.381 0 0 0-5.376-5.387H34.048a5.381 5.381 0 0 0-5.376 5.387 5.381 5.381 0 0 0 5.376 5.386" fill="#ECB22E"/>
+                    <path d="M0 34.249a5.381 5.381 0 0 0 5.376 5.386 5.381 5.381 0 0 0 5.376-5.386v-5.387H5.376A5.381 5.381 0 0 0 0 34.25m14.336-.001v14.364A5.381 5.381 0 0 0 19.712 54a5.381 5.381 0 0 0 5.376-5.387V34.25a5.381 5.381 0 0 0-5.376-5.387 5.381 5.381 0 0 0-5.376 5.387" fill="#E01E5A"/>
+                  </g>
+                </svg>
+                <span className="font-medium">Join Slack</span>
+              </Button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Personal Information Card */}
             <div className="bg-white bg-opacity-95 rounded-xl shadow-lg p-6 sm:p-8">

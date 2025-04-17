@@ -56,6 +56,7 @@ export default function Header() {
       id: 'events-speakers',
       items: [
         { name: 'Events', path: '/events' },
+        { name: 'Workshops', path: '/workshops' },
         { name: 'Speakers', path: '/speakers' },
       ]
     },

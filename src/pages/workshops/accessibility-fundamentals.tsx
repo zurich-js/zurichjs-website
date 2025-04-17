@@ -53,7 +53,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         timeInfo: "Duration: 2-3 hours",
         locationInfo: "TBD",
         description: "Prepare your web applications for the European Accessibility Act (EAA) with this comprehensive workshop on web accessibility fundamentals. Learn how to create inclusive digital experiences that comply with accessibility standards and regulations. This workshop covers essential concepts, practical techniques, and best practices to help you build accessible websites and applications. Through hands-on exercises and real-world examples, you'll gain the knowledge and skills to make your digital products accessible to everyone, including people with disabilities.",
-        priceInfo: "CHF 120 per person",
+        priceInfo: "CHF 150 per person",
         maxAttendees: 15,
         speaker: speaker,
         topics: [
@@ -339,7 +339,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 <div className="relative mb-5">
                                     <div className="absolute inset-0 bg-gradient-to-tr from-purple-400 to-js rounded-full opacity-30 blur-lg transform scale-110"></div>
                                     <Image
-                                        src={workshop.speaker.image}
+                                        src={`${workshop.speaker.image}?h=300`}
                                         alt={workshop.speaker.name}
                                         width={220}
                                         height={220}

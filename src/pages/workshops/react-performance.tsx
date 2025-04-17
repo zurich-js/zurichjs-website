@@ -347,7 +347,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             <div className="mt-6 pt-5 border-t border-gray-200">
                                 <div className="flex items-center mb-3">
                                     <Image
-                                        src={workshop.speaker.image}
+                                        src={`${workshop.speaker.image}?h=300`}
                                         alt={workshop.speaker.name}
                                         width={48}
                                         height={48}

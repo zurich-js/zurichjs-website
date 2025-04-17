@@ -42,10 +42,10 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "nodejs-threads-workshop-2024",
+        id: "nodejs-threads",
         title: "Node.js: More Threads Than You Think",
         subtitle: "Exploring the Multi-Threaded Capabilities of Node.js",
-        dateInfo: "June 18, 2024",
+        dateInfo: "June 18, 2025",
         timeInfo: "18:30 - 20:30 (2 hours)",
         locationInfo: "Zürich (Venue TBD)",
         description: "Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. This workshop explores the world of multithreaded Node.js, showing how it is no longer a single-threaded environment. It introduces the Worker Threads API for offloading CPU-intensive tasks and the MessagePort API for thread communication. It discusses the challenges of cloning and transferring objects between threads and introduces tools like Piscina to simplify multithreading. Finally, it showcases Watt, a Node.js application server that leverages worker threads for isolated service execution and network-less HTTP communication.",

@@ -46,7 +46,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         id: "astro-zero-to-hero-workshop-2024",
         title: "Astro: Zero to Hero",
         subtitle: "Build High-Performance Websites with Astro",
-        dateInfo: "June 23, 2024",
+        dateInfo: "July 23, 2025",
         timeInfo: "17:30 - 21:30 (4 hours)",
         locationInfo: "Zürich (Venue TBD)",
         price: "180 CHF",

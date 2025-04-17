@@ -46,7 +46,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "accessibility-fundamentals-workshop-2024",
+        id: "accessibility-fundamentals-workshop",
         title: "Getting Ready for the European Accessibility Act",
         subtitle: "Getting Accessibility Right with the Fundamentals",
         dateInfo: "TBD",

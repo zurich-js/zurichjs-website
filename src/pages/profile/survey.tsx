@@ -43,15 +43,28 @@ const interestOptions = [
     'Accessibility',
     'WebAssembly',
     'Web3',
+    'Svelte',
+    'Astro',
+    'Qwik',
+    'Tailwind CSS',
+    'SolidJS',
+    'Bun',
+    'Serverless',
+    'DevOps',
+    'AI Integration',
+    'Progressive Web Apps',
     'Other'
 ];
 
 // Experience levels
 const experienceLevels = [
     'Beginner (0-1 years)',
-    'Intermediate (1-3 years)',
-    'Advanced (3-5 years)',
-    'Expert (5+ years)'
+    'Junior (1-2 years)',
+    'Mid-Level (2-4 years)',
+    'Senior (4-6 years)',
+    'Expert (6-8 years)',
+    'Veteran (8-10 years)',
+    'Legend (10+ years)'
 ];
 
 export default function Survey() {

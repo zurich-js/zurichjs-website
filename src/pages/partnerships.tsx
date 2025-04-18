@@ -888,11 +888,12 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 export async function getStaticProps() {
 
   const partners = getPartners();
-  const upcomingEvent = await getUpcomingEvents();
+  const upcomingEvents = await getUpcomingEvents();
+
   return {
     props: {
       partners,
-      upcomingEvent: upcomingEvent[0],
+      upcomingEvent: upcomingEvents[0],
     },
   };
 }

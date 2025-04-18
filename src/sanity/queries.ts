@@ -88,7 +88,7 @@ const mapEventData = (event: SanityEvent) => {
 export type Event = ReturnType<typeof mapEventData>;
 
 export const getUpcomingEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime > now()] {
+  const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) {
     ...,
     "image": {
       "asset": {
@@ -111,12 +111,11 @@ export const getUpcomingEvents = async () => {
     }
   }`);
 
-
   return events.map(mapEventData);
 };
 
 export const getPastEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime < now()] {
+  const events = await client.fetch(`*[_type == "events" && datetime < now()] | order(datetime desc) {
     ...,
     "image": {
       "asset": {

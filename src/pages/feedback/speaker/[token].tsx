@@ -71,7 +71,7 @@ export default function SpeakerFeedbackPage() {
     return (
       <div className="flex">
         {[1, 2, 3, 4, 5].map((star) => (
-          <svg 
+          <svg
             key={star}
             className={`w-6 h-6 ${star <= Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'}`}
             fill="currentColor"
@@ -104,11 +104,11 @@ export default function SpeakerFeedbackPage() {
     if (!feedbackData.length) return null;
 
     const speaker = feedbackData[0]?.speaker;
-    
+
     // Group feedback by talk
     const talkMap = new Map();
     let totalRating = 0;
-    
+
     feedbackData.forEach(item => {
       if (!talkMap.has(item.talk._id)) {
         talkMap.set(item.talk._id, {
@@ -120,7 +120,7 @@ export default function SpeakerFeedbackPage() {
           comments: []
         });
       }
-      
+
       const talkData = talkMap.get(item.talk._id);
       talkData.ratings.push(item.rating);
       if (item.comment) talkData.comments.push(item.comment);
@@ -130,10 +130,10 @@ export default function SpeakerFeedbackPage() {
     // Calculate stats for each talk
     const feedbackByTalk = Array.from(talkMap.values()).map(talk => {
       const totalFeedback = talk.ratings.length;
-      const averageRating = totalFeedback > 0 
-        ? talk.ratings.reduce((sum: number, rating: number) => sum + rating, 0) / totalFeedback 
+      const averageRating = totalFeedback > 0
+        ? talk.ratings.reduce((sum: number, rating: number) => sum + rating, 0) / totalFeedback
         : 0;
-        
+
       return {
         talkTitle: talk.talkTitle,
         eventTitle: talk.eventTitle,
@@ -220,7 +220,7 @@ export default function SpeakerFeedbackPage() {
         title={`Speaker Feedback - ${speaker?.name}`}
         description={`Feedback for ${speaker?.name}'s talks at ZurichJS events.`}
       />
-      
+
       {/* Hero Section with Animation */}
       <section className="relative overflow-hidden text-gray-900">
         <div className="container mx-auto px-6 py-14 md:py-20 relative z-10">
@@ -231,7 +231,7 @@ export default function SpeakerFeedbackPage() {
             className="flex flex-col md:flex-row items-center gap-8"
           >
             <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl relative">
-              <Image 
+              <Image
                 src={speaker?.image ? `${speaker?.image}?h=300` : '/images/speakers/default.png'}
                 alt={speaker?.name || 'Speaker'}
                 width={144}
@@ -279,8 +279,8 @@ export default function SpeakerFeedbackPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Rating Distribution</h3>
                 <div className="h-6 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-amber-400 to-yellow-500" 
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-yellow-500"
                     style={{ width: `${ratingPercentage}%` }}
                   ></div>
                 </div>
@@ -289,7 +289,7 @@ export default function SpeakerFeedbackPage() {
                   <span>5</span>
                 </div>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <div className="text-center">
                   <p className="text-sm font-semibold text-gray-500">AVERAGE RATING</p>
@@ -303,20 +303,20 @@ export default function SpeakerFeedbackPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl shadow-md p-6 flex flex-col justify-center">
               <h3 className="text-xl font-semibold mb-4">Feedback Impact</h3>
               {(() => {
                 // Determine the feedback impact message and actions based on data
                 const avgRating = summary.averageRating;
                 const totalFeedback = summary.totalFeedback;
-                
+
                 // Not enough feedback to give a meaningful assessment
                 if (totalFeedback < 3) {
                   return (
                     <>
                       <p className="mb-6">
-                        Thank you for being part of the ZurichJS community! 
+                        Thank you for being part of the ZurichJS community!
                         We have limited feedback for your {totalFeedback === 1 ? 'talk' : 'talks'} so far.
                         As we collect more responses, we&apos;ll be able to provide more meaningful insights. We encourage you to reach out to attendees to submit more feedback.
                       </p>
@@ -335,13 +335,13 @@ export default function SpeakerFeedbackPage() {
                     </>
                   );
                 }
-                
+
                 // Excellent feedback (4.5+)
                 if (avgRating >= 4.5) {
                   return (
                     <>
                       <p className="mb-6">
-                        Wow! Your presentations have made an exceptional impact on our attendees. 
+                        Wow! Your presentations have made an exceptional impact on our attendees.
                         With an impressive average rating of {avgRating.toFixed(1)}, you&apos;re among our most valued speakers.
                         The ZurichJS community has really connected with your content and presentation style.
                       </p>
@@ -352,7 +352,7 @@ export default function SpeakerFeedbackPage() {
                           </svg>
                         </div>
                         <p className="ml-4 text-sm font-medium">
-                          We&apos;d love to have you speak again! 
+                          We&apos;d love to have you speak again!
                           <a href="https://zurichjs.com/cfp" className="underline hover:text-yellow-200 transition-colors ml-1">
                             Submit a new talk proposal
                           </a>
@@ -361,15 +361,15 @@ export default function SpeakerFeedbackPage() {
                     </>
                   );
                 }
-                
+
                 // Good feedback (3.7 - 4.4)
                 if (avgRating >= 3.7) {
                   return (
                     <>
                       <p className="mb-6">
-                        Thank you for your valuable contributions to the ZurichJS community! 
-                        With a solid average rating of {avgRating.toFixed(1)}, attendees have clearly 
-                        appreciated your presentations. Your talks have been well-received and have 
+                        Thank you for your valuable contributions to the ZurichJS community!
+                        With a solid average rating of {avgRating.toFixed(1)}, attendees have clearly
+                        appreciated your presentations. Your talks have been well-received and have
                         added significant value to our events.
                       </p>
                       <div className="flex items-center mb-3">
@@ -379,7 +379,7 @@ export default function SpeakerFeedbackPage() {
                           </svg>
                         </div>
                         <p className="ml-4 text-sm font-medium">
-                          We&apos;d love to have you speak again! 
+                          We&apos;d love to have you speak again!
                           <a href="https://zurichjs.com/cfp" className="underline hover:text-yellow-200 transition-colors ml-1">
                             Submit a new talk proposal
                           </a>
@@ -388,15 +388,15 @@ export default function SpeakerFeedbackPage() {
                     </>
                   );
                 }
-                
+
                 // Needs improvement (3.0 - 3.6)
                 if (avgRating >= 3.0) {
                   return (
                     <>
                       <p className="mb-6">
-                        Thank you for contributing to the ZurichJS community! Your presentations have received 
-                        an average rating of {avgRating.toFixed(1)}. While attendees found value in your talks, 
-                        there may be opportunities to enhance your presentation style or content to create an even 
+                        Thank you for contributing to the ZurichJS community! Your presentations have received
+                        an average rating of {avgRating.toFixed(1)}. While attendees found value in your talks,
+                        there may be opportunities to enhance your presentation style or content to create an even
                         stronger connection with our audience.
                       </p>
                       <div className="flex items-center mb-3">
@@ -426,12 +426,12 @@ export default function SpeakerFeedbackPage() {
                     </>
                   );
                 }
-                
+
                 // Significant improvement needed (< 3.0)
                 return (
                   <>
                     <p className="mb-6">
-                      Thank you for being part of the ZurichJS community! 
+                      Thank you for being part of the ZurichJS community!
                       We have limited feedback for your {totalFeedback === 1 ? 'talk' : 'talks'} so far.
                       As we collect more responses, we&apos;ll be able to provide more meaningful insights.
                     </p>
@@ -494,7 +494,7 @@ export default function SpeakerFeedbackPage() {
                       <span className="text-yellow-700 font-bold">{talk.averageRating.toFixed(1)}</span>
                     </div>
                   </div>
-                  
+
                   <p className="text-gray-500 text-sm mb-4 flex items-center">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -503,13 +503,13 @@ export default function SpeakerFeedbackPage() {
                     <span className="mx-2">•</span>
                     {talk.eventTitle}
                   </p>
-                  
+
                   <div className="flex gap-2 mb-4">
                     <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">
                       {talk.totalFeedback} {talk.totalFeedback === 1 ? 'response' : 'responses'}
                     </span>
                   </div>
-                  
+
                   <div className="mb-4">{renderStars(talk.averageRating)}</div>
 
                   {talk.comments.length > 0 && (
@@ -523,8 +523,8 @@ export default function SpeakerFeedbackPage() {
                         </h4>
                         <div className="space-y-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                           {talk.comments.map((comment: string, idx: number) => (
-                            <div 
-                              key={idx} 
+                            <div
+                              key={idx}
                               className="p-3 bg-gray-50 rounded-lg border-l-4 border-yellow-400 hover:bg-gray-100 transition-colors"
                             >
                               <p className="text-gray-700">{comment}</p>

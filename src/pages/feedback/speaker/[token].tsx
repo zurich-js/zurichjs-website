@@ -222,7 +222,7 @@ export default function SpeakerFeedbackPage() {
       />
       
       {/* Hero Section with Animation */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900">
+      <section className="relative overflow-hidden text-gray-900">
         <div className="container mx-auto px-6 py-14 md:py-20 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -230,13 +230,13 @@ export default function SpeakerFeedbackPage() {
             transition={{ duration: 0.5 }}
             className="flex flex-col md:flex-row items-center gap-8"
           >
-            <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl">
+            <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-4 border-white shadow-xl relative">
               <Image 
                 src={speaker?.image ? `${speaker?.image}?h=300` : '/images/speakers/default.png'}
                 alt={speaker?.name || 'Speaker'}
-                className="object-cover"
-                fill
-                sizes="(max-width: 768px) 7rem, 9rem"
+                width={144}
+                height={144}
+                className="object-cover w-full h-full"
                 priority
               />
             </div>
@@ -489,8 +489,8 @@ export default function SpeakerFeedbackPage() {
               >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-gray-800">{talk.talkTitle}</h3>
-                    <div className="bg-yellow-100 rounded-full h-10 w-10 flex items-center justify-center">
+                    <h3 className="text-xl font-bold text-gray-800 flex-1 pr-3">{talk.talkTitle}</h3>
+                    <div className="bg-yellow-100 rounded-full h-10 w-10 flex-shrink-0 flex items-center justify-center">
                       <span className="text-yellow-700 font-bold">{talk.averageRating.toFixed(1)}</span>
                     </div>
                   </div>
@@ -515,12 +515,17 @@ export default function SpeakerFeedbackPage() {
                   {talk.comments.length > 0 && (
                     <>
                       <div className="border-t border-gray-100 my-4 pt-4">
-                        <h4 className="text-lg font-semibold mb-3 text-gray-800">Attendee Comments</h4>
-                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                        <h4 className="text-lg font-semibold mb-3 text-gray-800 flex items-center">
+                          <svg className="w-5 h-5 mr-1 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                          </svg>
+                          Attendee Comments
+                        </h4>
+                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                           {talk.comments.map((comment: string, idx: number) => (
                             <div 
                               key={idx} 
-                              className="p-3 bg-gray-50 rounded-lg border-l-4 border-yellow-400"
+                              className="p-3 bg-gray-50 rounded-lg border-l-4 border-yellow-400 hover:bg-gray-100 transition-colors"
                             >
                               <p className="text-gray-700">{comment}</p>
                             </div>

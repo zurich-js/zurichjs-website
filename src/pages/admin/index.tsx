@@ -1,8 +1,6 @@
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { getAuth, clerkClient } from '@clerk/nextjs/server';
 import { motion } from 'framer-motion';
 import { MessageSquare, BarChart } from 'lucide-react';
-import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 
 import Layout from '@/components/layout/Layout';
@@ -41,7 +39,7 @@ export default function AdminDashboard() {
                 <div className="mb-12">
                     <h2 className="text-xl font-semibold mb-4">Select Organization</h2>
                     <div className="bg-white rounded-lg shadow-md p-6">
-                        <OrganizationSwitcher/>
+                        <OrganizationSwitcher />
                     </div>
                 </div>
 
@@ -74,37 +72,3 @@ export default function AdminDashboard() {
         </Layout>
     );
 }
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-    const { userId } = await getAuth(context.req);
-
-    if (!userId) {
-        return {
-            notFound: true,
-        };
-    }
-
-    try {
-        // Get the user's organization memberships
-        const clerk = await clerkClient();
-        const userMembershipsResponse = await clerk.users.getOrganizationMembershipList({
-            userId,
-        });
-
-        // If the user has no organization memberships, return 404
-        if (!userMembershipsResponse || !userMembershipsResponse.data || userMembershipsResponse.data.length === 0) {
-            return {
-                notFound: true,
-            };
-        }
-
-        return {
-            props: {},
-        };
-    } catch (error) {
-        console.error('Error fetching organization memberships:', error);
-        return {
-            notFound: true,
-        };
-    }
-};

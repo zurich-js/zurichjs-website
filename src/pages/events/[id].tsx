@@ -187,9 +187,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </div>
 
               {event.description ? (
-                <p className="text-lg mb-6">
+                <div className="text-lg mb-6 whitespace-pre-line">
                   {event.description}
-                </p>
+                </div>
               ) : (
                 <div className="text-lg mb-6">
                   <p className="italic">We&apos;re working on bringing this event to life! Check back soon for more details on this exciting JavaScript gathering.</p>
@@ -601,11 +601,43 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         </p>
                       </div>
                     </details>
+
+                    {/* Financial Support Notice */}
+                    <details className="mt-4 bg-gradient-to-br from-blue-50 to-white rounded-lg border border-zurich/30 shadow-sm overflow-hidden">
+                      <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-blue-50/50 transition-colors">
+                        <h4 className="font-semibold text-blue-700 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                          </svg>
+                          Need Financial Support?
+                        </h4>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-700">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </summary>
+                      <div className="px-4 pb-4">
+                        <p className="text-sm text-gray-700 mb-3">
+                          Don&apos;t let cost be a barrier to learning. We offer scholarships, discounts, and special rates for underrepresented groups, career changers, and those with accessibility needs.
+                        </p>
+                        <a 
+                          href="mailto:hello@zurichjs.com" 
+                          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                          </svg>
+                          Get in Touch for Support Options
+                        </a>
+                      </div>
+                    </details>
+
                     {isUpcoming && event.ticketSaleUrl && (
                       <Button
                         href={event.ticketSaleUrl}
                         variant="primary"
-                        className="bg-zurich hover:bg-blue-600 text-white"
+                        className="bg-zurich hover:bg-blue-600 text-white mt-4"
                         target="_blank"
                         rel="noopener noreferrer"
                       >

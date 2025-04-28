@@ -3,6 +3,7 @@ import { User } from "lucide-react";
 import { useRouter } from 'next/router';
 
 import Layout from '@/components/layout/Layout';
+import CouponsSection from '@/components/profile/CouponsSection';
 import Button from '@/components/ui/Button';
 import { useCheckUserSurvey } from '@/hooks/useCheckUserSurvey';
 
@@ -42,6 +43,8 @@ export default function Profile() {
               Welcome back, <span className="font-bold">{user.firstName || user.username}</span>!
             </p>
           </div>
+
+          <CouponsSection />
 
           {/* Slack CTA Banner */}
           <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl shadow-lg p-8 mb-8 relative overflow-hidden">

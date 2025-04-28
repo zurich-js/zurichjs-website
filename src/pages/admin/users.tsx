@@ -16,9 +16,7 @@ interface ClerkUser {
   lastName: string | null;
   username: string | null;
   imageUrl: string;
-  primaryEmailAddress: {
-    emailAddress: string;
-  } | null;
+  primaryEmailAddress: string | null;
   lastSignInAt: number | null;
   createdAt: number;
   lastActiveAt: number | null;
@@ -31,6 +29,7 @@ interface ClerkUser {
       newsletter: boolean;
     };
   };
+  emailAddresses?: { emailAddress: string }[];
 }
 
 interface Pagination {
@@ -53,8 +52,6 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showStats, setShowStats] = useState(true);
-
-  console.log(users);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,8 +103,6 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
       minute: '2-digit',
     });
   };
-
-  console.log(users);
 
   return (
     <Layout>
@@ -220,7 +215,9 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{user.primaryEmailAddress?.emailAddress || 'No email'}</div>
+                      <div className="text-sm text-gray-900">
+                        {user.emailAddresses?.[0]?.emailAddress || 'No email'}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-500">

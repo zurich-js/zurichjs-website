@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Building, Users, Gift, Coffee, Rocket, CheckCircle, MapPin } from 'lucide-react';
+import { Building, Users, Gift, Coffee, Rocket, CheckCircle, MapPin, Home, Calendar, Wrench } from 'lucide-react';
 import Image from 'next/image';
 import { useState, ChangeEvent, FormEvent } from 'react';
 
@@ -7,20 +7,12 @@ import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
-import { getPartners } from '@/data';
+import { getPartners, getPartnersByType } from '@/data';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import { getUpcomingEvents } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
-interface Partner {
-  id: string;
-  name: string;
-  logo: string;
-  url: string;
-  description?: string;
-}
-
 interface PartnershipTier {
   name: string;
   price: string;
@@ -41,7 +33,7 @@ interface FormState {
 }
 
 interface PartnershipPageProps {
-  partners: Partner[];
+  partners: ReturnType<typeof getPartners>;
   upcomingEvent: {
     title: string;
     date: string;
@@ -140,6 +132,12 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
       highlighted: true,
     },
   ];
+
+  // Get partners by type
+  const venuePartners = getPartnersByType('venue');
+  const conferencePartners = getPartnersByType('conference');
+  const communityPartners = getPartnersByType('community');
+  const supportingPartners = getPartnersByType('supporting');
 
   // Handle form input changes
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -490,27 +488,117 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
         {/* Current Partners */}
         {partners.length > 0 && (
           <Section variant="white">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl font-bold mb-3 text-blue-700">Our Amazing Partners 💛</h2>
-                <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                  These awesome companies help make ZurichJS possible. Thank you for your support!
-                </p>
-              </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl font-bold mb-4 text-blue-700">Our Partners 💛</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                We&apos;re grateful for the support of our partners who help make ZurichJS possible.
+              </p>
+            </motion.div>
 
+            {/* Partnership Types Navigation */}
+            <div className="mb-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-blue-50 p-6 rounded-lg border border-blue-100 hover:border-blue-200 transition-colors flex flex-col h-full"
+                >
+                  <div className="flex items-center mb-4">
+                    <Home className="text-blue-700 mr-3" size={24} />
+                    <h3 className="text-xl font-bold text-gray-900">Venue Partners</h3>
+                  </div>
+                  <p className="text-gray-700 mb-4 flex-grow">
+                    Companies that provide their spaces for our meetups
+                  </p>
+                  <div className="text-sm text-blue-700 font-medium mt-auto">
+                    {venuePartners.length} Partners
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="bg-purple-50 p-6 rounded-lg border border-purple-100 hover:border-purple-200 transition-colors flex flex-col h-full"
+                >
+                  <div className="flex items-center mb-4">
+                    <Calendar className="text-purple-700 mr-3" size={24} />
+                    <h3 className="text-xl font-bold text-gray-900">Conference Partners</h3>
+                  </div>
+                  <p className="text-gray-700 mb-4 flex-grow">
+                    Conferences offering exclusive discounts to our members
+                  </p>
+                  <div className="text-sm text-purple-700 font-medium mt-auto">
+                    {conferencePartners.length} Partners
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="bg-green-50 p-6 rounded-lg border border-green-100 hover:border-green-200 transition-colors flex flex-col h-full"
+                >
+                  <div className="flex items-center mb-4">
+                    <Users className="text-green-700 mr-3" size={24} />
+                    <h3 className="text-xl font-bold text-gray-900">Community Partners</h3>
+                  </div>
+                  <p className="text-gray-700 mb-4 flex-grow">
+                    Fellow tech communities we collaborate with
+                  </p>
+                  <div className="text-sm text-green-700 font-medium mt-auto">
+                    {communityPartners.length} Partners
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="bg-orange-50 p-6 rounded-lg border border-orange-100 hover:border-orange-200 transition-colors flex flex-col h-full"
+                >
+                  <div className="flex items-center mb-4">
+                    <Wrench className="text-orange-700 mr-3" size={24} />
+                    <h3 className="text-xl font-bold text-gray-900">Supporting Partners</h3>
+                  </div>
+                  <p className="text-gray-700 mb-4 flex-grow">
+                    Companies providing resources and tools
+                  </p>
+                  <div className="text-sm text-orange-700 font-medium mt-auto">
+                    {supportingPartners.length} Partners
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Venue Partners Section */}
+            <div className="mb-20">
+              <div className="flex items-center mb-8">
+                <Home className="text-blue-700 mr-3" size={28} />
+                <h3 className="text-2xl font-bold text-gray-900">Venue Partners</h3>
+              </div>
+              <p className="text-gray-700 mb-8 max-w-3xl">
+                Our venue partners generously provide their spaces for ZurichJS meetups, helping us create memorable events for our community.
+              </p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
-                {partners.map((partner) => (
+                {venuePartners.map((partner) => (
                   <motion.a
                     key={partner.id}
                     href={partner.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-full max-w-[180px] h-28 relative group"
+                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                     whileHover={{
                       y: -5,
                       transition: { duration: 0.2 }
@@ -530,6 +618,121 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                   </motion.a>
                 ))}
               </div>
+            </div>
+
+            {/* Conference Partners Section */}
+            <div className="mb-20">
+              <div className="flex items-center mb-8">
+                <Calendar className="text-purple-700 mr-3" size={28} />
+                <h3 className="text-2xl font-bold text-gray-900">Conference Partners</h3>
+              </div>
+              <p className="text-gray-700 mb-8 max-w-3xl">
+                Our conference partners offer exclusive discounts and special access to ZurichJS members for their events.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                {conferencePartners.map((partner) => (
+                  <motion.a
+                    key={partner.id}
+                    href={partner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{
+                      y: -5,
+                      transition: { duration: 0.2 }
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    onClick={() => handlePartnerClick(partner.name)}
+                  >
+                    <Image
+                      src={partner.logo}
+                      alt={partner.name}
+                      fill
+                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                    />
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+
+            {/* Community Partners Section */}
+            <div className="mb-20">
+              <div className="flex items-center mb-8">
+                <Users className="text-green-700 mr-3" size={28} />
+                <h3 className="text-2xl font-bold text-gray-900">Community Partners</h3>
+              </div>
+              <p className="text-gray-700 mb-8 max-w-3xl">
+                Our community partners are fellow tech communities that we collaborate with to strengthen the JavaScript ecosystem in our region.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                {communityPartners.map((partner) => (
+                  <motion.a
+                    key={partner.id}
+                    href={partner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{
+                      y: -5,
+                      transition: { duration: 0.2 }
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    onClick={() => handlePartnerClick(partner.name)}
+                  >
+                    <Image
+                      src={partner.logo}
+                      alt={partner.name}
+                      fill
+                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                    />
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+
+            {/* Supporting Partners Section */}
+            <div className="mb-20">
+              <div className="flex items-center mb-8">
+                <Wrench className="text-orange-700 mr-3" size={28} />
+                <h3 className="text-2xl font-bold text-gray-900">Supporting Partners</h3>
+              </div>
+              <p className="text-gray-700 mb-8 max-w-3xl">
+                Our supporting partners provide valuable resources, tools, and services that help us run ZurichJS more effectively.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                {supportingPartners.map((partner) => (
+                  <motion.a
+                    key={partner.id}
+                    href={partner.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                    whileHover={{
+                      y: -5,
+                      transition: { duration: 0.2 }
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    onClick={() => handlePartnerClick(partner.name)}
+                  >
+                    <Image
+                      src={partner.logo}
+                      alt={partner.name}
+                      fill
+                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                    />
+                  </motion.a>
+                ))}
+              </div>
+            </div>
           </Section>
         )}
 

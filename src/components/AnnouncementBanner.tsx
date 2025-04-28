@@ -2,8 +2,8 @@ import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
-import { Announcement } from '@/sanity/queries';
 import useEvents from '@/hooks/useEvents';
+import { Announcement } from '@/sanity/queries';
 
 const ANNOUNCEMENT_STORAGE_KEY = 'zurichjs_announcements';
 const DISMISSED_ANNOUNCEMENTS_KEY = 'zurichjs_dismissed_announcements';

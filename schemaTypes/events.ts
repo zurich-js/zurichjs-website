@@ -12,8 +12,11 @@ export default defineType({
     { name: 'address', title: 'Address', type: 'string' },
     { name: 'description', title: 'Description', type: 'text' },
     { name: 'meetupUrl', title: 'Meetup URL', type: 'url' },
+    { name: 'isProMeetup', title: 'Is Pro Meetup', type: 'boolean', initialValue: false },
+    { name: 'ticketSaleUrl', title: 'Ticket Sale URL', type: 'url' },
     { name: 'image', title: 'Image', type: 'image' },
     { name: 'attendees', title: 'Attendees', type: 'number' },
+    { name: 'excludeFromStats', title: 'Exclude from Stats', type: 'boolean', initialValue: false },
     { 
       name: 'talks', 
       title: 'Talks', 

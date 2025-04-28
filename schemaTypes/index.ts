@@ -5,6 +5,7 @@ import partner from './partner';
 import talk from './talk';
 import talkSubmission from './talkSubmission';
 import feedback from './feedback';
+import announcement from './announcement';
 
 export const schemaTypes = [
   event,
@@ -13,5 +14,6 @@ export const schemaTypes = [
   partner,
   talk,
   talkSubmission,
-  feedback
+  feedback,
+  announcement,
 ];

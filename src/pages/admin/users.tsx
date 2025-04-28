@@ -53,6 +53,8 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showStats, setShowStats] = useState(true);
+
+  console.log(users);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

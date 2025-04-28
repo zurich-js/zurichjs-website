@@ -128,12 +128,41 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
             initial={{opacity: 0, y: 20}}
             animate={{opacity: 1, y: 0}}
             transition={{duration: 0.5}}
-            className="text-center mb-8 md:mb-12"
+            className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start justify-between"
         >
-          <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 text-black">ZurichJS Workshops</h1>
-          <p className="text-lg md:text-2xl max-w-3xl mx-auto text-gray-800">
-            Hands-on learning experiences to level up your JavaScript skills
-          </p>
+          <div className="lg:w-2/3 w-full">
+            <h1 className="text-3xl md:text-5xl font-bold mb-3 md:mb-4 text-black">ZurichJS Workshops</h1>
+            <p className="text-lg md:text-2xl text-gray-800">
+              Hands-on learning experiences to level up your JavaScript skills
+            </p>
+          </div>
+          
+          <div className="lg:w-1/3 w-full">
+            <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 border-2 border-zurich shadow-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="bg-zurich/10 p-2 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zurich">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </div>
+                <h3 className="font-bold text-zurich text-lg sm:text-xl">Need Financial Support?</h3>
+              </div>
+              <p className="text-gray-800 mb-4 text-sm sm:text-base">
+                Don&apos;t let cost be a barrier to learning. We offer scholarships, discounts, and special rates for underrepresented groups, career changers, and those with accessibility needs.
+              </p>
+              <a 
+                href="mailto:hello@zurichjs.com" 
+                className="inline-flex items-center gap-2 bg-zurich text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-zurich/90 transition-colors w-full justify-center text-base sm:text-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span className="truncate">Get in Touch for Support Options</span>
+              </a>
+            </div>
+          </div>
         </motion.div>
       </Section>
 

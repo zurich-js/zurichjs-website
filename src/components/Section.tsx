@@ -25,8 +25,8 @@ const variantStyles: Record<SectionVariant, string> = {
 
 const paddingStyles: Record<SectionPadding, string> = {
   'sm': 'py-4 lg:py-8',
-  'md': 'py-12 lg:py-16',
-  'lg': 'py-24 lg:py-32'
+  'md': 'py-4 lg:py-16',
+  'lg': 'py-4 lg:py-24'
 };
 
 export default function Section({

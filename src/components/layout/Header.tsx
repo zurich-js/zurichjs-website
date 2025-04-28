@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -95,8 +95,9 @@ export default function Header() {
 
   // Helper functions to generate class names
   const getHeaderClasses = () => {
-    return `fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-black text-js shadow-md py-2' : 'bg-transparent text-black py-4'
-      }`;
+    return `w-full transition-all duration-300 ${
+      scrolled ? 'bg-black text-js shadow-md py-2' : 'bg-transparent text-black py-2 lg:py-4'
+    }`;
   };
 
   const getLinkActiveClasses = (path: string) => {
@@ -114,13 +115,15 @@ export default function Header() {
   };
 
   const getMobileLinkClasses = (path: string) => {
-    return `block py-2 hover:text-blue-600 transition-colors ${router.pathname === path ? 'font-bold' : ''
-      }`;
+    return `block py-2.5 text-white hover:text-js transition-colors ${
+      router.pathname === path ? 'font-bold text-js' : ''
+    }`;
   };
 
   const getMobileSubItemClasses = (path: string) => {
-    return `block py-1.5 hover:text-blue-600 transition-colors ${router.pathname === path ? 'font-bold' : ''
-      }`;
+    return `block py-2 text-white/80 hover:text-js transition-colors ${
+      router.pathname === path ? 'font-bold text-js' : ''
+    }`;
   };
 
   const getSignInButtonClasses = () => {
@@ -138,8 +141,8 @@ export default function Header() {
   // Add a specific function for the mobile coffee button
   const getMobileCoffeeButtonClasses = () => {
     return `
-      bg-js-dark text-black px-4 py-2 rounded-full font-medium w-full
-      inline-flex items-center justify-center gap-2
+      bg-js text-black px-4 py-2.5 rounded-full font-medium w-full
+      inline-flex items-center justify-center gap-2 hover:bg-js-dark
     `;
   };
 
@@ -245,10 +248,9 @@ export default function Header() {
 
           {/* Mobile menu button */}
           <div className="lg:hidden flex items-center">
-
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="focus:outline-none ml-6"
+              className="text-black hover:text-gray-800 transition-colors"
               aria-label="Toggle menu"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
@@ -257,103 +259,109 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Navigation with Accordions */}
+      {/* Mobile menu */}
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="lg:hidden bg-black text-js mt-3"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="lg:hidden bg-black text-white border-t border-js/20 mt-1"
         >
-          <nav className="container mx-auto px-6 py-4">
-            {/* User account info */}
-            <SignedIn>
-              <div className="flex items-center justify-between border-b border-gray-800 pb-4 mb-3">
-                <Link
-                  href="/profile"
-                  className={`py-2 hover:text-blue-600 transition-colors ${router.pathname.startsWith('/profile') ? 'font-bold' : ''}`}
-                >
-                  Profile
-                </Link>
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: 'w-8 h-8'
-                    }
-                  }}
-                  afterSignOutUrl="/"
-                />
-              </div>
-            </SignedIn>
-
-            <ul className="space-y-3">
-              {navItems.map((item) => (
-                <li key={item.name} className="border-b border-gray-800 pb-2">
-                  {item.path ? (
-                    <Link
-                      href={item.path}
-                      className={getMobileLinkClasses(item.path)}
-                    >
-                      {item.name}
-                    </Link>
-                  ) : item.id && item.items ? (
-                    <>
-                      <button
-                        onClick={() => item.id && toggleMobileAccordion(item.id)}
-                        className="w-full text-left py-2 flex justify-between items-center"
-                      >
-                        <span>{item.name}</span>
-                        {item.id && mobileExpanded.includes(item.id) ?
-                          <ChevronDown size={18} /> :
-                          <ChevronRight size={18} />
-                        }
-                      </button>
-
-                      {/* Accordion content */}
-                      {item.id && mobileExpanded.includes(item.id) && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="pl-4 mt-1 space-y-2"
-                        >
-                          {item.items.map((subItem) => (
-                            <Link
-                              key={subItem.path}
-                              href={subItem.path}
-                              className={getMobileSubItemClasses(subItem.path)}
-                            >
-                              {subItem.name}
-                            </Link>
-                          ))}
-                        </motion.div>
-                      )}
-                    </>
-                  ) : null}
-                </li>
-              ))}
-
-              <li className="mt-4 border-b border-gray-800 pb-2">
-                <Link
-                  href={coffeeItem.path || '#'}
-                  className={getMobileCoffeeButtonClasses()}
-                >
-                  <span>☕</span>
-                  <span className="font-semibold">Buy us a coffee</span>
-                </Link>
-              </li>
-            </ul>
-
-            {/* Auth button for mobile */}
-            <SignedOut>
-              <div className="mt-4 pb-2">
+          <div className="container mx-auto px-6">
+            <div className="py-4 border-b border-js/20">
+              <SignedIn>
+                <div className="flex items-center justify-between">
+                  <Link
+                    href="/profile"
+                    className="text-white hover:text-js transition-colors"
+                  >
+                    Profile
+                  </Link>
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        userButtonAvatarBox: 'w-8 h-8'
+                      }
+                    }}
+                    afterSignOutUrl="/"
+                  />
+                </div>
+              </SignedIn>
+              <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="bg-js-dark text-black px-4 py-2 rounded-full font-medium w-full">
+                  <button className="w-full bg-js text-black px-4 py-2 rounded-full font-medium hover:bg-js-dark transition-colors">
                     Sign In
                   </button>
                 </SignInButton>
-              </div>
-            </SignedOut>
-          </nav>
+              </SignedOut>
+            </div>
+            <ul className="py-4 space-y-1">
+              {navItems.map((item) => (
+                <li key={item.name}>
+                  {item.path ? (
+                    <Link
+                      href={item.path}
+                      className={getMobileLinkClasses(item.path || '')}
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <div>
+                      <button
+                        onClick={() => toggleMobileAccordion(item.id || '')}
+                        className="flex items-center justify-between w-full py-2.5 text-white hover:text-js transition-colors"
+                      >
+                        <span>{item.name}</span>
+                        <ChevronRight
+                          size={16}
+                          className={`transform transition-transform duration-200 ${
+                            mobileExpanded.includes(item.id || '') ? 'rotate-90' : ''
+                          }`}
+                        />
+                      </button>
+                      <AnimatePresence>
+                        {item.items && mobileExpanded.includes(item.id || '') && (
+                          <motion.ul
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            className="pl-4 overflow-hidden"
+                          >
+                            {item.items.map((subItem) => (
+                              <motion.li
+                                key={subItem.path}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <Link
+                                  href={subItem.path}
+                                  className={getMobileSubItemClasses(subItem.path)}
+                                >
+                                  {subItem.name}
+                                </Link>
+                              </motion.li>
+                            ))}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+            <div className="py-4 border-t border-js/20">
+              <Link
+                href={coffeeItem.path || '#'}
+                className={getMobileCoffeeButtonClasses()}
+              >
+                <span>☕</span>
+                <span>Buy us a coffee</span>
+              </Link>
+            </div>
+          </div>
         </motion.div>
       )}
     </header>

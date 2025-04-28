@@ -219,7 +219,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             />
 
             {/* Hero Section */}
-            <Section variant="gradient" padding="lg" className="mt-20">
+            <Section variant="gradient" padding="lg" className="mt-2 sm:mt-3">
                 <div className="mb-4">
                     <Link href="/workshops" className="inline-flex items-center text-black hover:underline">
                         <ChevronLeft size={16} className="mr-1"/>

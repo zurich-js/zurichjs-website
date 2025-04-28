@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
+import AnnouncementBanner from '../AnnouncementBanner';
 import Button from '../ui/Button';
 
 import Footer from './Footer';
@@ -26,8 +27,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">
-      <Header />
-      <main className="flex-grow">{children}
+      <div className="sticky top-0 z-50">
+        <AnnouncementBanner />
+        <div className="relative bg-transparent">
+          <Header />
+        </div>
+      </div>
+      <main className="flex-grow pt-2 lg:pt-4">{children}
 
         <div className="fixed bottom-6 right-6 z-50">
           {showSupportButton && (

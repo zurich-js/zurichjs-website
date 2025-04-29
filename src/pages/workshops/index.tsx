@@ -23,7 +23,7 @@ const workshops = [
     description: 'Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. Learn about Worker Threads API, thread communication, and advanced multithreading tools.',
     dateInfo: 'June 18, 2025',
     timeInfo: '18:30 - 20:30',
-    locationInfo: 'Zürich (Venue TBD)',
+    locationInfo: 'ORBIZ Josef, Zürich',
     maxAttendees: 15,
     image: '/images/workshops/nodejs-threads.png',
     iconColor: '#16a34a', // green-600

@@ -141,6 +141,24 @@ export default function AnnouncementBanner() {
     }
   };
 
+  const handleCTAClick = () => {
+    if (currentAnnouncement && currentAnnouncement.cta) {
+      // Track CTA click
+      track('announcement_cta_clicked', {
+        announcementId: currentAnnouncement.id,
+        announcementType: currentAnnouncement.type,
+        title: currentAnnouncement.title,
+        ctaText: currentAnnouncement.cta.text,
+        ctaUrl: currentAnnouncement.cta.href,
+        isLoggedIn: state.isLoggedIn,
+        viewCount: state.viewCount
+      });
+
+      // Dismiss the announcement
+      handleDismiss();
+    }
+  };
+
   // Don't render anything until we've fully initialized
   if (!state.hasInitialized) {
     return null;
@@ -193,7 +211,7 @@ export default function AnnouncementBanner() {
               {currentAnnouncement.cta && (
                 <motion.a
                   href={currentAnnouncement.cta.href}
-                  onClick={handleDismiss}
+                  onClick={handleCTAClick}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-4 py-2 bg-js text-black rounded-lg text-sm font-semibold hover:bg-js-dark transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap flex items-center gap-2"

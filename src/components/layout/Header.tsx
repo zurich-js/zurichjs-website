@@ -95,7 +95,7 @@ export default function Header() {
 
   // Helper functions to generate class names
   const getHeaderClasses = () => {
-    return `w-full transition-all duration-300 ${
+    return `w-full fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled ? 'bg-black text-js shadow-md py-2' : 'bg-transparent text-black py-2 lg:py-4'
     }`;
   };
@@ -250,7 +250,7 @@ export default function Header() {
           <div className="lg:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-black hover:text-gray-800 transition-colors"
+              className={`transition-colors ${scrolled ? 'text-js hover:text-js-dark' : 'text-black hover:text-gray-800'}`}
               aria-label="Toggle menu"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}

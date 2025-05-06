@@ -33,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <Header />
         </div>
       </div>
-      <main className="flex-grow pt-2 lg:pt-4">{children}
+      <main className="flex-grow pt-16 lg:pt-20">{children}
 
         <div className="fixed bottom-6 right-6 z-50">
           {showSupportButton && (

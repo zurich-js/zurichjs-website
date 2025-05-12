@@ -8,6 +8,8 @@ import Layout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import TicketSelection from '@/components/workshop/TicketSelection';
+import { workshopTickets } from '@/components/workshop/workshopTickets';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
@@ -99,50 +101,6 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             workshop_id: workshop.id,
             workshop_title: workshop.title
         });
-
-        // Initialize TixTree when client is ready
-        if (typeof window !== 'undefined') {
-            // Only add script if it doesn't already exist
-            if (!document.getElementById('tixtree-script')) {
-                // Load the TixTree script dynamically
-                const script = document.createElement('script');
-                script.src = 'https://www.tixtree.com/widgets/tixtree.js';
-                script.id = 'tixtree-script';
-                script.dataset.type = 'event';
-                script.dataset.id = 'workshop-nodejs-more-threads-than-you-think-2f54bcd4d4e9';
-                script.async = true;
-                document.body.appendChild(script);
-            }
-
-            // Add custom CSS for highlight effect
-            const style = document.createElement('style');
-            style.textContent = `
-        @keyframes pulse-highlight {
-          0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
-          70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
-        }
-        .highlight-pulse {
-          animation: pulse-highlight 1.5s ease-in-out;
-        }
-        /* Fix for mobile overflow */
-        body, html {
-          overflow-x: hidden;
-          max-width: 100%;
-        }
-        /* Ensure TixTree widget is responsive */
-        #tixtree-wrapper {
-          width: 100% !important;
-          margin: 0 auto !important;
-          display: block !important;
-        }
-        /* Hide horizontal scrollbar */
-        ::-webkit-scrollbar-horizontal {
-          display: none;
-        }
-      `;
-            document.head.appendChild(style);
-        }
     }, []);
 
     // Share event function
@@ -647,11 +605,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
                             </p>
 
-                            {/* TixTree Widget */}
-                            <div
-                                id="tixtree-wrapper"
-                                className="transition-all duration-300 overflow-x-hidden w-full"
-                            ></div>
+                            {/* Replace TixTree Widget with TicketSelection */}
+                            {isClient && <TicketSelection
+                                options={workshopTickets}
+                                className="max-w-2xl mx-auto"
+                            />}
                         </motion.div>
                     </div>
                 </div>

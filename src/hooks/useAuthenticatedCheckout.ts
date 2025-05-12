@@ -8,6 +8,8 @@ interface UseAuthenticatedCheckoutProps {
 interface CheckoutOptions {
   priceId: string;
   quantity?: number;
+  workshopId?: string;
+  couponCode?: string;
 }
 
 export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutProps = {}) {
@@ -15,7 +17,12 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
-  const startCheckout = async ({ priceId, quantity = 1 }: CheckoutOptions) => {
+  const startCheckout = async ({ 
+    priceId, 
+    quantity = 1, 
+    workshopId, 
+    couponCode 
+  }: CheckoutOptions) => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/stripe/checkout-sessions', {
@@ -27,7 +34,9 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
           priceId,
           email: user?.primaryEmailAddress?.emailAddress,
           quantity,
-          couponCode: isSignedIn ? 'zurichjs-community' : undefined,
+          // If a custom coupon is provided, use it instead of the community discount
+          couponCode: couponCode || (isSignedIn ? 'zurichjs-community' : undefined),
+          workshopId,
         }),
       });
 

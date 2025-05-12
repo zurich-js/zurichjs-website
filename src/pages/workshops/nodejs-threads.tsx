@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, MessageSquare, Cpu, Server, Network } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
@@ -13,6 +14,8 @@ import { workshopTickets } from '@/components/workshop/workshopTickets';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
+
+import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 
 interface WorkshopDetails {
     id: string;
@@ -41,6 +44,8 @@ interface WorkshopPageProps {
 export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     const [isClient, setIsClient] = useState(false);
     const { track } = useEvents();
+    const router = useRouter();
+    const { canceled } = router.query;
 
     // Workshop data
     const workshop: WorkshopDetails = {
@@ -595,21 +600,34 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 </div>
                             </div>
 
-                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-4">
-                                <p className="font-medium text-gray-800">
-                                    Only {workshop.maxAttendees} spots available for this hands-on technical workshop.
-                                </p>
-                            </div>
+                            {canceled === 'true' ? (
+                                <CancelledCheckout 
+                                    workshopId="nodejs-threads"
+                                    workshopTitle={workshop.title}
+                                />
+                            ) : (
+                                <>
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-4">
+                                        <p className="font-medium text-gray-800">
+                                            Only {workshop.maxAttendees} spots available for this hands-on technical workshop.
+                                        </p>
+                                        <p className="text-xs text-gray-700 mt-1">
+                                            <strong>Pro tip:</strong> Sign up for a ZurichJS account to get a 20% community discount, or use a coupon code by adding <code>?coupon=YOUR_CODE</code> to the URL.
+                                        </p>
+                                    </div>
 
-                            <p className="mb-4 font-medium text-base">
-                                Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
-                            </p>
+                                    <p className="mb-4 font-medium text-base">
+                                        Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
+                                    </p>
 
-                            {/* Replace TixTree Widget with TicketSelection */}
-                            {isClient && <TicketSelection
-                                options={workshopTickets}
-                                className="max-w-2xl mx-auto"
-                            />}
+                                    {/* Replace TixTree Widget with TicketSelection */}
+                                    {isClient && <TicketSelection
+                                        options={workshopTickets}
+                                        className="max-w-2xl mx-auto"
+                                        workshopId="nodejs-threads"
+                                    />}
+                                </>
+                            )}
                         </motion.div>
                     </div>
                 </div>

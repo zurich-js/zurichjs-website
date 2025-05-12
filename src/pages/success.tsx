@@ -9,7 +9,6 @@ import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import Button from '@/components/ui/Button';
 
-
 export default function SuccessPage() {
   const router = useRouter();
   const { session_id, workshop_id } = router.query;

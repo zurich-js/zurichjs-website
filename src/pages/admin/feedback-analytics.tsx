@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 import { ArrowDown, ArrowUp, Calendar, Download, Star, Filter } from 'lucide-react';
 import { GetServerSideProps } from 'next';
 import Image from 'next/image';
@@ -20,11 +23,6 @@ interface FeedbackAnalyticsProps {
     speakerStats: SpeakerFeedbackStats[];
     talkStats: TalkFeedbackStats[];
 }
-
-// Helper type for accessing nested properties
-// Use a more permissive type to avoid TypeScript errors
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ObjectWithProperties = any;
 
 export default function FeedbackAnalytics({
     feedbackData,
@@ -57,8 +55,6 @@ export default function FeedbackAnalytics({
         }
     };
 
-    // Helper to get nested property using dot notation (e.g. "event.title")
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getNestedProperty = (obj: any, path: string): any => {
         return path.split('.').reduce((acc, part) => {
             if (acc === null || acc === undefined || typeof acc !== 'object') {
@@ -69,13 +65,13 @@ export default function FeedbackAnalytics({
     };
 
     // Sort and filter function
-    const getSortedAndFilteredItems = <T extends ObjectWithProperties>(
-        items: T[],
+    const getSortedAndFilteredItems = (
+        items: any[],
         field: string,
         direction: 'asc' | 'desc',
         filterValue: string,
         filterFields: string[]
-    ): T[] => {
+    ): any[] => {
         // First filter
         let filteredItems = items;
         if (filterValue.trim()) {
@@ -355,7 +351,7 @@ export default function FeedbackAnalytics({
                                                 </div>
                                                 <div className="flex items-center whitespace-nowrap bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs sm:text-sm font-medium">
                                                     {speaker.averageRating.toFixed(1)}
-                                                    <Star className="ml-1 h-3 w-3 sm:h-4 sm:w-4 fill-yellow-500 text-yellow-500" />
+                                                    <Star className="ml-1 h-3 w-3 fill-yellow-500 text-yellow-500" />
                                                 </div>
                                             </div>
                                         ))}

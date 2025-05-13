@@ -30,6 +30,20 @@ interface SanityTalk {
   slides: string;
   videoUrl: string;
   speakers: SanitySpeaker[];
+  productDemo?: {
+    id: { current: string };
+    name: string;
+    description: string;
+    logo: SanityImage;
+    websiteUrl: string;
+  };
+  productDemos?: Array<{
+    id: { current: string };
+    name: string;
+    description: string;
+    logo: SanityImage;
+    websiteUrl: string;
+  }>;
   [key: string]: unknown;
 }
 
@@ -75,6 +89,14 @@ const mapEventData = (event: SanityEvent) => {
       durationMinutes: talk.durationMinutes as number || 0,
       slides: talk.slides || "",
       videoUrl: talk.videoUrl || "",
+      productDemo: talk.productDemo ? {
+        id: talk.productDemo.id?.current || "",
+        name: talk.productDemo.name || "",
+        description: talk.productDemo.description || "",
+        logo: talk.productDemo.logo?.asset?.url || null,
+        websiteUrl: talk.productDemo.websiteUrl || ""
+      } : null,
+      productDemos: talk.productDemos ? talk.productDemos : [],
       speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
         id: speaker.id?.current || "",
         name: speaker.name || "",
@@ -99,6 +121,28 @@ export const getUpcomingEvents = async () => {
     talks[]-> {
       ...,
       "id": id,
+      productDemo-> {
+        "id": id,
+        name,
+        description,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+      },
+      productDemos[]-> {
+        "id": id,
+        name,
+        description,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+      },
       speakers[]-> {
         ...,
         "id": id,
@@ -126,6 +170,28 @@ export const getPastEvents = async () => {
     talks[]-> {
       ...,
       "id": id,
+      productDemo-> {
+        "id": id,
+        name,
+        description,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+      },
+      productDemos[]-> {
+        "id": id,
+        name,
+        description,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+      },
       speakers[]-> {
         ...,
         "id": id,
@@ -152,6 +218,24 @@ export const getEventById = async (eventId: string) => {
     talks[]-> {
       ...,
       "id": id,
+      productDemo-> {
+        "id": id,
+        name,
+        description,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+      },
+      productDemos[]-> {
+        ...,
+        name,
+        description,
+        "logo": logo.asset->url,
+        websiteUrl
+      },
       speakers[]-> {
         ...,
         "id": id,
@@ -394,6 +478,15 @@ export interface FeedbackItem {
     name: string;
     image: string;
   };
+  productFeedback?: {
+    productId: string;
+    productName: string;
+    rating: number;
+    interests: string[];
+    questions: string;
+    learningPreferences: string[];
+    detailedFeedback: string;
+  };
 }
 
 export interface EventFeedbackStats {
@@ -467,6 +560,22 @@ export const getFeedback = async (): Promise<FeedbackItem[]> => {
         id,
         name,
         "image": image.asset->url
+      },
+      productFeedback {
+        "product": product->{
+        ...,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+        },
+        rating,
+        interests,
+        questions,
+        learningPreferences,
+        detailedFeedback
       }
     } | order(submittedAt desc)
   `);
@@ -611,9 +720,15 @@ export const getFeedbackBySpeakerId = async (speakerId: string): Promise<Feedbac
       rating,
       comment,
       submittedAt,
-      "event": event->,
+      "event": event->{
+        _id,
+        id,
+        title,
+        datetime
+      },
       "talk": talk->{
         _id,
+        id,
         title
       },
       "speaker": speaker->{
@@ -621,6 +736,22 @@ export const getFeedbackBySpeakerId = async (speakerId: string): Promise<Feedbac
         id,
         name,
         "image": image.asset->url
+      },
+     productFeedback {
+        "product": product->{
+        ...,
+        "logo": {
+          "asset": {
+            "url": logo.asset->url
+          }
+        },
+        websiteUrl
+        },
+        rating,
+        interests,
+        questions,
+        learningPreferences,
+        detailedFeedback
       }
     } | order(submittedAt desc)
   `, { speakerId });

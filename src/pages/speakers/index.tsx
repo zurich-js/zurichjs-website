@@ -8,7 +8,7 @@ import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
-import { Event, getSpeakers, getTalks } from '@/sanity/queries';
+import { getSpeakers, getTalks } from '@/sanity/queries';
 import { Speaker, Talk } from '@/types';
 
 interface SpeakersProps {
@@ -34,20 +34,6 @@ interface UpcomingTalk {
   speakerId: string;
   date: string;
   location: string;
-}
-
-// Add these interfaces for the talk data structure
-interface TalkData {
-  title: string;
-  events?: Event[];
-  speakers?: SpeakerData[];
-  tags?: string[];
-  durationMinutes?: number;
-}
-
-interface SpeakerData {
-  id: string;
-  name: string;
 }
 
 interface TalkWithEventDate extends UpcomingTalk {
@@ -451,11 +437,28 @@ export async function getStaticProps() {
         {name: speakers[0]?.name || 'N/A', talkCount: speakers[0]?.talks.length || 0})
     : {name: "N/A", talkCount: 0};
 
+  // Define types inline to avoid unused imports
+  type TalkType = {
+    title: string;
+    events?: Array<{
+      id: string;
+      title: string;
+      datetime: string;
+      location: string;
+    }>;
+    speakers?: Array<{
+      id: string;
+      name: string;
+    }>;
+    tags?: string[];
+    durationMinutes?: number;
+  };
+
   // Calculate location frequencies
   const locationCounts: Record<string, number> = {};
-  talks.forEach((talk: TalkData) => {
+  talks.forEach((talk: TalkType) => {
     if (talk.events && talk.events.length > 0) {
-      talk.events.forEach(event => {
+      talk.events.forEach((event) => {
         if (event.location) {
           locationCounts[event.location] = (locationCounts[event.location] || 0) + 1;
         }
@@ -475,7 +478,7 @@ export async function getStaticProps() {
 
   // Extract all talk tags and count frequencies
   const tagCounts: Record<string, number> = {};
-  talks.forEach((talk: TalkData) => {
+  talks.forEach((talk: TalkType) => {
     if (talk.tags) {
       talk.tags.forEach((tag: string) => {
         tagCounts[tag] = (tagCounts[tag] || 0) + 1;
@@ -506,9 +509,9 @@ export async function getStaticProps() {
   // Get upcoming talks from the talks data
   const now = new Date();
   const upcomingTalks: UpcomingTalk[] = talks
-    .filter((talk: TalkData) => talk.events && talk.events.length > 0)
-    .flatMap((talk: TalkData) =>
-      talk.events!.map((event: Event) => ({
+    .filter((talk: TalkType) => talk.events && talk.events.length > 0)
+    .flatMap((talk: TalkType) =>
+      talk.events!.map((event) => ({
         id: event.id,
         title: talk.title,
         speakerName: talk.speakers && talk.speakers.length > 0 ? talk.speakers[0].name : 'Unknown Speaker',

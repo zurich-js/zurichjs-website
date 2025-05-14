@@ -8,10 +8,12 @@ import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';
 // Types to match the client-side types
 interface ProductFeedbackData {
   productId: string;
+  productName?: string;
   rating: number;
   interests: string[];
   questions: string;
   learningPreferences: string[];
+  detailedFeedback: string;
 }
 
 interface FeedbackData {
@@ -179,10 +181,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         if (productFeedback) {
             console.log('Received product feedback:', {
                 productId: productFeedback.productId,
+                productName: productFeedback.productName,
                 rating: productFeedback.rating,
                 interests: productFeedback.interests,
                 hasQuestions: !!productFeedback.questions,
-                learningPreferences: productFeedback.learningPreferences
+                learningPreferences: productFeedback.learningPreferences,
+                hasDetailedFeedback: !!productFeedback.detailedFeedback
             });
 
             // Add product feedback to the main feedback document
@@ -195,7 +199,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
                     rating: productFeedback.rating,
                     interests: productFeedback.interests,
                     questions: productFeedback.questions,
-                    learningPreferences: productFeedback.learningPreferences
+                    learningPreferences: productFeedback.learningPreferences,
+                    detailedFeedback: productFeedback.detailedFeedback
                 }
             });
         }

@@ -363,8 +363,6 @@ const FeedbackForm = ({
   const [activeProductDemo, setActiveProductDemo] = useState<ProductDemo | null>(initialActiveDemo);
   const [allProductDemos] = useState<ProductDemo[]>(initialProductDemos);
 
-  console.log({productDemos})
-
   // Set email from user data when available
   useEffect(() => {
     if (isLoaded && user && user.primaryEmailAddress) {
@@ -403,9 +401,13 @@ const FeedbackForm = ({
         email: submissionEmail,
         submittedAt: new Date().toISOString(),
         productFeedback: productFeedback && activeProductDemo ? {
-          ...productFeedback,
           productId: activeProductDemo._id,
-          productName: activeProductDemo.name
+          productName: activeProductDemo.name,
+          rating: productFeedback.rating,
+          interests: productFeedback.interests,
+          questions: productFeedback.questions,
+          learningPreferences: productFeedback.learningPreferences,
+          detailedFeedback: productFeedback.detailedFeedback
         } : undefined
       });
       
@@ -755,6 +757,15 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
   const [mockDemosAdded, setMockDemosAdded] = useState<boolean>(false);
   const [eventWithMockDemos, setEventWithMockDemos] = useState(event);
   
+  // Count total speaker-talk combinations
+  const countTotalFeedbackForms = (event: EventFeedbackProps['event']) => {
+    let count = 0;
+    event.talks.forEach(talk => {
+      count += talk.speakers.length;
+    });
+    return count;
+  };
+  
   // Load previously submitted feedbacks from localStorage
   useEffect(() => {
     const storageKey = `zurichjs-feedback-${event.id}`;
@@ -764,11 +775,11 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
       const feedbacks = JSON.parse(storedFeedbacks);
       setSubmittedFeedbacks(feedbacks);
       
-      // Calculate completion percentage
-      if (event.talks.length > 0) {
-        const totalFeedbacks = event.talks.length;
+      // Calculate completion percentage based on speaker-talk combinations
+      const totalFeedbackForms = countTotalFeedbackForms(event);
+      if (totalFeedbackForms > 0) {
         const submittedCount = Object.keys(feedbacks).length;
-        setCompletionPercentage(Math.round((submittedCount / totalFeedbacks) * 100));
+        setCompletionPercentage(Math.round((submittedCount / totalFeedbackForms) * 100));
       }
     }
 
@@ -800,21 +811,24 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
         throw new Error(`Failed to submit feedback: ${response.statusText}`);
       }
       
-      // Update local storage to mark this talk as submitted
+      // Generate a unique key for this talk-speaker combination
+      const feedbackKey = `${feedbackData.talkId}-${feedbackData.speakerId}`;
+      
+      // Update local storage to mark this talk-speaker combination as submitted
       const storageKey = `zurichjs-feedback-${event.id}`;
       const updatedFeedbacks = {
         ...submittedFeedbacks,
-        [feedbackData.talkId]: true,
+        [feedbackKey]: true,
       };
       
       localStorage.setItem(storageKey, JSON.stringify(updatedFeedbacks));
       setSubmittedFeedbacks(updatedFeedbacks);
       
-      // Recalculate completion percentage
-      if (event.talks.length > 0) {
-        const totalFeedbacks = event.talks.length;
+      // Recalculate completion percentage based on speaker-talk combinations
+      const totalFeedbackForms = countTotalFeedbackForms(eventWithMockDemos);
+      if (totalFeedbackForms > 0) {
         const submittedCount = Object.keys(updatedFeedbacks).length;
-        setCompletionPercentage(Math.round((submittedCount / totalFeedbacks) * 100));
+        setCompletionPercentage(Math.round((submittedCount / totalFeedbackForms) * 100));
       }
       
     } catch (error) {
@@ -880,7 +894,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
     return null;
   }
 
-  const totalForms = eventWithMockDemos.talks.length;
+  const totalForms = countTotalFeedbackForms(eventWithMockDemos);
   const submittedForms = Object.keys(submittedFeedbacks).length;
   const mockDemoCount = eventWithMockDemos.talks.filter(talk => talk.productDemo).length;
 
@@ -954,7 +968,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
                 speakerId={speaker.id}
                 speakerName={speaker.name}
                 onSubmit={handleFeedbackSubmit}
-                isSubmitted={!!submittedFeedbacks[talk.id]}
+                isSubmitted={!!submittedFeedbacks[`${talk.id}-${speaker.id}`]}
                 productDemo={talk.productDemo || null}
                 productDemos={talk.productDemos || []}
               />

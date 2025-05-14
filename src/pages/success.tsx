@@ -2,11 +2,11 @@ import { CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
+import AccountCreationIncentive from '@/components/checkout/AccountCreationIncentive';
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import Button from '@/components/ui/Button';
 
-import AccountCreationIncentive from '@/components/checkout/AccountCreationIncentive';
 
 export default function SuccessPage() {
   const router = useRouter();

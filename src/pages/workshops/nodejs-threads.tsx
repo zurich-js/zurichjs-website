@@ -9,13 +9,13 @@ import Layout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { workshopTickets } from '@/components/workshop/workshopTickets';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
 
-import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 
 interface WorkshopDetails {
     id: string;

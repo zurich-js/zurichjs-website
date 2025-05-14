@@ -4,18 +4,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useState, useEffect } from 'react';
-import React from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import EventFeedback from '@/components/ui/EventFeedback';
+import ProductDemoHighlight from '@/components/ui/ProductDemoHighlight';
 import { FeatureFlags } from '@/constants';
 import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
-
-
+import { ProductDemo } from '@/types';
 
 
 interface EventDetailPageProps {
@@ -31,7 +30,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   
   // Check if we're in feedback mode
   const isFeedbackMode = router.query.feedback === 'true';
-  
+
   // Calculate if event is upcoming
   const isUpcoming = new Date(event.datetime) > new Date();
 
@@ -54,7 +53,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       const data = await response.json();
       setMapUrl(data.url);
     })();
-  }, [event.address])
+  }, [event.address, event.location]);
 
   // Share event function
   const shareEvent = async () => {
@@ -274,7 +273,18 @@ export default function EventDetail({ event }: EventDetailPageProps) {
             <div className="lg:w-2/3">
               {/* Feedback Section - Only shows when in feedback mode */}
               <EventFeedback 
-                event={event} 
+                event={{
+                  id: event.id,
+                  title: event.title,
+                  datetime: event.datetime,
+                  talks: event.talks.map(talk => ({
+                    id: talk.id,
+                    title: talk.title,
+                    productDemo: talk.productDemo as unknown as ProductDemo,
+                    productDemos: talk.productDemos as unknown as ProductDemo[],
+                    speakers: talk.speakers
+                  }))
+                }}
                 isFeedbackMode={isFeedbackMode} 
               />
 
@@ -334,10 +344,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                             {talk.description && (
                               <p className="text-gray-700 mb-4">
                                 {talk.description?.split('\n').map((line, i) => (
-                                  <React.Fragment key={i}>
+                                  <Fragment key={i}>
                                     {line}
                                     {i < talk.description!.split('\n').length - 1 && <br />}
-                                  </React.Fragment>
+                                  </Fragment>
                                 ))}
                               </p>
                             )}
@@ -408,6 +418,23 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                 </a>
                               )}
                             </div>
+                            
+                            {/* Product Demo highlights */}
+                            {talk.productDemos && talk.productDemos.length > 0 ? (
+                              <div className="mt-4 pt-3 border-t border-gray-100">
+                                <ProductDemoHighlight 
+                                  productDemos={talk.productDemos as unknown as ProductDemo[]}
+                                  isUpcoming={isUpcoming}
+                                />
+                              </div>
+                            ) : talk.productDemo && (
+                              <div className="mt-4 pt-3 border-t border-gray-100">
+                                <ProductDemoHighlight 
+                                  productDemos={[talk.productDemo as unknown as ProductDemo]}
+                                  isUpcoming={isUpcoming}
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       </motion.div>

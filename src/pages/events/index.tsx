@@ -5,14 +5,14 @@ import Link from 'next/link';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useState, useEffect } from 'react';
 
+import { getEventTicket } from '@/components/event/EventTickets';
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
 import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
-import { getEventTicket } from '@/components/event/EventTickets';
-import TicketSelection from '@/components/workshop/TicketSelection';
 
 
 interface EventsPageProps {

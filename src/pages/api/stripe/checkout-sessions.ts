@@ -8,6 +8,8 @@ interface CheckoutRequestBody {
   quantity?: number;
   couponCode?: string;
   workshopId?: string;
+  eventId?: string;
+  ticketType?: 'workshop' | 'event';
 }
 
 export default async function handler(
@@ -19,7 +21,15 @@ export default async function handler(
   }
 
   try {
-    const { priceId, email, quantity = 1, couponCode, workshopId } = req.body as CheckoutRequestBody;
+    const { 
+      priceId, 
+      email, 
+      quantity = 1, 
+      couponCode, 
+      workshopId, 
+      eventId,
+      ticketType
+    } = req.body as CheckoutRequestBody;
 
     if (!priceId) {
       return res.status(400).json({ error: 'Price ID is required' });
@@ -30,14 +40,28 @@ export default async function handler(
     }
 
     const origin = req.headers.origin || 'http://localhost:3000';
-    const workshopPath = workshopId ? `/workshops/${workshopId}` : '';
+    
+    // Determine the right path for success and cancel URLs
+    let returnPath = '';
+    if (workshopId) {
+      returnPath = `/workshops/${workshopId}`;
+    } else if (eventId) {
+      returnPath = `/events/${eventId}`;
+    }
     
     // Build query parameters for redirect URLs
     const successParams = new URLSearchParams({
       session_id: '{CHECKOUT_SESSION_ID}',
     });
+    
     if (workshopId) {
       successParams.append('workshop_id', workshopId);
+    } else if (eventId) {
+      successParams.append('event_id', eventId);
+    }
+    
+    if (ticketType) {
+      successParams.append('ticket_type', ticketType);
     }
     
     const cancelParams = new URLSearchParams();
@@ -73,11 +97,13 @@ export default async function handler(
       ],
       mode: 'payment',
       success_url: `${origin}/success?${successParams.toString()}`,
-      cancel_url: `${origin}${workshopPath}?${cancelParams.toString()}`,
+      cancel_url: `${origin}${returnPath}?${cancelParams.toString()}`,
       customer_email: email,
       ...(Object.keys(discountOptions).length > 0 ? discountOptions : {}),
       metadata: {
         workshopId: workshopId || '',
+        eventId: eventId || '',
+        ticketType: ticketType || (workshopId ? 'workshop' : 'event'),
         couponCode: couponCode || '',
       },
     });

@@ -3,8 +3,10 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { sendPushoverNotification } from '@/lib/pushover';
 
 interface CheckoutCancelledBody {
-  workshopId: string;
-  workshopTitle: string;
+  workshopId?: string;
+  eventId?: string;
+  ticketType?: string;
+  itemTitle: string;
   reason: string;
   email: string;
 }
@@ -18,12 +20,28 @@ export default async function handler(
   }
 
   try {
-    const { workshopId, workshopTitle, reason, email } = req.body as CheckoutCancelledBody;
+    const { 
+      workshopId,
+      eventId,
+      ticketType, 
+      itemTitle, 
+      reason, 
+      email 
+    } = req.body as CheckoutCancelledBody;
+
+    // Determine purchase type
+    const isWorkshop = ticketType === 'workshop' || Boolean(workshopId);
+    const itemId = isWorkshop ? workshopId : eventId;
+    const itemType = isWorkshop ? 'Workshop' : 'Event';
 
     // Create a descriptive message
     const message = {
-      title: `⚠️ Checkout Cancelled: ${workshopTitle}`,
-      message: `Workshop ID: ${workshopId}\nWorkshop: ${workshopTitle}\nReason: ${reason}\nEmail: ${email}`,
+      title: `⚠️ Checkout Cancelled: ${itemTitle}`,
+      message: `Type: ${itemType}
+${itemType} ID: ${itemId || 'Not specified'}
+${itemType}: ${itemTitle}
+Reason: ${reason}
+Customer Email: ${email}`,
       priority: 0,
     };
 

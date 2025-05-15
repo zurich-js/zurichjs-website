@@ -57,7 +57,7 @@ interface SanityEvent {
   attendees: number;
   image: SanityImage;
   isProMeetup: boolean;
-  ticketSaleUrl: string;
+  stripePriceId: string;
   description: string;
   meetupUrl: string;
   talks: SanityTalk[];
@@ -78,7 +78,7 @@ const mapEventData = (event: SanityEvent) => {
     description: event.description || "",
     isProMeetup: event.isProMeetup || false,
     meetupUrl: event.meetupUrl || "",
-    ticketSaleUrl: event.ticketSaleUrl || "",
+    stripePriceId: event.stripePriceId || "",
     excludeFromStats: event.excludeFromStats || false,
     talks: event.talks?.map((talk: SanityTalk) => ({
       id: talk.id?.current || "",

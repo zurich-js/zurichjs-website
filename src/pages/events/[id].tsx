@@ -1,17 +1,19 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, Building } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, Building, Ticket } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import React, { Fragment, useState, useEffect } from 'react';
 
+import { getEventTicket } from '@/components/event/EventTickets';
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import EventFeedback from '@/components/ui/EventFeedback';
 import ProductDemoHighlight from '@/components/ui/ProductDemoHighlight';
+import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
 import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
 import { ProductDemo } from '@/types';
@@ -55,6 +57,27 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     })();
   }, [event.address, event.location]);
 
+  // Add animation for ticket section when scrolled to
+  useEffect(() => {
+    const handleScroll = () => {
+      const ticketSection = document.getElementById('event-tickets-section');
+      if (ticketSection) {
+        const rect = ticketSection.getBoundingClientRect();
+        // Check if the ticket section is in the viewport
+        if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+          ticketSection.classList.add('highlight-ticket');
+        } else {
+          ticketSection.classList.remove('highlight-ticket');
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   // Share event function
   const shareEvent = async () => {
     const shareUrl = `${window.location.origin}/events/${event.id}`;
@@ -96,6 +119,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   return (
     <Layout>
+      <style jsx global>{`
+        @keyframes pulseHighlight {
+          0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+          70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .highlight-ticket {
+          animation: pulseHighlight 2s ease-in-out 1;
+        }
+      `}</style>
+
       <SEO
         title={`${event.title} | ZurichJS`}
         description={`Join us for ${event.title} on ${new Date(event.datetime).toLocaleDateString('en-GB', {
@@ -199,17 +233,33 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               )}
 
               <div className="flex flex-wrap gap-3">
-                {isUpcoming && (event.isProMeetup ? event.ticketSaleUrl : event.meetupUrl) ? (
-                  <Button
-                    href={event.isProMeetup ? event.ticketSaleUrl : event.meetupUrl}
-                    variant="primary"
-                    size="lg"
-                    className={`${event.isProMeetup ? 'bg-zurich' : 'bg-black'} text-js hover:${event.isProMeetup ? 'bg-blue-600' : 'bg-gray-800'}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {event.isProMeetup ? 'Get Tickets' : 'RSVP on Meetup 🚀'}
-                  </Button>
+                {isUpcoming && (event.isProMeetup ? event.stripePriceId : event.meetupUrl) ? (
+                  event.isProMeetup ? (
+                    <Button
+                      onClick={() => {
+                        const ticketSection = document.getElementById('event-tickets-section');
+                        if (ticketSection) {
+                          ticketSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                      variant="primary"
+                      size="lg"
+                      className="bg-zurich text-white hover:bg-blue-600"
+                    >
+                      Get Tickets 🎟️
+                    </Button>
+                  ) : (
+                    <Button
+                      href={event.meetupUrl}
+                      variant="primary"
+                      size="lg"
+                      className="bg-black text-js hover:bg-gray-800"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      RSVP on Meetup 🚀
+                    </Button>
+                  )
                 ) : isUpcoming && (
                   <Button
                     variant="primary"
@@ -660,16 +710,49 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       </div>
                     </details>
 
-                    {isUpcoming && event.ticketSaleUrl && (
-                      <Button
-                        href={event.ticketSaleUrl}
-                        variant="primary"
-                        className="bg-zurich hover:bg-blue-600 text-white mt-4"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Get Your Tickets Now
-                      </Button>
+                    {isUpcoming && event.stripePriceId && (
+                      <div id="event-tickets-section" className="mt-5 bg-white p-5 rounded-lg shadow-md border-t-4 border-zurich">
+                        <h4 className="text-xl font-bold mb-3 text-center flex items-center justify-center">
+                          <Ticket className="mr-2 text-zurich" size={22} />
+                          Secure Your Spot
+                        </h4>
+                        <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-semibold text-gray-800">Date:</span>
+                            <span className="text-black">{isClient && event.datetime
+                              ? new Date(event.datetime).toLocaleDateString('en-GB', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })
+                              : 'Date TBD'}</span>
+                          </div>
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-semibold text-gray-800">Time:</span>
+                            <span className="text-black">{isClient && event.datetime
+                              ? new Date(event.datetime).toLocaleTimeString('en-GB', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })
+                              : 'Time TBD'}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-gray-800">Location:</span>
+                            <span className="text-black">{event.location || 'Location TBD'}</span>
+                          </div>
+                        </div>
+                        <TicketSelection
+                          options={getEventTicket(event.id, event.title, 10, event.stripePriceId)} 
+                          eventId={event.id}
+                          ticketType="event"
+                          buttonText="Complete Purchase"
+                          className="max-w-lg mx-auto"
+                        />
+                        <p className="mt-4 text-sm text-center text-gray-600">
+                          Tickets are non-refundable but can be transferred to someone else.
+                        </p>
+                      </div>
                     )}
                   </div>
                 </motion.div>
@@ -689,7 +772,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     Don&apos;t miss this amazing JavaScript event!
                     {event.datetime ? (
                       event.isProMeetup ? (
-                        event.ticketSaleUrl ? ' Secure your ticket now!' : " We're finalizing ticket sales - check back soon!"
+                        event.stripePriceId ? ' Secure your ticket now!' : " We're finalizing ticket sales - check back soon!"
                       ) : (
                         event.meetupUrl ? ' RSVP now to secure your spot.' : " We're finalizing the details - check back soon!"
                       )
@@ -698,16 +781,19 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     )}
                   </p>
                   {event.isProMeetup ? (
-                    event.ticketSaleUrl ? (
+                    event.stripePriceId ? (
                       <Button
-                        href={event.ticketSaleUrl}
+                        onClick={() => {
+                          const ticketSection = document.getElementById('event-tickets-section');
+                          if (ticketSection) {
+                            ticketSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }}
                         variant="primary"
                         size="lg"
                         className="w-full bg-zurich text-white hover:bg-blue-600"
-                        target="_blank"
-                        rel="noopener noreferrer"
                       >
-                        Get Tickets
+                        Get Your Ticket
                       </Button>
                     ) : (
                       <Button

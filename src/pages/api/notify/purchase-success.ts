@@ -5,7 +5,9 @@ import { stripe } from '@/lib/stripe';
 
 interface PurchaseSuccessBody {
   sessionId: string;
-  workshopId: string;
+  workshopId?: string;
+  eventId?: string;
+  ticketType?: string;
   email: string;
 }
 
@@ -18,34 +20,66 @@ export default async function handler(
   }
 
   try {
-    const { sessionId, workshopId, email } = req.body as PurchaseSuccessBody;
+    const { sessionId, workshopId, eventId, ticketType, email } = req.body as PurchaseSuccessBody;
 
-    // Get the workshop name based on the ID
-    let workshopName = 'Unknown Workshop';
+    // Determine purchase type and item name
+    const isWorkshop = ticketType === 'workshop' || Boolean(workshopId);
+    const isEvent = ticketType === 'event' || Boolean(eventId);
+
+    // Get the item name based on the ID
+    let itemName = 'Unknown Purchase';
+    let itemId = '';
     
-    if (workshopId === 'nodejs-threads') {
-      workshopName = 'Node.js Threads Workshop';
-    } else if (workshopId === 'astro-zero-to-hero') {
-      workshopName = 'Astro: Zero to Hero Workshop';
+    if (isWorkshop) {
+      itemId = workshopId || '';
+      if (workshopId === 'nodejs-threads') {
+        itemName = 'Node.js Threads Workshop';
+      } else if (workshopId === 'astro-zero-to-hero') {
+        itemName = 'Astro: Zero to Hero Workshop';
+      } else {
+        itemName = 'Workshop Ticket';
+      }
+    } else if (isEvent) {
+      itemId = eventId || '';
+      itemName = 'Pro Meetup Event Ticket';
     }
 
-    // Try to get coupon information from Stripe session
+    // Try to get price and coupon information from Stripe session
     let couponInfo = 'No discount applied';
+    let priceInfo = '';
     try {
-      const session = await stripe.checkout.sessions.retrieve(sessionId as string);
+      const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
+        expand: ['line_items']
+      });
+      
+      // Get price information
+      const lineItems = session.line_items?.data;
+      if (lineItems && lineItems.length > 0) {
+        const amount = lineItems[0].amount_total / 100; // Convert from cents to currency unit
+        const currency = lineItems[0].currency.toUpperCase();
+        const quantity = lineItems[0].quantity || 1;
+        
+        priceInfo = `Amount: ${amount} ${currency} × ${quantity}`;
+      }
       
       // Use the coupon info from metadata which we set in checkout-sessions.ts
       if (session.metadata?.couponCode) {
         couponInfo = `Coupon used: ${session.metadata.couponCode}`;
       }
     } catch (err) {
-      console.warn('Could not retrieve coupon information from session', err);
+      console.warn('Could not retrieve session information', err);
     }
 
     // Create a descriptive message
     const message = {
-      title: `🎟️ New Purchase: ${workshopName}`,
-      message: `Session ID: ${sessionId}\nWorkshop ID: ${workshopId}\nWorkshop: ${workshopName}\nEmail: ${email}\n${couponInfo}`,
+      title: `🎟️ New Purchase: ${itemName}`,
+      message: `Session ID: ${sessionId}
+Type: ${isWorkshop ? 'Workshop' : 'Event'}
+${isWorkshop ? 'Workshop' : 'Event'} ID: ${itemId}
+${isWorkshop ? 'Workshop' : 'Event'}: ${itemName}
+${priceInfo}
+Customer Email: ${email}
+${couponInfo}`,
       priority: 1,
     };
 

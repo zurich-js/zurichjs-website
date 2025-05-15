@@ -11,21 +11,32 @@ import Button from '@/components/ui/Button';
 
 export default function SuccessPage() {
   const router = useRouter();
-  const { session_id, workshop_id } = router.query;
+  const { session_id, workshop_id, event_id, ticket_type } = router.query;
   const [loading, setLoading] = useState(true);
   const [errorMessage] = useState('');
   const { user, isLoaded } = useUser();
 
-  // Get workshop information based on the workshop_id
-  let workshopName = 'the workshop';
-  let workshopPath = '/workshops';
+  // Determine correct item name and return path based on the ticket type
+  let itemName = 'your purchase';
+  let returnPath = '/';
+  let itemType = 'item';
   
-  if (workshop_id === 'nodejs-threads') {
-    workshopName = 'Node.js Threads Workshop';
-    workshopPath = '/workshops/nodejs-threads';
-  } else if (workshop_id === 'astro-zero-to-hero') {
-    workshopName = 'Astro: Zero to Hero Workshop';
-    workshopPath = '/workshops/astro-zero-to-hero';
+  if (ticket_type === 'workshop' || workshop_id) {
+    itemType = 'workshop';
+    if (workshop_id === 'nodejs-threads') {
+      itemName = 'Node.js Threads Workshop';
+      returnPath = '/workshops/nodejs-threads';
+    } else if (workshop_id === 'astro-zero-to-hero') {
+      itemName = 'Astro: Zero to Hero Workshop';
+      returnPath = '/workshops/astro-zero-to-hero';
+    } else {
+      itemName = 'the workshop';
+      returnPath = '/workshops';
+    }
+  } else if (ticket_type === 'event' || event_id) {
+    itemType = 'event';
+    itemName = 'the meetup event';
+    returnPath = event_id ? `/events/${event_id}` : '/events';
   }
 
   useEffect(() => {
@@ -50,7 +61,9 @@ export default function SuccessPage() {
           },
           body: JSON.stringify({
             sessionId: session_id,
-            workshopId: workshop_id as string || 'unknown',
+            workshopId: workshop_id as string || undefined,
+            eventId: event_id as string || undefined,
+            ticketType: ticket_type as string || itemType,
             email: userEmail,
           }),
         });
@@ -63,7 +76,7 @@ export default function SuccessPage() {
     };
 
     notifyPurchase();
-  }, [session_id, workshop_id, user, isLoaded]);
+  }, [session_id, workshop_id, event_id, ticket_type, user, isLoaded, itemType]);
 
   if (loading) {
     return (
@@ -92,9 +105,9 @@ export default function SuccessPage() {
                 There was a problem processing your order
               </h2>
               <p className="text-red-600 mb-4">{errorMessage}</p>
-              <Link href={workshopPath}>
+              <Link href={returnPath}>
                 <Button className="bg-red-600 text-white hover:bg-red-700">
-                  Return to Workshop
+                  Return to {itemType === 'workshop' ? 'Workshop' : 'Event'}
                 </Button>
               </Link>
             </div>
@@ -116,7 +129,7 @@ export default function SuccessPage() {
               Thank You for Your Purchase!
             </h1>
             <p className="text-lg text-gray-600 mb-4">
-              Your purchase for {workshopName} has been confirmed.
+              Your purchase for {itemName} has been confirmed.
             </p>
             <p className="text-md text-gray-600 mb-8 bg-yellow-50 p-4 rounded-lg border border-yellow-100">
               <strong>Important:</strong> Due to high demand, please allow up to 24 hours for your ticket to be delivered to your email.
@@ -139,18 +152,20 @@ export default function SuccessPage() {
               </li>
               <li className="flex items-start">
                 <span className="text-green-500 mr-2">✓</span>
-                <span>Add the workshop date to your calendar</span>
+                <span>Add {itemType === 'workshop' ? 'the workshop' : 'the event'} date to your calendar</span>
               </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Prepare any prerequisites for the workshop</span>
-              </li>
+              {itemType === 'workshop' && (
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Prepare any prerequisites for the workshop</span>
+                </li>
+              )}
             </ul>
             
-            <Link href={workshopPath}>
+            <Link href={returnPath}>
               <Button className="flex items-center bg-zurich text-black hover:bg-zurich/90">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Return to Workshop
+                Return to {itemType === 'workshop' ? 'Workshop' : 'Event'}
               </Button>
             </Link>
           </div>

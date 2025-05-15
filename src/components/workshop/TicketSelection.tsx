@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, Star, Zap, Ticket } from 'lucide-react';
+import { CheckCircle, Star, Zap, Ticket, Tag } from 'lucide-react';
 import { useState } from 'react';
 
 import Button from '@/components/ui/Button';
@@ -13,6 +13,10 @@ export interface TicketOption {
   price: number;
   features: string[];
   testPriceId?: string;
+  autoSelect?: boolean;
+  ticketType?: 'workshop' | 'event';
+  eventId?: string;
+  workshopId?: string;
 }
 
 interface TicketSelectionProps {
@@ -21,6 +25,8 @@ interface TicketSelectionProps {
   className?: string;
   buttonText?: string;
   workshopId?: string;
+  eventId?: string;
+  ticketType?: 'workshop' | 'event';
 }
 
 const isTestMode = process.env.NODE_ENV === 'development';
@@ -31,8 +37,17 @@ export default function TicketSelection({
   className = '',
   buttonText = 'Proceed to Checkout',
   workshopId,
+  eventId,
+  ticketType,
 }: TicketSelectionProps) {
-  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  // Find auto-select ticket or default to first one if only one option
+  const defaultTicket = options.find(option => option.autoSelect) || 
+                      (options.length === 1 ? options[0] : null);
+  
+  const [selectedTicket, setSelectedTicket] = useState<string | null>(
+    defaultTicket ? (isTestMode && defaultTicket.testPriceId ? defaultTicket.testPriceId : defaultTicket.id) : null
+  );
+  
   const { startCheckout, isLoading, isSignedIn } = useAuthenticatedCheckout({
     onError: (error) => {
       alert(error.message);
@@ -53,9 +68,16 @@ export default function TicketSelection({
     }
 
     try {
+      const selectedOption = options.find(option => getPriceId(option) === selectedTicket);
+      
+      // Determine ticket type and ID
+      const type = ticketType || selectedOption?.ticketType || (workshopId ? 'workshop' : 'event');
+      
       await startCheckout({
         priceId: selectedTicket,
-        workshopId,
+        workshopId: type === 'workshop' ? (selectedOption?.workshopId || workshopId) : undefined,
+        eventId: type === 'event' ? (selectedOption?.eventId || eventId) : undefined,
+        ticketType: type,
         couponCode: couponCode,
       });
     } catch (error) {
@@ -80,6 +102,20 @@ export default function TicketSelection({
       return originalPrice * 0.8; // 20% off for community members
     }
     return originalPrice;
+  };
+
+  // Calculate discount percentage or amount for display
+  const getDiscountLabel = () => {
+    if (hasCoupon) {
+      if (couponData.percentOff) {
+        return `${couponData.percentOff}%`;
+      } else if (couponData.amountOff) {
+        return `CHF ${(couponData.amountOff / 100).toFixed(0)}`;
+      }
+    } else if (communityDiscount) {
+      return '20%';
+    }
+    return '';
   };
 
   return (
@@ -109,7 +145,7 @@ export default function TicketSelection({
           </div>
           <span className="font-bold text-sm">
             {couponData.percentOff ? `${couponData.percentOff}% off` : `CHF ${couponData.amountOff ? (couponData.amountOff / 100).toFixed(2) : 0} off`} 
-            with coupon: {couponData.code}
+            {" "}with coupon: {couponData.code}
           </span>
           <Star size={14} className="text-yellow-300 ml-2" />
         </motion.div>
@@ -126,7 +162,7 @@ export default function TicketSelection({
           key={ticket.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`relative rounded-lg border-2 p-4 transition-all ${
+          className={`relative rounded-lg border-2 p-5 transition-all ${
             selectedTicket === getPriceId(ticket)
               ? 'border-js bg-js/5'
               : 'border-gray-200 hover:border-js/50'
@@ -136,37 +172,52 @@ export default function TicketSelection({
             onClick={() => setSelectedTicket(getPriceId(ticket))}
             className="w-full text-left"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col space-y-4">
+              {/* Title and description */}
               <div>
                 <h4 className="text-lg font-bold text-gray-900">{ticket.title}</h4>
                 <p className="text-sm text-gray-600 mt-1">{ticket.description}</p>
               </div>
-              <div className="text-right">
-                {hasCoupon || communityDiscount ? (
-                  <div className="flex flex-col items-end">
-                    <div className="flex items-center">
-                      <p className="text-sm line-through text-gray-400 mr-2">CHF {ticket.price}</p>
-                      <p className="text-2xl font-bold text-gray-900">CHF {getDiscountedPrice(ticket.price).toFixed(0)}</p>
-                    </div>
-                    <p className="text-sm text-gray-600">per person</p>
+              
+              {/* Price card */}
+              <div className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+                {/* Price information */}
+                <div className="flex flex-col">
+                  <div className="flex items-baseline">
+                    <span className="text-2xl font-bold text-gray-900">CHF {(hasCoupon || communityDiscount) 
+                      ? getDiscountedPrice(ticket.price).toFixed(0) 
+                      : ticket.price}
+                    </span>
+                    
+                    {(hasCoupon || communityDiscount) && (
+                      <span className="ml-3 text-sm line-through text-gray-500">CHF {ticket.price}</span>
+                    )}
                   </div>
-                ) : (
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900">CHF {ticket.price}</p>
-                    <p className="text-sm text-gray-600">per person</p>
+                  <span className="text-xs text-gray-600 mt-0.5">per person</span>
+                </div>
+                
+                {/* Discount badge */}
+                {(hasCoupon || communityDiscount) && (
+                  <div className="flex-shrink-0">
+                    <div className="bg-green-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                      <Tag size={10} className="shrink-0" />
+                      <span>{getDiscountLabel()}</span>
+                      <span className="uppercase text-[10px] bg-green-700 px-1 py-0.5 rounded">OFF</span>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
 
-            <ul className="mt-4 space-y-2">
-              {ticket.features.map((feature, index) => (
-                <li key={index} className="flex items-center text-sm text-gray-700">
-                  <CheckCircle className="h-4 w-4 text-js mr-2 flex-shrink-0" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
+              {/* Features list */}
+              <ul className="space-y-2">
+                {ticket.features.map((feature, index) => (
+                  <li key={index} className="flex items-center text-sm text-gray-700">
+                    <CheckCircle className="h-4 w-4 text-js mr-2 flex-shrink-0" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {selectedTicket === getPriceId(ticket) && (
               <div className="absolute -right-2 -top-2">

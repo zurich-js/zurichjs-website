@@ -9,6 +9,8 @@ interface CheckoutOptions {
   priceId: string;
   quantity?: number;
   workshopId?: string;
+  eventId?: string;
+  ticketType?: 'workshop' | 'event';
   couponCode?: string;
 }
 
@@ -20,7 +22,9 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
   const startCheckout = async ({ 
     priceId, 
     quantity = 1, 
-    workshopId, 
+    workshopId,
+    eventId,
+    ticketType = workshopId ? 'workshop' : 'event',
     couponCode 
   }: CheckoutOptions) => {
     setIsLoading(true);
@@ -37,6 +41,8 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
           // If a custom coupon is provided, use it instead of the community discount
           couponCode: couponCode || (isSignedIn ? 'zurichjs-community' : undefined),
           workshopId,
+          eventId,
+          ticketType,
         }),
       });
 

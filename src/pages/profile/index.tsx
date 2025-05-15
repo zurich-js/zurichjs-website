@@ -56,7 +56,7 @@ export default function Profile() {
                 <p className="text-gray-700">Join our Slack workspace to engage directly with speakers, participate in polls, ask questions, and help shape the future of ZurichJS. It&apos;s where our community comes alive!</p>
               </div>
               <Button 
-                href="https://join.slack.com/t/zurichjs/shared_invite/zt-33h65a5nr-ReVlKRBWJ0SDRIZsveuoMQ"
+                href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg"
                 variant="primary"
                 className="bg-[#4A154B] hover:bg-[#611f64] focus:ring-purple-500 flex items-center justify-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base shadow-md transform transition-transform duration-200 hover:scale-105 whitespace-nowrap"
                 target="_blank"

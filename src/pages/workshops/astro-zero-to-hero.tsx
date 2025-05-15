@@ -710,7 +710,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Join Our Developer Community</h3>
                                 <p className="text-gray-600 mb-4">Get help, share your projects, and connect with other Astro enthusiasts in our Slack community.</p>
                                 <a 
-                                    href="https://join.slack.com/t/zurichjs/shared_invite/zt-33h65a5nr-ReVlKRBWJ0SDRIZsveuoMQ" 
+                                    href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg" 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="bg-purple-700 hover:bg-purple-800 text-white py-2 px-6 rounded-md font-medium transition-colors inline-flex items-center"
@@ -766,7 +766,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             Share with Your Team
                         </button>
                         <a
-                            href="https://join.slack.com/t/zurichjs/shared_invite/zt-33h65a5nr-ReVlKRBWJ0SDRIZsveuoMQ"
+                            href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg"
                             target="_blank"
                             rel="noopener noreferrer" 
                             className="bg-purple-700 text-white px-4 sm:px-8 py-2.5 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-purple-800 transition-colors w-full sm:w-auto mt-3 sm:mt-0"

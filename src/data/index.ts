@@ -129,7 +129,15 @@ export const getPartners = () => {
             url: 'https://www.jetbrains.com/',
             type: 'supporting',
             description: 'Software licenses and tools for ZurichJS'
-        }
+        },
+        {
+            id: '14',
+            name: 'ImageKit',
+            logo: '/images/partners/imagekit.png',
+            url: 'https://imagekit.io?utm_source=zurichjs&utm_medium=website',
+            type: 'supporting',
+            description: 'Image and Video API plus AI-powered DAM'
+        },
     ];
 
     return partners;

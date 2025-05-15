@@ -45,11 +45,6 @@ const ProductDemoHighlight: React.FC<ProductDemoHighlightProps> = ({ productDemo
                     fill
                     className="object-contain p-1"
                   />
-                  {isUpcoming && (
-                    <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-bl-md">
-                      NEW
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-purple-200 rounded-lg flex items-center justify-center text-purple-700">
@@ -62,14 +57,7 @@ const ProductDemoHighlight: React.FC<ProductDemoHighlightProps> = ({ productDemo
               )}
               
               <div className="flex-grow text-center sm:text-left">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <h5 className="font-bold text-lg text-purple-900">{demo.name}</h5>
-                  {isUpcoming && (
-                    <span className="inline-flex items-center text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                      <span className="animate-pulse mr-1">•</span> New
-                    </span>
-                  )}
-                </div>
+                <h5 className="font-bold text-lg text-purple-900">{demo.name}</h5>
                 
                 {demo.description && (
                   <p className="text-sm text-gray-600 mt-1 mb-3 line-clamp-2">

@@ -5,10 +5,12 @@ import Link from 'next/link';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useState, useEffect } from 'react';
 
+import { getEventTicket } from '@/components/event/EventTickets';
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
 import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
 
@@ -117,16 +119,26 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
             </p>
 
             {upcomingEvents.length > 0 && (
-              <Button
-                href={upcomingEvents[0].isProMeetup ? upcomingEvents[0].ticketSaleUrl : upcomingEvents[0].meetupUrl}
-                variant="primary"
-                size="lg"
-                className={`${upcomingEvents[0].isProMeetup ? 'bg-zurich' : 'bg-blue-700'} hover:${upcomingEvents[0].isProMeetup ? 'bg-blue-600' : 'bg-blue-600'} text-white`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {upcomingEvents[0].isProMeetup ? 'Get tickets for our next Pro Meetup! 🎟️' : 'RSVP for our next meetup! 🚀'}
-              </Button>
+              upcomingEvents[0].isProMeetup ? (
+                <div className="mt-6 max-w-md">
+                  <TicketSelection
+                    options={getEventTicket(upcomingEvents[0].id, upcomingEvents[0].title, 10, upcomingEvents[0].stripePriceId)}
+                    workshopId={`event-${upcomingEvents[0].id}`}
+                    buttonText="Get tickets for our next Pro Meetup! 🎟️"
+                  />
+                </div>
+              ) : (
+                <Button
+                  href={upcomingEvents[0].meetupUrl}
+                  variant="primary"
+                  size="lg"
+                  className="bg-blue-700 hover:bg-blue-600 text-white"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  RSVP for our next meetup! 🚀
+                </Button>
+              )
             )}
           </motion.div>
         </Section>

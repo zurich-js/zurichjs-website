@@ -206,7 +206,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
         }
 
         const createdFeedback = await sanityClient.create(feedbackDoc);
-        
+
         return res.status(201).json({ 
             success: true,
             message: 'Feedback submitted successfully',

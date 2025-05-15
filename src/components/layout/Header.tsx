@@ -1,9 +1,9 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, UserButton, useSignIn } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 // Define our interfaces
 interface NavSubItem {
@@ -24,6 +24,17 @@ export default function Header() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string[]>([]);
   const router = useRouter();
+  const { signIn } = useSignIn();
+  const signInButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Handle query parameter to open signup modal
+  useEffect(() => {
+    const { signup } = router.query;
+    if (signup === 'true' && signIn && signInButtonRef.current) {
+      // Simulate a click on the sign-in button to open the modal
+      signInButtonRef.current.click();
+    }
+  }, [router.query, signIn]);
 
   // Handle scroll effect
   useEffect(() => {
@@ -238,7 +249,7 @@ export default function Header() {
               </SignedIn>
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className={getSignInButtonClasses()}>
+                  <button ref={signInButtonRef} className={getSignInButtonClasses()}>
                     Sign In
                   </button>
                 </SignInButton>
@@ -289,7 +300,7 @@ export default function Header() {
               </SignedIn>
               <SignedOut>
                 <SignInButton mode="modal">
-                  <button className="w-full bg-js text-black px-4 py-2 rounded-full font-medium hover:bg-js-dark transition-colors">
+                  <button ref={signInButtonRef} className="w-full bg-js text-black px-4 py-2 rounded-full font-medium hover:bg-js-dark transition-colors">
                     Sign In
                   </button>
                 </SignInButton>

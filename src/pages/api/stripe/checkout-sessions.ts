@@ -49,26 +49,29 @@ export default async function handler(
       returnPath = `/events/${eventId}`;
     }
     
-    // Build query parameters for redirect URLs
-    const successParams = new URLSearchParams({
-      session_id: '{CHECKOUT_SESSION_ID}',
-    });
+    // Build success URL with the Stripe session ID placeholder that Stripe will replace
+    // Note: Must use exactly {CHECKOUT_SESSION_ID} as the literal string for Stripe to replace it
+    const successUrl = `${origin}/success?session_id={CHECKOUT_SESSION_ID}`;
     
+    // Add additional parameters to the success URL
+    const additionalParams = [];
     if (workshopId) {
-      successParams.append('workshop_id', workshopId);
+      additionalParams.push(`workshop_id=${encodeURIComponent(workshopId)}`);
     } else if (eventId) {
-      successParams.append('event_id', eventId);
+      additionalParams.push(`event_id=${encodeURIComponent(eventId)}`);
     }
     
     if (ticketType) {
-      successParams.append('ticket_type', ticketType);
+      additionalParams.push(`ticket_type=${encodeURIComponent(ticketType)}`);
     }
     
-    const cancelParams = new URLSearchParams();
-    cancelParams.append('canceled', 'true');
-    if (couponCode) {
-      cancelParams.append('coupon', couponCode);
-    }
+    // Combine all parameters
+    const fullSuccessUrl = additionalParams.length > 0 
+      ? `${successUrl}&${additionalParams.join('&')}` 
+      : successUrl;
+    
+    // Build cancel URL
+    const cancelUrl = `${origin}${returnPath}?canceled=true${couponCode ? `&coupon=${encodeURIComponent(couponCode)}` : ''}`;
 
     let discountOptions = {};
     if (couponCode) {
@@ -96,8 +99,8 @@ export default async function handler(
         },
       ],
       mode: 'payment',
-      success_url: `${origin}/success?${successParams.toString()}`,
-      cancel_url: `${origin}${returnPath}?${cancelParams.toString()}`,
+      success_url: fullSuccessUrl,
+      cancel_url: cancelUrl,
       customer_email: email,
       ...(Object.keys(discountOptions).length > 0 ? discountOptions : {}),
       metadata: {

@@ -13,7 +13,7 @@ export default function SuccessPage() {
   const router = useRouter();
   const { session_id, workshop_id, event_id, ticket_type } = router.query;
   const [loading, setLoading] = useState(true);
-  const [errorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const { user, isLoaded } = useUser();
 
   // Determine correct item name and return path based on the ticket type
@@ -40,11 +40,15 @@ export default function SuccessPage() {
   }
 
   useEffect(() => {
-    // Only proceed if session_id exists
-    if (!session_id || !isLoaded) {
-      if (isLoaded && !session_id) {
-        setLoading(false);
-      }
+    // Only proceed if query params are loaded
+    if (!router.isReady || !isLoaded) {
+      return;
+    }
+    
+    // Check if session_id exists and is valid
+    if (!session_id) {
+      setLoading(false);
+      setErrorMessage('No session ID found. Your purchase may not have been completed.');
       return;
     }
 
@@ -54,7 +58,7 @@ export default function SuccessPage() {
         const userEmail = user?.primaryEmailAddress?.emailAddress || 'No email available';
 
         // Send notification about successful purchase
-        await fetch('/api/notify/purchase-success', {
+        const response = await fetch('/api/notify/purchase-success', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -67,6 +71,10 @@ export default function SuccessPage() {
             email: userEmail,
           }),
         });
+        
+        if (!response.ok) {
+          throw new Error('Failed to confirm purchase');
+        }
       } catch (error) {
         console.error('Failed to notify purchase:', error);
         // We don't set an error here as it's just a notification
@@ -76,7 +84,7 @@ export default function SuccessPage() {
     };
 
     notifyPurchase();
-  }, [session_id, workshop_id, event_id, ticket_type, user, isLoaded, itemType]);
+  }, [router.isReady, session_id, workshop_id, event_id, ticket_type, user, isLoaded, itemType]);
 
   if (loading) {
     return (

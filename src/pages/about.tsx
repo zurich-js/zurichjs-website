@@ -955,7 +955,7 @@ export async function getStaticProps() {
           name: 'Faris Aziz',
           role: 'Founder & Lead Organizer',
           image: '/images/team/faris.jpg',
-          bio: 'JavaScript enthusiast who loves bringing people together! Started ZurichJS to create a space where devs of all levels could share their passion for JS.',
+          bio: 'Staff Software Engineer and conference speaker focused on React, resilient systems, and scaling products used by millions. Founder of ZurichJS, passionate about practical architecture, great DX, and developer communities.',
           twitter: 'https://x.com/farisaziz12',
           github: 'https://github.com/farisaziz12',
           linkedin: 'https://linkedin.com/in/farisaziz12',
@@ -982,6 +982,15 @@ export async function getStaticProps() {
           github: 'https://github.com/ruizdurazo',
           linkedin: 'https://linkedin.com/in/ruizdurazo',
           website: 'https://ruizdurazo.com'
+        },
+        {
+          id: '4',
+          name: 'Nadja Hesselbjerg',
+          role: 'Community Supporter',
+          image: '/images/team/nadja.png',
+          bio: "Nadja is a Zurich-based frontend developer with a flair for crafting sleek, user-friendly web experiences. With a passion for innovative UX/UI design, she transforms complex ideas into intuitive digital solutions. Her multicultural background adds a unique perspective to her work. When she's not coding, Nadja is likely exploring the latest design trends or enjoying the vibrant Swiss tech scene.",
+          github: 'https://github.com/Nadjaroemer',
+          linkedin: 'https://www.linkedin.com/in/nadja-r%C3%B8mer-hesselbjerg-47002a12b/',
         },
       ],
       milestones: [

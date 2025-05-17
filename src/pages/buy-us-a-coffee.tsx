@@ -237,7 +237,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                               />
                             </div>
                         ) : (
-                            <div className="h-32 bg-gradient-to-r from-amber-400 to-yellow-300 flex items-center justify-center">
+                            <div className="h-48 w-full bg-gradient-to-r from-amber-400 to-yellow-300 flex items-center justify-center">
                               <span className="text-4xl">🙏</span>
                             </div>
                         )}
@@ -474,6 +474,12 @@ export async function getStaticProps() {
       date: 'March 25, 2025',
       photo: '/images/supporter/patrick-stillhart.png',
       link: 'https://stillh.art/',
+    },
+    {
+      name: 'Mario Vasile',
+      date: 'May 16, 2025',
+      // photo: '/images/supporter/nadja.png',
+      link: 'https://www.linkedin.com/in/mariovasile/',
     },
   ];
 

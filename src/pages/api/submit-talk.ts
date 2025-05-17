@@ -7,7 +7,7 @@ import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuidv4 } from 'uuid';
 
-import { sendPushoverNotification } from '@/lib/pushover';
+import { sendPlatformNotification } from '@/lib/notification';
 
 
 // Initialize Sanity client
@@ -45,7 +45,7 @@ export default async function handler(
 
   try {
     // Send notification that submission process has started
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'CFP Submission Started',
       message: 'A new CFP submission process has started.',
       priority: 0,
@@ -75,7 +75,7 @@ export default async function handler(
     const topics = fields.topics ? JSON.parse((Array.isArray(fields.topics) ? fields.topics[0] : fields.topics).toString()) : [];
 
     // Send notification with submission details
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'CFP Submission Processing',
       message: `Processing submission from ${name} (${email}):\n"${title}" - ${talkLength} minutes, ${talkLevel} level`,
       priority: 0,
@@ -224,7 +224,7 @@ export default async function handler(
     const { _id } =await sanityClient.create(talkDoc);
 
     // Send success notification
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'CFP Submission Successful',
       message: `Talk "${title}" by ${name} (${email}) was successfully submitted.\nTopics: ${topics.join(', ')}\nDuration: ${durationMinutes} minutes\nLevel: ${talkLevel}`,
       priority: 1,
@@ -254,7 +254,7 @@ export default async function handler(
     }
     
     // Send failure notification with submitter info
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'CFP Submission Failed',
       message: `Error processing submission from ${submitterInfo}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       priority: 2,

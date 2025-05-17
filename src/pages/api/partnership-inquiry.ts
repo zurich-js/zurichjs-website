@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-import { sendPushoverNotification } from '@/lib/pushover';
+import { sendPlatformNotification } from '@/lib/notification';
 
 type ResponseData = {
   success: boolean;
@@ -46,7 +46,7 @@ export default async function handler(
     };
 
     // Send the notification
-    await sendPushoverNotification(notificationMessage);
+    await sendPlatformNotification(notificationMessage);
     
     // Return success response
     return res.status(200).json({ 

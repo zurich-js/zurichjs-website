@@ -1,7 +1,7 @@
 import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { sendPushoverNotification } from '@/lib/pushover';
+import { sendPlatformNotification } from '@/lib/notification';
 
 // Disable the default body parser to handle form-data
 export const config = {
@@ -26,7 +26,7 @@ export default async function handler(
 
   try {
     // Send notification that submission process has started
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'Volunteer Application Started',
       message: 'A new volunteer application process has started.',
       priority: 0,
@@ -91,7 +91,7 @@ ${message}
 `;
 
     // Send notification with submission details
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'New Volunteer Application',
       message: detailedMessage,
       priority: 1,
@@ -107,7 +107,7 @@ ${message}
     console.error('Error submitting volunteer application:', error);
     
     // Send failure notification
-    await sendPushoverNotification({
+    await sendPlatformNotification({
       title: 'Volunteer Application Failed',
       message: `Error processing volunteer application: ${error instanceof Error ? error.message : 'Unknown error'}`,
       priority: 2,

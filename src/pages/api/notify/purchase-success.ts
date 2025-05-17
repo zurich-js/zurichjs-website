@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { sendPushoverNotification } from '@/lib/pushover';
+import { sendPlatformNotification } from '@/lib/notification';
 import { stripe } from '@/lib/stripe';
 
 interface PurchaseSuccessBody {
@@ -83,8 +83,8 @@ ${couponInfo}`,
       priority: 1,
     };
 
-    // Send notification to Pushover
-    await sendPushoverNotification(message);
+    // Send notification to platforms
+    await sendPlatformNotification(message);
 
     // Return success response
     return res.status(200).json({ success: true });

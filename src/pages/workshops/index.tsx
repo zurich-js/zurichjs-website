@@ -268,7 +268,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                             <div className="flex items-center">
                               <div className="relative mr-2 md:mr-3 w-7 h-7 md:w-10 md:h-10 overflow-hidden rounded-full border-2 border-yellow-500">
                                 <Image
-                                    src={speaker.image}
+                                    src={`${speaker.image}?h=100`}
                                     alt={speaker.name}
                                     fill
                                     className="object-cover"

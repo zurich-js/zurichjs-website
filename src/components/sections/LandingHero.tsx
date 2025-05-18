@@ -1,6 +1,7 @@
 import {motion} from "framer-motion";
 import { Linkedin } from "lucide-react";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 import Section from "@/components/Section";
 import Button from "@/components/ui/Button";
@@ -25,6 +26,11 @@ export default function LandingHero({
     stats
 }: LandingHeroProps) {
     const { track } = useEvents();
+    const [isClient, setIsClient] = useState(false);
+    
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     // Get the next event date dynamically
     const nextEventDate = upcomingEvents && upcomingEvents.length > 0
@@ -62,7 +68,7 @@ export default function LandingHero({
         <Section variant="gradient" padding="lg">
             <div className="flex flex-col lg:flex-row gap-12 lg:gap-4">
                 <motion.div
-                    initial={{opacity: 0, y: 20}}
+                    initial={isClient ? {opacity: 0, y: 20} : {opacity: 1, y: 0}}
                     animate={{opacity: 1, y: 0}}
                     transition={{duration: 0.5}}
                     className="grow basis-1/2 flex flex-col"
@@ -128,7 +134,7 @@ export default function LandingHero({
 
                 <div className="grow basis-1/2 flex h-fit">
                     <motion.div
-                        initial={{opacity: 0, y: 30}}
+                        initial={isClient ? {opacity: 0, y: 30} : {opacity: 1, y: 0}}
                         animate={{opacity: 1, y: 0}}
                         transition={{duration: 0.7, delay: 0.3}}
                         className="w-full relative bg-white rounded-xl shadow-xl overflow-hidden border-4 border-gray-900"
@@ -189,9 +195,9 @@ export default function LandingHero({
 
             {/* Stats Counter */}
             <motion.div
-                initial={{opacity: 0, y: 30}}
+                initial={isClient ? {opacity: 0, y: 30} : {opacity: 1, y: 0}}
                 animate={{opacity: 1, y: 0}}
-                transition={{delay: 1, duration: 0.5}}
+                transition={{delay: isClient ? 1 : 0, duration: 0.5}}
                 className="mt-20"
             >
                 <Stats stats={stats}/>

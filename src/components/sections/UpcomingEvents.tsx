@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 import { Event } from '@/sanity/queries';
 
@@ -14,6 +15,12 @@ interface UpcomingEventsProps {
 export default function UpcomingEvents({
   events,
 }: UpcomingEventsProps) {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   if (!events || events.length === 0) {
     return null;
   }
@@ -27,7 +34,7 @@ export default function UpcomingEvents({
     <Section variant="white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={isClient ? { opacity: 0, x: -20 } : { opacity: 1, x: 0 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
@@ -40,7 +47,7 @@ export default function UpcomingEvents({
           </p>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
+          initial={isClient ? { opacity: 0, x: 20 } : { opacity: 1, x: 0 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -59,7 +66,7 @@ export default function UpcomingEvents({
         {sortedEvents.map((event, index) => (
           <motion.div
             key={event.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -73,7 +80,7 @@ export default function UpcomingEvents({
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5, delay: 0.3 }}

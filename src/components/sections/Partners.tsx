@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 import Section from "@/components/Section";
 
@@ -20,6 +21,12 @@ interface PartnersProps {
 }
 
 export default function Partners({ partners, titleClassName = 'text-blue-700' }: PartnersProps) {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   if (!partners || partners.length === 0) {
     return null;
   }
@@ -27,7 +34,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
   return (
     <Section variant="white" padding="lg">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={isClient ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
@@ -43,7 +50,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0 }}
+            initial={isClient ? { opacity: 0 } : { opacity: 1 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
@@ -71,7 +78,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useState, useEffect } from 'react';
 
 import Section from "@/components/Section";
 import { FeatureFlags } from '@/constants';
@@ -42,11 +43,16 @@ export default function JoinCTA({
   buttonUrl = "https://meetup.com/zurich-js"
 }: JoinCTAProps) {
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <Section variant="black" padding="lg" className="flex justify-center">
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
+          initial={isClient ? { opacity: 0, x: -30 } : { opacity: 1, x: 0 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
@@ -81,10 +87,10 @@ export default function JoinCTA({
 
         {showNewsletter && (
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
+            initial={isClient ? { opacity: 0, x: 30 } : { opacity: 1, x: 0 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: isClient ? 0.2 : 0 }}
             className="lg:w-1/2 bg-gray-800 p-8 rounded-lg"
           >
             <h3 className="text-2xl font-bold mb-4">{newsletterTitle}</h3>

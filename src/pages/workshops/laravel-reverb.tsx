@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, Layout as LayoutIcon, Rocket, Code } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, Database, Globe, Code } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -9,8 +9,8 @@ import PageLayout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
-import { astroWorkshopTickets } from '@/components/workshop/astroWorkshopTickets';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
+import { laravelWorkshopTickets } from '@/components/workshop/laravelWorkshopTickets';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
@@ -49,52 +49,53 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "astro-zero-to-hero-workshop-2024",
-        title: "Astro: Zero to Hero",
-        subtitle: "Build High-Performance Websites with Astro",
+        id: "laravel-reverb-workshop-2025",
+        title: "From Scratch to Real-Time with Laravel & Reverb",
+        subtitle: "Building a mini-project tracker with Laravel",
         dateInfo: "July 23, 2025",
         timeInfo: "17:30 - 21:30 (4 hours)",
         locationInfo: "Zürich (Venue TBD)",
         price: "225 CHF",
-        description: "This comprehensive workshop takes you from zero knowledge to Astro hero status in just four hours. You'll learn how to leverage Astro's unique Island Architecture to build blazing-fast websites that ship zero JavaScript by default. We'll cover everything from project setup and configuration to advanced patterns including content collections, dynamic routing, and integration with your favorite frameworks. By the end of this hands-on session, you'll walk away with the skills to build modern, SEO-friendly websites that load in milliseconds and deliver exceptional user experiences.",
+        description: "This hands-on workshop takes you from the basics of Laravel to building a real-time mini-project tracker application. You&apos;ll learn how to set up a new Laravel project, create models and controllers, implement authentication, and add real-time features using Laravel Reverb. By the end of the session, you&apos;ll have built a functional application that updates in real-time as team members make changes to projects and tasks. This workshop is perfect for developers who are new to Laravel or have early-intermediate level experience and want to level up their skills.",
         maxAttendees: 15,
         speaker: speaker,
         topics: [
             {
-                title: "Astro Fundamentals",
-                description: "Learn Astro's core concepts and architecture for building high-performance websites.",
-                icon: <Rocket className="text-blue-500" size={24} />
+                title: "Laravel Fundamentals",
+                description: "Learn the core concepts of Laravel including routing, controllers, and Eloquent ORM.",
+                icon: <Database className="text-red-500" size={24} />
             },
             {
-                title: "Content Collections",
-                description: "Master Astro's powerful content management and type-safe Markdown/MDX systems.",
-                icon: <LayoutIcon className="text-purple-500" size={24} />
+                title: "Real-Time Features",
+                description: "Implement real-time updates with Laravel Reverb and websockets.",
+                icon: <Globe className="text-blue-500" size={24} />
             },
             {
-                title: "Framework Integrations",
-                description: "Seamlessly integrate React, Vue, Svelte or other framework components with Astro Islands.",
+                title: "Modern PHP Patterns",
+                description: "Apply modern PHP patterns and Laravel best practices to build maintainable applications.",
                 icon: <Code className="text-green-500" size={24} />
             }
         ],
         takeaways: [
-            "Understanding of Astro's Island Architecture and how it optimizes performance",
-            "Ability to structure and organize Astro projects for maintainability",
-            "Skills to build content-rich websites with Markdown/MDX and content collections",
-            "Knowledge of integrating components from React, Vue, Svelte or other frameworks",
-            "Experience with dynamic routing and data fetching patterns",
-            "Techniques for optimizing images, assets and SEO"
+            "Understanding of Laravel's MVC architecture and how to structure applications",
+            "Skills to implement authentication and authorization in Laravel",
+            "Knowledge of Eloquent ORM for database interactions",
+            "Experience with real-time features using Laravel Reverb",
+            "Techniques for testing Laravel applications",
+            "Best practices for PHP development and code organization"
         ],
         targetAudience: [
-            "Frontend Developers (all experience levels)",
-            "Web Developers looking to upgrade their toolkit",
-            "Designers transitioning to development",
-            "Content creators wanting technical website skills"
+            "Developers new to Laravel",
+            "Early-intermediate level Laravel developers",
+            "PHP developers wanting to learn modern frameworks",
+            "Web developers interested in real-time applications"
         ],
         prerequisites: [
-            "Basic HTML, CSS, and JavaScript knowledge",
-            "Familiarity with command line and npm/yarn",
-            "Your own laptop with Node.js installed (v16+ recommended)",
-            "No previous Astro experience required"
+            "Basic PHP knowledge",
+            "Familiarity with command line and Composer",
+            "Your own laptop with PHP 8.2+ installed",
+            "Composer and Git installed on your system",
+            "No previous Laravel experience required"
         ]
     };
 
@@ -113,9 +114,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             const style = document.createElement('style');
             style.textContent = `
                 @keyframes pulse-highlight {
-                  0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
-                  70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
-                  100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+                  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
                 }
                 .highlight-pulse {
                   animation: pulse-highlight 1.5s ease-in-out;
@@ -302,13 +303,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         transition={{duration: 0.5, delay: 0.2}}
                         className="lg:w-1/2 mt-6 sm:mt-8 lg:mt-0"
                     >
-                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-5 sm:p-8 border-l-4 border-blue-600 lg:sticky lg:top-24 relative">
+                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-5 sm:p-8 border-l-4 border-red-600 lg:sticky lg:top-24 relative">
                             <div className="absolute right-0 top-0 bg-js rounded-full w-16 sm:w-24 h-16 sm:h-24 opacity-20"></div>
-                            <div className="absolute -bottom-10 -left-10 bg-gradient-to-tr from-blue-200 to-transparent rounded-full w-32 h-32 opacity-30"></div>
+                            <div className="absolute -bottom-10 -left-10 bg-gradient-to-tr from-red-200 to-transparent rounded-full w-32 h-32 opacity-30"></div>
                             
                             <div className="flex flex-col items-center mb-6">
                                 <div className="relative mb-5">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-400 to-js rounded-full opacity-30 blur-lg transform scale-110"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-red-400 to-js rounded-full opacity-30 blur-lg transform scale-110"></div>
                                     <Image
                                         src={`${workshop.speaker.image}?h=300`}
                                         alt={workshop.speaker.name}
@@ -322,18 +323,18 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     <p className="text-lg text-gray-600 mb-3">{workshop.speaker.title}</p>
                                     
                                     <div className="flex flex-wrap gap-2 justify-center mb-5">
-                                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Astro Core Team</span>
-                                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Web Performance Expert</span>
-                                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Technical Writer</span>
+                                        <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">Laravel Expert</span>
+                                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Full-Stack Developer</span>
+                                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Tech Lead</span>
                                     </div>
                                     
-                                    <div className="bg-blue-50 p-5 rounded-lg border-l-2 border-blue-400">
-                                        <h4 className="font-bold text-sm mb-2 text-blue-800">EXPERTISE</h4>
+                                    <div className="bg-red-50 p-5 rounded-lg border-l-2 border-red-400">
+                                        <h4 className="font-bold text-sm mb-2 text-red-800">EXPERTISE</h4>
                                         <div className="flex flex-wrap gap-2 justify-center">
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Astro</span>
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Web Performance</span>
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Jamstack</span>
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">SSR/SSG</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Laravel</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">PHP</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Web Development</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Real-Time Apps</span>
                                         </div>
                                     </div>
                                 </div>
@@ -380,7 +381,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             className="mb-8 sm:mb-12"
                         >
                             <div className="flex items-center mb-4 sm:mb-6">
-                                <div className="h-1 w-6 sm:w-10 bg-blue-600 mr-2 sm:mr-3"></div>
+                                <div className="h-1 w-6 sm:w-10 bg-red-600 mr-2 sm:mr-3"></div>
                                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black">Topics We&apos;ll Cover</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
@@ -391,31 +392,31 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
                                     transition={{duration: 0.5, delay: 0.1}}
-                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow"
+                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow"
                                 >
                                     <div className="flex items-center mb-3">
-                                        <div className="bg-blue-100 p-2 rounded-full">
-                                            <Rocket className="text-blue-700" size={22} />
+                                        <div className="bg-red-100 p-2 rounded-full">
+                                            <Database className="text-red-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Astro Fundamentals
+                                            Laravel Fundamentals
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Learn the core concepts of Astro&apos;s architecture and how it optimizes performance:
+                                        Learn the core concepts of Laravel:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
-                                            <span className="text-blue-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Understanding Islands Architecture</span>
+                                            <span className="text-red-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">MVC architecture and project structure</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Project setup and file-based routing</span>
+                                            <span className="text-red-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Routing, controllers, and middleware</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-blue-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Building your first Astro components</span>
+                                            <span className="text-red-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Eloquent ORM for database interactions</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -425,31 +426,31 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
                                     transition={{duration: 0.5, delay: 0.2}}
-                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-shadow"
+                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500 hover:shadow-md transition-shadow"
                                 >
                                     <div className="flex items-center mb-3">
-                                        <div className="bg-purple-100 p-2 rounded-full">
-                                            <LayoutIcon className="text-purple-700" size={22} />
+                                        <div className="bg-blue-100 p-2 rounded-full">
+                                            <Globe className="text-blue-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Content Collections
+                                            Real-Time Features
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Master Astro&apos;s powerful content management systems:
+                                        Implement real-time functionality:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
-                                            <span className="text-purple-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Type-safe Markdown/MDX content</span>
+                                            <span className="text-blue-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Laravel Reverb setup and configuration</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-purple-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Setting up collection schemas</span>
+                                            <span className="text-blue-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Broadcasting events to specific channels</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-purple-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Building dynamic content pages</span>
+                                            <span className="text-blue-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Building responsive UI with live updates</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -466,24 +467,24 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                             <Code className="text-green-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Framework Integrations
+                                            Modern PHP Patterns
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Integrate your favorite UI frameworks with Astro Islands:
+                                        Apply modern PHP and Laravel patterns:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
                                             <span className="text-green-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Adding React, Vue, or Svelte components</span>
+                                            <span className="text-gray-700 text-base">Service classes and dependency injection</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-green-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Client-side hydration strategies</span>
+                                            <span className="text-gray-700 text-base">Repository pattern for data access</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-green-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Sharing state between islands</span>
+                                            <span className="text-gray-700 text-base">Laravel best practices and code organization</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -500,24 +501,24 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                             <Calendar className="text-yellow-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Advanced Patterns
+                                            Project Structure
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Take your Astro skills to the next level:
+                                        Build a complete mini-project tracker:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
                                             <span className="text-yellow-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Dynamic routing and data fetching</span>
+                                            <span className="text-gray-700 text-base">Authentication and authorization</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-yellow-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Optimizing images and assets</span>
+                                            <span className="text-gray-700 text-base">Project and task management features</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-yellow-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Advanced SEO techniques</span>
+                                            <span className="text-gray-700 text-base">Testing and deployment strategies</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -551,7 +552,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             
                             <div className="mt-6 bg-yellow-50 border-l-4 border-js p-4 rounded-lg">
                                 <p className="text-sm sm:text-base font-medium text-gray-800">
-                                    <span className="text-yellow-600 font-bold">Note:</span> All participants will receive code samples and reference materials to continue building with Astro after the workshop.
+                                    <span className="text-yellow-600 font-bold">Note:</span> All participants will receive code samples and reference materials to continue building with Laravel after the workshop.
                                 </p>
                             </div>
                         </motion.div>
@@ -565,26 +566,26 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-blue-500"
+                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-red-500"
                         >
                             <div className="flex items-center mb-4 sm:mb-6">
-                                <div className="h-1 w-6 sm:w-10 bg-blue-500 mr-2 sm:mr-3"></div>
+                                <div className="h-1 w-6 sm:w-10 bg-red-500 mr-2 sm:mr-3"></div>
                                 <h2 className="text-xl sm:text-2xl font-bold text-black">Who Should Attend</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
                             
                             <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                 {workshop.targetAudience.map((audience, index) => (
-                                    <div key={index} className="bg-blue-50 rounded-lg p-3 sm:p-5">
-                                        <Users className="mb-2 sm:mb-3 text-blue-600" size={22} />
+                                    <div key={index} className="bg-red-50 rounded-lg p-3 sm:p-5">
+                                        <Users className="mb-2 sm:mb-3 text-red-600" size={22} />
                                         <p className="font-medium text-gray-800 text-base">{audience}</p>
                                     </div>
                                 ))}
                             </div>
                             
-                            <div className="mt-4 sm:mt-6 bg-blue-50 border-l-4 border-blue-500 p-3 sm:p-4 rounded-lg">
+                            <div className="mt-4 sm:mt-6 bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-lg">
                                 <p className="text-sm sm:text-base font-medium text-gray-800">
-                                    <span className="text-blue-600 font-bold">Perfect for:</span> Developers looking to build lightning-fast websites with modern tools and minimal JavaScript.
+                                    <span className="text-red-600 font-bold">Perfect for:</span> Developers looking to build modern, real-time web applications with Laravel&apos;s powerful ecosystem.
                                 </p>
                             </div>
                         </motion.div>
@@ -616,7 +617,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             
                             <div className="mt-6 bg-purple-50 border-l-4 border-purple-400 p-4 rounded-lg">
                                 <p className="text-sm sm:text-base font-medium text-gray-800">
-                                    Don&apos;t worry if you&apos;re new to Astro! This workshop is designed to take you from zero experience to being able to build complete websites.
+                                    Don&apos;t worry if you&apos;re new to Laravel! This workshop is designed to take you from basic knowledge to building complete applications with real-time features.
                                 </p>
                             </div>
                         </motion.div>
@@ -665,7 +666,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                             {canceled === 'true' ? (
                                 <CancelledCheckout 
-                                    workshopId="astro-zero-to-hero"
+                                    workshopId="laravel-reverb"
                                     workshopTitle={workshop.title}
                                 />
                             ) : (
@@ -680,14 +681,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
 
                                     <p className="mb-4 font-medium text-base">
-                                        Join our exclusive workshop to learn how to build blazing-fast websites with Astro&apos;s powerful architecture and tooling.
+                                        Join our exclusive workshop to learn how to build real-time web applications with Laravel and Reverb.
                                     </p>
 
                                     {/* Stripe Checkout */}
                                     {isClient && <TicketSelection
-                                        options={astroWorkshopTickets}
+                                        options={laravelWorkshopTickets}
                                         className="max-w-2xl mx-auto"
-                                        workshopId="astro-zero-to-hero"
+                                        workshopId="laravel-reverb"
                                     />}
                                 </>
                             )}
@@ -708,7 +709,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </svg>
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Join Our Developer Community</h3>
-                                <p className="text-gray-600 mb-4">Get help, share your projects, and connect with other Astro enthusiasts in our Slack community.</p>
+                                <p className="text-gray-600 mb-4">Get help, share your projects, and connect with other Laravel enthusiasts in our Slack community.</p>
                                 <a 
                                     href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg" 
                                     target="_blank" 
@@ -735,16 +736,16 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     transition={{ duration: 0.5 }}
                     className="text-center py-3 sm:py-4"
                 >
-                    <div className="inline-block bg-gradient-to-r from-blue-500 to-yellow-500 p-1 rounded-lg sm:rounded-xl mb-5 sm:mb-8">
+                    <div className="inline-block bg-gradient-to-r from-red-500 to-yellow-500 p-1 rounded-lg sm:rounded-xl mb-5 sm:mb-8">
                         <div className="bg-black rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
                             <p className="text-white text-sm sm:text-base font-bold">{workshop.dateInfo} • {workshop.timeInfo} • Limited to {workshop.maxAttendees} participants</p>
                         </div>
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-5 text-js">Become an Astro Expert in Just One Evening! 🚀</h2>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-5 text-js">Build Real-Time Applications with Laravel & Reverb! 🚀</h2>
                     <p className="text-base sm:text-lg md:text-xl mb-5 sm:mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                        Join this intensive workshop to learn how Astro helps you build lightning-fast websites with less JavaScript. 
-                        Master the framework that&apos;s transforming modern web development!
+                        Join this hands-on workshop to learn how Laravel and Reverb help you build real-time web applications. 
+                        Take your PHP development skills to the next level!
                     </p>
 
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-5">
@@ -780,7 +781,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                     <div className="mt-6 sm:mt-8 bg-gray-800 rounded-lg p-3 sm:p-4 max-w-xl mx-auto">
                         <p className="text-white text-base">
-                            Learn everything you need to start building blazing-fast websites with Astro&apos;s innovative architecture and advanced features.
+                            Learn everything you need to start building real-time web applications with Laravel&apos;s modern architecture and Reverb.
                         </p>
                         <p className="text-js font-bold mt-2 text-base">Join us on {workshop.dateInfo}</p>
                     </div>
@@ -792,7 +793,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
 export async function getStaticProps() {
     // Fetch the speaker data using the getSpeakerById function
-    const speaker = await getSpeakerById('elian-van-cutsem');
+    const speaker = await getSpeakerById('bert-de-swaef');
 
     if (!speaker) {
         return {

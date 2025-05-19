@@ -2,7 +2,7 @@ import { TicketOption } from './TicketSelection';
 
 export const astroWorkshopTickets: TicketOption[] = [
   {
-    id: 'price_1RQ51TGxQziVA7FsioKTXffK', // Production price ID
+    id: 'price_1RQWurGxQziVA7FscgrUyAyO', // Production price ID
     testPriceId: 'price_1RQ6KnGxQziVA7FsdHks8zWL', // Test price ID (reusing nodejs workshop test ID for development)
     title: 'Workshop Only',
     description: 'Access to the Astro Zero to Hero Workshop',
@@ -15,7 +15,7 @@ export const astroWorkshopTickets: TicketOption[] = [
     ]
   },
   {
-    id: 'price_1RQ52iGxQziVA7FsUEKOrdng', // Production price ID
+    id: 'price_1RQWuyGxQziVA7Fs37EGVorN', // Production price ID
     testPriceId: 'price_1RQ6KCGxQziVA7FsatbNkH3k', // Test price ID (reusing nodejs workshop test ID for development)
     title: 'Workshop + Pro Meetup',
     description: 'Workshop + July 24th Pro Meetup Ticket',

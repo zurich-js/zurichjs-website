@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import React, { Fragment, useState, useEffect } from 'react';
 
-import { getEventTicket } from '@/components/event/EventTickets';
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
@@ -15,9 +14,9 @@ import EventFeedback from '@/components/ui/EventFeedback';
 import ProductDemoHighlight from '@/components/ui/ProductDemoHighlight';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
+import { useStripePrice } from '@/hooks/useStripePrice';
 import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
 import { ProductDemo } from '@/types';
-
 
 interface EventDetailPageProps {
   event: Event;
@@ -29,6 +28,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const [copySuccess, setCopySuccess] = useState(false);
   const [mapUrl, setMapUrl] = useState('');
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
+  const { price: stripePrice } = useStripePrice(event.stripePriceId);
   
   // Check if we're in feedback mode
   const isFeedbackMode = router.query.feedback === 'true';
@@ -743,7 +743,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                           </div>
                         </div>
                         <TicketSelection
-                          options={getEventTicket(event.id, event.title, 10, event.stripePriceId)} 
+                          options={[{
+                            id: event.stripePriceId,
+                            title: 'Pro Meetup Ticket',
+                            description: `Access to ${event.title}`,
+                            price: stripePrice ? stripePrice.unitAmount / 100 : 0,
+                            features: [
+                              'Full access to the pro meetup',
+                              'Networking opportunities',
+                              'Food and drinks included',
+                              'Q&A sessions with speakers'
+                            ],
+                            autoSelect: true,
+                            ticketType: 'event',
+                            eventId: event.id
+                          }]}
                           eventId={event.id}
                           ticketType="event"
                           buttonText="Complete Purchase"

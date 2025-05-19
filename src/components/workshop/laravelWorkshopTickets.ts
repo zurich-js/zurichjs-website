@@ -2,7 +2,7 @@ import { TicketOption } from './TicketSelection';
 
 export const laravelWorkshopTickets: TicketOption[] = [
   {
-    id: 'price_1RQ51TGxQziVA7FsioKTXffK', // Production price ID
+    id: 'price_1RQWvBGxQziVA7FsCDQxAjAi', // Production price ID
     testPriceId: 'price_1RQ6NpGxQziVA7FspQTF8Bdo', // Test price ID (reusing workshop test ID for development)
     title: 'Workshop Only',
     description: 'Access to the Laravel Workshop: From Scratch to Real-Time with Laravel & Reverb',
@@ -15,7 +15,7 @@ export const laravelWorkshopTickets: TicketOption[] = [
     ]
   },
   {
-    id: 'price_1RQ52iGxQziVA7FsUEKOrdng', // Production price ID
+    id: 'price_1RQWv1GxQziVA7FsUspZ2Sz8', // Production price ID
     testPriceId: 'price_1RQ6LyGxQziVA7FsneNLOrFr', // Test price ID (reusing workshop test ID for development)
     title: 'Workshop + Pro Meetup',
     description: 'Workshop + Pro Meetup Ticket for the following day',

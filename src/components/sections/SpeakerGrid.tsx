@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 import Section from '../Section';
 import Button from '../ui/Button';
@@ -24,6 +25,12 @@ export default function SpeakerGrid({
   textClassName = 'text-gray-800',
   titleClassName = 'text-gray-900'
 }: SpeakerGridProps) {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   if (!speakers || speakers.length === 0) {
     return null;
   }
@@ -32,7 +39,7 @@ export default function SpeakerGrid({
     <Section variant="white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
+          initial={isClient ? { opacity: 0, x: -20 } : { opacity: 1, x: 0 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
@@ -45,7 +52,7 @@ export default function SpeakerGrid({
           </p>
         </motion.div>
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
+          initial={isClient ? { opacity: 0, x: 20 } : { opacity: 1, x: 0 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -64,10 +71,10 @@ export default function SpeakerGrid({
         {speakers.map((speaker, index) => (
           <motion.div
             key={speaker.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            transition={{ duration: 0.5, delay: isClient ? index * 0.1 : 0 }}
           >
             <Card 
               type="speaker" 
@@ -78,10 +85,10 @@ export default function SpeakerGrid({
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.3 }}
+        transition={{ duration: 0.5, delay: isClient ? 0.3 : 0 }}
         className="mt-12 text-center"
       >
         <Button 

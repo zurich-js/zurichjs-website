@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Users, Calendar, Mic, UserPlus, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 // Define TypeScript interfaces for data structure
 interface StatsData {
@@ -27,6 +28,11 @@ export default function Stats({
   iconColor = 'text-blue-400',
   backgroundColor = 'bg-black bg-opacity-80'
 }: StatsProps) {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const statItems: StatItem[] = [
     {
@@ -58,7 +64,7 @@ export default function Stats({
   return (
     <div className={`${backgroundColor} text-white rounded-xl shadow-xl p-6 backdrop-blur-sm max-w-screen-lg mx-auto`}>
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={isClient ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="flex justify-center mb-4"
@@ -73,18 +79,18 @@ export default function Stats({
         {statItems.map((item, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
+            transition={{ duration: 0.3, delay: isClient ? index * 0.1 : 0 }}
             className="flex flex-col items-center text-center"
           >
             <div className={`${iconColor} mb-2`}>{item.icon}</div>
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={isClient ? { opacity: 0, scale: 0.8 } : { opacity: 1, scale: 1 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{
                 duration: 0.8,
-                delay: 0.5 + (index * 0.1),
+                delay: isClient ? 0.5 + (index * 0.1) : 0,
                 type: "spring",
                 stiffness: 100
               }}

@@ -2,12 +2,16 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, Layout as LayoutIcon, Rocket, Code } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import PageLayout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import { astroWorkshopTickets } from '@/components/workshop/astroWorkshopTickets';
+import CancelledCheckout from '@/components/workshop/CancelledCheckout';
+import TicketSelection from '@/components/workshop/TicketSelection';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
@@ -40,6 +44,8 @@ interface WorkshopPageProps {
 export default function WorkshopPage({ speaker }: WorkshopPageProps) {
     const [isClient, setIsClient] = useState(false);
     const { track } = useEvents();
+    const router = useRouter();
+    const { canceled } = router.query;
 
     // Workshop data
     const workshop: WorkshopDetails = {
@@ -49,7 +55,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         dateInfo: "July 23, 2025",
         timeInfo: "17:30 - 21:30 (4 hours)",
         locationInfo: "Zürich (Venue TBD)",
-        price: "180 CHF",
+        price: "225 CHF",
         description: "This comprehensive workshop takes you from zero knowledge to Astro hero status in just four hours. You'll learn how to leverage Astro's unique Island Architecture to build blazing-fast websites that ship zero JavaScript by default. We'll cover everything from project setup and configuration to advanced patterns including content collections, dynamic routing, and integration with your favorite frameworks. By the end of this hands-on session, you'll walk away with the skills to build modern, SEO-friendly websites that load in milliseconds and deliver exceptional user experiences.",
         maxAttendees: 15,
         speaker: speaker,
@@ -102,47 +108,28 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             workshop_title: workshop.title
         });
 
-        // Initialize TixTree when client is ready
+        // Add custom CSS for highlight effect
         if (typeof window !== 'undefined') {
-            // Only add script if it doesn't already exist
-            if (!document.getElementById('tixtree-script')) {
-                // Load the TixTree script dynamically
-                const script = document.createElement('script');
-                script.src = 'https://www.tixtree.com/widgets/tixtree.js';
-                script.id = 'tixtree-script';
-                script.dataset.type = 'event';
-                script.dataset.id = 'workshop-astro-zero-to-hero-677d595b6248';
-                script.async = true;
-                document.body.appendChild(script);
-            }
-
-            // Add custom CSS for highlight effect
             const style = document.createElement('style');
             style.textContent = `
-        @keyframes pulse-highlight {
-          0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
-          70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
-        }
-        .highlight-pulse {
-          animation: pulse-highlight 1.5s ease-in-out;
-        }
-        /* Fix for mobile overflow */
-        body, html {
-          overflow-x: hidden;
-          max-width: 100%;
-        }
-        /* Ensure TixTree widget is responsive */
-        #tixtree-wrapper {
-          width: 100% !important;
-          margin: 0 auto !important;
-          display: block !important;
-        }
-        /* Hide horizontal scrollbar */
-        ::-webkit-scrollbar-horizontal {
-          display: none;
-        }
-      `;
+                @keyframes pulse-highlight {
+                  0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.7); }
+                  70% { box-shadow: 0 0 0 15px rgba(250, 204, 21, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
+                }
+                .highlight-pulse {
+                  animation: pulse-highlight 1.5s ease-in-out;
+                }
+                /* Fix for mobile overflow */
+                body, html {
+                  overflow-x: hidden;
+                  max-width: 100%;
+                }
+                /* Hide horizontal scrollbar */
+                ::-webkit-scrollbar-horizontal {
+                  display: none;
+                }
+            `;
             document.head.appendChild(style);
         }
     }, []);
@@ -208,11 +195,11 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             });
 
             // Add a highlight effect
-            const tixtreeElement = document.getElementById('tixtree-wrapper');
-            if (tixtreeElement) {
-                tixtreeElement.classList.add('highlight-pulse');
+            const registrationContainer = document.getElementById('registrationContainer');
+            if (registrationContainer) {
+                registrationContainer.classList.add('highlight-pulse');
                 setTimeout(() => {
-                    tixtreeElement.classList.remove('highlight-pulse');
+                    registrationContainer.classList.remove('highlight-pulse');
                 }, 2000);
             }
         }
@@ -564,7 +551,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             
                             <div className="mt-6 bg-yellow-50 border-l-4 border-js p-4 rounded-lg">
                                 <p className="text-sm sm:text-base font-medium text-gray-800">
-                                    <span className="text-yellow-600 font-bold">Note:</span> All participants will receive starter templates, code samples, and reference materials to continue building with Astro after the workshop.
+                                    <span className="text-yellow-600 font-bold">Note:</span> All participants will receive code samples and reference materials to continue building with Astro after the workshop.
                                 </p>
                             </div>
                         </motion.div>
@@ -671,26 +658,39 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 </div>
                                 <div className="mt-3 pt-3 border-t border-gray-200">
                                     <p className="text-sm sm:text-base text-gray-600">
-                                        Includes workshop materials, code examples, starter templates, and refreshments
+                                        Includes workshop materials, code examples, and refreshments
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-4">
-                                <p className="font-medium text-gray-800">
-                                    Only {workshop.maxAttendees} spots available for this hands-on technical workshop.
-                                </p>
-                            </div>
+                            {canceled === 'true' ? (
+                                <CancelledCheckout 
+                                    workshopId="astro-zero-to-hero"
+                                    workshopTitle={workshop.title}
+                                />
+                            ) : (
+                                <>
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg mb-4">
+                                        <p className="font-medium text-gray-800">
+                                            Only {workshop.maxAttendees} spots available for this hands-on technical workshop.
+                                        </p>
+                                        <p className="text-xs text-gray-700 mt-1">
+                                            <strong>Pro tip:</strong> Sign up for a ZurichJS account to get a 20% community discount, or use a coupon code by adding <code>?coupon=YOUR_CODE</code> to the URL.
+                                        </p>
+                                    </div>
 
-                            <p className="mb-4 font-medium text-base">
-                                Join our exclusive workshop to learn how to build blazing-fast websites with Astro&apos;s powerful architecture and tooling.
-                            </p>
+                                    <p className="mb-4 font-medium text-base">
+                                        Join our exclusive workshop to learn how to build blazing-fast websites with Astro&apos;s powerful architecture and tooling.
+                                    </p>
 
-                            {/* TixTree Widget - Script loaded dynamically in useEffect hook */}
-                            <div
-                                id="tixtree-wrapper"
-                                className="transition-all duration-300 overflow-x-hidden w-full"
-                            ></div>
+                                    {/* Stripe Checkout */}
+                                    {isClient && <TicketSelection
+                                        options={astroWorkshopTickets}
+                                        className="max-w-2xl mx-auto"
+                                        workshopId="astro-zero-to-hero"
+                                    />}
+                                </>
+                            )}
                         </motion.div>
 
                         {/* Join Slack Community */}

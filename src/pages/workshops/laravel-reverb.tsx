@@ -1,21 +1,20 @@
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, MessageSquare, Cpu, Server, Network } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ChevronLeft, Database, Globe, Code } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
-import Layout from '@/components/layout/Layout';
+import PageLayout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
+import { laravelWorkshopTickets } from '@/components/workshop/laravelWorkshopTickets';
 import TicketSelection from '@/components/workshop/TicketSelection';
-import { workshopTickets } from '@/components/workshop/workshopTickets';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
-
 
 interface WorkshopDetails {
     id: string;
@@ -26,6 +25,7 @@ interface WorkshopDetails {
     locationInfo: string;
     description: string;
     maxAttendees: number;
+    price: string;
     speaker: Speaker;
     topics: {
         title: string;
@@ -49,51 +49,53 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "nodejs-threads",
-        title: "Node.js: More Threads Than You Think",
-        subtitle: "Exploring the Multi-Threaded Capabilities of Node.js",
-        dateInfo: "June 18, 2025",
-        timeInfo: "18:30 - 20:30 (2 hours)",
-        locationInfo: "ORBIZ Josef, Josefstrasse 214a, 8005 Zürich",
-        description: "Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. This workshop explores the world of multithreaded Node.js, showing how it is no longer a single-threaded environment. It introduces the Worker Threads API for offloading CPU-intensive tasks and the MessagePort API for thread communication. It discusses the challenges of cloning and transferring objects between threads and introduces tools like Piscina to simplify multithreading. Finally, it showcases Watt, a Node.js application server that leverages worker threads for isolated service execution and network-less HTTP communication.",
+        id: "laravel-reverb-workshop-2025",
+        title: "From Scratch to Real-Time with Laravel & Reverb",
+        subtitle: "Building a mini-project tracker with Laravel",
+        dateInfo: "July 23, 2025",
+        timeInfo: "17:30 - 21:30 (4 hours)",
+        locationInfo: "Zürich (Venue TBD)",
+        price: "225 CHF",
+        description: "This hands-on workshop takes you from the basics of Laravel to building a real-time mini-project tracker application. You&apos;ll learn how to set up a new Laravel project, create models and controllers, implement authentication, and add real-time features using Laravel Reverb. By the end of the session, you&apos;ll have built a functional application that updates in real-time as team members make changes to projects and tasks. This workshop is perfect for developers who are new to Laravel or have early-intermediate level experience and want to level up their skills.",
         maxAttendees: 15,
         speaker: speaker,
         topics: [
             {
-                title: "Worker Threads API",
-                description: "Learn how to use worker_threads to offload CPU-intensive tasks.",
-                icon: <Cpu className="text-green-500" size={24} />
+                title: "Laravel Fundamentals",
+                description: "Learn the core concepts of Laravel including routing, controllers, and Eloquent ORM.",
+                icon: <Database className="text-red-500" size={24} />
             },
             {
-                title: "Thread Communication",
-                description: "Master MessagePort API for effective communication between threads.",
-                icon: <MessageSquare className="text-blue-500" size={24} />
+                title: "Real-Time Features",
+                description: "Implement real-time updates with Laravel Reverb and websockets.",
+                icon: <Globe className="text-blue-500" size={24} />
             },
             {
-                title: "Advanced Multithreading",
-                description: "Explore Piscina and Watt for simplified multithreading in Node.js.",
-                icon: <Server className="text-purple-500" size={24} />
+                title: "Modern PHP Patterns",
+                description: "Apply modern PHP patterns and Laravel best practices to build maintainable applications.",
+                icon: <Code className="text-green-500" size={24} />
             }
         ],
         takeaways: [
-            "Understanding of Node.js's multi-threaded capabilities",
-            "Practical experience with Worker Threads API",
-            "Knowledge of effective thread communication patterns",
-            "Skills for building thread-based performance optimizations",
-            "Experience with tools like Piscina for thread pool management",
-            "Insights into Watt for isolated service execution"
+            "Understanding of Laravel's MVC architecture and how to structure applications",
+            "Skills to implement authentication and authorization in Laravel",
+            "Knowledge of Eloquent ORM for database interactions",
+            "Experience with real-time features using Laravel Reverb",
+            "Techniques for testing Laravel applications",
+            "Best practices for PHP development and code organization"
         ],
         targetAudience: [
-            "Node.js Developers (intermediate to advanced)",
-            "Backend Engineers looking to optimize performance",
-            "Technical Leads and Engineering Managers",
-            "Developers working on CPU-intensive Node.js applications"
+            "Developers new to Laravel",
+            "Early-intermediate level Laravel developers",
+            "PHP developers wanting to learn modern frameworks",
+            "Web developers interested in real-time applications"
         ],
         prerequisites: [
-            "Solid understanding of JavaScript and Node.js",
-            "Familiarity with asynchronous programming concepts",
-            "Experience building Node.js applications",
-            "Laptop with Node.js installed (v14+ recommended)"
+            "Basic PHP knowledge",
+            "Familiarity with command line and Composer",
+            "Your own laptop with PHP 8.2+ installed",
+            "Composer and Git installed on your system",
+            "No previous Laravel experience required"
         ]
     };
 
@@ -106,6 +108,31 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             workshop_id: workshop.id,
             workshop_title: workshop.title
         });
+
+        // Add custom CSS for highlight effect
+        if (typeof window !== 'undefined') {
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse-highlight {
+                  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+                  70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+                }
+                .highlight-pulse {
+                  animation: pulse-highlight 1.5s ease-in-out;
+                }
+                /* Fix for mobile overflow */
+                body, html {
+                  overflow-x: hidden;
+                  max-width: 100%;
+                }
+                /* Hide horizontal scrollbar */
+                ::-webkit-scrollbar-horizontal {
+                  display: none;
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }, []);
 
     // Share event function
@@ -169,18 +196,18 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             });
 
             // Add a highlight effect
-            const tixtreeElement = document.getElementById('tixtree-wrapper');
-            if (tixtreeElement) {
-                tixtreeElement.classList.add('highlight-pulse');
+            const registrationContainer = document.getElementById('registrationContainer');
+            if (registrationContainer) {
+                registrationContainer.classList.add('highlight-pulse');
                 setTimeout(() => {
-                    tixtreeElement.classList.remove('highlight-pulse');
+                    registrationContainer.classList.remove('highlight-pulse');
                 }, 2000);
             }
         }
     };
 
     return (
-        <Layout>
+        <PageLayout>
             <SEO
                 title={`${workshop.title} | ZurichJS Workshop`}
                 description={`Join us for ${workshop.title}: ${workshop.subtitle}. ${workshop.description.slice(0, 120)}...`}
@@ -221,28 +248,28 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                         <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 sm:mb-6">
                             <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-                                <Calendar size={18} className="mr-1.5 sm:mr-2 text-purple-600"/>
+                                <Calendar size={18} className="mr-1.5 sm:mr-2 text-blue-600"/>
                                 <div>
                                     <p className="font-semibold">Date</p>
                                     <p>{workshop.dateInfo}</p>
                                 </div>
                             </div>
                             <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-                                <Clock size={18} className="mr-1.5 sm:mr-2 text-purple-600"/>
+                                <Clock size={18} className="mr-1.5 sm:mr-2 text-blue-600"/>
                                 <div>
                                     <p className="font-semibold">Duration</p>
                                     <p>{workshop.timeInfo}</p>
                                 </div>
                             </div>
                             <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-                                <MapPin size={18} className="mr-1.5 sm:mr-2 text-purple-600"/>
+                                <MapPin size={18} className="mr-1.5 sm:mr-2 text-blue-600"/>
                                 <div>
                                     <p className="font-semibold">Location</p>
                                     <p>{workshop.locationInfo}</p>
                                 </div>
                             </div>
                             <div className="flex items-center bg-white shadow-sm px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base">
-                                <Users size={18} className="mr-1.5 sm:mr-2 text-purple-600"/>
+                                <Users size={18} className="mr-1.5 sm:mr-2 text-blue-600"/>
                                 <div>
                                     <p className="font-semibold">Capacity</p>
                                     <p>Limited to {workshop.maxAttendees} attendees</p>
@@ -276,13 +303,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         transition={{duration: 0.5, delay: 0.2}}
                         className="lg:w-1/2 mt-6 sm:mt-8 lg:mt-0"
                     >
-                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-5 sm:p-8 border-l-4 border-green-600 lg:sticky lg:top-24 relative">
+                        <div className="rounded-xl overflow-hidden shadow-lg sm:shadow-xl bg-white p-5 sm:p-8 border-l-4 border-red-600 lg:sticky lg:top-24 relative">
                             <div className="absolute right-0 top-0 bg-js rounded-full w-16 sm:w-24 h-16 sm:h-24 opacity-20"></div>
-                            <div className="absolute -bottom-10 -left-10 bg-gradient-to-tr from-green-200 to-transparent rounded-full w-32 h-32 opacity-30"></div>
+                            <div className="absolute -bottom-10 -left-10 bg-gradient-to-tr from-red-200 to-transparent rounded-full w-32 h-32 opacity-30"></div>
                             
                             <div className="flex flex-col items-center mb-6">
                                 <div className="relative mb-5">
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-green-400 to-js rounded-full opacity-30 blur-lg transform scale-110"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-red-400 to-js rounded-full opacity-30 blur-lg transform scale-110"></div>
                                     <Image
                                         src={`${workshop.speaker.image}?h=300`}
                                         alt={workshop.speaker.name}
@@ -296,26 +323,26 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     <p className="text-lg text-gray-600 mb-3">{workshop.speaker.title}</p>
                                     
                                     <div className="flex flex-wrap gap-2 justify-center mb-5">
-                                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">Node.js Core Team</span>
-                                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Published Author</span>
-                                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Founder & CTO</span>
+                                        <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">Laravel Expert</span>
+                                        <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">Full-Stack Developer</span>
+                                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium">Tech Lead</span>
                                     </div>
                                     
-                                    <div className="bg-green-50 p-5 rounded-lg border-l-2 border-green-400">
-                                        <h4 className="font-bold text-sm mb-2 text-green-800">EXPERTISE</h4>
+                                    <div className="bg-red-50 p-5 rounded-lg border-l-2 border-red-400">
+                                        <h4 className="font-bold text-sm mb-2 text-red-800">EXPERTISE</h4>
                                         <div className="flex flex-wrap gap-2 justify-center">
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Node.js Internals</span>
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Performance Optimization</span>
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Threading Models</span>
-                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Async Patterns</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Laravel</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">PHP</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Web Development</span>
+                                            <span className="bg-white text-gray-700 px-2 py-1 rounded text-xs font-medium">Real-Time Apps</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <div className="bg-gray-50 p-5 rounded-lg mt-6 border border-gray-100">
-                                <p className="font-medium text-gray-700">Limited to {workshop.maxAttendees} attendees</p>
-                                <p className="text-sm text-gray-600 mt-2">See ticket options below.</p>
+                                <p className="font-medium text-gray-700">Price: {workshop.price}</p>
+                                <p className="text-sm text-gray-600 mt-2">Limited to {workshop.maxAttendees} attendees.</p>
                             </div>
                         </div>
                     </motion.div>
@@ -341,9 +368,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                         {workshop.description}
                     </p>
                 </motion.div>
-                
+
                 <div className="flex flex-col lg:flex-row gap-6 sm:gap-10">
-                    {/* Main Content - now 50% width */}
+                    {/* Main Content - 50% width */}
                     <div className="lg:w-1/2">
                         {/* Workshop Topics */}
                         <motion.div
@@ -354,7 +381,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             className="mb-8 sm:mb-12"
                         >
                             <div className="flex items-center mb-4 sm:mb-6">
-                                <div className="h-1 w-6 sm:w-10 bg-green-600 mr-2 sm:mr-3"></div>
+                                <div className="h-1 w-6 sm:w-10 bg-red-600 mr-2 sm:mr-3"></div>
                                 <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-black">Topics We&apos;ll Cover</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
@@ -365,31 +392,31 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
                                     transition={{duration: 0.5, delay: 0.1}}
-                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500 hover:shadow-md transition-shadow"
+                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow"
                                 >
                                     <div className="flex items-center mb-3">
-                                        <div className="bg-green-100 p-2 rounded-full">
-                                            <Cpu className="text-green-700" size={22} />
+                                        <div className="bg-red-100 p-2 rounded-full">
+                                            <Database className="text-red-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Worker Threads API
+                                            Laravel Fundamentals
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Learn the fundamentals of Node.js&apos;s Worker Threads API for creating true multi-threaded applications:
+                                        Learn the core concepts of Laravel:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
-                                            <span className="text-green-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Creating and managing worker threads</span>
+                                            <span className="text-red-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">MVC architecture and project structure</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-green-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Identifying CPU-intensive tasks for offloading</span>
+                                            <span className="text-red-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Routing, controllers, and middleware</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-green-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Thread lifecycle and error handling</span>
+                                            <span className="text-red-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Eloquent ORM for database interactions</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -403,27 +430,27 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 >
                                     <div className="flex items-center mb-3">
                                         <div className="bg-blue-100 p-2 rounded-full">
-                                            <MessageSquare className="text-blue-700" size={22} />
+                                            <Globe className="text-blue-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Thread Communication
+                                            Real-Time Features
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Master effective communication patterns between threads in Node.js:
+                                        Implement real-time functionality:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
                                             <span className="text-blue-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">MessagePort API for efficient data transfer</span>
+                                            <span className="text-gray-700 text-base">Laravel Reverb setup and configuration</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-blue-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Cloning vs. transferring objects between threads</span>
+                                            <span className="text-gray-700 text-base">Broadcasting events to specific channels</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-blue-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Parent-child communication patterns</span>
+                                            <span className="text-gray-700 text-base">Building responsive UI with live updates</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -433,31 +460,31 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     whileInView={{opacity: 1, y: 0}}
                                     viewport={{once: true}}
                                     transition={{duration: 0.5, delay: 0.3}}
-                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-500 hover:shadow-md transition-shadow"
+                                    className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500 hover:shadow-md transition-shadow"
                                 >
                                     <div className="flex items-center mb-3">
-                                        <div className="bg-purple-100 p-2 rounded-full">
-                                            <Server className="text-purple-700" size={22} />
+                                        <div className="bg-green-100 p-2 rounded-full">
+                                            <Code className="text-green-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Thread Pools with Piscina
+                                            Modern PHP Patterns
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Simplify multithreading with thread pool management:
+                                        Apply modern PHP and Laravel patterns:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
-                                            <span className="text-purple-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Implementing thread pools with Piscina</span>
+                                            <span className="text-green-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Service classes and dependency injection</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-purple-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Dynamic task distribution and load balancing</span>
+                                            <span className="text-green-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Repository pattern for data access</span>
                                         </li>
                                         <li className="flex items-start">
-                                            <span className="text-purple-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Performance optimization techniques</span>
+                                            <span className="text-green-500 mr-2 text-lg">•</span>
+                                            <span className="text-gray-700 text-base">Laravel best practices and code organization</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -471,27 +498,27 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 >
                                     <div className="flex items-center mb-3">
                                         <div className="bg-yellow-100 p-2 rounded-full">
-                                            <Network className="text-yellow-700" size={22} />
+                                            <Calendar className="text-yellow-700" size={22} />
                                         </div>
                                         <h3 className="text-xl font-bold ml-3 text-gray-800">
-                                            Watt Application Server
+                                            Project Structure
                                         </h3>
                                     </div>
                                     <p className="text-gray-600 leading-relaxed text-base">
-                                        Explore the cutting-edge Watt server for isolated service execution:
+                                        Build a complete mini-project tracker:
                                     </p>
                                     <ul className="mt-2 space-y-2">
                                         <li className="flex items-start">
                                             <span className="text-yellow-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Service isolation through worker threads</span>
+                                            <span className="text-gray-700 text-base">Authentication and authorization</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-yellow-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Network-less HTTP communication</span>
+                                            <span className="text-gray-700 text-base">Project and task management features</span>
                                         </li>
                                         <li className="flex items-start">
                                             <span className="text-yellow-500 mr-2 text-lg">•</span>
-                                            <span className="text-gray-700 text-base">Building resilient service architectures</span>
+                                            <span className="text-gray-700 text-base">Testing and deployment strategies</span>
                                         </li>
                                     </ul>
                                 </motion.div>
@@ -525,13 +552,13 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             
                             <div className="mt-6 bg-yellow-50 border-l-4 border-js p-4 rounded-lg">
                                 <p className="text-sm sm:text-base font-medium text-gray-800">
-                                    <span className="text-yellow-600 font-bold">Note:</span> All participants will receive code examples and reference materials to apply multithreading techniques in their own projects after the workshop.
+                                    <span className="text-yellow-600 font-bold">Note:</span> All participants will receive code samples and reference materials to continue building with Laravel after the workshop.
                                 </p>
                             </div>
                         </motion.div>
                     </div>
                 
-                    {/* Sidebar Content - now also 50% width */}
+                    {/* Sidebar Content - 50% width */}
                     <div className="lg:w-1/2">
                         {/* Who Should Attend */}
                         <motion.div
@@ -539,26 +566,58 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5, delay: 0.2 }}
-                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-green-500"
+                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-red-500"
                         >
                             <div className="flex items-center mb-4 sm:mb-6">
-                                <div className="h-1 w-6 sm:w-10 bg-green-500 mr-2 sm:mr-3"></div>
+                                <div className="h-1 w-6 sm:w-10 bg-red-500 mr-2 sm:mr-3"></div>
                                 <h2 className="text-xl sm:text-2xl font-bold text-black">Who Should Attend</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
                             </div>
                             
                             <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                                 {workshop.targetAudience.map((audience, index) => (
-                                    <div key={index} className="bg-green-50 rounded-lg p-3 sm:p-5">
-                                        <Users className="mb-2 sm:mb-3 text-green-600" size={22} />
+                                    <div key={index} className="bg-red-50 rounded-lg p-3 sm:p-5">
+                                        <Users className="mb-2 sm:mb-3 text-red-600" size={22} />
                                         <p className="font-medium text-gray-800 text-base">{audience}</p>
                                     </div>
                                 ))}
                             </div>
                             
-                            <div className="mt-4 sm:mt-6 bg-green-50 border-l-4 border-green-500 p-3 sm:p-4 rounded-lg">
+                            <div className="mt-4 sm:mt-6 bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-lg">
                                 <p className="text-sm sm:text-base font-medium text-gray-800">
-                                    <span className="text-green-600 font-bold">Perfect for:</span> Developers looking to leverage multithreading for performance-critical Node.js applications.
+                                    <span className="text-red-600 font-bold">Perfect for:</span> Developers looking to build modern, real-time web applications with Laravel&apos;s powerful ecosystem.
+                                </p>
+                            </div>
+                        </motion.div>
+
+                        {/* Prerequisites */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-purple-500"
+                        >
+                            <div className="flex items-center mb-4 sm:mb-6">
+                                <div className="h-1 w-6 sm:w-10 bg-purple-500 mr-2 sm:mr-3"></div>
+                                <h2 className="text-xl sm:text-2xl font-bold text-black">Prerequisites</h2>
+                                <div className="h-1 flex-grow bg-gray-200 ml-2 sm:ml-3"></div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                                {workshop.prerequisites.map((prerequisite, index) => (
+                                    <div key={index} className="flex items-start">
+                                        <div className="flex-shrink-0 h-6 w-6 rounded-full bg-purple-100 flex items-center justify-center mt-0.5 mr-3">
+                                            <span className="text-purple-700 font-bold text-sm">{index + 1}</span>
+                                        </div>
+                                        <p className="text-gray-700">{prerequisite}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div className="mt-6 bg-purple-50 border-l-4 border-purple-400 p-4 rounded-lg">
+                                <p className="text-sm sm:text-base font-medium text-gray-800">
+                                    Don&apos;t worry if you&apos;re new to Laravel! This workshop is designed to take you from basic knowledge to building complete applications with real-time features.
                                 </p>
                             </div>
                         </motion.div>
@@ -586,49 +645,28 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     <span className="font-semibold text-gray-800 text-base">Time:</span>
                                     <span className="text-black text-base">{workshop.timeInfo}</span>
                                 </div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="font-semibold text-gray-800 text-base">Location:</span>
+                                    <span className="text-black text-base">{workshop.locationInfo}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="font-semibold text-gray-800 text-base">Price:</span>
+                                    <span className="text-black text-base font-bold">{workshop.price}</span>
+                                </div>
                                 <div className="flex justify-between items-center">
                                     <span className="font-semibold text-gray-800 text-base">Availability:</span>
                                     <span className="text-black text-base">Only {workshop.maxAttendees} spots</span>
                                 </div>
-
-                                <div className="mt-3 bg-red-50 border-l-4 border-red-400 p-3 rounded-lg">
-                                    <p className="font-bold text-red-700">
-                                        Only 5 tickets left!
-                                    </p>
-                                    <p className="text-xs text-gray-600 mt-1 italic">
-                                        Note: Ticket availability may take up to 24h to update.
-                                    </p>
-                                </div>
-
-                                <div className="mt-3 bg-orange-50 border-l-4 border-orange-400 p-3 rounded-lg">
-                                    <p className="font-bold text-orange-700">
-                                        Prices increase to CHF 150 per seat on June 1st
-                                    </p>
-                                    <div className="mt-2 p-2 bg-white rounded-md text-center">
-                                        <p className="text-sm font-semibold text-gray-700">Time remaining until price increase:</p>
-                                        <div id="priceIncreaseTimer" className="font-mono text-lg font-bold text-orange-600">
-                                            {isClient && (
-                                                <span>
-                                                    {Math.floor((new Date('2025-06-01T00:00:00Z').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <div className="mt-3 pt-3 border-t border-gray-200">
                                     <p className="text-sm sm:text-base text-gray-600">
                                         Includes workshop materials, code examples, and refreshments
-                                    </p>
-                                    <p className="text-xs sm:text-sm text-gray-600 mt-2 italic">
-                                        All proceeds support ZurichJS running costs, refreshments, and future meetups. None of the money goes to Platformatic.
                                     </p>
                                 </div>
                             </div>
 
                             {canceled === 'true' ? (
                                 <CancelledCheckout 
-                                    workshopId="nodejs-threads"
+                                    workshopId="laravel-reverb"
                                     workshopTitle={workshop.title}
                                 />
                             ) : (
@@ -643,17 +681,47 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
 
                                     <p className="mb-4 font-medium text-base">
-                                        Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
+                                        Join our exclusive workshop to learn how to build real-time web applications with Laravel and Reverb.
                                     </p>
 
-                                    {/* Replace TixTree Widget with TicketSelection */}
+                                    {/* Stripe Checkout */}
                                     {isClient && <TicketSelection
-                                        options={workshopTickets}
+                                        options={laravelWorkshopTickets}
                                         className="max-w-2xl mx-auto"
-                                        workshopId="nodejs-threads"
+                                        workshopId="laravel-reverb"
                                     />}
                                 </>
                             )}
+                        </motion.div>
+
+                        {/* Join Slack Community */}
+                        <motion.div
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="mb-8 sm:mb-12 bg-white p-4 sm:p-8 rounded-lg shadow-md border-t-4 border-purple-700"
+                        >
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 mb-4 flex items-center justify-center bg-purple-100 rounded-full">
+                                    <svg className="w-10 h-10 text-purple-700" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Join Our Developer Community</h3>
+                                <p className="text-gray-600 mb-4">Get help, share your projects, and connect with other Laravel enthusiasts in our Slack community.</p>
+                                <a 
+                                    href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="bg-purple-700 hover:bg-purple-800 text-white py-2 px-6 rounded-md font-medium transition-colors inline-flex items-center"
+                                >
+                                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                                    </svg>
+                                    Join ZurichJS Slack
+                                </a>
+                            </div>
                         </motion.div>
                     </div>
                 </div>
@@ -668,16 +736,16 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     transition={{ duration: 0.5 }}
                     className="text-center py-3 sm:py-4"
                 >
-                    <div className="inline-block bg-gradient-to-r from-green-500 to-yellow-500 p-1 rounded-lg sm:rounded-xl mb-5 sm:mb-8">
+                    <div className="inline-block bg-gradient-to-r from-red-500 to-yellow-500 p-1 rounded-lg sm:rounded-xl mb-5 sm:mb-8">
                         <div className="bg-black rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
-                            <p className="text-white text-sm sm:text-base font-bold">June 18, 2024 • 18:30-20:30 • Limited to 15 participants</p>
+                            <p className="text-white text-sm sm:text-base font-bold">{workshop.dateInfo} • {workshop.timeInfo} • Limited to {workshop.maxAttendees} participants</p>
                         </div>
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-5 text-js">Unlock the Full Power of Node.js Threads! 🚀</h2>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-5 text-js">Build Real-Time Applications with Laravel & Reverb! 🚀</h2>
                     <p className="text-base sm:text-lg md:text-xl mb-5 sm:mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                        Join this exclusive workshop to discover how Node.js evolved beyond its single-threaded origins. 
-                        Learn practical multi-threading techniques from a Node.js expert!
+                        Join this hands-on workshop to learn how Laravel and Reverb help you build real-time web applications. 
+                        Take your PHP development skills to the next level!
                     </p>
 
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-5">
@@ -689,7 +757,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 scrollToRegistration();
                             }}
                         >
-                            Get Your Ticket
+                            Get Your Ticket ({workshop.price})
                         </a>
                         <button
                             onClick={shareWorkshop}
@@ -698,23 +766,34 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             <Share2 size={18} className="inline mr-2"/> 
                             Share with Your Team
                         </button>
+                        <a
+                            href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg"
+                            target="_blank"
+                            rel="noopener noreferrer" 
+                            className="bg-purple-700 text-white px-4 sm:px-8 py-2.5 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-purple-800 transition-colors w-full sm:w-auto mt-3 sm:mt-0"
+                        >
+                            <svg className="w-5 h-5 inline mr-2" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/>
+                            </svg>
+                            Join Slack Community
+                        </a>
                     </div>
 
                     <div className="mt-6 sm:mt-8 bg-gray-800 rounded-lg p-3 sm:p-4 max-w-xl mx-auto">
                         <p className="text-white text-base">
-                            Master the art of multi-threaded programming in Node.js and take your applications to the next level of performance and scalability.
+                            Learn everything you need to start building real-time web applications with Laravel&apos;s modern architecture and Reverb.
                         </p>
                         <p className="text-js font-bold mt-2 text-base">Join us on {workshop.dateInfo}</p>
                     </div>
                 </motion.div>
             </Section>
-        </Layout>
+        </PageLayout>
     );
 }
 
 export async function getStaticProps() {
     // Fetch the speaker data using the getSpeakerById function
-    const speaker = await getSpeakerById('matteo-collina');
+    const speaker = await getSpeakerById('bert-de-swaef');
 
     if (!speaker) {
         return {
@@ -728,4 +807,4 @@ export async function getStaticProps() {
         },
         revalidate: 60, // Revalidate the page every 60 seconds
     };
-}
+} 

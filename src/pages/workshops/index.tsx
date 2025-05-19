@@ -32,6 +32,21 @@ const workshops = [
     state: 'confirmed' as WorkshopState
   },
   {
+    id: 'laravel-reverb',
+    title: 'From Scratch to Real-Time with Laravel & Reverb',
+    subtitle: 'Building a mini-project tracker with Laravel',
+    description: 'Learn to build a functional mini-project tracker app with real-time features using Laravel & Reverb. Perfect for developers new to Laravel or those with early-intermediate level experience.',
+    dateInfo: 'July 23, 2025',
+    timeInfo: '17:30 - 21:30',
+    locationInfo: 'Zürich (Venue TBD)',
+    maxAttendees: 15,
+    image: '/images/workshops/laravel-reverb.png',
+    iconColor: '#ef4444', // red-500
+    tag: '⚡ Real-Time Web',
+    speakerId: 'bert-de-swaef',
+    state: 'confirmed' as WorkshopState
+  },
+  {
     id: 'astro-zero-to-hero',
     title: 'Astro: Zero to Hero',
     subtitle: 'Build High-Performance Websites with Astro',
@@ -253,7 +268,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                             <div className="flex items-center">
                               <div className="relative mr-2 md:mr-3 w-7 h-7 md:w-10 md:h-10 overflow-hidden rounded-full border-2 border-yellow-500">
                                 <Image
-                                    src={speaker.image}
+                                    src={`${speaker.image}?h=100`}
                                     alt={speaker.name}
                                     fill
                                     className="object-cover"

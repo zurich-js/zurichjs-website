@@ -5,8 +5,11 @@ import LandingHero from "@/components/sections/LandingHero";
 import Partners from '@/components/sections/Partners';
 import SpeakerGrid from '@/components/sections/SpeakerGrid';
 import UpcomingEvents from '@/components/sections/UpcomingEvents';
+import UpcomingWorkshops from '@/components/sections/UpcomingWorkshops';
+import type { Workshop } from '@/components/sections/UpcomingWorkshops';
 import SEO from '@/components/SEO';
 import { getPartners } from '@/data';
+import { getUpcomingWorkshops } from '@/data/workshops';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import type { Event } from '@/sanity/queries';
 import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
@@ -39,9 +42,10 @@ interface HomeProps {
   featuredSpeakers: Speaker[];
   stats: StatsData;
   partners: Partner[];
+  upcomingWorkshops: Workshop[];
 }
 
-export default function Home({ upcomingEvents, featuredSpeakers, stats, partners }: HomeProps) {
+export default function Home({ upcomingEvents, featuredSpeakers, stats, partners, upcomingWorkshops }: HomeProps) {
   useReferrerTracking();
 
   return (
@@ -63,6 +67,9 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
 
       {/* Upcoming Events Section */}
       <UpcomingEvents events={upcomingEvents} />
+
+      {/* Upcoming Workshops Section */}
+      <UpcomingWorkshops workshops={upcomingWorkshops} />
 
       {/* Community Values Section */}
       <CommunityValues />
@@ -86,12 +93,15 @@ export async function getStaticProps() {
   const upcomingEvents = await getUpcomingEvents();
   const speakers = await getSpeakers({ shouldFilterVisible: true });
   const partners = getPartners();
+  const upcomingWorkshops = getUpcomingWorkshops();
+  
   return {
     props: {
       upcomingEvents,
       featuredSpeakers: speakers.slice(0, 3),
       stats,
-      partners
+      partners,
+      upcomingWorkshops
     },
   };
 }

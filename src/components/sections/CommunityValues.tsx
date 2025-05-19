@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Code, Users, Lightbulb, Globe, Heart, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 import Section from "@/components/Section";
 
@@ -11,6 +12,11 @@ interface CommunityValue {
 }
 
 export default function CommunityValues() {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const values: CommunityValue[] = [
     {
@@ -38,7 +44,7 @@ export default function CommunityValues() {
   return (
     <Section variant="gradient">
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={isClient ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
@@ -60,10 +66,10 @@ export default function CommunityValues() {
         {values.map((value, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            transition={{ duration: 0.5, delay: isClient ? index * 0.1 : 0 }}
             className="bg-white p-6 rounded-lg shadow-md relative overflow-hidden"
           >
             {/* Decorative star in background */}
@@ -86,10 +92,10 @@ export default function CommunityValues() {
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.5 }}
+        transition={{ duration: 0.5, delay: isClient ? 0.5 : 0 }}
         className="mt-12 text-center"
       >
         <p className="text-xl font-bold">

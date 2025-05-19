@@ -49,6 +49,18 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     setIsClient(true);
   }, []);
 
+  // Function to format date in CEST timezone
+  const formatDateCEST = (date: string, options: Intl.DateTimeFormatOptions) => {
+    // Create a date object
+    const dateObj = new Date(date);
+    
+    // Format the date in CEST timezone (Europe/Zurich)
+    return new Intl.DateTimeFormat('en-GB', {
+      ...options,
+      timeZone: 'Europe/Zurich'
+    }).format(dateObj);
+  };
+
   useEffect(() => {
     (async () => {
       const response = await fetch(`/api/google-maps?location=${encodeURIComponent(event.address || event.location)}`);
@@ -82,14 +94,15 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const shareEvent = async () => {
     const shareUrl = `${window.location.origin}/events/${event.id}`;
 
-    // Format the date for sharing
-    const eventDate = new Date(event.datetime);
-    const formattedDate = eventDate.toLocaleDateString('en-GB', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    // Format the date for sharing in CEST timezone
+    const formattedDate = isClient && event.datetime
+      ? formatDateCEST(event.datetime, {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      : 'TBD';
 
     const shareText = `Join me at ${event.title} on ${formattedDate} with ZurichJS!`;
 
@@ -188,7 +201,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                   <Calendar size={16} className="mr-1.5" />
                     <span>{isClient && event.datetime
-                      ? new Date(event.datetime).toLocaleDateString('en-GB', {
+                      ? formatDateCEST(event.datetime, {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
@@ -200,10 +213,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                   <Clock size={16} className="mr-1.5" />
                   <span>{isClient && event.datetime
-                    ? new Date(event.datetime).toLocaleTimeString('en-GB', {
+                    ? `${formatDateCEST(event.datetime, {
                         hour: '2-digit',
                         minute: '2-digit'
-                      })
+                      })} CEST`
                     : 'Time TBD'}
                   </span>
                 </div>
@@ -720,7 +733,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-semibold text-gray-800">Date:</span>
                             <span className="text-black">{isClient && event.datetime
-                              ? new Date(event.datetime).toLocaleDateString('en-GB', {
+                              ? formatDateCEST(event.datetime, {
                                   weekday: 'long',
                                   year: 'numeric',
                                   month: 'long',
@@ -731,10 +744,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                           <div className="flex justify-between items-center mb-2">
                             <span className="font-semibold text-gray-800">Time:</span>
                             <span className="text-black">{isClient && event.datetime
-                              ? new Date(event.datetime).toLocaleTimeString('en-GB', {
+                              ? `${formatDateCEST(event.datetime, {
                                   hour: '2-digit',
                                   minute: '2-digit'
-                                })
+                                })} CEST`
                               : 'Time TBD'}</span>
                           </div>
                           <div className="flex justify-between items-center">

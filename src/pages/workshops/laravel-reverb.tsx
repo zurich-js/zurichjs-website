@@ -56,7 +56,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         timeInfo: "17:30 - 21:30 (4 hours)",
         locationInfo: "Zürich (Venue TBD)",
         price: "225 CHF",
-        description: "This hands-on workshop takes you from the basics of Laravel to building a real-time mini-project tracker application. You&apos;ll learn how to set up a new Laravel project, create models and controllers, implement authentication, and add real-time features using Laravel Reverb. By the end of the session, you&apos;ll have built a functional application that updates in real-time as team members make changes to projects and tasks. This workshop is perfect for developers who are new to Laravel or have early-intermediate level experience and want to level up their skills.",
+        description: "This hands-on workshop takes you from the basics of Laravel to building a real-time mini-project tracker application. You'll learn how to set up a new Laravel project, create models and controllers, implement authentication, and add real-time features using Laravel Reverb. By the end of the session, you'll have built a functional application that updates in real-time as team members make changes to projects and tasks. This workshop is perfect for developers who are new to Laravel or have early-intermediate level experience and want to level up their skills.",
         maxAttendees: 15,
         speaker: speaker,
         topics: [

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Linkedin, MapPin, Calendar, Mail } from 'lucide-react';
+import { Linkedin, MapPin, Calendar, Mail, BookText, Shield, FileText, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
 import Section from "@/components/Section";
@@ -10,7 +10,7 @@ export default function Footer() {
   return (
       <footer>
         <Section variant="black">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* About */}
             <div>
               <h3 className="text-2xl font-bold text-js mb-4">ZurichJS</h3>
@@ -79,6 +79,37 @@ export default function Footer() {
                 <li>
                   <Link href="/about" className="hover:text-js transition-colors">
                     About Us
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Policies */}
+            <div>
+              <h3 className="text-xl font-bold text-js mb-4">Policies</h3>
+              <ul className="space-y-2">
+                <li className="flex items-center">
+                  <UserCheck size={16} className="mr-2 text-js"/>
+                  <Link href="/policies/code-of-conduct" className="hover:text-js transition-colors">
+                    Code of Conduct
+                  </Link>
+                </li>
+                <li className="flex items-center">
+                  <FileText size={16} className="mr-2 text-js"/>
+                  <Link href="/policies/terms-and-conditions" className="hover:text-js transition-colors">
+                    Terms and Conditions
+                  </Link>
+                </li>
+                <li className="flex items-center">
+                  <Shield size={16} className="mr-2 text-js"/>
+                  <Link href="/policies/privacy-policy" className="hover:text-js transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li className="flex items-center">
+                  <BookText size={16} className="mr-2 text-js"/>
+                  <Link href="/policies/refund-policy" className="hover:text-js transition-colors">
+                    Refund Policy
                   </Link>
                 </li>
               </ul>

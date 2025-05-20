@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import {
   ClerkProvider,
   useUser,
+  useClerk
 } from '@clerk/nextjs'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import type { AppProps } from "next/app";
@@ -15,13 +16,41 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
   
   const { user } = useUser();
   const { isValid } = useCheckUserSurvey();
-
+  const clerk = useClerk();
+  
   const router = useRouter();
   useEffect(() => {
     if (user && !isValid && router.pathname !== '/profile/survey') {
       router.push('/profile/survey')
     }
   }, [user, isValid])
+
+  // Identify the user with PostHog when they log in
+  useEffect(() => {
+    if (user) {
+      posthog.identify(user.id, {
+        email: user.primaryEmailAddress?.emailAddress,
+        name: user.fullName,
+        clerk_id: user.id
+      });
+    }
+  }, [user]);
+  
+  // Set up a listener for Clerk's beforeSignOut event
+  useEffect(() => {
+    // Register an event listener for signing out
+    const unsubscribe = clerk.addListener(({ session }) => {
+      // If session changes to null (user signs out), reset PostHog
+      if (!session && clerk.session === null) {
+        posthog.reset();
+      }
+    });
+    
+    // Cleanup function to remove the listener
+    return () => {
+      unsubscribe();
+    };
+  }, [clerk]);
 
   return <>{children}</>
 }

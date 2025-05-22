@@ -43,7 +43,7 @@ export default function AccountCreationIncentive() {
             </li>
           </ul>
           <Button
-            onClick={() => window.location.href = '/sign-up'}
+            href="/?signup=true"
             className="bg-purple-600 text-white hover:bg-purple-700"
           >
             Create Account

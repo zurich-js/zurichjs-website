@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/nextjs";
-import { User } from "lucide-react";
+import { User, CreditCard, Zap, Mail, Calendar } from "lucide-react";
 import { useRouter } from 'next/router';
 
 import Layout from '@/components/layout/Layout';
@@ -37,11 +37,96 @@ export default function Profile() {
       <div className="w-full pt-16 sm:pt-24 pb-16 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">Your Profile</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">Your ZurichJS Profile</h1>
             <div className="bg-yellow-400 h-1 w-24 md:w-32 mx-auto mb-6"></div>
             <p className="text-black text-lg md:text-xl max-w-2xl mx-auto">
               Welcome back, <span className="font-bold">{user.firstName || user.username}</span>!
             </p>
+          </div>
+          
+          {/* Member Benefits Banner */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-8 mb-12 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 -mt-8 -mr-8 bg-indigo-200 rounded-full opacity-70"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 -mb-6 -ml-6 bg-blue-200 rounded-full opacity-70"></div>
+            <div className="relative z-10">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Your ZurichJS Member Benefits</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start space-x-3">
+                  <div className="bg-indigo-100 p-2 rounded-full mt-1">
+                    <CreditCard size={20} className="text-indigo-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Faster Checkout</p>
+                    <p className="text-gray-700">Pre-filled email and details for quicker registration</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="bg-green-100 p-2 rounded-full mt-1">
+                    <Zap size={20} className="text-green-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">20% Off All Paid Events</p>
+                    <p className="text-gray-700">Automatic discounts on workshops and pro events</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="bg-purple-100 p-2 rounded-full mt-1">
+                    <Calendar size={20} className="text-purple-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Priority Access</p>
+                    <p className="text-gray-700">Early access to limited-seat workshops</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="bg-yellow-100 p-2 rounded-full mt-1">
+                    <Mail size={20} className="text-yellow-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Personalized Updates</p>
+                    <p className="text-gray-700">Get notified about events matching your interests</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Event CTAs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div className="bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl shadow-md p-6 flex flex-col h-full">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Pro Events</h3>
+                <p className="text-gray-700 mb-6">
+                  Gain insights from industry experts with specialized deep-dive sessions and networking.
+                </p>
+              </div>
+              <div className="mt-auto">
+                <Button 
+                  href="/events"
+                  variant="primary"
+                  className="bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 w-full"
+                >
+                  Explore Pro Events
+                </Button>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl shadow-md p-6 flex flex-col h-full">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Workshops</h3>
+                <p className="text-gray-700 mb-6">
+                  Hands-on learning experiences to level up your JavaScript skills with industry leaders.
+                </p>
+              </div>
+              <div className="mt-auto">
+                <Button 
+                  href="/workshops"
+                  variant="primary"
+                  className="bg-amber-600 hover:bg-amber-700 focus:ring-amber-500 w-full"
+                >
+                  Browse Workshops
+                </Button>
+              </div>
+            </div>
           </div>
 
           <CouponsSection />
@@ -150,9 +235,8 @@ export default function Profile() {
               ) : (
                 <div className="space-y-6">
                   <p className="text-gray-700">
-                    Help us create a community that works for <span className="font-bold">you</span>. 
-                    Please complete your community profile to help us tailor ZurichJS events and content 
-                    to match your interests.
+                    Complete your profile to unlock all ZurichJS benefits including personalized event 
+                    recommendations and automatic 20% discount on all paid events!
                   </p>
                   <Button 
                     href="/profile/survey" 

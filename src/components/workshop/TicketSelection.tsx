@@ -36,7 +36,6 @@ export default function TicketSelection({
   options,
   onCheckout,
   className = '',
-  buttonText = 'Proceed to Checkout',
   workshopId,
   eventId,
   ticketType,

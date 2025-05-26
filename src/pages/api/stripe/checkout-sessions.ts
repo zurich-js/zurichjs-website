@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+import { encodePaymentData } from '@/utils/encoding';
+
 import { stripe } from '../../../lib/stripe';
 
 interface CheckoutRequestBody {
@@ -49,26 +51,19 @@ export default async function handler(
       returnPath = `/events/${eventId}`;
     }
     
-    // Build success URL with the Stripe session ID placeholder that Stripe will replace
+    // For Stripe success URL, we keep session_id as a separate parameter and encode other data
+    // IMPORTANT: Do NOT include session_id in the encoded data - it must remain a separate parameter
+    const paymentData = {
+      workshop_id: workshopId,
+      event_id: eventId,
+      ticket_type: ticketType,
+      coupon: couponCode,
+      // Do NOT include session_id here as Stripe needs to replace it in the URL
+    };
+    
+    // Build success URL with Stripe session ID placeholder and encoded data
     // Note: Must use exactly {CHECKOUT_SESSION_ID} as the literal string for Stripe to replace it
-    const successUrl = `${origin}/success?session_id={CHECKOUT_SESSION_ID}`;
-    
-    // Add additional parameters to the success URL
-    const additionalParams = [];
-    if (workshopId) {
-      additionalParams.push(`workshop_id=${encodeURIComponent(workshopId)}`);
-    } else if (eventId) {
-      additionalParams.push(`event_id=${encodeURIComponent(eventId)}`);
-    }
-    
-    if (ticketType) {
-      additionalParams.push(`ticket_type=${encodeURIComponent(ticketType)}`);
-    }
-    
-    // Combine all parameters
-    const fullSuccessUrl = additionalParams.length > 0 
-      ? `${successUrl}&${additionalParams.join('&')}` 
-      : successUrl;
+    const successUrl = `${origin}/success?session_id={CHECKOUT_SESSION_ID}&data=${encodePaymentData(paymentData)}`;
     
     // Build cancel URL
     const cancelUrl = `${origin}${returnPath}?canceled=true${couponCode ? `&coupon=${encodeURIComponent(couponCode)}` : ''}`;
@@ -99,7 +94,7 @@ export default async function handler(
         },
       ],
       mode: 'payment',
-      success_url: fullSuccessUrl,
+      success_url: successUrl,
       cancel_url: cancelUrl,
       customer_email: email,
       ...(Object.keys(discountOptions).length > 0 ? discountOptions : {}),

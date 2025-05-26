@@ -9,6 +9,7 @@ interface PurchaseSuccessBody {
   eventId?: string;
   ticketType?: string;
   email: string;
+  coupon?: string;
 }
 
 export default async function handler(
@@ -20,7 +21,7 @@ export default async function handler(
   }
 
   try {
-    const { sessionId, workshopId, eventId, ticketType, email } = req.body as PurchaseSuccessBody;
+    const { sessionId, workshopId, eventId, ticketType, email, coupon } = req.body as PurchaseSuccessBody;
 
     // Determine purchase type and item name
     const isWorkshop = ticketType === 'workshop' || Boolean(workshopId);
@@ -62,12 +63,21 @@ export default async function handler(
         priceInfo = `Amount: ${amount} ${currency} × ${quantity}`;
       }
       
-      // Use the coupon info from metadata which we set in checkout-sessions.ts
-      if (session.metadata?.couponCode) {
+      // First check if we have the coupon in our request body (from base64 encoded data)
+      if (coupon) {
+        couponInfo = `Coupon used: ${coupon}`;
+      } 
+      // Fall back to the metadata from Stripe session
+      else if (session.metadata?.couponCode) {
         couponInfo = `Coupon used: ${session.metadata.couponCode}`;
       }
     } catch (err) {
       console.warn('Could not retrieve session information', err);
+      
+      // If we couldn't get session info but have coupon in the request, use that
+      if (coupon) {
+        couponInfo = `Coupon used: ${coupon}`;
+      }
     }
 
     // Create a descriptive message

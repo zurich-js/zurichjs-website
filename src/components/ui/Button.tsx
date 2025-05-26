@@ -41,7 +41,7 @@ export default function Button({
   ...props
 }: ButtonProps) {
   // Define button styles based on variant and size
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 !cursor-pointer hover:!cursor-pointer';
 
   const variantStyles: Record<ButtonVariant, string> = {
     primary: 'bg-black text-white hover:bg-gray-800 focus:ring-black',

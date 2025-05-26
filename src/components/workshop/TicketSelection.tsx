@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { CheckCircle, Star, Zap, Ticket, Tag } from 'lucide-react';
+import { CheckCircle, Star, Zap, Ticket, Tag, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 
 import Button from '@/components/ui/Button';
+import CashPaymentModal from '@/components/ui/CashPaymentModal';
 import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
 
@@ -48,6 +49,9 @@ export default function TicketSelection({
     defaultTicket ? (isTestMode && defaultTicket.testPriceId ? defaultTicket.testPriceId : defaultTicket.id) : null
   );
   
+  // Cash payment modal state
+  const [showCashModal, setShowCashModal] = useState(false);
+  
   const { startCheckout, isLoading, isSignedIn } = useAuthenticatedCheckout({
     onError: (error) => {
       alert(error.message);
@@ -85,6 +89,11 @@ export default function TicketSelection({
       console.error('Checkout failed:', error);
     }
   };
+  
+  const handleCashPayment = () => {
+    if (!selectedTicket) return;
+    setShowCashModal(true);
+  };
 
   const getPriceId = (option: TicketOption) => {
     return isTestMode && option.testPriceId ? option.testPriceId : option.id;
@@ -117,6 +126,14 @@ export default function TicketSelection({
     }
     return '';
   };
+  
+  // Get the currently selected ticket details
+  const getSelectedTicketDetails = () => {
+    if (!selectedTicket) return null;
+    return options.find(option => getPriceId(option) === selectedTicket);
+  };
+  
+  const selectedTicketDetails = getSelectedTicketDetails();
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -230,16 +247,32 @@ export default function TicketSelection({
         </motion.div>
       ))}
 
-      <Button
-        onClick={handleCheckout}
-        disabled={!selectedTicket || isLoading || isCouponLoading}
-        className="w-full bg-zurich text-black hover:opacity-80 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all"
-      >
-        {isLoading || isCouponLoading ? 'Processing...' : buttonText}
-      </Button>
+      {/* Payment options section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+        <Button
+          onClick={handleCheckout}
+          disabled={!selectedTicket || isLoading || isCouponLoading}
+          className="w-full bg-zurich text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all py-3 rounded-lg flex items-center justify-center"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+            <rect width="20" height="14" x="2" y="5" rx="2" />
+            <line x1="2" x2="22" y1="10" y2="10" />
+          </svg>
+          {isLoading || isCouponLoading ? 'Processing...' : 'Pay Online'}
+        </Button>
+        
+        <Button
+          onClick={handleCashPayment}
+          disabled={!selectedTicket || isLoading || isCouponLoading}
+          className="w-full bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all py-3 rounded-lg flex items-center justify-center"
+        >
+          <DollarSign className="h-5 w-5 mr-2" />
+          Pay in Person
+        </Button>
+      </div>
 
-      <div className="text-xs text-gray-500 text-center mt-4 flex flex-col gap-2">
-        <p>Secure payment powered by Stripe. All prices include VAT.</p>
+      <div className="text-xs text-gray-600 text-center mt-4 flex flex-col gap-2 bg-gray-50 p-3 rounded-lg">
+        <p>Secure payment options. All prices include VAT.</p>
         {isTestMode && (
           <div className="block p-2 bg-red-50 border border-red-200 rounded-md">
             <span className="text-red-500 font-medium">
@@ -248,6 +281,21 @@ export default function TicketSelection({
           </div>
         )}
       </div>
+      
+      {/* Cash Payment Modal */}
+      {selectedTicketDetails && (
+        <CashPaymentModal
+          isOpen={showCashModal}
+          onClose={() => setShowCashModal(false)}
+          ticketTitle={selectedTicketDetails.title}
+          price={hasCoupon || communityDiscount 
+            ? getDiscountedPrice(selectedTicketDetails.price)
+            : selectedTicketDetails.price}
+          eventId={ticketType === 'event' ? eventId : undefined}
+          workshopId={ticketType === 'workshop' ? workshopId : undefined}
+          ticketType={ticketType || (workshopId ? 'workshop' : 'event')}
+        />
+      )}
     </div>
   );
 } 

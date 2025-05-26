@@ -192,7 +192,19 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   // Share event function
   const shareEvent = async () => {
-    const shareUrl = `${window.location.origin}/events/${event.id}`;
+    // Create base URL
+    const baseUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/events/${event.id}`;
+    
+    // Add UTM parameters for tracking
+    const utmParams = new URLSearchParams({
+      utm_source: 'share_button',
+      utm_medium: 'social',
+      utm_campaign: 'event_share',
+      utm_content: event.id
+    }).toString();
+    
+    // Complete share URL with UTM parameters
+    const shareUrl = `${baseUrl}?${utmParams}`;
 
     // Format the date for sharing in CEST timezone
     const formattedDate = isClient && event.datetime
@@ -213,12 +225,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       share_method: typeof navigator !== 'undefined' && 'share' in navigator ? 'web_share_api' : 'clipboard'
     });
 
-    if (navigator.share) {
+    if (typeof navigator !== 'undefined' && 'share' in navigator) {
       try {
         await navigator.share({
           title: event.title,
           text: shareText,
           url: shareUrl,
+        });
+        // Track successful share via Web Share API
+        track('share_completed', {
+          event_id: event.id,
+          method: 'web_share_api'
         });
       } catch (err) {
         console.error('Error sharing:', err);
@@ -231,10 +248,47 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   // Copy to clipboard function
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    });
+    if (typeof navigator === 'undefined' || !navigator.clipboard) {
+      console.error('Clipboard API not available');
+      return;
+    }
+    
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopySuccess(true);
+        // Track successful clipboard copy
+        track('share_completed', {
+          event_id: event.id,
+          method: 'clipboard'
+        });
+        setTimeout(() => setCopySuccess(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy text: ', err);
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed'; // Prevent scrolling to bottom
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            setCopySuccess(true);
+            track('share_completed', {
+              event_id: event.id,
+              method: 'clipboard_fallback'
+            });
+            setTimeout(() => setCopySuccess(false), 2000);
+          }
+        } catch (err) {
+          console.error('Fallback clipboard copy failed:', err);
+        }
+        
+        document.body.removeChild(textarea);
+      });
   };
 
   return (

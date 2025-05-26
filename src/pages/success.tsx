@@ -1,5 +1,6 @@
 import { useUser } from '@clerk/nextjs';
-import { CheckCircle, ArrowLeft, DollarSign, CreditCard } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { CheckCircle, ArrowLeft, DollarSign, CreditCard, Calendar, FileText, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
@@ -193,7 +194,7 @@ export default function SuccessPage() {
     return (
       <Layout>
         <Section>
-          <div className="max-w-2xl mx-auto text-center p-8">
+          <div className="max-w-2xl mx-auto p-4 sm:p-8">
             <div className="animate-pulse flex flex-col items-center justify-center">
               <div className="w-16 h-16 bg-gray-200 rounded-full mb-4"></div>
               <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -210,7 +211,7 @@ export default function SuccessPage() {
     return (
       <Layout>
         <Section>
-          <div className="max-w-2xl mx-auto text-center">
+          <div className="max-w-2xl mx-auto px-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
               <h2 className="text-xl font-semibold text-red-700 mb-4">
                 There was a problem processing your order
@@ -231,24 +232,42 @@ export default function SuccessPage() {
   return (
     <Layout>
       <Section>
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
-              {isManualPayment 
-                ? 'Your Reservation is Confirmed!' 
-                : 'Thank You for Your Purchase!'}
-            </h1>
-            <p className="text-lg text-gray-600 mb-4">
-              {isManualPayment 
-                ? `Your reservation for ${itemName} has been confirmed.` 
-                : `Your purchase for ${itemName} has been confirmed.`}
-            </p>
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="mb-6 sm:mb-8">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="flex justify-center"
+            >
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-5">
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+            >
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 text-center">
+                {isManualPayment 
+                  ? 'Your Reservation is Confirmed!' 
+                  : 'Thank You for Your Purchase!'}
+              </h1>
+              <p className="text-lg text-gray-600 mb-4 text-center">
+                {isManualPayment 
+                  ? `Your reservation for ${itemName} has been confirmed.` 
+                  : `Your purchase for ${itemName} has been confirmed.`}
+              </p>
+            </motion.div>
             
             {isManualPayment && (
-              <div className="bg-green-50 border border-green-100 rounded-lg p-5 mb-6">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-xl p-5 mb-6 shadow-sm"
+              >
                 <div className="flex justify-center mb-4">
                   {method === 'cash' ? (
                     <div className="bg-green-100 p-3 rounded-full">
@@ -261,91 +280,166 @@ export default function SuccessPage() {
                   )}
                 </div>
                 
-                <h3 className="text-lg font-medium mb-2">
+                <h3 className="text-lg font-medium mb-3 text-center">
                   {method === 'cash' 
                     ? 'Cash Payment Selected' 
                     : 'Bank Transfer Selected'}
                 </h3>
                 
-                <p className="mb-3">
+                <p className="mb-4 text-center">
                   {method === 'cash'
                     ? 'Please bring the exact amount in cash to the event. Arrive 15 minutes early to complete your payment.'
                     : 'Please check your email for bank transfer details. Your reservation will be confirmed once payment is received.'}
                 </p>
                 
-                <div className="bg-white rounded p-3 inline-block font-mono text-sm">
-                  Amount due: CHF {price}
+                <div className="flex justify-center">
+                  <div className="bg-white rounded-lg p-3 inline-block font-mono text-sm shadow-sm">
+                    Amount due: <span className="font-bold">CHF {price}</span>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             )}
             
             {!isManualPayment && (
-              <p className="text-md text-gray-600 mb-8 bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-                <strong>Important:</strong> Due to high demand, please allow up to 24 hours for your ticket to be delivered to your email.
-                If you don&apos;t receive it within this timeframe, please contact us at <a href="mailto:hello@zurichjs.com" className="text-blue-600 underline">hello@zurichjs.com</a>.
-              </p>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="bg-gradient-to-r from-yellow-50 to-amber-50 p-4 rounded-xl border border-yellow-100 shadow-sm mb-6 sm:mb-8"
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="bg-amber-100 p-2 rounded-full flex-shrink-0 mt-1">
+                    <Mail className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-md text-gray-700">
+                      <strong>Important:</strong> Due to high demand, please allow up to 24 hours for your ticket to be delivered to your email.
+                      If you don&apos;t receive it within this timeframe, please contact us at <a href="mailto:hello@zurichjs.com" className="text-blue-600 underline">hello@zurichjs.com</a>.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             )}
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 sm:p-6 mb-8"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center sm:text-left">
               Next Steps
             </h2>
-            <ul className="space-y-3 text-left mb-6">
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>
-                  {isManualPayment 
-                    ? 'Check your email for reservation confirmation' 
-                    : 'Check your email for purchase confirmation'}
-                </span>
-              </li>
+            <div className="grid grid-cols-1 gap-3 mb-6">
+              <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div className="bg-green-100 p-2 rounded-full mr-3 flex-shrink-0">
+                  <Mail className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <span className="text-gray-700">
+                    {isManualPayment 
+                      ? 'Check your email for reservation confirmation' 
+                      : 'Check your email for purchase confirmation'}
+                  </span>
+                </div>
+              </div>
               
               {method === 'bank' && (
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Complete the bank transfer using the details in your email</span>
-                </li>
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="bg-green-100 p-2 rounded-full mr-3 flex-shrink-0">
+                    <CreditCard className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <span className="text-gray-700">Complete the bank transfer using the details in your email</span>
+                  </div>
+                </div>
               )}
               
               {method === 'cash' && (
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Bring CHF {price} in cash to the event entrance</span>
-                </li>
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="bg-green-100 p-2 rounded-full mr-3 flex-shrink-0">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <span className="text-gray-700">Bring CHF {price} in cash to the event entrance</span>
+                  </div>
+                </div>
               )}
               
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>
-                  {isManualPayment 
-                    ? 'Your ticket information will be sent once payment is confirmed' 
-                    : 'Your ticket will arrive within 24 hours'}
-                </span>
-              </li>
+              <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div className="bg-green-100 p-2 rounded-full mr-3 flex-shrink-0">
+                  <FileText className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <span className="text-gray-700">
+                    {method === 'cash'
+                      ? 'Your ticket will arrive within 24 hours'
+                      : isManualPayment 
+                        ? 'Your ticket information will be sent once payment is confirmed' 
+                        : 'Your ticket will arrive within 24 hours'}
+                  </span>
+                </div>
+              </div>
               
-              <li className="flex items-start">
-                <span className="text-green-500 mr-2">✓</span>
-                <span>Add {itemType === 'workshop' ? 'the workshop' : 'the event'} date to your calendar</span>
-              </li>
+              <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div className="bg-green-100 p-2 rounded-full mr-3 flex-shrink-0">
+                  <Calendar className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <span className="text-gray-700">Add {itemType === 'workshop' ? 'the workshop' : 'the event'} date to your calendar</span>
+                </div>
+              </div>
               
               {itemType === 'workshop' && (
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Prepare any prerequisites for the workshop</span>
-                </li>
+                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="bg-green-100 p-2 rounded-full mr-3 flex-shrink-0">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div>
+                    <span className="text-gray-700">Prepare any prerequisites for the workshop</span>
+                  </div>
+                </div>
               )}
-            </ul>
+            </div>
             
-            <Link href={returnPath}>
-              <Button className="flex items-center bg-zurich text-black hover:bg-zurich/90">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Return to {itemType === 'workshop' ? 'Workshop' : 'Event'}
-              </Button>
-            </Link>
-          </div>
+            <div className="flex justify-center sm:justify-start">
+              <Link href={returnPath}>
+                <Button className="flex items-center bg-zurich text-black hover:bg-zurich/90 w-full sm:w-auto">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Return to {itemType === 'workshop' ? 'Workshop' : 'Event'}
+                </Button>
+              </Link>
+            </div>
+          </motion.div>
 
-          <AccountCreationIncentive />
+          {/* Always show account creation incentive for manual payments too */}
+          {method === 'cash' ? (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="mb-8"
+            >
+              <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-100 rounded-xl p-4 sm:p-5 shadow-sm mb-6">
+                <h3 className="text-center text-lg font-semibold text-gray-900 mb-3">
+                  Create an Account Now and Get Benefits at the Event
+                </h3>
+                <p className="text-center text-gray-700 mb-0">
+                  With a ZurichJS account, you&apos;ll have a smoother check-in process and be eligible for exclusive offers at the event.
+                </p>
+              </div>
+              <AccountCreationIncentive />
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+            >
+              <AccountCreationIncentive />
+            </motion.div>
+          )}
         </div>
       </Section>
     </Layout>

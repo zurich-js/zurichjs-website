@@ -21,6 +21,19 @@ interface ClerkUser {
   createdAt: number;
   lastActiveAt: number | null;
   unsafeMetadata?: {
+    credits?: number;
+    referrals?: Array<{
+      userId: string;
+      email: string;
+      date: string;
+      type: string;
+      creditValue: number;
+    }>;
+    referredBy?: {
+      userId: string;
+      name: string;
+      date: string;
+    };
     surveyData?: {
       role: string;
       company: string;

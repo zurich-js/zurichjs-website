@@ -30,8 +30,21 @@ interface ClerkUser {
   createdAt: number;
   lastActiveAt: number | null;
   unsafeMetadata?: {
+    credits?: number;
     surveyData?: SurveyData;
     coupons?: Coupon[];
+    referrals?: {
+      userId: string;
+      email: string;
+      date: string;
+      type: string;
+      creditValue: number;
+    }[];
+    referredBy?: {
+      userId: string;
+      name: string;
+      date: string;
+    };
   };
 }
 
@@ -42,13 +55,15 @@ interface UserDetailsModalProps {
 }
 
 export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsModalProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'survey' | 'coupons'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'survey' | 'coupons' | 'credits'>('overview');
   const [isAssigningCoupon, setIsAssigningCoupon] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [optimisticCoupons, setOptimisticCoupons] = useState<Coupon[]>([]);
   const [shouldShowModal, setShouldShowModal] = useState(isOpen);
+  const [creditAmount, setCreditAmount] = useState<number>(0);
+  const [currentCredits, setCurrentCredits] = useState<number>(0);
   
   // Initialize optimisticCoupons with user's existing coupons
   useEffect(() => {
@@ -56,6 +71,13 @@ export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsM
       setOptimisticCoupons(user.unsafeMetadata.coupons);
     } else {
       setOptimisticCoupons([]);
+    }
+    
+    // Initialize current credits
+    if (user?.unsafeMetadata?.credits !== undefined) {
+      setCurrentCredits(user.unsafeMetadata.credits);
+    } else {
+      setCurrentCredits(0);
     }
   }, [user]);
   
@@ -227,6 +249,45 @@ export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsM
       setIsLoading(false);
     }
   };
+  
+  const handleSetCredits = async () => {
+    if (!user || creditAmount < 0) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    // Optimistically update the UI
+    setCurrentCredits(creditAmount);
+    
+    try {
+      const response = await fetch('/api/admin/update-credits', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          credits: creditAmount,
+          action: 'set'
+        }),
+      });
+      
+      if (!response.ok) {
+        // Revert optimistic update on error
+        if (user?.unsafeMetadata?.credits !== undefined) {
+          setCurrentCredits(user.unsafeMetadata.credits);
+        }
+        throw new Error('Failed to update credits');
+      }
+      
+      // Keep the credit amount in the input field
+      // Don't reset: setCreditAmount(0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -311,6 +372,16 @@ export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsM
               }`}
             >
               Coupons
+            </button>
+            <button
+              onClick={() => setActiveTab('credits')}
+              className={`py-4 px-6 border-b-2 text-sm font-medium ${
+                activeTab === 'credits'
+                  ? 'border-yellow-500 text-yellow-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Credits
             </button>
           </nav>
         </div>
@@ -445,6 +516,94 @@ export default function UserDetailsModal({ user, isOpen, onClose }: UserDetailsM
                   <p className="text-gray-500">No survey data available for this user.</p>
                 </div>
               )}
+            </div>
+          ) : activeTab === 'credits' ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Credits Management</h3>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900">{currentCredits}</h4>
+                    <p className="text-sm text-gray-500">Current Credit Balance</p>
+                  </div>
+                  
+                  <div className="px-4 py-2 bg-teal-100 text-teal-800 rounded-lg">
+                    <span className="font-medium">Referral Credits</span>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Update Credits</p>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="number"
+                          value={creditAmount === 0 ? '' : creditAmount}
+                          onChange={(e) => setCreditAmount(parseInt(e.target.value) || 0)}
+                          placeholder="Enter new credit amount"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
+                        />
+                        <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500">
+                          credits
+                        </span>
+                      </div>
+                      <button
+                        onClick={handleSetCredits}
+                        disabled={isLoading || creditAmount < 0}
+                        className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? 'Processing...' : 'Set Credits'}
+                      </button>
+                    </div>
+                    {error && (
+                      <p className="text-red-500 text-sm mt-2">{error}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-2">
+                      Enter the new total credit amount for this user.
+                    </p>
+                  </div>
+                </div>
+                
+                {user?.unsafeMetadata?.referrals && user.unsafeMetadata.referrals.length > 0 && (
+                  <div className="mt-8">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Referral History</h4>
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Credits</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {user.unsafeMetadata.referrals.map((referral, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{referral.email}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{new Date(referral.date).toLocaleDateString()}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{referral.type}</td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 text-right">+{referral.creditValue}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+                
+                {user?.unsafeMetadata?.referredBy && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm font-medium text-blue-800">
+                      This user was referred by: <span className="font-bold">{user.unsafeMetadata.referredBy.name}</span> on {new Date(user.unsafeMetadata.referredBy.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-6">

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import { useCheckUserSurvey } from '@/hooks/useCheckUserSurvey';
+import { useReferrals } from '@/hooks/useReferrals';
 
 // Define the expected shape of survey data (same as in useCheckUserSurvey.ts)
 interface SurveyData {
@@ -71,6 +72,8 @@ export default function Survey() {
     const router = useRouter();
     const { user } = useUser();
     const { surveyData: existingData } = useCheckUserSurvey();
+    const { getCurrentReferrer, processReferralSignup } = useReferrals();
+    const [processingReferral, setProcessingReferral] = useState(false);
 
     // Initialize form state from empty values
     const [formData, setFormData] = useState<SurveyData>({
@@ -93,6 +96,138 @@ export default function Survey() {
             });
         }
     }, [existingData]);
+
+    // Process pending referrals when the user first visits the survey page
+    useEffect(() => {
+        const processPendingReferral = async () => {
+            if (!user || processingReferral) return;
+            
+            try {
+                // Check if there's a pending referral in localStorage
+                const referrerId = getCurrentReferrer();
+                
+                if (!referrerId) return;
+                
+                // Check if we've already processed this referral
+                const processedReferrals = localStorage.getItem('zurichjs_processed_referrals');
+                const processedList = processedReferrals ? JSON.parse(processedReferrals) : [];
+                
+                if (processedList.includes(referrerId)) {
+                    console.log('Referral already processed, skipping');
+                    return;
+                }
+                
+                // Check if the user already has referredBy data in their metadata
+                const currentMetadata = user.unsafeMetadata || {};
+                const alreadyHasReferrer = currentMetadata.referredBy;
+                
+                if (alreadyHasReferrer) {
+                    console.log('User already has a referrer in metadata, skipping');
+                    
+                    // Mark this referral as processed to avoid future attempts
+                    processedList.push(referrerId);
+                    localStorage.setItem('zurichjs_processed_referrals', JSON.stringify(processedList));
+                    return;
+                }
+                
+                setProcessingReferral(true);
+                
+                // Fetch referrer details
+                const response = await fetch(`/api/users/${referrerId}`);
+                
+                if (response.ok) {
+                    const referrerData = await response.json();
+                    const referrerName = referrerData.fullName || 'ZurichJS Member';
+                    
+                    console.log('Processing referral in survey page with data:', {
+                        referrerId,
+                        referrerName,
+                        userId: user.id
+                    });
+                    
+                    // 1. Update user metadata directly
+                    try {
+                        // Update the user's metadata with referrer information
+                        await user.update({
+                            unsafeMetadata: {
+                                ...currentMetadata,
+                                referredBy: {
+                                    userId: referrerId,
+                                    name: referrerName,
+                                    date: new Date().toISOString()
+                                }
+                            }
+                        });
+                        console.log('Successfully updated referee metadata with referrer info');
+                    } catch (error) {
+                        console.error('Error updating user metadata:', error);
+                    }
+                    
+                    // 2. Update referrer's metadata
+                    try {
+                        const updateResponse = await fetch('/api/referrals/update-referrer-metadata', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                referrerId: referrerId,
+                                refereeId: user.id,
+                                refereeName: user.fullName || user.username || 'New User',
+                                refereeEmail: user.primaryEmailAddress?.emailAddress || '',
+                                date: new Date().toISOString(),
+                                type: 'signup',
+                                creditValue: 5
+                            }),
+                        });
+                        
+                        const responseText = await updateResponse.text();
+                        console.log('Referrer metadata API response:', updateResponse.status, responseText);
+                        
+                        if (!updateResponse.ok) {
+                            console.error('Failed to update referrer metadata:', responseText);
+                        }
+                    } catch (error) {
+                        console.error('Error calling referrer metadata API:', error);
+                    }
+                    
+                    // 3. Send platform notification
+                    try {
+                        // Import the notification function dynamically to avoid SSR issues
+                        const { sendPlatformNotification } = await import('@/lib/notification');
+                        
+                        await sendPlatformNotification({
+                            title: 'New Referral Signup',
+                            message: `${referrerName} successfully referred ${user.fullName || user.username || 'New User'} to ZurichJS! They both earned 5 credits.`,
+                            priority: 0,
+                            sound: 'success'
+                        });
+                        
+                        console.log('Successfully sent platform notification about referral');
+                    } catch (error) {
+                        console.error('Error sending platform notification:', error);
+                    }
+                    
+                    // 4. Process the referral with useReferrals as a backup
+                    await processReferralSignup(referrerId, referrerName);
+                    
+                    // Mark this referral as processed
+                    processedList.push(referrerId);
+                    localStorage.setItem('zurichjs_processed_referrals', JSON.stringify(processedList));
+                    
+                    console.log('Referral processed successfully from survey page');
+                } else {
+                    console.error('Failed to fetch referrer details', await response.text());
+                }
+            } catch (error) {
+                console.error('Error processing referral from survey page:', error);
+            } finally {
+                setProcessingReferral(false);
+            }
+        };
+        
+        processPendingReferral();
+    }, [user, processingReferral, getCurrentReferrer, processReferralSignup]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');

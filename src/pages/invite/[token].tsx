@@ -2,6 +2,7 @@ import { useUser, SignInButton } from '@clerk/nextjs';
 import confetti from 'canvas-confetti';
 import { UserPlus } from 'lucide-react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -445,7 +446,7 @@ export default function InvitePage() {
           </div>
           
           <p className="text-center text-sm text-gray-500">
-            By joining, you agree to our <a href="/policies/terms" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="/policies/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>.
+            By joining, you agree to our <Link href="/policies/terms-and-conditions" className="text-blue-600 hover:underline">Terms of Service</Link> and <Link href="/policies/privacy-policy" className="text-blue-600 hover:underline">Privacy Policy</Link>.
           </p>
         </div>
       </div>

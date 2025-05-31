@@ -56,7 +56,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         timeInfo: "18:30 - 20:30 (2 hours)",
         locationInfo: "ORBIZ Josef, Josefstrasse 214a, 8005 Zürich",
         description: "Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. This workshop explores the world of multithreaded Node.js, showing how it is no longer a single-threaded environment. It introduces the Worker Threads API for offloading CPU-intensive tasks and the MessagePort API for thread communication. It discusses the challenges of cloning and transferring objects between threads and introduces tools like Piscina to simplify multithreading. Finally, it showcases Watt, a Node.js application server that leverages worker threads for isolated service execution and network-less HTTP communication.",
-        maxAttendees: 15,
+        maxAttendees: 20,
         speaker: speaker,
         topics: [
             {
@@ -670,7 +670,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                 >
                     <div className="inline-block bg-gradient-to-r from-green-500 to-yellow-500 p-1 rounded-lg sm:rounded-xl mb-5 sm:mb-8">
                         <div className="bg-black rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2">
-                            <p className="text-white text-sm sm:text-base font-bold">June 18, 2024 • 18:30-20:30 • Limited to 15 participants</p>
+                            <p className="text-white text-sm sm:text-base font-bold">June 18, 2024 • 18:30-20:30 • Limited to 20 participants</p>
                         </div>
                     </div>
 

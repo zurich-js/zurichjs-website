@@ -7,7 +7,7 @@ import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
-import { getPartners, getPartnersByType } from '@/data';
+import { getPartnersByType, getPartnersBySponsorshipTier, getRegularPartners } from '@/data';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import { getUpcomingEvents } from '@/sanity/queries';
@@ -33,7 +33,6 @@ interface FormState {
 }
 
 interface PartnershipPageProps {
-  partners: ReturnType<typeof getPartners>;
   upcomingEvent: {
     title: string;
     date: string;
@@ -42,7 +41,7 @@ interface PartnershipPageProps {
   };
 }
 
-export default function Partnerships({ partners, upcomingEvent }: PartnershipPageProps) {
+export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
   useReferrerTracking();
   const { track } = useEvents();
 
@@ -133,11 +132,16 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
     },
   ];
 
-  // Get partners by type
+  // Get partners by type (for regular partners section)
   const venuePartners = getPartnersByType('venue');
   const conferencePartners = getPartnersByType('conference');
   const communityPartners = getPartnersByType('community');
   const supportingPartners = getPartnersByType('supporting');
+
+  // Get partners by sponsorship tier
+  const goldPartners = getPartnersBySponsorshipTier('gold');
+  const silverPartners = getPartnersBySponsorshipTier('silver');
+  const regularPartners = getRegularPartners();
 
   // Handle form input changes
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -245,9 +249,11 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
   };
 
   // Add tracking for partner logo clicks
-  const handlePartnerClick = (partnerName: string) => {
-    track('partner_click', {
-      name: partnerName
+  const handlePartnerClick = (partnerName: string, partnerTier?: string) => {
+    track('partner_click_partnerships', {
+      partnerName: partnerName,
+      partnerTier: partnerTier || 'regular',
+      page: 'partnerships'
     });
   };
 
@@ -485,8 +491,8 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
             </div>
         </Section>
 
-        {/* Current Partners */}
-        {partners.length > 0 && (
+        {/* Current Partners - Sponsors First */}
+        {(goldPartners.length > 0 || silverPartners.length > 0) && (
           <Section variant="white">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -495,9 +501,221 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
               transition={{ duration: 0.5 }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl font-bold mb-4 text-blue-700">Our Partners 💛</h2>
+              <h2 className="text-4xl font-bold mb-4 text-blue-700">Our Sponsors 💛</h2>
               <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                We&apos;re grateful for the support of our partners who help make ZurichJS possible.
+                These incredible sponsors help us keep the JavaScript passion beating strong in our community. We couldn&apos;t be more grateful for their support that allows us to thrive and create amazing events together! 🙏
+              </p>
+            </motion.div>
+
+            {/* Gold Partners Section */}
+            {goldPartners.length > 0 && (
+              <div className="mb-20">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">🥇</span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-gray-900">Gold Sponsors</h3>
+                  </div>
+                  <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+                    These phenomenal partners keep the JavaScript passion burning bright in our hearts. Their exceptional support helps our community thrive beyond our wildest dreams! 🔥
+                  </p>
+                </motion.div>
+
+                <div className="space-y-16">
+                  {goldPartners.map((partner, index) => (
+                    <motion.div
+                      key={partner.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-yellow-50 to-amber-50 p-8 rounded-2xl border-2 border-yellow-200"
+                    >
+                      <div className="flex flex-col lg:flex-row items-center lg:items-start">
+                        <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-8">
+                          <motion.a
+                            href={partner.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => {
+                              handlePartnerClick(partner.name, 'gold');
+                              track('sponsor_logo_click', {
+                                sponsorName: partner.name,
+                                sponsorTier: 'gold',
+                                sponsorUrl: partner.url
+                              });
+                            }}
+                          >
+                            <div className="w-64 h-32 relative bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                              <Image
+                                src={partner.logo}
+                                alt={partner.name}
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
+                          </motion.a>
+                        </div>
+                        <div className="flex-1 text-center lg:text-left">
+                          <h4 className="text-2xl font-bold text-gray-900 mb-4">{partner.name}</h4>
+                                                     {partner.blurb && (
+                             <div className="text-gray-700 leading-relaxed text-lg">
+                               {partner.blurb.split('\n').map((line, index) => (
+                                 <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                                   {line}
+                                 </p>
+                               ))}
+                             </div>
+                           )}
+                          <div className="mt-4">
+                                                         <Button
+                               href={partner.url}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               variant="primary"
+                               className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                               onClick={() => {
+                                 handlePartnerClick(partner.name, 'gold');
+                                 track('sponsor_visit', {
+                                   sponsorName: partner.name,
+                                   sponsorTier: 'gold',
+                                   sponsorUrl: partner.url
+                                 });
+                               }}
+                             >
+                               Visit {partner.name} →
+                             </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Silver Partners Section */}
+            {silverPartners.length > 0 && (
+              <div className="mb-20">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-gray-300 to-gray-500 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">🥈</span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-gray-900">Silver Sponsors</h3>
+                  </div>
+                  <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+                    These wonderful partners nurture our JavaScript passion and help our community flourish. We&apos;re deeply grateful for their commitment to keeping our love for JS alive! 💙
+                  </p>
+                </motion.div>
+
+                <div className="space-y-12">
+                  {silverPartners.map((partner, index) => (
+                    <motion.div
+                      key={partner.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border-2 border-gray-200"
+                    >
+                      <div className="flex flex-col lg:flex-row items-center lg:items-start">
+                        <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-6">
+                          <motion.a
+                            href={partner.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => {
+                              handlePartnerClick(partner.name, 'silver');
+                              track('sponsor_logo_click', {
+                                sponsorName: partner.name,
+                                sponsorTier: 'silver',
+                                sponsorUrl: partner.url
+                              });
+                            }}
+                          >
+                            <div className="w-32 h-32 relative bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                              <Image
+                                src={partner.logo}
+                                alt={partner.name}
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
+                          </motion.a>
+                        </div>
+                        <div className="flex-1 text-center lg:text-left">
+                          <h4 className="text-xl font-bold text-gray-900 mb-3">{partner.name}</h4>
+                                                     {partner.blurb && (
+                             <div className="text-gray-700 leading-relaxed">
+                               {partner.blurb.split('\n').map((line, index) => (
+                                 <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                                   {line}
+                                 </p>
+                               ))}
+                             </div>
+                           )}
+                          <div className="mt-4">
+                                                         <Button
+                               href={partner.url}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               variant="outline"
+                               className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white"
+                               onClick={() => {
+                                 handlePartnerClick(partner.name, 'silver');
+                                 track('sponsor_visit', {
+                                   sponsorName: partner.name,
+                                   sponsorTier: 'silver',
+                                   sponsorUrl: partner.url
+                                 });
+                               }}
+                             >
+                               Visit {partner.name} →
+                             </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Section>
+        )}
+
+        {/* Regular Partners */}
+        {regularPartners.length > 0 && (
+          <Section variant="gray">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl font-bold mb-4 text-gray-900">Our Community Partners 🤝</h2>
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+                We collaborate with these amazing organizations to strengthen the tech ecosystem in Zurich and beyond.
               </p>
             </motion.div>
 
@@ -519,7 +737,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     Companies that provide their spaces for our meetups
                   </p>
                   <div className="text-sm text-blue-700 font-medium mt-auto">
-                    {venuePartners.length} Partners
+                    {venuePartners.filter(p => !p.sponsorshipTier).length} Partners
                   </div>
                 </motion.div>
 
@@ -538,7 +756,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     Conferences offering exclusive discounts to our members
                   </p>
                   <div className="text-sm text-purple-700 font-medium mt-auto">
-                    {conferencePartners.length} Partners
+                    {conferencePartners.filter(p => !p.sponsorshipTier).length} Partners
                   </div>
                 </motion.div>
 
@@ -557,7 +775,7 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     Fellow tech communities we collaborate with
                   </p>
                   <div className="text-sm text-green-700 font-medium mt-auto">
-                    {communityPartners.length} Partners
+                    {communityPartners.filter(p => !p.sponsorshipTier).length} Partners
                   </div>
                 </motion.div>
 
@@ -576,163 +794,171 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
                     Companies providing resources and tools
                   </p>
                   <div className="text-sm text-orange-700 font-medium mt-auto">
-                    {supportingPartners.length} Partners
+                    {supportingPartners.filter(p => !p.sponsorshipTier).length} Partners
                   </div>
                 </motion.div>
               </div>
             </div>
 
             {/* Venue Partners Section */}
-            <div className="mb-20">
-              <div className="flex items-center mb-8">
-                <Home className="text-blue-700 mr-3" size={28} />
-                <h3 className="text-2xl font-bold text-gray-900">Venue Partners</h3>
+            {venuePartners.filter(p => !p.sponsorshipTier).length > 0 && (
+              <div className="mb-20">
+                <div className="flex items-center mb-8">
+                  <Home className="text-blue-700 mr-3" size={28} />
+                  <h3 className="text-2xl font-bold text-gray-900">Venue Partners</h3>
+                </div>
+                <p className="text-gray-700 mb-8 max-w-3xl">
+                  Our venue partners generously provide their spaces for ZurichJS meetups, helping us create memorable events for our community.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                  {venuePartners.filter(p => !p.sponsorshipTier).map((partner) => (
+                    <motion.a
+                      key={partner.id}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{
+                        y: -5,
+                        transition: { duration: 0.2 }
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                      onClick={() => handlePartnerClick(partner.name, 'venue')}
+                    >
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        fill
+                        className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                      />
+                    </motion.a>
+                  ))}
+                </div>
               </div>
-              <p className="text-gray-700 mb-8 max-w-3xl">
-                Our venue partners generously provide their spaces for ZurichJS meetups, helping us create memorable events for our community.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
-                {venuePartners.map((partner) => (
-                  <motion.a
-                    key={partner.id}
-                    href={partner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                    whileHover={{
-                      y: -5,
-                      transition: { duration: 0.2 }
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    onClick={() => handlePartnerClick(partner.name)}
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      fill
-                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
-                    />
-                  </motion.a>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Conference Partners Section */}
-            <div className="mb-20">
-              <div className="flex items-center mb-8">
-                <Calendar className="text-purple-700 mr-3" size={28} />
-                <h3 className="text-2xl font-bold text-gray-900">Conference Partners</h3>
+            {conferencePartners.filter(p => !p.sponsorshipTier).length > 0 && (
+              <div className="mb-20">
+                <div className="flex items-center mb-8">
+                  <Calendar className="text-purple-700 mr-3" size={28} />
+                  <h3 className="text-2xl font-bold text-gray-900">Conference Partners</h3>
+                </div>
+                <p className="text-gray-700 mb-8 max-w-3xl">
+                  Our conference partners offer exclusive discounts and special access to ZurichJS members for their events.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                  {conferencePartners.filter(p => !p.sponsorshipTier).map((partner) => (
+                    <motion.a
+                      key={partner.id}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{
+                        y: -5,
+                        transition: { duration: 0.2 }
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                      onClick={() => handlePartnerClick(partner.name, 'conference')}
+                    >
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        fill
+                        className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                      />
+                    </motion.a>
+                  ))}
+                </div>
               </div>
-              <p className="text-gray-700 mb-8 max-w-3xl">
-                Our conference partners offer exclusive discounts and special access to ZurichJS members for their events.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
-                {conferencePartners.map((partner) => (
-                  <motion.a
-                    key={partner.id}
-                    href={partner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                    whileHover={{
-                      y: -5,
-                      transition: { duration: 0.2 }
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    onClick={() => handlePartnerClick(partner.name)}
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      fill
-                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
-                    />
-                  </motion.a>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Community Partners Section */}
-            <div className="mb-20">
-              <div className="flex items-center mb-8">
-                <Users className="text-green-700 mr-3" size={28} />
-                <h3 className="text-2xl font-bold text-gray-900">Community Partners</h3>
+            {communityPartners.filter(p => !p.sponsorshipTier).length > 0 && (
+              <div className="mb-20">
+                <div className="flex items-center mb-8">
+                  <Users className="text-green-700 mr-3" size={28} />
+                  <h3 className="text-2xl font-bold text-gray-900">Community Partners</h3>
+                </div>
+                <p className="text-gray-700 mb-8 max-w-3xl">
+                  Our community partners are fellow tech communities that we collaborate with to strengthen the JavaScript ecosystem in our region.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                  {communityPartners.filter(p => !p.sponsorshipTier).map((partner) => (
+                    <motion.a
+                      key={partner.id}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{
+                        y: -5,
+                        transition: { duration: 0.2 }
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                      onClick={() => handlePartnerClick(partner.name, 'community')}
+                    >
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        fill
+                        className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                      />
+                    </motion.a>
+                  ))}
+                </div>
               </div>
-              <p className="text-gray-700 mb-8 max-w-3xl">
-                Our community partners are fellow tech communities that we collaborate with to strengthen the JavaScript ecosystem in our region.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
-                {communityPartners.map((partner) => (
-                  <motion.a
-                    key={partner.id}
-                    href={partner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                    whileHover={{
-                      y: -5,
-                      transition: { duration: 0.2 }
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    onClick={() => handlePartnerClick(partner.name)}
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      fill
-                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
-                    />
-                  </motion.a>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Supporting Partners Section */}
-            <div className="mb-20">
-              <div className="flex items-center mb-8">
-                <Wrench className="text-orange-700 mr-3" size={28} />
-                <h3 className="text-2xl font-bold text-gray-900">Supporting Partners</h3>
+            {supportingPartners.filter(p => !p.sponsorshipTier).length > 0 && (
+              <div className="mb-20">
+                <div className="flex items-center mb-8">
+                  <Wrench className="text-orange-700 mr-3" size={28} />
+                  <h3 className="text-2xl font-bold text-gray-900">Supporting Partners</h3>
+                </div>
+                <p className="text-gray-700 mb-8 max-w-3xl">
+                  Our supporting partners provide valuable resources, tools, and services that help us run ZurichJS more effectively.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                  {supportingPartners.filter(p => !p.sponsorshipTier).map((partner) => (
+                    <motion.a
+                      key={partner.id}
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      whileHover={{
+                        y: -5,
+                        transition: { duration: 0.2 }
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                      onClick={() => handlePartnerClick(partner.name, 'supporting')}
+                    >
+                      <Image
+                        src={partner.logo}
+                        alt={partner.name}
+                        fill
+                        className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                      />
+                    </motion.a>
+                  ))}
+                </div>
               </div>
-              <p className="text-gray-700 mb-8 max-w-3xl">
-                Our supporting partners provide valuable resources, tools, and services that help us run ZurichJS more effectively.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
-                {supportingPartners.map((partner) => (
-                  <motion.a
-                    key={partner.id}
-                    href={partner.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                    whileHover={{
-                      y: -5,
-                      transition: { duration: 0.2 }
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                    onClick={() => handlePartnerClick(partner.name)}
-                  >
-                    <Image
-                      src={partner.logo}
-                      alt={partner.name}
-                      fill
-                      className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
-                    />
-                  </motion.a>
-                ))}
-              </div>
-            </div>
+            )}
           </Section>
         )}
 
@@ -1089,13 +1315,10 @@ export default function Partnerships({ partners, upcomingEvent }: PartnershipPag
 }
 
 export async function getStaticProps() {
-
-  const partners = getPartners();
   const upcomingEvents = await getUpcomingEvents();
 
   return {
     props: {
-      partners,
       upcomingEvent: upcomingEvents[0],
     },
   };

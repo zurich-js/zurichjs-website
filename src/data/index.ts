@@ -1,4 +1,5 @@
 export type PartnerType = 'venue' | 'conference' | 'community' | 'supporting';
+export type SponsorshipTier = 'gold' | 'silver' | 'community' | 'other';
 
 export interface Partner {
     id: string;
@@ -6,7 +7,9 @@ export interface Partner {
     logo: string;
     url: string;
     type: PartnerType;
+    sponsorshipTier?: SponsorshipTier;
     description?: string;
+    blurb?: string;
 }
 
 export const getPartners = () => {
@@ -136,7 +139,19 @@ export const getPartners = () => {
             logo: '/images/partners/imagekit.png',
             url: 'https://imagekit.io?utm_source=zurichjs&utm_medium=website',
             type: 'supporting',
-            description: 'Image and Video API plus AI-powered DAM'
+            sponsorshipTier: 'gold',
+            description: 'Image and Video API plus AI-powered DAM',
+            blurb: 'ImageKit is a complete media management solution that helps developers and businesses optimize, transform, and deliver images and videos through a global CDN. With powerful APIs, real-time transformations, and AI-powered digital asset management, ImageKit streamlines media workflows while improving web performance and user experience.'
+        },
+        {
+            id: '15',
+            name: 'GYFF',
+            logo: '/images/partners/gyff.png',
+            url: 'https://www.getyourfreefast.ch',
+            type: 'supporting',
+            sponsorshipTier: 'silver',
+            description: 'Swiss platform connecting IT experts with businesses',
+            blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
         },
     ];
 
@@ -146,4 +161,19 @@ export const getPartners = () => {
 // Helper function to get partners by type
 export const getPartnersByType = (type: PartnerType) => {
     return getPartners().filter(partner => partner.type === type);
+};
+
+// Helper function to get partners by sponsorship tier
+export const getPartnersBySponsorshipTier = (tier: SponsorshipTier) => {
+    return getPartners().filter(partner => partner.sponsorshipTier === tier);
+};
+
+// Helper function to get all partners with sponsorship tiers (excluding those without tiers)
+export const getSponsorshipPartners = () => {
+    return getPartners().filter(partner => partner.sponsorshipTier);
+};
+
+// Helper function to get partners without sponsorship tiers (regular partners)
+export const getRegularPartners = () => {
+    return getPartners().filter(partner => !partner.sponsorshipTier);
 };

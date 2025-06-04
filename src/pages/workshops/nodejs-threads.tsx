@@ -593,7 +593,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                                 <div className="mt-3 bg-red-50 border-l-4 border-red-400 p-3 rounded-lg">
                                     <p className="font-bold text-red-700">
-                                        Only 5 tickets left!
+                                        Only 2 tickets left!
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1 italic">
                                         Note: Ticket availability may take up to 24h to update.

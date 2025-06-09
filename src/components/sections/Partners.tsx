@@ -85,7 +85,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="bg-gradient-to-r from-yellow-50 to-amber-50 p-8 rounded-2xl border-2 border-yellow-200 shadow-lg"
               >
-                <div className="flex flex-col lg:flex-row items-center lg:items-start">
+                <div className="flex flex-col lg:flex-row items-center lg:items-start text-center lg:text-left">
                   <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-8">
                     <motion.a
                       href={partner.url}
@@ -96,7 +96,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       transition={{ duration: 0.2 }}
                       onClick={() => handlePartnerClick(partner, 'gold_logo')}
                     >
-                      <div className="w-64 h-32 relative bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                      <div className="w-56 h-28 sm:w-64 sm:h-32 lg:w-72 lg:h-36 relative bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         <Image
                           src={partner.logo}
                           alt={partner.name}
@@ -106,10 +106,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       </div>
                     </motion.a>
                   </div>
-                  <div className="flex-1 text-center lg:text-left">
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">{partner.name}</h3>
+                  <div className="flex-1">
+                    <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{partner.name}</h3>
                     {partner.blurb && (
-                      <div className="text-gray-700 leading-relaxed text-lg mb-6">
+                      <div className="text-gray-700 leading-relaxed text-base sm:text-lg lg:text-xl mb-6">
                         {partner.blurb.split('\n').map((line, idx) => (
                           <p key={idx} className={idx > 0 ? 'mt-2' : ''}>
                             {line}
@@ -117,13 +117,13 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                         ))}
                       </div>
                     )}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col sm:flex-row lg:flex-row gap-3">
                       <Button
                         href={partner.url}
                         target="_blank"
                         rel="noopener noreferrer"
                         variant="primary"
-                        className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                        className="bg-yellow-600 hover:bg-yellow-700 text-white w-full sm:w-auto lg:w-auto"
                         onClick={() => handlePartnerClick(partner, 'gold_cta')}
                       >
                         Visit {partner.name} →
@@ -131,7 +131,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       <Button
                         href="/partnerships"
                         variant="outline"
-                        className="border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white"
+                        className="border-yellow-600 text-yellow-700 hover:bg-yellow-600 hover:text-white w-full sm:w-auto lg:w-auto"
                         onClick={() => track('partnership_cta_click', { source: 'gold_partner_section' })}
                       >
                         Learn More About Sponsoring
@@ -176,8 +176,8 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border-2 border-gray-200 shadow-md"
               >
-                <div className="flex flex-col lg:flex-row items-center lg:items-start">
-                  <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-6">
+                <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left">
+                  <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-6">
                     <motion.a
                       href={partner.url}
                       target="_blank"
@@ -187,7 +187,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       transition={{ duration: 0.2 }}
                       onClick={() => handlePartnerClick(partner, 'silver_logo')}
                     >
-                      <div className="w-32 h-32 relative bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 relative bg-white p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <Image
                           src={partner.logo}
                           alt={partner.name}
@@ -197,10 +197,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       </div>
                     </motion.a>
                   </div>
-                  <div className="flex-1 text-center lg:text-left">
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">{partner.name}</h3>
+                  <div className="flex-1">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3">{partner.name}</h3>
                     {partner.blurb && (
-                      <div className="text-gray-700 leading-relaxed mb-4">
+                      <div className="text-gray-700 leading-relaxed mb-4 text-sm sm:text-base md:text-lg">
                         {partner.blurb.split('\n').map((line, idx) => (
                           <p key={idx} className={idx > 0 ? 'mt-2' : ''}>
                             {line}
@@ -214,7 +214,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                         target="_blank"
                         rel="noopener noreferrer"
                         variant="outline"
-                        className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white"
+                        className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white w-full sm:w-auto"
                         onClick={() => handlePartnerClick(partner, 'silver_cta')}
                       >
                         Visit {partner.name} →
@@ -222,7 +222,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       <Button
                         href="/partnerships"
                         variant="outline"
-                        className="border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white"
+                        className="border-gray-400 text-gray-600 hover:bg-gray-600 hover:text-white w-full sm:w-auto"
                         onClick={() => track('partnership_cta_click', { source: 'silver_partner_section' })}
                       >
                         Become a Sponsor
@@ -259,7 +259,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center mb-12"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 lg:gap-10 items-center justify-items-center mb-12"
           >
             {regularPartners.map((partner) => (
               <motion.a
@@ -269,7 +269,7 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                 rel="noopener noreferrer"
                 whileHover={{ y: -5 }}
                 transition={{ duration: 0.2 }}
-                className="w-full max-w-[150px] h-20 relative grayscale hover:grayscale-0 transition-all"
+                className="w-full max-w-[120px] sm:max-w-[150px] lg:max-w-[180px] h-16 sm:h-20 lg:h-24 relative grayscale hover:grayscale-0 transition-all"
                 aria-label={`Visit ${partner.name} website`}
                 onClick={() => handlePartnerClick(partner, 'regular')}
               >

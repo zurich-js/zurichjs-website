@@ -538,7 +538,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="bg-gradient-to-r from-yellow-50 to-amber-50 p-8 rounded-2xl border-2 border-yellow-200"
                     >
-                      <div className="flex flex-col lg:flex-row items-center lg:items-start">
+                      <div className="flex flex-col lg:flex-row items-center lg:items-start text-center lg:text-left">
                         <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-8">
                           <motion.a
                             href={partner.url}
@@ -556,7 +556,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                               });
                             }}
                           >
-                            <div className="w-64 h-32 relative bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                            <div className="w-56 h-28 sm:w-64 sm:h-32 lg:w-72 lg:h-36 relative bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                               <Image
                                 src={partner.logo}
                                 alt={partner.name}
@@ -566,10 +566,10 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                             </div>
                           </motion.a>
                         </div>
-                        <div className="flex-1 text-center lg:text-left">
-                          <h4 className="text-2xl font-bold text-gray-900 mb-4">{partner.name}</h4>
+                        <div className="flex-1">
+                          <h4 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{partner.name}</h4>
                                                      {partner.blurb && (
-                             <div className="text-gray-700 leading-relaxed text-lg">
+                             <div className="text-gray-700 leading-relaxed text-base sm:text-lg lg:text-xl mb-6">
                                {partner.blurb.split('\n').map((line, index) => (
                                  <p key={index} className={index > 0 ? 'mt-2' : ''}>
                                    {line}
@@ -583,7 +583,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                                target="_blank"
                                rel="noopener noreferrer"
                                variant="primary"
-                               className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                               className="bg-yellow-600 hover:bg-yellow-700 text-white w-full sm:w-auto lg:w-auto"
                                onClick={() => {
                                  handlePartnerClick(partner.name, 'gold');
                                  track('sponsor_visit', {
@@ -635,8 +635,8 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border-2 border-gray-200"
                     >
-                      <div className="flex flex-col lg:flex-row items-center lg:items-start">
-                        <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-6">
+                      <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left">
+                        <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-6">
                           <motion.a
                             href={partner.url}
                             target="_blank"
@@ -653,7 +653,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                               });
                             }}
                           >
-                            <div className="w-32 h-32 relative bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                            <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 relative bg-white p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                               <Image
                                 src={partner.logo}
                                 alt={partner.name}
@@ -663,10 +663,10 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                             </div>
                           </motion.a>
                         </div>
-                        <div className="flex-1 text-center lg:text-left">
-                          <h4 className="text-xl font-bold text-gray-900 mb-3">{partner.name}</h4>
+                        <div className="flex-1">
+                          <h4 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3">{partner.name}</h4>
                                                      {partner.blurb && (
-                             <div className="text-gray-700 leading-relaxed">
+                             <div className="text-gray-700 leading-relaxed text-sm sm:text-base md:text-lg mb-4">
                                {partner.blurb.split('\n').map((line, index) => (
                                  <p key={index} className={index > 0 ? 'mt-2' : ''}>
                                    {line}
@@ -680,7 +680,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                                target="_blank"
                                rel="noopener noreferrer"
                                variant="outline"
-                               className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white"
+                               className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white w-full sm:w-auto"
                                onClick={() => {
                                  handlePartnerClick(partner.name, 'silver');
                                  track('sponsor_visit', {
@@ -810,14 +810,14 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 <p className="text-gray-700 mb-8 max-w-3xl">
                   Our venue partners generously provide their spaces for ZurichJS meetups, helping us create memorable events for our community.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 lg:gap-10 items-center justify-items-center">
                   {venuePartners.filter(p => !p.sponsorshipTier).map((partner) => (
                     <motion.a
                       key={partner.id}
                       href={partner.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="block w-full max-w-[140px] sm:max-w-[180px] lg:max-w-[200px] h-24 sm:h-28 lg:h-32 relative group bg-white p-3 sm:p-4 lg:p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       whileHover={{
                         y: -5,
                         transition: { duration: 0.2 }
@@ -850,14 +850,14 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 <p className="text-gray-700 mb-8 max-w-3xl">
                   Our conference partners offer exclusive discounts and special access to ZurichJS members for their events.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 lg:gap-10 items-center justify-items-center">
                   {conferencePartners.filter(p => !p.sponsorshipTier).map((partner) => (
                     <motion.a
                       key={partner.id}
                       href={partner.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="block w-full max-w-[140px] sm:max-w-[180px] lg:max-w-[200px] h-24 sm:h-28 lg:h-32 relative group bg-white p-3 sm:p-4 lg:p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       whileHover={{
                         y: -5,
                         transition: { duration: 0.2 }
@@ -890,14 +890,14 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 <p className="text-gray-700 mb-8 max-w-3xl">
                   Our community partners are fellow tech communities that we collaborate with to strengthen the JavaScript ecosystem in our region.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 lg:gap-10 items-center justify-items-center">
                   {communityPartners.filter(p => !p.sponsorshipTier).map((partner) => (
                     <motion.a
                       key={partner.id}
                       href={partner.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="block w-full max-w-[140px] sm:max-w-[180px] lg:max-w-[200px] h-24 sm:h-28 lg:h-32 relative group bg-white p-3 sm:p-4 lg:p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       whileHover={{
                         y: -5,
                         transition: { duration: 0.2 }
@@ -930,14 +930,14 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 <p className="text-gray-700 mb-8 max-w-3xl">
                   Our supporting partners provide valuable resources, tools, and services that help us run ZurichJS more effectively.
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center justify-items-center">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8 lg:gap-10 items-center justify-items-center">
                   {supportingPartners.filter(p => !p.sponsorshipTier).map((partner) => (
                     <motion.a
                       key={partner.id}
                       href={partner.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full max-w-[180px] h-28 relative group bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="block w-full max-w-[140px] sm:max-w-[180px] lg:max-w-[200px] h-24 sm:h-28 lg:h-32 relative group bg-white p-3 sm:p-4 lg:p-5 rounded-lg shadow-sm hover:shadow-md transition-shadow"
                       whileHover={{
                         y: -5,
                         transition: { duration: 0.2 }

@@ -602,14 +602,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                                 <div className="mt-3 bg-orange-50 border-l-4 border-orange-400 p-3 rounded-lg">
                                     <p className="font-bold text-orange-700">
-                                        Prices increase to CHF 150 per seat on June 5th
+                                        Prices increase to CHF 150 per seat on June 15th
                                     </p>
                                     <div className="mt-2 p-2 bg-white rounded-md text-center">
                                         <p className="text-sm font-semibold text-gray-700">Time remaining until price increase:</p>
                                         <div id="priceIncreaseTimer" className="font-mono text-lg font-bold text-orange-600">
                                             {isClient && (
                                                 <span>
-                                                    {Math.floor((new Date('2025-06-05T00:00:00Z').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                                                    {Math.floor((new Date('2025-06-15T00:00:00Z').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
                                                 </span>
                                             )}
                                         </div>

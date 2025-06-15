@@ -1,4 +1,5 @@
 import Layout from '@/components/layout/Layout';
+import RafflePopup from '@/components/RafflePopup';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
 import LandingHero from "@/components/sections/LandingHero";
@@ -8,7 +9,6 @@ import UpcomingEvents from '@/components/sections/UpcomingEvents';
 import UpcomingWorkshops from '@/components/sections/UpcomingWorkshops';
 import type { Workshop } from '@/components/sections/UpcomingWorkshops';
 import SEO from '@/components/SEO';
-import RafflePopup from '@/components/RafflePopup';
 import { getPartners } from '@/data';
 import { getUpcomingWorkshops } from '@/data/workshops';
 import useReferrerTracking from '@/hooks/useReferrerTracking';

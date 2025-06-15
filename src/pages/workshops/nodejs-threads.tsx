@@ -6,13 +6,13 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import RafflePopup from '@/components/RafflePopup';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { workshopTickets } from '@/components/workshop/workshopTickets';
-import RafflePopup from '@/components/RafflePopup';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function RafflePopup() {
     const [isVisible, setIsVisible] = useState(false);

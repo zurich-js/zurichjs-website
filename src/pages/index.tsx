@@ -8,6 +8,7 @@ import UpcomingEvents from '@/components/sections/UpcomingEvents';
 import UpcomingWorkshops from '@/components/sections/UpcomingWorkshops';
 import type { Workshop } from '@/components/sections/UpcomingWorkshops';
 import SEO from '@/components/SEO';
+import RafflePopup from '@/components/RafflePopup';
 import { getPartners } from '@/data';
 import { getUpcomingWorkshops } from '@/data/workshops';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
@@ -82,6 +83,9 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
 
       {/* Join CTA */}
       <JoinCTA />
+
+      {/* Raffle Popup */}
+      <RafflePopup />
     </Layout>
   );
 }

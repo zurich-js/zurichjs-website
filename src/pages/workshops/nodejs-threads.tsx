@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { workshopTickets } from '@/components/workshop/workshopTickets';
+import RafflePopup from '@/components/RafflePopup';
 import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
@@ -593,23 +594,22 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                                 <div className="mt-3 bg-red-50 border-l-4 border-red-400 p-3 rounded-lg">
                                     <p className="font-bold text-red-700">
-                                        Only 2 tickets left!
+                                        Only 5 tickets left!
                                     </p>
                                     <p className="text-xs text-gray-600 mt-1 italic">
                                         Note: Ticket availability may take up to 24h to update.
                                     </p>
                                 </div>
 
-                                <div className="mt-3 bg-orange-50 border-l-4 border-orange-400 p-3 rounded-lg">
-                                    <p className="font-bold text-orange-700">
-                                        Prices increase to CHF 150 per seat on June 15th
+                                <div className="mt-3 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg">
+                                    <p className="font-bold text-blue-700">
+                                        Event starts in:
                                     </p>
                                     <div className="mt-2 p-2 bg-white rounded-md text-center">
-                                        <p className="text-sm font-semibold text-gray-700">Time remaining until price increase:</p>
-                                        <div id="priceIncreaseTimer" className="font-mono text-lg font-bold text-orange-600">
+                                        <div id="eventCountdown" className="font-mono text-lg font-bold text-blue-600">
                                             {isClient && (
                                                 <span>
-                                                    {Math.floor((new Date('2025-06-15T00:00:00Z').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                                                    {Math.floor((new Date('2025-06-18T18:30:00Z').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
                                                 </span>
                                             )}
                                         </div>
@@ -645,6 +645,41 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     <p className="mb-4 font-medium text-base">
                                         Join our exclusive workshop to learn how to leverage Node.js&apos;s multi-threaded capabilities for high-performance applications.
                                     </p>
+
+                                    <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-l-4 border-purple-400 p-4 rounded-lg">
+                                        <h4 className="text-lg font-bold text-purple-700 mb-3">🎉 Special Raffle & Referral Program!</h4>
+                                        <p className="text-gray-800 mb-3">Get your ticket now and enter our exciting raffle with amazing prizes:</p>
+                                        
+                                        <ul className="space-y-2 mb-4">
+                                            <li className="flex items-start">
+                                                <span className="text-purple-500 mr-2">•</span>
+                                                <span className="text-gray-700">12-day pass for ORBIZ Flex Office Josef co-working space</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-purple-500 mr-2">•</span>
+                                                <span className="text-gray-700">CHF 100 ZurichJS coupon for any workshop</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-purple-500 mr-2">•</span>
+                                                <span className="text-gray-700">12-month Perplexity Pro subscription</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-purple-500 mr-2">•</span>
+                                                <span className="text-gray-700">2x JetBrains 1-year licenses</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-purple-500 mr-2">•</span>
+                                                <span className="text-gray-700">5x ZurichJS Sticker packs</span>
+                                            </li>
+                                        </ul>
+
+                                        <div className="bg-white p-3 rounded-lg border border-purple-100">
+                                            <p className="text-sm font-medium text-purple-700 mb-2">🎁 Refer a Friend Bonus:</p>
+                                            <p className="text-gray-700 text-sm">Bring a friend to the meetup and get in for free! Plus, both of you can participate in the raffle!</p>
+                                        </div>
+
+                                        <p className="text-sm text-gray-600 mt-3 italic">Winners will be drawn LIVE at the meetup next week. Must be present to claim prizes!</p>
+                                    </div>
 
                                     {/* Replace TixTree Widget with TicketSelection */}
                                     {isClient && <TicketSelection
@@ -708,6 +743,9 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     </div>
                 </motion.div>
             </Section>
+
+            {/* Raffle Popup */}
+            <RafflePopup />
         </Layout>
     );
 }

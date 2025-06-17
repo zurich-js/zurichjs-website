@@ -12,6 +12,12 @@ import Button from '@/components/ui/Button';
 import { FeatureFlags } from '@/constants';
 import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
 
+const getEventHref = (event: Event): string => {
+  if (event.isProMeetup) {
+    return `/events/${event.id}`;
+  }
+  return event.meetupUrl;
+};
 
 interface EventsPageProps {
   upcomingEvents: Event[];
@@ -118,7 +124,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
 
             {upcomingEvents.length > 0 && (
               <Button
-                href={upcomingEvents[0].meetupUrl}
+                href={getEventHref(upcomingEvents[0])}
                 variant="primary"
                 size="lg"
                 className="bg-blue-700 hover:bg-blue-600 text-white"

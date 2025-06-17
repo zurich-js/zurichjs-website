@@ -16,6 +16,48 @@ import useEvents from '@/hooks/useEvents';
 import { getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
 
+// Event Countdown Component
+function EventCountdown() {
+    const [timeLeft, setTimeLeft] = useState('');
+    const [isExpired, setIsExpired] = useState(false);
+
+    useEffect(() => {
+        const eventDate = new Date('2025-06-18T18:30:00+02:00'); // 18:30 Zurich time (UTC+2)
+        
+        const updateCountdown = () => {
+            const now = new Date();
+            const difference = eventDate.getTime() - now.getTime();
+
+            if (difference <= 0) {
+                setTimeLeft('Workshop has started!');
+                setIsExpired(true);
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        };
+
+        // Update immediately
+        updateCountdown();
+
+        // Update every second
+        const interval = setInterval(updateCountdown, 1000);
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <span className={isExpired ? 'text-green-600' : 'text-blue-600'}>
+            {timeLeft}
+        </span>
+    );
+}
 
 interface WorkshopDetails {
     id: string;
@@ -600,18 +642,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </p>
                                 </div>
 
-                                <div className="mt-3 bg-orange-50 border-l-4 border-orange-400 p-3 rounded-lg">
-                                    <p className="font-bold text-orange-700">
-                                        Prices increase to CHF 150 per seat on June 15th
+                                <div className="mt-3 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg">
+                                    <p className="font-bold text-blue-700">
+                                        Workshop starts on June 18, 2025 at 18:30
                                     </p>
                                     <div className="mt-2 p-2 bg-white rounded-md text-center">
-                                        <p className="text-sm font-semibold text-gray-700">Time remaining until price increase:</p>
-                                        <div id="priceIncreaseTimer" className="font-mono text-lg font-bold text-orange-600">
-                                            {isClient && (
-                                                <span>
-                                                    {Math.floor((new Date('2025-06-15T00:00:00Z').getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
-                                                </span>
-                                            )}
+                                        <p className="text-sm font-semibold text-gray-700">Time remaining until workshop starts:</p>
+                                        <div id="eventCountdownTimer" className="font-mono text-lg font-bold text-blue-600">
+                                            {isClient && <EventCountdown />}
                                         </div>
                                     </div>
                                 </div>

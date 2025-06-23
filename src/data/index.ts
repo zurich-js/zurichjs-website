@@ -59,27 +59,11 @@ export const getPartners = () => {
         // Conference Partners
         {
             id: '5',
-            name: 'React Paris',
-            logo: '/images/partners/react-paris.png',
-            url: 'https://reactparis.com/',
+            name: 'WhatTheStack',
+            logo: '/images/partners/wts.png',
+            url: 'https://wts.sh',
             type: 'conference',
-            description: 'Exclusive discounts for ZurichJS members'
-        },
-        {
-            id: '12',
-            name: 'dotJS',
-            logo: '/images/partners/dotjs.png',
-            url: 'https://www.dotjs.io/',
-            type: 'conference',
-            description: 'Exclusive discounts for ZurichJS members'
-        },
-        {
-            id: '9',
-            name: 'Voxxed Days Zurich',
-            logo: '/images/partners/voxxed-days-zurich.png',
-            url: 'https://zurich.voxxeddays.com/',
-            type: 'conference',
-            description: 'Exclusive discounts for ZurichJS members'
+            description: 'Exclusive perks for ZurichJS members'
         },
         {
             id: '7',
@@ -87,7 +71,7 @@ export const getPartners = () => {
             logo: '/images/partners/city-js.png',
             url: 'https://cityjsconf.org/',
             type: 'conference',
-            description: 'Exclusive discounts for ZurichJS members'
+            description: 'Exclusive perks for ZurichJS members'
         },
 
         // Community Partners

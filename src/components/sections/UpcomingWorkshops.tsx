@@ -33,7 +33,7 @@ export default function UpcomingWorkshops({
   workshops,
 }: UpcomingWorkshopsProps) {
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -43,8 +43,8 @@ export default function UpcomingWorkshops({
   }
 
   // Only show workshops with 'confirmed' state
-  const confirmedWorkshops = workshops.filter(workshop => workshop.state === 'confirmed');
-  
+  const confirmedWorkshops = workshops.filter(workshop => workshop.state === 'confirmed' && new Date(workshop.dateInfo) >= new Date());
+
   if (confirmedWorkshops.length === 0) {
     return null;
   }
@@ -92,15 +92,15 @@ export default function UpcomingWorkshops({
           >
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col border border-gray-100">
               <div className="relative">
-                <div 
-                  className="w-full h-48 bg-cover bg-center relative" 
+                <div
+                  className="w-full h-48 bg-cover bg-center relative"
                   style={{ backgroundImage: `url(${workshop.image})` }}
                 />
               </div>
               <div className="p-4 flex flex-col flex-grow">
                 <h3 className="text-xl font-bold mb-1">{workshop.title}</h3>
                 <p className="text-sm text-gray-600 mb-3">{workshop.subtitle}</p>
-                
+
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <div className="flex items-center bg-gray-50 px-2 py-1.5 rounded-lg text-xs border border-gray-100">
                     <span className="text-gray-700 truncate">📅 {workshop.dateInfo}</span>
@@ -115,9 +115,9 @@ export default function UpcomingWorkshops({
                     <span className="text-gray-700 truncate">👥 Max {workshop.maxAttendees}</span>
                   </div>
                 </div>
-                
+
                 <p className="text-sm text-gray-700 mb-4 line-clamp-2">{workshop.description}</p>
-                
+
                 <div className="mt-auto">
                   <Button
                     href={`/workshops/${workshop.id}`}
@@ -155,4 +155,4 @@ export default function UpcomingWorkshops({
       </motion.div>
     </Section>
   );
-} 
+}

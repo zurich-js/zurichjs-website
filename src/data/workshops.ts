@@ -3,21 +3,6 @@ import { Workshop, WorkshopState } from '@/components/sections/UpcomingWorkshops
 export const getWorkshops = (): Workshop[] => {
   const workshops: Workshop[] = [
     {
-      id: 'nodejs-threads',
-      title: 'Node.js: More Threads Than You Think',
-      subtitle: 'Exploring the Multi-Threaded Capabilities of Node.js',
-      description: 'Node.js was announced in 2009 as a single-threaded JavaScript runtime. In 2018, it became multi-threaded, and no one noticed. Learn about Worker Threads API, thread communication, and advanced multithreading tools.',
-      dateInfo: 'June 18, 2025',
-      timeInfo: '18:30 - 20:30',
-      locationInfo: 'ORBIZ Josef, Zürich',
-      maxAttendees: 15,
-      image: '/images/workshops/nodejs-threads.png',
-      iconColor: '#16a34a', // green-600
-      tag: '🧵 Multithreading',
-      speakerId: 'matteo-collina',
-      state: 'confirmed' as WorkshopState
-    },
-    {
       id: 'laravel-reverb',
       title: 'From Scratch to Real-Time with Laravel & Reverb',
       subtitle: 'Building a mini-project tracker with Laravel',

@@ -13,18 +13,5 @@ export const laravelWorkshopTickets: TicketOption[] = [
       'Refreshments included',
       'Networking opportunities'
     ]
-  },
-  {
-    id: 'price_1RQWv1GxQziVA7FsUspZ2Sz8', // Production price ID
-    testPriceId: 'price_1RQ6LyGxQziVA7FsneNLOrFr', // Test price ID (reusing workshop test ID for development)
-    title: 'Workshop + Pro Meetup',
-    description: 'Workshop + Pro Meetup Ticket for the following day',
-    price: 235,
-    features: [
-      'Everything in Workshop Only',
-      'Access to the next Pro Meetup',
-      'Additional networking opportunities',
-      'Exclusive content and discussions'
-    ]
   }
 ]; 

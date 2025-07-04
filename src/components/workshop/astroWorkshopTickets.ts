@@ -13,18 +13,5 @@ export const astroWorkshopTickets: TicketOption[] = [
       'Refreshments included',
       'Networking opportunities'
     ]
-  },
-  {
-    id: 'price_1RQWuyGxQziVA7Fs37EGVorN', // Production price ID
-    testPriceId: 'price_1RQ6KCGxQziVA7FsatbNkH3k', // Test price ID (reusing nodejs workshop test ID for development)
-    title: 'Workshop + Pro Meetup',
-    description: 'Workshop + July 24th Pro Meetup Ticket',
-    price: 235,
-    features: [
-      'Everything in Workshop Only',
-      'Access to the Pro Meetup on July 24th',
-      'Additional networking opportunities',
-      'Exclusive content and discussions'
-    ]
   }
 ]; 

@@ -67,6 +67,11 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
+                  <Link href="/media" className="hover:text-js transition-colors">
+                    Photos & Videos
+                  </Link>
+                </li>
+                <li>
                   <Link href="/cfp" className="hover:text-js transition-colors">
                     Call for Papers
                   </Link>

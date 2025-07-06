@@ -165,6 +165,18 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz#4a2868d75d6d6963e423bcf90b7fd1be343409d3"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
 
+"@imagekit/javascript@^5.1.0":
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/@imagekit/javascript/-/javascript-5.1.0.tgz#3027f3e3a838d883107161d6434fb8f45df39dd9"
+  integrity sha512-P12NaxlO6Qu4GROFagX9qgP5kKde236mCu5jJB1cWJ6mPaVdjyk0Mw3ciGIWdKXST/jP1cFqS2ZoBVRSq1SWow==
+
+"@imagekit/next@^2.1.2":
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/@imagekit/next/-/next-2.1.2.tgz#4c3827ecebbd15618125f3a6ca6c5f7859ac7dd9"
+  integrity sha512-JzUdBoWKvGqsVjM/b5B7whhsKHyUQG9Hh7/bGKDK2tCOvVtwmXa9ohMUfnGuTqBPKbl16vpDXVXKoMin4jq8rQ==
+  dependencies:
+    "@imagekit/javascript" "^5.1.0"
+
 "@isaacs/cliui@^8.0.2":
   version "8.0.2"
   resolved "https://registry.yarnpkg.com/@isaacs/cliui/-/cliui-8.0.2.tgz#b37667b7bc181c168782259bab42474fbf52b550"

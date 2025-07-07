@@ -3,149 +3,58 @@ import { Camera, Video, Calendar, MapPin, Users, ExternalLink, Play, Image as Im
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { Event } from "@/sanity/queries"
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 
-interface MediaItem {
-  id: string;
-  title: string;
-  description: string;
-  type: 'photo' | 'video';
-  thumbnail: string;
-  url: string;
-  eventDate: string;
-  eventTitle: string;
-  location: string;
-  attendees: number;
-  tags: string[];
+export type MediaProps = {
+  pastEvents: Event[];
 }
 
-// Mock data - in a real app, this would come from a CMS
-const mockMediaItems: MediaItem[] = [
-  {
-    id: '1',
-    title: 'React 18 Deep Dive Workshop',
-    description: 'Amazing photos from our hands-on React 18 workshop where developers learned about concurrent features and automatic batching.',
-    type: 'photo',
-    thumbnail: '/api/og/home',
-    url: '#',
-    eventDate: '2024-01-15',
-    eventTitle: 'React 18 Deep Dive Workshop',
-    location: 'Impact Hub Zurich',
-    attendees: 45,
-    tags: ['React', 'Workshop', 'Frontend']
-  },
-  {
-    id: '2',
-    title: 'TypeScript Best Practices Talk',
-    description: 'Watch the full presentation on TypeScript best practices and advanced patterns for enterprise applications.',
-    type: 'video',
-    thumbnail: '/api/og/home',
-    url: '#',
-    eventDate: '2024-01-10',
-    eventTitle: 'TypeScript Best Practices',
-    location: 'Google Zurich',
-    attendees: 78,
-    tags: ['TypeScript', 'Best Practices', 'Enterprise']
-  },
-  {
-    id: '3',
-    title: 'Node.js Performance Optimization',
-    description: 'Beautiful moments captured during our Node.js performance optimization session with networking and pizza!',
-    type: 'photo',
-    thumbnail: '/api/og/home',
-    url: '#',
-    eventDate: '2024-01-05',
-    eventTitle: 'Node.js Performance Workshop',
-    location: 'Microsoft Switzerland',
-    attendees: 32,
-    tags: ['Node.js', 'Performance', 'Backend']
-  },
-  {
-    id: '4',
-    title: 'Vue.js vs React Panel Discussion',
-    description: 'Full video recording of our lively panel discussion comparing Vue.js and React frameworks.',
-    type: 'video',
-    thumbnail: '/api/og/home',
-    url: '#',
-    eventDate: '2023-12-20',
-    eventTitle: 'Vue.js vs React Panel',
-    location: 'Digital Switzerland',
-    attendees: 65,
-    tags: ['Vue.js', 'React', 'Panel Discussion']
-  },
-  {
-    id: '5',
-    title: 'JavaScript Testing Strategies',
-    description: 'Photos from our comprehensive testing workshop covering Jest, Cypress, and testing best practices.',
-    type: 'photo',
-    thumbnail: '/api/og/home',
-    url: '#',
-    eventDate: '2023-12-15',
-    eventTitle: 'Testing Strategies Workshop',
-    location: 'Swisscom',
-    attendees: 28,
-    tags: ['Testing', 'Jest', 'Cypress']
-  },
-  {
-    id: '6',
-    title: 'Web3 and JavaScript Integration',
-    description: 'Complete video of our Web3 session where we explored blockchain integration with JavaScript.',
-    type: 'video',
-    thumbnail: '/api/og/home',
-    url: '#',
-    eventDate: '2023-12-10',
-    eventTitle: 'Web3 JavaScript Integration',
-    location: 'Crypto Valley Labs',
-    attendees: 42,
-    tags: ['Web3', 'Blockchain', 'JavaScript']
+interface MediaItem {
+  type: 'photo' | 'video';
+  url: string;
+}
+
+interface EventMedia {
+  folderId: string;
+  event: Event | null;
+  media: MediaItem[];
+}
+
+function filterEventMedias(eventMedias: EventMedia[], activeTab: 'all' | 'photos' | 'videos'): EventMedia[] {
+  if (activeTab === 'photos') {
+    return eventMedias.map(eventMedia => ({
+      event: eventMedia.event,
+      media: eventMedia.media.filter(media => media.type === 'photo'),
+    }));
+  } else if (activeTab === 'videos') {
+    return eventMedias.map(eventMedia => ({
+      event: eventMedia.event,
+      media: eventMedia.media.filter(media => media.type === 'video'),
+    }));
+  } else {
+    return eventMedias;
   }
-];
+}
 
 export default function Media() {
   const [activeTab, setActiveTab] = useState<'all' | 'photos' | 'videos'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredItems, setFilteredItems] = useState<MediaItem[]>(mockMediaItems);
-  const [isClient, setIsClient] = useState(false);
+  const [eventMedias, setEventMedias] = useState<EventMedia[]>([]);
+
+  const filteredMedia = filterEventMedias(eventMedias, activeTab);
+
+  const allMedia = eventMedias.flatMap(eventMedia => eventMedia.media);
 
   useEffect(() => {
-    setIsClient(true);
+    //TODO setEventMedias
   }, []);
-
-  useEffect(() => {
-    let filtered = mockMediaItems;
-
-    // Filter by type
-    if (activeTab === 'photos') {
-      filtered = filtered.filter(item => item.type === 'photo');
-    } else if (activeTab === 'videos') {
-      filtered = filtered.filter(item => item.type === 'video');
-    }
-
-    // Filter by search query
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(query) ||
-        item.description.toLowerCase().includes(query) ||
-        item.eventTitle.toLowerCase().includes(query) ||
-        item.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    setFilteredItems(filtered);
-  }, [activeTab, searchQuery]);
 
   const handleTabChange = (tab: 'all' | 'photos' | 'videos') => {
     setActiveTab(tab);
-    setSearchQuery('');
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
   };
 
   const formatDate = (dateString: string) => {
@@ -188,11 +97,11 @@ export default function Media() {
           <div className="flex flex-wrap justify-center gap-4">
             <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
               <Camera className="w-5 h-5 mr-2" />
-              <span className="font-medium">{mockMediaItems.filter(item => item.type === 'photo').length} Photo Albums</span>
+              <span className="font-medium">{allMedia.filter(item => item.type === 'photo').length} Photos</span>
             </div>
             <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
               <Video className="w-5 h-5 mr-2" />
-              <span className="font-medium">{mockMediaItems.filter(item => item.type === 'video').length} Video Recordings</span>
+              <span className="font-medium">{allMedia.filter(item => item.type === 'video').length} Videos</span>
             </div>
           </div>
         </motion.div>
@@ -212,7 +121,7 @@ export default function Media() {
               onClick={() => handleTabChange('all')}
             >
               <span>All Media</span>
-              <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{mockMediaItems.length}</span>
+              <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{eventMedias.flatMap(eventMedia => eventMedia.media).length}</span>
             </button>
             <button
               className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
@@ -225,7 +134,7 @@ export default function Media() {
               <Camera size={16} />
               <span>Photos</span>
               <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                {mockMediaItems.filter(item => item.type === 'photo').length}
+                {allMedia.filter(item => item.type === 'photo').length}
               </span>
             </button>
             <button
@@ -239,28 +148,18 @@ export default function Media() {
               <Video size={16} />
               <span>Videos</span>
               <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                {mockMediaItems.filter(item => item.type === 'video').length}
+                {allMedia.filter(item => item.type === 'video').length}
               </span>
             </button>
-          </div>
-
-          <div className="relative w-full md:w-64">
-            <input
-              type="text"
-              placeholder="Search media..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full pl-4 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
           </div>
         </div>
 
         {/* Media Grid */}
-        {filteredItems.length > 0 ? (
+        {filteredMedia.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredItems.map((item, index) => (
+            {filteredMedia.map((item, index) => (
               <motion.div
-                key={item.id}
+                key={item.folderId}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -269,8 +168,8 @@ export default function Media() {
               >
                 <div className="relative h-48 md:h-60 w-full">
                   <Image
-                    src={item.thumbnail}
-                    alt={item.title}
+                    src={item.media[0].url}
+                    alt={item.event?.title || "Event " + item.folderId}
                     fill
                     className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                   />
@@ -278,78 +177,44 @@ export default function Media() {
                   {/* Overlay with type indicator */}
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
                   
-                  {/* Type badge */}
-                  <div className="absolute top-3 left-3">
-                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                      item.type === 'video' 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-blue-500 text-white'
-                    }`}>
-                      {item.type === 'video' ? <Play size={12} /> : <ImageIcon size={12} />}
-                      {item.type === 'video' ? 'Video' : 'Photos'}
-                    </div>
-                  </div>
-
-                  {/* Play button for videos */}
-                  {item.type === 'video' && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-white/90 rounded-full p-3 group-hover:scale-110 transition-transform">
-                        <Play size={24} className="text-red-500 ml-1" />
-                      </div>
-                    </div>
-                  )}
+                  {/* TODO snippet I saved */}
+                  
                 </div>
 
                 <div className="p-6">
                   <h3 className="text-xl font-bold mb-2 text-gray-900 line-clamp-2">
-                    {item.title}
+                    {item.event?.title || "Event " + item.folderId}
                   </h3>
                   
                   <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {item.description}
+                    {item.event?.description || ""}
                   </p>
 
                   {/* Event details */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar size={14} className="mr-2" />
-                      <span>{formatDate(item.eventDate)}</span>
+                      <span>{item.event ? formatDate(item.event.datetime) : ""}</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <MapPin size={14} className="mr-2" />
-                      <span>{item.location}</span>
+                      <span>{item.event?.location || ""}</span>
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Users size={14} className="mr-2" />
-                      <span>{item.attendees} attendees</span>
+                      <span>{item.event ? ("" + item.event?.attendees + " attendees") : ""}</span>
                     </div>
                   </div>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {item.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {item.tags.length > 3 && (
-                      <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
-                        +{item.tags.length - 3}
-                      </span>
-                    )}
-                  </div>
-
                   {/* Action button */}
+                  {/* TODO button & fix url to go to event page */}
                   <Button
-                    href={item.url}
+                    href={item.event?.meetupUrl || ""}
                     variant="outline"
                     size="sm"
                     className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
                   >
-                    {item.type === 'video' ? 'Watch Video' : 'View Photos'}
+                    {"View"}
                     <ExternalLink size={14} className="ml-1" />
                   </Button>
                 </div>
@@ -360,21 +225,6 @@ export default function Media() {
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📸</div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">No media found</h3>
-            <p className="text-gray-600 mb-6">
-              {searchQuery 
-                ? `No media matching "${searchQuery}" found. Try adjusting your search.`
-                : 'No media available for the selected category.'
-              }
-            </p>
-            <Button
-              onClick={() => {
-                setSearchQuery('');
-                setActiveTab('all');
-              }}
-              variant="primary"
-            >
-              View All Media
-            </Button>
           </div>
         )}
       </Section>

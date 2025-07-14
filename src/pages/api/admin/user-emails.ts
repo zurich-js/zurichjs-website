@@ -25,7 +25,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Fetch all users
     const usersList = await client.users.getUserList({
-      limit: 1000, // Adjust limit as needed
+      limit: 500, // Adjust limit as needed
       orderBy: '-created_at',
     });
     const users = usersList.data;

@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Fetch all users to analyze referral data
     const usersList = await client.users.getUserList({
-      limit: 1000, // Increase limit to get more users
+      limit: 500, // Increase limit to get more users
       orderBy: '-created_at',
     });
     const users = usersList.data;

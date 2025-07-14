@@ -43,6 +43,8 @@ export default function ReferralProgramAdmin() {
   const [rewardThresholds, setRewardThresholds] = useState<RewardThreshold[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(15);
 
   useEffect(() => {
     const fetchReferralData = async () => {
@@ -66,6 +68,12 @@ export default function ReferralProgramAdmin() {
 
     fetchReferralData();
   }, []);
+
+  // Pagination logic for top referrers
+  const totalPages = Math.ceil(topReferrers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentReferrers = topReferrers.slice(startIndex, endIndex);
 
   if (loading) {
     return (
@@ -184,11 +192,11 @@ export default function ReferralProgramAdmin() {
               Top Referrers
             </h2>
             <div className="space-y-4">
-              {topReferrers.map((referrer, index) => (
+              {currentReferrers.map((referrer, index) => (
                 <div key={referrer.userId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
-                      {index + 1}
+                      {startIndex + index + 1}
                     </div>
                     <div>
                       <p className="font-semibold">{referrer.name}</p>
@@ -202,6 +210,59 @@ export default function ReferralProgramAdmin() {
                 </div>
               ))}
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1}-{Math.min(endIndex, topReferrers.length)} of {topReferrers.length} referrers
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Previous
+                  </button>
+                  
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-3 py-1 rounded-lg ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Reward Thresholds */}

@@ -47,6 +47,8 @@ export default function CouponManagement() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showCopyDropdown, setShowCopyDropdown] = useState<string | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(15);
   
   // Coupon creation form state
   const [newCoupon, setNewCoupon] = useState({
@@ -138,6 +140,17 @@ export default function CouponManagement() {
         return true;
     }
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredCoupons.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCoupons = filteredCoupons.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterBy]);
 
   const formatDiscount = (coupon: StripeCoupon) => {
     if (coupon.percent_off) {
@@ -431,7 +444,7 @@ export default function CouponManagement() {
               </select>
             </div>
             <div className="text-sm text-gray-600">
-              Showing {filteredCoupons.length} of {coupons.length} coupons
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredCoupons.length)} of {filteredCoupons.length} coupons
             </div>
           </div>
         </div>
@@ -462,7 +475,7 @@ export default function CouponManagement() {
                 </tr>
               </thead>
               <tbody>
-                {filteredCoupons.map((coupon) => {
+                {currentCoupons.map((coupon) => {
                   const { status, color } = getCouponStatus(coupon);
                   return (
                     <tr key={coupon.id} className="border-b hover:bg-gray-50">
@@ -556,6 +569,59 @@ export default function CouponManagement() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredCoupons.length)} of {filteredCoupons.length} coupons
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1 rounded-lg ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* View Details Modal */}

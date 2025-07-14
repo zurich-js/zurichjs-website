@@ -28,6 +28,8 @@ export default function EmailAllUsers() {
   const [filterBy, setFilterBy] = useState<'all' | 'active' | 'new' | 'inactive'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(25);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -52,6 +54,11 @@ export default function EmailAllUsers() {
     fetchUsers();
   }, []);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterBy]);
+
   // Filter users based on criteria
   const filteredUsers = users.filter(user => {
     // Text search filter
@@ -75,7 +82,13 @@ export default function EmailAllUsers() {
     }
   });
 
-  // Get selected user emails
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Get selected user emails (from all pages)
   const selectedUserEmails = filteredUsers
     .filter(user => selectedUsers.includes(user.id))
     .map(user => user.email);
@@ -85,6 +98,22 @@ export default function EmailAllUsers() {
       setSelectedUsers([]);
     } else {
       setSelectedUsers(filteredUsers.map(user => user.id));
+    }
+  };
+
+  const handleSelectCurrentPage = () => {
+    const currentPageUserIds = currentUsers.map(user => user.id);
+    const allCurrentPageSelected = currentPageUserIds.every(id => selectedUsers.includes(id));
+    
+    if (allCurrentPageSelected) {
+      // Deselect all users on current page
+      setSelectedUsers(prev => prev.filter(id => !currentPageUserIds.includes(id)));
+    } else {
+      // Select all users on current page
+      setSelectedUsers(prev => {
+        const newSelections = currentPageUserIds.filter(id => !prev.includes(id));
+        return [...prev, ...newSelections];
+      });
     }
   };
 
@@ -246,6 +275,12 @@ export default function EmailAllUsers() {
               >
                 {selectedUsers.length === filteredUsers.length ? 'Deselect All' : 'Select All'}
               </button>
+              <button
+                onClick={handleSelectCurrentPage}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+              >
+                {currentUsers.every(user => selectedUsers.includes(user.id)) ? 'Deselect Page' : 'Select Page'}
+              </button>
             </div>
           </div>
 
@@ -287,8 +322,8 @@ export default function EmailAllUsers() {
                   <th className="text-left py-3 px-4 font-semibold">
                     <input
                       type="checkbox"
-                      checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                      onChange={handleSelectAll}
+                      checked={currentUsers.length > 0 && currentUsers.every(user => selectedUsers.includes(user.id))}
+                      onChange={handleSelectCurrentPage}
                       className="rounded"
                     />
                   </th>
@@ -300,7 +335,7 @@ export default function EmailAllUsers() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {currentUsers.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <input
@@ -341,6 +376,59 @@ export default function EmailAllUsers() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Previous
+                </button>
+                
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 7) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 4) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    pageNum = totalPages - 6 + i;
+                  } else {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1 rounded-lg ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Email Preview */}

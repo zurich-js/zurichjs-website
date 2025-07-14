@@ -1,6 +1,6 @@
 import { OrganizationSwitcher } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
-import { MessageSquare, BarChart, Users } from 'lucide-react';
+import { MessageSquare, BarChart, Users, Tag } from 'lucide-react';
 import Link from 'next/link';
 
 import Layout from '@/components/layout/Layout';
@@ -26,6 +26,34 @@ const adminRoutes = [
         icon: <Users className="w-6 h-6" />,
         href: '/admin/users',
         color: 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+    },
+    {
+        name: 'Referral Program Admin',
+        description: 'Manage referral campaigns, rewards, and track performance',
+        icon: <Users className="w-6 h-6" />,
+        href: '/admin/referrals',
+        color: 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+    },
+    {
+        name: 'User Activity Monitor',
+        description: 'Track user engagement and community participation',
+        icon: <BarChart className="w-6 h-6" />,
+        href: '/admin/user-activity',
+        color: 'bg-teal-100 text-teal-700 hover:bg-teal-200'
+    },
+    {
+        name: 'Email All Users',
+        description: 'Open Gmail with all user emails for mass communication',
+        icon: <MessageSquare className="w-6 h-6" />,
+        href: '/admin/email-users',
+        color: 'bg-red-100 text-red-700 hover:bg-red-200'
+    },
+    {
+        name: 'Coupon Management',
+        description: 'Manage Stripe coupons, view usage, and create new discounts',
+        icon: <Tag className="w-6 h-6" />,
+        href: '/admin/coupons',
+        color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
     },
 ];
 

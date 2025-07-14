@@ -109,6 +109,35 @@ const mapEventData = (event: SanityEvent) => {
 
 export type Event = ReturnType<typeof mapEventData>;
 
+// Lightweight event data for UTM tracking
+export interface UTMEvent {
+  _id: string;
+  id: string;
+  title: string;
+  datetime: string;
+  location: string;
+  talks: Array<{
+    speakers: Array<{
+      id: string;
+      name: string;
+    }>;
+  }>;
+}
+
+interface SanityUTMEvent {
+  _id: string;
+  id: string;
+  title: string;
+  datetime: string;
+  location: string;
+  talks?: Array<{
+    speakers?: Array<{
+      id: string;
+      name: string;
+    }>;
+  }>;
+}
+
 export const getUpcomingEvents = async () => {
   const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) {
     ...,
@@ -156,6 +185,53 @@ export const getUpcomingEvents = async () => {
   }`);
 
   return events.map(mapEventData);
+};
+
+// Lightweight version for UTM tracking - only fetch essential data
+export const getEventsForUTM = async (options: {
+  limit?: number;
+  monthsBack?: number;
+  monthsAhead?: number;
+} = {}): Promise<UTMEvent[]> => {
+  const { limit = 50, monthsBack = 6, monthsAhead = 12 } = options;
+  
+  const startDate = new Date();
+  startDate.setMonth(startDate.getMonth() - monthsBack);
+  
+  const endDate = new Date();
+  endDate.setMonth(endDate.getMonth() + monthsAhead);
+  
+  const events = await client.fetch(`*[_type == "events" && datetime >= $startDate && datetime <= $endDate] | order(datetime desc) [0...$limit] {
+    _id,
+    "id": id.current,
+    title,
+    datetime,
+    location,
+    talks[]-> {
+      speakers[]-> {
+        "id": id.current,
+        name
+      }
+    }
+  }`, {
+    startDate: startDate.toISOString(),
+    endDate: endDate.toISOString(),
+    limit: limit - 1
+  });
+
+  return events.map((event: SanityUTMEvent) => ({
+    _id: event._id,
+    id: event.id,
+    title: event.title,
+    datetime: event.datetime,
+    location: event.location,
+    talks: event.talks?.map((talk) => ({
+      speakers: talk.speakers?.map((speaker) => ({
+        id: speaker.id,
+        name: speaker.name
+      })) || []
+    })) || []
+  }));
 };
 
 export const getPastEvents = async () => {

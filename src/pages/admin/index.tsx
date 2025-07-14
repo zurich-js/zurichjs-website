@@ -1,6 +1,6 @@
 import { OrganizationSwitcher } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
-import { MessageSquare, BarChart, Users, Tag } from 'lucide-react';
+import { MessageSquare, BarChart, Users, Tag, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 
 import Layout from '@/components/layout/Layout';
@@ -19,6 +19,13 @@ const adminRoutes = [
         icon: <MessageSquare className="w-6 h-6" />,
         href: '/admin/feedback-links',
         color: 'bg-green-100 text-green-700 hover:bg-green-200'
+    },
+    {
+        name: 'UTM Tracking Links',
+        description: 'Generate UTM tracking links for events and workshops for social media sharing',
+        icon: <LinkIcon className="w-6 h-6" />,
+        href: '/admin/utm-tracking',
+        color: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
     },
     {
         name: 'User Management',

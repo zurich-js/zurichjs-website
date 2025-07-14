@@ -23,6 +23,7 @@
     "date-fns": "^4.1.0",
     "formidable": "^3.5.2",
     "framer-motion": "^12.4.13",
+    "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.2",
     "lodash.get": "^4.4.2",
     "lucide-react": "^0.479.0",

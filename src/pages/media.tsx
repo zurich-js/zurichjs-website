@@ -3,7 +3,7 @@ import { Camera, Video, Calendar, MapPin, Users, ExternalLink, Play, Image as Im
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Event } from "@/sanity/queries"
+import { Event, getPastEvents } from "@/sanity/queries"
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
@@ -28,11 +28,13 @@ interface EventMedia {
 function filterEventMedias(eventMedias: EventMedia[], activeTab: 'all' | 'photos' | 'videos'): EventMedia[] {
   if (activeTab === 'photos') {
     return eventMedias.map(eventMedia => ({
+      folderId: eventMedia.folderId,
       event: eventMedia.event,
       media: eventMedia.media.filter(media => media.type === 'photo'),
     }));
   } else if (activeTab === 'videos') {
     return eventMedias.map(eventMedia => ({
+      folderId: eventMedia.folderId,
       event: eventMedia.event,
       media: eventMedia.media.filter(media => media.type === 'video'),
     }));
@@ -41,7 +43,7 @@ function filterEventMedias(eventMedias: EventMedia[], activeTab: 'all' | 'photos
   }
 }
 
-export default function Media() {
+export default function Media({ pastEvents }: MediaProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'photos' | 'videos'>('all');
   const [eventMedias, setEventMedias] = useState<EventMedia[]>([]);
 
@@ -50,7 +52,14 @@ export default function Media() {
   const allMedia = eventMedias.flatMap(eventMedia => eventMedia.media);
 
   useEffect(() => {
-    //TODO setEventMedias
+    fetch('/api/imagekit/list', {
+      method: 'GET',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+    }).then(response => response.json())
+      .then(console.log)
+      .catch(console.error);
   }, []);
 
   const handleTabChange = (tab: 'all' | 'photos' | 'videos') => {
@@ -258,4 +267,15 @@ export default function Media() {
       </Section>
     </Layout>
   );
-} 
+}
+
+export async function getStaticProps() {
+
+  const pastEvents = await getPastEvents();
+  
+  return {
+    props: {
+      pastEvents,
+    },
+  };
+}

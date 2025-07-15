@@ -3,12 +3,13 @@ import { Camera, Video, Calendar, MapPin, Users, ExternalLink, Play, Image as Im
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Event, getPastEvents } from "@/sanity/queries"
+
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import { Event, getPastEvents } from "@/sanity/queries"
 
 export type MediaProps = {
   pastEvents: Event[];
@@ -43,6 +44,22 @@ function filterEventMedias(eventMedias: EventMedia[], activeTab: 'all' | 'photos
   }
 }
 
+function createEventMedias(pastEvents: Event[], filesByFolder: Record<string, any[]>): EventMedia[] {
+  return Object.entries(filesByFolder).map(([folderId, files]) => {
+    const event = pastEvents.find(event => event.id === folderId);
+    const media: MediaItem[] = files.map((file: any) => ({
+      // TODO: add video type
+      type: 'photo',
+      url: file.url,
+    }));
+    return ({ 
+      folderId: folderId, 
+      event: event || null,  
+      media,
+    });
+  });
+}
+
 export default function Media({ pastEvents }: MediaProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'photos' | 'videos'>('all');
   const [eventMedias, setEventMedias] = useState<EventMedia[]>([]);
@@ -58,7 +75,10 @@ export default function Media({ pastEvents }: MediaProps) {
           'Content-Type': 'application/json',
       },
     }).then(response => response.json())
-      .then(console.log)
+      .then(filesByFolder => {
+        const eventMedias = createEventMedias(pastEvents, filesByFolder);
+        setEventMedias(eventMedias);
+      })
       .catch(console.error);
   }, []);
 

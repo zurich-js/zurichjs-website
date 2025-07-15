@@ -5,6 +5,12 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'ik.imagekit.io',
+        port: '',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
         hostname: 'cdn.sanity.io',
         port: '',
         pathname: '**',

@@ -9,6 +9,7 @@ import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import ImageGallery from '@/components/ui/ImageGallery';
 import { Event, getPastEvents } from "@/sanity/queries"
 
 export type MediaProps = {
@@ -63,6 +64,8 @@ function createEventMedias(pastEvents: Event[], filesByFolder: Record<string, an
 export default function Media({ pastEvents }: MediaProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'photos' | 'videos'>('all');
   const [eventMedias, setEventMedias] = useState<EventMedia[]>([]);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [selectedEventMedia, setSelectedEventMedia] = useState<EventMedia | null>(null);
 
   const filteredMedia = filterEventMedias(eventMedias, activeTab);
 
@@ -84,6 +87,20 @@ export default function Media({ pastEvents }: MediaProps) {
 
   const handleTabChange = (tab: 'all' | 'photos' | 'videos') => {
     setActiveTab(tab);
+  };
+
+  const handleCardClick = (eventMedia: EventMedia) => {
+    // Only open gallery if there are photos
+    const photos = eventMedia.media.filter(item => item.type === 'photo');
+    if (photos.length > 0) {
+      setSelectedEventMedia(eventMedia);
+      setGalleryOpen(true);
+    }
+  };
+
+  const handleGalleryClose = () => {
+    setGalleryOpen(false);
+    setSelectedEventMedia(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -186,69 +203,106 @@ export default function Media({ pastEvents }: MediaProps) {
         {/* Media Grid */}
         {filteredMedia.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredMedia.map((item, index) => (
-              <motion.div
-                key={item.folderId}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index % 3 * 0.1 }}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow group"
-              >
-                <div className="relative h-48 md:h-60 w-full">
-                  <Image
-                    src={item.media[0].url}
-                    alt={item.event?.title || "Event " + item.folderId}
-                    fill
-                    className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
-                  />
-                  
-                  {/* Overlay with type indicator */}
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
-                  
-                  {/* TODO snippet I saved */}
-                  
-                </div>
-
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 text-gray-900 line-clamp-2">
-                    {item.event?.title || "Event " + item.folderId}
-                  </h3>
-                  
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                    {item.event?.description || ""}
-                  </p>
-
-                  {/* Event details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Calendar size={14} className="mr-2" />
-                      <span>{item.event ? formatDate(item.event.datetime) : ""}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <MapPin size={14} className="mr-2" />
-                      <span>{item.event?.location || ""}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Users size={14} className="mr-2" />
-                      <span>{item.event ? ("" + item.event?.attendees + " attendees") : ""}</span>
+            {filteredMedia.map((item, index) => {
+              const photos = item.media.filter(media => media.type === 'photo');
+              const hasPhotos = photos.length > 0;
+              
+              return (
+                <motion.div
+                  key={item.folderId}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index % 3 * 0.1 }}
+                  className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+                  onClick={() => handleCardClick(item)}
+                >
+                  <div className="relative h-48 md:h-60 w-full">
+                    <Image
+                      src={item.media[0].url}
+                      alt={item.event?.title || "Event " + item.folderId}
+                      fill
+                      className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                    />
+                    
+                    {/* Overlay with type indicator */}
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors" />
+                    
+                    {/* Photo count badge */}
+                    {hasPhotos && (
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-medium text-gray-900 flex items-center gap-1">
+                        <Camera size={14} />
+                        <span>{photos.length}</span>
+                      </div>
+                    )}
+                    
+                    {/* Click to view overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="bg-black/70 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                        <ImageIcon size={20} />
+                        <span className="font-medium">View Gallery</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Action button */}
-                  {/* TODO button & fix url to go to event page */}
-                  <Button
-                    href={item.event?.meetupUrl || ""}
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-                  >
-                    {"View"}
-                    <ExternalLink size={14} className="ml-1" />
-                  </Button>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold mb-2 text-gray-900 line-clamp-2">
+                      {item.event?.title || "Event " + item.folderId}
+                    </h3>
+                    
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                      {item.event?.description || ""}
+                    </p>
+
+                    {/* Event details */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Calendar size={14} className="mr-2" />
+                        <span>{item.event ? formatDate(item.event.datetime) : ""}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin size={14} className="mr-2" />
+                        <span>{item.event?.location || ""}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Users size={14} className="mr-2" />
+                        <span>{item.event ? ("" + item.event?.attendees + " attendees") : ""}</span>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex gap-2">
+                      {hasPhotos && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardClick(item);
+                          }}
+                          variant="primary"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          <Camera size={14} className="mr-1" />
+                          View Photos
+                        </Button>
+                      )}
+                      {item.event?.meetupUrl && (
+                        <Button
+                          href={item.event.meetupUrl}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <ExternalLink size={14} className="mr-1" />
+                          Event Details
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
@@ -285,6 +339,16 @@ export default function Media({ pastEvents }: MediaProps) {
           </motion.div>
         </div>
       </Section>
+
+      {/* Image Gallery Modal */}
+      {selectedEventMedia && (
+        <ImageGallery
+          isOpen={galleryOpen}
+          onClose={handleGalleryClose}
+          media={selectedEventMedia.media}
+          eventTitle={selectedEventMedia.event?.title || "Event"}
+        />
+      )}
     </Layout>
   );
 }

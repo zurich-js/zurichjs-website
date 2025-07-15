@@ -16,8 +16,22 @@ export default async function handler(
     });
 
     const list = await imagekit.listFiles({});
+    
+    const filesByFolder: Record<string, any[]> = {};
+    
+    list.forEach((file: any) => {
+        if (file.filePath) {
+            // Extract folder from filePath (e.g., '/zurichjs-5/DSC02185.png' -> 'zurichjs-5')
+            const pathParts = file.filePath.split('/').filter(Boolean);
+            if (pathParts.length > 0) {
+                const folder = pathParts[0];
+                if (!filesByFolder[folder]) {
+                    filesByFolder[folder] = [];
+                }
+                filesByFolder[folder].push(file);
+            }
+        }
+    });
 
-    console.log(list);
-
-    return res.status(200).json(list);
+    return res.status(200).json(filesByFolder);
 }

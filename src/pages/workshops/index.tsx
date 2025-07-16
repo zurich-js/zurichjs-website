@@ -17,21 +17,6 @@ type WorkshopState = 'confirmed' | 'interest';
 // Workshop data
 const workshops = [
   {
-    id: 'laravel-reverb',
-    title: 'From Scratch to Real-Time with Laravel & Reverb',
-    subtitle: 'Building a mini-project tracker with Laravel',
-    description: 'Learn to build a functional mini-project tracker app with real-time features using Laravel & Reverb. Perfect for developers new to Laravel or those with early-intermediate level experience.',
-    dateInfo: 'July 23, 2025',
-    timeInfo: '17:30 - 21:30',
-    locationInfo: 'Zürich (Venue TBD)',
-    maxAttendees: 15,
-    image: '/images/workshops/laravel-reverb.png',
-    iconColor: '#ef4444', // red-500
-    tag: '⚡ Real-Time Web',
-    speakerId: 'bert-de-swaef',
-    state: 'confirmed' as WorkshopState
-  },
-  {
     id: 'astro-zero-to-hero',
     title: 'Astro: Zero to Hero',
     subtitle: 'Build High-Performance Websites with Astro',

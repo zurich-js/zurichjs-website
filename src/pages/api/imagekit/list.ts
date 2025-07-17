@@ -1,6 +1,7 @@
 import ImageKit from "imagekit";
 import { NextApiRequest, NextApiResponse } from 'next';
 
+import { ImageKitFile } from '../../../types/gallery';
 import { generateThumbnail, isVideoFile } from '../../../utils/thumbnailGenerator';
 
 export default async function handler(
@@ -23,45 +24,54 @@ export default async function handler(
             sort: 'DESC_CREATED' // Sort by creation date descending
         });
         
-        const filesByFolder: Record<string, any[]> = {};
+        const filesByFolder: Record<string, ImageKitFile[]> = {};
         
-        list.forEach((file: any) => {
-            if (file.filePath) {
+        list.forEach((file: unknown) => {
+            // Type guard to ensure we're working with a file object, not a folder
+            const fileObj = file as Record<string, unknown>;
+            if (fileObj.filePath && fileObj.fileId && fileObj.url) {
                 // Extract folder from filePath (e.g., '/zurichjs-5/DSC02185.png' -> 'zurichjs-5')
-                const pathParts = file.filePath.split('/').filter(Boolean);
+                const pathParts = (fileObj.filePath as string).split('/').filter(Boolean);
                 if (pathParts.length > 0) {
                     const folder = pathParts[0];
                     if (!filesByFolder[folder]) {
                         filesByFolder[folder] = [];
                     }
                     
-                    const isVideo = isVideoFile(file.name);
+                    const isVideo = isVideoFile(fileObj.name as string);
                     
                     // Get actual dimensions from ImageKit or calculate from metadata
-                    const actualWidth = file.width || file.metadata?.width || (isVideo ? 1920 : 1200);
-                    const actualHeight = file.height || file.metadata?.height || (isVideo ? 1080 : 800);
+                    const metadata = fileObj.metadata as { width?: number; height?: number } | undefined;
+                    const actualWidth = (fileObj.width as number) || metadata?.width || (isVideo ? 1920 : 1200);
+                    const actualHeight = (fileObj.height as number) || metadata?.height || (isVideo ? 1080 : 800);
                     
                     // Calculate aspect ratio for consistent display
                     const aspectRatio = actualWidth / actualHeight;
                     
                     // Enhance file object with additional metadata and multiple thumbnail sizes
-                    const enhancedFile = {
-                        ...file,
+                    const enhancedFile: ImageKitFile = {
+                        fileId: fileObj.fileId as string,
+                        name: fileObj.name as string,
+                        filePath: fileObj.filePath as string,
+                        url: fileObj.url as string,
+                        createdAt: fileObj.createdAt as string,
+                        updatedAt: fileObj.updatedAt as string | undefined,
+                        metadata,
                         isVideo,
                         // Use actual dimensions from ImageKit
                         width: actualWidth,
                         height: actualHeight,
                         aspectRatio,
                         // Generate multiple thumbnail sizes for different use cases using centralized utility
-                        thumbnailUrl: generateThumbnail(file.url, isVideo, 'medium'),
-                        thumbnailUrlSmall: generateThumbnail(file.url, isVideo, 'small'),
-                        thumbnailUrlLarge: generateThumbnail(file.url, isVideo, 'large'),
+                        thumbnailUrl: generateThumbnail(fileObj.url as string, isVideo, 'medium'),
+                        thumbnailUrlSmall: generateThumbnail(fileObj.url as string, isVideo, 'small'),
+                        thumbnailUrlLarge: generateThumbnail(fileObj.url as string, isVideo, 'large'),
                         // Add fallback URL for when thumbnail generation fails
-                        fallbackUrl: file.url,
-                        duration: file.duration || (isVideo ? 120 : undefined), // Default duration for videos
-                        tags: file.tags || [],
-                        fileSize: file.size || 0,
-                        mimeType: file.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg')
+                        fallbackUrl: fileObj.url as string,
+                        duration: (fileObj.duration as number) || (isVideo ? 120 : undefined), // Default duration for videos
+                        tags: (fileObj.tags as string[]) || undefined, // Convert null to undefined to match interface
+                        fileSize: (fileObj.size as number) || 0,
+                        mimeType: (fileObj.mimeType as string) || (isVideo ? 'video/mp4' : 'image/jpeg')
                     };
                     
                     filesByFolder[folder].push(enhancedFile);

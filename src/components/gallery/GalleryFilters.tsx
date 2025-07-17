@@ -1,5 +1,4 @@
 import { Search, Filter, Calendar, Camera, Video, X } from 'lucide-react';
-import { useState } from 'react';
 
 import { EventType, MediaType, TimePeriod, SortOption, GalleryFilters } from '../../types/gallery';
 import { formatEventType, formatMediaType } from '../../utils/galleryFormatters';
@@ -11,8 +10,6 @@ interface GalleryFiltersProps {
 }
 
 export default function GalleryFiltersComponent({ filters, onFiltersChange, onClearFilters }: GalleryFiltersProps) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
   const hasActiveFilters = filters.eventType !== EventType.ALL || 
                           filters.mediaType !== MediaType.ALL || 
                           filters.timePeriod !== TimePeriod.ALL || 
@@ -160,7 +157,7 @@ export default function GalleryFiltersComponent({ filters, onFiltersChange, onCl
           
           {filters.searchQuery && (
             <div className="filter-chip filter-chip-active">
-              <span>"{filters.searchQuery}"</span>
+              <span>&quot;{filters.searchQuery}&quot;</span>
               <button
                 onClick={() => onFiltersChange({ searchQuery: '' })}
                 className="icon-button p-0.5 hover:bg-blue-300 rounded-full"

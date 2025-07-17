@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Play, Camera, Video, Clock } from 'lucide-react';
+import { Camera, Video, Clock } from 'lucide-react';
 
 import { useResponsiveThumbnail } from '../../hooks/useResponsiveThumbnail';
 import { MediaItem as MediaItemType, MediaType } from '../../types/gallery';
@@ -24,7 +24,6 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
     imageError,
     handleImageLoad,
     handleImageError,
-    fallbackUrl
   } = useResponsiveThumbnail({
     originalUrl: media.url,
     isVideo,

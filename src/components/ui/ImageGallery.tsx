@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 interface MediaItem {
   type: 'photo' | 'video';

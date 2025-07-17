@@ -1,4 +1,4 @@
-import { Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
 import Image from 'next/image';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 

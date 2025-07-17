@@ -1,4 +1,4 @@
-import { EventType, MediaType, SortOption, TimePeriod } from '../types/gallery';
+import { EventType, MediaType } from '../types/gallery';
 
 // Data passed as props to the root component
 export const mockRootProps = {

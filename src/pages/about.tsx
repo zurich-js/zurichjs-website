@@ -309,9 +309,12 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
               <p className="text-xl mb-6 text-gray-900">
                 Welcome to ZurichJS – the heart of JavaScript awesomeness in Zurich since 2024!
               </p>
-              <p className="text-lg mb-8 text-gray-900">
+              <p className="text-lg mb-6 text-gray-900">
                 We&apos;re a thriving community of JS enthusiasts who love to code, learn, and connect. From React wizards to Node.js ninjas,
                 TypeScript pros to vanilla JS lovers – everyone building with JavaScript has a home here!
+              </p>
+              <p className="text-sm mb-8 text-gray-700 bg-white/20 p-4 rounded-lg">
+                <strong>Legal Note:</strong> ZurichJS is part of the Swiss JavaScript Group, a non-profit association (Verein) registered in Switzerland, dedicated to fostering JavaScript communities across the country.
               </p>
             </motion.div>
 
@@ -425,8 +428,70 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
           </div>
       </Section>
 
-  {/* Timeline Section */
-  }
+      {/* Organizational Structure Section */}
+      <Section variant="white">
+        <motion.div
+            initial={{opacity: 0, y: 20}}
+            whileInView={{opacity: 1, y: 0}}
+            viewport={{once: true}}
+            transition={{duration: 0.5}}
+            className="text-center mb-12"
+        >
+          <h2 className="text-3xl font-bold mb-3 text-gray-900">Our Organization 🏛️</h2>
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+            Understanding the structure behind ZurichJS and our commitment to the Swiss JavaScript community
+          </p>
+        </motion.div>
+
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+              initial={{opacity: 0, y: 20}}
+              whileInView={{opacity: 1, y: 0}}
+              viewport={{once: true}}
+              transition={{duration: 0.5, delay: 0.1}}
+              className="bg-gray-50 p-8 rounded-lg shadow-lg mb-8"
+          >
+            <h3 className="text-2xl font-bold mb-4 text-gray-900">Swiss JavaScript Group</h3>
+            <p className="text-lg mb-4 text-gray-700">
+              ZurichJS operates under the <strong>Swiss JavaScript Group</strong>, a registered non-profit association (Verein) in Switzerland. 
+              This legal structure ensures our commitment to fostering JavaScript communities across Switzerland while maintaining transparency 
+              and accountability to our members and the broader developer community.
+            </p>
+            <p className="text-lg mb-4 text-gray-700">
+              The Swiss JavaScript Group serves as the umbrella organization for JavaScript meetups and events throughout Switzerland, 
+              with ZurichJS being our flagship community in the Zurich area. This structure allows us to:
+            </p>
+            <ul className="list-disc ml-6 mb-4 text-gray-700">
+              <li className="mb-2">Operate as a recognized non-profit organization under Swiss law</li>
+              <li className="mb-2">Maintain transparent financial operations and governance</li>
+              <li className="mb-2">Collaborate with other JavaScript communities across Switzerland</li>
+              <li className="mb-2">Provide legal protection and proper insurance for our events</li>
+              <li className="mb-2">Ensure compliance with Swiss regulations and data protection laws</li>
+            </ul>
+          </motion.div>
+
+          <motion.div
+              initial={{opacity: 0, y: 20}}
+              whileInView={{opacity: 1, y: 0}}
+              viewport={{once: true}}
+              transition={{duration: 0.5, delay: 0.2}}
+              className="bg-blue-50 p-8 rounded-lg shadow-lg"
+          >
+            <h3 className="text-2xl font-bold mb-4 text-gray-900">Non-Profit Commitment</h3>
+            <p className="text-lg mb-4 text-gray-700">
+              As a non-profit association, our primary mission is to serve the JavaScript community, not to generate profit. 
+              All revenue from events and sponsorships goes directly back into improving our community offerings, 
+              securing better venues, bringing in top-tier speakers, and expanding our reach across Switzerland.
+            </p>
+            <p className="text-lg text-gray-700">
+              This commitment ensures that ZurichJS remains accessible, community-focused, and dedicated to advancing 
+              JavaScript education and networking opportunities for developers at all levels.
+            </p>
+          </motion.div>
+        </div>
+      </Section>
+
+  {/* Timeline Section */}
   <Section variant="white">
     <motion.div
         initial={{opacity: 0, y: 20}}

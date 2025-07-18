@@ -24,8 +24,11 @@ export default function RefundPolicy() {
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-js mb-8">
             <h2 className="text-xl font-bold mb-4 text-black">Overview</h2>
             <p className="mb-4 text-gray-800">
-              This refund policy outlines the terms under which ZurichJS may provide refunds for event tickets and workshops. 
+              This refund policy outlines the terms under which the Swiss JavaScript Group, a registered non-profit association (Verein) in Switzerland, operating ZurichJS, may provide refunds for event tickets and workshops. 
               Our goal is to maintain a fair and transparent approach to refunds while ensuring the sustainability of our community events.
+            </p>
+            <p className="mb-4 text-gray-800">
+              For the purposes of this policy, &quot;we,&quot; &quot;us,&quot; and &quot;our&quot; refer to the Swiss JavaScript Group and its ZurichJS operations.
             </p>
           </div>
           
@@ -47,8 +50,8 @@ export default function RefundPolicy() {
               We may provide refunds in the following limited circumstances:
             </p>
             <ul className="list-disc ml-6 mb-4 text-gray-800">
-              <li className="mb-2"><strong>Event Cancellation:</strong> If ZurichJS cancels an event or workshop, all attendees will receive a full refund.</li>
-              <li className="mb-2"><strong>Date Changes:</strong> If ZurichJS changes the date of an event, and the new date doesn&apos;t work for you, you may request a refund.</li>
+              <li className="mb-2"><strong>Event Cancellation:</strong> If the Swiss JavaScript Group cancels an event or workshop, all attendees will receive a full refund.</li>
+              <li className="mb-2"><strong>Date Changes:</strong> If the Swiss JavaScript Group changes the date of an event, and the new date doesn&apos;t work for you, you may request a refund.</li>
             </ul>
             <p className="mb-4 text-gray-800">
               To request a refund for these exceptions, please contact us at hello@zurichjs.com within 7 days of the cancellation or date change announcement.
@@ -73,6 +76,7 @@ export default function RefundPolicy() {
               If you have any questions about our refund policy or need to request a ticket transfer or refund, please contact us at:
             </p>
             <p className="mb-4 text-gray-800">
+              <strong>Swiss JavaScript Group</strong> (ZurichJS Operations)<br />
               <strong>Email:</strong> hello@zurichjs.com
             </p>
           </div>

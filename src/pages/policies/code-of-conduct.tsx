@@ -24,7 +24,7 @@ export default function CodeOfConduct() {
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-js mb-8">
             <h2 className="text-xl font-bold mb-4 text-black">Our Pledge</h2>
             <p className="mb-4 text-gray-800">
-              ZurichJS is dedicated to providing a harassment-free and inclusive event experience for everyone regardless of gender identity and expression, sexual orientation, disability, physical appearance, body size, race, age, religion, or technology choices.
+              ZurichJS, operated by the Swiss JavaScript Group (a registered non-profit association in Switzerland), is dedicated to providing a harassment-free and inclusive event experience for everyone regardless of gender identity and expression, sexual orientation, disability, physical appearance, body size, race, age, religion, or technology choices.
             </p>
             <p className="mb-4 text-gray-800">
               We do not tolerate harassment of event participants in any form and are committed to ensuring a welcoming environment for all attendees.
@@ -78,7 +78,7 @@ export default function CodeOfConduct() {
               If you are subject to or witness unacceptable behavior, or have any other concerns, please notify an organizer as soon as possible by emailing hello@zurichjs.com or speaking directly with any ZurichJS team member at an event.
             </p>
             <p className="mb-4 text-gray-800">
-              All complaints will be reviewed and investigated promptly and fairly. All community organizers are obligated to respect the privacy and security of the reporter of any incident.
+              All complaints will be reviewed and investigated promptly and fairly by the Swiss JavaScript Group organizers. All community organizers are obligated to respect the privacy and security of the reporter of any incident.
             </p>
           </div>
           
@@ -95,6 +95,7 @@ export default function CodeOfConduct() {
               If you have any questions about this Code of Conduct or need to report an incident, please contact us at:
             </p>
             <p className="mb-4 text-gray-800">
+              <strong>Swiss JavaScript Group</strong> (ZurichJS Operations)<br />
               <strong>Email:</strong> hello@zurichjs.com
             </p>
           </div>

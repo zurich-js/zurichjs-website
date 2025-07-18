@@ -141,9 +141,12 @@ export default function Footer() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
-            <p>© {currentYear} ZurichJS. All rights reserved.</p>
+            <p>© {currentYear} Swiss JavaScript Group. All rights reserved.</p>
             <p className="mt-2 text-sm">
               Made with 💛 by the JavaScript community in Zurich
+            </p>
+            <p className="mt-3 text-xs text-gray-500">
+              ZurichJS is part of the Swiss JavaScript Group, a non-profit association registered in Switzerland.
             </p>
           </div>
         </Section>

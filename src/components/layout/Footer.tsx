@@ -141,7 +141,7 @@ export default function Footer() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
-            <p>© {currentYear} Swiss JavaScript Group (CHE-255.581.547). All rights reserved.</p>
+            <p>© {currentYear} Swiss JavaScript Group (<a href="https://www.uid.admin.ch/Detail.aspx?uid_id=CHE255581547" target="_blank" rel="noopener noreferrer" className="hover:text-js transition-colors">CHE-255.581.547</a>). All rights reserved.</p>
             <p className="mt-2 text-sm">
               Made with 💛 by the JavaScript community in Zurich
             </p>

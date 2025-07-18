@@ -24,7 +24,10 @@ export default function TermsAndConditions() {
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-js mb-8">
             <h2 className="text-xl font-bold mb-4 text-black">1. Introduction</h2>
             <p className="mb-4 text-gray-800">
-              Welcome to ZurichJS. These Terms and Conditions govern your use of our website and participation in our events. By accessing our website or attending our events, you agree to these terms.
+              Welcome to ZurichJS, operated by the Swiss JavaScript Group, a registered non-profit association (Verein) in Switzerland. These Terms and Conditions govern your use of our website and participation in our events. By accessing our website or attending our events, you agree to these terms.
+            </p>
+            <p className="mb-4 text-gray-800">
+              For the purposes of these terms, &quot;we,&quot; &quot;us,&quot; and &quot;our&quot; refer to the Swiss JavaScript Group and its ZurichJS operations.
             </p>
           </div>
           
@@ -84,6 +87,7 @@ export default function TermsAndConditions() {
               If you have any questions about these terms and conditions, please contact us at:
             </p>
             <p className="mb-4 text-gray-800">
+              <strong>Swiss JavaScript Group</strong> (ZurichJS Operations)<br />
               <strong>Email:</strong> hello@zurichjs.com
             </p>
           </div>

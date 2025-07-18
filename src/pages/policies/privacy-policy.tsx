@@ -24,7 +24,10 @@ export default function PrivacyPolicy() {
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-js mb-8">
             <h2 className="text-xl font-bold mb-4 text-black">Introduction</h2>
             <p className="mb-4 text-gray-800">
-              ZurichJS respects your privacy and is committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our website and attend our events, and tell you about your privacy rights.
+              The Swiss JavaScript Group, a registered non-profit association (Verein) in Switzerland, operating ZurichJS, respects your privacy and is committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our website and attend our events, and tell you about your privacy rights.
+            </p>
+            <p className="mb-4 text-gray-800">
+              For the purposes of this privacy policy, &quot;we,&quot; &quot;us,&quot; and &quot;our&quot; refer to the Swiss JavaScript Group and its ZurichJS operations.
             </p>
           </div>
           
@@ -95,7 +98,11 @@ export default function PrivacyPolicy() {
               If you have any questions about this privacy policy or our privacy practices, please contact us at:
             </p>
             <p className="mb-4 text-gray-800">
+              <strong>Swiss JavaScript Group</strong> (ZurichJS Operations)<br />
               <strong>Email:</strong> hello@zurichjs.com
+            </p>
+            <p className="mb-4 text-gray-800">
+              As a registered non-profit association in Switzerland, we are committed to handling your data in accordance with Swiss data protection laws and European GDPR standards.
             </p>
           </div>
           

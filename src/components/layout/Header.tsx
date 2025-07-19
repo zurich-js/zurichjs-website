@@ -69,6 +69,7 @@ export default function Header() {
         { name: 'Events', path: '/events' },
         { name: 'Workshops', path: '/workshops' },
         { name: 'Speakers', path: '/speakers' },
+        { name: 'Photos & Videos', path: '/media' },
       ]
     },
     {

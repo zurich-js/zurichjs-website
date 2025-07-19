@@ -113,13 +113,20 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
           {/* Media display */}
         <div className="flex-1 flex items-center justify-center relative min-h-0 p-4">
             {isVideo ? (
-              <video
-                src={media.url}
-                controls
-                autoPlay
-              className="max-w-full max-h-full object-contain"
-              onLoadStart={() => setImageLoaded(true)}
-              />
+              <div className="relative w-full h-full flex items-center justify-center">
+                <video
+                  src={media.url}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-full object-contain"
+                  style={{
+                    aspectRatio: `${media.width}/${media.height}`,
+                    minHeight: media.height > media.width ? '60vh' : 'auto',
+                    minWidth: media.height > media.width ? 'auto' : '40vw'
+                  }}
+                  onLoadStart={() => setImageLoaded(true)}
+                />
+              </div>
             ) : (
             <div className="relative max-w-full max-h-full">
               <img
@@ -147,7 +154,7 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
               {isVideo ? <Video size={16} /> : <Camera size={16} />}
               <span>{isVideo ? 'Video' : 'Photo'}</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button 
                 onClick={handleDownload}
                 className="icon-button"
@@ -186,7 +193,7 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
           </div>
 
           <div className="border-t pt-4 mb-4">
-            <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+            <p className="text-gray-900 leading-relaxed text-sm sm:text-base">
               {media.description}
             </p>
           </div>
@@ -195,11 +202,11 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
             {media.tags.length > 0 && (
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Tags:</h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                   {media.tags.map((tag) => (
                   <span
                       key={tag}
-                    className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded text-sm font-medium"
+                    className="inline-block bg-gray-100 text-gray-900 px-2 py-1 rounded text-sm font-medium"
                   >
                     {tag}
                   </span>

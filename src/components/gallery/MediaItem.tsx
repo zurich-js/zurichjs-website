@@ -133,25 +133,25 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
             {media.eventName}
           </h3>
           <p className="text-xs text-gray-500 mb-2">
-            {formatEventDate(eventDate)} • {media.photographer}
+            {formatEventDate(eventDate)} &nbsp;•&nbsp; {media.photographer}
           </p>
-          <p className="text-sm text-gray-600 line-clamp-2 leading-tight">
+          <p className="text-sm text-gray-800 line-clamp-2 leading-tight">
             {media.description}
           </p>
           
           {/* Tags */}
           {media.tags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
+            <div className="mt-2 flex flex-wrap gap-2">
               {media.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
-                  className="inline-block bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-medium"
+                  className="inline-block bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-medium"
                 >
                   {tag}
                 </span>
               ))}
               {media.tags.length > 3 && (
-                <span className="inline-block bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-medium">
+                <span className="inline-block bg-gray-100 text-gray-800 px-2 py-0.5 rounded text-xs font-medium">
                   +{media.tags.length - 3}
                 </span>
               )}

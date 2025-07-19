@@ -7,22 +7,26 @@ interface VideoPlayerProps {
   thumbnail?: string;
   title?: string;
   className?: string;
+  autoplay?: boolean;
+  muted?: boolean;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
   src, 
   thumbnail, 
   title = "Video", 
-  className = "" 
+  className = "",
+  autoplay = false,
+  muted = false
 }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(autoplay);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+  const [volume, setVolume] = useState(muted ? 0 : 1);
+  const [isMuted, setIsMuted] = useState(muted);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showThumbnail, setShowThumbnail] = useState(true);
+  const [showThumbnail, setShowThumbnail] = useState(!autoplay);
   const [thumbnailError, setThumbnailError] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -139,6 +143,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setShowThumbnail(!!thumbnail);
   }, [thumbnail]);
 
+  // Handle autoplay initialization
+  useEffect(() => {
+    if (autoplay && videoRef.current) {
+      videoRef.current.muted = muted;
+      videoRef.current.play().catch((error) => {
+        console.log('Autoplay failed:', error);
+        setIsPlaying(false);
+        setShowThumbnail(true);
+      });
+    }
+  }, [autoplay, muted]);
+
+
+
   return (
     <div 
       ref={containerRef}
@@ -148,7 +166,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     >
             {/* Thumbnail overlay */}
       {showThumbnail && thumbnail && !thumbnailError && (
-        <div className="absolute inset-0 z-10 cursor-pointer" onClick={handlePlayClick}>
+        <div className="absolute inset-0 cursor-pointer" onClick={handlePlayClick}>
           <Image
             src={thumbnail}
             alt={title}
@@ -167,7 +185,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* Video placeholder when no thumbnail */}
       {(showThumbnail && !thumbnail) || (showThumbnail && thumbnailError) ? (
-        <div className="absolute inset-0 z-10 cursor-pointer bg-gray-900 flex items-center justify-center touch-manipulation" onClick={handlePlayClick}>
+        <div className="absolute inset-0 cursor-pointer bg-gray-900 flex items-center justify-center touch-manipulation" onClick={handlePlayClick}>
           <div className="flex flex-col items-center justify-center text-white">
             <Play size={40} className="sm:w-12 sm:h-12 mb-2 sm:mb-3" />
             <span className="text-base sm:text-lg font-medium">Play Video</span>
@@ -179,23 +197,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       <video
         ref={videoRef}
         src={src}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-contain"
         preload="metadata"
+        autoPlay={autoplay}
+        muted={muted}
         onClick={togglePlay}
       />
 
       {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-white border-t-transparent"></div>
         </div>
       )}
 
+
+
       {/* Controls */}
       <div 
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${
-          showControls || isPlaying ? 'opacity-100' : 'opacity-0'
-        }`}
+        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 z-20"
+        style={{
+          opacity: showControls || isPlaying ? 1 : 0.3,
+          pointerEvents: 'auto'
+        }}
       >
         {/* Progress bar */}
         <div 

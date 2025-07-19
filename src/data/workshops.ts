@@ -1,4 +1,4 @@
-import { Workshop, WorkshopState } from '@/components/sections/UpcomingWorkshops';
+import { Workshop } from '@/components/sections/UpcomingWorkshops';
 
 export const getWorkshops = (): Workshop[] => {
   const workshops: Workshop[] = [
@@ -11,11 +11,10 @@ export const getWorkshops = (): Workshop[] => {
       timeInfo: '17:30 - 21:30',
       locationInfo: 'Zürich (Venue TBD)',
       maxAttendees: 15,
+      price: '225 CHF',
       image: '/images/workshops/astro-zero-to-hero.png',
-      iconColor: '#0284c7', // sky-600
-      tag: '🚀 Web Performance',
-      speakerId: 'elian-van-cutsem',
-      state: 'confirmed' as WorkshopState
+      level: 'Beginner to Intermediate',
+      confirmedDate: true
     },
     {
       id: 'accessibility-fundamentals',
@@ -27,10 +26,8 @@ export const getWorkshops = (): Workshop[] => {
       locationInfo: 'TBD',
       maxAttendees: 15,
       image: '/images/workshops/web-accessibility.png',
-      iconColor: '#0284c7', // sky-600
-      tag: '🌐 Accessibility',
-      speakerId: 'aleksej-dix',
-      state: 'interest' as WorkshopState
+      level: 'All Levels',
+      confirmedDate: false
     },
     {
       id: 'react-performance',
@@ -42,10 +39,8 @@ export const getWorkshops = (): Workshop[] => {
       locationInfo: 'TBD',
       maxAttendees: 15,
       image: '/images/workshops/react-performance.png',
-      iconColor: '#2563eb', // blue-600
-      tag: '🚀 React & Next.js Performance',
-      speakerId: 'faris-aziz',
-      state: 'interest' as WorkshopState
+      level: 'Intermediate to Advanced',
+      confirmedDate: false
     },
   ];
 
@@ -54,7 +49,7 @@ export const getWorkshops = (): Workshop[] => {
 
 // Helper function to get only confirmed workshops
 export const getConfirmedWorkshops = (): Workshop[] => {
-  return getWorkshops().filter(workshop => workshop.state === 'confirmed');
+  return getWorkshops().filter(workshop => workshop.confirmedDate === true);
 };
 
 // Helper function to get upcoming workshops for homepage

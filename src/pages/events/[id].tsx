@@ -465,8 +465,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       });
                       addToCalendar();
                     }}
-                    variant="outline"
-                    className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-none hover:from-purple-600 hover:to-indigo-700"
+                    variant="primary"
+                    className="bg-blue-600 text-white hover:bg-blue-700 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg transition-all duration-200"
                   >
                     <Calendar size={16} className="mr-1.5" />
                     Add to Calendar
@@ -787,9 +787,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                             });
                             addToCalendar();
                           }}
-                          className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-1.5 rounded-full hover:from-purple-600 hover:to-indigo-700 flex items-center transition-colors"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                         >
-                          <Calendar size={14} className="mr-1" />
+                          <Calendar size={14} className="mr-2" />
                           Save to Calendar
                         </button>
                       )}
@@ -844,7 +844,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         });
                         addToCalendar();
                       }}
-                      className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 font-bold py-3 px-4 rounded-md flex items-center justify-center transition-colors"
+                      className="w-full bg-blue-600 text-white hover:bg-blue-700 font-bold py-3 px-4 rounded-lg flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Calendar size={18} className="mr-2" />
                       Add to My Calendar

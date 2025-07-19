@@ -476,13 +476,13 @@ export default function Media({ pastEvents }: MediaProps) {
                   <div className="flex flex-wrap items-center gap-3 mb-6">
                     <motion.span 
                       whileHover={{ scale: 1.05 }}
-                      className="bg-gradient-to-r from-js to-js-dark text-black px-3 py-2 sm:px-4 sm:py-2 rounded-full text-sm sm:text-base font-semibold shadow-lg"
+                      className="bg-yellow-500 text-black px-3 py-2 sm:px-4 sm:py-2 rounded-full text-sm sm:text-base font-semibold shadow-lg"
                     >
                       🔥 Latest
                     </motion.span>
                     <motion.span 
                       whileHover={{ scale: 1.05 }}
-                      className="bg-gradient-to-r from-zurich to-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-full text-sm sm:text-base font-semibold shadow-lg"
+                      className="bg-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-full text-sm sm:text-base font-semibold shadow-lg"
                     >
                       🎥 Video
                     </motion.span>
@@ -513,7 +513,7 @@ export default function Media({ pastEvents }: MediaProps) {
                       href={latestVideo.media.url}
                       target="_blank"
                       variant="primary"
-                      className="flex-1 justify-center group/btn hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-zurich to-blue-600 hover:from-blue-700 hover:to-blue-800 text-white"
+                      className="flex-1 justify-center group/btn hover:shadow-xl transition-all duration-300 bg-blue-600 hover:bg-blue-700 text-white"
                       size="md"
                     >
                       <Play size={18} className="mr-2 group-hover/btn:scale-110 transition-transform duration-200" />
@@ -1009,7 +1009,7 @@ export default function Media({ pastEvents }: MediaProps) {
                             }}
                             variant="primary"
                             size="sm"
-                             className="flex-1 justify-center group/btn hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-zurich to-blue-600 hover:from-blue-700 hover:to-blue-800 text-black text-xs sm:text-sm"
+                             className="flex-1 justify-center group/btn hover:shadow-lg transition-all duration-300 bg-yellow-500 hover:bg-yellow-600 text-black text-xs sm:text-sm"
                           >
                              <Camera size={14} className="mr-1.5 group-hover/btn:scale-110 transition-transform duration-200" />
                              Gallery ({photos.length})

@@ -130,7 +130,7 @@ export default function CancelledCheckout({ workshopId, workshopTitle }: Cancell
           <Button
             type="button"
             onClick={handleTryAgain}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg flex items-center justify-center"
+                            className="flex-1 bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg flex items-center justify-center"
           >
             <RefreshCw size={16} className="mr-2" />
             Try Again

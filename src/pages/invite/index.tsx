@@ -87,7 +87,7 @@ export default function InvitePage() {
               <div className="space-y-4">
                 <SignInButton mode="modal" forceRedirectUrl="/profile">
                   <button
-                    className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-medium py-3 text-lg rounded-md shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 text-lg rounded-md shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     Sign Up Now
                   </button>

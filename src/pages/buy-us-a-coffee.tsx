@@ -333,7 +333,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 <h3 className="text-xl font-bold mb-2">Be the First Supporter!</h3>
                 <p className="text-gray-600 mb-4">Your contribution will help us grow the ZurichJS community.</p>
                 <button
-                    className="bg-gradient-to-r from-js-dark to-yellow-500 text-white font-bold py-2 px-6 rounded-full
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-6 rounded-full
                     hover:from-amber-600 hover:to-yellow-600 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
                     onClick={() => document.getElementById('bmc-wbtn')?.click()}
                 >

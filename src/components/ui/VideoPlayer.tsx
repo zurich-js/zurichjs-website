@@ -26,8 +26,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(muted);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showThumbnail, setShowThumbnail] = useState(!autoplay);
+  const [showThumbnail, setShowThumbnail] = useState(true);
   const [thumbnailError, setThumbnailError] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -143,17 +144,37 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setShowThumbnail(!!thumbnail);
   }, [thumbnail]);
 
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor || '';
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      setIsMobile(isMobileDevice);
+    };
+    
+    checkMobile();
+  }, []);
+
   // Handle autoplay initialization
   useEffect(() => {
-    if (autoplay && videoRef.current) {
-      videoRef.current.muted = muted;
-      videoRef.current.play().catch((error) => {
-        console.log('Autoplay failed:', error);
-        setIsPlaying(false);
-        setShowThumbnail(true);
-      });
+    if (videoRef.current) {
+      // Enable autoplay on mobile, use original autoplay setting for desktop
+      const shouldAutoplay = isMobile || autoplay;
+      
+      if (shouldAutoplay) {
+        videoRef.current.muted = true; // Must be muted for autoplay to work on mobile
+        setShowThumbnail(false); // Hide thumbnail when autoplay starts
+        setIsPlaying(true);
+        videoRef.current.play().catch((error) => {
+          console.log('Autoplay failed:', error);
+          setIsPlaying(false);
+          setShowThumbnail(true);
+        });
+      } else {
+        setShowThumbnail(!!thumbnail); // Show thumbnail if not autoplaying
+      }
     }
-  }, [autoplay, muted]);
+  }, [autoplay, muted, isMobile, thumbnail]);
 
 
 
@@ -199,8 +220,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         src={src}
         className="w-full h-full object-contain"
         preload="metadata"
-        autoPlay={autoplay}
-        muted={muted}
+        autoPlay={isMobile || autoplay}
+        muted={isMobile || muted}
+        playsInline
+        controls={false}
         onClick={togglePlay}
       />
 

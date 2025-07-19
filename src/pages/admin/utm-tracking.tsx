@@ -136,7 +136,6 @@ interface UTMTrackingProps {
     title: string;
     dateInfo: string;
     locationInfo: string;
-    speakerId: string;
   }>;
   baseUrl: string;
   error?: string;
@@ -181,8 +180,7 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
       utmLinks,
       metadata: {
         dateInfo: workshop.dateInfo,
-        locationInfo: workshop.locationInfo,
-        speakerId: workshop.speakerId
+        locationInfo: workshop.locationInfo
       }
     });
   });
@@ -780,8 +778,7 @@ export const getServerSideProps: GetServerSideProps<UTMTrackingProps> = async ({
           id: workshop.id,
           title: workshop.title,
           dateInfo: workshop.dateInfo,
-          locationInfo: workshop.locationInfo,
-          speakerId: workshop.speakerId
+          locationInfo: workshop.locationInfo
         })),
         baseUrl
       }
@@ -799,8 +796,7 @@ export const getServerSideProps: GetServerSideProps<UTMTrackingProps> = async ({
           id: workshop.id,
           title: workshop.title,
           dateInfo: workshop.dateInfo,
-          locationInfo: workshop.locationInfo,
-          speakerId: workshop.speakerId
+          locationInfo: workshop.locationInfo
         })),
         baseUrl,
         error: 'Events could not be loaded from Sanity CMS. Showing workshops only.'

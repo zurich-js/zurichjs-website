@@ -140,7 +140,7 @@ export default function TicketSelection({
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 rounded-lg shadow-md mb-4 flex items-center justify-center"
+                          className="bg-yellow-500 text-black py-2 px-4 rounded-lg shadow-md mb-4 flex items-center justify-center"
         >
           <div className="bg-white p-1 rounded-full mr-2">
             <Zap size={14} className="text-green-600" />
@@ -154,7 +154,7 @@ export default function TicketSelection({
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 px-4 rounded-lg shadow-md mb-4 flex items-center justify-center"
+                          className="bg-blue-600 text-white py-2 px-4 rounded-lg shadow-md mb-4 flex items-center justify-center"
         >
           <div className="bg-white p-1 rounded-full mr-2">
             <Ticket size={14} className="text-indigo-600" />

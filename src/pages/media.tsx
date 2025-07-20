@@ -1,18 +1,20 @@
 import { motion } from 'framer-motion';
-import { Camera, Video, Calendar, MapPin, ExternalLink, Play, Image as ImageIcon, Clock, Zap, TrendingUp } from 'lucide-react';
+import { Camera, Video, Calendar, MapPin, ExternalLink, Play, Image as ImageIcon, Clock, Zap, TrendingUp, Sparkles } from 'lucide-react';
 import Image from 'next/image';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/router';
+import { useState, useEffect, useMemo } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
+import AIFunMode from '@/components/ui/AIFunMode';
 import Button from '@/components/ui/Button';
 import ImageGallery from '@/components/ui/ImageGallery';
 import VideoPlayer from '@/components/ui/VideoPlayer';
-import { Event, getPastEvents } from "@/sanity/queries"
+import { Event, getPastEvents } from "@/sanity/queries";
 
 import { ImageKitFile } from '../types/gallery';
-import { isVideoFile } from '../utils/thumbnailGenerator';
+import { isVideoFile, generateOptimizedImage, generateSizes } from '../utils/thumbnailGenerator';
 
 export type MediaProps = {
   pastEvents: Event[];
@@ -23,8 +25,6 @@ interface MediaItem {
   url: string;
   thumbnailUrl?: string;
   duration?: number;
-  fileSize?: number;
-  mimeType?: string;
   createdAt: string;
   width?: number;
   height?: number;
@@ -45,43 +45,45 @@ interface FeaturedImage {
   aspectRatio?: number;
 }
 
-// Video detection is now handled by the centralized utility function
+const getFirstPhoto = (media: MediaItem[]) => media.find(item => item.type === 'photo') || null;
+const getFirstVideo = (media: MediaItem[]) => media.find(item => item.type === 'video') || null;
+const getThumbnailMedia = (media: MediaItem[]) => getFirstPhoto(media) || getFirstVideo(media);
 
-// Helper function to get the most recent photo from media array (media is sorted by date)
-const getFirstPhoto = (media: MediaItem[]) => {
-  return media.find(item => item.type === 'photo') || null;
-};
-
-// Helper function to get the most recent video from media array (media is sorted by date)
-const getFirstVideo = (media: MediaItem[]) => {
-  return media.find(item => item.type === 'video') || null;
-};
-
-// Helper function to get appropriate thumbnail based on active tab (always most recent)
-const getThumbnailMedia = (media: MediaItem[], activeTab: string) => {
-  if (activeTab === 'videos') {
-    return getFirstVideo(media) || getFirstPhoto(media);
-  } else {
-    return getFirstPhoto(media) || getFirstVideo(media);
-  }
-};
-
-// Simple Image component without retry mechanisms
-const SafeImage: React.FC<{
+// Optimized Image component with responsive loading and error handling
+const OptimizedImage: React.FC<{
   src: string;
   alt: string;
   fill?: boolean;
   className?: string;
   sizes?: string;
   isVideo?: boolean;
-}> = ({ src, alt, fill = true, className, sizes, isVideo }) => {
+  priority?: boolean;
+  context?: 'gallery' | 'featured' | 'modal' | 'hero';
+  lazy?: boolean;
+  thumbnailUrl?: string;
+}> = ({ src, alt, fill = true, className, sizes, isVideo, priority = false, context = 'gallery', lazy = false, thumbnailUrl }) => {
   const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleError = useCallback(() => {
+  // Use thumbnail URL if available, otherwise optimize the original URL
+  const imageUrl = useMemo(() => {
+    if (isVideo) return src;
+    // Use thumbnail URL if provided, otherwise optimize the original URL
+    return thumbnailUrl || generateOptimizedImage(src, context);
+  }, [src, isVideo, context, thumbnailUrl]);
+
+  // Handle loading state
+  const handleLoad = () => {
+    setIsLoading(false);
+  };
+
+  // Handle error state
+  const handleError = () => {
+    setIsLoading(false);
     setHasError(true);
-  }, []);
+  };
 
-  // If it's a video file, show video placeholder
+  // Show video placeholder for video files
   if (isVideo && (hasError || isVideoFile(src))) {
     return (
       <div className={`bg-gray-900 flex items-center justify-center ${className || ''}`}>
@@ -93,8 +95,8 @@ const SafeImage: React.FC<{
     );
   }
 
+  // Show error placeholder
   if (hasError) {
-    // Show placeholder when image fails to load
     return (
       <div className={`bg-gray-200 flex items-center justify-center ${className || ''}`}>
         <ImageIcon className="w-8 h-8 text-gray-400" />
@@ -104,14 +106,27 @@ const SafeImage: React.FC<{
 
   return (
     <div className="relative w-full h-full">
+      {/* Loading placeholder */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+        </div>
+      )}
+      
       <Image
-        src={src}
+        src={imageUrl}
         alt={alt}
         fill={fill}
-        className={className}
-        sizes={sizes}
+        className={`${className || ''} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        sizes={sizes || generateSizes()}
+        priority={priority}
+        onLoad={handleLoad}
         onError={handleError}
+        loading={lazy ? 'lazy' : (priority ? 'eager' : 'lazy')}
+        quality={85}
       />
+      
+      {/* Video play button overlay */}
       {isVideo && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
           <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 sm:p-3 group-hover:scale-110 transition-transform duration-200">
@@ -126,79 +141,54 @@ const SafeImage: React.FC<{
 function createEventMedias(pastEvents: Event[], filesByFolder: Record<string, ImageKitFile[]>): EventMedia[] {
   return Object.entries(filesByFolder).map(([folderId, files]) => {
     const event = pastEvents.find(event => event.id === folderId);
-
-    const media: MediaItem[] = files.map((file: ImageKitFile) => {
-      const isVideo = isVideoFile(file.name);
-      return {
-        type: isVideo ? 'video' : 'photo',
-        url: file.url,
-        thumbnailUrl: file.thumbnailUrl, // Use the API-provided thumbnailUrl
-        duration: isVideo ? file.duration || 120 : undefined,
-        fileSize: file.fileSize || 0,
-        mimeType: file.mimeType || (isVideo ? 'video/mp4' : 'image/jpeg'),
-        createdAt: file.createdAt,
-        width: file.width,
-        height: file.height
-      };
-    });
+    const media: MediaItem[] = files.map((file: ImageKitFile) => ({
+      type: isVideoFile(file.name) ? 'video' : 'photo',
+      url: file.url,
+      thumbnailUrl: file.thumbnailUrl,
+      duration: isVideoFile(file.name) ? file.duration || 120 : undefined,
+      createdAt: file.createdAt,
+      width: file.width,
+      height: file.height
+    }));
     
-    // Sort media by creation date (most recent first)
-    const sortedMedia = media.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return dateB - dateA;
-    });
+    const sortedMedia = media.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
     
-    return ({ 
-      folderId: folderId, 
-      event: event || null,  
-      media: sortedMedia
-    });
+    return { folderId, event: event || null, media: sortedMedia };
   }).filter(eventMedia => eventMedia.media.length > 0);
 }
 
-// Helper function to get featured images from the latest 2 events only
 function getFeaturedImages(eventMedias: EventMedia[]): FeaturedImage[] {
   const featuredImages: FeaturedImage[] = [];
   
-  // Sort events by date (newest first) and take only the latest 2
   const latestTwoEvents = [...eventMedias]
-    .sort((a, b) => {
-      const dateA = new Date(a.event?.datetime || 0).getTime();
-      const dateB = new Date(b.event?.datetime || 0).getTime();
-      return dateB - dateA;
-    })
+    .sort((a, b) => new Date(b.event?.datetime || 0).getTime() - new Date(a.event?.datetime || 0).getTime())
     .slice(0, 2);
   
-  // Extract only photos from these 2 events with variety
   latestTwoEvents.forEach((eventMedia, eventIndex) => {
-    const photos = eventMedia.media.filter(m => m.type === 'photo'); // Only photos, no videos
+    const photos = eventMedia.media.filter(m => m.type === 'photo');
     
     if (photos.length > 0) {
-      // Take photos from the latest events with 9-image total limit
       const remainingSlots = 9 - featuredImages.length;
       const maxPhotosFromEvent = eventIndex === 0 
         ? Math.min(7, photos.length, remainingSlots) 
         : Math.min(5, photos.length, remainingSlots);
       
-      // Select photos with variety (prioritizing recent ones since photos are already sorted by date)
       const selectedIndices: number[] = [];
       if (photos.length <= maxPhotosFromEvent) {
-        // Take all photos if we have few
         selectedIndices.push(...photos.map((_, i) => i));
       } else {
-        // Strategic selection for variety, starting with most recent
-        selectedIndices.push(0); // Most recent photo (first in sorted array)
-        if (photos.length >= 3) selectedIndices.push(Math.floor(photos.length / 4)); // Early in timeline
-        if (photos.length >= 2) selectedIndices.push(Math.floor(photos.length / 3)); // Recent
-        if (photos.length >= 4) selectedIndices.push(Math.floor(photos.length / 2)); // Middle
-        if (photos.length >= 5) selectedIndices.push(Math.floor(photos.length * 2 / 3)); // Older
-        if (photos.length >= 6) selectedIndices.push(photos.length - 1); // Oldest photo
+        selectedIndices.push(0);
+        if (photos.length >= 3) selectedIndices.push(Math.floor(photos.length / 4));
+        if (photos.length >= 2) selectedIndices.push(Math.floor(photos.length / 3));
+        if (photos.length >= 4) selectedIndices.push(Math.floor(photos.length / 2));
+        if (photos.length >= 5) selectedIndices.push(Math.floor(photos.length * 2 / 3));
+        if (photos.length >= 6) selectedIndices.push(photos.length - 1);
         
-        // Fill up to maxPhotosFromEvent with evenly spaced selections
         while (selectedIndices.length < maxPhotosFromEvent && selectedIndices.length < photos.length) {
-          const gap: number = Math.floor(photos.length / (selectedIndices.length + 1));
-          const newIndex: number = selectedIndices.length * gap + Math.floor(gap / 2);
+          const gap = Math.floor(photos.length / (selectedIndices.length + 1));
+          const newIndex = selectedIndices.length * gap + Math.floor(gap / 2);
           if (newIndex < photos.length && !selectedIndices.includes(newIndex)) {
             selectedIndices.push(newIndex);
           } else {
@@ -207,10 +197,8 @@ function getFeaturedImages(eventMedias: EventMedia[]): FeaturedImage[] {
         }
       }
       
-      // Remove duplicates and limit selection
-      const uniqueSelectedIndices: number[] = Array.from(new Set(selectedIndices));
+      const uniqueSelectedIndices = Array.from(new Set(selectedIndices));
       
-      // Add selected photos to featured images (with 10-image limit)
       uniqueSelectedIndices.slice(0, maxPhotosFromEvent).forEach(photoIndex => {
         const photo = photos[photoIndex];
         if (photo && featuredImages.length < 10) {
@@ -227,30 +215,20 @@ function getFeaturedImages(eventMedias: EventMedia[]): FeaturedImage[] {
     }
   });
   
-  // Ensure we don't exceed 10 images total
   return featuredImages.slice(0, 10);
 }
 
-// Helper function to get the latest video from the most recent event only
 function getLatestVideo(eventMedias: EventMedia[]): { media: MediaItem; event: EventMedia } | null {
-  // Sort events by date (most recent first)
-  const sortedEvents = [...eventMedias].sort((a, b) => {
-    const dateA = new Date(a.event?.datetime || 0).getTime();
-    const dateB = new Date(b.event?.datetime || 0).getTime();
-    return dateB - dateA;
-  });
+  const sortedEvents = [...eventMedias].sort((a, b) => 
+    new Date(b.event?.datetime || 0).getTime() - new Date(a.event?.datetime || 0).getTime()
+  );
   
-  // Look only at the most recent event that has videos
   for (const eventMedia of sortedEvents) {
     const videos = eventMedia.media.filter(m => m.type === 'video');
     if (videos.length > 0) {
-      // Sort videos by creation date (most recent first) and take the first one
-      const sortedVideos = [...videos].sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
-        return dateB - dateA;
-      });
-      
+      const sortedVideos = [...videos].sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
       return { media: sortedVideos[0], event: eventMedia };
     }
   }
@@ -259,6 +237,7 @@ function getLatestVideo(eventMedias: EventMedia[]): { media: MediaItem; event: E
 }
 
 export default function Media({ pastEvents }: MediaProps) {
+  const router = useRouter();
   const [eventMedias, setEventMedias] = useState<EventMedia[]>([]);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [selectedEventMedia, setSelectedEventMedia] = useState<EventMedia | null>(null);
@@ -266,20 +245,34 @@ export default function Media({ pastEvents }: MediaProps) {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<MediaItem | null>(null);
   const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
+  const [aiFunModeOpen, setAiFunModeOpen] = useState(false);
+  const [selectedImageForAI, setSelectedImageForAI] = useState<{ url: string; alt: string } | null>(null);
+  const [aiFunModeActive, setAiFunModeActive] = useState(false);
+
+  // Check if AI fun mode easter egg is unlocked via URL parameter
+  const isAIFunModeUnlocked = router.query.ai === 'true';
+
+  // Enable AI Fun Mode when easter egg is unlocked
+  useEffect(() => {
+    if (isAIFunModeUnlocked) {
+      setAiFunModeActive(true);
+    }
+  }, [isAIFunModeUnlocked]);
 
   const allMedia = eventMedias.flatMap(eventMedia => eventMedia.media);
-  
-  // Memoize featured images to prevent re-computation on every render
   const featuredImages = useMemo(() => getFeaturedImages(eventMedias), [eventMedias]);
   const latestVideo = useMemo(() => getLatestVideo(eventMedias), [eventMedias]);
 
+  // Temporarily disable preloading to debug image loading issues
+
   useEffect(() => {
-    fetch('/api/imagekit/list', {
-      method: 'GET',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-    }).then(response => response.json())
+    fetch('/api/imagekit/list')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
       .then((filesByFolder: Record<string, ImageKitFile[]>) => {
         const eventMedias = createEventMedias(pastEvents, filesByFolder);
         setEventMedias(eventMedias);
@@ -291,6 +284,8 @@ export default function Media({ pastEvents }: MediaProps) {
       });
   }, [pastEvents]);
 
+  // Temporarily disable lazy loading to debug image loading issues
+
   const handleCardClick = (eventMedia: EventMedia, thumbnailMedia: MediaItem) => {
     if (thumbnailMedia.type === 'video') {
       setSelectedVideo(thumbnailMedia);
@@ -298,12 +293,9 @@ export default function Media({ pastEvents }: MediaProps) {
     } else {
       const photos = eventMedia.media.filter(item => item.type === 'photo');
       if (photos.length > 0) {
-        // Find the index of the clicked photo
         const clickedPhotoIndex = photos.findIndex(photo => photo.url === thumbnailMedia.url);
-        const initialIndex = clickedPhotoIndex >= 0 ? clickedPhotoIndex : 0;
-        
         setSelectedEventMedia(eventMedia);
-        setGalleryInitialIndex(initialIndex);
+        setGalleryInitialIndex(clickedPhotoIndex >= 0 ? clickedPhotoIndex : 0);
         setGalleryOpen(true);
       }
     }
@@ -320,7 +312,16 @@ export default function Media({ pastEvents }: MediaProps) {
     setSelectedVideo(null);
   };
 
-  // Handle ESC key to close video modal
+  const handleAIFunModeOpen = (imageUrl: string, imageAlt: string) => {
+    setSelectedImageForAI({ url: imageUrl, alt: imageAlt });
+    setAiFunModeOpen(true);
+  };
+
+  const handleAIFunModeClose = () => {
+    setAiFunModeOpen(false);
+    setSelectedImageForAI(null);
+  };
+
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && videoModalOpen) {
@@ -331,14 +332,13 @@ export default function Media({ pastEvents }: MediaProps) {
     document.addEventListener('keydown', handleEscKey);
     return () => document.removeEventListener('keydown', handleEscKey);
   }, [videoModalOpen]);
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
+  const formatDate = (dateString: string) => 
+    new Date(dateString).toLocaleDateString('en-GB', {
       weekday: 'short',
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
-  };
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -371,6 +371,25 @@ export default function Media({ pastEvents }: MediaProps) {
             <p className="text-base md:text-lg opacity-80 max-w-3xl mx-auto">
               Dive into our rich collection of photos and videos from meetups, workshops, and special events. Each image tells a story of learning, networking, and community building.
             </p>
+            
+            {isAIFunModeUnlocked && !aiFunModeActive && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                className="mt-6"
+              >
+                <Button
+                  onClick={() => setAiFunModeActive(true)}
+                  variant="primary"
+                  className="bg-blue-800 hover:bg-blue-900 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                  size="lg"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Enable AI Fun Mode
+                </Button>
+              </motion.div>
+            )}
           </div>
           
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-8 mt-4">
@@ -386,6 +405,22 @@ export default function Media({ pastEvents }: MediaProps) {
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-gray-900" />
               <span className="font-medium text-sm sm:text-base text-gray-900">{eventMedias.length} Events</span>
             </div>
+            {aiFunModeActive && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center bg-blue-800/20 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-blue-800/30"
+              >
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-800" />
+                <span className="font-medium text-sm sm:text-base text-blue-800 mr-3">AI Fun Mode Active</span>
+                <button
+                  onClick={() => setAiFunModeActive(false)}
+                  className="bg-blue-800 hover:bg-blue-900 text-white rounded-full px-3 py-1 text-xs font-medium transition-colors"
+                >
+                  Disable
+                </button>
+              </motion.div>
+            )}
           </div>
         </motion.div>
       </Section>
@@ -645,7 +680,6 @@ export default function Media({ pastEvents }: MediaProps) {
                 }
                 
                 const gridClasses = `col-span-${colSpan} row-span-${rowSpan}`;
-                
                 return (
                   <motion.div
                     key={`${image.eventId}-${index}`}
@@ -660,12 +694,10 @@ export default function Media({ pastEvents }: MediaProps) {
                     }}
                     className={`group cursor-pointer relative z-10 hover:z-20 ${gridClasses}`}
                     onClick={() => {
-                      // Find the event media that contains this image
                       const eventMedia = eventMedias.find(em => em.folderId === image.eventId);
                       if (eventMedia) {
                         const photos = eventMedia.media.filter(item => item.type === 'photo');
                         if (photos.length > 0) {
-                          // Find the exact photo that was clicked
                           const clickedPhotoIndex = photos.findIndex(photo => photo.url === image.url);
                           const initialIndex = clickedPhotoIndex >= 0 ? clickedPhotoIndex : 0;
                           
@@ -677,12 +709,15 @@ export default function Media({ pastEvents }: MediaProps) {
                     }}
                   >
                     <div className="relative w-full h-full overflow-hidden rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-all duration-500 group-hover:scale-[1.02] transform-gpu bg-gray-100">
-                                              <SafeImage
-                          src={image.thumbnailUrl}
+                                              <OptimizedImage
+                          src={image.url}
                           alt={`Photo from ${image.eventName}`}
                           fill
                           className="object-cover transition-all duration-700 group-hover:scale-110"
                           sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                          context="featured"
+                          lazy={false}
+                          thumbnailUrl={image.thumbnailUrl}
                         />
                       
                       {/* Subtle overlay */}
@@ -712,6 +747,22 @@ export default function Media({ pastEvents }: MediaProps) {
                           <ImageIcon size={12} className="text-gray-900" />
                         </div>
                       </div>
+                      
+                                      {/* AI Fun Mode button */}
+                {aiFunModeActive && (
+                        <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-75 group-hover:scale-100">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAIFunModeOpen(image.url, `Photo from ${image.eventName}`);
+                            }}
+                            className="bg-blue-800 hover:bg-blue-900 backdrop-blur-sm rounded-full p-2 shadow-md hover:scale-110 transition-transform duration-200"
+                            title="Try AI Fun Mode"
+                          >
+                            <Sparkles size={12} className="text-white" />
+                          </button>
+                        </div>
+                      )}
                       
                       {/* Shimmer effect */}
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-25 transition-opacity duration-500">
@@ -893,7 +944,7 @@ export default function Media({ pastEvents }: MediaProps) {
                      <div 
                        className="relative h-64 sm:h-72 w-full overflow-hidden cursor-pointer"
                        onClick={() => {
-                         const thumbnailMedia = getThumbnailMedia(item.media, 'all');
+                         const thumbnailMedia = getThumbnailMedia(item.media);
                          if (thumbnailMedia) {
                            handleCardClick(item, thumbnailMedia);
                          }
@@ -904,16 +955,19 @@ export default function Media({ pastEvents }: MediaProps) {
                            {previewPhotos.slice(0, 4).map((photo, photoIndex) => (
                              <div 
                                key={photoIndex} 
-                               className={`relative overflow-hidden ${
+                               className={`relative overflow-hidden aspect-square ${
                                  previewPhotos.length === 3 && photoIndex === 0 ? 'row-span-2' : ''
                                }`}
                              >
-                                                       <SafeImage
-                          src={photo.thumbnailUrl || photo.url}
+                                                       <OptimizedImage
+                          src={photo.url}
                           alt={`${item.event?.title || "Event"} - Photo ${photoIndex + 1}`}
                           fill
                           className="object-cover transition-all duration-700 group-hover:scale-110"
                           sizes="(max-width: 1024px) 50vw, 33vw"
+                          context="gallery"
+                          lazy={false}
+                          thumbnailUrl={photo.thumbnailUrl}
                         />
                                {photoIndex === 3 && photos.length > 4 && (
                                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -925,16 +979,18 @@ export default function Media({ pastEvents }: MediaProps) {
                          </div>
                        ) : (
                          (() => {
-                           const thumbnailMedia = getThumbnailMedia(item.media, 'all');
+                           const thumbnailMedia = getThumbnailMedia(item.media);
                            return thumbnailMedia ? (
-                                                        <SafeImage
-                              src={thumbnailMedia.thumbnailUrl || thumbnailMedia.url}
-                              alt={item.event?.title || "Event " + item.folderId}
-                              fill
-                              className="object-cover transition-all duration-700 group-hover:scale-110"
-                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                              isVideo={thumbnailMedia.type === 'video'}
-                            />
+                                                                                 <OptimizedImage
+                           src={thumbnailMedia.url}
+                           alt={item.event?.title || "Event " + item.folderId}
+                           fill
+                           className="object-cover transition-all duration-700 group-hover:scale-110"
+                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                           isVideo={thumbnailMedia.type === 'video'}
+                           lazy={false}
+                           thumbnailUrl={thumbnailMedia.thumbnailUrl}
+                         />
                            ) : (
                              <div className="w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
                               <div className="flex flex-col items-center justify-center text-white">
@@ -960,6 +1016,24 @@ export default function Media({ pastEvents }: MediaProps) {
                              <Video size={14} className="text-js-darker" />
                             <span>{videos.length}</span>
                            </motion.div>
+                        )}
+                        {aiFunModeActive && hasPhotos && (
+                          <motion.div 
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-blue-800 hover:bg-blue-900 backdrop-blur-sm rounded-full px-3 py-1.5 text-xs font-bold text-white flex items-center gap-1.5 shadow-lg hover:scale-105 transition-transform duration-200 cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const firstPhoto = photos[0];
+                              if (firstPhoto) {
+                                handleAIFunModeOpen(firstPhoto.url, `${item.event?.title || "Event"} - Photo`);
+                              }
+                            }}
+                            title="Try AI Fun Mode"
+                          >
+                            <Sparkles size={14} />
+                            <span>AI</span>
+                          </motion.div>
                         )}
                       </div>
                       
@@ -1060,6 +1134,8 @@ export default function Media({ pastEvents }: MediaProps) {
           media={selectedEventMedia.media}
           eventTitle={selectedEventMedia.event?.title || "Event"}
           initialIndex={galleryInitialIndex}
+                          onAIFunMode={aiFunModeActive ? handleAIFunModeOpen : undefined}
+                isAIFunModeEnabled={aiFunModeActive}
         />
       )}
 
@@ -1092,16 +1168,25 @@ export default function Media({ pastEvents }: MediaProps) {
           </div>
         </div>
       )}
+
+      {/* AI Fun Mode Modal */}
+      {selectedImageForAI && (
+        <AIFunMode
+          isOpen={aiFunModeOpen}
+          onClose={handleAIFunModeClose}
+          imageUrl={selectedImageForAI.url}
+          imageAlt={selectedImageForAI.alt}
+          eventTitle="ZurichJS Event"
+        />
+      )}
     </Layout>
   );
 }
 
 export async function getStaticProps() {
-  const pastEvents = await getPastEvents();
-  
   return {
     props: {
-      pastEvents,
-        },
+      pastEvents: await getPastEvents(),
+    },
   };
 }

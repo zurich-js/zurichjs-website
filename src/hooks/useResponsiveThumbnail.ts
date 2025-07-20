@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 
-import { generateThumbnail, ThumbnailSize } from '../utils/thumbnailGenerator';
+import { generateThumbnail, generateSrcSet, generateSizes, ThumbnailSize } from '../utils/thumbnailGenerator';
 
 interface UseResponsiveThumbnailProps {
   originalUrl: string;
@@ -14,7 +14,7 @@ interface ThumbnailBreakpoints {
   large: number;
 }
 
-// Define breakpoints for different thumbnail sizes (in pixels)
+// Optimized breakpoints for different thumbnail sizes (in pixels)
 const BREAKPOINTS: ThumbnailBreakpoints = {
   small: 640,   // Mobile
   medium: 1024, // Tablet
@@ -45,16 +45,23 @@ export function useResponsiveThumbnail({
     // Set initial values
     updateDimensions();
 
-    // Listen for resize events
-    window.addEventListener('resize', updateDimensions);
+    // Listen for resize events with throttling
+    let timeoutId: NodeJS.Timeout;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateDimensions, 100);
+    };
+
+    window.addEventListener('resize', handleResize);
     
-    // Listen for pixel ratio changes (e.g., when moving between different DPI screens)
+    // Listen for pixel ratio changes
     const mediaQuery = window.matchMedia('(resolution: 2dppx)');
     mediaQuery.addEventListener('change', updateDimensions);
 
     return () => {
-      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('resize', handleResize);
       mediaQuery.removeEventListener('change', updateDimensions);
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -68,8 +75,10 @@ export function useResponsiveThumbnail({
       return 'small';
     } else if (effectiveWidth <= BREAKPOINTS.medium) {
       return 'medium';
-    } else {
+    } else if (effectiveWidth <= BREAKPOINTS.large) {
       return 'large';
+    } else {
+      return 'xl';
     }
   }, [windowWidth, devicePixelRatio]);
 
@@ -83,26 +92,19 @@ export function useResponsiveThumbnail({
     return {
       small: generateThumbnail(originalUrl, isVideo, 'small'),
       medium: generateThumbnail(originalUrl, isVideo, 'medium'),
-      large: generateThumbnail(originalUrl, isVideo, 'large')
+      large: generateThumbnail(originalUrl, isVideo, 'large'),
+      xl: generateThumbnail(originalUrl, isVideo, 'xl')
     };
   }, [originalUrl, isVideo]);
 
-  // Generate srcSet for responsive images
+  // Generate srcSet for responsive images using the utility function
   const srcSet = useMemo(() => {
-    return [
-      `${thumbnailSizes.small} 400w`,
-      `${thumbnailSizes.medium} 800w`,
-      `${thumbnailSizes.large} 1200w`
-    ].join(', ');
-  }, [thumbnailSizes]);
+    return generateSrcSet(originalUrl, isVideo);
+  }, [originalUrl, isVideo]);
 
-  // Generate sizes attribute for responsive images
+  // Generate sizes attribute for responsive images using the utility function
   const sizes = useMemo(() => {
-    return [
-      `(max-width: ${BREAKPOINTS.small}px) 400px`,
-      `(max-width: ${BREAKPOINTS.medium}px) 800px`,
-      '1200px'
-    ].join(', ');
+    return generateSizes();
   }, []);
 
   // Handle image loading states

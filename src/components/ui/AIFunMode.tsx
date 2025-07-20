@@ -67,7 +67,6 @@ const AI_EFFECTS: AIEffect[] = [
       { value: 'person', label: 'Person', icon: <Users className="w-3 h-3" /> },
       { value: 'pizza', label: 'Pizza', icon: <Palette className="w-3 h-3" /> },
       { value: 'bottle', label: 'Bottle', icon: <Droplets className="w-3 h-3" /> },
-      { value: 'phone', label: 'Phone', icon: <Camera className="w-3 h-3" /> },
       { value: 'book', label: 'Book', icon: <Layers className="w-3 h-3" /> },
       { value: 'cup', label: 'Cup', icon: <Coffee className="w-3 h-3" /> },
       { value: 'fork', label: 'Fork', icon: <Utensils className="w-3 h-3" /> },

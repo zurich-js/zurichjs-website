@@ -19,36 +19,36 @@ export const getWorkshops = (): Workshop[] => {
       speakerId: 'elian-van-cutsem',
       state: 'confirmed' as WorkshopState
     },
-    {
-      id: 'accessibility-fundamentals',
-      title: 'Web Accessibility Fundamentals',
-      subtitle: 'Building Inclusive Digital Experiences',
-      description: 'Learn how to create accessible web applications that comply with WCAG standards and the European Accessibility Act.',
-      dateInfo: 'TBD',
-      timeInfo: 'TBD',
-      locationInfo: 'TBD',
-      maxAttendees: 15,
-      image: '/images/workshops/web-accessibility.png',
-      iconColor: '#0284c7', // sky-600
-      tag: '🌐 Accessibility',
-      speakerId: 'aleksej-dix',
-      state: 'interest' as WorkshopState
-    },
-    {
-      id: 'react-performance',
-      title: 'React & Next.js Performance Optimization',
-      subtitle: 'Strategies for Blazing Fast Applications',
-      description: 'Master advanced techniques to optimize your React and Next.js applications for maximum performance and user experience.',
-      dateInfo: 'TBD',
-      timeInfo: 'TBD',
-      locationInfo: 'TBD',
-      maxAttendees: 15,
-      image: '/images/workshops/react-performance.png',
-      iconColor: '#2563eb', // blue-600
-      tag: '🚀 React & Next.js Performance',
-      speakerId: 'faris-aziz',
-      state: 'interest' as WorkshopState
-    },
+    // {
+    //   id: 'accessibility-fundamentals',
+    //   title: 'Web Accessibility Fundamentals',
+    //   subtitle: 'Building Inclusive Digital Experiences',
+    //   description: 'Learn how to create accessible web applications that comply with WCAG standards and the European Accessibility Act.',
+    //   dateInfo: 'TBD',
+    //   timeInfo: 'TBD',
+    //   locationInfo: 'TBD',
+    //   maxAttendees: 15,
+    //   image: '/images/workshops/web-accessibility.png',
+    //   iconColor: '#0284c7', // sky-600
+    //   tag: '🌐 Accessibility',
+    //   speakerId: 'aleksej-dix',
+    //   state: 'interest' as WorkshopState
+    // },
+    // {
+    //   id: 'react-performance',
+    //   title: 'React & Next.js Performance Optimization',
+    //   subtitle: 'Strategies for Blazing Fast Applications',
+    //   description: 'Master advanced techniques to optimize your React and Next.js applications for maximum performance and user experience.',
+    //   dateInfo: 'TBD',
+    //   timeInfo: 'TBD',
+    //   locationInfo: 'TBD',
+    //   maxAttendees: 15,
+    //   image: '/images/workshops/react-performance.png',
+    //   iconColor: '#2563eb', // blue-600
+    //   tag: '🚀 React & Next.js Performance',
+    //   speakerId: 'faris-aziz',
+    //   state: 'interest' as WorkshopState
+    // },
     {
       id: 'ai-edge-application',
       title: 'Building a Full-Stack AI Application on the Edge',

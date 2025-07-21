@@ -778,7 +778,7 @@ export const getServerSideProps: GetServerSideProps<UTMTrackingProps> = async ({
           id: workshop.id,
           title: workshop.title,
           dateInfo: workshop.dateInfo,
-          locationInfo: workshop.locationInfo
+          locationInfo: workshop.locationInfo || 'TBD'
         })),
         baseUrl
       }
@@ -796,7 +796,7 @@ export const getServerSideProps: GetServerSideProps<UTMTrackingProps> = async ({
           id: workshop.id,
           title: workshop.title,
           dateInfo: workshop.dateInfo,
-          locationInfo: workshop.locationInfo
+          locationInfo: workshop.locationInfo || 'TBD'
         })),
         baseUrl,
         error: 'Events could not be loaded from Sanity CMS. Showing workshops only.'

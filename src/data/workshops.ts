@@ -13,7 +13,7 @@ export const getWorkshops = (): Workshop[] => {
       maxAttendees: 15,
       price: '225 CHF',
       image: '/images/workshops/astro-zero-to-hero.png',
-      level: 'Beginner to Intermediate',
+      level: 'intermediate',
       confirmedDate: true
     },
     {
@@ -26,7 +26,7 @@ export const getWorkshops = (): Workshop[] => {
       locationInfo: 'TBD',
       maxAttendees: 15,
       image: '/images/workshops/web-accessibility.png',
-      level: 'All Levels',
+      level: 'beginner',
       confirmedDate: false
     },
     {
@@ -39,7 +39,7 @@ export const getWorkshops = (): Workshop[] => {
       locationInfo: 'TBD',
       maxAttendees: 15,
       image: '/images/workshops/react-performance.png',
-      level: 'Intermediate to Advanced',
+      level: 'intermediate',
       confirmedDate: false
     },
   ];

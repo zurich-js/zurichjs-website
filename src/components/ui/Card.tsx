@@ -30,10 +30,10 @@ export default function Card({
       <motion.div
         whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl"
+        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl cursor-pointer border border-black/10 hover:border-[#258BCC] transition-all duration-200"
         {...props}
       >
-        <Link href={`/events/${eventItem.id}`} className="block">
+        <Link href={`/events/${eventItem.id}`} className="block cursor-pointer">
           <div className="relative h-64 w-full">
             {eventItem.image ? (
               <Image
@@ -108,10 +108,10 @@ export default function Card({
       <motion.div
         whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl"
+        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl cursor-pointer border border-black/10 hover:border-[#258BCC] transition-all duration-200"
         {...props}
       >
-        <Link href={`/speakers/${speakerItem.id}`} className="block">
+        <Link href={`/speakers/${speakerItem.id}`} className="block cursor-pointer">
           <div className="relative h-64 w-full">
             <Image
               src={speakerItem.image || '/images/speakers/default.jpg'}

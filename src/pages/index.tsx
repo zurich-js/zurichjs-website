@@ -58,7 +58,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
       />
 
       {/* Hero Section with Next Event and Workshop */}
-      <LandingHero upcomingEvents={upcomingEvents} stats={stats} upcomingWorkshops={upcomingWorkshops} />
+      <LandingHero upcomingEvents={upcomingEvents} stats={stats} upcomingWorkshops={upcomingWorkshops} speakers={featuredSpeakers} />
 
       {/* Account Incentives Section - Prominently placed */}
       <AccountIncentives />
@@ -93,37 +93,11 @@ export async function getStaticProps() {
   const partners = getPartners();
   const upcomingWorkshops = getUpcomingWorkshops();
   
-  // Create a fair speaker selection
-  const createFairSpeakerSelection = (speakers: Speaker[]) => {
-    // If we have fewer than 12 speakers, return all
-    if (speakers.length <= 12) {
-      return speakers;
-    }
-    
-    // Create a balanced selection favoring diversity over talk count
-    const shuffledSpeakers = [...speakers];
-    
-    // Use a seeded random based on current week to ensure consistency during the week
-    // but rotation weekly for fairness
-    const currentWeek = Math.floor(Date.now() / (1000 * 60 * 60 * 24 * 7));
-    const seed = currentWeek % 1000;
-    
-    // Simple seeded shuffle algorithm
-    for (let i = shuffledSpeakers.length - 1; i > 0; i--) {
-      const j = Math.floor(((seed * (i + 1)) % 1000) / 1000 * (i + 1));
-      [shuffledSpeakers[i], shuffledSpeakers[j]] = [shuffledSpeakers[j], shuffledSpeakers[i]];
-    }
-    
-    // Take first 12-15 speakers for the condensed grid
-    return shuffledSpeakers.slice(0, Math.min(15, speakers.length));
-  };
-
-  const fairSpeakers = createFairSpeakerSelection(speakers);
   
   return {
     props: {
       upcomingEvents,
-      featuredSpeakers: fairSpeakers,
+      featuredSpeakers: speakers,
       stats,
       partners,
       upcomingWorkshops

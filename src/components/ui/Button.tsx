@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ReactNode, MouseEvent, ButtonHTMLAttributes, AnchorHTMLAttributes } from 'react';
 
@@ -40,51 +39,67 @@ export default function Button({
   external = false,
   ...props
 }: ButtonProps) {
-  // Define button styles based on variant and size
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 !cursor-pointer hover:!cursor-pointer';
+  // Basic button styles with mobile-first design
+  const baseStyles =
+    'inline-flex items-center justify-center font-medium rounded-md cursor-pointer transition-all duration-200 touch-manipulation active:scale-95';
 
   const variantStyles: Record<ButtonVariant, string> = {
-    primary: 'bg-black hover:bg-gray-800 focus:ring-black',
-    secondary: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500',
-    outline: 'bg-transparent border-2 border-current text-black hover:bg-black hover:text-white focus:ring-black',
-    ghost: 'bg-transparent text-black hover:bg-yellow-100 focus:ring-black',
+    primary: 'bg-black text-white hover:bg-gray-800 shadow-md hover:shadow-lg',
+    secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-lg',
+    outline: 'bg-transparent border-2 border-current text-black hover:bg-black hover:text-white shadow-sm hover:shadow-md',
+    ghost: 'bg-transparent text-black hover:bg-yellow-100 hover:shadow-sm',
   };
 
   const sizeStyles: Record<ButtonSize, string> = {
-    sm: 'text-sm px-3 py-1.5',
-    md: 'text-base px-4 py-2',
-    lg: 'text-lg px-6 py-3',
+    sm: 'text-sm px-3 py-2 min-h-[40px]',
+    md: 'text-sm sm:text-base px-4 py-2.5 min-h-[44px]',
+    lg: 'text-base sm:text-lg px-6 py-3 min-h-[48px]',
   };
 
+  // Compose the final className
   const buttonStyles = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
 
-  const buttonContent = (
-    <motion.span
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.98 }}
-      className="w-full h-full flex items-center justify-center"
-    >
-      {children}
-    </motion.span>
-  );
-
-  // Return link or button based on href prop
+  // If href is present, render a link
   if (href) {
+    // External link: use <a> directly
+    if (external) {
+      return (
+        <a
+          href={href}
+          className={buttonStyles}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClick as AnchorElementProps['onClick']}
+          {...(props as Omit<AnchorElementProps, 'href'>)}
+        >
+          {children}
+        </a>
+      );
+    }
+    
+    // Internal link: use Link directly (it renders as <a> automatically)
     return (
       <Link
         href={href}
+        style={{ cursor: 'pointer' }}
         className={buttonStyles}
-        target={external ? '_blank' : undefined}
-        rel={external ? 'noopener noreferrer' : undefined}
+        onClick={onClick as AnchorElementProps['onClick']}
+        {...(props as Omit<AnchorElementProps, 'href'>)}
       >
-        {buttonContent}
+        {children}
       </Link>
     );
   }
 
+  // Regular button
   return (
-    <button className={buttonStyles} onClick={onClick as ButtonElementProps['onClick']} {...props as ButtonElementProps}>
-      {buttonContent}
+    <button
+      type="button"
+      className={buttonStyles}
+      onClick={onClick as ButtonElementProps['onClick']}
+      {...props as ButtonElementProps}
+    >
+      {children}
     </button>
   );
 }

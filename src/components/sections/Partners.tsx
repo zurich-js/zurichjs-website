@@ -1,7 +1,5 @@
-import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Heart, Star, Trophy, Users, Zap, Building2, Handshake } from 'lucide-react';
+import { ArrowRight, Handshake, Users, Heart, Crown, Award } from 'lucide-react';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 
 import Section from "@/components/Section";
 import useEvents from '@/hooks/useEvents';
@@ -26,13 +24,8 @@ interface PartnersProps {
 }
 
 export default function Partners({ partners }: PartnersProps) {
-  const [isClient, setIsClient] = useState(false);
   const { track } = useEvents();
   
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   if (!partners || partners.length === 0) {
     return null;
   }
@@ -52,438 +45,250 @@ export default function Partners({ partners }: PartnersProps) {
     });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 20,
-      scale: 0.95
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const floatingVariants = {
-    animate: {
-      y: [-8, 8, -8],
-      rotate: [-2, 2, -2],
-      transition: {
-        duration: 6,
-        repeat: Infinity,
-        ease: "easeInOut"
-      }
-    }
-  };
-
   return (
-    <Section variant="gradient" padding="lg" className="relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 -left-40 w-96 h-96 bg-white/15 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-      </div>
-
-      {/* Floating decorative elements */}
-      <motion.div
-        className="absolute top-16 right-16 text-3xl opacity-30"
-        variants={floatingVariants}
-        animate="animate"
-      >
-        🤝
-      </motion.div>
-      <motion.div
-        className="absolute bottom-20 left-16 text-2xl opacity-25"
-        variants={floatingVariants}
-        animate="animate"
-        style={{ animationDelay: '2s' }}
-      >
-        💫
-      </motion.div>
-      <motion.div
-        className="absolute top-32 left-1/4 text-2xl opacity-20"
-        variants={floatingVariants}
-        animate="animate"
-        style={{ animationDelay: '4s' }}
-      >
-        🚀
-      </motion.div>
-
-      <div className="relative z-10">
-        {/* Main Header */}
-        <motion.div
-          initial={isClient ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <div className="inline-flex items-center bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full mb-6 border border-white/30">
-            <Handshake size={20} className="text-blue-600 mr-2" />
-            <span className="font-semibold text-black">Our Amazing Partners</span>
-            <Heart size={18} className="text-yellow-600 ml-2" />
+    <Section variant="white" padding="lg">
+      <div className="px-4 sm:px-6">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-red-400/20 px-3 sm:px-4 py-2 rounded-full mb-3 sm:mb-4 border border-purple-500/30 shadow-sm">
+            <Handshake size={14} className="text-purple-700 mr-2 sm:w-4 sm:h-4" />
+            <span className="font-bold text-purple-800 text-xs sm:text-sm tracking-wide">Our Partners</span>
           </div>
           
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-black">
-            Powered by <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-600">Incredible</span> Sponsors 🎯
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-3 sm:mb-4">
+            Powered by Amazing <span className="text-zurich">Partners</span>
           </h2>
-          <p className="text-xl text-black/80 max-w-3xl mx-auto leading-relaxed">
-            These amazing organizations fuel our JavaScript passion and make our community thrive. 
-            Together, we&apos;re building something extraordinary! ✨
+          <p className="text-base sm:text-lg md:text-xl text-black/80 max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
+            These organizations support our JavaScript community and help make our events possible.
           </p>
-        </motion.div>
+        </div>
 
         {/* Gold Partners Section - Premium Tier */}
         {goldPartners.length > 0 && (
-          <div className="mb-20">
-            <motion.div
-              initial={isClient ? { opacity: 0, y: -15 } : { opacity: 1, y: 0 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <div className="inline-flex items-center bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 backdrop-blur-sm px-6 py-3 rounded-full mb-6 border border-yellow-300/50">
-                <Trophy size={20} className="text-yellow-600 mr-2" />
-                <span className="font-semibold text-yellow-900">Premium Partners</span>
-                <Star size={18} className="text-yellow-600 ml-2" />
+          <div className="mb-8 sm:mb-12">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="inline-flex items-center bg-gradient-to-r from-amber-300/30 via-yellow-400/30 to-orange-400/30 px-3 sm:px-4 py-2 rounded-full border border-amber-400/40 shadow-lg">
+                <Crown size={14} className="text-amber-700 mr-2 sm:w-4 sm:h-4" />
+                <span className="font-bold text-amber-900 text-xs sm:text-sm tracking-wide">Premium Partners</span>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="space-y-8"
-            >
-                             {goldPartners.map((partner) => (
-                <motion.div
+            <div className="space-y-4 sm:space-y-6">
+              {goldPartners.map((partner) => (
+                <div
                   key={partner.id}
-                  variants={cardVariants}
-                  whileHover={{ y: -8, scale: 1.02 }}
-                  className="group"
+                  className="bg-gradient-to-br from-white to-amber-50/50 border-2 border-amber-200/50 rounded-xl p-4 sm:p-6 hover:shadow-2xl hover:border-amber-300/60 transition-all duration-200 shadow-lg"
                 >
-                  <div className="relative">
-                    {/* Premium glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/30 to-blue-400/30 rounded-3xl blur-xl scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    
-                    {/* Premium badge - positioned outside card to avoid clipping */}
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-4 py-1.5 rounded-full font-bold text-xs shadow-lg transform rotate-2 z-20">
-                      🥇 Premium Partner
+                  <div className="flex flex-col lg:flex-row items-center lg:items-start text-center lg:text-left gap-4 sm:gap-6">
+                    <div className="flex-shrink-0">
+                      <a
+                        href={partner.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block transition-all duration-200 hover:scale-105 touch-manipulation"
+                        onClick={() => handlePartnerClick(partner, 'gold_logo')}
+                      >
+                        <div className="w-40 h-28 sm:w-48 sm:h-36 lg:w-64 lg:h-48 relative bg-white/60 p-3 sm:p-4 rounded-xl border border-black/20 hover:border-black/30 transition-all duration-200">
+                          <Image
+                            src={partner.logo}
+                            alt={partner.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      </a>
                     </div>
                     
-                    {/* Premium card */}
-                    <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/50 p-8 md:p-10">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/80 to-white/40"></div>
-
-                      <div className="relative z-10 flex flex-col lg:flex-row items-center lg:items-start text-center lg:text-left gap-8">
-                        <div className="flex-shrink-0">
-                          <motion.a
-                            href={partner.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block"
-                            whileHover={{ scale: 1.05, rotateY: 5 }}
-                            transition={{ duration: 0.3 }}
-                            onClick={() => handlePartnerClick(partner, 'gold_logo')}
-                          >
-                            <div className="w-64 h-32 lg:w-80 lg:h-40 relative bg-white/80 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100">
-                              <Image
-                                src={partner.logo}
-                                alt={partner.name}
-                                fill
-                                className="object-contain"
-                              />
-                            </div>
-                          </motion.a>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black mb-2 sm:mb-3">{partner.name}</h3>
+                      {partner.blurb && (
+                        <div className="text-black/70 leading-relaxed mb-3 sm:mb-4 text-sm sm:text-base">
+                          {partner.blurb.split('\n').map((line, idx) => (
+                            <p key={idx} className={idx > 0 ? 'mt-2' : ''}>
+                              {line}
+                            </p>
+                          ))}
                         </div>
+                      )}
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          href={partner.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="primary"
+                          className="bg-black hover:bg-gray-800 text-white transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
+                          onClick={() => handlePartnerClick(partner, 'gold_cta')}
+                        >
+                          <span>Visit {partner.name}</span>
+                          <ArrowRight size={14} className="ml-2 flex-shrink-0" />
+                        </Button>
                         
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{partner.name}</h3>
-                          {partner.blurb && (
-                            <div className="text-gray-700 leading-relaxed text-lg mb-6">
-                              {partner.blurb.split('\n').map((line, idx) => (
-                                <p key={idx} className={idx > 0 ? 'mt-3' : ''}>
-                                  {line}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                          
-                          <div className="flex flex-col sm:flex-row gap-4">
-                            <motion.div
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              <Button
-                                href={partner.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                variant="primary"
-                                className="group bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-                                onClick={() => handlePartnerClick(partner, 'gold_cta')}
-                              >
-                                <span>Visit {partner.name}</span>
-                                <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                              </Button>
-                            </motion.div>
-                            
-                            <Button
-                              href="/partnerships"
-                              variant="outline"
-                              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                              onClick={() => track('partnership_cta_click', { source: 'gold_partner_section' })}
-                            >
-                              Partner With Us
-                            </Button>
-                          </div>
-                        </div>
+                        <Button
+                          href="/partnerships"
+                          variant="outline"
+                          className="border-2 border-black text-black hover:bg-black hover:text-white transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
+                          onClick={() => track('partnership_cta_click', { source: 'gold_partner_section' })}
+                        >
+                          Partner With Us
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         )}
 
         {/* Silver Partners Section */}
         {silverPartners.length > 0 && (
-          <div className="mb-20">
-            <motion.div
-              initial={isClient ? { opacity: 0, y: -15 } : { opacity: 1, y: 0 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <div className="inline-flex items-center bg-gradient-to-r from-blue-400/20 to-blue-500/20 backdrop-blur-sm px-6 py-3 rounded-full mb-6 border border-blue-300/50">
-                <Building2 size={20} className="text-blue-600 mr-2" />
-                <span className="font-semibold text-blue-900">Supporting Partners</span>
-                <Sparkles size={18} className="text-blue-600 ml-2" />
+          <div className="mb-8 sm:mb-12">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="inline-flex items-center bg-gradient-to-r from-cyan-400/30 via-blue-400/30 to-indigo-500/30 px-3 sm:px-4 py-2 rounded-full border border-cyan-400/40 shadow-lg">
+                <Award size={14} className="text-cyan-700 mr-2 sm:w-4 sm:h-4" />
+                <span className="font-bold text-indigo-800 text-xs sm:text-sm tracking-wide">Supporting Partners</span>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            >
-                             {silverPartners.map((partner) => (
-                <motion.div
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {silverPartners.map((partner) => (
+                <div
                   key={partner.id}
-                  variants={cardVariants}
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  className="group"
+                  className="bg-gradient-to-br from-white to-blue-50/40 border-2 border-blue-200/60 rounded-xl p-4 sm:p-5 hover:shadow-xl hover:border-cyan-300/70 transition-all duration-200 shadow-md"
                 >
-                  <div className="relative">
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-yellow-400/20 rounded-2xl blur-lg scale-105 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    
-                    {/* Card */}
-                    <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-white/50 p-6">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/70 to-white/30"></div>
-                      
-                      <div className="relative z-10 flex flex-col items-center text-center">
-                        <motion.a
-                          href={partner.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block mb-6"
-                          whileHover={{ scale: 1.05 }}
-                          transition={{ duration: 0.2 }}
-                          onClick={() => handlePartnerClick(partner, 'silver_logo')}
-                        >
-                          <div className="w-48 h-24 relative bg-white/90 p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                            <Image
-                              src={partner.logo}
-                              alt={partner.name}
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
-                        </motion.a>
-                        
-                        <h3 className="text-xl font-bold text-gray-900 mb-3">{partner.name}</h3>
-                        {partner.blurb && (
-                          <p className="text-gray-700 leading-relaxed mb-4 text-sm">
-                            {partner.blurb}
-                          </p>
-                        )}
-                        
-                        <div className="flex flex-col sm:flex-row gap-3 w-full">
-                          <Button
-                            href={partner.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            variant="outline"
-                            className="border-blue-500 text-blue-600 hover:bg-blue-600 hover:text-white flex-1"
-                            onClick={() => handlePartnerClick(partner, 'silver_cta')}
-                          >
-                            Visit Website
-                          </Button>
-                        </div>
+                  <div className="text-center">
+                    <a
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block mb-3 sm:mb-4 transition-all duration-200 hover:scale-105 touch-manipulation"
+                      onClick={() => handlePartnerClick(partner, 'silver_logo')}
+                    >
+                      <div className="w-28 h-28 sm:w-32 sm:h-32 relative bg-white/60 p-2 sm:p-3 rounded-lg mx-auto border border-black/20 hover:border-black/30 transition-all duration-200">
+                        <Image
+                          src={partner.logo}
+                          alt={partner.name}
+                          fill
+                          className="object-contain"
+                        />
                       </div>
-                    </div>
+                    </a>
+                    
+                    <h3 className="text-base sm:text-lg font-bold text-black mb-2">{partner.name}</h3>
+                    {partner.blurb && (
+                      <p className="text-black/70 leading-relaxed mb-2 sm:mb-3 text-xs sm:text-sm line-clamp-3">
+                        {partner.blurb}
+                      </p>
+                    )}
+                    
+                    <Button
+                      href={partner.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="outline"
+                      size="sm"
+                      className="border border-black text-black hover:bg-black hover:text-white transition-all duration-200 w-full min-h-[40px] touch-manipulation"
+                      onClick={() => handlePartnerClick(partner, 'silver_cta')}
+                    >
+                      Visit Website
+                    </Button>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         )}
 
         {/* Community Partners Section */}
         {regularPartners.length > 0 && (
-          <div className="mb-16">
-            <motion.div
-              initial={isClient ? { opacity: 0, y: -15 } : { opacity: 1, y: 0 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <div className="inline-flex items-center bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full mb-6 border border-white/30">
-                <Users size={20} className="text-blue-600 mr-2" />
-                <span className="font-semibold text-black">Community Partners</span>
-                <Heart size={18} className="text-yellow-600 ml-2" />
+          <div className="mb-8 sm:mb-12">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="inline-flex items-center bg-gradient-to-r from-emerald-400/30 via-green-400/30 to-teal-500/30 px-3 sm:px-4 py-2 rounded-full border border-emerald-400/40 shadow-lg">
+                <Users size={14} className="text-emerald-700 mr-2 sm:w-4 sm:h-4" />
+                <span className="font-bold text-teal-800 text-xs sm:text-sm tracking-wide">Community Partners</span>
               </div>
               
-              <h3 className="text-2xl md:text-3xl font-bold text-black mb-4">
-                Amazing Organizations Supporting Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-600">Community</span>
+              <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-black mb-2 mt-3">
+                Community <span className="text-zurich">Partners</span>
               </h3>
-              <p className="text-black/80 max-w-2xl mx-auto text-lg">
-                These incredible partners help us build bridges in the JavaScript ecosystem! 🌉
+              <p className="text-black/70 max-w-2xl mx-auto text-xs sm:text-sm px-2 sm:px-0">
+                Organizations that help us build connections in the JavaScript ecosystem.
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={isClient ? { opacity: 0 } : { opacity: 1 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, staggerChildren: 0.05 }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-10 items-center justify-items-center mb-12"
-            >
-              {regularPartners.map((partner, index) => (
-                <motion.div
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6 items-center justify-items-center">
+              {regularPartners.map((partner) => (
+                <div
                   key={partner.id}
-                  initial={isClient ? { opacity: 0, scale: 0.8 } : { opacity: 1, scale: 1 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ 
-                    y: -8, 
-                    scale: 1.1,
-                    transition: { duration: 0.2 }
-                  }}
-                  className="group"
+                  className="group w-full"
                 >
                   <a
                     href={partner.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block w-40 h-28 relative"
+                    className="block w-full aspect-square max-w-28 sm:max-w-32 mx-auto relative transition-all duration-200 hover:scale-105 touch-manipulation"
                     aria-label={`Visit ${partner.name} website`}
                     onClick={() => handlePartnerClick(partner, 'regular')}
                   >
-                    <div className="absolute inset-0 bg-white/90 backdrop-blur-md rounded-xl shadow-lg group-hover:shadow-2xl border border-white/50 transition-all duration-300 p-4">
+                    <div className="bg-gradient-to-br from-white to-green-50/30 border border-emerald-200/60 hover:border-teal-300/80 rounded-xl p-2 sm:p-3 h-full shadow-sm hover:shadow-lg transition-all duration-200">
                       <Image
                         src={partner.logo}
                         alt={`${partner.name} logo`}
                         fill
-                        className="object-contain grayscale group-hover:grayscale-0 transition-all duration-300 p-2"
+                        className="object-contain grayscale group-hover:grayscale-0 transition-all duration-200 p-1 sm:p-2"
                       />
                     </div>
                   </a>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         )}
 
-        {/* Enhanced Call to Action */}
-        <motion.div
-          initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center bg-white/20 backdrop-blur-xl rounded-3xl p-10 border border-white/30 shadow-2xl"
-        >
-          <div className="mb-6">
-            <div className="inline-flex items-center mb-4">
-              <Zap size={24} className="text-yellow-600 mr-2" />
-              <h3 className="text-2xl md:text-3xl font-bold text-black">
-                Ready to Sponsor Our Community?
-              </h3>
-              <Zap size={24} className="text-yellow-600 ml-2" />
-            </div>
-            <p className="text-black/80 max-w-3xl mx-auto text-lg leading-relaxed">
-              Join our incredible sponsors and help us build the most vibrant JavaScript community in Switzerland! 
-              Your support makes all the difference. 💫
-            </p>
-          </div>
+        {/* Call to Action */}
+        <div className="text-center bg-gradient-to-br from-js-100/60 via-js-dark-50/40 to-js-darker-100/60 backdrop-blur rounded-xl p-4 sm:p-6 border border-violet-200/50 shadow-lg">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-zurich mb-2 sm:mb-3">
+            Ready to Partner With Us?
+          </h3>
+          <p className="text-gray-700 mb-4 sm:mb-6 leading-relaxed max-w-2xl mx-auto text-sm sm:text-base px-2 sm:px-0">
+            Join our partners and help us build the most vibrant JavaScript community in Switzerland.
+          </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center mb-4 sm:mb-6">
+            <Button
+              href="/partnerships"
+              variant="primary"
+              className="bg-black hover:bg-gray-800 text-white transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
+              onClick={() => track('partnership_cta_click', { source: 'partners_section_cta' })}
             >
-              <Button
-                href="/partnerships"
-                variant="primary"
-                size="lg"
-                className="group bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-                onClick={() => track('partnership_cta_click', { source: 'partners_section_cta' })}
-              >
-                <span>Become a Partner</span>
-                <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </motion.div>
+              <span>Become a Partner</span>
+              <ArrowRight size={16} className="ml-2 flex-shrink-0" />
+            </Button>
             
             <Button
               href="/contact"
               variant="outline"
-              size="lg"
-              className="border-2 border-white text-black hover:bg-zurich hover:text-black"
+              className="border border-black text-black hover:bg-black hover:text-white transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
             >
               Get in Touch
             </Button>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="flex flex-col items-center text-black/80">
-              <Trophy size={20} className="text-yellow-600 mb-2" />
-              <span className="text-sm font-medium">Premium visibility</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 text-center">
+            <div className="flex flex-col items-center text-black hover:text-red-600 transition-colors duration-200 p-2 sm:p-3 rounded-lg hover:bg-red-50/50">
+              <Heart size={18} className="text-red-500 mb-1 sm:w-5 sm:h-5" />
+              <span className="text-xs font-bold">Community Impact</span>
             </div>
-            <div className="flex flex-col items-center text-black/80">
-              <Users size={20} className="text-blue-600 mb-2" />
-              <span className="text-sm font-medium">Access to talent</span>
+            <div className="flex flex-col items-center text-black hover:text-blue-600 transition-colors duration-200 p-2 sm:p-3 rounded-lg hover:bg-blue-50/50">
+              <Users size={18} className="text-blue-500 mb-1 sm:w-5 sm:h-5" />
+              <span className="text-xs font-bold">Access to Talent</span>
             </div>
-            <div className="flex flex-col items-center text-black/80">
-              <Heart size={20} className="text-yellow-600 mb-2" />
-              <span className="text-sm font-medium">Community impact</span>
+            <div className="flex flex-col items-center text-black hover:text-green-600 transition-colors duration-200 p-2 sm:p-3 rounded-lg hover:bg-green-50/50">
+              <Handshake size={18} className="text-green-500 mb-1 sm:w-5 sm:h-5" />
+              <span className="text-xs font-bold">Brand Visibility</span>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </Section>
   );

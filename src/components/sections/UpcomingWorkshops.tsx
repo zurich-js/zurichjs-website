@@ -1,26 +1,26 @@
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, Clock, Sparkles, ArrowRight, BookOpen, Trophy, Star, Zap } from 'lucide-react';
+import { Clock, Calendar, ArrowRight, BookOpen } from 'lucide-react';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 
-import Section from "@/components/Section";
+import Section from '@/components/Section';
 import Button from '@/components/ui/Button';
 
-
-// Workshop interface
 export interface Workshop {
   id: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
+  instructor?: string;
   dateInfo: string;
   timeInfo: string;
-  locationInfo: string;
-  maxAttendees: number;
+  locationInfo?: string;
+  duration?: string;
+  price?: string;
   description: string;
   image?: string;
-  price?: string;
-  instructor?: string;
-  level?: string;
+  level: 'beginner' | 'intermediate' | 'advanced';
+  tags?: string[];
+  maxAttendees?: number;
+  currentAttendees?: number;
+  stripePriceId?: string;
   confirmedDate?: boolean;
 }
 
@@ -31,303 +31,204 @@ interface UpcomingWorkshopsProps {
 export default function UpcomingWorkshops({
   workshops,
 }: UpcomingWorkshopsProps) {
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   if (!workshops || workshops.length === 0) {
-    return null;
+    return (
+      <Section variant="gradient" padding="lg">
+        <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
+          <div className="inline-flex items-center bg-black/20 px-3 sm:px-4 py-2 rounded-full mb-4 sm:mb-6 border border-black/30 shadow-sm">
+            <BookOpen size={16} className="text-black mr-2" />
+            <span className="font-semibold text-black text-xs sm:text-sm">Upcoming Workshops</span>
+          </div>
+          
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black mb-3 sm:mb-4">
+            New Workshops Coming Soon
+          </h2>
+          <p className="text-base sm:text-lg text-black/90 mb-4 sm:mb-6">
+            We&apos;re developing hands-on workshops to help you master JavaScript technologies. Stay tuned!
+          </p>
+          
+          <Button
+            href="https://www.meetup.com/zurich-js"
+            variant="primary"
+            size="lg"
+            className="bg-black hover:bg-gray-800 text-white cursor-pointer transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
+          >
+            Get Notified
+          </Button>
+        </div>
+      </Section>
+    );
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.3,
-      }
+  const getLevelColor = (level: Workshop['level']) => {
+    switch (level) {
+      case 'beginner':
+        return 'bg-green-200 text-green-900 border-green-300';
+      case 'intermediate':
+        return 'bg-blue-200 text-blue-900 border-blue-300';
+      case 'advanced':
+        return 'bg-red-200 text-red-900 border-red-300';
+      default:
+        return 'bg-gray-200 text-gray-900 border-gray-300';
     }
   };
 
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 30,
-      scale: 0.95
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
-    }
+  // Helper function to format price to CHF
+  const formatPrice = (price: string) => {
+    // Remove any currency symbols and return with CHF prefix
+    const numericPrice = price.replace(/[$€£]/g, '').trim();
+    return `CHF ${numericPrice}`;
   };
 
   return (
-    <Section variant="gray" className="relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -left-40 w-80 h-80 bg-gradient-to-br from-yellow-200 to-blue-200 rounded-full opacity-40 blur-3xl"></div>
-        <div className="absolute bottom-20 -right-40 w-96 h-96 bg-gradient-to-br from-blue-200 to-yellow-200 rounded-full opacity-30 blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-yellow-100 to-blue-100 rounded-full opacity-20 blur-3xl"></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* Enhanced header */}
-        <motion.div
-          initial={isClient ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center bg-gradient-to-r from-yellow-50 to-blue-50 backdrop-blur-sm px-6 py-3 rounded-full mb-6 border border-yellow-200/50">
-            <BookOpen size={20} className="text-blue-600 mr-2" />
-            <span className="font-semibold text-blue-900">Hands-On Learning</span>
-            <Trophy size={18} className="text-yellow-600 ml-2" />
+    <Section variant="js" padding="lg">
+      <div className="px-4 sm:px-6">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center bg-black/20 px-3 sm:px-4 py-2 rounded-full mb-3 sm:mb-4 border border-black/30 shadow-sm">
+            <BookOpen size={16} className="text-black mr-2" />
+            <span className="font-semibold text-black text-xs sm:text-sm">Hands-On Learning</span>
           </div>
           
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-gray-900">
-            Upcoming <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-600">Workshops</span> 🛠️
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-3 sm:mb-4">
+            Upcoming <span className="text-zurich">Workshops</span>
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Deep-dive into JavaScript technologies with expert-led, hands-on workshops designed to boost your skills and accelerate your career!
+          <p className="text-base sm:text-lg md:text-xl text-black/90 max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
+            Deep-dive into JavaScript technologies with expert-led workshops designed to boost your skills.
           </p>
-        </motion.div>
+        </div>
 
-        {/* Workshops grid with enhanced animations */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12"
-        >
+        {/* Workshops grid - more compact responsive layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {workshops.map((workshop) => (
-            <motion.div
+            <div
               key={workshop.id}
-              variants={cardVariants}
-              whileHover={{ 
-                y: -10, 
-                scale: 1.03,
-                transition: { duration: 0.3 }
-              }}
-              className="group h-full"
+              className="bg-white border border-black/20 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-200 shadow-lg cursor-pointer"
             >
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-yellow-300 h-full flex flex-col">
-                {/* Workshop image - Increased height */}
-                <div className="relative h-64 overflow-hidden flex-shrink-0">
-                  {workshop.image ? (
-                    <Image
-                      src={workshop.image}
-                      alt={workshop.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-500 via-yellow-500 to-blue-600 flex items-center justify-center p-6">
-                      <div className="text-center text-white">
-                        <div className="text-5xl mb-3">🛠️</div>
-                        <div className="flex justify-center space-x-3 opacity-80">
-                          <span className="text-2xl">💡</span>
-                          <span className="text-2xl">📚</span>
-                          <span className="text-2xl">⚡</span>
-                        </div>
-                      </div>
+              {/* Workshop Image - Responsive aspect ratio */}
+              {workshop.image && (
+                <div className="relative w-full aspect-[5/2] sm:aspect-[3/1]">
+                  <Image 
+                    src={workshop.image} 
+                    alt={workshop.title}
+                    fill
+                    className="object-cover"
+                  />
+                  {/* Price overlay */}
+                  {workshop.price && (
+                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-white/95 backdrop-blur px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg shadow-lg">
+                      <span className="font-bold text-black text-sm sm:text-lg">{formatPrice(workshop.price)}</span>
                     </div>
                   )}
-                  
-                  {/* Bottom shadow gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                  
-                  {/* Workshop badge */}
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                      Hands-On Workshop
+                  {/* Level badge overlay */}
+                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4">
+                    <span className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold border backdrop-blur ${getLevelColor(workshop.level)}`}>
+                      {workshop.level.charAt(0).toUpperCase() + workshop.level.slice(1)}
                     </span>
                   </div>
+                </div>
+              )}
+              
+              {/* Workshop Content */}
+              <div className="p-4 sm:p-6 flex flex-col">
+                {/* Header */}
+                <div className="mb-3 sm:mb-4">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-black mb-2 leading-tight">
+                    {workshop.title}
+                  </h3>
+                </div>
+
+                {/* Workshop details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 sm:mb-4 text-sm">
+                  <div className="flex items-center text-black/80">
+                    <Calendar className="w-4 h-4 mr-2 sm:mr-3 text-zurich flex-shrink-0" />
+                    <span className="font-medium">{workshop.dateInfo}</span>
+                  </div>
                   
-                  {/* Level badge */}
-                  {workshop.level && (
-                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                      {workshop.level}
+                  <div className="flex items-center text-black/80">
+                    <Clock className="w-4 h-4 mr-2 sm:mr-3 text-zurich flex-shrink-0" />
+                    <span className="font-medium">{workshop.timeInfo}</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="text-black/70 text-sm leading-relaxed mb-3 sm:mb-4 flex-grow line-clamp-3 sm:line-clamp-4">
+                  {workshop.description}
+                </p>
+
+                {/* Tags */}
+                {workshop.tags && workshop.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4 sm:mb-6">
+                    {workshop.tags.slice(0, 4).map((tag) => (
+                      <span key={tag} className="bg-black/10 text-black/80 text-xs px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border border-black/20 hover:bg-black/20 cursor-pointer transition-colors duration-200">
+                        {tag}
+                      </span>
+                    ))}
+                    {workshop.tags.length > 4 && (
+                      <span className="text-black/60 text-xs self-center">+{workshop.tags.length - 4} more</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Action and progress */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 mt-auto">
+                  <Button
+                    href={`/workshops/${workshop.id}`}
+                    variant="primary"
+                    size="lg"
+                    className="bg-black hover:bg-gray-800 text-white font-semibold cursor-pointer transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation order-2 sm:order-1"
+                  >
+                    Learn More <ArrowRight size={14} className="ml-2 flex-shrink-0" />
+                  </Button>
+                  
+                  {workshop.maxAttendees && workshop.currentAttendees && (
+                    <div className="text-center sm:text-right order-1 sm:order-2">
+                      <span className="text-xs sm:text-sm text-black/70 font-medium block mb-1 sm:mb-2">
+                        {workshop.currentAttendees}/{workshop.maxAttendees} spots filled
+                      </span>
+                      <div className="w-full sm:w-20 lg:w-24 bg-black/20 rounded-full h-2 mx-auto sm:mx-0 sm:ml-auto">
+                        <div 
+                          className="bg-zurich h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${(workshop.currentAttendees / workshop.maxAttendees) * 100}%` }}
+                        ></div>
+                      </div>
                     </div>
                   )}
-                  
-                  {/* Title overlay */}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white text-xl font-bold line-clamp-2">
-                      {workshop.title}
-                    </h3>
-                    {workshop.subtitle && (
-                      <p className="text-white/80 text-sm mt-1 line-clamp-1 drop-shadow-md">
-                        {workshop.subtitle}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Workshop details - Flexible container */}
-                <div className="p-6 flex-1 flex flex-col">
-                  {/* Workshop info grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center p-2 bg-blue-50 rounded-lg border border-blue-100 group-hover:bg-blue-100 transition-colors"
-                    >
-                      <Calendar className="w-4 h-4 mr-2 text-blue-600" />
-                      <span className="text-xs font-medium text-gray-700 truncate">
-                        {workshop.dateInfo || 'Date TBD'}
-                      </span>
-                    </motion.div>
-                    
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center p-2 bg-yellow-50 rounded-lg border border-yellow-100 group-hover:bg-yellow-100 transition-colors"
-                    >
-                      <Clock className="w-4 h-4 mr-2 text-yellow-600" />
-                      <span className="text-xs font-medium text-gray-700 truncate">
-                        {workshop.timeInfo || 'Time TBD'}
-                      </span>
-                    </motion.div>
-                    
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center p-2 bg-green-50 rounded-lg border border-green-100 group-hover:bg-green-100 transition-colors"
-                    >
-                      <MapPin className="w-4 h-4 mr-2 text-green-600" />
-                      <span className="text-xs font-medium text-gray-700 truncate">
-                        {workshop.locationInfo || 'Venue TBD'}
-                      </span>
-                    </motion.div>
-                    
-                    <motion.div 
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center p-2 bg-purple-50 rounded-lg border border-purple-100 group-hover:bg-purple-100 transition-colors"
-                    >
-                      <Users className="w-4 h-4 mr-2 text-purple-600" />
-                      <span className="text-xs font-medium text-gray-700 truncate">
-                        Max {workshop.maxAttendees || '12'}
-                      </span>
-                    </motion.div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 group-hover:text-gray-700 transition-colors flex-1">
-                    {workshop.description}
-                  </p>
-
-                  {/* Instructor and price */}
-                  <div className="flex items-center justify-between mb-4">
-                    {workshop.instructor && (
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-yellow-500 rounded-full flex items-center justify-center mr-2">
-                          <span className="text-white text-xs font-bold">👨‍🏫</span>
-                        </div>
-                        <span className="text-sm font-medium text-gray-700">{workshop.instructor}</span>
-                      </div>
-                    )}
-                    
-                    {workshop.price ? (
-                      <div className="bg-yellow-100 text-yellow-800 text-sm font-bold px-3 py-1 rounded-full">
-                        {workshop.price}
-                      </div>
-                    ) : workshop.confirmedDate ? (
-                      <div className="bg-blue-100 text-blue-800 text-sm font-bold px-3 py-1 rounded-full">
-                        Price coming soon
-                      </div>
-                    ) : (
-                      <div className="bg-gray-100 text-gray-600 text-sm font-bold px-3 py-1 rounded-full">
-                        Details coming soon
-                      </div>
-                    )}
-                  </div>
-
-                  {/* CTA Button - Always at bottom */}
-                  <div className="mt-auto">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <a
-                        href={`/workshops/${workshop.id}`}
-                                                 className="inline-flex items-center justify-center w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 group-hover:shadow-2xl"
-                      >
-                        <span>Learn More & Register</span>
-                        <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                      </a>
-                    </motion.div>
-                  </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Enhanced call to action */}
-        <motion.div
-          initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="text-center bg-gradient-to-r from-blue-50 to-yellow-50 rounded-2xl p-8 border border-yellow-200/50 backdrop-blur-sm"
-        >
-          <div className="mb-6">
-            <div className="inline-flex items-center mb-4">
-              <Star size={24} className="text-yellow-500 mr-2" />
-              <h3 className="text-2xl font-bold text-gray-900">
-                Ready to Master JavaScript? 🚀
-              </h3>
-              <Star size={24} className="text-yellow-500 ml-2" />
             </div>
-            <p className="text-gray-700 max-w-3xl mx-auto leading-relaxed">
-              Expert-led workshops, hands-on practice, career-boosting skills, and small group settings for personalized attention. 
-              Transform your JavaScript knowledge from good to extraordinary!
-            </p>
-          </div>
+          ))}
+        </div>
+
+        {/* Call to action - more compact and mobile-friendly */}
+        <div className="text-center bg-white/30 backdrop-blur rounded-2xl p-4 sm:p-6 border border-black/30 shadow-lg">
+          <h3 className="text-lg sm:text-xl font-bold text-black mb-2 sm:mb-3">
+            Level Up Your JavaScript Skills
+          </h3>
+          <p className="text-black/90 mb-3 sm:mb-4 leading-relaxed max-w-xl mx-auto text-sm sm:text-base px-2 sm:px-0">
+            Join our workshops to gain practical experience and learn from industry experts in small, focused groups.
+          </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
             <Button
               href="/workshops"
               variant="primary"
               size="lg"
-              className="group bg-yellow-500 hover:bg-yellow-600 text-black shadow-lg hover:shadow-xl"
+              className="bg-black hover:bg-gray-800 text-white cursor-pointer transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
             >
-              <span>Explore All Workshops</span>
-              <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              View All Workshops
             </Button>
             
             <Button
-              href="/cfp"
+              href="mailto:hello@zurichjs.com?subject=Workshop%20Topic%20Suggestion"
               variant="outline"
               size="lg"
-              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+              className="border-2 border-black text-black hover:bg-black hover:text-white cursor-pointer transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
             >
-              Teach a Workshop
+              Suggest a Topic
             </Button>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="flex items-center justify-center text-gray-600 text-sm">
-              <Zap size={16} className="mr-2 text-blue-500" />
-              <span>Hands-on learning</span>
-            </div>
-            <div className="flex items-center justify-center text-gray-600 text-sm">
-              <Trophy size={16} className="mr-2 text-yellow-500" />
-              <span>Expert guidance</span>
-            </div>
-            <div className="flex items-center justify-center text-gray-600 text-sm">
-              <Sparkles size={16} className="mr-2 text-yellow-500" />
-              <span>Career-boosting skills</span>
-            </div>
-          </div>
-        </motion.div>
+        </div>
       </div>
     </Section>
   );

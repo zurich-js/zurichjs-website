@@ -1,9 +1,8 @@
-import { motion } from 'framer-motion';
-import { Calendar, ArrowRight, Sparkles, Users, MapPin, Clock } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Calendar, MapPin, ArrowRight, Clock, Users } from 'lucide-react';
 
-import Section from "@/components/Section";
+import Section from '@/components/Section';
 import Button from '@/components/ui/Button';
+import useEvents from '@/hooks/useEvents';
 import { Event } from '@/sanity/queries';
 import { formatDateWithOrdinal } from '@/utils/dateUtils';
 
@@ -14,11 +13,15 @@ interface UpcomingEventsProps {
 export default function UpcomingEvents({
   events,
 }: UpcomingEventsProps) {
-  const [isClient, setIsClient] = useState(false);
-  
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const { track } = useEvents();
+
+  const handleReserveClick = (eventId: string, eventTitle: string) => {
+    track('event_rsvp', {
+      eventId: eventId,
+      eventTitle: eventTitle,
+      source: 'upcoming_events_homepage'
+    });
+  };
 
   // Sort events by date
   const sortedEvents = events ? [...events].sort((a, b) => 
@@ -26,90 +29,61 @@ export default function UpcomingEvents({
   ) : [];
 
   if (!events || events.length === 0) {
-    return null;
-  }
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 20,
-      scale: 0.95
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  return (
-    <Section variant="white" className="relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 -right-40 w-80 h-80 bg-gradient-to-br from-yellow-200 to-blue-200 rounded-full opacity-30 blur-3xl"></div>
-        <div className="absolute bottom-20 -left-40 w-96 h-96 bg-gradient-to-br from-blue-100 to-yellow-100 rounded-full opacity-20 blur-3xl"></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* Enhanced header */}
-        <motion.div
-          initial={isClient ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center bg-gradient-to-r from-yellow-50 to-blue-50 backdrop-blur-sm px-6 py-3 rounded-full mb-6 border border-yellow-200/50">
-            <Calendar size={20} className="text-blue-600 mr-2" />
-            <span className="font-semibold text-blue-900">What&apos;s Coming Up</span>
-            <Sparkles size={18} className="text-yellow-600 ml-2" />
+    return (
+      <Section variant="gradient" padding="lg">
+        <div className="text-center max-w-2xl mx-auto px-4 sm:px-6">
+          <div className="inline-flex items-center bg-black/10 px-3 sm:px-4 py-2 rounded-full mb-4 sm:mb-6 border border-black/20">
+            <Calendar size={16} className="text-black mr-2" />
+            <span className="font-semibold text-black text-xs sm:text-sm">Upcoming Events</span>
           </div>
           
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-gray-900">
-            Upcoming <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-yellow-600">Events</span> 🎯
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-black mb-4 sm:mb-6">
+            New Events Coming Soon
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-            Join us for amazing JavaScript sessions, insightful talks, and networking with fellow developers in Zurich&apos;s most vibrant tech community!
+          <p className="text-base sm:text-lg text-black/80 mb-6 sm:mb-8">
+            We&apos;re planning exciting JavaScript sessions and networking opportunities. Stay tuned for updates!
           </p>
-        </motion.div>
+          
+          <Button
+            href="https://www.meetup.com/zurich-js"
+            variant="primary"
+            size="lg"
+            className="bg-black hover:bg-gray-800 text-white cursor-pointer transition-all duration-200 w-full sm:w-auto min-h-[48px] touch-manipulation"
+          >
+            Get Notified
+          </Button>
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section variant="gradient" padding="lg">
+      <div className="px-4 sm:px-6">
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="inline-flex items-center bg-black/10 px-3 sm:px-4 py-2 rounded-full mb-4 sm:mb-6 border border-black/20">
+            <Calendar size={16} className="text-black mr-2" />
+            <span className="font-semibold text-black text-xs sm:text-sm">What&apos;s Coming Up</span>
+          </div>
+          
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-4 sm:mb-6">
+            Upcoming <span className="text-zurich">Events</span>
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl text-black/80 max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
+            Join us for JavaScript sessions, insightful talks, and networking with fellow developers in Zurich.
+          </p>
+        </div>
 
         {/* Events grid with enhanced animations */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-12"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
           {sortedEvents.map((event) => (
-            <motion.div
+            <div
               key={event.id}
-              variants={cardVariants}
-              whileHover={{ 
-                y: -8, 
-                scale: 1.02,
-                transition: { duration: 0.2 }
-              }}
-              className="group h-full"
+              className="group h-full cursor-pointer"
             >
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-yellow-300 h-full flex flex-col">
-                {/* Event image with overlay - Increased height */}
-                <div className="relative h-64 overflow-hidden flex-shrink-0">
+              <div className="bg-white/90 backdrop-blur rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-black/10 hover:border-black/20 h-full flex flex-col">
+                {/* Event image with overlay - Responsive height */}
+                <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden flex-shrink-0">
                   {event.image ? (
                     <img
                       src={event.image as string}
@@ -117,13 +91,13 @@ export default function UpcomingEvents({
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-500 via-yellow-500 to-blue-600 flex items-center justify-center p-6">
-                      <div className="text-center text-white">
-                        <div className="text-5xl mb-3">🚀</div>
-                        <div className="flex justify-center space-x-3 opacity-80">
-                          <span className="text-2xl">⚛️</span>
-                          <span className="text-2xl">💻</span>
-                          <span className="text-2xl">🔥</span>
+                    <div className="w-full h-full bg-gradient-to-br from-js via-js-dark to-zurich flex items-center justify-center p-4 sm:p-6">
+                      <div className="text-center text-black">
+                        <div className="text-4xl sm:text-5xl mb-3">🚀</div>
+                        <div className="flex justify-center space-x-2 sm:space-x-3 opacity-80">
+                          <span className="text-xl sm:text-2xl">⚛️</span>
+                          <span className="text-xl sm:text-2xl">💻</span>
+                          <span className="text-xl sm:text-2xl">🔥</span>
                         </div>
                       </div>
                     </div>
@@ -133,25 +107,25 @@ export default function UpcomingEvents({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                   
                   {/* Date badge with ordinal suffix */}
-                  <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm text-black text-sm font-bold px-3 py-2 rounded-full shadow-lg border border-white/50">
+                  <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-white/95 backdrop-blur-sm text-black text-xs sm:text-sm font-bold px-2 sm:px-3 py-1.5 sm:py-2 rounded-full shadow-lg border border-white/50">
                     {formatDateWithOrdinal(new Date(event.datetime))}
                   </div>
                   
                   {/* Title overlay */}
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <h3 className="text-white text-xl font-bold line-clamp-2">
+                  <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 right-3 sm:right-4">
+                    <h3 className="text-white text-lg sm:text-xl font-bold line-clamp-2">
                       {event.title}
                     </h3>
                   </div>
                 </div>
 
                 {/* Event details - Flexible container */}
-                <div className="p-6 flex-1 flex flex-col">
+                <div className="p-4 sm:p-6 flex-1 flex flex-col">
                   {/* Event info grid */}
-                  <div className="grid grid-cols-1 gap-3 mb-4">
-                    <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors">
-                      <Clock className="w-4 h-4 mr-3 text-blue-500" />
-                      <span className="font-medium">
+                  <div className="grid grid-cols-1 sm:gap-3 mb-3 sm:mb-4">
+                    <div className="flex items-center text-black/70 hover:text-black transition-colors cursor-pointer">
+                      <Clock className="w-4 h-4 mr-3 text-zurich flex-shrink-0" />
+                      <span className="font-medium text-sm">
                         {new Date(event.datetime).toLocaleTimeString('en-GB', {
                           hour: '2-digit',
                           minute: '2-digit'
@@ -159,14 +133,14 @@ export default function UpcomingEvents({
                       </span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors">
-                      <MapPin className="w-4 h-4 mr-3 text-yellow-600" />
-                      <span className="font-medium line-clamp-1">{event.location || 'Venue TBD'}</span>
+                    <div className="flex items-center text-black/70 hover:text-black transition-colors cursor-pointer">
+                      <MapPin className="w-4 h-4 mr-3 text-zurich flex-shrink-0" />
+                      <span className="font-medium line-clamp-2 text-sm">{event.location || 'Venue TBD'}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors">
-                      <Users className="w-4 h-4 mr-3 text-blue-500" />
-                      <span className="font-medium">
+                    <div className="flex items-center text-black/70 hover:text-black transition-colors cursor-pointer">
+                      <Users className="w-4 h-4 mr-3 text-zurich flex-shrink-0" />
+                      <span className="font-medium text-sm">
                         {event.attendees && event.attendees > 0 
                           ? `${event.attendees} JavaScript enthusiasts joining`
                           : "Be one of the first to RSVP"
@@ -177,75 +151,66 @@ export default function UpcomingEvents({
 
                   {/* Description */}
                   {event.description && (
-                    <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3 group-hover:text-gray-700 transition-colors flex-1">
+                    <p className="text-black/60 text-sm leading-relaxed mb-3 sm:mb-4 line-clamp-3 group-hover:text-black/70 transition-colors flex-1">
                       {event.description}
                     </p>
                   )}
 
                   {/* CTA Button - Always at bottom */}
                   <div className="mt-auto">
-                    <motion.div
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <a
+                      href={event.meetupUrl || `/events/${event.id}`}
+                      className="inline-flex items-center justify-center w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 group-hover:shadow-2xl cursor-pointer min-h-[48px] touch-manipulation"
+                      onClick={() => handleReserveClick(event.id, event.title)}
                     >
-                      <a
-                        href={event.meetupUrl || `/events/${event.id}`}
-                        className="inline-flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 group-hover:shadow-2xl"
-                      >
-                        <span>Join This Event</span>
-                        <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                      </a>
-                    </motion.div>
+                      <span>Join This Event</span>
+                      <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform flex-shrink-0" />
+                    </a>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Enhanced call to action */}
-        <motion.div
-          initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center bg-gradient-to-r from-blue-50 to-yellow-50 rounded-2xl p-8 border border-yellow-200/50 backdrop-blur-sm"
-        >
-          <div className="mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              Ready to Join Our JavaScript Adventure? 🚀
-            </h3>
-            <p className="text-gray-700 max-w-2xl mx-auto">
-              Amazing talks, brilliant minds, delicious food, and great vibes – everything you need for the perfect tech meetup experience!
-            </p>
+        {/* Compact Community CTA */}
+        <div className="relative overflow-hidden">
+          <div className="bg-gradient-to-r from-black via-gray-900 to-black rounded-xl shadow-2xl border border-gray-700/50">
+            <div className="absolute inset-0 bg-gradient-to-r from-js/10 via-transparent to-zurich/10"></div>
+            <div className="relative px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              <div className="flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-6">
+                <div className="text-center lg:text-left">
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">
+                    Stay Connected with ZurichJS
+                  </h3>
+                  <p className="text-gray-300 text-sm leading-tight">
+                    Get notified about new events and join our growing community
+                  </p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 flex-shrink-0 w-full lg:w-auto">
+                  <Button
+                    href="https://www.meetup.com/zurich-js"
+                    variant="primary"
+                    size="md"
+                    className="bg-white hover:bg-js !text-black hover:text-black font-semibold cursor-pointer transition-all duration-200 shadow-lg hover:shadow-xl px-4 sm:px-6 border border-white min-h-[48px] touch-manipulation w-full sm:w-auto"
+                  >
+                    Join the Meetup Group
+                  </Button>
+                  
+                  <Button
+                    href="/events"
+                    variant="outline"
+                    size="md"
+                    className="border-2 border-white/70 text-white hover:bg-js hover:!text-black cursor-pointer transition-all duration-200 font-medium px-4 sm:px-6 hover:border-js min-h-[48px] touch-manipulation w-full sm:w-auto"
+                  >
+                    Browse Events
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              href="https://meetup.com/zurich-js"
-              variant="primary"
-              size="lg"
-              className="group bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-            >
-              <span>Join Our Meetup Group</span>
-              <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            
-            <Button
-              href="/cfp"
-              variant="outline"
-              size="lg"
-              className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-            >
-              Become a Speaker
-            </Button>
-          </div>
-          
-          <div className="mt-6 flex items-center justify-center text-gray-600 text-sm">
-            <Sparkles size={16} className="mr-2 text-yellow-500" />
-            <span>Amazing talks • Great networking • JavaScript magic ✨</span>
-          </div>
-        </motion.div>
+        </div>
       </div>
     </Section>
   );

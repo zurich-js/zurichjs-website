@@ -11,7 +11,6 @@ interface StatsData {
 
 interface StatsProps {
   stats: StatsData;
-  backgroundColor?: string;
 }
 
 // Animated counter component
@@ -41,8 +40,7 @@ const AnimatedCounter = ({ value, delay = 0 }: { value: number; delay?: number }
 };
 
 export default function Stats({
-  stats,
-  backgroundColor = 'bg-black/70 backdrop-blur-xl'
+  stats
 }: StatsProps) {
   const [isClient, setIsClient] = useState(false);
   
@@ -91,41 +89,36 @@ export default function Stats({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8, ease: "easeOut" }}
-      className={`${backgroundColor} text-white rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto border border-white/10 relative overflow-hidden`}
+      className={`bg-[#f7f7f7] text-black rounded-lg shadow-lg p-2 sm:p-3 w-full border border-[#222]/20 relative overflow-hidden`}
     >
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
-      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-yellow-400/10 to-transparent rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-blue-400/10 to-transparent rounded-full blur-2xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#eaeaea] to-transparent"></div>
+      <div className="absolute top-0 right-0 w-32 sm:w-48 lg:w-64 h-32 sm:h-48 lg:h-64 bg-gradient-to-br from-[#222]/10 to-transparent rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-24 sm:w-36 lg:w-48 h-24 sm:h-36 lg:h-48 bg-gradient-to-tr from-[#258BCC]/10 to-transparent rounded-full blur-2xl"></div>
       
       {/* Header */}
       <motion.div
         initial={isClient ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="text-center mb-4 sm:mb-6 lg:mb-8 relative z-10"
+        className="mb-2 relative z-10 text-center"
       >
-        <div className="inline-flex items-center bg-gradient-to-r from-yellow-400/20 to-yellow-500/20 backdrop-blur-sm px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full mb-3 sm:mb-4 border border-yellow-400/30">
-          <Code2 size={16} className="text-yellow-400 mr-2 sm:mr-2 sm:w-5 sm:h-5" />
-          <span className="font-semibold text-white text-sm sm:text-base">Our Growing JavaScript Community</span>
-          <Zap size={14} className="text-yellow-400 ml-2 sm:ml-2 sm:w-4 sm:h-4" />
+        <div className="inline-flex items-center bg-[#222]/5 px-2 py-1 rounded-full mb-2 border border-[#222]/10">
+          <Code2 size={12} className="text-[#258BCC] mr-1" />
+          <span className="font-semibold text-[#222] text-xs">Community Stats</span>
+          <Zap size={10} className="text-[#258BCC] ml-1" />
         </div>
-        
-        <p className="text-gray-300 text-sm sm:text-base lg:text-lg px-4 sm:px-0">
-          These numbers tell our story – but the real magic happens when we come together! ✨
-        </p>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 relative z-10">
+      {/* Stats Layout - Vertical on mobile, Horizontal on desktop */}
+      <div className="flex flex-col gap-1 md:grid md:grid-cols-4 md:gap-2 relative z-10">
         {statItems.map((item, index) => (
           <motion.div
             key={index}
-            initial={isClient ? { opacity: 0, scale: 0.8 } : { opacity: 1, scale: 1 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={isClient ? { opacity: 0, x: -20 } : { opacity: 1, x: 0 }}
+            whileInView={{ opacity: 1, x: 0 }}
             whileHover={{ 
-              scale: 1.05, 
-              y: -5,
+              scale: 1.02, 
               transition: { duration: 0.2 }
             }}
             viewport={{ once: true }}
@@ -135,55 +128,60 @@ export default function Stats({
               type: "spring",
               stiffness: 100
             }}
-            className="group"
+            className="group touch-manipulation cursor-pointer"
           >
-            <div className={`${item.bgColor} backdrop-blur-sm rounded-xl p-3 sm:p-4 lg:p-6 text-center border border-white/10 hover:border-white/20 transition-all duration-300 relative overflow-hidden h-full flex flex-col`}>
+            <div className={`bg-[#f7f7f7] rounded-lg p-2 border border-[#222]/10 hover:border-[#258BCC] transition-all duration-300 relative overflow-hidden text-center
+              ${index === 0 ? 'hover:bg-blue-50/20' : ''}
+              ${index === 1 ? 'hover:bg-green-50/20' : ''}
+              ${index === 2 ? 'hover:bg-purple-50/20' : ''}
+              ${index === 3 ? 'hover:bg-yellow-50/20' : ''}
+            `}>
               {/* Hover effect overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#258BCC]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               
-              {/* Icon with gradient background */}
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 mx-auto mb-3 sm:mb-4 bg-gradient-to-br ${item.gradient} rounded-full flex items-center justify-center relative z-10 shadow-lg`}>
-                <div className="text-white">
-                  <item.icon className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" />
+              <div className="relative z-10">
+                {/* Icon at top */}
+                <div className="flex justify-center mb-1">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm
+                    ${index === 0 ? 'bg-blue-100' : ''}
+                    ${index === 1 ? 'bg-green-100' : ''}
+                    ${index === 2 ? 'bg-purple-100' : ''}
+                    ${index === 3 ? 'bg-yellow-100' : ''}
+                  `}>
+                    <div className={
+                      index === 0 ? 'text-blue-700' :
+                      index === 1 ? 'text-green-700' :
+                      index === 2 ? 'text-purple-700' :
+                      index === 3 ? 'text-yellow-700' :
+                      'text-[#258BCC]'}>
+                      <item.icon className="w-3 h-3" />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Animated counter */}
-              <motion.div
-                initial={isClient ? { opacity: 0, scale: 0.5 } : { opacity: 1, scale: 1 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.8,
-                  delay: isClient ? 0.8 + (index * 0.1) : 0,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 text-white relative z-10 group-hover:text-yellow-300 transition-colors duration-300"
-              >
-                <AnimatedCounter value={item.value} delay={800 + (index * 100)} />
-                {/* Sparkle effect */}
+                
+                {/* Animated counter - Big number on top */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
-                  transition={{ 
-                    duration: 2,
-                    delay: 1.5 + (index * 0.2),
-                    repeat: Infinity,
-                    repeatDelay: 3
+                  initial={isClient ? { opacity: 0, scale: 0.5 } : { opacity: 1, scale: 1 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{
+                    duration: 0.8,
+                    delay: isClient ? 0.8 + (index * 100) : 0,
+                    type: "spring",
+                    stiffness: 100
                   }}
-                  className="absolute -top-2 -right-2 text-yellow-400 text-sm"
+                  className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#222] group-hover:text-[#258BCC] transition-colors duration-300 relative mb-1"
                 >
-                  ✨
+                  <AnimatedCounter value={item.value} delay={800 + (index * 100)} />
                 </motion.div>
-              </motion.div>
-              
-              {/* Fun title and description */}
-              <div className="relative z-10 mt-auto">
-                <div className="text-xs sm:text-sm font-bold text-yellow-300 mb-1 group-hover:text-yellow-200 transition-colors duration-300">
+                
+                {/* Title - Below the number */}
+                <div className="text-xs font-bold text-[#258BCC] group-hover:text-[#222] transition-colors duration-300 mb-1">
                   {item.title}
                 </div>
-                <div className="text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-300 leading-relaxed hidden sm:block">
+                
+                {/* Description - At the bottom */}
+                <div className="text-xs text-[#444] group-hover:text-[#258BCC]/80 transition-colors duration-300 leading-tight">
                   {item.description}
                 </div>
               </div>
@@ -198,12 +196,12 @@ export default function Stats({
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, delay: 1.2 }}
-        className="text-center mt-4 sm:mt-6 lg:mt-8 relative z-10"
+        className="text-center mt-2 relative z-10"
       >
-        <div className="inline-flex items-center text-gray-300 text-xs sm:text-sm px-4 sm:px-0">
-          <TrendingUp size={14} className="mr-2 text-green-400 sm:w-4 sm:h-4" />
-          <span>Growing every day with passionate JavaScript developers!</span>
-          <span className="ml-2 text-base sm:text-lg">🚀</span>
+        <div className="inline-flex items-center text-[#222] text-xs font-medium">
+          <TrendingUp size={12} className="mr-1 text-green-600" />
+          <span>Growing daily!</span>
+          <span className="ml-1">🚀</span>
         </div>
       </motion.div>
     </motion.div>

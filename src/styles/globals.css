@@ -18,29 +18,74 @@
 
 /* Global button styles for accessibility and consistent behavior */
 @layer base {
-  /* Ensure all buttons have cursor pointer */
-  button {
-    cursor: pointer;
+  /* Mobile-first responsive base styles */
+  html {
+    font-size: 14px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
   
-  /* Ensure all interactive elements have cursor pointer */
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
+  
+  /* Ensure all buttons have cursor pointer and proper touch targets */
+  button {
+    cursor: pointer;
+    min-height: 44px; /* Minimum touch target size */
+    touch-action: manipulation;
+  }
+  
+  /* Ensure all interactive elements have cursor pointer and touch-friendly sizing */
   [role="button"], 
   input[type="button"], 
   input[type="submit"], 
   input[type="reset"],
   .cursor-pointer {
     cursor: pointer;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Improve text rendering on mobile */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  /* Better tap highlights for mobile */
+  * {
+    -webkit-tap-highlight-color: rgba(37, 139, 204, 0.2);
+  }
+  
+  /* Improve input styling on mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  @media (max-width: 640px) {
+    /* Allow smaller font sizes on mobile for space efficiency */
+    input, textarea, select {
+      font-size: 14px;
+    }
   }
 }
 
 @layer components {
-  /* Standard button hover states with accessible contrast */
+  /* Mobile-optimized button hover states with accessible contrast */
   .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
+    @apply bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-colors duration-200 cursor-pointer min-h-[44px] touch-manipulation;
   }
   
   .btn-primary:hover {
     @apply bg-blue-700;
+  }
+  
+  .btn-primary:active {
+    @apply scale-95 bg-blue-800;
   }
   
   .btn-primary:focus {
@@ -48,11 +93,15 @@
   }
   
   .btn-secondary {
-    @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
+    @apply bg-gray-100 text-gray-700 px-4 py-3 rounded-lg font-medium transition-colors duration-200 cursor-pointer min-h-[44px] touch-manipulation;
   }
   
   .btn-secondary:hover {
     @apply bg-gray-200 text-gray-800;
+  }
+  
+  .btn-secondary:active {
+    @apply scale-95 bg-gray-300;
   }
   
   .btn-secondary:focus {
@@ -60,33 +109,41 @@
   }
   
   .btn-outline {
-    @apply border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
+    @apply border border-gray-300 text-gray-700 px-4 py-3 rounded-lg font-medium transition-all duration-200 cursor-pointer min-h-[44px] touch-manipulation;
   }
   
   .btn-outline:hover {
     @apply bg-gray-50 border-gray-400 text-gray-800;
   }
   
+  .btn-outline:active {
+    @apply scale-95 bg-gray-100;
+  }
+  
   .btn-outline:focus {
     @apply ring-2 ring-gray-500 ring-offset-2;
   }
   
-  /* Icon button hover states */
+  /* Mobile-friendly icon button hover states */
   .icon-button {
-    @apply p-2 rounded-full transition-colors duration-200 cursor-pointer;
+    @apply p-3 rounded-full transition-all duration-200 cursor-pointer min-w-[44px] min-h-[44px] touch-manipulation flex items-center justify-center;
   }
   
   .icon-button:hover {
     @apply bg-gray-100;
   }
   
+  .icon-button:active {
+    @apply scale-95 bg-gray-200;
+  }
+  
   .icon-button:focus {
     @apply ring-2 ring-gray-500 ring-offset-2;
   }
   
-  /* Filter chip hover states */
+  /* Mobile-optimized filter chip hover states */
   .filter-chip {
-    @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer;
+    @apply inline-flex items-center gap-1 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer min-h-[40px] touch-manipulation;
   }
   
   .filter-chip-active {
@@ -97,9 +154,13 @@
     @apply bg-blue-200;
   }
   
-  /* Form elements with proper hover states */
+  .filter-chip-active:active {
+    @apply scale-95 bg-blue-300;
+  }
+  
+  /* Form elements with proper mobile sizing */
   .form-select {
-    @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 cursor-pointer;
+    @apply px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 cursor-pointer min-h-[44px];
   }
   
   .form-select:hover {
@@ -107,20 +168,24 @@
   }
   
   .form-input {
-    @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200;
+    @apply px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 min-h-[44px];
   }
   
   .form-input:hover {
     @apply border-gray-400;
   }
   
-  /* Modal overlay buttons */
+  /* Modal overlay buttons with better mobile sizing */
   .modal-nav-button {
-    @apply p-2 rounded-full bg-black bg-opacity-50 text-white transition-colors duration-200 cursor-pointer;
+    @apply p-3 rounded-full bg-black bg-opacity-50 text-white transition-all duration-200 cursor-pointer min-w-[44px] min-h-[44px] touch-manipulation;
   }
   
   .modal-nav-button:hover {
     @apply bg-opacity-70;
+  }
+  
+  .modal-nav-button:active {
+    @apply scale-95 bg-opacity-80;
   }
   
   .modal-nav-button:focus {
@@ -131,9 +196,18 @@
   .focus-visible {
     @apply ring-2 ring-blue-500 ring-offset-2;
   }
+  
+  /* Mobile-specific utility classes */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+  
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
 }
 
-/* Ensure proper line clamping for text truncation */
+/* Enhanced line clamping for text truncation */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -148,11 +222,18 @@
   overflow: hidden;
 }
 
-/* Responsive masonry grid improvements */
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Enhanced responsive masonry grid improvements */
 @media (max-width: 640px) {
   .masonry-grid {
     column-count: 1;
-    column-gap: 1rem;
+    column-gap: 0.75rem;
   }
 }
 
@@ -184,7 +265,7 @@
   }
 }
 
-/* Ensure proper aspect ratio maintenance */
+/* Enhanced aspect ratio maintenance */
 .aspect-square {
   aspect-ratio: 1 / 1;
 }
@@ -197,13 +278,65 @@
   aspect-ratio: 4 / 3;
 }
 
+/* Mobile-specific aspect ratios */
+@media (max-width: 640px) {
+  .aspect-mobile-banner {
+    aspect-ratio: 5 / 2;
+  }
+  
+  .aspect-mobile-card {
+    aspect-ratio: 3 / 2;
+  }
+}
+
 /* Smooth scrolling for better UX */
 html {
   scroll-behavior: smooth;
 }
 
-/* Improved focus visibility */
+/* Improved focus visibility with better mobile support */
 :focus-visible {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Improve readability on small screens */
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-spacing > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Container improvements for mobile */
+@layer utilities {
+  .container-mobile {
+    @apply px-4 mx-auto;
+  }
+  
+  @media (min-width: 640px) {
+    .container-mobile {
+      @apply px-6;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .container-mobile {
+      @apply px-8;
+    }
+  }
 }

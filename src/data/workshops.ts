@@ -1,5 +1,7 @@
 import { Workshop, WorkshopState } from '@/components/sections/UpcomingWorkshops';
 
+export type { WorkshopState };
+
 export const getWorkshops = (): Workshop[] => {
   const workshops: Workshop[] = [
     {
@@ -46,6 +48,21 @@ export const getWorkshops = (): Workshop[] => {
       tag: '🚀 React & Next.js Performance',
       speakerId: 'faris-aziz',
       state: 'interest' as WorkshopState
+    },
+    {
+      id: 'ai-edge-application',
+      title: 'Building a Full-Stack AI Application on the Edge',
+      subtitle: 'Master Cloudflare Workers & AI Integration',
+      description: 'Ready to build lightning-fast AI applications that scale globally? Master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch with Workers, AI capabilities, databases, and React.',
+      dateInfo: 'September 9, 2025',
+      timeInfo: '18:00 - 20:30',
+      locationInfo: 'Smallpdf AG, Steinstrasse 21, 8003 Zürich',
+      maxAttendees: 20,
+      image: '/images/workshops/ai-powered-js-apps.png',
+      iconColor: '#f59e0b', // amber-500
+      tag: '🤖 AI & Edge Computing',
+      speakerId: 'speaker-c6fff8ee-97c5-4db1-8d6c-fb90ad1376e9',
+      state: 'confirmed' as WorkshopState
     },
   ];
 

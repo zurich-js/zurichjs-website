@@ -8,60 +8,14 @@ import { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
+import { getWorkshops, WorkshopState } from '@/data/workshops';
 import { getSpeakers } from '@/sanity/queries';
 import type { Speaker } from '@/types';
 
-// Define workshop state type
-type WorkshopState = 'confirmed' | 'interest';
+
 
 // Workshop data
-const workshops = [
-  {
-    id: 'astro-zero-to-hero',
-    title: 'Astro: Zero to Hero',
-    subtitle: 'Build High-Performance Websites with Astro',
-    description: "Master Astro's Island Architecture in this intensive 4-hour workshop. Learn to build lightning-fast websites that ship zero JavaScript by default and integrate with your favorite frameworks.",
-    dateInfo: 'July 23, 2025',
-    timeInfo: '17:30 - 21:30',
-    locationInfo: 'Zürich (Venue TBD)',
-    maxAttendees: 15,
-    image: '/images/workshops/astro-zero-to-hero.png',
-    iconColor: '#0284c7', // sky-600
-    tag: '🚀 Web Performance',
-    speakerId: 'elian-van-cutsem',
-    state: 'confirmed' as WorkshopState
-  },
-  {
-    id: 'accessibility-fundamentals',
-    title: 'Web Accessibility Fundamentals',
-    subtitle: 'Building Inclusive Digital Experiences',
-    description: 'Learn how to create accessible web applications that comply with WCAG standards and the European Accessibility Act.',
-    dateInfo: 'TBD',
-    timeInfo: 'TBD',
-    locationInfo: 'TBD',
-    maxAttendees: 15,
-    image: '/images/workshops/web-accessibility.png',
-    iconColor: '#0284c7', // sky-600
-    tag: '🌐 Accessibility',
-    speakerId: 'aleksej-dix',
-    state: 'interest' as WorkshopState
-  },
-  {
-    id: 'react-performance',
-    title: 'React & Next.js Performance Optimization',
-    subtitle: 'Strategies for Blazing Fast Applications',
-    description: 'Master advanced techniques to optimize your React and Next.js applications for maximum performance and user experience.',
-    dateInfo: 'TBD',
-    timeInfo: 'TBD',
-    locationInfo: 'TBD',
-    maxAttendees: 15,
-    image: '/images/workshops/react-performance.png',
-    iconColor: '#2563eb', // blue-600
-    tag: '🚀 React & Next.js Performance Foundations',
-    speakerId: 'faris-aziz',
-    state: 'interest' as WorkshopState
-  },
-];
+const workshops = getWorkshops();
 
 interface WorkshopsPageProps {
   speakers: Speaker[];

@@ -107,7 +107,7 @@ export default function Header() {
   };
 
   const getLinkActiveClasses = (path: string) => {
-    return `hover:text-blue-600 transition-colors flex items-center font-medium ${router.pathname === path ? 'font-bold text-blue-600' : ''
+    return `hover:text-zurich transition-colors flex items-center font-medium ${router.pathname === path ? 'font-bold text-zurich' : ''
       }`;
   };
 

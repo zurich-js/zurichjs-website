@@ -44,8 +44,8 @@ export default function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 !cursor-pointer hover:!cursor-pointer';
 
   const variantStyles: Record<ButtonVariant, string> = {
-    primary: 'bg-black text-white hover:bg-gray-800 focus:ring-black',
-    secondary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
+    primary: 'bg-black hover:bg-gray-800 focus:ring-black',
+    secondary: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500',
     outline: 'bg-transparent border-2 border-current text-black hover:bg-black hover:text-white focus:ring-black',
     ghost: 'bg-transparent text-black hover:bg-yellow-100 focus:ring-black',
   };

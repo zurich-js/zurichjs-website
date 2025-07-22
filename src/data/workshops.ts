@@ -11,7 +11,7 @@ export const getWorkshops = (): Workshop[] => {
       description: "Master Astro's Island Architecture in this intensive 4-hour workshop. Learn to build lightning-fast websites that ship zero JavaScript by default and integrate with your favorite frameworks.",
       dateInfo: 'July 23, 2025',
       timeInfo: '17:30 - 21:30',
-      locationInfo: 'Zürich (Venue TBD)',
+      locationInfo: 'ORBIZ Josef, Josefstrasse 214a, 8005 Zürich',
       maxAttendees: 15,
       image: '/images/workshops/astro-zero-to-hero.png',
       iconColor: '#0284c7', // sky-600

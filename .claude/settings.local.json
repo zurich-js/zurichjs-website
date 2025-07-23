@@ -10,7 +10,8 @@
       "Bash(npx tsc:*)",
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npm run typecheck:*)"
     ],
     "deny": []
   }

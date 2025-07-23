@@ -5,7 +5,7 @@ import { sendPlatformNotification } from '@/lib/notification';
 interface PlatformNotification {
   title: string;
   message: string;
-  type: 'referral' | 'event' | 'workshop' | 'tshirt' | 'other';
+  type: 'referral' | 'event' | 'workshop' | 'tshirt' | 'merch-suggestion' | 'other';
   priority: 'low' | 'normal' | 'high';
   slackChannel?: string;
 }

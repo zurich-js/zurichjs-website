@@ -10,9 +10,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { size, delivery, priceId, isMember, quantity, shippingRateId } = req.body;
-  if (!size || !priceId || !quantity) {
+  const { sizeQuantities, delivery, priceId, isMember, totalQuantity, shippingRateId } = req.body;
+  if (!sizeQuantities || !priceId || !totalQuantity) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+  
+  // Validate sizeQuantities
+  const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  const hasValidItems = Object.entries(sizeQuantities).some(([size, qty]) => 
+    validSizes.includes(size) && typeof qty === 'number' && qty > 0
+  );
+  
+  if (!hasValidItems) {
+    return res.status(400).json({ error: 'No valid items in order' });
   }
 
   // Calculate discount
@@ -25,28 +35,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Create Stripe Checkout session
   try {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      line_items: [
-        {
+      line_items: Object.entries(sizeQuantities)
+        .filter(([, qty]) => (qty as number) > 0)
+        .map(([, qty]) => ({
           price: priceId,
-          quantity,
-        },
-      ],
+          quantity: qty as number,
+        })),
       mode: 'payment',
       discounts,
-      success_url: `${req.headers.origin}/tshirt?success=true&delivery=${delivery}&size=${size}&quantity=${quantity}`,
+      success_url: `${req.headers.origin}/tshirt?success=true&delivery=${delivery}`,
       cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
       metadata: {
-        size,
+        sizes: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
+        sizeQuantities: JSON.stringify(sizeQuantities),
         delivery: delivery ? 'true' : 'false',
-        quantity: String(quantity),
+        totalQuantity: String(totalQuantity),
       },
       invoice_creation: {
         enabled: true,
         invoice_data: {
           metadata: {
-            size,
+            sizes: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
+            sizeQuantities: JSON.stringify(sizeQuantities),
             delivery: delivery ? 'true' : 'false',
-            quantity: String(quantity),
+            totalQuantity: String(totalQuantity),
           },
         },
       },

@@ -2,7 +2,7 @@ import { TicketOption } from './TicketSelection';
 
 export const aiEdgeWorkshopTickets: TicketOption[] = [
   {
-    id: 'price_1RnNZiGxQziVA7FsgIOwC5O2', // Production price ID (using test ID provided)
+    id: 'price_1Ro6NTGxQziVA7Fsf2m5GZtv', // Production price ID (using test ID provided)
     testPriceId: 'price_1RnN87GxQziVA7FsaSMjJPM1', // Test price ID
     title: 'AI Edge Workshop',
     description: 'Access to the Building a Full-Stack AI Application on the Edge Workshop',

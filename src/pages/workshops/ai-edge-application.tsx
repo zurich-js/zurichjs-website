@@ -113,7 +113,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
         dateInfo: "September 9, 2025",
         timeInfo: "18:00 - 20:30",
         locationInfo: "Smallpdf AG, Steinstrasse 21, 8003 Zürich",
-        price: "80 CHF",
+        price: "95 CHF",
         description: "Ready to build lightning-fast AI applications that scale globally? In this hands-on workshop, you'll master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch. You'll start with the fundamentals of Cloudflare Workers and progressively add AI capabilities, databases, object storage, and a modern React frontend. By the end, you'll have deployed a production-ready AI application running on Cloudflare's global edge network.",
         maxAttendees: 20,
         speaker: speaker,
@@ -832,7 +832,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             onClick={scrollToRegistration}
                             className="bg-js text-black px-4 sm:px-8 py-2.5 sm:py-4 rounded-lg font-bold text-base sm:text-lg hover:bg-yellow-300 transition-colors w-full sm:w-auto"
                         >
-                            Get Your Ticket (80 CHF)
+                            Get Your Ticket (95 CHF)
                         </button>
                         <button
                             onClick={shareWorkshop}

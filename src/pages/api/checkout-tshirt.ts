@@ -5,9 +5,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-04-30.basil',
 });
 
-// Simulated stock (replace with DB or persistent store)
-const STOCK: { [key: string]: number } = { S: 10, M: 20, L: 30, XL: 30, XXL: 10 };
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,11 +13,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { size, delivery, priceId, isMember, quantity, shippingRateId } = req.body;
   if (!size || !priceId || !quantity) {
     return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  // Check stock (simulate)
-  if (!STOCK[size] || STOCK[size] < quantity) {
-    return res.status(400).json({ error: 'Not enough stock' });
   }
 
   // Calculate discount
@@ -33,7 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Create Stripe Checkout session
   try {
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
@@ -41,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       ],
       mode: 'payment',
-      discounts,
+      ...(Object.keys(discounts).length > 0 ? { discounts } : {}),
       success_url: `${req.headers.origin}/tshirt?success=true&delivery=${delivery}&size=${size}&quantity=${quantity}`,
       cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
       metadata: {
@@ -49,9 +40,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         delivery: delivery ? 'true' : 'false',
         quantity: String(quantity),
       },
+      invoice_creation: {
+        enabled: true,
+        invoice_data: {
+          metadata: {
+            size,
+            delivery: delivery ? 'true' : 'false',
+            quantity: String(quantity),
+          },
+        },
+      },
       customer_creation: 'always',
-      shipping_address_collection: {
-        allowed_countries: ['CH'],
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
       },
     };
     if (shippingRateId) {
@@ -60,9 +62,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ];
     }
     const session = await stripe.checkout.sessions.create(sessionParams);
-
-    // Simulate stock deduction (TODO: move to webhook for real reliability)
-    STOCK[size] = Math.max(0, STOCK[size] - quantity);
 
     return res.status(200).json({ url: session.url });
   } catch (err: unknown) {

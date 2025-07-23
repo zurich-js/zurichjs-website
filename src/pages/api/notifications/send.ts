@@ -1,23 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+import { sendPlatformNotification } from '@/lib/notification';
+
 interface PlatformNotification {
   title: string;
   message: string;
-  type: 'referral' | 'event' | 'workshop' | 'other';
+  type: 'referral' | 'event' | 'workshop' | 'tshirt' | 'other';
   priority: 'low' | 'normal' | 'high';
-}
-
-// Mock implementation of notification sending
-// In a real app, this would connect to Pushover, Slack, etc.
-async function sendPlatformNotification(notification: PlatformNotification): Promise<void> {
-  // In a real implementation, you would:
-  // 1. Send to Pushover
-  // 2. Send to Slack
-  // 3. Log to database
-  console.log('📣 Platform Notification:', notification);
-  
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
+  slackChannel?: string;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -38,8 +28,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       notification.priority = 'normal';
     }
     
-    // Send the notification
-    await sendPlatformNotification(notification);
+    // Map priority strings to numbers for the notification system
+    const priorityMap = {
+      'low': 0,
+      'normal': 1, 
+      'high': 2
+    };
+    
+    // Send the notification using the real notification system
+    await sendPlatformNotification({
+      title: notification.title,
+      message: notification.message,
+      priority: priorityMap[notification.priority],
+      slackChannel: notification.slackChannel || undefined
+    });
     
     return res.status(200).json({ success: true });
   } catch (error) {

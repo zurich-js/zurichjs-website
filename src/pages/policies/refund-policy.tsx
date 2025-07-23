@@ -71,6 +71,13 @@ export default function RefundPolicy() {
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-js mb-8">
+            <h2 className="text-xl font-bold mb-4 text-black">T-Shirt Orders</h2>
+            <p className="mb-4 text-gray-800">
+              Please note: We cannot process refunds for ZurichJS T-shirt orders. However, if you ordered the wrong size, we are happy to exchange your shirt for a different size if available. Please contact us at <a href="mailto:hello@zurichjs.com" className="underline text-[#258BCC]">hello@zurichjs.com</a> and we will do our best to help!
+            </p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-md border-t-4 border-js mb-8">
             <h2 className="text-xl font-bold mb-4 text-black">Contact Information</h2>
             <p className="mb-4 text-gray-800">
               If you have any questions about our refund policy or need to request a ticket transfer or refund, please contact us at:

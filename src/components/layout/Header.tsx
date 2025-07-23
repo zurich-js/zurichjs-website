@@ -80,6 +80,7 @@ export default function Header() {
       id: 'community',
       items: [
         { name: 'About', path: '/about' },
+        { name: 'T-shirts', path: '/tshirt' },
         { name: 'Contact', path: '/contact' },
       ]
     },

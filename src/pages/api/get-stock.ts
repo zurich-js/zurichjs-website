@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Fetch the product by price ID to get metadata
-    const price = await stripe.prices.retrieve('price_1RneOpGxQziVA7FsQRe8QHGK');
+    const price = await stripe.prices.retrieve(req.query.priceId as string);
     const product = await stripe.products.retrieve(price.product as string);
 
     // Extract stock data from metadata

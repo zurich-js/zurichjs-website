@@ -13,8 +13,8 @@ import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
 import useEvents from '@/hooks/useEvents';
 
-const TSHIRT_PRICE_ID = 'price_1RneOpGxQziVA7FsQRe8QHGK';
-const SHIPPING_RATE_ID = 'shr_1RnePLGxQziVA7FsEWPBRYAA';
+const TSHIRT_PRICE_ID = 'price_1RneLaGxQziVA7Fs49QnVKbT' // TEST: price_1RneOpGxQziVA7FsQRe8QHGK;
+const SHIPPING_RATE_ID = 'shr_1RneNbGxQziVA7FsmyQbFuTM'; // TEST: shr_1RnePLGxQziVA7FsEWPBRYAA
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const BASE_PRICE = 25;
 const DELIVERY_ADDON = 10;
@@ -67,7 +67,7 @@ export default function TshirtPage() {
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        const response = await fetch('/api/get-stock');
+        const response = await fetch('/api/get-stock?priceId=' + TSHIRT_PRICE_ID);
         if (response.ok) {
           const stockData = await response.json();
           setStock(stockData);

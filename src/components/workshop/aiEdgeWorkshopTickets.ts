@@ -6,7 +6,7 @@ export const aiEdgeWorkshopTickets: TicketOption[] = [
     testPriceId: 'price_1RnN87GxQziVA7FsaSMjJPM1', // Test price ID
     title: 'AI Edge Workshop',
     description: 'Access to the Building a Full-Stack AI Application on the Edge Workshop',
-    price: 80,
+    price: 95,
     features: [
       '2.5 hour hands-on workshop with 20 min break',
       'Complete AI application built from scratch',

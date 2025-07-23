@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, Users, Copy, ExternalLink, Filter, Download } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRef } from 'react';
 
 import Layout from '@/components/layout/Layout';
 
@@ -30,6 +31,57 @@ export default function EmailAllUsers() {
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
+  // List of common JavaScript interests (from survey)
+  const interestOptions = [
+    'React',
+    'Vue',
+    'Angular',
+    'Node.js',
+    'Deno',
+    'TypeScript',
+    'Next.js',
+    'Remix',
+    'GraphQL',
+    'Testing',
+    'Performance',
+    'Accessibility',
+    'WebAssembly',
+    'Web3',
+    'Svelte',
+    'Astro',
+    'Qwik',
+    'Tailwind CSS',
+    'SolidJS',
+    'Bun',
+    'Serverless',
+    'DevOps',
+    'AI Integration',
+    'Progressive Web Apps',
+    'Other',
+  ];
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [interestDropdownOpen, setInterestDropdownOpen] = useState(false);
+  const interestDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        interestDropdownRef.current &&
+        !interestDropdownRef.current.contains(event.target as Node)
+      ) {
+        setInterestDropdownOpen(false);
+      }
+    }
+    if (interestDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [interestDropdownOpen]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -66,6 +118,13 @@ export default function EmailAllUsers() {
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (!matchesSearch) return false;
+
+    // Interest filter
+    if (selectedInterests.length > 0) {
+      const userInterests = user.surveyData?.interests || [];
+      const hasInterest = selectedInterests.some(interest => userInterests.includes(interest));
+      if (!hasInterest) return false;
+    }
 
     // Status filter
     switch (filterBy) {
@@ -137,7 +196,8 @@ export default function EmailAllUsers() {
 
   const openGmail = () => {
     const emailList = selectedUserEmails.join(',');
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(emailList)}`;
+    // Use BCC for all emails
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(emailList)}`;
     window.open(gmailUrl, '_blank');
   };
 
@@ -249,7 +309,7 @@ export default function EmailAllUsers() {
         {/* Controls */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <input
                 type="text"
                 placeholder="Search users..."
@@ -267,6 +327,69 @@ export default function EmailAllUsers() {
                 <option value="new">New (30 days)</option>
                 <option value="inactive">Inactive (90+ days)</option>
               </select>
+              {/* Interest filter */}
+              <div className="relative" ref={interestDropdownRef}>
+                <button
+                  type="button"
+                  className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-yellow-400 flex items-center gap-2 min-w-[180px] flex-wrap"
+                  onClick={() => setInterestDropdownOpen((open) => !open)}
+                >
+                  <span>Filter by Interest</span>
+                  <div className="flex flex-wrap gap-1 ml-2">
+                    {selectedInterests.map(interest => (
+                      <span
+                        key={interest}
+                        className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+                      >
+                        {interest}
+                        <button
+                          type="button"
+                          className="ml-1 text-yellow-700 hover:text-yellow-900 focus:outline-none"
+                          onClick={e => {
+                            e.stopPropagation();
+                            setSelectedInterests(prev => prev.filter(i => i !== interest));
+                          }}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-500">{selectedInterests.length > 0 ? `(${selectedInterests.length})` : ''}</span>
+                </button>
+                {interestDropdownOpen && (
+                  <div className="absolute z-10 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-h-64 overflow-y-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {interestOptions.map(interest => (
+                        <label key={interest} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedInterests.includes(interest)}
+                            onChange={() => {
+                              setSelectedInterests(prev =>
+                                prev.includes(interest)
+                                  ? prev.filter(i => i !== interest)
+                                  : [...prev, interest]
+                              );
+                            }}
+                            className="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{interest}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {selectedInterests.length > 0 && (
+                      <button
+                        type="button"
+                        className="mt-3 px-3 py-1 bg-gray-100 rounded text-xs text-gray-600 hover:bg-gray-200"
+                        onClick={() => setSelectedInterests([])}
+                      >
+                        Clear Interests
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button

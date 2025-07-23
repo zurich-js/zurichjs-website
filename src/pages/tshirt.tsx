@@ -497,11 +497,11 @@ export default function TshirtPage() {
               {/* Headlines */}
               <div className="space-y-4">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
-                  Wear Your <span className="text-black relative inline-block">
-                    Passion
+                  Rep <span className="text-black relative inline-block">
+                    Zurich
                     <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-2 sm:h-3 bg-js/80 -skew-x-12 -z-10"></div>
-                  </span> for <span className="text-black relative inline-block">
-                    Community
+                  </span>, Rep <span className="text-black relative inline-block">
+                    JavaScript
                     <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-2 sm:h-3 bg-js/80 -skew-x-12 -z-10"></div>
                   </span>
                 </h1>

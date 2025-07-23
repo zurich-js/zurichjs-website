@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   let discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
   if (isMember) {
     // TODO: Use real Stripe coupon/discount
-    discounts = [{ coupon: process.env.STRIPE_MEMBER_COUPON_ID || '' }];
+    discounts = [{ coupon: 'zurichjs-community' }];
   }
 
   // Create Stripe Checkout session
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         },
       ],
       mode: 'payment',
-      ...(Object.keys(discounts).length > 0 ? { discounts } : {}),
+      discounts,
       success_url: `${req.headers.origin}/tshirt?success=true&delivery=${delivery}&size=${size}&quantity=${quantity}`,
       cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
       metadata: {

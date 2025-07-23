@@ -50,11 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         },
       },
-      customer_creation: 'always',
-      customer_update: {
-        address: 'auto',
-        name: 'auto',
-      },
     };
     if (shippingRateId) {
       sessionParams.shipping_options = [

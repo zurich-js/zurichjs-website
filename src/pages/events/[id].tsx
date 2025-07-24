@@ -12,6 +12,7 @@ import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import EventFeedback from '@/components/ui/EventFeedback';
+import EventInterestButton from '@/components/ui/EventInterestButton';
 import ProductDemoHighlight from '@/components/ui/ProductDemoHighlight';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
@@ -403,6 +404,11 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <div className="mt-2 flex items-center text-black text-sm">
                     <span className="animate-pulse">⏳ Coming soon...</span>
                   </div>
+                  <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg">
+                    <p className="text-sm text-gray-700">
+                      <strong>Want to be the first to know?</strong> Register your interest below and we&apos;ll notify you as soon as {event.isProMeetup ? 'tickets' : 'RSVP'} opens!
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -435,14 +441,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     </Button>
                   )
                 ) : isUpcoming && (
-                  <Button
+                  <EventInterestButton
+                    eventId={event.id}
+                    eventTitle={event.title}
                     variant="primary"
                     size="lg"
-                    className="bg-black text-js hover:bg-gray-800 cursor-not-allowed"
-                    disabled
-                  >
-                    Hold tight! {event.isProMeetup ? 'Tickets' : 'RSVP'} coming soon ⏳
-                  </Button>
+                    className="bg-black text-js hover:bg-gray-800"
+                  />
                 )}
 
                 {isClient && (
@@ -1052,14 +1057,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         Get Your Ticket
                       </Button>
                     ) : (
-                      <Button
+                      <EventInterestButton
+                        eventId={event.id}
+                        eventTitle={event.title}
                         variant="primary"
                         size="lg"
-                        className="w-full bg-zurich text-white hover:bg-blue-600 cursor-not-allowed opacity-80"
-                        disabled
-                      >
-                        Tickets Coming Soon
-                      </Button>
+                        className="w-full bg-zurich text-white hover:bg-blue-600"
+                      />
                     )
                   ) : (
                     event.meetupUrl ? (
@@ -1074,14 +1078,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         RSVP on Meetup
                       </Button>
                     ) : (
-                      <Button
+                      <EventInterestButton
+                        eventId={event.id}
+                        eventTitle={event.title}
                         variant="primary"
                         size="lg"
-                        className="w-full bg-black text-js hover:bg-gray-800 cursor-not-allowed opacity-80"
-                        disabled
-                      >
-                        RSVP Coming Soon
-                      </Button>
+                        className="w-full bg-black text-js hover:bg-gray-800"
+                      />
                     )
                   )}
                 </motion.div>

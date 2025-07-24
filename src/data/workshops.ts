@@ -4,21 +4,21 @@ export type { WorkshopState };
 
 export const getWorkshops = (): Workshop[] => {
   const workshops: Workshop[] = [
-    {
-      id: 'astro-zero-to-hero',
-      title: 'Astro: Zero to Hero',
-      subtitle: 'Build High-Performance Websites with Astro',
-      description: "Master Astro's Island Architecture in this intensive 4-hour workshop. Learn to build lightning-fast websites that ship zero JavaScript by default and integrate with your favorite frameworks.",
-      dateInfo: 'July 23, 2025',
-      timeInfo: '17:30 - 20:30',
-      locationInfo: 'ORBIZ Josef, Josefstrasse 214a, 8005 Zürich',
-      maxAttendees: 15,
-      image: '/images/workshops/astro-zero-to-hero.png',
-      iconColor: '#0284c7', // sky-600
-      tag: '🚀 Web Performance',
-      speakerId: 'elian-van-cutsem',
-      state: 'confirmed' as WorkshopState
-    },
+    // {
+    //   id: 'astro-zero-to-hero',
+    //   title: 'Astro: Zero to Hero',
+    //   subtitle: 'Build High-Performance Websites with Astro',
+    //   description: "Master Astro's Island Architecture in this intensive 4-hour workshop. Learn to build lightning-fast websites that ship zero JavaScript by default and integrate with your favorite frameworks.",
+    //   dateInfo: 'July 23, 2025',
+    //   timeInfo: '17:30 - 20:30',
+    //   locationInfo: 'ORBIZ Josef, Josefstrasse 214a, 8005 Zürich',
+    //   maxAttendees: 15,
+    //   image: '/images/workshops/astro-zero-to-hero.png',
+    //   iconColor: '#0284c7', // sky-600
+    //   tag: '🚀 Web Performance',
+    //   speakerId: 'elian-van-cutsem',
+    //   state: 'confirmed' as WorkshopState
+    // },
     // {
     //   id: 'accessibility-fundamentals',
     //   title: 'Web Accessibility Fundamentals',
@@ -58,7 +58,7 @@ export const getWorkshops = (): Workshop[] => {
       timeInfo: '18:00 - 20:30',
       locationInfo: 'Smallpdf AG, Steinstrasse 21, 8003 Zürich',
       maxAttendees: 20,
-      image: '/images/workshops/ai-powered-js-apps.png',
+      image: '/images/workshops/full-stack-ai-cloudflare.png',
       iconColor: '#f59e0b', // amber-500
       tag: '🤖 AI & Edge Computing',
       speakerId: 'speaker-c6fff8ee-97c5-4db1-8d6c-fb90ad1376e9',

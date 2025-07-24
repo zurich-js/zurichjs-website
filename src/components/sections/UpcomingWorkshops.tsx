@@ -42,13 +42,6 @@ export default function UpcomingWorkshops({
     return null;
   }
 
-  // Only show workshops with 'confirmed' state
-  const confirmedWorkshops = workshops.filter(workshop => workshop.state === 'confirmed' && new Date(workshop.dateInfo) >= new Date());
-
-  if (confirmedWorkshops.length === 0) {
-    return null;
-  }
-
   return (
     <Section variant="gray">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
@@ -82,7 +75,7 @@ export default function UpcomingWorkshops({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {confirmedWorkshops.map((workshop, index) => (
+        {workshops.map((workshop, index) => (
           <motion.div
             key={workshop.id}
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}

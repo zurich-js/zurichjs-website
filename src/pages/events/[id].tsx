@@ -481,7 +481,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="lg:w-1/2 w-full"
             >
-              <div className="relative h-64 sm:h-80 md:h-96 w-full rounded-lg overflow-hidden shadow-lg">
+              <div className="relative w-full aspect-[16/9] rounded-lg overflow-hidden shadow-lg">
                 {event.image ? (
                   <Image
                     src={event.image}

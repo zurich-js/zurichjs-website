@@ -25,6 +25,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     if (amount && !priceId) {
       // For custom amounts, create a one-time payment
+      const successParams = new URLSearchParams({
+        success: 'true',
+        donation_type: 'custom',
+        amount: String(amount),
+        currency: 'CHF'
+      });
+      
+      if (email) {
+        successParams.set('customer_email', email);
+      }
+
       sessionParams = {
         line_items: [
           {
@@ -37,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         ],
         mode: 'payment',
-        success_url: `${req.headers.origin}/buy-us-a-coffee?success=true&type=custom&amount=${amount}`,
+        success_url: `${req.headers.origin}/buy-us-a-coffee?${successParams.toString()}`,
         cancel_url: `${req.headers.origin}/buy-us-a-coffee?canceled=true`,
         metadata: {
           type: 'custom',
@@ -48,6 +59,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Use the provided price ID
       const price = await stripe.prices.retrieve(priceId);
       const mode = price.type === 'recurring' ? 'subscription' : 'payment';
+      
+      const donationType = mode === 'subscription' ? 'monthly' : 'oneoff';
+      const successParams = new URLSearchParams({
+        success: 'true',
+        donation_type: donationType,
+        amount: String(price.unit_amount ? price.unit_amount / 100 : 0),
+        currency: price.currency.toUpperCase()
+      });
+      
+      if (email) {
+        successParams.set('customer_email', email);
+      }
 
       sessionParams = {
         line_items: [
@@ -57,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           },
         ],
         mode,
-        success_url: `${req.headers.origin}/buy-us-a-coffee?success=true&type=${mode}`,
+        success_url: `${req.headers.origin}/buy-us-a-coffee?${successParams.toString()}`,
         cancel_url: `${req.headers.origin}/buy-us-a-coffee?canceled=true`,
         metadata: {
           type: mode,

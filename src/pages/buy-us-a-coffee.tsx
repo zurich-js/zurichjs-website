@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Heart, Star, Users, Code, Calendar, Twitter, Github, Linkedin, Globe, Mail, UserPlus, Shirt, CreditCard, RefreshCw, Zap } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { useState, useEffect, useMemo } from 'react';
 
 import Layout from '@/components/layout/Layout';
@@ -11,18 +12,6 @@ import Button from '@/components/ui/Button';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
-
-// Define our TypeScript interfaces (keeping for compatibility)
-// interface SupportTier {
-//   id: string;
-//   name: string;
-//   price: string;
-//   priceId: string;
-//   description: string;
-//   type: 'one-time' | 'recurring' | 'custom';
-//   highlighted?: boolean;
-//   icon: React.ReactNode;
-// }
 
 interface StripePrice {
   id: string;
@@ -57,12 +46,86 @@ interface SupportPageProps {
 export default function Support({ recentSupporters, eventsHosted }: SupportPageProps) {
   useReferrerTracking();
   const { track } = useEvents();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<'monthly' | 'oneoff' | 'custom'>('monthly');
   const [selectedAmount, setSelectedAmount] = useState<string>('');
   const [customAmount, setCustomAmount] = useState('');
   const [pricesData, setPricesData] = useState<SupportPricesData | null>(null);
   const [pricesLoading, setPricesLoading] = useState(true);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Check for success query parameter
+  useEffect(() => {
+    if (router.query.success === 'true') {
+      setShowSuccess(true);
+      
+      // Send notification about the donation
+      const sendDonationNotification = async () => {
+        try {
+          // Get donation details from URL parameters
+          const donationType = router.query.donation_type as string;
+          const amount = router.query.amount as string;
+          const currency = router.query.currency as string;
+          const customerEmail = router.query.customer_email as string;
+
+          let donationInfo = '';
+          
+          if (amount && currency && donationType) {
+            const typeLabels: Record<string, string> = {
+              monthly: 'Monthly',
+              oneoff: 'One-time',
+              custom: 'Custom'
+            };
+            
+            const typeLabel = typeLabels[donationType] || 'Unknown';
+            donationInfo = `\n\n💰 Amount: ${currency} ${amount}\n🔄 Type: ${typeLabel}`;
+            
+            if (donationType === 'monthly') {
+              donationInfo += ' (recurring)';
+            }
+          }
+
+          if (customerEmail) {
+            donationInfo += `\n📧 Email: ${customerEmail}`;
+          }
+
+          await fetch('/api/notifications/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: '💚 New ZurichJS Donation!',
+              message: `Someone just showed some love to ZurichJS with a donation! 🎉${donationInfo}`,
+              type: 'other',
+              priority: 'normal'
+            }),
+          });
+        } catch (error) {
+          console.error('Error sending donation notification:', error);
+        }
+      };
+      
+      // Only send notification once per session to avoid duplicates
+      const notificationSent = sessionStorage.getItem('donation-notification-sent');
+      if (!notificationSent) {
+        sendDonationNotification();
+        sessionStorage.setItem('donation-notification-sent', 'true');
+      }
+      
+      // Auto-hide success message after 10 seconds
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+        // Remove success query param from URL
+        const { ...query } = router.query;
+        router.replace({ pathname: router.pathname, query }, undefined, { shallow: true });
+        // Clear the notification flag when cleaning up
+        sessionStorage.removeItem('donation-notification-sent');
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [router]);
 
   // Fetch Stripe prices on component mount
   useEffect(() => {
@@ -174,44 +237,78 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
             }}
         />
 
+        {/* Success Message */}
+        {showSuccess && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4">
+            <motion.div
+              initial={{ opacity: 0, y: -50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -50, scale: 0.9 }}
+              className="bg-white border-l-4 border-green-500 rounded-lg shadow-xl p-6"
+            >
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <Heart className="h-6 w-6 text-green-500 animate-pulse" />
+                </div>
+                <div className="ml-3 flex-1">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Thank You! 💚
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Your support means the world to us! You&apos;re helping us build an amazing JavaScript community in Zurich.
+                  </p>
+                  <div className="mt-3 flex">
+                    <button
+                      onClick={() => setShowSuccess(false)}
+                      className="text-sm font-medium text-green-600 hover:text-green-500 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {/* Hero Section */}
         <Section variant="gradient" padding="lg">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-4">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             <motion.div
                 initial={{opacity: 0, y: 20}}
                 animate={{opacity: 1, y: 0}}
                 transition={{duration: 0.5}}
                 className="flex flex-col basis-1/2 lg:basis-2/3"
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-gray-900 leading-tight">
                 Show Some Love to ZurichJS ❤️
               </h1>
-              <p className="text-xl mb-6 text-gray-900">
+              <p className="text-lg sm:text-xl mb-4 sm:mb-6 text-gray-900">
                 Help us keep the community thriving and create better experiences for everyone!
               </p>
-              <p className="text-lg mb-8 text-gray-900">
+              <p className="text-base sm:text-lg mb-6 sm:mb-8 text-gray-900 leading-relaxed">
                 Your love and support allows us to organize amazing meetups, invite world-class speakers, provide great food and drinks, 
                 and create an inclusive space where JavaScript enthusiasts can learn, connect, and grow together.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button
                   onClick={() => {
                     setSelectedType('monthly');
                     document.getElementById('support-section')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-8 rounded-full 
+                  className="bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 sm:py-4 px-6 sm:px-8 rounded-full 
                   shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 
-                  flex items-center gap-2 md:text-lg justify-center"
+                  flex items-center gap-3 text-base sm:text-lg justify-center min-h-[48px]"
                 >
-                  <Heart size={20} className="animate-pulse text-red-500" />
+                  <Heart size={18} className="animate-pulse text-red-500 mr-2" />
                   <span>Show Monthly Love</span>
                 </Button>
-                <Link href="/tshirt">
+                <Link href="/tshirt" className="w-full sm:w-auto">
                   <Button
                     variant="outline"
-                    className="py-3 px-8 rounded-full font-medium flex items-center gap-2 md:text-lg justify-center"
+                    className="py-3 sm:py-4 px-6 sm:px-8 rounded-full font-medium flex items-center gap-2 text-base sm:text-lg justify-center min-h-[48px] w-full"
                   >
-                    <Shirt size={20} />
+                    <Shirt size={18} className="mr-2" />
                     <span>Get Your ZurichJS T-Shirt</span>
                   </Button>
                 </Link>
@@ -266,54 +363,54 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 whileInView={{opacity: 1, y: 0}}
                 viewport={{once: true}}
                 transition={{duration: 0.5}}
-                className="max-w-2xl mx-auto"
+                className="max-w-2xl mx-auto px-4 sm:px-6"
             >
-              <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold mb-3 text-gray-900">Show Some Love ❤️</h2>
-                <p className="text-xl text-gray-700">
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 text-gray-900">Show Some Love ❤️</h2>
+                <p className="text-lg sm:text-xl text-gray-700">
                   Choose how you&apos;d like to support ZurichJS
                 </p>
               </div>
 
-              <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+              <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
                 {/* Support Type Selection */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">Support Type</label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <button
                       onClick={() => setSelectedType('monthly')}
-                      className={`p-4 rounded-lg border-2 transition-all text-center ${
+                      className={`p-4 sm:p-3 md:p-4 rounded-lg border-2 transition-all text-center min-h-[80px] sm:min-h-[auto] ${
                         selectedType === 'monthly' 
                           ? 'border-js-dark bg-js-dark/10 text-gray-900' 
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <RefreshCw size={24} className="mx-auto mb-2 text-blue-500" />
-                      <div className="font-medium">Monthly</div>
+                      <div className="font-medium text-base">Monthly</div>
                       <div className="text-sm text-gray-500">Recurring</div>
                     </button>
                     <button
                       onClick={() => setSelectedType('oneoff')}
-                      className={`p-4 rounded-lg border-2 transition-all text-center ${
+                      className={`p-4 sm:p-3 md:p-4 rounded-lg border-2 transition-all text-center min-h-[80px] sm:min-h-[auto] ${
                         selectedType === 'oneoff' 
                           ? 'border-js-dark bg-js-dark/10 text-gray-900' 
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <Zap size={24} className="mx-auto mb-2 text-yellow-500" />
-                      <div className="font-medium">One-time</div>
+                      <div className="font-medium text-base">One-time</div>
                       <div className="text-sm text-gray-500">Single payment</div>
                     </button>
                     <button
                       onClick={() => setSelectedType('custom')}
-                      className={`p-4 rounded-lg border-2 transition-all text-center ${
+                      className={`p-4 sm:p-3 md:p-4 rounded-lg border-2 transition-all text-center min-h-[80px] sm:min-h-[auto] ${
                         selectedType === 'custom' 
                           ? 'border-js-dark bg-js-dark/10 text-gray-900' 
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <CreditCard size={24} className="mx-auto mb-2 text-green-500" />
-                      <div className="font-medium">Custom</div>
+                      <div className="font-medium text-base">Custom</div>
                       <div className="text-sm text-gray-500">Your amount</div>
                     </button>
                   </div>
@@ -345,6 +442,27 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                               <div className="text-sm text-gray-500">per month</div>
                             </button>
                           ))}
+                        </div>
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-gray-600">
+                            💡 <strong>Easy to cancel:</strong> You can cancel anytime by{' '}
+                            <a 
+                              href="mailto:hello@zurichjs.com?subject=Cancel Monthly Support&body=Hi! I'd like to cancel my monthly support. I'm emailing from the same email address I used to subscribe."
+                              className="text-blue-600 hover:underline font-medium"
+                            >
+                              emailing us
+                            </a>{' '}
+                            with the same email you used to subscribe. No questions asked! Or{' '}
+                            <button
+                              onClick={() => {
+                                document.querySelector('[data-faq-cancel]')?.scrollIntoView({ behavior: 'smooth' });
+                              }}
+                              className="text-blue-600 hover:underline font-medium"
+                            >
+                              see our FAQ
+                            </button>{' '}
+                            for more details.
+                          </p>
                         </div>
                       </div>
                     )}
@@ -418,7 +536,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     </>
                   ) : (
                     <>
-                      <Heart size={20} className="text-red-500" />
+                      <Heart size={20} className="text-red-500 mr-2" />
                       <span>
                         {selectedType === 'monthly' ? 'Start Monthly Support' :
                          selectedType === 'oneoff' ? 'Make One-time Payment' :
@@ -656,11 +774,21 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 viewport={{once: true}}
                 transition={{duration: 0.5, delay: 0.3}}
                 className="bg-gray-50 p-6 rounded-lg"
+                data-faq-cancel
             >
               <h3 className="text-xl font-bold mb-2 text-gray-900">Can I cancel my monthly support?</h3>
+              <p className="text-gray-700 mb-3">
+                Yes, you can cancel your monthly support at any time. To cancel your monthly recurring support, you can{' '}
+                <a 
+                  href="mailto:hello@zurichjs.com?subject=Cancel Monthly Support&body=Hi! I'd like to cancel my monthly support. I'm emailing from the same email address I used to subscribe."
+                  className="text-amber-600 hover:underline font-medium"
+                >
+                  click here
+                </a>{' '}
+                and email us at hello@zurichjs.com with the same email you subscribed with and we&apos;ll cancel it.
+              </p>
               <p className="text-gray-700">
-                Yes, you can cancel your monthly support at any time. Just email us at hello@zurichjs.com and we&apos;ll help you manage your
-                subscription.
+                <strong>No questions asked, no explanation needed</strong> - simple, easy, and we&apos;re grateful nonetheless! ❤️
               </p>
             </motion.div>
 
@@ -695,23 +823,23 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               Every bit of love and support helps us create a thriving community where developers grow, connect, and create amazing things together.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                onClick={() => {
-                  setSelectedType('monthly');
-                  document.getElementById('support-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="text-white py-3 px-8 rounded-full bg-gray-900 hover:bg-gray-800 transition-all duration-300 
-                transform hover:scale-105 hover:shadow-md font-medium flex items-center gap-2 justify-center"
-              >
-                <Heart size={20} className="text-red-500" />
-                <span>Show Some Love Today!</span>
-              </Button>
+                              <Button
+                  onClick={() => {
+                    setSelectedType('monthly');
+                    document.getElementById('support-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="text-white py-3 px-8 rounded-full bg-gray-900 hover:bg-gray-800 transition-all duration-300 
+                  transform hover:scale-105 hover:shadow-md font-medium flex items-center gap-3 justify-center"
+                >
+                  <Heart size={20} className="text-red-500 mr-2" />
+                  <span>Show Some Love Today!</span>
+                </Button>
               <Link href="/tshirt">
                 <Button
                   variant="outline"
                   className="py-3 px-8 rounded-full font-medium border-white text-white hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2 justify-center"
                 >
-                  <Shirt size={20} />
+                  <Shirt size={20} className="mr-2" />
                   <span>Get Your ZurichJS T-Shirt</span>
                 </Button>
               </Link>

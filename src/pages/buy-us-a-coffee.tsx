@@ -801,8 +801,8 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
             >
               <h3 className="text-xl font-bold mb-2 text-gray-900">Is my support tax-deductible?</h3>
               <p className="text-gray-700">
-                Currently, ZurichJS is not registered as a non-profit organization, so contributions are not tax-deductible. We&apos;re exploring this
-                option for the future to make your support even more impactful.
+                ZurichJS is now registered as a non-profit organization under the Swiss JavaScript Group! However, contributions are not yet tax-deductible as we&apos;re still 
+                working on getting the necessary approvals. We&apos;re actively pursuing this to make it easier for you to support.
               </p>
             </motion.div>
 

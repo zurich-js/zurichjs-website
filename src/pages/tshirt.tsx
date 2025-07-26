@@ -13,8 +13,12 @@ import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
 import useEvents from '@/hooks/useEvents';
 
-const TSHIRT_PRICE_ID = 'price_1RneLaGxQziVA7Fs49QnVKbT' // TEST: price_1RneOpGxQziVA7FsQRe8QHGK;
-const SHIPPING_RATE_ID = 'shr_1RneNbGxQziVA7FsmyQbFuTM'; // TEST: shr_1RnePLGxQziVA7FsEWPBRYAA
+const TSHIRT_PRICE_ID = process.env.NODE_ENV === 'development' 
+  ? 'price_1RneOpGxQziVA7FsQRe8QHGK' // Development/Test price ID
+  : 'price_1RneLaGxQziVA7Fs49QnVKbT'; // Production price ID
+const SHIPPING_RATE_ID = process.env.NODE_ENV === 'development'
+  ? 'shr_1RnePLGxQziVA7FsEWPBRYAA' // Development/Test shipping rate ID
+  : 'shr_1RneNbGxQziVA7FsmyQbFuTM'; // Production shipping rate ID
 const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 const BASE_PRICE = 25;
 const DELIVERY_ADDON = 10;
@@ -27,7 +31,7 @@ export default function TshirtPage() {
   const [stock, setStock] = useState<Record<string, number>>({});
   const [stockLoading, setStockLoading] = useState(true);
   const [stockError, setStockError] = useState(false);
-  const [sizeQuantities, setSizeQuantities] = useState<SizeQuantity>({ M: 1 });
+  const [sizeQuantities, setSizeQuantities] = useState<SizeQuantity>({});
   const [delivery, setDelivery] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState('');
@@ -202,30 +206,34 @@ export default function TshirtPage() {
 
   // Track purchase success
   useEffect(() => {
-    if (router.query.success === 'true') {
+    if (router.query.success === 'true' && router.query.session_id && router.isReady) {
       setStep(4);
-      track('tshirt_purchase_success', {
-        sizesOrdered: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
-        totalQuantity,
-        delivery,
-        coupon: couponCode || '',
-      });
       
-      // Send platform notification for card payment (only once)
+      // Send platform notification for card payment with session data (only once)
       if (!cardNotificationSent) {
+        const sessionId = Array.isArray(router.query.session_id) 
+          ? router.query.session_id[0] 
+          : router.query.session_id;
+        
+        // Prevent duplicate notifications by setting this immediately  
+        setCardNotificationSent(true);
+          
         const sendCardPaymentNotification = async () => {
           try {
-            await fetch('/api/notifications/send', {
+            await fetch('/api/notify/tshirt-purchase-success', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                title: '💳 Card T-shirt Order',
-                message: `New online payment t-shirt order\n\nSizes: ${Object.entries(sizeQuantities).filter(([, qty]) => qty > 0).map(([size, qty]) => `${size} (${qty})`).join(', ')}\nTotal Quantity: ${totalQuantity}\nDelivery: ${delivery ? 'Home Delivery' : 'Meetup Pickup'}\nPayment: Card/TWINT`,
-                type: 'tshirt',
-                priority: 'normal',
+                sessionId,
+                userEmail: userEmail || 'Unknown',
               })
             });
-            setCardNotificationSent(true);
+            
+            // Track the success after notification is sent
+            track('tshirt_purchase_success', {
+              sessionId,
+              paymentMethod: 'online',
+            });
           } catch (error) {
             console.error('Failed to send card payment notification:', error);
           }
@@ -234,7 +242,7 @@ export default function TshirtPage() {
         sendCardPaymentNotification();
       }
     }
-  }, [router.query.success, sizeQuantities, totalQuantity, delivery, couponCode, track, cardNotificationSent]);
+  }, [router.query.success, router.query.session_id, router.isReady, track, cardNotificationSent, userEmail]);
 
   // Validation functions
   const isStepValid = (stepNum: number) => {
@@ -277,12 +285,25 @@ export default function TshirtPage() {
       
       // Send platform notification via API
       try {
+        const sizesDisplay = Object.entries(sizeQuantities)
+          .filter(([, qty]) => qty > 0)
+          .map(([size, qty]) => `${size} (${qty})`)
+          .join(', ');
+          
         await fetch('/api/notifications/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             title: '💰 Cash T-shirt Order',
-            message: `New cash payment t-shirt order from ${cashPaymentDetails.firstName} ${cashPaymentDetails.lastName} (${cashPaymentDetails.email})\n\nSizes: ${Object.entries(sizeQuantities).filter(([, qty]) => qty > 0).map(([size, qty]) => `${size} (${qty})`).join(', ')}\nTotal Quantity: ${totalQuantity}\nPickup: Meetup Collection`,
+            message: `New cash payment t-shirt order
+
+Customer Name: ${cashPaymentDetails.firstName} ${cashPaymentDetails.lastName}
+Customer Email: ${cashPaymentDetails.email}
+Sizes Ordered: ${sizesDisplay}
+Total Quantity: ${totalQuantity}
+Total Amount: CHF ${discountedTotal}
+Payment Method: Cash at Meetup
+Delivery Method: Meetup Pickup`,
             type: 'tshirt',
             priority: 'normal',
           })
@@ -1291,128 +1312,158 @@ export default function TshirtPage() {
                 <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 overflow-hidden">
                   {/* Header */}
                   <div className="text-center pb-3 sm:pb-4 border-b border-gray-100">
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                      {step === 4 ? 'Order Complete!' : 'Order Summary'}
+                    </h2>
                   </div>
                   
                   {/* Product Details */}
-                  <div className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-lg sm:rounded-xl flex items-center justify-center text-js font-bold text-sm sm:text-base flex-shrink-0">
-                          JS
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">ZurichJS T-Shirt</div>
-                          <div className="text-xs sm:text-sm text-gray-600">{totalQuantity} items • {delivery ? 'Home Delivery' : 'Meetup Pickup'}</div>
+                  {step === 4 ? (
+                    /* Success State */
+                    <div className="text-center space-y-4">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <CheckCircle className="w-8 h-8 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-900 mb-2">Thank You!</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          {paymentMethod === 'cash' 
+                            ? 'Your cash order is confirmed! We\'ll see you at the next meetup.' 
+                            : 'Your payment was successful! You\'ll receive email confirmation shortly.'
+                          }
+                        </p>
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <p className="text-sm text-green-800 font-medium">
+                            🎉 Welcome to the ZurichJS family!
+                          </p>
                         </div>
                       </div>
-                      
-                      {/* Size breakdown */}
-                      <div className="bg-white rounded-lg p-3 border border-gray-100">
-                        <div className="text-sm font-medium text-gray-700 mb-2">Items:</div>
+                    </div>
+                  ) : (
+                    /* Normal Order Summary */
+                    <div className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl sm:rounded-2xl">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-lg sm:rounded-xl flex items-center justify-center text-js font-bold text-sm sm:text-base flex-shrink-0">
+                            JS
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">ZurichJS T-Shirt</div>
+                            <div className="text-xs sm:text-sm text-gray-600">{totalQuantity} items • {delivery ? 'Home Delivery' : 'Meetup Pickup'}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Size breakdown */}
+                        <div className="bg-white rounded-lg p-3 border border-gray-100">
+                          <div className="text-sm font-medium text-gray-700 mb-2">Items:</div>
+                          {Object.entries(sizeQuantities)
+                            .filter(([, qty]) => qty > 0)
+                            .map(([size, qty]) => (
+                              <div key={size} className="flex justify-between text-sm text-gray-600">
+                                <span>Size {size}</span>
+                                <span>{qty} × CHF {BASE_PRICE}</span>
+                              </div>
+                            ))
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Price Breakdown - Only show when not on success step */}
+                  {step !== 4 && (
+                    <>
+                      <div className="space-y-3 py-4 border-t border-gray-100 text-sm sm:text-base">
                         {Object.entries(sizeQuantities)
                           .filter(([, qty]) => qty > 0)
                           .map(([size, qty]) => (
-                            <div key={size} className="flex justify-between text-sm text-gray-600">
-                              <span>Size {size}</span>
-                              <span>{qty} × CHF {BASE_PRICE}</span>
+                            <div key={size} className="flex justify-between items-center">
+                              <span className="text-gray-600 truncate pr-2">Size {size} ({qty}x)</span>
+                              <span className="font-semibold flex-shrink-0">CHF {BASE_PRICE * qty}</span>
                             </div>
                           ))
                         }
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Price Breakdown */}
-                  <div className="space-y-3 py-4 border-t border-gray-100 text-sm sm:text-base">
-                    {Object.entries(sizeQuantities)
-                      .filter(([, qty]) => qty > 0)
-                      .map(([size, qty]) => (
-                        <div key={size} className="flex justify-between items-center">
-                          <span className="text-gray-600 truncate pr-2">Size {size} ({qty}x)</span>
-                          <span className="font-semibold flex-shrink-0">CHF {BASE_PRICE * qty}</span>
-                        </div>
-                      ))
-                    }
-                    
-                    {delivery && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 truncate pr-2">Delivery (tracked & insured)</span>
-                        <span className="font-semibold flex-shrink-0">CHF {DELIVERY_ADDON}</span>
-                      </div>
-                    )}
-                    
-                    {communityDiscount && (
-                      <div className="flex justify-between items-center text-green-700">
-                        <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
-                          <Zap className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                          <span className="truncate">Member Discount (20%)</span>
-                        </span>
-                        <span className="font-bold flex-shrink-0">-CHF {Math.round(tshirtTotal * 0.2)}</span>
-                      </div>
-                    )}
-                    
-                    {hasCoupon && (
-                      <div className="flex justify-between items-center text-amber-700">
-                        <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
-                          <Ticket className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                          <span className="truncate">Coupon Discount</span>
-                        </span>
-                        <span className="font-bold flex-shrink-0">-CHF {Math.round(couponData?.amountOff || 0)}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Total */}
-                  <div className="border-t-2 border-gray-200 pt-4">
-                    <div className="flex justify-between items-center mb-4 sm:mb-6">
-                      <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Total</span>
-                      <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">CHF {discountedTotal}</span>
-                    </div>
-                    
-                    {/* Step Navigation */}
-                    <div className="flex justify-between pt-4">
-                      <div></div> {/* Empty div for spacing */}
-                      <Button
-                        onClick={handleNextStep}
-                        disabled={!isStepValid(step) || loading || step === 4}
-                        className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
-                          step === 4 
-                            ? 'bg-green-500 text-white cursor-not-allowed'
-                            : 'bg-black hover:bg-gray-800 text-js disabled:bg-gray-300 disabled:text-gray-500'
-                        }`}
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Processing...
-                          </>
-                        ) : step === 4 ? (
-                          <>
-                            <CheckCircle className="w-4 h-4" />
-                            Ordered
-                          </>
-                        ) : step === 3 ? (
-                          paymentMethod === 'cash' ? 'Confirm Order' : 'Pay Now'
-                        ) : step === 2 ? (
-                          <>
-                            Continue to Review
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        ) : step === 1 ? (
-                          <>
-                            Continue to Delivery
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        ) : (
-                          <>
-                            Continue to Payment
-                            <ArrowRight className="w-4 h-4" />
-                          </>
+                        
+                        {delivery && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 truncate pr-2">Delivery (tracked & insured)</span>
+                            <span className="font-semibold flex-shrink-0">CHF {DELIVERY_ADDON}</span>
+                          </div>
                         )}
-                      </Button>
-                    </div>
-                  </div>
+                        
+                        {communityDiscount && (
+                          <div className="flex justify-between items-center text-green-700">
+                            <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
+                              <Zap className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">Member Discount (20%)</span>
+                            </span>
+                            <span className="font-bold flex-shrink-0">-CHF {Math.round(tshirtTotal * 0.2)}</span>
+                          </div>
+                        )}
+                        
+                        {hasCoupon && (
+                          <div className="flex justify-between items-center text-amber-700">
+                            <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
+                              <Ticket className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="truncate">Coupon Discount</span>
+                            </span>
+                            <span className="font-bold flex-shrink-0">-CHF {Math.round(couponData?.amountOff || 0)}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Total */}
+                      <div className="border-t-2 border-gray-200 pt-4">
+                        <div className="flex justify-between items-center mb-4 sm:mb-6">
+                          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Total</span>
+                          <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">CHF {discountedTotal}</span>
+                        </div>
+                        
+                        {/* Step Navigation */}
+                        <div className="flex justify-between pt-4">
+                          <div></div> {/* Empty div for spacing */}
+                          <Button
+                            onClick={handleNextStep}
+                            disabled={!isStepValid(step) || loading || step === 4}
+                            className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
+                              step === 4 
+                                ? 'bg-green-500 text-white cursor-not-allowed'
+                                : 'bg-black hover:bg-gray-800 text-js disabled:bg-gray-300 disabled:text-gray-500'
+                            }`}
+                          >
+                            {loading ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Processing...
+                              </>
+                            ) : step === 4 ? (
+                              <>
+                                <CheckCircle className="w-4 h-4" />
+                                Ordered
+                              </>
+                            ) : step === 3 ? (
+                              paymentMethod === 'cash' ? 'Confirm Order' : 'Pay Now'
+                            ) : step === 2 ? (
+                              <>
+                                Continue to Review
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            ) : step === 1 ? (
+                              <>
+                                Continue to Delivery
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            ) : (
+                              <>
+                                Continue to Payment
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 
                 {/* Merch Survey - Right below order summary */}

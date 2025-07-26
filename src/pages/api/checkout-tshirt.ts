@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sizeQuantities, delivery, priceId, isMember, totalQuantity, shippingRateId } = req.body;
+  const { sizeQuantities, delivery, priceId, isMember, totalQuantity, shippingRateId, email, couponCode } = req.body;
   if (!sizeQuantities || !priceId || !totalQuantity) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -43,13 +43,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         })),
       mode: 'payment',
       discounts,
-      success_url: `${req.headers.origin}/tshirt?success=true&delivery=${delivery}`,
+      success_url: `${req.headers.origin}/tshirt?success=true&session_id={CHECKOUT_SESSION_ID}&delivery=${delivery}`,
       cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
       metadata: {
         sizes: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
         sizeQuantities: JSON.stringify(sizeQuantities),
         delivery: delivery ? 'true' : 'false',
         totalQuantity: String(totalQuantity),
+        userEmail: email || '',
+        couponCode: couponCode || '',
       },
       invoice_creation: {
         enabled: true,
@@ -59,6 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             sizeQuantities: JSON.stringify(sizeQuantities),
             delivery: delivery ? 'true' : 'false',
             totalQuantity: String(totalQuantity),
+            userEmail: email || '',
+            couponCode: couponCode || '',
           },
         },
       },

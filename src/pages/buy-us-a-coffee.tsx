@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Heart, Star, Users, Code, Calendar, Twitter, Github, Linkedin, Globe, Mail, UserPlus, Shirt, CreditCard, RefreshCw, Zap } from 'lucide-react';
+import { Heart, Star, Users, Code, Calendar, Twitter, Github, Linkedin, Globe, Mail, UserPlus, Shirt, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -48,11 +48,11 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
   const { track } = useEvents();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [selectedType, setSelectedType] = useState<'monthly' | 'oneoff' | 'custom'>('monthly');
   const [selectedAmount, setSelectedAmount] = useState<string>('');
   const [customAmount, setCustomAmount] = useState('');
+  const [isRecurring, setIsRecurring] = useState(true);
+  const [selectedPresetAmount, setSelectedPresetAmount] = useState<number | null>(20);
   const [pricesData, setPricesData] = useState<SupportPricesData | null>(null);
-  const [pricesLoading, setPricesLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
 
   // Check for success query parameter
@@ -138,8 +138,6 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
         setPricesData(data);
       } catch (error) {
         console.error('Error fetching prices:', error);
-      } finally {
-        setPricesLoading(false);
       }
     };
     fetchPrices();
@@ -158,43 +156,48 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
   // Set default selected amount when prices load
   useEffect(() => {
     if (pricesData && !selectedAmount) {
-      if (selectedType === 'monthly' && monthlyOptions.length > 0) {
+      if (isRecurring && monthlyOptions.length > 0) {
         setSelectedAmount(monthlyOptions[0].id);
-      } else if (selectedType === 'oneoff' && oneOffOptions.length > 0) {
+      } else if (!isRecurring && oneOffOptions.length > 0) {
         setSelectedAmount(oneOffOptions[0].id);
       }
     }
-  }, [pricesData, selectedType, selectedAmount, monthlyOptions, oneOffOptions]);
+  }, [pricesData, isRecurring, selectedAmount, monthlyOptions, oneOffOptions]);
 
   // Function to handle Stripe checkout
   const handleSupportClick = async () => {
-    if (selectedType === 'custom' && !customAmount) {
-      alert('Please enter a custom amount');
+    const amount = customAmount ? parseFloat(customAmount) : selectedPresetAmount;
+    
+    if (!amount) {
+      alert('Please select or enter an amount');
       return;
     }
 
-    if (selectedType === 'custom' && parseFloat(customAmount) < 5) {
+    if (amount < 5) {
       alert('Minimum amount is CHF 5');
-      return;
-    }
-
-    if (selectedType !== 'custom' && !selectedAmount) {
-      alert('Please select an amount');
       return;
     }
 
     setLoading(true);
     
     try {
+      // Find the appropriate Stripe price based on amount and recurring type
+      const targetPrices = isRecurring ? monthlyOptions : oneOffOptions;
+      const matchingPrice = targetPrices.find(p => p.amount === amount);
+      
       const requestBody: {
         priceId?: string;
         amount?: number;
+        recurring?: boolean;
       } = {};
 
-      if (selectedType === 'custom') {
-        requestBody.amount = parseFloat(customAmount);
+      if (matchingPrice) {
+        // Use existing Stripe price
+        requestBody.priceId = matchingPrice.id;
       } else {
-        requestBody.priceId = selectedAmount;
+        // For custom amounts, create based on user's selection (recurring or one-time)
+        requestBody.amount = amount;
+        requestBody.recurring = isRecurring;
       }
       
       const response = await fetch('/api/checkout-support', {
@@ -209,8 +212,9 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
       
       if (data.url) {
         track('support_click', {
-          type: selectedType,
-          amount: selectedType === 'custom' ? customAmount : selectedAmount,
+          type: isRecurring ? 'monthly' : 'oneoff',
+          amount: amount,
+          custom: !matchingPrice,
         });
         window.location.href = data.url;
       } else {
@@ -280,11 +284,11 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 transition={{duration: 0.5}}
                 className="flex flex-col basis-1/2 lg:basis-2/3"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-gray-900 leading-tight">
-                Show Some Love to ZurichJS ❤️
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-gray-900 leading-tight">
+                You&apos;re what keeps us running
               </h1>
-              <p className="text-lg sm:text-xl mb-4 sm:mb-6 text-gray-900">
-                Help us keep the community thriving and create better experiences for everyone!
+              <p className="text-base sm:text-lg md:text-xl mb-4 sm:mb-6 text-gray-900">
+                Thank you for choosing to support ZurichJS with a kind donation
               </p>
               <p className="text-base sm:text-lg mb-6 sm:mb-8 text-gray-900 leading-relaxed">
                 Your love and support allows us to organize amazing meetups, invite world-class speakers, provide great food and drinks, 
@@ -293,7 +297,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <Button
                   onClick={() => {
-                    setSelectedType('monthly');
+                    setIsRecurring(true);
                     document.getElementById('support-section')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   className="bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 sm:py-4 px-6 sm:px-8 rounded-full 
@@ -366,168 +370,115 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 className="max-w-2xl mx-auto px-4 sm:px-6"
             >
               <div className="text-center mb-6 sm:mb-8">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 text-gray-900">Show Some Love ❤️</h2>
-                <p className="text-lg sm:text-xl text-gray-700">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 text-gray-900">Show Some Love ❤️</h2>
+                <p className="text-base sm:text-lg md:text-xl text-gray-700">
                   Choose how you&apos;d like to support ZurichJS
                 </p>
               </div>
 
               <div className="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-lg border border-gray-200">
-                {/* Support Type Selection */}
+                {/* Amount Selection */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Support Type</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Amount</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+                    {[10, 20, 40, 50].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => {
+                          setSelectedPresetAmount(amount);
+                          setCustomAmount('');
+                        }}
+                        className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-center min-h-[60px] touch-manipulation ${
+                          selectedPresetAmount === amount && !customAmount
+                            ? 'border-js-dark bg-js-dark/10'
+                            : 'border-gray-200 hover:border-gray-300 active:border-gray-400'
+                        }`}
+                      >
+                        <div className="font-semibold text-base">CHF {amount}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Animated explanation text */}
+                  {selectedPresetAmount && !customAmount && (
+                    <motion.div
+                      key={selectedPresetAmount}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg"
+                    >
+                      <motion.p 
+                        initial={{ scale: 0.95 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.2, delay: 0.1 }}
+                        className="text-sm text-gray-700 italic"
+                      >
+                        {selectedPresetAmount === 10 && "*CHF 10 per month helps us pay for Drive storage and other tooling"}
+                        {selectedPresetAmount === 20 && "*CHF 20 per month ensures we never run out of snacks"}
+                        {selectedPresetAmount === 40 && "*CHF 40 per month helps us cover the cost of a couple of beers for one meetup"}
+                        {selectedPresetAmount === 50 && "*CHF 50 per month helps cover two large pizzas at a meetup"}
+                      </motion.p>
+                    </motion.div>
+                  )}
+
+                  {/* Custom Amount */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Or decide on your own</label>
+                    <input
+                      type="number"
+                      placeholder="Enter amount in CHF (min. 5)"
+                      value={customAmount}
+                      onChange={(e) => {
+                        setCustomAmount(e.target.value);
+                        if (e.target.value) {
+                          setSelectedPresetAmount(null);
+                        }
+                      }}
+                      className="w-full px-4 py-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js-dark touch-manipulation"
+                      min="5"
+                      inputMode="decimal"
+                    />
+
+                  </div>
+                </div>
+
+                {/* Recurring Toggle */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Recurring?</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     <button
-                      onClick={() => setSelectedType('monthly')}
-                      className={`p-4 sm:p-3 md:p-4 rounded-lg border-2 transition-all text-center min-h-[80px] sm:min-h-[auto] ${
-                        selectedType === 'monthly' 
+                      onClick={() => setIsRecurring(true)}
+                      className={`p-4 sm:p-5 rounded-lg border-2 transition-all text-center touch-manipulation min-h-[70px] ${
+                        isRecurring 
                           ? 'border-js-dark bg-js-dark/10 text-gray-900' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-gray-200 hover:border-gray-300 active:border-gray-400'
                       }`}
                     >
-                      <RefreshCw size={24} className="mx-auto mb-2 text-blue-500" />
                       <div className="font-medium text-base">Monthly</div>
-                      <div className="text-sm text-gray-500">Recurring</div>
+                      <div className="text-sm text-gray-500 leading-tight">Cancel anytime, no questions asked</div>
                     </button>
                     <button
-                      onClick={() => setSelectedType('oneoff')}
-                      className={`p-4 sm:p-3 md:p-4 rounded-lg border-2 transition-all text-center min-h-[80px] sm:min-h-[auto] ${
-                        selectedType === 'oneoff' 
+                      onClick={() => setIsRecurring(false)}
+                      className={`p-4 sm:p-5 rounded-lg border-2 transition-all text-center touch-manipulation min-h-[70px] ${
+                        !isRecurring 
                           ? 'border-js-dark bg-js-dark/10 text-gray-900' 
-                          : 'border-gray-200 hover:border-gray-300'
+                          : 'border-gray-200 hover:border-gray-300 active:border-gray-400'
                       }`}
                     >
-                      <Zap size={24} className="mx-auto mb-2 text-yellow-500" />
                       <div className="font-medium text-base">One-time</div>
-                      <div className="text-sm text-gray-500">Single payment</div>
-                    </button>
-                    <button
-                      onClick={() => setSelectedType('custom')}
-                      className={`p-4 sm:p-3 md:p-4 rounded-lg border-2 transition-all text-center min-h-[80px] sm:min-h-[auto] ${
-                        selectedType === 'custom' 
-                          ? 'border-js-dark bg-js-dark/10 text-gray-900' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <CreditCard size={24} className="mx-auto mb-2 text-green-500" />
-                      <div className="font-medium text-base">Custom</div>
-                      <div className="text-sm text-gray-500">Your amount</div>
+                      <div className="text-sm text-gray-500">Show of support</div>
                     </button>
                   </div>
                 </div>
 
-                {/* Amount Selection */}
-                {pricesLoading ? (
-                  <div className="mb-6">
-                    <div className="h-4 bg-gray-200 rounded mb-3 animate-pulse"></div>
-                    <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                ) : (
-                  <div className="mb-6">
-                    {selectedType === 'monthly' && monthlyOptions.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">Monthly Amount</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {monthlyOptions.map((option) => (
-                            <button
-                              key={option.id}
-                              onClick={() => setSelectedAmount(option.id)}
-                              className={`p-3 rounded-lg border-2 transition-all text-center ${
-                                selectedAmount === option.id
-                                  ? 'border-js-dark bg-js-dark/10'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                            >
-                              <div className="font-semibold">{option.currency.toUpperCase()} {option.amount}</div>
-                              <div className="text-sm text-gray-500">per month</div>
-                            </button>
-                          ))}
-                        </div>
-                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-gray-600">
-                            💡 <strong>Easy to cancel:</strong> You can cancel anytime by{' '}
-                            <a 
-                              href="mailto:hello@zurichjs.com?subject=Cancel Monthly Support&body=Hi! I'd like to cancel my monthly support. I'm emailing from the same email address I used to subscribe."
-                              className="text-blue-600 hover:underline font-medium"
-                            >
-                              emailing us
-                            </a>{' '}
-                            with the same email you used to subscribe. No questions asked! Or{' '}
-                            <button
-                              onClick={() => {
-                                document.querySelector('[data-faq-cancel]')?.scrollIntoView({ behavior: 'smooth' });
-                              }}
-                              className="text-blue-600 hover:underline font-medium"
-                            >
-                              see our FAQ
-                            </button>{' '}
-                            for more details.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedType === 'oneoff' && oneOffOptions.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">One-time Amount</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {oneOffOptions.map((option) => (
-                            <button
-                              key={option.id}
-                              onClick={() => setSelectedAmount(option.id)}
-                              className={`p-3 rounded-lg border-2 transition-all text-center ${
-                                selectedAmount === option.id
-                                  ? 'border-js-dark bg-js-dark/10'
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                            >
-                              <div className="font-semibold">{option.currency.toUpperCase()} {option.amount}</div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedType === 'custom' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">Custom Amount</label>
-                        <div className="mb-3">
-                          <div className="flex gap-2 flex-wrap mb-3">
-                            {[15, 25, 50, 100].map(amount => (
-                              <button
-                                key={amount}
-                                onClick={() => setCustomAmount(String(amount))}
-                                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                                  customAmount === String(amount)
-                                    ? 'bg-js-dark text-black'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                              >
-                                CHF {amount}
-                              </button>
-                            ))}
-                          </div>
-                          <input
-                            type="number"
-                            placeholder="Enter amount in CHF (min. 5)"
-                            value={customAmount}
-                            onChange={(e) => setCustomAmount(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js-dark"
-                            min="5"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
                 {/* Support Button */}
                 <Button
                   onClick={handleSupportClick}
-                  disabled={loading || pricesLoading || (selectedType !== 'custom' && !selectedAmount) || (selectedType === 'custom' && !customAmount)}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-4 px-8 rounded-lg 
-                  shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 
-                  flex items-center gap-3 justify-center text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  disabled={loading || (!selectedPresetAmount && !customAmount)}
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-4 sm:py-5 px-6 sm:px-8 rounded-lg 
+                  shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95
+                  flex items-center gap-3 justify-center text-base sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-manipulation min-h-[56px]"
                 >
                   {loading ? (
                     <>
@@ -537,14 +488,101 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   ) : (
                     <>
                       <Heart size={20} className="text-red-500 mr-2" />
-                      <span>
-                        {selectedType === 'monthly' ? 'Start Monthly Support' :
-                         selectedType === 'oneoff' ? 'Make One-time Payment' :
-                         'Support with Custom Amount'}
-                      </span>
+                      <span>Send the love our way</span>
                     </>
                   )}
                 </Button>
+
+                {/* Monthly Subscription Cancellation Note */}
+                {isRecurring && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                  >
+                    <p className="text-sm text-gray-600 text-center">
+                      You can cancel anytime, no questions asked.{' '}
+                      <a 
+                        href="mailto:hello@zurichjs.com?subject=Cancel Monthly Support&body=Hi! I'd like to cancel my monthly support. I'm emailing from the same email address I used to subscribe."
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        Click here to email us
+                      </a>{' '}
+                      at hello@zurichjs.com and we&apos;ll handle it swiftly.
+                      Just make sure to contact us using the same email tied to your subscription.
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* What Does It Cost Section */}
+            <motion.div
+                initial={{opacity: 0, y: 20}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.5}}
+                className="max-w-2xl mx-auto px-4 sm:px-6 mt-8"
+            >
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
+                <h3 className="text-lg sm:text-xl font-bold mb-4 text-center text-gray-900">What does it cost to run a meetup?</h3>
+                <ul className="space-y-2 sm:space-y-3">
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Basic drinks and snacks for 20–30 people</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 150</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Pizza for 40–60 people</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 600</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Flying in a speaker (within Europe)</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 500–600</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Tooling and hosting (Google Drive, etc.)</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 100+ per month</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Workshop venue rental</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 150 per hour</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Meetup.com subscription</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 80 every 6 months</span>
+                  </li>
+                  <li className="flex items-center justify-between gap-3">
+                    <div className="flex items-center flex-1">
+                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-gray-700">Community goodies (stickers, etc.)</span>
+                    </div>
+                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 20–50 per meetup</span>
+                  </li>
+                </ul>
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-gray-600 text-center italic">
+                    This is just a sample of what goes into each event, not an exhaustive list.
+                  </p>
+                </div>
               </div>
             </motion.div>
 
@@ -554,34 +592,34 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                 whileInView={{opacity: 1, y: 0}}
                 viewport={{once: true}}
                 transition={{duration: 0.5}}
-                className="bg-gradient-to-r from-gray-50 to-gray-100 p-8 rounded-lg"
+                className="bg-gradient-to-r from-gray-50 to-gray-100 p-8 rounded-lg mt-12"
             >
-              <h3 className="text-2xl font-bold mb-6 text-center text-gray-900">More Ways to Support Our Community</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-900">More Ways to Support Our Community</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <Link href="/tshirt">
-                  <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-js-dark">
+                  <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-js-dark touch-manipulation">
                     <div className="text-center">
-                      <Shirt className="mx-auto mb-3 text-gray-700" size={32} />
-                      <h4 className="text-lg font-semibold mb-2 text-gray-900">Get Your ZurichJS T-Shirt</h4>
-                      <p className="text-gray-600">Rep ZurichJS in style and support us at the same time!</p>
+                      <Shirt className="mx-auto mb-3 text-gray-700" size={28} />
+                      <h4 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Get Your ZurichJS T-Shirt</h4>
+                      <p className="text-sm sm:text-base text-gray-600">Rep ZurichJS in style and support us at the same time!</p>
                     </div>
                   </div>
                 </Link>
                 <a href="mailto:hello@zurichjs.com">
-                  <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-js-dark">
+                  <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-js-dark touch-manipulation">
                     <div className="text-center">
-                      <Mail className="mx-auto mb-3 text-gray-700" size={32} />
-                      <h4 className="text-lg font-semibold mb-2 text-gray-900">Give Us Feedback</h4>
-                      <p className="text-gray-600">Share your ideas and help us improve our events!</p>
+                      <Mail className="mx-auto mb-3 text-gray-700" size={28} />
+                      <h4 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Give Us Feedback</h4>
+                      <p className="text-sm sm:text-base text-gray-600">Share your ideas and help us improve our events!</p>
                     </div>
                   </div>
                 </a>
                 <Link href="/cfv">
-                  <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-js-dark">
+                  <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-js-dark touch-manipulation sm:col-span-2 lg:col-span-1">
                     <div className="text-center">
-                      <UserPlus className="mx-auto mb-3 text-gray-700" size={32} />
-                      <h4 className="text-lg font-semibold mb-2 text-gray-900">Volunteer With Us</h4>
-                      <p className="text-gray-600">Join our team and help shape the future of ZurichJS!</p>
+                      <UserPlus className="mx-auto mb-3 text-gray-700" size={28} />
+                      <h4 className="text-base sm:text-lg font-semibold mb-2 text-gray-900">Volunteer With Us</h4>
+                      <p className="text-sm sm:text-base text-gray-600">Join our team and help shape the future of ZurichJS!</p>
                     </div>
                   </div>
                 </Link>
@@ -825,7 +863,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                               <Button
                   onClick={() => {
-                    setSelectedType('monthly');
+                    setIsRecurring(true);
                     document.getElementById('support-section')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   className="text-white py-3 px-8 rounded-full bg-gray-900 hover:bg-gray-800 transition-all duration-300 

@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { priceId, amount, email } = req.body;
+  const { priceId, amount, email, recurring } = req.body;
   
   if (!priceId && !amount) {
     return res.status(400).json({ error: 'Price ID or custom amount is required' });
@@ -24,10 +24,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let sessionParams: Stripe.Checkout.SessionCreateParams;
     
     if (amount && !priceId) {
-      // For custom amounts, create a one-time payment
+      // For custom amounts, create based on recurring flag
+      const isRecurring = recurring === true;
+      const mode = isRecurring ? 'subscription' : 'payment';
+      const donationType = isRecurring ? 'monthly' : 'custom';
+      
       const successParams = new URLSearchParams({
         success: 'true',
-        donation_type: 'custom',
+        donation_type: donationType,
         amount: String(amount),
         currency: 'CHF'
       });
@@ -36,23 +40,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         successParams.set('customer_email', email);
       }
 
+      const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
+        currency: 'chf',
+        product: SUPPORT_PRODUCT_ID,
+        unit_amount: Math.round(amount * 100), // Convert to cents
+      };
+
+      // Add recurring info if it's a subscription
+      if (isRecurring) {
+        priceData.recurring = {
+          interval: 'month',
+        };
+      }
+
       sessionParams = {
         line_items: [
           {
-            price_data: {
-              currency: 'chf',
-              product: SUPPORT_PRODUCT_ID,
-              unit_amount: Math.round(amount * 100), // Convert to cents
-            },
+            price_data: priceData,
             quantity: 1,
           },
         ],
-        mode: 'payment',
+        mode,
         success_url: `${req.headers.origin}/buy-us-a-coffee?${successParams.toString()}`,
         cancel_url: `${req.headers.origin}/buy-us-a-coffee?canceled=true`,
         metadata: {
-          type: 'custom',
+          type: mode,
           amount: String(amount),
+          recurring: String(isRecurring),
         },
       };
     } else {

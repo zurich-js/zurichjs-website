@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 
+import Logo from "@/components/ui/Logo";
+
 // Define our interfaces
 interface NavSubItem {
   name: string;
@@ -165,7 +167,7 @@ export default function Header() {
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center opacity-100 transition-opacity duration-300"
               >
-                <span className="font-bold text-2xl lg:text-3xl">Zurich<span className="font-black">JS</span></span>
+                <Logo textClasses={scrolled ? 'fill-white' : 'fill-black'} className="h-5 w-auto transition-colors duration-300 ease-in-out" />
               </motion.div>
             </Link>
 
@@ -225,7 +227,7 @@ export default function Header() {
                   )}
                 </li>
               ))}
-              
+
               {/* Coffee button for medium screens */}
               <li className="xl:hidden">
                 <Link

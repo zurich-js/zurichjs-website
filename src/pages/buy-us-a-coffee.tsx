@@ -517,74 +517,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               </div>
             </motion.div>
 
-            {/* What Does It Cost Section */}
-            <motion.div
-                initial={{opacity: 0, y: 20}}
-                whileInView={{opacity: 1, y: 0}}
-                viewport={{once: true}}
-                transition={{duration: 0.5}}
-                className="max-w-2xl mx-auto px-4 sm:px-6 mt-8"
-            >
-              <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200">
-                <h3 className="text-lg sm:text-xl font-bold mb-4 text-center text-gray-900">What does it cost to run a meetup?</h3>
-                <ul className="space-y-2 sm:space-y-3">
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Basic drinks and snacks for 20–30 people</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 150</span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Pizza for 40–60 people</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 600</span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Flying in a speaker (within Europe)</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 500–600</span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Tooling and hosting (Google Drive, etc.)</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 100+ per month</span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Workshop venue rental</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 150 per hour</span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Meetup.com subscription</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 80 every 6 months</span>
-                  </li>
-                  <li className="flex items-center justify-between gap-3">
-                    <div className="flex items-center flex-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full mr-2 sm:mr-3 flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base text-gray-700">Community goodies (stickers, etc.)</span>
-                    </div>
-                    <span className="font-semibold text-sm sm:text-base text-gray-900 whitespace-nowrap">CHF 20–50 per meetup</span>
-                  </li>
-                </ul>
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm text-gray-600 text-center italic">
-                    This is just a sample of what goes into each event, not an exhaustive list.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+
 
             {/* Other Ways to Support */}
             <motion.div

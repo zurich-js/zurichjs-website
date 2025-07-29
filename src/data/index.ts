@@ -73,6 +73,15 @@ export const getPartners = () => {
             type: 'conference',
             description: 'Exclusive perks for ZurichJS members'
         },
+        {
+            id: '17',
+            name: 'iJS Munich',
+            logo: '/images/partners/ijs-munich.jpg',
+            url: 'https://ijs-munich.com/',
+            type: 'conference',
+            description: 'The Conference for Fullstack JS Development',
+            blurb: 'iJS gathers like-minded professionals to learn, share, and grow. Join us in Munich where industry leaders and innovators will come together to exchange insights, share experiences, and chart the course for the future of Javascript'
+        },
 
         // Community Partners
         {
@@ -136,6 +145,16 @@ export const getPartners = () => {
             sponsorshipTier: 'silver',
             description: 'Swiss platform connecting IT experts with businesses',
             blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
+        },
+        {
+            id: '16',
+            name: 'OnlyDust',
+            logo: '/images/partners/only-dust-logo.webp',
+            url: 'https://onlydust.com',
+            type: 'supporting',
+            sponsorshipTier: 'gold',
+            description: 'We help people contribute to open source.',
+            blurb: 'Whether you\'re a contributor looking for something meaningful to build, or a maintainer looking for actual humans to help - not bots - we\'re here.'
         },
     ];
 

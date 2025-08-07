@@ -85,11 +85,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Pre-fill shipping address if provided
       if (deliveryAddress) {
         sessionParams.customer_creation = 'always';
-        sessionParams.customer_update = {
-          address: 'auto',
-          name: 'auto',
-          shipping: 'auto',
-        };
         
         // Store address in session metadata for reference, but Stripe will collect fresh address
         // The user will still need to enter/confirm address in Stripe checkout for security

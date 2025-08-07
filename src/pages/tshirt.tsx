@@ -264,7 +264,16 @@ export default function TshirtPage() {
                  cashPaymentDetails.email.trim() && 
                  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cashPaymentDetails.email);
         }
-        return true; // Online payment delivery step is always valid
+        // For online payment with delivery, require delivery address
+        if (paymentMethod === 'online' && delivery) {
+          return deliveryAddress.name.trim() && 
+                 deliveryAddress.email.trim() && 
+                 /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryAddress.email) &&
+                 deliveryAddress.address.trim() && 
+                 deliveryAddress.city.trim() && 
+                 deliveryAddress.zipCode.trim();
+        }
+        return true; // Online payment without delivery is always valid
       case 3:
         return true; // Review step is always valid
       default:
@@ -318,6 +327,26 @@ Delivery Method: Meetup Pickup`,
     // Handle online payment
     setLoading(true);
     setCheckoutError('');
+    
+    // Validate delivery address if delivery is selected
+    if (delivery) {
+      if (!deliveryAddress.name.trim() || 
+          !deliveryAddress.email.trim() || 
+          !deliveryAddress.address.trim() || 
+          !deliveryAddress.city.trim() || 
+          !deliveryAddress.zipCode.trim()) {
+        setCheckoutError('Please fill in all required delivery address fields.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryAddress.email)) {
+        setCheckoutError('Please enter a valid email address.');
+        setLoading(false);
+        return;
+      }
+    }
+    
     track('tshirt_checkout_started', {
       sizesOrdered: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
       totalQuantity,
@@ -1106,12 +1135,13 @@ Delivery Method: Meetup Pickup`,
                         ) : null}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
                             <input
                               type="text"
                               value={deliveryAddress.name}
                               onChange={(e) => setDeliveryAddress(prev => ({ ...prev, name: e.target.value }))}
                               disabled={!!(userLoaded && user)}
+                              required
                               className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
                                 userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
                               }`}
@@ -1119,12 +1149,13 @@ Delivery Method: Meetup Pickup`,
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                             <input
                               type="email"
                               value={deliveryAddress.email}
                               onChange={(e) => setDeliveryAddress(prev => ({ ...prev, email: e.target.value }))}
                               disabled={!!(userLoaded && user)}
+                              required
                               className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${
                                 userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
                               }`}
@@ -1132,31 +1163,34 @@ Delivery Method: Meetup Pickup`,
                             />
                           </div>
                           <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
                             <input
                               type="text"
                               value={deliveryAddress.address}
                               onChange={(e) => setDeliveryAddress(prev => ({ ...prev, address: e.target.value }))}
+                              required
                               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                               placeholder="Street address"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
                             <input
                               type="text"
                               value={deliveryAddress.city}
                               onChange={(e) => setDeliveryAddress(prev => ({ ...prev, city: e.target.value }))}
+                              required
                               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                               placeholder="City"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
                             <input
                               type="text"
                               value={deliveryAddress.zipCode}
                               onChange={(e) => setDeliveryAddress(prev => ({ ...prev, zipCode: e.target.value }))}
+                              required
                               className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                               placeholder="ZIP code"
                             />

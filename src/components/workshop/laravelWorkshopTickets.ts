@@ -7,6 +7,8 @@ export const laravelWorkshopTickets: TicketOption[] = [
     title: 'Workshop Only',
     description: 'Access to the Laravel Workshop: From Scratch to Real-Time with Laravel & Reverb',
     price: 225,
+    ticketType: 'workshop',
+    workshopId: 'laravel-workshop',
     features: [
       '4-hour hands-on workshop',
       'Workshop materials and code examples',

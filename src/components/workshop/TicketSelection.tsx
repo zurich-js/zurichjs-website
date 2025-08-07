@@ -15,7 +15,7 @@ export interface TicketOption {
   features: string[];
   testPriceId?: string;
   autoSelect?: boolean;
-  ticketType?: 'workshop' | 'event';
+  ticketType: 'workshop' | 'event';
   eventId?: string;
   workshopId?: string;
 }

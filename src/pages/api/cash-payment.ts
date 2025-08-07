@@ -24,8 +24,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } = req.body;
 
     // Validate required fields
-    if (!name || !email || !ticketTitle || price === undefined || !(eventId || workshopId)) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const missingFields = [];
+    if (!name) missingFields.push('name');
+    if (!email) missingFields.push('email');
+    if (!ticketTitle) missingFields.push('ticketTitle');
+    if (price === undefined) missingFields.push('price');
+    if (!eventId && !workshopId) missingFields.push('eventId or workshopId');
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        error: `Missing required fields: ${missingFields.join(', ')}` 
+      });
     }
 
     // Validate payment method

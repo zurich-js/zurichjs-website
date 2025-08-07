@@ -797,7 +797,8 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                     {isClient && <TicketSelection
                                         options={aiEdgeWorkshopTickets}
                                         className="max-w-2xl mx-auto"
-                                        workshopId="ai-edge-application"
+                                        workshopId={workshop.id}
+                                        ticketType="workshop"
                                     />}
                                 </>
                             )}

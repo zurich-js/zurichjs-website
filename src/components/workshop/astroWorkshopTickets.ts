@@ -6,6 +6,8 @@ export const astroWorkshopTickets: TicketOption[] = [
     testPriceId: 'price_1RQ6KnGxQziVA7FsdHks8zWL', // Test price ID (reusing nodejs workshop test ID for development)
     title: 'Workshop Only',
     description: 'Access to the Astro Zero to Hero Workshop',
+    ticketType: 'workshop',
+    workshopId: 'astro-zero-to-hero',
     price: 225,
     features: [
       '4-hour hands-on workshop',

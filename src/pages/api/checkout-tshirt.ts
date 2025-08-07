@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sizeQuantities, delivery, priceId, isMember, totalQuantity, shippingRateId, email, couponCode } = req.body;
+  const { sizeQuantities, delivery, priceId, isMember, totalQuantity, shippingRateId, email, couponCode, deliveryAddress } = req.body;
   if (!sizeQuantities || !priceId || !totalQuantity) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -52,6 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         totalQuantity: String(totalQuantity),
         userEmail: email || '',
         couponCode: couponCode || '',
+        deliveryAddress: deliveryAddress ? JSON.stringify(deliveryAddress) : '',
       },
       invoice_creation: {
         enabled: true,
@@ -63,10 +64,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             totalQuantity: String(totalQuantity),
             userEmail: email || '',
             couponCode: couponCode || '',
+            deliveryAddress: deliveryAddress ? JSON.stringify(deliveryAddress) : '',
           },
         },
       },
     };
+
+    // Set customer email if provided
+    if (email) {
+      sessionParams.customer_email = email;
+    }
+
+    // Configure address collection for delivery orders
+    if (delivery) {
+      // Collect shipping address when delivery is selected
+      sessionParams.shipping_address_collection = {
+        allowed_countries: ['CH'], // Switzerland only as mentioned in UI
+      };
+      
+      // Pre-fill shipping address if provided
+      if (deliveryAddress) {
+        sessionParams.customer_creation = 'always';
+        sessionParams.customer_update = {
+          address: 'auto',
+          name: 'auto',
+          shipping: 'auto',
+        };
+        
+        // Store address in session metadata for reference, but Stripe will collect fresh address
+        // The user will still need to enter/confirm address in Stripe checkout for security
+      }
+    } else {
+      // For pickup orders, we still collect billing address but not shipping
+      sessionParams.billing_address_collection = 'required';
+    }
     if (shippingRateId) {
       sessionParams.shipping_options = [
         { shipping_rate: shippingRateId },

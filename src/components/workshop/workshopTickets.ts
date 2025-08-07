@@ -5,6 +5,8 @@ export const workshopTickets: TicketOption[] = [
     id: 'price_1RNBioGxQziVA7FsGUNhc2Ag', // Production price ID
     testPriceId: 'price_1RNCL3GxQziVA7FskRzSk2hf', // Test price ID
     title: 'Workshop Only',
+    ticketType: 'workshop',
+    workshopId: 'nodejs-threads-workshop',
     description: 'Access to the Node.js Threads Workshop',
     price: 100,
     features: [
@@ -17,6 +19,8 @@ export const workshopTickets: TicketOption[] = [
   {
     id: 'price_1RNBk0GxQziVA7FsGd4IO3ro', // Production price ID
     testPriceId: 'price_1RNCKfGxQziVA7FsNqpFZehv', // Test price ID
+    ticketType: 'workshop',
+    workshopId: 'nodejs-threads-workshop',
     title: 'Workshop + Pro Meetup',
     description: 'Workshop + June 19th Pro Meetup Ticket',
     price: 110,

@@ -620,6 +620,7 @@ Delivery Method: Meetup Pickup`,
           </div>
         </section>
 
+
         {/* Product Configuration */}
         <section className="max-w-7xl mx-auto px-4 pb-20 overflow-x-hidden">
           <div className="grid lg:grid-cols-3 gap-8 lg:gap-12 w-full min-w-0">

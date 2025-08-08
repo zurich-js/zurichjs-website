@@ -87,43 +87,25 @@ export const useReferrals = () => {
       }
 
       try {
-        // In a real implementation, this would be an API call to your backend
-        // For now, we'll mock data from localStorage
-        const storedData = localStorage.getItem(`referral_data_${user.id}`);
-        
-        // Check if user was referred (from metadata)
+        // Get data directly from Clerk user metadata
+        const credits = (user.unsafeMetadata?.credits as number) || 0;
+        const referrals = (user.unsafeMetadata?.referrals as ReferralData['referrals']) || [];
         const referredByData = user.unsafeMetadata?.referredBy as ReferredBy;
         
-        if (storedData) {
-          const parsedData = JSON.parse(storedData);
-          
-          // If there's referral data in metadata but not in local storage, add it
-          if (referredByData && !parsedData.referredBy) {
-            parsedData.referredBy = referredByData;
-            localStorage.setItem(`referral_data_${user.id}`, JSON.stringify(parsedData));
-          }
-          
-          setReferralData(parsedData);
-          
-          if (referredByData) {
-            setReferredBy(referredByData);
-          }
-        } else {
-          // Initialize with default values if no data exists
-          const defaultData: ReferralData = {
-            credits: 0,
-            referrals: [],
-            workshopDiscount: 100,
-            tshirt: 500,
-            workshopEntry: 1000,
-            referredBy: referredByData || undefined
-          };
-          setReferralData(defaultData);
-          localStorage.setItem(`referral_data_${user.id}`, JSON.stringify(defaultData));
-          
-          if (referredByData) {
-            setReferredBy(referredByData);
-          }
+        // Set referral data from Clerk metadata
+        const clerkData: ReferralData = {
+          credits,
+          referrals,
+          workshopDiscount: 100,
+          tshirt: 500,
+          workshopEntry: 1000,
+          referredBy: referredByData || undefined
+        };
+        
+        setReferralData(clerkData);
+        
+        if (referredByData) {
+          setReferredBy(referredByData);
         }
 
         // Generate referral link
@@ -143,20 +125,34 @@ export const useReferrals = () => {
   }, [user]);
 
   // Add credits to the user's account
-  const addCredits = (amount: number) => {
+  const addCredits = async (amount: number) => {
     if (!user) return;
     
-    const updatedData = {
-      ...referralData,
-      credits: referralData.credits + amount
-    };
-    
-    setReferralData(updatedData);
-    localStorage.setItem(`referral_data_${user.id}`, JSON.stringify(updatedData));
+    try {
+      const currentCredits = (user.unsafeMetadata?.credits as number) || 0;
+      const newCredits = currentCredits + amount;
+      
+      // Update Clerk metadata
+      await user.update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
+          credits: newCredits
+        }
+      });
+      
+      // Update local state
+      const updatedData = {
+        ...referralData,
+        credits: newCredits
+      };
+      setReferralData(updatedData);
+    } catch (error) {
+      console.error('Error adding credits:', error);
+    }
   };
 
   // Record a new referral
-  const recordReferral = (
+  const recordReferral = async (
     referredUserId: string, 
     referredEmail: string, 
     type: 'workshop' | 'event' | 'other' = 'other',
@@ -164,22 +160,37 @@ export const useReferrals = () => {
   ) => {
     if (!user) return;
     
-    const newReferral = {
-      userId: referredUserId,
-      email: referredEmail,
-      date: new Date().toISOString(),
-      type,
-      creditValue
-    };
-    
-    const updatedData = {
-      ...referralData,
-      referrals: [...referralData.referrals, newReferral],
-      credits: referralData.credits + creditValue
-    };
-    
-    setReferralData(updatedData);
-    localStorage.setItem(`referral_data_${user.id}`, JSON.stringify(updatedData));
+    try {
+      const newReferral = {
+        userId: referredUserId,
+        email: referredEmail,
+        date: new Date().toISOString(),
+        type,
+        creditValue
+      };
+      
+      const currentReferrals = (user.unsafeMetadata?.referrals as ReferralData['referrals']) || [];
+      const currentCredits = (user.unsafeMetadata?.credits as number) || 0;
+      
+      // Update Clerk metadata
+      await user.update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
+          referrals: [...currentReferrals, newReferral],
+          credits: currentCredits + creditValue
+        }
+      });
+      
+      // Update local state
+      const updatedData = {
+        ...referralData,
+        referrals: [...currentReferrals, newReferral],
+        credits: currentCredits + creditValue
+      };
+      setReferralData(updatedData);
+    } catch (error) {
+      console.error('Error recording referral:', error);
+    }
   };
 
   // Get the current user's referrer (if any)
@@ -254,9 +265,9 @@ export const useReferrals = () => {
       }
       
       // 2. Add initial signup credits (5 credits)
-      addCredits(5);
+      await addCredits(5);
       
-      // 3. Update referralData with referredBy information
+      // 3. Update local referralData state with referredBy information
       const updatedReferralData = {
         ...referralData,
         referredBy: {
@@ -266,7 +277,6 @@ export const useReferrals = () => {
         }
       };
       setReferralData(updatedReferralData);
-      localStorage.setItem(`referral_data_${user.id}`, JSON.stringify(updatedReferralData));
       
       // 4. Update referrer's metadata to include this user as a referral
       try {

@@ -20,4 +20,5 @@ export const aiEdgeWorkshopTickets: TicketOption[] = [
       'Networking opportunities'
     ]
   }
-]; 
+];
+

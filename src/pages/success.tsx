@@ -413,12 +413,59 @@ export default function SuccessPage() {
             </div>
           </motion.div>
 
+          {/* T-shirt Pre-order Reminder for Workshop Attendees */}
+          {itemType === 'workshop' && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+              className="mb-8"
+            >
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6 shadow-sm">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="bg-purple-100 p-3 rounded-full">
+                    <span className="text-2xl">👕</span>
+                  </div>
+                </div>
+                <h3 className="text-center text-xl font-bold text-gray-900 mb-3">
+                  Don&apos;t Forget Your ZurichJS T-Shirt!
+                </h3>
+                <p className="text-center text-gray-700 mb-4">
+                  Pre-order your official ZurichJS t-shirt now and have it ready for pickup at the workshop. Save time and guarantee your size!
+                </p>
+                <div className="bg-white/70 p-4 rounded-lg border border-purple-200 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-600 font-bold">✓</span> 25 CHF (20% off for members)
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-600 font-bold">✓</span> Available in S-XXL
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-600 font-bold">✓</span> Ready at workshop pickup
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <Link href="/tshirt">
+                    <Button className="bg-purple-600 text-white hover:bg-purple-700 px-6 py-3 font-bold text-lg shadow-lg transform hover:scale-105 transition-all">
+                      Pre-Order T-Shirt
+                    </Button>
+                  </Link>
+                  <p className="text-xs text-purple-600 mt-2">
+                    Order before the workshop for guaranteed availability
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Always show account creation incentive for manual payments too */}
           {method === 'cash' ? (
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
               className="mb-8"
             >
               <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-100 rounded-xl p-4 sm:p-5 shadow-sm mb-6">
@@ -435,7 +482,7 @@ export default function SuccessPage() {
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
+              transition={{ delay: itemType === 'workshop' ? 0.6 : 0.4, duration: 0.4 }}
             >
               <AccountCreationIncentive />
             </motion.div>

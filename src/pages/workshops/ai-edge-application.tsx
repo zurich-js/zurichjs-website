@@ -375,7 +375,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
     };
 
     // Single source of truth for seats
-    const seatsRemaining = 9; // Update in one place to keep the UI consistent
+    const seatsRemaining = 7; // Update in one place to keep the UI consistent
 
     // Scroll to registration function
     const scrollToRegistration = useCallback(() => {

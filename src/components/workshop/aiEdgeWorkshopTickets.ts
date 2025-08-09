@@ -8,7 +8,7 @@ export const aiEdgeWorkshopTickets: TicketOption[] = [
     description: 'Access to the Building a Full-Stack AI Application on the Edge Workshop',
     price: 95,
     ticketType: 'workshop',
-    workshopId: 'cloudflare-ai-edge-application',
+    workshopId: 'ai-edge-application',
     features: [
       '2.5 hour hands-on workshop with 20 min break',
       'Complete AI application built from scratch',

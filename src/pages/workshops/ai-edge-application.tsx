@@ -48,8 +48,8 @@ interface WorkshopPageProps {
     speaker: Speaker;
 }
 
-// --- Countdown Component ---
-function CountdownTimer({ targetDate }: { targetDate: string }) {
+// --- Smart Countdown Component ---
+function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -57,39 +57,81 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
     seconds: 0
   });
   const [isClient, setIsClient] = useState(false);
+  const [countdownType, setCountdownType] = useState<'earlybird' | 'workshop'>('earlybird');
 
   useEffect(() => {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const target = new Date(targetDate).getTime();
-      const difference = target - now;
-
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        });
+      const earlybirdEnd = new Date('2025-08-22T23:59:59').getTime();
+      const workshopStart = new Date('2025-09-09T18:00:00').getTime();
+      
+      // Check if earlybird period is still active
+      if (now < earlybirdEnd) {
+        setCountdownType('earlybird');
+        const difference = earlybirdEnd - now;
+        
+        if (difference > 0) {
+          setTimeLeft({
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+            seconds: Math.floor((difference % (1000 * 60)) / 1000)
+          });
+        } else {
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        }
+      } else {
+        // Switch to workshop countdown
+        setCountdownType('workshop');
+        const difference = workshopStart - now;
+        
+        if (difference > 0) {
+          setTimeLeft({
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+            seconds: Math.floor((difference % (1000 * 60)) / 1000)
+          });
+        } else {
+          // Workshop has started or passed
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        }
       }
     };
 
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, []);
 
   if (!isClient) return null;
 
-  return (
-    <div className="flex gap-2 sm:gap-4">
-      {[{ label: 'Days', value: timeLeft.days }, { label: 'Hours', value: timeLeft.hours }, { label: 'Min', value: timeLeft.minutes }, { label: 'Sec', value: timeLeft.seconds }].map((unit) => (
-        <div key={unit.label} className="bg-white/90 backdrop-blur rounded-lg px-2 py-1 sm:px-3 sm:py-2 text-center min-w-[3rem] sm:min-w-[4rem]">
-          <div className="font-bold text-lg sm:text-2xl text-gray-900">{unit.value.toString().padStart(2, '0')}</div>
-          <div className="text-xs text-gray-600 font-medium">{unit.label}</div>
+  const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
+
+  if (isExpired && countdownType === 'workshop') {
+    return (
+      <div className="text-center">
+        <div className="bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm">
+          Workshop Started!
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <div className="text-xs font-medium text-white mb-1">
+        {countdownType === 'earlybird' ? 'Early Bird Ends In:' : 'Workshop Starts In:'}
+      </div>
+      <div className="flex gap-2 sm:gap-4">
+        {[{ label: 'Days', value: timeLeft.days }, { label: 'Hours', value: timeLeft.hours }, { label: 'Min', value: timeLeft.minutes }, { label: 'Sec', value: timeLeft.seconds }].map((unit) => (
+          <div key={unit.label} className="bg-white/90 backdrop-blur rounded-lg px-2 py-1 sm:px-3 sm:py-2 text-center min-w-[3rem] sm:min-w-[4rem]">
+            <div className="font-bold text-lg sm:text-2xl text-gray-900">{unit.value.toString().padStart(2, '0')}</div>
+            <div className="text-xs text-gray-600 font-medium">{unit.label}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -365,6 +407,27 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
         }
     }, [track, workshop.id, workshop.title]);
 
+    // Scroll to workshop details function
+    const scrollToDetails = useCallback(() => {
+        track('workshop_details_button_clicked', {
+            workshop_id: workshop.id,
+            workshop_title: workshop.title
+        });
+
+        // Find the "What You'll Build" section specifically
+        const whatYoullBuildSection = document.getElementById('what-youll-build');
+        if (whatYoullBuildSection) {
+            // Get the element's position
+            const elementPosition = whatYoullBuildSection.getBoundingClientRect().top + window.pageYOffset;
+
+            // Scroll to a position 100px above the element
+            window.scrollTo({
+                top: elementPosition - 100,
+                behavior: 'smooth'
+            });
+        }
+    }, [track, workshop.id, workshop.title]);
+
     // Set up client-side rendering flag to prevent hydration issues
     useEffect(() => {
         setIsClient(true);
@@ -525,7 +588,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-end">
                             <div className="scale-75 sm:scale-100">
-                                <CountdownTimer targetDate="2025-09-09T18:00:00" />
+                                <CountdownTimer />
                             </div>
                             <button
                                 onClick={scrollToRegistration}
@@ -583,11 +646,18 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                       >
                         🎫 Book Your Spot - 95 CHF
                       </Button>
+                      <Button
+                        onClick={scrollToDetails}
+                        variant="outline"
+                        className="border-zurich text-zurich hover:bg-zurich hover:text-white text-base sm:text-lg py-3 sm:py-4 px-6 sm:px-8 font-bold shadow-lg transform hover:scale-105 transition-all flex-1 sm:flex-initial"
+                      >
+                        📚 Learn More
+                      </Button>
                       {isClient && (
                         <Button
                           onClick={shareWorkshop}
                           variant="outline"
-                          className="border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800 text-sm py-2 font-medium"
+                          className="border-gray-300 text-gray-600 hover:bg-gray-600 hover:text-white text-sm py-2 font-medium"
                         >
                           <Share2 size={16} className="mr-1.5"/>
                           Share
@@ -681,141 +751,45 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
 
             {/* Quick Info Cards */}
             <Section className="bg-gray-50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-blue-50 p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
-                    <Calendar className="text-blue-600 mb-3" size={24} />
-                    <div className="font-semibold text-blue-800">Date & Time</div>
-                    <div className="text-sm text-blue-700">{workshop.dateInfo}</div>
-                    <div className="text-sm text-blue-700">{workshop.timeInfo}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+                  <div className="bg-blue-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <Calendar className="text-blue-600" size={20} />
+                      <div className="font-semibold text-blue-800 text-sm sm:text-base">Date & Time</div>
+                    </div>
+                    <div className="text-xs sm:text-sm text-blue-700">{workshop.dateInfo}</div>
+                    <div className="text-xs sm:text-sm text-blue-700">{workshop.timeInfo}</div>
                   </div>
-                  <div className="bg-purple-50 p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
-                    <MapPin className="text-purple-600 mb-3" size={24} />
-                    <div className="font-semibold text-purple-800">Location</div>
-                    <div className="text-sm text-purple-700">Smallpdf AG</div>
-                    <div className="text-sm text-purple-700">Steinstrasse 21, Zürich</div>
+                  <div className="bg-purple-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <MapPin className="text-purple-600" size={20} />
+                      <div className="font-semibold text-purple-800 text-sm sm:text-base">Location</div>
+                    </div>
+                    <div className="text-xs sm:text-sm text-purple-700">Smallpdf AG</div>
+                    <div className="text-xs sm:text-sm text-purple-700">Steinstrasse 21, Zürich</div>
                   </div>
-                  <div className="bg-red-50 p-6 rounded-lg shadow-sm border-l-4 border-red-500">
-                    <Users className="text-red-600 mb-3" size={24} />
-                    <div className="font-semibold text-red-800">Availability</div>
-                    <div className="text-sm text-red-600 font-bold">{seatsRemaining} seats left</div>
-                    <div className="text-sm text-red-700">of {workshop.maxAttendees} total</div>
+                  <div className="bg-red-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <Users className="text-red-600" size={20} />
+                      <div className="font-semibold text-red-800 text-sm sm:text-base">Availability</div>
+                    </div>
+                    <div className="text-xs sm:text-sm text-red-600 font-bold">{seatsRemaining} seats left</div>
+                    <div className="text-xs sm:text-sm text-red-700">of {workshop.maxAttendees} total</div>
                   </div>
-                  <div className="bg-amber-50 p-6 rounded-lg shadow-sm border-l-4 border-amber-500">
-                    <Timer className="text-amber-600 mb-3" size={24} />
-                    <div className="font-semibold text-amber-800">Early Bird</div>
-                    <div className="text-sm text-amber-600 font-bold">Ends Aug 22nd</div>
-                    <div className="text-sm text-amber-700">Save 30 CHF</div>
+                  <div className="bg-amber-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-amber-500">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <Timer className="text-amber-600" size={20} />
+                      <div className="font-semibold text-amber-800 text-sm sm:text-base">Early Bird</div>
+                    </div>
+                    <div className="text-xs sm:text-sm text-amber-600 font-bold">Ends Aug 22nd</div>
+                    <div className="text-xs sm:text-sm text-amber-700">Save 30 CHF</div>
                   </div>
                 </div>
             </Section>
 
-            <Section className="bg-white">
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full text-sm font-bold mb-4">
-                        <AlertCircle size={16} />
-                        Only {seatsRemaining} seats left!
-                    </div>
-                    <h2 className="text-3xl font-bold mb-4 text-gray-900">
-                        🎯 Secure Your Spot
-                    </h2>
-                    <p className="text-lg text-gray-600 mb-6">
-                        Build a complete AI application in 2.5 hours with hands-on guidance
-                    </p>
-                    <div className="flex justify-center mb-4">
-                        <CountdownTimer targetDate="2025-09-09T18:00:00" />
-                    </div>
-                    <div className="text-sm text-amber-700 font-semibold">
-                        Early bird pricing ends August 22nd - Save 30 CHF!
-                    </div>
-                </div>
-
-                {canceled === 'true' ? (
-                        <CancelledCheckout 
-                            workshopId="ai-edge-application"
-                            workshopTitle={workshop.title}
-                        />
-                    ) : (
-                        <>
-                            <div className="bg-white border-2 border-zurich/30 rounded-xl p-6 mb-6 shadow-lg">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-3 bg-zurich/10 rounded-full shadow-sm">
-                                        <AlertCircle className="text-zurich" size={28} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-2xl font-bold text-zurich">Workshop Pricing</h3>
-                                        <p className="text-sm text-gray-600">Seats available</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="grid sm:grid-cols-2 gap-6 mb-6">
-                                    <div className="bg-white rounded-lg p-4 border border-zurich/20 shadow-sm">
-                                        <div className="text-sm font-medium text-gray-600 mb-1">Early Bird Special</div>
-                                        <div className="flex items-baseline gap-2 mb-2">
-                                            <span className="text-3xl font-bold text-zurich">95</span>
-                                            <span className="text-lg font-semibold text-gray-600">CHF</span>
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                            <span className="line-through">Regular: 125 CHF</span>
-                                            <span className="ml-2 text-green-600 font-semibold">Save 24%</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="bg-white rounded-lg p-4 border border-zurich/20 shadow-sm">
-                                        <div className="text-sm font-medium text-gray-600 mb-1">Availability</div>
-                                        <div className="flex items-baseline gap-2 mb-2">
-                                            <span className="text-3xl font-bold text-zurich">{seatsRemaining}</span>
-                                            <span className="text-lg font-semibold text-gray-600">left</span>
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                            of {workshop.maxAttendees} total seats
-                                        </div>
-                                        <div className="mt-2">
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div 
-                                                    className="bg-zurich h-2 rounded-full transition-all duration-300"
-                                                    style={{width: `${((workshop.maxAttendees - seatsRemaining) / workshop.maxAttendees) * 100}%`}}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
-                                    <div className="text-amber-800 font-semibold text-sm mb-1">
-                                        ⏰ Early Bird Pricing
-                                    </div>
-                                    <div className="text-amber-700 text-xs">
-                                        Early bird pricing ends August 22nd
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg mb-6">
-                                <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                                    <span className="text-green-600">📦</span> What&apos;s included:
-                                </h4>
-                                <div className="grid sm:grid-cols-2 gap-3 text-sm text-gray-700">
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-green-200">
-                                        <span className="text-green-600 font-bold">✓</span> 2.5 hours hands-on learning
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-green-200">
-                                        <span className="text-green-600 font-bold">✓</span> Complete codebase & guides
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-green-200">
-                                        <span className="text-green-600 font-bold">✓</span> Refreshments & snacks
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-white p-2 rounded border border-green-200">
-                                        <span className="text-green-600 font-bold">✓</span> Community access
-                                    </div>
-                                </div>
-                            </div>
-                        </>
-                    )}
-            </Section>
 
             {/* Workshop Content and Registration Side by Side */}
-            <Section className="bg-white">
+            <Section className="bg-white workshop-details-section">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Workshop Details - Left Column (2/3 width on desktop) */}
                     <div className="lg:col-span-2 order-2 lg:order-1">
@@ -826,6 +800,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             viewport={{once: true}}
                             transition={{duration: 0.5}}
                             className="mb-8 bg-white border-2 border-amber-200 p-6 rounded-xl shadow-sm"
+                            id="what-youll-build"
                         >
                             <div className="mb-6">
                                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
@@ -992,9 +967,6 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900">
                                     🎯 Secure Your Spot
                                 </h2>
-                                <div className="flex justify-center mb-3 scale-75 sm:scale-75">
-                                    <CountdownTimer targetDate="2025-09-09T18:00:00" />
-                                </div>
                                 <div className="text-xs text-amber-700 font-semibold">
                                     Early bird ends Aug 22nd - Save 30 CHF!
                                 </div>
@@ -1007,56 +979,41 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 />
                             ) : (
                                 <>
-                                    <div className="bg-gradient-to-br from-white to-blue-50/30 border-2 border-zurich rounded-xl p-5 mb-4 shadow-lg">
+                                    <div className="bg-gradient-to-br from-white to-blue-50/30 border-2 border-zurich rounded-xl p-3 sm:p-5 mb-4 shadow-lg">
                                         {/* Header with pricing emphasis */}
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="p-2 bg-zurich rounded-full">
-                                                    <AlertCircle className="text-white" size={16} />
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4">
+                                            <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                                                <div className="p-1.5 sm:p-2 bg-zurich rounded-full">
+                                                    <AlertCircle className="text-white" size={14} />
                                                 </div>
-                                                <h3 className="text-lg font-bold text-zurich">Workshop Pricing</h3>
+                                                <h3 className="text-base sm:text-lg font-bold text-zurich">Workshop Pricing</h3>
                                             </div>
-                                            <div className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">
+                                            <div className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold self-start sm:self-auto">
                                                 {seatsRemaining} seats left
                                             </div>
                                         </div>
                                         
                                         {/* Main price display */}
-                                        <div className="bg-white rounded-lg p-4 mb-4 border border-zurich/20">
-                                            <div className="flex items-end justify-between">
-                                                <div>
-                                                    <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Early Bird Special</div>
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-3xl font-black text-zurich">95</span>
-                                                        <span className="text-lg font-bold text-zurich">CHF</span>
-                                                        <span className="text-sm text-gray-400 line-through ml-2">125 CHF</span>
-                                                    </div>
-                                                    <div className="text-xs text-green-600 font-semibold mt-1">
-                                                        💰 Save 30 CHF (24% off)
-                                                    </div>
+                                        <div className="bg-white rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-zurich/20">
+                                            <div className="text-center sm:text-left">
+                                                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Early Bird Special</div>
+                                                <div className="flex items-baseline gap-1 sm:gap-2 justify-center sm:justify-start">
+                                                    <span className="text-2xl sm:text-3xl font-black text-zurich">95</span>
+                                                    <span className="text-base sm:text-lg font-bold text-zurich">CHF</span>
+                                                    <span className="text-xs sm:text-sm text-gray-400 line-through ml-2">125 CHF</span>
                                                 </div>
-                                                <div className="text-right">
-                                                    <div className="text-xs text-gray-500 mb-1">Availability</div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                            <div 
-                                                                className="h-full bg-gradient-to-r from-red-400 to-red-600 rounded-full transition-all"
-                                                                style={{ width: `${(seatsRemaining / workshop.maxAttendees) * 100}%` }}
-                                                            ></div>
-                                                        </div>
-                                                        <span className="text-xs font-medium text-gray-600">{seatsRemaining}/{workshop.maxAttendees}</span>
-                                                    </div>
-                                                    <div className="text-xs text-red-500 font-medium mt-1">Filling fast!</div>
+                                                <div className="text-xs text-green-600 font-semibold mt-1">
+                                                    💰 Save 30 CHF (24% off)
                                                 </div>
                                             </div>
                                         </div>
                                         
                                         {/* Urgency banner */}
-                                        <div className="bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200 rounded-lg px-3 py-2">
-                                            <div className="flex items-center justify-center gap-2 text-amber-800">
-                                                <span className="animate-pulse">⏰</span>
-                                                <span className="text-xs font-bold">Early bird pricing ends August 22nd</span>
-                                                <span className="animate-pulse">⏰</span>
+                                        <div className="bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200 rounded-lg px-2 sm:px-3 py-2">
+                                            <div className="flex items-center justify-center gap-1 sm:gap-2 text-amber-800">
+                                                <span className="animate-pulse text-sm">⏰</span>
+                                                <span className="text-xs font-bold text-center">Early bird pricing ends August 22nd</span>
+                                                <span className="animate-pulse text-sm">⏰</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1117,25 +1074,6 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                         )}
                                     </div>
 
-                                    <div className="bg-green-50 border-2 border-green-200 p-3 rounded-lg mb-4">
-                                        <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2 text-sm">
-                                            <span className="text-green-600">📦</span> What&apos;s included:
-                                        </h4>
-                                        <div className="space-y-2 text-xs text-gray-700">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-green-600 font-bold">✓</span> 2.5 hours hands-on learning
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-green-600 font-bold">✓</span> Complete codebase & guides
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-green-600 font-bold">✓</span> Refreshments & snacks
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-green-600 font-bold">✓</span> Community access
-                                            </div>
-                                        </div>
-                                    </div>
 
                                     {/* T-shirt Link */}
                                     <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 mb-4">
@@ -1288,7 +1226,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                     <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Don&apos;t Miss Out! 🚀</h2>
                     <div className="bg-white/10 backdrop-blur rounded-xl p-6 mb-6 max-w-2xl mx-auto">
                         <div className="flex justify-center mb-4">
-                            <CountdownTimer targetDate="2025-09-09T18:00:00" />
+                            <CountdownTimer />
                         </div>
                         <p className="text-white/90 text-lg mb-4">
                             Build a complete AI application in one evening with expert guidance

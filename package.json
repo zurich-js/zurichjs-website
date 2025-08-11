@@ -28,7 +28,7 @@
     "lodash.get": "^4.4.2",
     "lucide-react": "^0.479.0",
     "meetup-api-client": "^0.1.14",
-    "next": "14.2.24",
+    "next": "^14.2.25",
     "next-sanity": "^9.9.0",
     "posthog-js": "^1.231.0",
     "react": "^18",

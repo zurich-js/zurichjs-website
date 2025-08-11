@@ -64,6 +64,7 @@ export default async function handler(
     const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || '';
     const name = `${firstName} ${lastName}`;
     const jobTitle = Array.isArray(fields.jobTitle) ? fields.jobTitle[0] : fields.jobTitle || '';
+    const biography = Array.isArray(fields.biography) ? fields.biography[0] : fields.biography || '';
     const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || '';
     const linkedinProfile = Array.isArray(fields.linkedinProfile) ? fields.linkedinProfile[0] : fields.linkedinProfile || '';
     const githubProfile = Array.isArray(fields.githubProfile) ? fields.githubProfile[0] : fields.githubProfile || '';
@@ -82,7 +83,7 @@ export default async function handler(
     });
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !linkedinProfile || !jobTitle || !title || !description) {
+    if (!firstName || !lastName || !email || !linkedinProfile || !jobTitle || !biography|| !title || !description) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -130,7 +131,7 @@ export default async function handler(
         name,
         title: jobTitle,
         email,
-        bio: '',
+        bio: biography,
         linkedin: linkedinProfile,
         talks: 0,
         image: null as null | { _type: string; asset: { _type: string; _ref: string } },
@@ -175,6 +176,7 @@ export default async function handler(
       const updateFields = {} as any;
       
       if (jobTitle) updateFields.title = jobTitle;
+      if (biography) updateFields.bio = biography;
       if (linkedinProfile) updateFields.linkedin = linkedinProfile;
       
       if (githubProfile) {
@@ -212,6 +214,7 @@ export default async function handler(
         current: talkId
       },
       title,
+      bio:biography,
       description,
       durationMinutes,
       level: talkLevel,

@@ -17,6 +17,7 @@ interface FormState {
   firstName: string;
   lastName: string;
   jobTitle: string;
+  biography:string;
   email: string;
   linkedinProfile: string;
   githubProfile: string;
@@ -42,6 +43,7 @@ export default function CFP() {
     firstName: '',
     lastName: '',
     jobTitle: '',
+    biography: '',
     email: '',
     linkedinProfile: '',
     githubProfile: '',
@@ -122,7 +124,7 @@ export default function CFP() {
 
     // Form validation
     if (!formState.firstName || !formState.lastName || !formState.email ||
-        !formState.linkedinProfile || !formState.jobTitle ||
+        !formState.linkedinProfile || !formState.jobTitle || formState.biography ||
         !formState.title || !formState.description || !formState.speakerImage) {
 
       // Track validation error
@@ -159,6 +161,7 @@ export default function CFP() {
       formData.append('firstName', formState.firstName);
       formData.append('lastName', formState.lastName);
       formData.append('jobTitle', formState.jobTitle);
+      formData.append('biography', formState.biography);
       formData.append('email', formState.email);
       formData.append('linkedinProfile', formState.linkedinProfile);
       formData.append('githubProfile', formState.githubProfile || '');
@@ -435,6 +438,22 @@ export default function CFP() {
                     onChange={handleInputChange}
                     placeholder="Senior Frontend Developer, Tech Lead, etc."
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    required
+                  />
+                </div>
+
+                <div className="mb-4">
+                  <label htmlFor="biography" className="block text-gray-700 mb-2">
+                    Biography *
+                  </label>
+                  <textarea
+                    id="biography"
+                    name="biography"
+                    value={formState.biography}
+                    onChange={handleInputChange}
+                    rows={5}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    placeholder='Tell us more about you and what connects you with javascript, Zürich or both...'
                     required
                   />
                 </div>

@@ -27,7 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">
-      <div className="sticky top-0 z-50">
+      <div className="sticky top-0 z-[60]">
         <AnnouncementBanner />
         <div className="relative bg-transparent">
           <Header />
@@ -35,7 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
       <main className="flex-grow pt-16 lg:pt-20">{children}
 
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-[70]">
           {showSupportButton && (
             <motion.div
               initial={{ y: 100, opacity: 0 }}

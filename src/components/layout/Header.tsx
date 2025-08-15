@@ -104,7 +104,7 @@ export default function Header() {
 
   // Helper functions to generate class names
   const getHeaderClasses = () => {
-    return `w-full fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+    return `w-full fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${
       scrolled ? 'bg-black text-js shadow-md py-2' : 'bg-transparent text-black py-2 lg:py-4'
     }`;
   };
@@ -208,7 +208,7 @@ export default function Header() {
 
                   {/* Dropdown menu */}
                   {item.items && item.id && activeDropdown === item.id && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-black text-js py-3 px-4 rounded-lg shadow-lg min-w-[180px] z-10">
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-black text-js py-3 px-4 rounded-lg shadow-lg min-w-[180px] z-[60]">
                       {/* Add invisible extension to prevent mouse gap */}
                       <div className="absolute h-2 w-full top-[-8px] left-0"></div>
                       <ul className="space-y-1">

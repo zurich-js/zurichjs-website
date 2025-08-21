@@ -77,7 +77,7 @@ export const getPartners = () => {
             id: '17',
             name: 'iJS Munich',
             logo: '/images/partners/ijs-munich.jpg',
-            url: 'https://ijs-munich.com/',
+            url: 'https://javascript-conference.com/munich/',
             type: 'conference',
             description: 'The Conference for Fullstack JS Development',
             blurb: 'iJS gathers like-minded professionals to learn, share, and grow. Join us in Munich where industry leaders and innovators will come together to exchange insights, share experiences, and chart the course for the future of Javascript'

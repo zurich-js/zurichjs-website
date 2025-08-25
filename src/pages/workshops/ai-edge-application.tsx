@@ -57,46 +57,27 @@ function CountdownTimer() {
     seconds: 0
   });
   const [isClient, setIsClient] = useState(false);
-  const [countdownType, setCountdownType] = useState<'earlybird' | 'workshop'>('earlybird');
+  const [countdownType] = useState<'workshop'>('workshop');
 
   useEffect(() => {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const earlybirdEnd = new Date('2025-08-22T23:59:59').getTime();
       const workshopStart = new Date('2025-09-09T18:00:00').getTime();
       
-      // Check if earlybird period is still active
-      if (now < earlybirdEnd) {
-        setCountdownType('earlybird');
-        const difference = earlybirdEnd - now;
-        
-        if (difference > 0) {
-          setTimeLeft({
-            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-            seconds: Math.floor((difference % (1000 * 60)) / 1000)
-          });
-        } else {
-          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        }
+      // Workshop countdown only
+      const difference = workshopStart - now;
+      
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        });
       } else {
-        // Switch to workshop countdown
-        setCountdownType('workshop');
-        const difference = workshopStart - now;
-        
-        if (difference > 0) {
-          setTimeLeft({
-            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-            hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-            minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-            seconds: Math.floor((difference % (1000 * 60)) / 1000)
-          });
-        } else {
-          // Workshop has started or passed
-          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        }
+        // Workshop has started or passed
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
@@ -122,7 +103,7 @@ function CountdownTimer() {
   return (
     <div className="text-center">
       <div className="text-xs font-medium text-white mb-1">
-        {countdownType === 'earlybird' ? 'Early Bird Ends In:' : 'Workshop Starts In:'}
+        Workshop Starts In:
       </div>
       <div className="flex gap-2 sm:gap-4">
         {[{ label: 'Days', value: timeLeft.days }, { label: 'Hours', value: timeLeft.hours }, { label: 'Min', value: timeLeft.minutes }, { label: 'Sec', value: timeLeft.seconds }].map((unit) => (
@@ -206,7 +187,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
         dateInfo: "September 9, 2025",
         timeInfo: "18:00 - 20:30",
         locationInfo: "Smallpdf AG, Steinstrasse 21, 8003 Zürich",
-        price: "95 CHF",
+        price: "125 CHF",
         description: "Ready to build lightning-fast AI applications that scale globally? In this hands-on workshop, you'll master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch. You'll start with the fundamentals of Cloudflare Workers and progressively add AI capabilities, databases, object storage, and a modern React frontend. By the end, you'll have deployed a production-ready AI application running on Cloudflare's global edge network.",
         maxAttendees: 20,
         speaker: speaker,
@@ -375,7 +356,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
     };
 
     // Single source of truth for seats
-    const seatsRemaining = 4; // Update in one place to keep the UI consistent
+    const seatsRemaining = 3; // Update in one place to keep the UI consistent
 
     // Scroll to registration function
     const scrollToRegistration = useCallback(() => {
@@ -582,8 +563,8 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             </div>
                             <div className="hidden sm:block h-6 w-px bg-white/30"></div>
                             <div className="flex items-center gap-2">
-                                <Timer size={16} className="text-js-dark" />
-                                <span className="text-xs sm:text-sm">Early bird ends Aug 22nd</span>
+                                <Calendar size={16} className="text-js-dark" />
+                                <span className="text-xs sm:text-sm">September 9, 2025</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-end">
@@ -594,7 +575,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 onClick={scrollToRegistration}
                                 className="bg-white text-zurich px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-bold text-xs sm:text-sm hover:bg-gray-100 transition-colors whitespace-nowrap"
                             >
-                                Book Now - 95 CHF
+                                Book Now - 125 CHF
                             </button>
                         </div>
                     </div>
@@ -644,7 +625,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                         onClick={scrollToRegistration}
                         className="bg-zurich text-white hover:bg-zurich/90 text-base sm:text-lg py-3 sm:py-4 px-6 sm:px-8 font-bold shadow-lg transform hover:scale-105 transition-all flex-1 sm:flex-initial"
                       >
-                        🎫 Book Your Spot - 95 CHF
+                        🎫 Book Your Spot - 125 CHF
                       </Button>
                       <Button
                         onClick={scrollToDetails}
@@ -664,17 +645,16 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                         </Button>
                       )}
                     </div>
-                    <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-lg mb-6">
+                    <div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-lg mb-6">
                       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                         <div className="flex items-center gap-2">
-                          <AlertCircle size={20} className="text-js-dark" />
-                          <span className="font-bold text-amber-700">Early bird pricing</span>
+                          <AlertCircle size={20} className="text-red-600" />
+                          <span className="font-bold text-red-700">Limited availability</span>
                         </div>
                         <div className="text-sm text-zurich">
-                          Save 30 CHF • {seatsRemaining} of {workshop.maxAttendees} seats remaining • Ends August 22nd
+                          Only {seatsRemaining} of {workshop.maxAttendees} seats remaining
                         </div>
                       </div>
-                      {/* Removed extra savings prompt for a cleaner hero */}
                     </div>
                     {/* Mini Speaker Card for mobile - now below hero content */}
                     <div className="block sm:hidden mt-8">
@@ -776,13 +756,13 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                     <div className="text-xs sm:text-sm text-red-600 font-bold">{seatsRemaining} seats left</div>
                     <div className="text-xs sm:text-sm text-red-700">of {workshop.maxAttendees} total</div>
                   </div>
-                  <div className="bg-amber-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-amber-500">
+                  <div className="bg-green-50 p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-green-500">
                     <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                      <Timer className="text-amber-600" size={20} />
-                      <div className="font-semibold text-amber-800 text-sm sm:text-base">Early Bird</div>
+                      <Calendar className="text-green-600" size={20} />
+                      <div className="font-semibold text-green-800 text-sm sm:text-base">Workshop Date</div>
                     </div>
-                    <div className="text-xs sm:text-sm text-amber-600 font-bold">Ends Aug 22nd</div>
-                    <div className="text-xs sm:text-sm text-amber-700">Save 30 CHF</div>
+                    <div className="text-xs sm:text-sm text-green-600 font-bold">September 9th</div>
+                    <div className="text-xs sm:text-sm text-green-700">18:00 - 20:30</div>
                   </div>
                 </div>
             </Section>
@@ -967,8 +947,8 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h2 className="text-xl sm:text-2xl font-bold mb-3 text-gray-900">
                                     🎯 Secure Your Spot
                                 </h2>
-                                <div className="text-xs text-amber-700 font-semibold">
-                                    Early bird ends Aug 22nd - Save 30 CHF!
+                                <div className="text-xs text-red-700 font-semibold">
+                                    Only {seatsRemaining} seats left - Book now!
                                 </div>
                             </div>
 
@@ -996,24 +976,23 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                         {/* Main price display */}
                                         <div className="bg-white rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-zurich/20">
                                             <div className="text-center sm:text-left">
-                                                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Early Bird Special</div>
+                                                <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Workshop Price</div>
                                                 <div className="flex items-baseline gap-1 sm:gap-2 justify-center sm:justify-start">
-                                                    <span className="text-2xl sm:text-3xl font-black text-zurich">95</span>
+                                                    <span className="text-2xl sm:text-3xl font-black text-zurich">125</span>
                                                     <span className="text-base sm:text-lg font-bold text-zurich">CHF</span>
-                                                    <span className="text-xs sm:text-sm text-gray-400 line-through ml-2">125 CHF</span>
                                                 </div>
-                                                <div className="text-xs text-green-600 font-semibold mt-1">
-                                                    💰 Save 30 CHF (24% off)
+                                                <div className="text-xs text-gray-600 font-semibold mt-1">
+                                                    2.5 hours of hands-on learning
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        {/* Urgency banner */}
-                                        <div className="bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200 rounded-lg px-2 sm:px-3 py-2">
-                                            <div className="flex items-center justify-center gap-1 sm:gap-2 text-amber-800">
-                                                <span className="animate-pulse text-sm">⏰</span>
-                                                <span className="text-xs font-bold text-center">Early bird pricing ends August 22nd</span>
-                                                <span className="animate-pulse text-sm">⏰</span>
+                                        {/* Availability banner */}
+                                        <div className="bg-gradient-to-r from-red-100 to-orange-100 border border-red-200 rounded-lg px-2 sm:px-3 py-2">
+                                            <div className="flex items-center justify-center gap-1 sm:gap-2 text-red-800">
+                                                <span className="animate-pulse text-sm">🎯</span>
+                                                <span className="text-xs font-bold text-center">Only {seatsRemaining} seats remaining</span>
+                                                <span className="animate-pulse text-sm">🎯</span>
                                             </div>
                                         </div>
                                     </div>
@@ -1238,8 +1217,8 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
-                                <Timer size={16} />
-                                Early bird ends Aug 22nd
+                                <Calendar size={16} />
+                                September 9th, 18:00
                             </span>
                         </div>
                     </div>
@@ -1247,7 +1226,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                         onClick={scrollToRegistration}
                         className="bg-white text-zurich px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
                     >
-Secure Your Spot Now - 95 CHF
+Secure Your Spot Now - 125 CHF
                     </button>
                 </motion.div>
             </Section>

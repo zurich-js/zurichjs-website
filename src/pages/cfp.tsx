@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload } from 'lucide-react';
+import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload, Save } from 'lucide-react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
@@ -17,7 +17,7 @@ interface FormState {
   firstName: string;
   lastName: string;
   jobTitle: string;
-  biography:string;
+  biography: string;
   email: string;
   linkedinProfile: string;
   githubProfile: string;
@@ -33,6 +33,21 @@ interface FormState {
   error: string;
   imagePreview: string | null;
 }
+
+interface ValidationErrors {
+  firstName?: string;
+  lastName?: string;
+  jobTitle?: string;
+  biography?: string;
+  email?: string;
+  linkedinProfile?: string;
+  title?: string;
+  description?: string;
+  speakerImage?: string;
+  topics?: string;
+}
+
+const STORAGE_KEY = 'zurichjs-cfp-form';
 
 export default function CFP() {
   useReferrerTracking();
@@ -51,7 +66,7 @@ export default function CFP() {
     speakerImage: null,
     title: '',
     description: '',
-    talkLength: '25',
+    talkLength: '20',
     talkLevel: 'intermediate',
     topics: [],
     submitted: false,
@@ -59,6 +74,93 @@ export default function CFP() {
     error: '',
     imagePreview: null,
   });
+
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Load saved form data on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        // Don't restore submitted state or loading states
+        const { lastSaved: savedTime, ...restoreableData } = parsedData;
+        
+        setFormState(prev => ({
+          ...prev,
+          ...restoreableData
+        }));
+        
+        if (savedTime) {
+          setLastSaved(new Date(savedTime));
+        }
+      } catch (error) {
+        console.warn('Failed to restore form data:', error);
+      }
+    }
+    setHasLoadedFromStorage(true);
+  }, []);
+
+  // Check if form has any meaningful data
+  const hasFormData = () => {
+    return formState.firstName.trim() ||
+           formState.lastName.trim() ||
+           formState.jobTitle.trim() ||
+           formState.biography.trim() ||
+           formState.email.trim() ||
+           formState.linkedinProfile.trim() ||
+           formState.githubProfile.trim() ||
+           formState.twitterHandle.trim() ||
+           formState.title.trim() ||
+           formState.description.trim() ||
+           formState.talkLength !== '20' ||
+           formState.talkLevel !== 'intermediate' ||
+           formState.topics.length > 0;
+  };
+
+  // Save form data to localStorage whenever it changes (except for loading/submitted states)
+  useEffect(() => {
+    if (!hasLoadedFromStorage || formState.submitted) return;
+    
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Only show saving state and save if there's actual data
+    if (hasFormData()) {
+      setIsAutoSaving(true);
+      
+      // Debounce the save operation
+      saveTimeoutRef.current = setTimeout(() => {
+        const { ...dataToSave } = formState;
+        const dataWithTimestamp = {
+          ...dataToSave,
+          lastSaved: new Date().toISOString()
+        };
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataWithTimestamp));
+        setLastSaved(new Date());
+        setIsAutoSaving(false);
+      }, 500); // Save after 500ms of no changes
+    } else {
+      // If no meaningful data, clear any existing saved data
+      localStorage.removeItem(STORAGE_KEY);
+      setLastSaved(null);
+      setIsAutoSaving(false);
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [formState, hasLoadedFromStorage, hasFormData]);
 
   const talkTopics = [
     'JavaScript Fundamentals',
@@ -77,11 +179,28 @@ export default function CFP() {
     'AI in JavaScript',
     'Tooling',
     'DevOps',
+    'Monetization',
+    'Growth Hacking',
+    'Product Management',
+    'User Experience',
+    'Analytics & Metrics',
+    'A/B Testing',
+    'Conversion Optimization',
+    'Business Strategy',
+    'Startup Journey',
+    'Team Leadership',
+    'Remote Work',
+    'Career Development',
   ];
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name as keyof ValidationErrors]) {
+      setValidationErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleTopicChange = (topic: string) => {
@@ -119,30 +238,68 @@ export default function CFP() {
     }
   };
 
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {};
+    
+    if (!formState.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+    
+    if (!formState.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+    
+    if (!formState.jobTitle.trim()) {
+      errors.jobTitle = 'Job title is required';
+    }
+    
+    if (!formState.biography.trim()) {
+      errors.biography = 'Biography is required';
+    }
+    
+    if (!formState.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (!formState.linkedinProfile.trim()) {
+      errors.linkedinProfile = 'LinkedIn profile URL is required';
+    } else if (!formState.linkedinProfile.includes('linkedin.com')) {
+      errors.linkedinProfile = 'Please enter a valid LinkedIn profile URL';
+    }
+    
+    if (!formState.title.trim()) {
+      errors.title = 'Talk title is required';
+    }
+    
+    if (!formState.description.trim()) {
+      errors.description = 'Talk description is required';
+    }
+    
+    if (!formState.speakerImage) {
+      errors.speakerImage = 'Profile image is required';
+    }
+    
+    if (formState.topics.length === 0) {
+      errors.topics = 'Please select at least one topic';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Form validation
-    if (!formState.firstName || !formState.lastName || !formState.email ||
-        !formState.linkedinProfile || !formState.jobTitle || formState.biography ||
-        !formState.title || !formState.description || !formState.speakerImage) {
-
+    if (!validateForm()) {
       // Track validation error
       track('form_error', {
-        errorType: 'missing_required_fields'
+        errorType: 'validation_failed',
+        errorFields: Object.keys(validationErrors).join(', ')
       });
 
-      setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
-      return;
-    }
-
-    if (formState.topics.length === 0) {
-      // Track validation error
-      track('form_error', {
-        errorType: 'no_topics_selected'
-      });
-
-      setFormState((prev) => ({ ...prev, error: 'Please select at least one topic' }));
+      setFormState((prev) => ({ ...prev, error: 'Please fix the highlighted errors below' }));
       return;
     }
 
@@ -201,7 +358,8 @@ export default function CFP() {
         talkTitle: formState.title
       });
 
-      // Show success state
+      // Clear localStorage and show success state
+      localStorage.removeItem(STORAGE_KEY);
       setFormState((prev) => ({
         ...prev,
         submitted: true,
@@ -328,7 +486,7 @@ export default function CFP() {
             <Clock className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Talk Length</h3>
             <p className="text-gray-600">
-              We offer slots for lightning talks (5 min) and standard talks (25 min)
+              We offer slots for lightning talks (5 min), standard talks (20 min)
               {showDeepDiveOption ? ', and deep dives (35 min)' : '.'}
             </p>
           </motion.div>
@@ -359,7 +517,40 @@ export default function CFP() {
           transition={{ duration: 0.5 }}
           className="max-w-3xl mx-auto"
         >
-          <h2 className="text-3xl font-bold mb-6">Submit Your Talk</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-3xl font-bold">Submit Your Talk</h2>
+            
+            {/* Autosave indicator */}
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              {isAutoSaving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-js"></div>
+                  <span>Saving...</span>
+                </>
+              ) : lastSaved ? (
+                <>
+                  <Save size={16} className="text-green-600" />
+                  <span>Saved {lastSaved.toLocaleDateString()} at {lastSaved.toLocaleTimeString()}</span>
+                </>
+              ) : hasLoadedFromStorage ? (
+                <>
+                  <Save size={16} className="text-gray-400" />
+                  <span>Start typing - your draft will auto-save so you can come back later</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+          
+          {/* Auto-save info banner */}
+          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center text-sm text-blue-800">
+              <Save size={16} className="mr-2 text-blue-600" />
+              <span>
+                <strong>Don&apos;t worry about finishing in one go!</strong> Your progress is automatically saved to your browser as you type. 
+                You can close this page and return later to continue where you left off.
+              </span>
+            </div>
+          </div>
 
           {formState.submitted ? (
             <motion.div
@@ -393,8 +584,14 @@ export default function CFP() {
                 </div>
               )}
 
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-4">Speaker Information</h3>
+              <div className="mb-8">
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center justify-center w-8 h-8 bg-js rounded-full text-black font-bold mr-3">
+                    1
+                  </div>
+                  <h3 className="text-xl font-bold">Speaker Information</h3>
+                </div>
+                <p className="text-gray-600 mb-6 ml-11">Tell us about yourself so we can introduce you properly.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="firstName" className="block text-gray-700 mb-2">
@@ -406,9 +603,16 @@ export default function CFP() {
                       name="firstName"
                       value={formState.firstName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                        validationErrors.firstName 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-js'
+                      }`}
                       required
                     />
+                    {validationErrors.firstName && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.firstName}</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="lastName" className="block text-gray-700 mb-2">
@@ -420,9 +624,16 @@ export default function CFP() {
                       name="lastName"
                       value={formState.lastName}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                      className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                        validationErrors.lastName 
+                          ? 'border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:ring-js'
+                      }`}
                       required
                     />
+                    {validationErrors.lastName && (
+                      <p className="mt-1 text-sm text-red-600">{validationErrors.lastName}</p>
+                    )}
                   </div>
                 </div>
 
@@ -436,10 +647,17 @@ export default function CFP() {
                     name="jobTitle"
                     value={formState.jobTitle}
                     onChange={handleInputChange}
-                    placeholder="Senior Frontend Developer, Tech Lead, etc."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    placeholder="e.g. Senior Frontend Developer, Tech Lead, Product Manager"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                      validationErrors.jobTitle 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-js hover:border-gray-400'
+                    }`}
                     required
                   />
+                  {validationErrors.jobTitle && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.jobTitle}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -452,10 +670,17 @@ export default function CFP() {
                     value={formState.biography}
                     onChange={handleInputChange}
                     rows={5}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
-                    placeholder='Tell us more about you and what connects you with javascript, Zürich or both...'
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.biography 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-js'
+                    }`}
+                    placeholder='Share your background, experience with JavaScript, connection to Zürich, or what motivates you to speak...'
                     required
                   />
+                  {validationErrors.biography && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.biography}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -468,9 +693,16 @@ export default function CFP() {
                     name="email"
                     value={formState.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.email 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-js'
+                    }`}
                     required
                   />
+                  {validationErrors.email && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.email}</p>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -484,9 +716,16 @@ export default function CFP() {
                     value={formState.linkedinProfile}
                     onChange={handleInputChange}
                     placeholder="https://linkedin.com/in/your-profile"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.linkedinProfile 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-js'
+                    }`}
                     required
                   />
+                  {validationErrors.linkedinProfile && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.linkedinProfile}</p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -529,7 +768,11 @@ export default function CFP() {
                   <div className="flex-1">
                     <label
                       htmlFor="speakerImage"
-                      className="flex items-center gap-2 w-full px-4 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                      className={`flex items-center gap-2 w-full px-4 py-2 border rounded-md cursor-pointer hover:bg-gray-50 ${
+                        validationErrors.speakerImage 
+                          ? 'border-red-500' 
+                          : 'border-gray-300'
+                      }`}
                     >
                       <Upload size={18} />
                       <span>{formState.speakerImage ? formState.speakerImage.name : 'Choose an image'}</span>
@@ -555,11 +798,20 @@ export default function CFP() {
                     </div>
                   )}
                 </div>
+                {validationErrors.speakerImage && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.speakerImage}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">Recommended: Square image, at least 400x400px</p>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-xl font-bold mb-4">Talk Details</h3>
+              <div className="mb-8">
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center justify-center w-8 h-8 bg-js rounded-full text-black font-bold mr-3">
+                    2
+                  </div>
+                  <h3 className="text-xl font-bold">Talk Details</h3>
+                </div>
+                <p className="text-gray-600 mb-6 ml-11">Share the details of your talk proposal with us.</p>
                 <div className="mb-4">
                   <label htmlFor="title" className="block text-gray-700 mb-2">
                     Talk Title *
@@ -570,9 +822,16 @@ export default function CFP() {
                     name="title"
                     value={formState.title}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.title 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-js'
+                    }`}
                     required
                   />
+                  {validationErrors.title && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.title}</p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label htmlFor="description" className="block text-gray-700 mb-2">
@@ -584,10 +843,17 @@ export default function CFP() {
                     value={formState.description}
                     onChange={handleInputChange}
                     rows={5}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
+                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.description 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-js'
+                    }`}
                     required
-                    placeholder="Tell us about your talk idea and what attendees will learn..."
+                    placeholder="Describe your talk, key takeaways, and what the audience will learn. Include any demos or examples you'll show..."
                   />
+                  {validationErrors.description && (
+                    <p className="mt-1 text-sm text-red-600">{validationErrors.description}</p>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -603,7 +869,7 @@ export default function CFP() {
                       required
                     >
                       <option value="5">Lightning Talk (5 min)</option>
-                      <option value="25">Standard Talk (25 min)</option>
+                      <option value="20">Standard Talk (20 min)</option>
                       {showDeepDiveOption && (
                         <option value="35">Deep Dive (35 min)</option>
                       )}
@@ -630,17 +896,23 @@ export default function CFP() {
               </div>
 
               <div className="mb-8">
-                <label className="block text-gray-700 mb-2">
-                  Talk Topics * (select at least one)
-                </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center mb-4">
+                  <div className="flex items-center justify-center w-8 h-8 bg-js rounded-full text-black font-bold mr-3">
+                    3
+                  </div>
+                  <label className="text-xl font-bold">
+                    Talk Topics *
+                  </label>
+                </div>
+                <p className="text-gray-600 mb-4 ml-11">Select the topics that best describe your talk. Choose multiple if relevant.</p>
+                <div className="flex flex-wrap gap-3">
                   {talkTopics.map((topic) => (
                     <div
                       key={topic}
                       onClick={() => handleTopicChange(topic)}
-                      className={`cursor-pointer flex items-center px-3 py-1.5 rounded-full ${formState.topics.includes(topic)
-                          ? 'bg-js text-black'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      className={`cursor-pointer flex items-center px-4 py-2 rounded-full transition-all transform hover:scale-105 ${formState.topics.includes(topic)
+                          ? 'bg-js text-black shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
                         }`}
                     >
                       <Tag size={14} className="mr-1" />
@@ -648,6 +920,9 @@ export default function CFP() {
                     </div>
                   ))}
                 </div>
+                {validationErrors.topics && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.topics}</p>
+                )}
               </div>
 
               <div className="flex justify-end">

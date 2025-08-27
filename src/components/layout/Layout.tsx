@@ -1,7 +1,22 @@
+import localFont from "next/font/local";
+
 import AnnouncementBanner from '../AnnouncementBanner';
 
 import Footer from './Footer';
 import Header from './Header';
+
+const figtree = localFont({
+  src: [
+    {
+      path: '../../../public/Figtree-VariableFont_wght.ttf',
+      style: 'normal',
+    },
+    {
+      path: '../../../public/Figtree-Italic-VariableFont_wght.ttf',
+      style: 'italic',
+    }
+  ],
+})
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,7 +25,7 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">
+    <div className={`flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark ${figtree.className}`}>
       <div className="sticky top-0 z-[60]">
         <AnnouncementBanner />
         <div className="relative bg-transparent">

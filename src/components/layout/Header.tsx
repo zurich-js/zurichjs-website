@@ -198,7 +198,7 @@ export default function Header() {
 
   return (
     <header className={getHeaderClasses()}>
-      <div className="container mx-auto px-4 lg:px-6">
+      <div className="container max-w-[1440px] mx-auto px-4 lg:px-6">
         <div className="flex justify-between items-center">
           {/* Logo Section */}
           <div className="flex items-center">

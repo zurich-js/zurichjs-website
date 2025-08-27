@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import localFont from "next/font/local";
 import { useState, useEffect } from 'react';
 
 import AnnouncementBanner from '../AnnouncementBanner';
@@ -7,18 +8,32 @@ import Button from '../ui/Button';
 import Footer from './Footer';
 import Header from './Header';
 
+const figtree = localFont({
+  src: [
+    {
+      path: '../../../public/Figtree-VariableFont_wght.ttf',
+      style: 'normal',
+    },
+    {
+      path: '../../../public/Figtree-Italic-VariableFont_wght.ttf',
+      style: 'italic',
+    }
+  ],
+})
+
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [showSupportButton, setShowSupportButton] = useState(false);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       // Show button after scrolling 200px
       const scrollPosition = window.scrollY;
       setShowSupportButton(scrollPosition > 40);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
-    
+
     // Clean up event listener
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -26,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">
+    <div className={`flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark ${figtree.className}`}>
       <div className="sticky top-0 z-[60]">
         <AnnouncementBanner />
         <div className="relative bg-transparent">

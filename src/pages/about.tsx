@@ -982,7 +982,7 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
-                href="https://meetup.com/zurichjs"
+                href="https://meetup.com/zurich-js"
                 variant="primary"
                 size="lg"
                 className="bg-blue-700 text-white hover:bg-blue-600"

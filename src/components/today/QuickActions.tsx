@@ -42,7 +42,7 @@ export default function QuickActions({ event }: QuickActionsProps) {
       color: "bg-gradient-to-br from-green-500 to-emerald-600"
     },
     {
-      label: "Buy Coffee",
+      label: "Buy us a Coffee",
       href: "/buy-us-a-coffee",
       icon: "☕",
       color: "bg-gradient-to-br from-amber-500 to-orange-600"
@@ -50,24 +50,26 @@ export default function QuickActions({ event }: QuickActionsProps) {
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <h2 className="text-lg font-black text-gray-900">Actions</h2>
       
-      <div className="grid gap-2">
+      <div className="grid gap-3 sm:gap-2">
         {actions.map((action, index) => (
           <Link
             key={index}
             href={action.href}
             {...(action.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            className="group flex items-center gap-3 p-3 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200 active:scale-95 shadow-lg hover:shadow-xl"
+            className="group flex items-center gap-4 sm:gap-3 p-4 sm:p-3 bg-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200 active:scale-[0.98] shadow-lg hover:shadow-xl min-h-[60px] touch-manipulation"
           >
-            <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform duration-200`}>
+            <div className={`w-12 h-12 sm:w-10 sm:h-10 rounded-xl ${action.color} flex items-center justify-center text-white text-xl sm:text-lg group-hover:scale-110 transition-transform duration-200 flex-shrink-0`}>
               {action.icon}
             </div>
-            <div className="flex-1 font-bold text-gray-900">
-              {action.label}
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-gray-900 text-base sm:text-sm leading-tight">
+                {action.label}
+              </div>
             </div>
-            <div className="text-gray-400 group-hover:text-zurich group-hover:translate-x-1 transition-all duration-200">
+            <div className="text-gray-400 group-hover:text-zurich group-hover:translate-x-1 transition-all duration-200 text-lg sm:text-base flex-shrink-0">
               →
             </div>
           </Link>

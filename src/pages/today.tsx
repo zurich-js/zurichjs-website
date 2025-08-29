@@ -112,39 +112,38 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
             </motion.div>
           )}
           
-          {/* Schedule - Prioritized for mobile */}
+          {/* Actions - stacked vertically for mobile */}
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Card>
-              <ScheduleCard event={upcomingEvent} />
+              <QuickActions event={upcomingEvent} />
             </Card>
           </motion.div>
           
-          {/* Two column grid for actions and connect - moved after schedule */}
-          <div className="grid grid-cols-2 gap-3">
-            <motion.div
-              initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card className="h-full">
-                <QuickActions event={upcomingEvent} />
-              </Card>
-            </motion.div>
-            
-            <motion.div
-              initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <Card className="h-full">
-                <SponsorCard event={upcomingEvent} />
-              </Card>
-            </motion.div>
-          </div>
+          {/* Connect - stacked vertically for mobile */}
+          <motion.div
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+          >
+            <Card>
+              <SponsorCard event={upcomingEvent} />
+            </Card>
+          </motion.div>
+          
+          {/* Schedule - moved after actions */}
+          <motion.div
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card>
+              <ScheduleCard event={upcomingEvent} />
+            </Card>
+          </motion.div>
         </div>
 
         {/* Desktop Grid Layout */}

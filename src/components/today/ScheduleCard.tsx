@@ -162,28 +162,42 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-black text-gray-900">Schedule</h2>
-      <p className="text-xs text-gray-500 italic">Times are estimates and subject to change</p>
+      <h2 className="text-lg sm:text-xl font-black text-gray-900">Schedule</h2>
+      <p className="text-xs sm:text-sm text-gray-500 italic">Times are estimates and subject to change</p>
       
       <div className="space-y-2">
         {schedule.map((item, index) => (
           <div
             key={index}
-            className="bg-white rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-lg hover:shadow-xl p-3"
+            className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-md hover:shadow-lg p-2.5 sm:p-3"
           >
-            <div className="flex items-center gap-3">
-              {/* Time Badge */}
-              <div className="bg-black text-js px-2 py-1 rounded-lg text-sm font-bold min-w-[50px] text-center flex-shrink-0">
-                {item.time}
+            {/* Mobile optimized layout */}
+            <div className="space-y-2">
+              {/* Time, Type and Duration Row */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* Time Badge */}
+                  <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[45px] text-center flex-shrink-0">
+                    {item.time}
+                  </div>
+                  
+                  {/* Type Badge - compact on mobile */}
+                  <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
+                    <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
+                    <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
+                  </div>
+                </div>
+                
+                {/* Duration */}
+                {item.durationMins && (
+                  <div className="text-xs text-gray-500 font-medium">
+                    {item.durationMins}m
+                  </div>
+                )}
               </div>
               
-              {/* Type Badge */}
-              <div className={`px-2 py-1 rounded-lg text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
-                {getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}
-              </div>
-              
-              {/* Content */}
-              <div className="flex-1 min-w-0">
+              {/* Content Row */}
+              <div>
                 <h3 className="font-bold text-gray-900 text-sm leading-tight">
                   {item.title}
                 </h3>
@@ -211,13 +225,6 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
                   </div>
                 )}
               </div>
-              
-              {/* Duration */}
-              {item.durationMins && (
-                <div className="text-xs text-gray-500 font-medium flex-shrink-0">
-                  {item.durationMins}m
-                </div>
-              )}
             </div>
           </div>
         ))}

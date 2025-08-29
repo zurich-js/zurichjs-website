@@ -81,15 +81,15 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
   return (
     <>
       <Header />
-      <Section variant="gradient" padding="lg" className="min-h-screen pb-20 md:pb-8 pt-24">
+      <Section variant="gradient" padding="lg" className="min-h-screen pb-24 md:pb-8 pt-20 sm:pt-24 px-3 sm:px-4">
       <SEO
         title={`${upcomingEvent.title} - Today - ZurichJS`}
         description={upcomingEvent.description || `Join us today for ${upcomingEvent.title}`}
       />
       
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {/* Mobile Layout */}
-        <div className="md:hidden space-y-4">
+        <div className="md:hidden space-y-3 sm:space-y-4">
           {/* Hero */}
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
@@ -112,12 +112,23 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
             </motion.div>
           )}
           
-          {/* Two column grid for actions and connect */}
+          {/* Schedule - Prioritized for mobile */}
+          <motion.div
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card>
+              <ScheduleCard event={upcomingEvent} />
+            </Card>
+          </motion.div>
+          
+          {/* Two column grid for actions and connect - moved after schedule */}
           <div className="grid grid-cols-2 gap-3">
             <motion.div
               initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
               <Card className="h-full">
                 <QuickActions event={upcomingEvent} />
@@ -127,57 +138,59 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
             <motion.div
               initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
               <Card className="h-full">
                 <SponsorCard event={upcomingEvent} />
               </Card>
             </motion.div>
           </div>
-          
-          {/* Schedule - Full width */}
-          <motion.div
-            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Card>
-              <ScheduleCard event={upcomingEvent} />
-            </Card>
-          </motion.div>
         </div>
 
         {/* Desktop Grid Layout */}
-        <div className="hidden md:grid md:grid-cols-4 gap-4">
-          {/* Hero - 2 columns */}
+        <div className="hidden md:grid md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {/* Hero - 2 columns on md, 3 on lg */}
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="md:col-span-2"
+            className="md:col-span-2 lg:col-span-3"
           >
             <Card className="h-full">
               <Hero event={upcomingEvent} />
             </Card>
           </motion.div>
           
-          {/* Deal of the Day - 2 columns, prioritized */}
+          {/* Schedule - 2 columns on md, 3 on lg - prioritized on desktop */}
+          <motion.div
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="md:col-span-2 lg:col-span-3"
+          >
+            <Card className="h-full">
+              <ScheduleCard event={upcomingEvent} />
+            </Card>
+          </motion.div>
+          
+          {/* Deal of the Day - full width second row */}
           {deal && (
             <motion.div
               initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="md:col-span-2"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="md:col-span-4 lg:col-span-6"
             >
               <DealCard deal={deal} />
             </motion.div>
           )}
           
-          {/* Actions and Connect - 1 column each */}
+          {/* Actions and Connect - 2 columns each on md, 3 each on lg */}
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="md:col-span-2 lg:col-span-3"
           >
             <Card className="h-full">
               <QuickActions event={upcomingEvent} />
@@ -187,22 +200,11 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="md:col-span-2 lg:col-span-3"
           >
             <Card className="h-full">
               <SponsorCard event={upcomingEvent} />
-            </Card>
-          </motion.div>
-          
-          {/* Schedule - Full width */}
-          <motion.div
-            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="md:col-span-2"
-          >
-            <Card>
-              <ScheduleCard event={upcomingEvent} />
             </Card>
           </motion.div>
         </div>

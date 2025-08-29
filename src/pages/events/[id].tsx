@@ -724,32 +724,46 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     const schedule = [...baseSchedule, ...talksSchedule, ...endSchedule];
 
                     return (
-                      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                        <div className="space-y-3">
+                      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-8">
+                        <div className="space-y-2 sm:space-y-3">
                           {schedule.map((item, index) => (
                             <div
                               key={index}
-                              className="bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md p-4"
+                              className="bg-gray-50 rounded-lg sm:rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md p-3 sm:p-4"
                             >
-                              <div className="flex items-center gap-3">
-                                {/* Time Badge */}
-                                <div className="bg-black text-js px-3 py-1.5 rounded-lg text-sm font-bold min-w-[60px] text-center flex-shrink-0">
-                                  {item.time}
+                              {/* Mobile optimized layout */}
+                              <div className="space-y-2">
+                                {/* Time, Type and Duration Row */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {/* Time Badge */}
+                                    <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
+                                      {item.time}
+                                    </div>
+                                    
+                                    {/* Type Badge - compact on mobile */}
+                                    <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
+                                      <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
+                                      <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Duration */}
+                                  {item.durationMins && (
+                                    <div className="text-xs text-gray-500 font-medium">
+                                      {item.durationMins}m
+                                    </div>
+                                  )}
                                 </div>
                                 
-                                {/* Type Badge */}
-                                <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
-                                  {getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}
-                                </div>
-                                
-                                {/* Content */}
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-gray-900 text-base leading-tight">
+                                {/* Content Row */}
+                                <div>
+                                  <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
                                     {item.title}
                                   </h3>
                                   
                                   {item.speaker && (
-                                    <div className="text-sm text-gray-600 mt-1">
+                                    <div className="text-xs sm:text-sm text-gray-600 mt-1">
                                       {item.speakerIds && item.speakerIds.length > 0 ? (
                                         <div className="flex flex-wrap gap-1">
                                           {item.speakerIds.map((speakerId: string, speakerIndex: number) => {
@@ -771,13 +785,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     </div>
                                   )}
                                 </div>
-                                
-                                {/* Duration */}
-                                {item.durationMins && (
-                                  <div className="text-sm text-gray-500 font-medium flex-shrink-0">
-                                    {item.durationMins}m
-                                  </div>
-                                )}
                               </div>
                             </div>
                           ))}

@@ -552,6 +552,242 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </motion.div>
               )}
 
+              {/* Schedule */}
+              {event.talks.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-12"
+                >
+                  <h2 className="text-2xl font-bold mb-3 py-2">
+                    Event Schedule 📅
+                  </h2>
+                  <p className="text-sm text-gray-500 italic mb-6">Times are estimates and subject to change</p>
+                  
+                  {(() => {
+                    // Schedule generation logic
+                    const getTypeColor = (type?: string, durationMins?: number) => {
+                      if (durationMins && durationMins < 10) {
+                        return 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800';
+                      }
+                      switch (type?.toLowerCase()) {
+                        case 'talk':
+                        case 'presentation':
+                          return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800';
+                        case 'break':
+                        case 'networking':
+                          return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800';
+                        case 'welcome':
+                        case 'opening':
+                          return 'bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900';
+                        case 'closing':
+                        case 'wrap-up':
+                          return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800';
+                        default:
+                          return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800';
+                      }
+                    };
+
+                    const getTypeEmoji = (type?: string, durationMins?: number) => {
+                      if (durationMins && durationMins < 10) return '⚡';
+                      switch (type?.toLowerCase()) {
+                        case 'talk':
+                        case 'presentation': return '🎤';
+                        case 'break':
+                        case 'networking': return '🍕';
+                        case 'welcome':
+                        case 'opening': return '👋';
+                        case 'closing':
+                        case 'wrap-up': return '🎉';
+                        default: return '📋';
+                      }
+                    };
+
+                    // Create schedule from event data with proper timing
+                    const eventDate = new Date(event.datetime);
+                    
+                    // Doors open: 17:30-18:30
+                    const doorsOpenTime = new Date(eventDate);
+                    doorsOpenTime.setHours(17, 30, 0, 0);
+                    
+                    // Welcome & intro: 18:30-18:45
+                    const welcomeTime = new Date(eventDate);
+                    welcomeTime.setHours(18, 30, 0, 0);
+                    
+                    // First talk starts at 18:50
+                    const firstTalkTime = new Date(eventDate);
+                    firstTalkTime.setHours(18, 50, 0, 0);
+
+                    const baseSchedule = [
+                      {
+                        time: doorsOpenTime.toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: false 
+                        }),
+                        title: "Doors Open",
+                        type: "welcome",
+                        durationMins: 60,
+                        speaker: undefined,
+                        speakerIds: undefined
+                      },
+                      {
+                        time: welcomeTime.toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: false 
+                        }),
+                        title: "Welcome & Intro",
+                        type: "opening",
+                        durationMins: 15,
+                        speaker: undefined,
+                        speakerIds: undefined
+                      }
+                    ];
+
+                    // Add talks from Sanity data with proper timing and break logic
+                    let currentTime = firstTalkTime.getTime();
+                    const talksSchedule: Array<{
+                      time: string;
+                      title: string;
+                      speaker?: string;
+                      speakerIds?: string[];
+                      type: string;
+                      durationMins: number;
+                    }> = [];
+                    
+                    event.talks.forEach((talk, index) => {
+                      const talkTime = new Date(currentTime);
+                      const duration = talk.durationMinutes || 20;
+                      
+                      const scheduleItem = {
+                        time: talkTime.toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          hour12: false 
+                        }),
+                        title: talk.title,
+                        speaker: talk.speakers.map(s => s.name).join(', '),
+                        speakerIds: talk.speakers.map(s => s.id),
+                        type: talk.type || 'talk',
+                        durationMins: duration
+                      };
+                      
+                      talksSchedule.push(scheduleItem);
+                      currentTime += duration * 60000; // Add talk duration
+                      
+                      // Add 15 min break after 2 talks (index 1 means 2nd talk, 0-indexed)
+                      if (index === 1) {
+                        const breakTime = new Date(currentTime);
+                        talksSchedule.push({
+                          time: breakTime.toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            hour12: false 
+                          }),
+                          title: "Pizza Break",
+                          type: "break",
+                          durationMins: 15,
+                          speaker: undefined,
+                          speakerIds: undefined
+                        });
+                        currentTime += 15 * 60000; // Add break duration
+                      } else if (index < event.talks.length - 1) {
+                        // Add 5 min buffer between other talks
+                        currentTime += 5 * 60000;
+                      }
+                    });
+
+                    // Add networking at the end - starts after last talk, ends at 21:30
+                    const networkingStartTime = new Date(currentTime + 5 * 60000); // 5 min buffer after last talk
+                    const networkingEndTime = new Date(eventDate);
+                    networkingEndTime.setHours(21, 30, 0, 0);
+                    
+                    // Calculate networking duration from start time to 21:30
+                    const networkingDuration = Math.max(30, Math.round((networkingEndTime.getTime() - networkingStartTime.getTime()) / 60000));
+                    
+                    const endSchedule = [{
+                      time: networkingStartTime.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false 
+                      }),
+                      title: "Networking & Drinks",
+                      type: "closing",
+                      durationMins: networkingDuration,
+                      speaker: undefined,
+                      speakerIds: undefined
+                    }];
+
+                    const schedule = [...baseSchedule, ...talksSchedule, ...endSchedule];
+
+                    return (
+                      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+                        <div className="space-y-3">
+                          {schedule.map((item, index) => (
+                            <div
+                              key={index}
+                              className="bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md p-4"
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Time Badge */}
+                                <div className="bg-black text-js px-3 py-1.5 rounded-lg text-sm font-bold min-w-[60px] text-center flex-shrink-0">
+                                  {item.time}
+                                </div>
+                                
+                                {/* Type Badge */}
+                                <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
+                                  {getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}
+                                </div>
+                                
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-bold text-gray-900 text-base leading-tight">
+                                    {item.title}
+                                  </h3>
+                                  
+                                  {item.speaker && (
+                                    <div className="text-sm text-gray-600 mt-1">
+                                      {item.speakerIds && item.speakerIds.length > 0 ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {item.speakerIds.map((speakerId: string, speakerIndex: number) => {
+                                            const speakerName = item.speaker!.split(', ')[speakerIndex];
+                                            return (
+                                              <Link 
+                                                key={speakerId}
+                                                href={`/speakers/${speakerId}`}
+                                                className="text-zurich font-bold hover:text-zurich/80 transition-colors underline"
+                                              >
+                                                {speakerName}
+                                              </Link>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : (
+                                        <span className="text-zurich font-bold">{item.speaker}</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Duration */}
+                                {item.durationMins && (
+                                  <div className="text-sm text-gray-500 font-medium flex-shrink-0">
+                                    {item.durationMins}m
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </motion.div>
+              )}
+
               {/* Talks */}
               {event.talks.length > 0 && (
                 <motion.div
@@ -782,22 +1018,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         Get Directions
                         <ExternalLink size={14} className="ml-1" />
                       </a>
-                      
-                      {isClient && event.datetime && (
-                        <button
-                          onClick={() => {
-                            track('calendar_button_click', {
-                              event_id: event.id,
-                              source: 'venue_details'
-                            });
-                            addToCalendar();
-                          }}
-                          className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-1.5 rounded-full hover:from-purple-600 hover:to-indigo-700 flex items-center transition-colors"
-                        >
-                          <Calendar size={14} className="mr-1" />
-                          Save to Calendar
-                        </button>
-                      )}
                     </div>
                   </>
                 ) : (

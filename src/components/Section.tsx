@@ -51,7 +51,7 @@ export default function Section({
         transition={{ duration: 0.5 }}
         className={`${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${className}`}
       >
-        <div className={`${containerStyles} ${containerClassName}`}>
+        <div className={`${containerStyles} ${containerClassName} h-full`}>
           {children}
         </div>
       </motion.section>

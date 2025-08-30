@@ -1361,13 +1361,23 @@ Delivery Method: Meetup Pickup`,
                           </div>
                         )}
 
-                        {hasCoupon && (
+                        {hasCoupon && couponData &&(
                           <div className="flex justify-between items-center text-amber-700">
                             <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
                               <Ticket className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                               <span className="truncate">Coupon Discount</span>
                             </span>
-                            <span className="font-bold flex-shrink-0">-CHF {Math.round(couponData?.amountOff || 0)}</span>
+                            {couponData && (
+                              couponData.amountOff ?? 0 ? (
+                                <span className="font-bold flex-shrink-0">
+                                  -CHF {Math.round(couponData.amountOff ?? 0)}
+                                </span>
+                              ) : couponData.percentOff !== undefined ? (
+                                <span className="font-bold flex-shrink-0">
+                                  -{Math.round(couponData.percentOff)}%
+                                </span>
+                              ) : null
+                            )}
                           </div>
                         )}
                       </div>
@@ -1376,7 +1386,7 @@ Delivery Method: Meetup Pickup`,
                       <div className="border-t-2 border-gray-200 pt-4">
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
                           <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Total</span>
-                          <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">CHF {discountedTotal}</span>
+                          <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">CHF {discountedTotal.toFixed(2)}</span>
                         </div>
 
                         {/* Step Navigation */}

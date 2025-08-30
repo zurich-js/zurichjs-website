@@ -1179,7 +1179,7 @@ Delivery Method: Meetup Pickup`,
                       <div className="border-t pt-4">
                         <div className="flex justify-between items-center text-xl font-bold">
                           <span>Total:</span>
-                          <span>CHF {discountedTotal}</span>
+                          <span>CHF {discountedTotal.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>

@@ -20,6 +20,42 @@ interface SanitySpeaker {
   [key: string]: unknown;
 }
 
+interface SanitySpeakerWithTalks {
+  _id: string;
+  id: string;
+  name: string;
+  title?: string;
+  email?: string;
+  bio?: string;
+  website?: string;
+  twitter?: string;
+  github?: string;
+  linkedin?: string;
+  company?: string;
+  location?: string;
+  interests?: string[];
+  isVisible?: boolean;
+  image: {
+    asset: {
+      url: string;
+    };
+  };
+  talks: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    type?: string;
+    tags?: string[];
+    durationMinutes?: number;
+    events: Array<{
+      id: string;
+      title: string;
+      datetime: string;
+      location: string;
+    }>;
+  }>;
+}
+
 interface SanityTalk {
   _id: string;
   id: { current: string };
@@ -475,6 +511,41 @@ export const getSpeakerById = async (speakerId: string): Promise<Speaker | null>
   };
 };
 
+export const getSpeakersByIds = async (speakerIds: string[]): Promise<Speaker[]> => {
+  const speakers = await client.fetch(`
+    *[_type == "speaker" && id.current in $speakerIds] {
+      ...,
+      "id": id.current,
+      email,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      "talks": *[_type == "talk" && references(^._id)]{
+        "id": id.current,
+        title,
+        description,
+        type,
+        tags,
+        durationMinutes,
+        "events": *[_type == "events" && references(^._id)]{
+          "id": id.current,
+          title,
+          datetime,
+          location
+        }
+      }
+    }`, { speakerIds });
+
+  return speakers.map((speaker: SanitySpeakerWithTalks) => ({
+    ...speaker,
+    image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    talks: speaker.talks || [],
+    talkCount: (speaker.talks || []).length
+  }));
+};
+
 export const getTalkById = async (talkId: string): Promise<Talk | null> => {
   const [talk] = await client.fetch(`
     *[_type == "talk" && id.current == $talkId] {
@@ -864,6 +935,75 @@ export const getCurrentAnnouncement = async (): Promise<Announcement[]> => {
   } catch (error) {
     console.error('Error fetching announcements:', error);
     return [];
+  }
+};
+
+export interface TalkSubmissionStats {
+  pendingSubmissions: number; // In queue waiting for review
+  totalSubmissions: number; // All submissions ever
+  recentSubmissions: number; // Last 30 days
+  queuePosition: number; // Position if submitting now
+}
+
+/**
+ * Get statistics about talk submissions for the CFP page
+ * 
+ * @returns Promise with talk submission statistics
+ */
+export const getTalkSubmissionStats = async (): Promise<TalkSubmissionStats> => {
+  try {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+    const stats = await client.fetch(`{
+      "pendingSubmissions": count(*[_type == "talkSubmission" && (status == "pending" || status == "under_review")]),
+      "totalSubmissions": count(*[_type == "talkSubmission"]),
+      "recentSubmissions": count(*[_type == "talkSubmission" && _createdAt >= $ninetyDaysAgo])
+    }`, {
+      ninetyDaysAgo: ninetyDaysAgo.toISOString()
+    });
+
+    return {
+      pendingSubmissions: stats.pendingSubmissions || 0,
+      totalSubmissions: stats.totalSubmissions || 0,
+      recentSubmissions: stats.recentSubmissions || 0,
+      // Next position in queue would be pending submissions + 1
+      queuePosition: (stats.pendingSubmissions || 0) + 1
+    };
+  } catch (error) {
+    console.error('Error fetching talk submission stats:', error);
+    throw error; // Let the caller handle the error
+  }
+};
+
+/**
+ * Get recent talk examples with titles and abstracts
+ * 
+ * @returns Promise with array of recent talk examples
+ */
+export const getRecentTalkExamples = async (): Promise<Array<{title: string; abstract: string}>> => {
+  try {
+    const talks = await client.fetch(`
+      *[_type == "talk" && defined(description) && defined(title)] | order(_createdAt desc) [0..6] {
+        title,
+        description
+      }
+    `);
+
+    // Filter out talks without proper descriptions and return up to 5
+    const validTalks = talks.filter((talk: {title: string; description: string}) => 
+      talk.description && talk.description.trim().length > 20
+    ).slice(0, 5);
+
+    return validTalks.map((talk: {title: string; description: string}) => ({
+      title: talk.title,
+      abstract: talk.description.length > 100 ? 
+        talk.description.substring(0, 100) + '...' : 
+        talk.description
+    }));
+  } catch (error) {
+    console.error('Error fetching talk examples:', error);
+    throw error; // Let the caller handle the error
   }
 };
 

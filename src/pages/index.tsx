@@ -3,7 +3,6 @@ import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
 import LandingHero from "@/components/sections/LandingHero";
 import Partners from '@/components/sections/Partners';
-import SpeakerGrid from '@/components/sections/SpeakerGrid';
 import UpcomingEvents from '@/components/sections/UpcomingEvents';
 import UpcomingWorkshops from '@/components/sections/UpcomingWorkshops';
 import type { Workshop } from '@/components/sections/UpcomingWorkshops';
@@ -13,15 +12,7 @@ import { getUpcomingWorkshops } from '@/data/workshops';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import type { Event } from '@/sanity/queries';
 import { getSpeakers, getSpeakerById, getStats, getUpcomingEvents } from '@/sanity/queries';
-
-
-interface Speaker {
-  id: string;
-  name: string;
-  title: string;
-  image: string;
-  talks: number;
-}
+import type { Speaker } from '@/types';
 
 interface StatsData {
   members: number;
@@ -39,13 +30,13 @@ interface Partner {
 
 interface HomeProps {
   upcomingEvents: Event[];
-  featuredSpeakers: Speaker[];
+  speakers: Speaker[];
   stats: StatsData;
   partners: Partner[];
   upcomingWorkshops: Workshop[];
 }
 
-export default function Home({ upcomingEvents, featuredSpeakers, stats, partners, upcomingWorkshops }: HomeProps) {
+export default function Home({ upcomingEvents, speakers, stats, partners, upcomingWorkshops }: HomeProps) {
   useReferrerTracking();
 
   return (
@@ -62,7 +53,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
       />
 
       {/* Hero Section */}
-      <LandingHero upcomingEvents={upcomingEvents} stats={stats} upcomingWorkshops={upcomingWorkshops} />
+      <LandingHero upcomingEvents={upcomingEvents} stats={stats} upcomingWorkshops={upcomingWorkshops} speakers={speakers} />
 
 
       {/* Upcoming Events Section */}
@@ -74,8 +65,6 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
       {/* Community Values Section */}
       <CommunityValues />
 
-      {/* Featured Speakers */}
-      <SpeakerGrid speakers={featuredSpeakers} />
 
       {/* Partners Section */}
       <Partners partners={partners} />
@@ -109,7 +98,7 @@ export async function getStaticProps() {
   return {
     props: {
       upcomingEvents,
-      featuredSpeakers: speakers.slice(0, 3),
+      speakers: speakers,
       stats,
       partners,
       upcomingWorkshops: workshopsWithSpeakers

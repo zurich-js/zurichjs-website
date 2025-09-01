@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload, Save } from 'lucide-react';
+import { Mic, FileText, Clock, CheckCircle, Calendar, Users, Tag, Upload, Save, TrendingUp, MessageCircle } from 'lucide-react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useState, ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 
@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import { FeatureFlags } from '@/constants';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
+import { getTalkSubmissionStats, TalkSubmissionStats } from '@/sanity/queries';
 
 
 
@@ -49,7 +50,11 @@ interface ValidationErrors {
 
 const STORAGE_KEY = 'zurichjs-cfp-form';
 
-export default function CFP() {
+interface CFPProps {
+  submissionStats?: TalkSubmissionStats;
+}
+
+export default function CFP({ submissionStats }: CFPProps) {
   useReferrerTracking();
   const { track } = useEvents();
   const showDeepDiveOption = useFeatureFlagEnabled(FeatureFlags.CfpDeepDiveOption);
@@ -66,7 +71,7 @@ export default function CFP() {
     speakerImage: null,
     title: '',
     description: '',
-    talkLength: '20',
+    talkLength: '25',
     talkLevel: 'intermediate',
     topics: [],
     submitted: false,
@@ -80,6 +85,69 @@ export default function CFP() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Helper function to generate email body with current form data
+  const generateEmailBody = () => {
+    const completedFields = [];
+    const missingFields = [];
+
+    // Check which fields are completed
+    if (formState.firstName.trim()) completedFields.push(`First Name: ${formState.firstName}`);
+    else missingFields.push('First Name');
+
+    if (formState.lastName.trim()) completedFields.push(`Last Name: ${formState.lastName}`);
+    else missingFields.push('Last Name');
+
+    if (formState.jobTitle.trim()) completedFields.push(`Job Title: ${formState.jobTitle}`);
+    else missingFields.push('Job Title');
+
+    if (formState.biography.trim()) completedFields.push(`Biography: ${formState.biography}`);
+    else missingFields.push('Biography');
+
+    if (formState.email.trim()) completedFields.push(`Email: ${formState.email}`);
+    else missingFields.push('Email');
+
+    if (formState.linkedinProfile.trim()) completedFields.push(`LinkedIn: ${formState.linkedinProfile}`);
+    else missingFields.push('LinkedIn Profile');
+
+    if (formState.githubProfile.trim()) completedFields.push(`GitHub: ${formState.githubProfile}`);
+    if (formState.twitterHandle.trim()) completedFields.push(`Twitter: ${formState.twitterHandle}`);
+
+    if (formState.title.trim()) completedFields.push(`Talk Title: ${formState.title}`);
+    else missingFields.push('Talk Title');
+
+    if (formState.description.trim()) completedFields.push(`Talk Description: ${formState.description}`);
+    else missingFields.push('Talk Description');
+
+    completedFields.push(`Talk Length: ${formState.talkLength} minutes`);
+    completedFields.push(`Talk Level: ${formState.talkLevel}`);
+
+    if (formState.topics.length > 0) completedFields.push(`Topics: ${formState.topics.join(', ')}`);
+    else missingFields.push('Talk Topics');
+
+    if (!formState.speakerImage) missingFields.push('Profile Image');
+
+    const emailBody = `Subject: CFP Submission - ${formState.title || 'Talk Proposal'} - ${formState.firstName} ${formState.lastName}
+
+Hi ZurichJS Team,
+
+I'd like to submit my talk proposal for an upcoming meetup. I encountered some issues with the online form, so I'm sending my information via email as suggested.
+
+=== COMPLETED INFORMATION ===
+${completedFields.join('\n')}
+
+=== STILL NEED TO PROVIDE ===
+${missingFields.join('\n')}
+
+${formState.speakerImage ? '\n(Profile image attached separately)' : ''}
+
+Looking forward to potentially speaking at ZurichJS!
+
+Best regards,
+${formState.firstName} ${formState.lastName}`;
+
+    return encodeURIComponent(emailBody);
+  };
 
   // Load saved form data on component mount
   useEffect(() => {
@@ -105,26 +173,28 @@ export default function CFP() {
     setHasLoadedFromStorage(true);
   }, []);
 
-  // Check if form has any meaningful data
-  const hasFormData = () => {
-    return formState.firstName.trim() ||
-           formState.lastName.trim() ||
-           formState.jobTitle.trim() ||
-           formState.biography.trim() ||
-           formState.email.trim() ||
-           formState.linkedinProfile.trim() ||
-           formState.githubProfile.trim() ||
-           formState.twitterHandle.trim() ||
-           formState.title.trim() ||
-           formState.description.trim() ||
-           formState.talkLength !== '20' ||
-           formState.talkLevel !== 'intermediate' ||
-           formState.topics.length > 0;
-  };
+
 
   // Save form data to localStorage whenever it changes (except for loading/submitted states)
   useEffect(() => {
     if (!hasLoadedFromStorage || formState.submitted) return;
+    
+    // Check if form has any meaningful data
+    const hasFormData = () => {
+      return formState.firstName.trim() ||
+             formState.lastName.trim() ||
+             formState.jobTitle.trim() ||
+             formState.biography.trim() ||
+             formState.email.trim() ||
+             formState.linkedinProfile.trim() ||
+             formState.githubProfile.trim() ||
+             formState.twitterHandle.trim() ||
+             formState.title.trim() ||
+             formState.description.trim() ||
+             formState.talkLength !== '25' ||
+             formState.talkLevel !== 'intermediate' ||
+             formState.topics.length > 0;
+    };
     
     // Clear previous timeout
     if (saveTimeoutRef.current) {
@@ -160,7 +230,7 @@ export default function CFP() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [formState, hasLoadedFromStorage, hasFormData]);
+  }, [formState, hasLoadedFromStorage]);
 
   const talkTopics = [
     'JavaScript Fundamentals',
@@ -406,15 +476,53 @@ export default function CFP() {
               transition={{ duration: 0.5 }}
             >
               <h1 className="text-4xl md:text-5xl font-bold mb-3 md:mb-4">
-                Call for Papers
+                Call for Papers 🎤
               </h1>
-              <p className="text-lg md:text-xl mb-4 md:mb-6">
-                Share your JavaScript knowledge with the ZurichJS community!
+              <p className="text-lg md:text-xl mb-4 md:mb-6 font-medium">
+                Share your passion with Zurich&apos;s most vibrant developer community!
               </p>
-              <p className="text-base md:text-lg mb-6 md:mb-8">
+              <p className="text-base md:text-lg mb-4 md:mb-6">
                 We&apos;re constantly looking for speakers for our upcoming meetups.
                 Whether you&apos;re a seasoned presenter or a first-timer, we&apos;d love to hear from you!
               </p>
+              {submissionStats && (
+                <div className="bg-js/20 backdrop-blur rounded-lg p-4 mb-6 md:mb-8 border border-js/30">
+                  <p className="text-sm md:text-base font-medium text-black">
+                    {submissionStats.recentSubmissions > 0 ? (
+                      <>🚀 <strong>Join our amazing speaker community!</strong> We&apos;ve had {submissionStats.recentSubmissions} submissions in the last 90 days and our events are packed with incredible talent. Submit now to get in the queue!</>
+                    ) : (
+                      <>🎆 <strong>Perfect timing!</strong> There hasn&apos;t been a submission for a while - go for it! Your talk could be the next big hit at ZurichJS.</>
+                    )}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <Button
+                  href="#form"
+                  variant="primary"
+                  size="lg"
+                  className="bg-black hover:bg-gray-800 text-white font-bold cursor-pointer transition-all duration-200"
+                  onClick={() => {
+                    document.getElementById('form')?.scrollIntoView({ behavior: 'smooth' });
+                    track('skip_to_form_hero', {});
+                  }}
+                >
+                  Submit Now ⚡
+                </Button>
+                <Button
+                  href="#inspiration"
+                  variant="outline"
+                  size="lg"
+                  className="border-2 border-black text-black hover:bg-black hover:text-white cursor-pointer transition-all duration-200"
+                  onClick={() => {
+                    document.getElementById('inspiration')?.scrollIntoView({ behavior: 'smooth' });
+                    track('get_ideas_hero', {});
+                  }}
+                >
+                  Get Talk Ideas 💡
+                </Button>
+              </div>
             </motion.div>
           </div>
           <div className="md:w-1/2">
@@ -424,23 +532,165 @@ export default function CFP() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="bg-white p-8 rounded-lg shadow-lg"
             >
-              <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex flex-col gap-4">
                 <div className="flex items-start">
                   <Mic className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Share Your Expertise</h3>
-                    <p className="text-gray-600">Help others learn from your experiences and insights</p>
+                    <p className="text-gray-600 text-sm">Help others learn from your experiences and insights</p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Users className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Build Your Network</h3>
-                    <p className="text-gray-600">Connect with like-minded developers in the community</p>
+                    <p className="text-gray-600 text-sm">Connect with like-minded developers in the community</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <TrendingUp className="text-yellow-500 mr-3 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold">Grow Your Career</h3>
+                    <p className="text-gray-600 text-sm">Speaking builds visibility and opens doors to new opportunities</p>
                   </div>
                 </div>
               </div>
             </motion.div>
+          </div>
+        </div>
+      </Section>
+
+      {/* Community Stats & Waiting Info */}
+      {submissionStats && (
+        <Section variant="white" padding="md">
+          <div className="bg-gradient-to-r from-js/10 to-yellow-100 rounded-2xl p-8 mb-12 border border-yellow-200">
+            <div className="text-center mb-8">
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-2xl md:text-3xl font-bold mb-4 text-black"
+              >
+                🎤 Join Our Amazing Speaker Community!
+              </motion.h2>
+              <p className="text-gray-700 max-w-2xl mx-auto">
+                We&apos;re building something special with passionate developers from all over Zurich and beyond.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="bg-white/80 backdrop-blur rounded-xl p-6 text-center border border-yellow-300 shadow-sm"
+              >
+                <TrendingUp className="mx-auto mb-3 text-green-600" size={32} />
+                <div className="text-2xl font-bold text-black mb-1">{submissionStats.recentSubmissions}</div>
+                <div className="text-sm text-gray-600">{submissionStats.recentSubmissions === 0 ? 'No recent submissions - great timing!' : 'Submissions in last 90 days'}</div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="bg-white/80 backdrop-blur rounded-xl p-6 text-center border border-yellow-300 shadow-sm"
+              >
+                <Clock className="mx-auto mb-3 text-blue-600" size={32} />
+                <div className="text-lg font-bold text-black mb-1">1-2 weeks to 3-4 months</div>
+                <div className="text-sm text-gray-600">Depends on theme match & capacity</div>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="bg-white/80 backdrop-blur rounded-xl p-6 text-center border border-yellow-300 shadow-sm"
+              >
+                <Users className="mx-auto mb-3 text-purple-600" size={32} />
+                <div className="text-2xl font-bold text-black mb-1">{submissionStats.pendingSubmissions}</div>
+                <div className="text-sm text-gray-600">Talks waiting for review</div>
+              </motion.div>
+            </div>
+
+            <div className="bg-white/60 backdrop-blur rounded-xl p-6 border border-yellow-300">
+              <div className="flex items-start space-x-3 mb-4">
+                <MessageCircle className="text-yellow-600 mt-1 flex-shrink-0" size={20} />
+                <div className="text-sm text-gray-700">
+                  <p className="font-semibold mb-2">📋 How our selection process works:</p>
+                  <ul className="space-y-1 text-xs">
+                    <li>• <strong>We read every submission</strong> and appreciate the time you put into applying</li>
+                    <li>• <strong>Order of submission ≠ order of acceptance</strong> - we curate based on event themes and diversity</li>
+                    <li>• <strong>Want to speak at a specific event?</strong> Reach out after submitting and we&apos;ll try our best!</li>
+                    <li>• <strong>High-quality backlog:</strong> Our speakers are awesome, so the wait might be worth it 🚀</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="text-center">
+                <Button
+                  href="#form"
+                  variant="primary"
+                  size="md"
+                  className="bg-black hover:bg-gray-800 text-white font-semibold"
+                  onClick={() => {
+                    document.getElementById('form')?.scrollIntoView({ behavior: 'smooth' });
+                    track('submit_now_stats', {});
+                  }}
+                >
+                  Submit Now 🚀
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Section>
+      )}
+
+      {/* Talk Inspiration Section */}
+      <Section variant="gray" padding="lg" id="inspiration">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl font-bold mb-6 text-black">💡 Need Talk Ideas? We&apos;ve Got You!</h2>
+          <p className="text-gray-600 max-w-3xl mx-auto text-lg leading-relaxed">
+            Can&apos;t decide what to talk about? Don&apos;t worry! We don&apos;t just want JavaScript talks. 
+            We love <strong>web technologies</strong>, <strong>soft skills</strong>, <strong>career stories</strong>, 
+            <strong>developer tools</strong>, and anything that gets developers excited! 
+          </p>
+        </motion.div>
+
+        <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-6 border border-yellow-200">
+          <div className="flex items-start space-x-4">
+            <Calendar className="text-yellow-600 mt-1 flex-shrink-0" size={24} />
+            <div>
+              <h3 className="text-lg font-bold mb-3 text-black">What Makes a Great Talk?</h3>
+              <div className="flex flex-col gap-3 text-sm text-gray-700">
+                <div className="flex items-start space-x-2">
+                  <span className="text-yellow-600 font-bold">✨</span>
+                  <span><strong>Personal experiences</strong> - your journey & wins</span>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <span className="text-yellow-600 font-bold">🔧</span>
+                  <span><strong>Practical insights</strong> - tools & techniques</span>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <span className="text-yellow-600 font-bold">🌟</span>
+                  <span><strong>What excites you</strong> - new tech & ideas</span>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <span className="text-yellow-600 font-bold">💡</span>
+                  <span><strong>Lessons learned</strong> - from projects & mistakes</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 mt-3 italic">
+                💭 The best talks come from genuine passion. What gets you excited about development?
+              </p>
+            </div>
           </div>
         </div>
       </Section>
@@ -486,7 +736,7 @@ export default function CFP() {
             <Clock className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Talk Length</h3>
             <p className="text-gray-600">
-              We offer slots for lightning talks (5 min), standard talks (20 min)
+              We offer slots for lightning talks (5 min), standard talks (25 min)
               {showDeepDiveOption ? ', and deep dives (35 min)' : '.'}
             </p>
           </motion.div>
@@ -509,7 +759,7 @@ export default function CFP() {
       </Section>
 
       {/* Submission Form */}
-      <Section variant="gray">
+      <Section variant="gray" id="form">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -542,12 +792,24 @@ export default function CFP() {
           </div>
           
           {/* Auto-save info banner */}
-          <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-center text-sm text-blue-800">
               <Save size={16} className="mr-2 text-blue-600" />
               <span>
                 <strong>Don&apos;t worry about finishing in one go!</strong> Your progress is automatically saved to your browser as you type. 
                 You can close this page and return later to continue where you left off.
+              </span>
+            </div>
+          </div>
+          
+          {/* Email alternative info */}
+          <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center text-sm text-green-800">
+              <MessageCircle size={16} className="mr-2 text-green-600" />
+              <span>
+                <strong>Having trouble?</strong> You can always email your talk proposal directly to{' '}
+                <a href="mailto:hello@zurichjs.com" className="underline font-semibold">hello@zurichjs.com</a>{' '}
+                if you encounter any issues with this form.
               </span>
             </div>
           </div>
@@ -579,8 +841,42 @@ export default function CFP() {
               encType="multipart/form-data"
             >
               {formState.error && (
-                <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">
-                  {formState.error}
+                <div className="mb-6 p-6 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-start space-x-3 mb-4">
+                    <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <h3 className="text-red-800 font-semibold">Submission Error</h3>
+                      <p className="text-red-700 mt-1">{formState.error}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-red-100 border border-red-200 rounded-lg p-4">
+                    <h4 className="text-red-800 font-semibold mb-2">📧 Alternative: Email Your Submission</h4>
+                    <p className="text-red-700 text-sm mb-3">
+                      Don&apos;t worry! You can send your talk proposal directly to us via email. 
+                      Click below to generate an email with your current form data.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <a
+                        href={`mailto:hello@zurichjs.com?body=${generateEmailBody()}`}
+                        className="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors"
+                        onClick={() => track('email_fallback_used', { error: formState.error })}
+                      >
+                        📧 Send Email with Current Data
+                      </a>
+                      <a
+                        href="mailto:hello@zurichjs.com?subject=CFP%20Submission%20-%20Talk%20Proposal"
+                        className="inline-flex items-center justify-center px-4 py-2 border border-red-300 text-red-700 hover:bg-red-100 text-sm font-medium rounded-md transition-colors"
+                      >
+                        Send Blank Email
+                      </a>
+                    </div>
+                    <p className="text-xs text-red-600 mt-2">
+                      💡 The first option will pre-fill an email with your current form data so you don&apos;t lose your work.
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -869,7 +1165,7 @@ export default function CFP() {
                       required
                     >
                       <option value="5">Lightning Talk (5 min)</option>
-                      <option value="20">Standard Talk (20 min)</option>
+                      <option value="25">Standard Talk (25 min)</option>
                       {showDeepDiveOption && (
                         <option value="35">Deep Dive (35 min)</option>
                       )}
@@ -951,4 +1247,29 @@ export default function CFP() {
       </Section>
     </Layout>
   );
+}
+
+export async function getStaticProps() {
+  try {
+    const submissionStats = await getTalkSubmissionStats();
+
+    console.log('submissionStats', submissionStats);
+
+    return {
+      props: {
+        submissionStats,
+      },
+      revalidate: 3600, // Revalidate every hour
+    };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    
+    // Return empty props - let UI handle missing data gracefully
+    return {
+      props: {
+        submissionStats: null,
+      },
+      revalidate: 300, // Try again sooner if there was an error
+    };
+  }
 }

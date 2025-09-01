@@ -18,6 +18,8 @@ export interface TicketOption {
   ticketType: 'workshop' | 'event';
   eventId?: string;
   workshopId?: string;
+  availableUntil?: string;
+  availableFrom?: string;
 }
 
 interface TicketSelectionProps {

@@ -54,7 +54,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         locationInfo: "TBD",
         description: "Prepare your web applications for the European Accessibility Act (EAA) with this comprehensive workshop on web accessibility fundamentals. Learn how to create inclusive digital experiences that comply with accessibility standards and regulations. This workshop covers essential concepts, practical techniques, and best practices to help you build accessible websites and applications. Through hands-on exercises and real-world examples, you'll gain the knowledge and skills to make your digital products accessible to everyone, including people with disabilities.",
         priceInfo: "CHF 150 per person",
-        maxAttendees: 15,
+        maxAttendees: 30,
         speaker: speaker,
         topics: [
             {

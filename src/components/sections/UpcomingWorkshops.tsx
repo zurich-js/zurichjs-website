@@ -21,6 +21,12 @@ export interface Workshop {
   tag: string;
   speakerId: string;
   state: WorkshopState;
+  speaker?: {
+    id: string;
+    name: string;
+    title: string;
+    image: string;
+  };
 }
 
 interface UpcomingWorkshopsProps {

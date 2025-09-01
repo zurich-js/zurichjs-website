@@ -12,7 +12,7 @@ import { getPartners } from '@/data';
 import { getUpcomingWorkshops } from '@/data/workshops';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import type { Event } from '@/sanity/queries';
-import { getSpeakers, getStats, getUpcomingEvents } from '@/sanity/queries';
+import { getSpeakers, getSpeakerById, getStats, getUpcomingEvents } from '@/sanity/queries';
 
 
 interface Speaker {
@@ -62,7 +62,7 @@ export default function Home({ upcomingEvents, featuredSpeakers, stats, partners
       />
 
       {/* Hero Section */}
-      <LandingHero upcomingEvents={upcomingEvents} stats={stats} />
+      <LandingHero upcomingEvents={upcomingEvents} stats={stats} upcomingWorkshops={upcomingWorkshops} />
 
 
       {/* Upcoming Events Section */}
@@ -95,13 +95,24 @@ export async function getStaticProps() {
   const partners = getPartners();
   const upcomingWorkshops = getUpcomingWorkshops();
   
+  // Fetch speaker data for each workshop
+  const workshopsWithSpeakers = await Promise.all(
+    upcomingWorkshops.map(async (workshop) => {
+      const speaker = await getSpeakerById(workshop.speakerId);
+      return {
+        ...workshop,
+        speaker
+      };
+    })
+  );
+  
   return {
     props: {
       upcomingEvents,
       featuredSpeakers: speakers.slice(0, 3),
       stats,
       partners,
-      upcomingWorkshops
+      upcomingWorkshops: workshopsWithSpeakers
     },
   };
 }

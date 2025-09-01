@@ -57,7 +57,7 @@ export const getWorkshops = (): Workshop[] => {
       dateInfo: 'September 9th, 2025',
       timeInfo: '18:00 - 20:30',
       locationInfo: 'Smallpdf AG, Steinstrasse 21, 8003 Zürich',
-      maxAttendees: 20,
+      maxAttendees: 30,
       image: '/images/workshops/full-stack-ai-cloudflare.png',
       iconColor: '#f59e0b', // amber-500
       tag: '🤖 AI & Edge Computing',

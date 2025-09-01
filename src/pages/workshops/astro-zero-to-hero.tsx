@@ -57,7 +57,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         locationInfo: "ORBIZ Josef, Josefstrasse 214a, 8005 Zürich",
         price: "225 CHF",
         description: "This comprehensive workshop takes you from zero knowledge to Astro hero status in just three hours. You'll learn how to leverage Astro's unique Island Architecture to build blazing-fast websites that ship zero JavaScript by default. We'll cover everything from project setup and configuration to advanced patterns including content collections, dynamic routing, and integration with your favorite frameworks. By the end of this hands-on session, you'll walk away with the skills to build modern, SEO-friendly websites that load in milliseconds and deliver exceptional user experiences.",
-        maxAttendees: 15,
+        maxAttendees: 30,
         speaker: speaker,
         topics: [
             {

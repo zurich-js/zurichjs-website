@@ -52,7 +52,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
         locationInfo: "TBD",
         description: "Getting pragmatic with building performant and resilient React applications. This workshop will delve into React and NextJs to create scalable, high-performance web applications made for the real world, exploring architectural patterns, rendering techniques, and optimization strategies. We'll tackle data fetching management, performance measurement, and state management, offering tools and insights for efficient coding and stakeholder communication. Practical exercises and real-world examples will equip developers with the skills to build and maintain solid web solutions, additionally, emphasizing the importance of observability and monitoring post-deployment.",
         priceInfo: "CHF 150 per person",
-        maxAttendees: 15,
+        maxAttendees: 30,
         speaker: speaker,
         topics: [
             {

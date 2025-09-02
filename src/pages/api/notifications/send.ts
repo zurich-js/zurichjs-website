@@ -8,6 +8,40 @@ interface PlatformNotification {
   type: 'referral' | 'event' | 'workshop' | 'tshirt' | 'merch-suggestion' | 'other';
   priority: 'low' | 'normal' | 'high';
   slackChannel?: string;
+  userData?: {
+    name: string;
+    email: string;
+    userId: string;
+    isLoggedIn: boolean;
+  };
+  eventData?: {
+    eventId: string;
+    eventTitle: string;
+  };
+  feedbackData?: {
+    overallRating: number;
+    worthTime: string;
+    wouldRecommend: string;
+    ratings: {
+      food: number;
+      drinks: number;
+      talks: number;
+      timing: number;
+      execution: number;
+      dealOfDay: number;
+    };
+    comments: {
+      food: string;
+      drinks: string;
+      talks: string;
+      timing: string;
+      execution: string;
+      dealOfDay: string;
+      improvements: string;
+      futureTopics: string;
+      additional: string;
+    };
+  };
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -34,6 +68,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       'normal': 1, 
       'high': 2
     };
+    
+    // Log detailed data for debugging (especially useful for feedback)
+    if (notification.type === 'event' && notification.feedbackData) {
+      console.log('Detailed feedback submission:', {
+        user: notification.userData,
+        event: notification.eventData,
+        feedback: notification.feedbackData,
+        timestamp: new Date().toISOString()
+      });
+    }
     
     // Send the notification using the real notification system
     await sendPlatformNotification({

@@ -1007,6 +1007,137 @@ export const getRecentTalkExamples = async (): Promise<Array<{title: string; abs
   }
 };
 
+/**
+ * Get recent past events for feedback (within last 30 days)
+ * 
+ * @param testCurrentDate - Optional test date override for testing scenarios
+ * @returns Promise with array of recent events
+ */
+export const getRecentPastEventsForFeedback = async (testCurrentDate?: Date): Promise<Event[]> => {
+  try {
+    const currentDate = testCurrentDate || new Date();
+    
+    // Set to end of current day to include events happening today
+    const endOfToday = new Date(currentDate);
+    endOfToday.setHours(23, 59, 59, 999);
+    
+    const thirtyDaysAgo = new Date(currentDate);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const events = await client.fetch(`*[_type == "events" && datetime <= $endOfToday && datetime >= $thirtyDaysAgo] | order(datetime desc) {
+      ...,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      excludeFromStats,
+      talks[]-> {
+        ...,
+        "id": id,
+        productDemo-> {
+          "id": id,
+          name,
+          description,
+          "logo": {
+            "asset": {
+              "url": logo.asset->url
+            }
+          },
+          websiteUrl
+        },
+        productDemos[]-> {
+          "id": id,
+          name,
+          description,
+          "logo": {
+            "asset": {
+              "url": logo.asset->url
+            }
+          },
+          websiteUrl
+        },
+        speakers[]-> {
+          ...,
+          "id": id,
+          "image": {
+            "asset": {
+              "url": image.asset->url
+            }
+          }
+        }
+      }
+    }`, { 
+      endOfToday: endOfToday.toISOString(),
+      thirtyDaysAgo: thirtyDaysAgo.toISOString() 
+    });
+
+    return events.map(mapEventData);
+  } catch (error) {
+    console.error('Error fetching recent past events:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get upcoming events for test scenario generation
+ * 
+ * @returns Promise with array of upcoming events (limited to next 10)
+ */
+export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
+  try {
+    const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) [0..9] {
+      ...,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      excludeFromStats,
+      talks[]-> {
+        ...,
+        "id": id,
+        productDemo-> {
+          "id": id,
+          name,
+          description,
+          "logo": {
+            "asset": {
+              "url": logo.asset->url
+            }
+          },
+          websiteUrl
+        },
+        productDemos[]-> {
+          "id": id,
+          name,
+          description,
+          "logo": {
+            "asset": {
+              "url": logo.asset->url
+            }
+          },
+          websiteUrl
+        },
+        speakers[]-> {
+          ...,
+          "id": id,
+          "image": {
+            "asset": {
+              "url": image.asset->url
+            }
+          }
+        }
+      }
+    }`);
+
+    return events.map(mapEventData);
+  } catch (error) {
+    console.error('Error fetching upcoming events for test scenarios:', error);
+    throw error;
+  }
+};
+
 
 
 

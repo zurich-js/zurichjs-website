@@ -1,6 +1,6 @@
-import { SignedIn, SignedOut, SignInButton, UserButton, useSignIn } from '@clerk/nextjs';
+import { SignedIn, SignedOut, SignInButton, UserButton, useSignIn, useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronRight, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
@@ -27,7 +27,11 @@ export default function Header() {
   const [mobileExpanded, setMobileExpanded] = useState<string[]>([]);
   const router = useRouter();
   const { signIn } = useSignIn();
+  const { orgId } = useAuth();
   const signInButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Check if user is admin (member of ZurichJS admin organization)
+  const isAdmin = orgId === process.env.NEXT_PUBLIC_ZURICHJS_ADMIN_ORG_ID;
 
   // Handle query parameter to open signup modal
   useEffect(() => {
@@ -90,6 +94,20 @@ export default function Header() {
 
   const coffeeItem: NavItem = { name: '☕ Buy us a coffee', path: '/buy-us-a-coffee' };
 
+  // Admin quick actions - most commonly used admin features
+  const adminQuickActions: NavSubItem[] = [
+    { name: 'Admin Dashboard', path: '/admin' },
+    { name: 'User Management', path: '/admin/users' },
+    { name: 'Feedback Analytics', path: '/admin/feedback-analytics' },
+    { name: 'Coupon Management', path: '/admin/coupons' },
+  ];
+
+  const adminItem: NavItem = {
+    name: 'Admin Tools',
+    id: 'admin-tools',
+    items: adminQuickActions
+  };
+
   const toggleMobileAccordion = (id: string) => {
     setMobileExpanded(prev =>
       prev.includes(id)
@@ -135,6 +153,16 @@ export default function Header() {
     }`;
   };
 
+  const getMobileAdminLinkClasses = () => {
+    return `flex items-center justify-between w-full py-3 text-red-400 hover:text-red-300 transition-colors font-medium`;
+  };
+
+  const getMobileAdminSubItemClasses = (path: string) => {
+    return `block py-2.5 pl-4 text-red-300/80 hover:text-red-200 transition-colors ${
+      router.pathname === path ? 'font-bold text-red-200' : ''
+    }`;
+  };
+
   const getSignInButtonClasses = () => {
     const baseClasses = "px-4 py-2 rounded-full font-medium transition-all duration-300";
     return scrolled
@@ -153,6 +181,19 @@ export default function Header() {
       bg-js text-black px-4 py-3 rounded-full font-medium w-full
       inline-flex items-center justify-center gap-2 hover:bg-js-dark transition-colors
     `;
+  };
+
+  // Admin-specific styling
+  const getAdminDropdownClasses = () => {
+    return "absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-red-900 text-white py-3 px-4 rounded-lg shadow-lg min-w-[200px] z-[60] border border-red-700";
+  };
+
+
+
+  const getAdminSubItemClasses = (path: string) => {
+    return `block hover:text-red-200 transition-colors whitespace-nowrap py-1 ${
+      router.pathname === path ? 'font-bold text-red-200' : ''
+    }`;
   };
 
   return (
@@ -186,7 +227,7 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center">
             <ul className="flex items-center space-x-1 xl:space-x-4 mr-4 xl:mr-6">
-              {navItems.map((item) => (
+              {[...navItems, ...(isAdmin ? [adminItem] : [])].map((item) => (
                 <li
                   key={item.name}
                   className={`relative group ${item.items ? 'cursor-pointer' : ''}`}
@@ -201,14 +242,17 @@ export default function Header() {
                       {item.name}
                     </Link>
                   ) : (
-                    <div className="flex items-center hover:text-blue-600 transition-colors px-3 py-2 rounded-md font-medium text-sm xl:text-base">
+                    <div className={`flex items-center transition-colors px-3 py-2 rounded-md font-medium text-sm xl:text-base ${
+                      item.id === 'admin-tools' ? 'hover:text-red-400 text-red-500' : 'hover:text-blue-600'
+                    }`}>
+                      {item.id === 'admin-tools' && <Settings size={16} className="mr-1" />}
                       {item.name} <ChevronDown size={16} className="ml-1" />
                     </div>
                   )}
 
                   {/* Dropdown menu */}
                   {item.items && item.id && activeDropdown === item.id && (
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-black text-js py-3 px-4 rounded-lg shadow-lg min-w-[180px] z-[60]">
+                    <div className={item.id === 'admin-tools' ? getAdminDropdownClasses() : "absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-black text-js py-3 px-4 rounded-lg shadow-lg min-w-[180px] z-[60]"}>
                       {/* Add invisible extension to prevent mouse gap */}
                       <div className="absolute h-2 w-full top-[-8px] left-0"></div>
                       <ul className="space-y-1">
@@ -216,7 +260,7 @@ export default function Header() {
                           <li key={subItem.path}>
                             <Link
                               href={subItem.path}
-                              className={getSubItemClasses(subItem.path)}
+                              className={item.id === 'admin-tools' ? getAdminSubItemClasses(subItem.path) : getSubItemClasses(subItem.path)}
                             >
                               {subItem.name}
                             </Link>
@@ -321,7 +365,7 @@ export default function Header() {
 
               {/* Navigation items */}
               <ul className="py-4 space-y-1">
-                {navItems.map((item) => (
+                {[...navItems, ...(isAdmin ? [adminItem] : [])].map((item) => (
                   <li key={item.name}>
                     {item.path ? (
                       <Link
@@ -334,9 +378,12 @@ export default function Header() {
                       <div>
                         <button
                           onClick={() => toggleMobileAccordion(item.id || '')}
-                          className="flex items-center justify-between w-full py-3 text-white hover:text-js transition-colors font-medium"
+                          className={item.id === 'admin-tools' ? getMobileAdminLinkClasses() : "flex items-center justify-between w-full py-3 text-white hover:text-js transition-colors font-medium"}
                         >
-                          <span>{item.name}</span>
+                          <span className="flex items-center">
+                            {item.id === 'admin-tools' && <Settings size={16} className="mr-2" />}
+                            {item.name}
+                          </span>
                           <ChevronRight
                             size={18}
                             className={`transform transition-transform duration-200 ${
@@ -363,7 +410,7 @@ export default function Header() {
                                 >
                                   <Link
                                     href={subItem.path}
-                                    className={getMobileSubItemClasses(subItem.path)}
+                                    className={item.id === 'admin-tools' ? getMobileAdminSubItemClasses(subItem.path) : getMobileSubItemClasses(subItem.path)}
                                   >
                                     {subItem.name}
                                   </Link>

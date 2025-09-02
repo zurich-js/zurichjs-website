@@ -1,6 +1,6 @@
 import { OrganizationSwitcher } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
-import { MessageSquare, BarChart, Users, Tag, Link as LinkIcon } from 'lucide-react';
+import { MessageSquare, BarChart, Users, Tag, Link as LinkIcon, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 
 import Layout from '@/components/layout/Layout';
@@ -61,6 +61,13 @@ const adminRoutes = [
         icon: <Tag className="w-6 h-6" />,
         href: '/admin/coupons',
         color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+    },
+    {
+        name: 'Mobile Payment Tools',
+        description: 'Accept payments via Payment Links, QR codes, card entry, and simulated Tap to Pay',
+        icon: <CreditCard className="w-6 h-6" />,
+        href: '/admin/tap-to-pay',
+        color: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
     },
 ];
 

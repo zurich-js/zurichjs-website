@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import AnnouncementBanner from '../AnnouncementBanner';
@@ -7,14 +8,21 @@ import Button from '../ui/Button';
 import Footer from './Footer';
 import Header from './Header';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  hideSupportButton?: boolean;
+}
+
+export default function Layout({ children, hideSupportButton }: LayoutProps) {
+  const router = useRouter();
   const [showSupportButton, setShowSupportButton] = useState(false);
   
   useEffect(() => {
     const handleScroll = () => {
-      // Show button after scrolling 200px
+      // Show button after scrolling 40px, but only if not hidden and not on admin pages
       const scrollPosition = window.scrollY;
-      setShowSupportButton(scrollPosition > 40);
+      const isAdminPage = router.pathname.startsWith('/admin');
+      setShowSupportButton(scrollPosition > 40 && !hideSupportButton && !isAdminPage);
     };
     
     window.addEventListener('scroll', handleScroll);
@@ -23,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [hideSupportButton, router.pathname]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">

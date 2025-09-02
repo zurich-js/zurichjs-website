@@ -5,7 +5,7 @@ import { sendPlatformNotification } from '@/lib/notification';
 interface PlatformNotification {
   title: string;
   message: string;
-  type: 'referral' | 'event' | 'workshop' | 'tshirt' | 'merch-suggestion' | 'other';
+  type: 'referral' | 'event' | 'workshop' | 'tshirt' | 'merch-suggestion' | 'tap_to_pay_success' | 'other';
   priority: 'low' | 'normal' | 'high';
   slackChannel?: string;
   userData?: {
@@ -76,6 +76,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         event: notification.eventData,
         feedback: notification.feedbackData,
         timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Log Tap to Pay transactions for audit trail
+    if (notification.type === 'tap_to_pay_success') {
+      console.log('Tap to Pay transaction completed:', {
+        timestamp: new Date().toISOString(),
+        notification: notification,
       });
     }
     

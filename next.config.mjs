@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_ZURICHJS_ADMIN_ORG_ID: process.env.ZURICHJS_ADMIN_ORG_ID,
+  },
   images: {
     remotePatterns: [
       {
@@ -18,6 +21,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'maps.googleapis.com',
+        port: '',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.qrserver.com',
         port: '',
         pathname: '**',
       },

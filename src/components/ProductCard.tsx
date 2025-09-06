@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-// Component interfaces
+// KitComponent interfaces
 interface SentimentGaugeProps {
   score: number;
   className?: string;
@@ -81,11 +81,11 @@ interface ProductCardProps {
   className?: string;
 }
 
-// Sentiment Gauge Component
+// Sentiment Gauge KitComponent
 const SentimentGauge = ({ score, className = "" }: SentimentGaugeProps) => {
   // Calculate the angle for the gauge needle based on score (0-100)
   const angle = -90 + (score * 1.8); // Map 0-100 to -90 to 90 degrees
-  
+
   // Define color based on score
   let color = 'text-yellow-500';
   if (score >= 80) color = 'text-green-500';
@@ -93,7 +93,7 @@ const SentimentGauge = ({ score, className = "" }: SentimentGaugeProps) => {
   else if (score >= 40) color = 'text-yellow-500';
   else if (score >= 20) color = 'text-orange-500';
   else color = 'text-red-500';
-  
+
   return (
     <div className={`relative ${className}`}>
       <div className="flex justify-center mb-1">
@@ -110,43 +110,43 @@ const SentimentGauge = ({ score, className = "" }: SentimentGaugeProps) => {
                   <stop offset="100%" stopColor="#22c55e" />
                 </linearGradient>
               </defs>
-              <path 
-                d="M 10,50 A 40,40 0 0,1 110,50" 
-                fill="none" 
-                stroke="url(#gauge-gradient)" 
+              <path
+                d="M 10,50 A 40,40 0 0,1 110,50"
+                fill="none"
+                stroke="url(#gauge-gradient)"
                 strokeWidth="8"
                 strokeLinecap="round"
               />
-              <path 
-                d="M 10,50 A 40,40 0 0,1 110,50" 
-                fill="none" 
+              <path
+                d="M 10,50 A 40,40 0 0,1 110,50"
+                fill="none"
                 stroke="#e5e7eb"
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeDasharray="157"
                 strokeDashoffset="157"
-                style={{ 
-                  strokeDashoffset: `${(100-score) * 1.57}` 
+                style={{
+                  strokeDashoffset: `${(100-score) * 1.57}`
                 }}
               />
             </svg>
           </div>
-          
+
           {/* Gauge needle */}
-          <div 
+          <div
             className="absolute top-0 left-0 w-full h-full flex justify-center"
             style={{ transform: `rotate(${angle}deg)` }}
           >
             <div className="w-1 h-20 bg-gray-700 rounded-full origin-bottom transform -translate-y-5"></div>
           </div>
-          
+
           {/* Score display */}
           <div className="absolute bottom-0 left-0 w-full flex justify-center">
             <div className={`text-2xl font-bold ${color}`}>{score}</div>
           </div>
         </div>
       </div>
-      
+
       {/* Label text below gauge */}
       <div className="text-center">
         <div className="text-sm font-medium text-gray-700">Sentiment Score</div>
@@ -172,13 +172,13 @@ const SentimentGauge = ({ score, className = "" }: SentimentGaugeProps) => {
   );
 };
 
-// Sentiment Breakdown Component
+// Sentiment Breakdown KitComponent
 const SentimentBreakdown = ({ positive, neutral, negative, totalFeedback, className = "" }: SentimentBreakdownProps) => {
   // Calculate percentages
   const positivePercent = totalFeedback > 0 ? Math.round((positive / totalFeedback) * 100) : 0;
   const neutralPercent = totalFeedback > 0 ? Math.round((neutral / totalFeedback) * 100) : 0;
   const negativePercent = totalFeedback > 0 ? Math.round((negative / totalFeedback) * 100) : 0;
-  
+
   return (
     <div className={`${className}`}>
       <div className="mb-1 flex justify-between items-center">
@@ -213,7 +213,7 @@ const SentimentBreakdown = ({ positive, neutral, negative, totalFeedback, classN
             ></div>
           </div>
         </div>
-        
+
         <div>
           <div className="flex justify-between items-center mb-1">
             <div className="text-xs text-yellow-800">Neutral</div>
@@ -226,7 +226,7 @@ const SentimentBreakdown = ({ positive, neutral, negative, totalFeedback, classN
             ></div>
           </div>
         </div>
-        
+
         <div>
           <div className="flex justify-between items-center mb-1">
             <div className="text-xs text-red-800">Negative</div>
@@ -244,10 +244,10 @@ const SentimentBreakdown = ({ positive, neutral, negative, totalFeedback, classN
   );
 };
 
-// Insight Summary Component
+// Insight Summary KitComponent
 const InsightSummary = ({ summary, className = "" }: InsightSummaryProps) => {
   if (!summary) return null;
-  
+
   return (
     <div className={`${className}`}>
       <h4 className="text-sm font-medium text-gray-700 mb-2">Key Insights</h4>
@@ -265,17 +265,17 @@ const InsightSummary = ({ summary, className = "" }: InsightSummaryProps) => {
   );
 };
 
-// Audience Interests Component
+// Audience Interests KitComponent
 const AudienceInterests = ({ interests, totalFeedback, className = "" }: AudienceInterestsProps) => {
   if (!interests || interests.length === 0) return null;
-  
+
   return (
     <div className={`${className}`}>
       <h4 className="text-sm font-medium text-gray-700 mb-2">Audience Interests</h4>
       <div className="space-y-2">
         {interests.slice(0, 5).map((item, index) => {
           const percentage = totalFeedback > 0 ? Math.round((item.count / totalFeedback) * 100) : 0;
-          
+
           return (
             <div key={index}>
               <div className="flex justify-between items-center mb-1">
@@ -296,17 +296,17 @@ const AudienceInterests = ({ interests, totalFeedback, className = "" }: Audienc
   );
 };
 
-// Learning Preferences Component
+// Learning Preferences KitComponent
 const LearningPreferences = ({ preferences, totalFeedback, className = "" }: LearningPreferencesProps) => {
   if (!preferences || preferences.length === 0) return null;
-  
+
   return (
     <div className={`${className}`}>
       <h4 className="text-sm font-medium text-gray-700 mb-2">Learning Preferences</h4>
       <div className="flex flex-wrap gap-2">
         {preferences.map((item, index) => {
           const percentage = totalFeedback > 0 ? Math.round((item.count / totalFeedback) * 100) : 0;
-          
+
           return (
             <div key={index} className="bg-indigo-50 rounded-full px-3 py-1">
               <div className="text-xs text-indigo-800">
@@ -320,36 +320,36 @@ const LearningPreferences = ({ preferences, totalFeedback, className = "" }: Lea
   );
 };
 
-// Contact List Component
+// Contact List KitComponent
 const ContactList = ({ contacts, className = "" }: ContactListProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   if (!contacts || contacts.length === 0) return null;
-  
+
   // Group contacts by feedback type
   const positiveContacts = contacts.filter(c => c.feedbackType === 'positive');
   const neutralContacts = contacts.filter(c => c.feedbackType === 'neutral');
   const negativeContacts = contacts.filter(c => c.feedbackType === 'negative');
   const followUpContacts = contacts.filter(c => c.followUp);
-  
+
   return (
     <div className={`${className}`}>
-      <button 
+      <button
         className="w-full flex justify-between items-center text-sm font-medium text-gray-700 mb-2"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span>Attendee Contacts ({contacts.length})</span>
-        <svg 
-          className={`w-4 h-4 transition-transform ${isExpanded ? 'transform rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24" 
+        <svg
+          className={`w-4 h-4 transition-transform ${isExpanded ? 'transform rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      
+
       {isExpanded && (
         <div className="bg-white border border-gray-200 rounded-lg p-3 mb-3 overflow-y-auto max-h-64">
           {followUpContacts.length > 0 && (
@@ -373,7 +373,7 @@ const ContactList = ({ contacts, className = "" }: ContactListProps) => {
               </div>
             </div>
           )}
-          
+
           {positiveContacts.length > 0 && (
             <div className="mb-3">
               <div className="text-xs font-semibold text-green-700 mb-1">
@@ -388,7 +388,7 @@ const ContactList = ({ contacts, className = "" }: ContactListProps) => {
               </div>
             </div>
           )}
-          
+
           {neutralContacts.length > 0 && (
             <div className="mb-3">
               <div className="text-xs font-semibold text-yellow-700 mb-1">
@@ -403,7 +403,7 @@ const ContactList = ({ contacts, className = "" }: ContactListProps) => {
               </div>
             </div>
           )}
-          
+
           {negativeContacts.length > 0 && (
             <div>
               <div className="text-xs font-semibold text-red-700 mb-1">
@@ -424,15 +424,15 @@ const ContactList = ({ contacts, className = "" }: ContactListProps) => {
   );
 };
 
-// Feedback Tabs Component
+// Feedback Tabs KitComponent
 const FeedbackTabs = ({ detailedFeedback, questions, className = "" }: FeedbackTabsProps) => {
   const [activeTab, setActiveTab] = useState<'feedback' | 'questions'>('feedback');
-  
+
   const hasFeedback = detailedFeedback && detailedFeedback.length > 0;
   const hasQuestions = questions && questions.length > 0;
-  
+
   if (!hasFeedback && !hasQuestions) return null;
-  
+
   return (
     <div className={`${className}`}>
       <div className="flex border-b">
@@ -457,7 +457,7 @@ const FeedbackTabs = ({ detailedFeedback, questions, className = "" }: FeedbackT
           Questions ({questions.length})
         </button>
       </div>
-      
+
       <div className="p-3 overflow-y-auto max-h-32">
         {activeTab === 'feedback' && hasFeedback ? (
           <div className="space-y-2">
@@ -468,7 +468,7 @@ const FeedbackTabs = ({ detailedFeedback, questions, className = "" }: FeedbackT
             ))}
           </div>
         ) : null}
-        
+
         {activeTab === 'questions' && hasQuestions ? (
           <div className="space-y-2">
             {questions.map((question, index) => (
@@ -478,14 +478,14 @@ const FeedbackTabs = ({ detailedFeedback, questions, className = "" }: FeedbackT
             ))}
           </div>
         ) : null}
-        
+
         {/* Empty state messages */}
         {activeTab === 'feedback' && !hasFeedback ? (
           <div className="text-center text-sm text-gray-500 py-2">
             No detailed feedback available
           </div>
         ) : null}
-        
+
         {activeTab === 'questions' && !hasQuestions ? (
           <div className="text-center text-sm text-gray-500 py-2">
             No questions available
@@ -496,24 +496,24 @@ const FeedbackTabs = ({ detailedFeedback, questions, className = "" }: FeedbackT
   );
 };
 
-// Main ProductCard Component
+// Main ProductCard KitComponent
 const ProductCard = ({ product, className = "" }: ProductCardProps) => {
   // Calculate sentiment score
   const calculateSentimentScore = () => {
     if (!product.sentimentAnalysis) return 50; // Default neutral score
-    
+
     const { positive, neutral, negative } = product.sentimentAnalysis;
     const total = positive + neutral + negative;
-    
+
     if (total === 0) return 50;
-    
+
     // Calculate weighted score: positive=10pts, neutral=5pts, negative=0pts
     const score = ((positive * 10) + (neutral * 5)) / total;
-    
+
     // Scale to 0-100
     return Math.round(score * 10);
   };
-  
+
   // Render star rating
   const renderStars = (rating: number) => {
     return (
@@ -551,7 +551,7 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
           </div>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -560,13 +560,13 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
             {/* Sentiment Score */}
             <div className="mb-6">
               <div className="flex justify-between items-start">
-                <SentimentGauge 
-                  score={calculateSentimentScore()} 
+                <SentimentGauge
+                  score={calculateSentimentScore()}
                   className="w-full"
                 />
               </div>
             </div>
-            
+
             {/* Sentiment Breakdown */}
             {product.sentimentAnalysis && (
               <SentimentBreakdown
@@ -577,7 +577,7 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
                 className="mb-6"
               />
             )}
-            
+
             {/* Insight Summary */}
             {product.insightSummary && (
               <InsightSummary
@@ -585,7 +585,7 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
                 className="mb-6"
               />
             )}
-            
+
             {/* Contact Info */}
             {product.contactInfo && product.contactInfo.length > 0 && (
               <ContactList
@@ -594,7 +594,7 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
               />
             )}
           </div>
-          
+
           {/* Right Column */}
           <div>
             {/* Audience Interests */}
@@ -603,14 +603,14 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
               totalFeedback={product.totalFeedback}
               className="mb-6"
             />
-            
+
             {/* Learning Preferences */}
             <LearningPreferences
               preferences={product.learningPreferences}
               totalFeedback={product.totalFeedback}
               className="mb-6"
             />
-            
+
             {/* Feedback & Questions Tabs */}
             <FeedbackTabs
               detailedFeedback={product.detailedFeedback}
@@ -624,4 +624,4 @@ const ProductCard = ({ product, className = "" }: ProductCardProps) => {
   );
 };
 
-export default ProductCard; 
+export default ProductCard;

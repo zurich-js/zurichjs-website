@@ -1,20 +1,26 @@
 import {LucideIcon} from "lucide-react";
 import React from 'react'
 
+import KitComponent from "@/components/kit/utils/KitComponent";
+
 export default function KitButton({
   tight = false,
-  icon,
-  iconCustom = false,
+  lucideIcon,
+  customIcon,
   variant = 'white',
   children,
-  className = ''
+  className = '',
+  as,
+  ...props
 }: {
   tight?: boolean;
-  icon?: React.ReactNode | LucideIcon;
-  iconCustom?: React.ReactNode;
+  lucideIcon?: LucideIcon;
+  customIcon?: React.ReactNode;
   variant?: 'white' | 'black';
   children?: React.ReactNode;
   className?: string;
+  as?: React.ElementType;
+  [x: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
 
   const outerForTight = 'p-1 flex items-center w-fit';
@@ -28,17 +34,17 @@ export default function KitButton({
   let inner = '';
   if (tight) {
     outer = outerForTight;
-    if (!!icon && !!children) {
+    if ((!!lucideIcon || !!customIcon) && !!children) {
       inner = innerForTightWithIconAndChildren;
     }
     else if (!children) {
       inner = innerForTightWithIcon;
     }
-    else if (!icon) {
+    else if (!lucideIcon && !customIcon) {
       inner = innerForTightWithChildren;
     }
   } else {
-    if (!!icon && !!children) {
+    if ((!!lucideIcon || !!customIcon) && !!children) {
       inner = innerWithIconAndChildren;
     }
     else {
@@ -50,22 +56,19 @@ export default function KitButton({
     ? ' bg-kit-gray-light text-black border-kit-gray-medium hover:bg-white hover:border-black focus:bg-white focus:border-black'
     : ' bg-black text-white border-black hover:bg-white hover:text-black hover:border-black hover:shadow-lg hover:shadow-white hover:-translate-y-px hover:-translate-x-px focus:bg-white focus:text-black focus:border-black';
 
-  const renderIcon = (() => {
-    if (!icon) return null;
-    if (iconCustom) return icon;
-    // @ts-expect-error we know icon is a LucideIcon or custom ReactNode
-    return React.createElement(icon, {size: tight ? 32 : 16});
-  })() as React.ReactNode;
 
   return (
-    <button
-      type="button"
-      className={`rounded-[40px] h-fit border-2 transition-all duration-300 focus:outline-0 focus:ring-2 focus: ring-zurich ring-offset-2 ${outer} ${className}`}
+    <KitComponent
+      is={as ? as : 'button'}
+      {...(as ? {} : { type: 'button' })}
+      className={`rounded-[40px] h-fit w-max border-2 transition-all duration-300 focus:outline-0 focus:ring-2 focus: ring-zurich ring-offset-2 ${outer} ${className}`}
+      {...props}
     >
       <span className={`text-kit-base leading-none font-medium ${inner}`}>
-        { renderIcon }
+        {lucideIcon && <KitComponent is={lucideIcon} className="shrink-0" size={tight ? 32 : 16 } />}
+        {customIcon && customIcon}
         {children}
       </span>
-    </button>
+    </KitComponent>
   )
 }

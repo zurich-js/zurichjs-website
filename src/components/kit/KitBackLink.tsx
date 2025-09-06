@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from "next/link";
 import React from "react";
 
-export default function Backlink({
+export default function KitBackLink({
   href,
   children,
   className = ''

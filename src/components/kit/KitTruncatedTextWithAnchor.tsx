@@ -1,4 +1,4 @@
-export default function TruncatedTextWithAnchor({
+export default function KitTruncatedTextWithAnchor({
   text,
   limit = 170,
   anchor,
@@ -17,7 +17,7 @@ export default function TruncatedTextWithAnchor({
       {truncatedText}
       {isTruncated && (
         <span>
-          <a href={'#' + anchor}>Read more</a>
+          <a className="text-inherit no-underline" href={'#' + anchor}>Read more</a>
         </span>
       )}
     </p>

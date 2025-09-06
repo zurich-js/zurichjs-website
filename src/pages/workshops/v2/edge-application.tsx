@@ -1,12 +1,24 @@
+import {Brain, CloudCog, Database, Atom} from "lucide-react";
+
+// import PlaygroundDemo from "@/components/kit/button/_playground_demo";
+import KitAccordion, {KitAccordionItem} from "@/components/kit/KitAccordion";
+import KitGrid, {KitGridItem} from "@/components/kit/KitGrid";
 import KitHero from "@/components/kit/KitHero";
+import KitList from "@/components/kit/KitList";
+import KitPageContent from "@/components/kit/KitPageContent";
+import KitPageSection from "@/components/kit/KitPageSection";
+import KitSectionContent from "@/components/kit/KitSectionContent";
+import KitSectionTitle from "@/components/kit/KitSectionTitle";
 import WorkshopActionsSlot from "@/components/kit/workshop/WorkshopActionsSlot";
 import {WorkshopDetailsRow} from "@/components/kit/workshop/WorkshopDetailsRow";
 import WorkshopSpeakerCard from "@/components/kit/workshop/WorkshopSpeakerCard";
 import WorkshopTopSlot from "@/components/kit/workshop/WorkshopTopSlot";
+import WorkshopVenueInfo from "@/components/kit/workshop/WorkshopVenueInfo";
 import PageLayout from '@/components/layout/Layout';
-import Section from "@/components/Section";
 import {getSpeakerById} from "@/sanity/queries";
 import {Speaker} from "@/types";
+
+
 
 export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
   const harshil = {
@@ -32,7 +44,7 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
                 maxSeats={20}
                 seatsLeft={5}
                 discountPeriodTitle="Early Bird"
-                discountPeriodEndDate="2025-09-01"
+                discountPeriodEndDate="2025-09-09"
               />
           ),
           actions: <WorkshopActionsSlot />,
@@ -42,10 +54,118 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
         }}
       />
 
-      <Section variant="white" id="overview">
-        Pending
-      </Section>
+      <KitPageContent hasTOC={true}>
+        <KitPageSection id="overview" layout="full">
+          <KitSectionContent>
+            <p className="text-kit-base">In this hands-on workshop, you&#39;ll master Cloudflare Workers, AI integration, and modern React to deploy a production-ready app on the edge.</p>
+            <KitList
+              className="mt-1"
+              listStyle="badge-check"
+              items={[
+                'Build and deploy from scratch',
+                'Integrate AI capabilities',
+                'Learn edge computing best practices',
+                'Walk away with a working app'
+              ]}
+            />
+          </KitSectionContent>
+        </KitPageSection>
 
+        <KitPageSection id="what-you-ll-learn" layout="section">
+          <KitSectionTitle>
+            What you&#39;ll learn
+            <a href="" className="text-kit-sm text-zurich block mt-2 underline hover:opacity-70 w-fit">See full syllabus</a>
+          </KitSectionTitle>
+          <KitSectionContent>
+            <KitGrid>
+              <KitGridItem icon={CloudCog} title="Cloudflare Workers & Edge Computing">
+                Understand Workers and the Cloudflare Developer Platform, and build & deploy from scratch
+              </KitGridItem>
+              <KitGridItem icon={Brain} title="AI Integration">
+                Integrate AI capabilities using Workers AI with model selection and prompt engineering
+              </KitGridItem>
+              <KitGridItem icon={Database} title="Data & Storage Solutions">
+                Implement D1 databases and R2 object storage for complete data persistence.
+              </KitGridItem>
+              <KitGridItem icon={Atom} title="Modern React">
+                Build interactive UIs with React and Cloudflare Vite plugin for seamless deployment.
+              </KitGridItem>
+            </KitGrid>
+          </KitSectionContent>
+        </KitPageSection>
+
+        <KitPageSection id="faq" layout="section">
+          <KitSectionTitle>
+            Frequently asked qestions
+          </KitSectionTitle>
+          <KitSectionContent>
+            <KitAccordion>
+              <KitAccordionItem title="Are there group discounts? I could bring a friend..." content="content" />
+              <KitAccordionItem title="Can I get a discount if I'm unemployed?">
+                <p className="mb-1">We hold a strong belief: <b><i>Never let finances be a blocker to learning</i></b></p>
+                <p>We know everyone’s situation is different, so if you ever want to join one of our paid events but the cost is a challenge, reach out to us.
+                We’ll do our best to make it possible for you to attend, network, learn, and thrive. Email us at&nbsp;
+                  <a href="mailto:hello@zurichjs.com">hello@zurichjs.com</a>
+                </p>
+              </KitAccordionItem>
+              <KitAccordionItem title="How long is the workshop?">
+                <p>
+                  The hands-on time is 2.5 hours, separated by a break in between and we’ll provide refreshments and snacks throughout. If you require any special accommodations, reach out to us and we’ll make it work:&nbsp;
+                  <a href="mailto:hello@zurichjs.com">hello@zurichjs.com</a>
+                </p>
+              </KitAccordionItem>
+              <KitAccordionItem title="Is this workshop for me?">
+                <p>Working on the Frontend, Backend, Full-stack, or even DevOps?</p>
+                <p>Interested in Edge computing, Cloudflare workers, AI integration, object storage?<br/>
+                  <b>Then it’s a match! 🎉</b>
+                </p>
+              </KitAccordionItem>
+              <KitAccordionItem title="Anything I need to prepare ahead of the workshop?">
+                <ol>
+                  <li>Bring a Laptop with at least 8 GB of RAM. And make sure you have admin rights</li>
+                  <li>Get <a href="https://docs.npmjs.com/downloading-and-installing-node-js-and-npm" target="_blank">Node.js 18+</a>, or, better yet, use <a href="https://github.com/nvm-sh/nvm" target="_blank">nvm</a> to easily switch between node versions.</li>
+                  <li>Create a <a href="https://dash.cloudflare.com/sign-up" target="_blank">Cloudflare account</a>. The Free Tier is sufficient for the workshop.</li>
+                </ol>
+              </KitAccordionItem>
+              <KitAccordionItem title="Is the venue wheelchair accessible?">
+                <p>Yes, the venue is wheelchair accessible. If you have any specific accessibility needs or concerns, please let us know in advance so we can make the necessary arrangements to ensure your comfort and accessibility during the workshop.</p>
+              </KitAccordionItem>
+              <KitAccordionItem title="Can I pay cash? or Bitcoin?">
+                <p>Our website allows you a multitude of payment options through Stripe. You&#39;ll see these at checkout.</p>
+                <p>But yes, you can also pay cash or on-site through Credit Card. If you do pay on-site, be aware that prepaid tickets have priority for seats.</p>
+              </KitAccordionItem>
+            </KitAccordion>
+          </KitSectionContent>
+        </KitPageSection>
+
+        <KitPageSection id="pricing-and-registration" layout="section">
+          <KitSectionTitle>
+            Pricing and Registration
+          </KitSectionTitle>
+        </KitPageSection>
+
+        <KitPageSection id="venue-info" layout="section">
+          <KitSectionTitle>
+            Venue info
+          </KitSectionTitle>
+          <KitSectionContent>
+            <WorkshopVenueInfo
+              location="Smallpdf AG"
+              address="Steinstrasse 21, 8003 Zürich"
+              floor={2}
+              date="2025-09-09"
+              startTime="18:00"
+            />
+          </KitSectionContent>
+        </KitPageSection>
+
+        <KitPageSection id="other-events" layout="full">
+          <KitSectionTitle>
+            Can&#39;t make it?
+            <p className="text-kit-sm mt-1">Check out our other events</p>
+          </KitSectionTitle>
+        </KitPageSection>
+      </KitPageContent>
     </PageLayout>
   )
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import TruncatedTextWithAnchor from "@/components/kit/TruncatedTextWithAnchor";
+import KitTruncatedTextWithAnchor from "@/components/kit/KitTruncatedTextWithAnchor";
 import Section from "@/components/Section";
 
 interface KitHeroProps {
@@ -45,7 +45,7 @@ export default function KitHero({
             <h1 className="max-w-screen-lg text-kit-huge font-medium">{ title }</h1>
             <div className="max-w-screen-md text-kit-md">
               { truncatedDescriptionAnchor
-                ? <TruncatedTextWithAnchor text={description} anchor={truncatedDescriptionAnchor} />
+                ? <KitTruncatedTextWithAnchor text={description} anchor={truncatedDescriptionAnchor} />
                 : <p>{description}</p>
               }
             </div>

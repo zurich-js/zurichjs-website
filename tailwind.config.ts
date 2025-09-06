@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: [
@@ -24,13 +25,13 @@ const config: Config = {
         'kit-gray-dark': '#4D4D4D',
       },
       fontSize: {
-        'kit-xs': "0.75rem", // 12px
-        'kit-sm': ["0.875rem", '130%'], // 14px
-        'kit-base': ["1rem", '130%'], // 16px
-        'kit-md': ["1.125rem", '110%'], // 18px
-        'kit-lg': ["1.5rem", '110%'], // 24px
-        'kit-xl': ["2rem", '110%'], // 32px
-        'kit-huge': ["4.5rem", '110%'], // 72px
+        'kit-xs': ['0.75rem', '130%'], // 12px
+        'kit-sm': ['0.875rem', '130%'], // 14px
+        'kit-base': ['1rem', '130%'], // 16px
+        'kit-md': ['1.125rem', '130%'], // 18px
+        'kit-lg': ['1.5rem', '110%'], // 24px
+        'kit-xl': ['2rem', '110%'], // 32px
+        'kit-huge': ['4.5rem', '110%'], // 72px
       },
       screens: {
         xs: "400px",
@@ -40,6 +41,10 @@ const config: Config = {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addVariant }) => {
+      addVariant('open', '&[open="true"]');
+    }),
+  ]
 };
 export default config;

@@ -22,19 +22,19 @@ export default function ButtonPlaygroundDemo() {
             Collapsible Button
           </KitButton>
           <KitButton
-            icon={Share2}
+            lucideIcon={Share2}
             tight={false}
             variant="black"
           />
           <KitButton
-            icon={Plus}
+            lucideIcon={Plus}
             tight={false}
             variant="black"
           >
             Content Button
           </KitButton>
           <KitButton
-            icon={(
+            customIcon={(
               <div className="bg-[#EC0001] rounded-full flex items-center justify-center h-full aspect-square p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" viewBox="0 0 24 14" fill="none">
                   <path d="M6 13.0132H9.4875L4.8 8.39056H10.6125V13.0132H13.3875V8.39056H19.2375L14.5125 13.0132H18L24 7L18.0375 0.986755H14.55L19.2375 5.60944H13.3875V0.986755H10.6125V5.60944H4.8L9.4875 0.986755H6L0 7L6 13.0132Z" fill="white"/>
@@ -43,12 +43,11 @@ export default function ButtonPlaygroundDemo() {
             )}
             tight={true}
             variant="black"
-            iconCustom={true}
           >
             Custom Icon Button
           </KitButton>
           <KitButton
-            icon={(
+            customIcon={(
               <div className="bg-[#EC0001] rounded-full flex items-center justify-center h-full aspect-square p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" viewBox="0 0 24 14" fill="none">
                   <path d="M6 13.0132H9.4875L4.8 8.39056H10.6125V13.0132H13.3875V8.39056H19.2375L14.5125 13.0132H18L24 7L18.0375 0.986755H14.55L19.2375 5.60944H13.3875V0.986755H10.6125V5.60944H4.8L9.4875 0.986755H6L0 7L6 13.0132Z" fill="white"/>
@@ -57,7 +56,6 @@ export default function ButtonPlaygroundDemo() {
             )}
             tight={true}
             variant="black"
-            iconCustom={true}
           />
         </div>
         <div className="flex gap-4">
@@ -74,19 +72,19 @@ export default function ButtonPlaygroundDemo() {
             Collapsible Button
           </KitButton>
           <KitButton
-            icon={Share2}
+            lucideIcon={Share2}
             tight={false}
             variant="white"
           />
           <KitButton
-            icon={Plus}
+            lucideIcon={Plus}
             tight={false}
             variant="white"
           >
             Content Button
           </KitButton>
           <KitButton
-            icon={(
+            customIcon={(
               <div className="flex items-center justify-center size-[32px] aspect-square p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <g clip-path="url(#clip0_51_744)">
@@ -106,10 +104,9 @@ export default function ButtonPlaygroundDemo() {
             )}
             tight={true}
             variant="white"
-            iconCustom={true}
           />
           <KitButton
-            icon={(
+            customIcon={(
               <div className="flex items-center justify-center size-[32px] aspect-square p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <g clip-path="url(#clip0_51_744)">
@@ -129,7 +126,6 @@ export default function ButtonPlaygroundDemo() {
             )}
             tight={true}
             variant="white"
-            iconCustom={true}
           >
             View on Google Maps
           </KitButton>

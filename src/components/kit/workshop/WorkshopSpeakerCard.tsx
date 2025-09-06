@@ -44,7 +44,7 @@ export default function WorkshopSpeakerCard({
         <div className="flex flex-col gap-1">
           <Link
             href={`/speakers/${speaker.id}`}
-            className="inline-block text-kit-lg font-medium border-b border-transparent border-dashed group hover:border-black transition-all duration-300 w-fit"
+            className="inline-block text-kit-lg font-medium text-inherit no-underline border-b border-transparent border-dashed group hover:border-black transition-all duration-300 w-fit"
           >
             {speaker.name}
             <SquareArrowOutUpRight size={12} className="inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />

@@ -1,6 +1,7 @@
 import React from 'react';
 
 import KitTruncatedTextWithAnchor from "@/components/kit/KitTruncatedTextWithAnchor";
+import {makeSlug} from "@/components/kit/utils/makeSlug";
 import Section from "@/components/Section";
 
 interface KitHeroProps {
@@ -34,8 +35,10 @@ export default function KitHero({
   *   actions slot?
   *  */
 
+  const slug = makeSlug(title)
+
   return (
-    <Section variant="gradient" className="flex flex-col">
+    <Section variant="gradient" className="flex flex-col" id={slug}>
       {/* Top slot */}
       { slots?.top ?? null }
       {/* Content */}

@@ -75,7 +75,7 @@ function MyComponent() {
   };
   
   return (
-    // KitComponent JSX
+    // Component JSX
   );
 }
 ```

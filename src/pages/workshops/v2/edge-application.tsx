@@ -9,6 +9,7 @@ import KitPageContent from "@/components/kit/KitPageContent";
 import KitPageSection from "@/components/kit/KitPageSection";
 import KitSectionContent from "@/components/kit/KitSectionContent";
 import KitSectionTitle from "@/components/kit/KitSectionTitle";
+import {makeSlug} from "@/components/kit/utils/makeSlug";
 import WorkshopActionsSlot from "@/components/kit/workshop/WorkshopActionsSlot";
 import {WorkshopDetailsRow} from "@/components/kit/workshop/WorkshopDetailsRow";
 import WorkshopSpeakerCard from "@/components/kit/workshop/WorkshopSpeakerCard";
@@ -18,14 +19,25 @@ import PageLayout from '@/components/layout/Layout';
 import {getSpeakerById} from "@/sanity/queries";
 import {Speaker} from "@/types";
 
-
-
 export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
   const harshil = {
     ...speaker,
     company: 'Cloudflare Inc.',
     companyLogo: 'https://cf-assets.www.cloudflare.com/dzlvafdwdttg/69wNwfiY5mFmgpd9eQFW6j/d5131c08085a977aa70f19e7aada3fa9/1pixel-down__1_.svg',
   }
+
+  const preSectionMap = {
+    overview: "Overview",
+    learn: "What you'll learn",
+    faq: "Frequently Asked Questions",
+    price: "Pricing and Registration",
+    venue: "Venue Info",
+    others: "Other Events"
+  }
+
+  const sections: Record<string, { title: string, slug: string }> = Object.fromEntries(
+    Object.entries(preSectionMap).map(([key, title]) => [key, { title, slug: makeSlug(title) }])
+  )
 
   return (
     <PageLayout>
@@ -54,8 +66,8 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
         }}
       />
 
-      <KitPageContent hasTOC={true}>
-        <KitPageSection id="overview" layout="full">
+      <KitPageContent toc={sections} title="Building a Full-Stack AI Application on the Edge">
+        <KitPageSection id={sections.overview.slug} layout="full">
           <KitSectionContent>
             <p className="text-kit-base">In this hands-on workshop, you&#39;ll master Cloudflare Workers, AI integration, and modern React to deploy a production-ready app on the edge.</p>
             <KitList
@@ -71,7 +83,7 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
           </KitSectionContent>
         </KitPageSection>
 
-        <KitPageSection id="what-you-ll-learn" layout="section">
+        <KitPageSection id={sections.learn.slug} layout="section">
           <KitSectionTitle>
             What you&#39;ll learn
             <a href="" className="text-kit-sm text-zurich block mt-2 underline hover:opacity-70 w-fit">See full syllabus</a>
@@ -94,7 +106,7 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
           </KitSectionContent>
         </KitPageSection>
 
-        <KitPageSection id="faq" layout="section">
+        <KitPageSection id={sections.faq.slug} layout="section">
           <KitSectionTitle>
             Frequently asked qestions
           </KitSectionTitle>
@@ -138,13 +150,13 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
           </KitSectionContent>
         </KitPageSection>
 
-        <KitPageSection id="pricing-and-registration" layout="section">
+        <KitPageSection id={sections.price.slug} layout="section">
           <KitSectionTitle>
             Pricing and Registration
           </KitSectionTitle>
         </KitPageSection>
 
-        <KitPageSection id="venue-info" layout="section">
+        <KitPageSection id={sections.venue.slug} layout="section">
           <KitSectionTitle>
             Venue info
           </KitSectionTitle>
@@ -159,7 +171,7 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
           </KitSectionContent>
         </KitPageSection>
 
-        <KitPageSection id="other-events" layout="full">
+        <KitPageSection id={sections.others.slug} layout="full">
           <KitSectionTitle>
             Can&#39;t make it?
             <p className="text-kit-sm mt-1">Check out our other events</p>

@@ -3,6 +3,7 @@ import Image from "next/image";
 import React, {useEffect, useState} from "react";
 
 import KitButton from "@/components/kit/button/KitButton";
+import KitCopyableText from "@/components/kit/KitCopyableText";
 
 function GoogleMapsButton({ link, ...props }: { link: string}) {
   return (
@@ -119,14 +120,14 @@ export default function WorkshopVenueInfo({
         </p>
         <p className="flex gap-1 text-kit-sm">
           <MapPin size={14} />
-          {address}<br/>{floorText}
+          <span><KitCopyableText text={address} className="text-black hover:text-zurich" /><br/>{floorText}</span>
         </p>
         <div className="flex flex-col gap-2 mt-auto">
           <GoogleMapsButton link={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || location)}`}/>
           <SBBButton link={sbbUrl} />
         </div>
       </div>
-      <div className="relative min-h-48 w-full aspect-video rounded-lg overflow-hidden">
+      <div className="relative min-h-48 w-full aspect-video rounded-lg border border-kit-gray-medium overflow-hidden">
         {mapUrl ? (
           <Image
             src={mapUrl}
@@ -135,8 +136,8 @@ export default function WorkshopVenueInfo({
             className="object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100">
-            <p className="text-gray-500">Map loading...</p>
+          <div className="w-full h-full flex items-center justify-center">
+            <p className="text-kit-gray-dark">Map loading...</p>
           </div>
         )}
       </div>

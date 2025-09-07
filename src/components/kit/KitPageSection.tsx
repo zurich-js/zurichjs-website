@@ -13,7 +13,7 @@ export default function KitPageSection({
   const wrapperClasses = layout === 'full' ? 'w-full max-w-[920px]' : 'flex xs:flex-row';
 
   return (
-    <section id={id} className={`${wrapperClasses} gap-2.5 ${className}`}>
+    <section id={id} className={`${wrapperClasses} gap-2.5 ${className}`} style={{scrollMarginTop: '56px'}}>
       {children}
     </section>
   )

@@ -22,6 +22,7 @@ const config: Config = {
         'kit-green': "#34A853",
         'kit-gray-light':'#f2f2f2',
         'kit-gray-medium': '#E5E5E5',
+        'kit-gray': '#A3A3A3',
         'kit-gray-dark': '#4D4D4D',
       },
       fontSize: {

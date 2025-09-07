@@ -1,8 +1,8 @@
-import React from 'react';
 
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/router';
 import localFont from "next/font/local";
+import { useRouter } from 'next/router';
+import React from 'react';
 import { useState, useEffect } from 'react';
 
 import AnnouncementBanner from '../AnnouncementBanner';

@@ -12,7 +12,7 @@ export default function WorkshopHero({
   date,
   startTime,
   endTime,
-  duration,
+                                       durationString,
   maxSeats,
   seatsLeft,
   discountPeriodTitle,
@@ -25,13 +25,23 @@ export default function WorkshopHero({
   date: string; // YYYY-MM-DD
   startTime: string; // HH:MM
   endTime: string; // HH:MM
-  duration: string;
+  durationString?: string;
   maxSeats: number;
   seatsLeft: number;
   discountPeriodTitle?: string;
   discountPeriodEndDate?: string; // YYYY-MM-DD
   speaker: Speaker
 }) {
+
+  const duration = (() => {
+    if (durationString) return durationString;
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diff = end.getTime() - start.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours > 0 ? hours + 'h' : ''}${hours > 0 && minutes > 0 ? ' ' : ''}${minutes > 0 ? minutes + 'm' : ''}`;
+  })();
   return (
     <KitHero
       title={title}

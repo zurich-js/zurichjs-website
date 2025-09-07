@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.14.3",
+    "@headlessui/react": "^2.2.7",
     "@imagekit/next": "^2.1.2",
     "@multiplayer-app/session-recorder-browser": "^1.2.6",
     "@next/third-parties": "^15.2.2",
@@ -35,7 +36,6 @@
     "jsonwebtoken": "^9.0.2",
     "lodash.get": "^4.4.2",
     "lucide-react": "^0.479.0",
-    "meetup-api-client": "^0.1.14",
     "next": "^14.2.25",
     "next-sanity": "^9.9.0",
     "posthog-js": "^1.231.0",
@@ -48,7 +48,7 @@
   "devDependencies": {
     "@types/formidable": "^3.4.5",
     "@types/lodash.get": "^4.4.9",
-    "@types/node": "^20",
+    "@types/node": "^20.19.13",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",

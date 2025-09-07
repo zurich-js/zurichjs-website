@@ -1,4 +1,5 @@
 import React from "react";
+
 import {makeSlug} from "@/components/kit/utils/makeSlug";
 
 export default function KitPageContent({

@@ -1,72 +1,59 @@
 import {Brain, CloudCog, Database, Atom} from "lucide-react";
+import React from "react";
 
-// import PlaygroundDemo from "@/components/kit/button/_playground_demo";
 import KitAccordion, {KitAccordionItem} from "@/components/kit/KitAccordion";
 import KitGrid, {KitGridItem} from "@/components/kit/KitGrid";
-import KitHero from "@/components/kit/KitHero";
 import KitList from "@/components/kit/KitList";
 import KitPageContent from "@/components/kit/KitPageContent";
 import KitPageSection from "@/components/kit/KitPageSection";
 import KitSectionContent from "@/components/kit/KitSectionContent";
 import KitSectionTitle from "@/components/kit/KitSectionTitle";
 import {makeSlug} from "@/components/kit/utils/makeSlug";
-import WorkshopActionsSlot from "@/components/kit/workshop/WorkshopActionsSlot";
-import {WorkshopDetailsRow} from "@/components/kit/workshop/WorkshopDetailsRow";
-import WorkshopSpeakerCard from "@/components/kit/workshop/WorkshopSpeakerCard";
-import WorkshopTopSlot from "@/components/kit/workshop/WorkshopTopSlot";
+import WorkshopHero from "@/components/kit/workshop/WorkshopHero";
 import WorkshopVenueInfo from "@/components/kit/workshop/WorkshopVenueInfo";
 import PageLayout from '@/components/layout/Layout';
+import CancelledCheckout from "@/components/workshop/CancelledCheckout";
 import {getSpeakerById} from "@/sanity/queries";
 import {Speaker} from "@/types";
 
-export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
+
+const title = "Building a Full-Stack AI Application on the Edge"
+const preSectionMap = {
+  overview: "Overview",
+  learn: "What you'll learn",
+  faq: "Frequently Asked Questions",
+  price: "Pricing and Registration",
+  venue: "Venue Info",
+  others: "Other Events"
+}
+
+const sections: Record<string, { title: string, slug: string }> = Object.fromEntries(
+  Object.entries(preSectionMap).map(([key, title]) => [key, { title, slug: makeSlug(title) }])
+)
+
+export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
   const harshil = {
     ...speaker,
     company: 'Cloudflare Inc.',
     companyLogo: 'https://cf-assets.www.cloudflare.com/dzlvafdwdttg/69wNwfiY5mFmgpd9eQFW6j/d5131c08085a977aa70f19e7aada3fa9/1pixel-down__1_.svg',
   }
 
-  const preSectionMap = {
-    overview: "Overview",
-    learn: "What you'll learn",
-    faq: "Frequently Asked Questions",
-    price: "Pricing and Registration",
-    venue: "Venue Info",
-    others: "Other Events"
-  }
-
-  const sections: Record<string, { title: string, slug: string }> = Object.fromEntries(
-    Object.entries(preSectionMap).map(([key, title]) => [key, { title, slug: makeSlug(title) }])
-  )
-
   return (
     <PageLayout>
-      <KitHero
-        title="Building a Full-Stack AI Application on the Edge"
+      <WorkshopHero
+        title={title}
         description="Ready to build lightning-fast AI applications that scale globally? In this hands-on workshop, you'll master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch. You'll start with the fundamentals of Cloudflare Workers and progressively add AI capabilities, databases, object storage, and a modern React frontend. By the end, you'll have deployed a production-ready AI application running on Cloudflare's global edge network."
-        truncatedDescriptionAnchor='overview'
-        slots={{
-          top: <WorkshopTopSlot />,
-          details: (
-              <WorkshopDetailsRow
-                date="2025-09-09"
-                startTime="18:00"
-                endTime="21:00"
-                duration="3 hours"
-                maxSeats={20}
-                seatsLeft={5}
-                discountPeriodTitle="Early Bird"
-                discountPeriodEndDate="2025-09-09"
-              />
-          ),
-          actions: <WorkshopActionsSlot />,
-          card: (
-              <WorkshopSpeakerCard speaker={harshil} />
-          ),
-        }}
+        truncatedDescriptionAnchor="overview"
+        date="2025-09-09"
+        startTime="18:00"
+        endTime="21:00"
+        durationString="3 hours"
+        maxSeats={30}
+        seatsLeft={11}
+        speaker={harshil}
       />
 
-      <KitPageContent toc={sections} title="Building a Full-Stack AI Application on the Edge">
+      <KitPageContent toc={sections} title={title}>
         <KitPageSection id={sections.overview.slug} layout="full">
           <KitSectionContent>
             <p className="text-kit-base">In this hands-on workshop, you&#39;ll master Cloudflare Workers, AI integration, and modern React to deploy a production-ready app on the edge.</p>
@@ -154,6 +141,12 @@ export default function EdgeApplication({ speaker }: { speaker: Speaker }) {
           <KitSectionTitle>
             Pricing and Registration
           </KitSectionTitle>
+          <KitSectionContent>
+            <CancelledCheckout
+              workshopId="ai-edge-application"
+              workshopTitle={title}
+            />
+          </KitSectionContent>
         </KitPageSection>
 
         <KitPageSection id={sections.venue.slug} layout="section">

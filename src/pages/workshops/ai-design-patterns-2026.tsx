@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Users, Share2, ChevronLeft, Activity, BarChart, Search, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, Share2, ChevronLeft, Brain, Lightbulb, Users2, Target, Layers } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -9,8 +9,8 @@ import PageLayout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
+import { aiDesignPatternsTickets } from '@/components/workshop/aiDesignPatternsTickets';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
-import { observabilityWorkshopTickets } from '@/components/workshop/observabilityWorkshopTickets';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
@@ -19,36 +19,52 @@ import { getSpeakersByIds } from '@/sanity/queries';
 import { Speaker } from '@/types';
 
 // Horizontal Timeline Component
-function HorizontalTimeline() {
+function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
     const now = new Date();
-    const earlyBirdEnd = new Date('2025-10-01T23:59:59');
-    const workshopDate = new Date('2025-10-28T16:00:00');
+    const earlyBirdEnd = new Date('2025-12-01');
+    const lateBirdStart = new Date('2026-03-01');
+    const workshopDate = new Date('2026-03-23');
+    
+    // Calculate early bird seats remaining
+    const soldTickets = 30 - seatsRemaining; // Note: This should use totalSeats from parent component
+    const earlyBirdSoldOut = soldTickets >= 10;
     
     const milestones = [
         { 
             name: 'Early Bird Pricing', 
-            date: 'Until Oct 1st, 2025',
-            price: 'CHF 95',
+            date: 'First 10 seats OR until Dec 1st, 2025',
+            price: 'CHF 525',
             endDate: earlyBirdEnd,
             color: 'bg-green-500',
             textColor: 'text-green-700',
             bgColor: 'bg-green-50',
-            icon: '🐦'
+            icon: '🐦',
+            extraInfo: !earlyBirdSoldOut && now < earlyBirdEnd ? `${Math.max(0, 10 - soldTickets)} early bird seats left` : null
         },
         { 
             name: 'Standard Pricing', 
-            date: 'Oct 1st - Oct 28th, 2025',
-            price: 'CHF 125',
-            endDate: workshopDate,
+            date: 'Dec 1st, 2025 - Mar 1st, 2026',
+            price: 'CHF 595',
+            endDate: lateBirdStart,
             color: 'bg-zurich',
             textColor: 'text-zurich',
             bgColor: 'bg-blue-50',
             icon: '💼'
         },
         { 
+            name: 'Late Bird Pricing', 
+            date: 'Mar 1st - Mar 23rd, 2026',
+            price: 'CHF 625',
+            endDate: workshopDate,
+            color: 'bg-orange-500',
+            textColor: 'text-orange-700',
+            bgColor: 'bg-orange-50',
+            icon: '⚡'
+        },
+        { 
             name: 'Workshop Day', 
-            date: 'October 28th, 2025',
-            price: '16:00 - 18:00',
+            date: 'March 23rd, 2026',
+            price: '09:00 - 17:00',
             endDate: workshopDate,
             color: 'bg-red-500',
             textColor: 'text-red-700',
@@ -58,9 +74,10 @@ function HorizontalTimeline() {
     ];
     
     const getCurrentMilestone = () => {
-        if (now < earlyBirdEnd) return 0;
-        if (now < workshopDate) return 1;
-        return 2;
+        if (now < earlyBirdEnd && !earlyBirdSoldOut) return 0;
+        if (now < lateBirdStart) return 1;
+        if (now < workshopDate) return 2;
+        return 3;
     };
     
     const currentMilestone = getCurrentMilestone();
@@ -76,7 +93,7 @@ function HorizontalTimeline() {
                     style={{ width: `${(currentMilestone / (milestones.length - 1)) * 100}%` }}
                 ></div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {milestones.map((milestone, index) => (
                         <div key={milestone.name} className="relative">
                             {/* Timeline dot */}
@@ -106,12 +123,17 @@ function HorizontalTimeline() {
                                         index === currentMilestone ? 'text-black font-semibold' : 'text-gray-500'
                                     }`}>
                                         {milestone.date}
-                                    </div>
+                                </div>
                                     <div className={`text-sm font-bold ${
                                         index === currentMilestone ? 'text-black' : 'text-gray-600'
-                                    }`}>
+                                }`}>
                                         {milestone.price}
-                                    </div>
+                                </div>
+                                    {milestone.extraInfo && (
+                                        <div className="mt-1 text-xs text-green-600 font-semibold">
+                                            {milestone.extraInfo}
+                                </div>
+                                    )}
                                     {index === currentMilestone && (
                                         <div className="mt-2 text-xs bg-zurich text-white px-2 py-1 rounded-full">
                                             Current
@@ -173,13 +195,18 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const earlyBirdEnd = new Date('2025-10-01T23:59:59').getTime();
-      const workshopStart = new Date('2025-10-28T16:00:00').getTime();
+      const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
+      const workshopStart = new Date('2026-03-23T09:00:00').getTime();
+      
+      // Calculate sold tickets and early bird seats left
+      const totalSeats = 30;
+      const soldTickets = totalSeats - seatsRemaining;
+      const earlyBirdSoldOut = soldTickets >= 10;
       
       // Determine which countdown to show
       let targetTime;
       
-      if (now < earlyBirdEnd) {
+      if (!earlyBirdSoldOut && now < earlyBirdEnd) {
         // Show early bird countdown
         targetTime = earlyBirdEnd;
       } else {
@@ -209,18 +236,19 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   if (!isClient) return null;
 
   const now = new Date().getTime();
-  const earlyBirdEnd = new Date('2025-10-01T23:59:59').getTime();
-  const workshopStart = new Date('2025-10-28T16:00:00').getTime();
+  const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
+  const workshopStart = new Date('2026-03-23T09:00:00').getTime();
+  
+  const totalSeats = 30;
+  const soldTickets = totalSeats - seatsRemaining;
+  const earlyBirdSoldOut = soldTickets >= 10;
   
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
   
   // Determine countdown label
-  let countdownLabel;
-  if (now < earlyBirdEnd) {
-    countdownLabel = "Early Bird Ends In:";
-  } else {
-    countdownLabel = "Workshop Starts In:";
-  }
+  const countdownLabel = !earlyBirdSoldOut && now < earlyBirdEnd 
+    ? "Early Bird Ends In:" 
+    : "Workshop Starts In:";
 
   if (isExpired && now >= workshopStart) {
     return (
@@ -249,7 +277,8 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   );
 }
 
-export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProps) {
+
+export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageProps) {
 
     const [isClient, setIsClient] = useState(false);
 
@@ -275,183 +304,189 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "observability-dynatrace",
-        title: "Observability in Action: Hands-On with Dynatrace",
-        subtitle: "Master Modern System Observability & Monitoring",
-        dateInfo: "October 28, 2025",
-        timeInfo: "16:00 - 18:00 (2 hours, refreshments included)",
+        id: "ai-design-patterns-2026",
+        title: "Design Patterns For AI Interfaces In 2026",
+        subtitle: "Master AI UX Design & Build Better User Experiences",
+        dateInfo: "March 23, 2026",
+        timeInfo: "09:00 - 17:00 (8 hours, lunch included)",
         locationInfo: "Venue TBA, Zürich",
-        price: "95 CHF (Early Bird) / 125 CHF",
-        description: "Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application. You'll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. By the end, you'll understand how to create a mature observability setup that provides actionable insights for your applications.",
-        maxAttendees: 25,
+        price: "525 CHF (Early Bird) / 595 CHF / 625 CHF (Late Bird)",
+        description: "As product teams race to include AI in their products, they too often rely on good old-fashioned patterns like an assistant or chatbot. However, this experience is often painfully slow, responses are generic, and users have to meticulously explain to AI what they need — over and over. In this full-day workshop with Vitaly Friedman, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, we'll explore brand new design patterns for better AI experiences, with daemons, clustering, style lenses, structured presets and templates, dynamic editing, temperature knobs and everything in-between!",
+        maxAttendees: 30,
         speakers: speakers,
         topics: [
             {
-                title: "Three Pillars of Observability",
-                description: "Master metrics, logs, and traces with hands-on exploration using Dynatrace dashboards and correlation techniques.",
-                icon: <Activity className="text-zurich" size={24} />
+                title: "AI UX State & Challenges",
+                description: "Understand how people use AI products today, main slowdowns, context awareness, capabilities awareness, and discoverability challenges.",
+                icon: <Brain className="text-zurich" size={24} />
             },
             {
-                title: "Smart Alerting & AI-Powered Detection",
-                description: "Configure symptom-based alerts and leverage Dynatrace AI to reduce noise and alert fatigue.",
-                icon: <AlertCircle className="text-zurich" size={24} />
+                title: "Intent Articulation Patterns",
+                description: "Learn style lenses, daemons, temperature knobs and other patterns to help users navigate AI output faster and more precisely.",
+                icon: <Target className="text-zurich" size={24} />
             },
             {
-                title: "Cost-Effective Data Ingestion",
-                description: "Build efficient observability pipelines with strategic sampling, retention, and cardinality management.",
-                icon: <BarChart className="text-zurich" size={24} />
+                title: "Dynamic AI Interfaces",
+                description: "Transform AI's static output into dynamic and proactive UI with canvases, conversations, clustering, and dynamic views.",
+                icon: <Layers className="text-zurich" size={24} />
             },
             {
-                title: "Distributed Tracing for Debugging",
-                description: "Use OpenTelemetry and Dynatrace tracing to debug latency issues and service dependencies effectively.",
-                icon: <Search className="text-zurich" size={24} />
+                title: "Agentic UX Design",
+                description: "Design for agentic UX, support users in complex flows, consider accessibility, sustainability, and build trust in AI interfaces.",
+                icon: <Users2 className="text-zurich" size={24} />
             }
         ],
         takeaways: [
-            "Deep understanding of the three pillars of observability and their correlation",
-            "Ability to configure smart alerting that reduces alert fatigue using AI-powered anomaly detection",
-            "Skills to build cost-effective observability pipelines with proper sampling and retention strategies",
-            "Hands-on experience debugging complex issues using distributed tracing",
-            "Knowledge of OpenTelemetry integration for vendor-neutral observability",
-            "Understanding of how to foster observability culture within development teams",
-            "Practical experience with Dynatrace for real-world observability scenarios"
+            "Practical design patterns from various AI products and interfaces with actionable takeaways",
+            "Better understanding of how to approach AI projects and prevent risks and technical challenges",
+            "Increased comfort and confidence in designing AI features and experiences",
+            "Toolbox of techniques for intent articulation with style lenses, daemons, and temperature controls",
+            "Methods to transform static AI output into dynamic, proactive user interfaces",
+            "Understanding of agentic UX design for complex workflows and task support",
+            "Knowledge of accessibility and sustainability considerations in AI interactions",
+            "Strategies to build user trust and confidence in AI-powered interfaces"
         ],
         targetAudience: [
-            "DevOps Engineers managing complex distributed systems",
-            "Site Reliability Engineers focused on system reliability",
-            "Full-stack Developers interested in production monitoring",
-            "Platform Engineers building observability infrastructure"
+            "Product Designers looking to design better AI-powered interfaces",
+            "UX Designers working on AI features and experiences",
+            "Product Managers overseeing AI product development",
+            "Design Leaders building AI strategy for their teams"
         ],
         prerequisites: [
-            "Basic understanding of web applications and APIs",
-            "Familiarity with system monitoring concepts",
-            "Experience with distributed systems (microservices preferred)",
-            "Laptop with stable internet connection",
-            "Basic knowledge of logging and metrics"
+            "Basic understanding of UX/UI design principles",
+            "Some experience with digital product design",
+            "Interest in AI and machine learning applications",
+            "No specific AI technical knowledge required - focus is on design patterns",
+            "Laptop with design tools (Figma, Sketch, or similar) for group exercises"
         ],
         phases: [
             {
-                title: "Introduction to Modern Observability",
-                duration: "15 minutes",
-                description: "Understand why observability is critical for modern systems and explore the AstroShop demo application",
+                title: "State of AI in 2026 & Current Challenges",
+                duration: "90 minutes",
+                description: "Explore how people actually use AI products today, identify main pain points, and understand frequent challenges in AI UX",
                 activities: [
-                    "Overview of observability vs monitoring",
-                    "Introduction to AstroShop application architecture",
-                    "Explore mature observability setups and common patterns",
-                    "Set up Dynatrace environment access"
+                    "Review current AI product landscape and user behaviors",
+                    "Analyze successful and failed AI interface examples",
+                    "Identify common UX bottlenecks in AI interactions",
+                    "Explore context awareness and capability discovery issues"
                 ],
                 concepts: [
-                    "Full-stack visibility requirements",
-                    "SLIs/SLOs alignment principles",
-                    "Automation in observability",
-                    "Proactive vs reactive monitoring"
+                    "AI adoption patterns and user expectations",
+                    "Chatbot UX limitations and alternatives",
+                    "Context awareness challenges",
+                    "Discoverability in AI interfaces"
                 ]
             },
             {
-                title: "Three Pillars Deep Dive",
+                title: "Intent Articulation & Navigation Patterns",
+                duration: "120 minutes",
+                description: "Learn how to help users articulate intent and navigate AI output with advanced design patterns",
+                activities: [
+                    "Design style lenses for different output types",
+                    "Create daemon patterns for proactive assistance",
+                    "Implement temperature knobs for output control",
+                    "Practice structured preset design"
+                ],
+                concepts: [
+                    "Style lenses and output customization",
+                    "Daemon patterns for proactive AI",
+                    "Temperature controls and user agency",
+                    "Structured presets and templates"
+                ]
+            },
+            {
+                title: "Lunch Break & Networking",
+                duration: "60 minutes",
+                description: "Enjoy lunch with fellow designers and continue discussions about AI UX challenges and solutions",
+                activities: [
+                    "Networking with other AI designers",
+                    "Informal discussions about workshop topics",
+                    "Q&A with the instructor",
+                    "Sharing experiences from current projects"
+                ],
+                concepts: [
+                    "Peer learning and experience sharing",
+                    "Building design community connections",
+                    "Real-world application discussions",
+                    "Industry trend insights"
+                ]
+            },
+            {
+                title: "Dynamic AI Interfaces & Canvases",
+                duration: "120 minutes",
+                description: "Transform static AI output into dynamic interfaces with canvases, conversations, and navigation patterns",
+                activities: [
+                    "Design AI canvases for complex data exploration",
+                    "Create conversation-to-canvas navigation flows",
+                    "Implement clustering and tabbed views",
+                    "Practice dynamic view switching patterns"
+                ],
+                concepts: [
+                    "AI canvas design principles",
+                    "Conversation-canvas integration",
+                    "Clustering and data organization",
+                    "Dynamic view management"
+                ]
+            },
+            {
+                title: "Agentic UX & Trust Building",
+                duration: "90 minutes",
+                description: "Design for agentic experiences, complex workflows, accessibility, and building user trust in AI systems",
+                activities: [
+                    "Design agentic workflows for complex tasks",
+                    "Create accessibility patterns for AI interfaces",
+                    "Develop trust-building interaction patterns",
+                    "Practice sustainable AI design approaches"
+                ],
+                concepts: [
+                    "Agentic UX design principles",
+                    "Accessibility in AI interactions",
+                    "Trust and confidence building",
+                    "Sustainable AI interface design"
+                ]
+            },
+            {
+                title: "Group Design Exercise & Review",
+                duration: "90 minutes",
+                description: "Apply learned patterns in a practical group exercise, designing AI experiences on paper with peer review",
+                activities: [
+                    "Break into design groups for hands-on exercise",
+                    "Apply workshop patterns to real design challenge",
+                    "Create paper prototypes of AI interfaces",
+                    "Present and review group solutions"
+                ],
+                concepts: [
+                    "Practical pattern application",
+                    "Collaborative design process",
+                    "Rapid prototyping techniques",
+                    "Peer feedback and iteration"
+                ]
+            },
+            {
+                title: "Wrap-up & Action Planning",
                 duration: "30 minutes",
-                description: "Master metrics, logs, and traces through theory and hands-on exploration",
+                description: "Consolidate learnings, plan next steps, and discuss how to apply patterns to current projects",
                 activities: [
-                    "Explore metrics dashboards in Dynatrace",
-                    "Search and filter logs to identify patterns",
-                    "Trace customer transactions across services",
-                    "Practice correlating data across all three pillars"
+                    "Review key takeaways and patterns learned",
+                    "Plan application to current projects",
+                    "Exchange contacts with fellow participants",
+                    "Get resources for continued learning"
                 ],
                 concepts: [
-                    "RED/USE methods and percentiles",
-                    "Structured logging and sampling strategies",
-                    "Distributed tracing fundamentals",
-                    "Data correlation techniques"
-                ]
-            },
-            {
-                title: "Intelligent Alerting Systems",
-                duration: "20 minutes",
-                description: "Configure smart alerts and leverage AI-powered anomaly detection",
-                activities: [
-                    "Set up symptom-based alerts for AstroShop",
-                    "Configure Dynatrace AI anomaly detection",
-                    "Practice alert ownership assignment",
-                    "Test dynamic baseline configurations"
-                ],
-                concepts: [
-                    "Symptom vs root cause alerting",
-                    "Alert ownership and team collaboration",
-                    "Dynamic baselines and anomaly detection",
-                    "Alert fatigue prevention strategies"
-                ]
-            },
-            {
-                title: "Data Ingestion & Cost Management",
-                duration: "20 minutes",
-                description: "Build efficient observability pipelines while managing costs effectively",
-                activities: [
-                    "Analyze current data ingestion patterns",
-                    "Configure log retention and sampling policies",
-                    "Optimize storage configurations",
-                    "Practice cardinality management techniques"
-                ],
-                concepts: [
-                    "Observability pipeline architecture",
-                    "Sampling strategies and trade-offs",
-                    "Retention policy optimization",
-                    "Cost control mechanisms"
-                ]
-            },
-            {
-                title: "Distributed Tracing Mastery",
-                duration: "20 minutes",
-                description: "Use tracing as a debugging superpower with OpenTelemetry integration",
-                activities: [
-                    "Simulate and debug latency issues in AstroShop",
-                    "Trace service dependency problems",
-                    "Correlate traces with metrics and logs",
-                    "Practice OpenTelemetry integration patterns"
-                ],
-                concepts: [
-                    "OpenTelemetry vendor neutrality",
-                    "Trace-driven debugging workflows",
-                    "Service dependency visualization",
-                    "Cross-pillar correlation techniques"
-                ]
-            },
-            {
-                title: "Best Practices & Wrap-up",
-                duration: "15 minutes",
-                description: "Learn from common mistakes, establish observability culture, and plan next steps",
-                activities: [
-                    "Review AstroShop's observability setup",
-                    "Identify and fix anti-patterns",
-                    "Discuss team ownership models",
-                    "Plan shift-left observability integration"
-                ],
-                concepts: [
-                    "Common observability anti-patterns",
-                    "Building observability into development",
-                    "Team accountability frameworks",
-                    "Cultural transformation strategies"
+                    "Pattern synthesis and integration",
+                    "Implementation planning",
+                    "Continued learning resources",
+                    "Community building"
                 ]
             }
         ]
     };
 
     // Single source of truth for seats
-    const seatsRemaining = 24; // Only 1 seat taken so far
+    const totalSeats = 30;
+    const seatsRemaining = totalSeats; // This would come from an API in a real implementation
     const isSoldOut = seatsRemaining <= 0;
 
-    // Get current pricing stage for display
-    const getCurrentPricingStage = () => {
-        const now = new Date();
-        const earlyBirdEnd = new Date('2025-10-01T23:59:59');
-        
-        if (now < earlyBirdEnd) {
-            return { stage: 'early', price: 95, endDate: earlyBirdEnd };
-        } else {
-            return { stage: 'standard', price: 125, endDate: new Date('2025-10-28T16:00:00') };
-        }
-    };
-
-    const currentPricing = getCurrentPricingStage();
 
     // Handle checkout with proper ticket selection
     const handleCheckout = async (priceId: string) => {
@@ -624,14 +659,14 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left w-full sm:w-auto">
                             <div className="flex items-center gap-2">
-                                <Activity size={18} className="text-white" />
+                                <Brain size={18} className="text-white" />
                                 <span className="font-bold text-xs sm:text-sm">Only {seatsRemaining} seats left!</span>
                             </div>
                             <div className="hidden sm:block h-6 w-px bg-white/30"></div>
                             
                             <div className="flex items-center gap-2">
                                 <Calendar size={16} className="text-white" />
-                                <span className="text-xs sm:text-sm">October 28th, 2025</span>
+                                <span className="text-xs sm:text-sm">March 23rd, 2026</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-end">
@@ -675,28 +710,28 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                             <div className="lg:col-span-7 order-1">
                                 {/* Category pill */}
                                 <div className="inline-flex items-center bg-black text-js px-4 py-2 rounded-full text-sm font-bold mb-6">
-                                    📊 Observability & Monitoring
+                                    🧠 AI Interface Design
                                 </div>
 
                                 {/* Workshop title */}
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 lg:mb-6 text-black leading-tight">
-                                    Observability in Action: Hands-On with Dynatrace
+                                    Design Patterns For AI Interfaces In 2026
                                 </h1>
 
                                 {/* Subtitle */}
                                 <p className="text-lg lg:text-xl text-gray-800 mb-8 lg:mb-10 leading-relaxed max-w-2xl">
-                                    Master Modern System Observability & Monitoring with hands-on Dynatrace experience
+                                    Master AI UX Design & Build Better User Experiences that go beyond chatbots
                                 </p>
 
                                 {/* Metadata cards */}
                                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 lg:mb-10">
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
-                                        <div className="text-2xl lg:text-3xl font-black text-black mb-1">28th</div>
-                                        <div className="text-xs lg:text-sm text-gray-600 font-medium">Oct 2025</div>
+                                        <div className="text-2xl lg:text-3xl font-black text-black mb-1">23rd</div>
+                                        <div className="text-xs lg:text-sm text-gray-600 font-medium">Mar 2026</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
-                                        <div className="text-sm lg:text-base font-bold text-black mb-1">16:00-18:00</div>
-                                        <div className="text-xs lg:text-sm text-gray-600 font-medium">2 hours</div>
+                                        <div className="text-sm lg:text-base font-bold text-black mb-1">09:00-17:00</div>
+                                        <div className="text-xs lg:text-sm text-gray-600 font-medium">8 hours</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
                                         <div className="text-sm lg:text-base font-bold text-blue-600 mb-1">Venue TBA</div>
@@ -739,20 +774,20 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     <h3 className="text-lg font-bold text-black mb-4">What you&apos;ll learn:</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
-                                            <div className="text-2xl">📊</div>
-                                            <span className="text-sm font-medium text-gray-800">Three Pillars of Observability</span>
+                                            <div className="text-2xl">🎯</div>
+                                            <span className="text-sm font-medium text-gray-800">Intent Articulation Patterns</span>
                                         </div>
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
-                                            <div className="text-2xl">🔔</div>
-                                            <span className="text-sm font-medium text-gray-800">Smart Alerting & AI Detection</span>
+                                            <div className="text-2xl">⚡</div>
+                                            <span className="text-sm font-medium text-gray-800">Dynamic AI Interfaces</span>
                                         </div>
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
-                                            <div className="text-2xl">💰</div>
-                                            <span className="text-sm font-medium text-gray-800">Cost-Effective Data Ingestion</span>
+                                            <div className="text-2xl">🧠</div>
+                                            <span className="text-sm font-medium text-gray-800">AI UX State & Challenges</span>
                                         </div>
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
-                                            <div className="text-2xl">🔍</div>
-                                            <span className="text-sm font-medium text-gray-800">Distributed Tracing Debug</span>
+                                            <div className="text-2xl">🤝</div>
+                                            <span className="text-sm font-medium text-gray-800">Agentic UX Design</span>
                                         </div>
                                     </div>
                                 </div>
@@ -763,110 +798,66 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                 <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8 border-2 border-black/10 relative">
                                     {/* Speaker card header */}
                                     <div className="text-center mb-6">
-                                        <div className="text-sm font-bold text-gray-600 mb-2">Workshop Instructors</div>
+                                        <div className="text-sm font-bold text-gray-600 mb-2">Workshop Instructor</div>
                                         
-                                        {workshop.speakers.length > 1 ? (
-                                            // Multiple speakers - compact layout
-                                            <div className="grid grid-cols-1 gap-4">
-                                                {workshop.speakers.map((speaker) => (
-                                                    <div key={speaker.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                                                        <div className="flex items-center gap-4">
-                                                            {/* Compact speaker image */}
-                                                            <div className="relative w-16 h-16 lg:w-20 lg:h-20 flex-shrink-0">
-                                                                <div className="relative w-full h-full rounded-full overflow-hidden shadow-lg border-2 border-white bg-gradient-to-br from-gray-50 to-gray-100">
-                                                                    <Image
-                                                                        src={`${speaker.image}`}
-                                                                        alt={speaker.name}
-                                                                        width={80}
-                                                                        height={80}
-                                                                        className="w-full h-full object-cover object-center"
-                                                                    />
-                                                                </div>
-                                                                {/* Small accent badge */}
-                                                                <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-js to-blue-400 rounded-full w-6 h-6 flex items-center justify-center shadow-md border border-white">
-                                                                    <span className="text-xs">📊</span>
-                                                                </div>
-                                                            </div>
-                                                            
-                                                            {/* Compact speaker info */}
-                                                            <div className="flex-1 text-left">
-                                                                <h4 className="text-lg lg:text-xl font-bold text-black mb-1 leading-tight">
-                                                                    {speaker.name}
-                                                                </h4>
-                                                                <p className="text-xs lg:text-sm text-gray-600 leading-relaxed mb-2">
-                                                                    {speaker.title}
-                                                                </p>
-                                                                <Link
-                                                                    href={`/speakers/${speaker.id}`}
-                                                                    className="text-xs text-zurich hover:underline font-medium"
-                                                                >
-                                                                    View Profile →
-                                                                </Link>
-                                                            </div>
-                                                        </div>
+                                        {workshop.speakers.map((speaker) => (
+                                            <div key={speaker.id}>
+                                                {/* Speaker image */}
+                                                <div className="relative mx-auto mb-6 w-32 h-32 lg:w-40 lg:h-40">
+                                                    {/* Background glow effect */}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-js/30 to-amber-300/30 rounded-full scale-110 blur-xl opacity-50"></div>
+                                                    {/* Main image container */}
+                                                    <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-br from-gray-50 to-gray-100">
+                                                        <Image
+                                                            src={`${speaker.image}`}
+                                                            alt={speaker.name}
+                                                            width={160}
+                                                            height={160}
+                                                            className="w-full h-full object-cover object-center"
+                                                        />
                                                     </div>
-                                                ))}
-                                                
-                                                {/* Shared expertise tags */}
-                                                <div className="flex flex-wrap gap-2 justify-center mt-2">
-                                                    <span className="bg-js/10 text-black px-2 py-1 rounded-full text-xs font-semibold border border-js/20">Observability</span>
-                                                    <span className="bg-js/10 text-black px-2 py-1 rounded-full text-xs font-semibold border border-js/20">Dynatrace</span>
-                                                    <span className="bg-js/10 text-black px-2 py-1 rounded-full text-xs font-semibold border border-js/20">DevOps</span>
+                                                    {/* Floating accent badge */}
+                                                    <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-js to-amber-400 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow-lg border-2 border-white">
+                                                        <span className="text-lg lg:text-xl">🧠</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Speaker info */}
+                                                <div className="text-center mb-6">
+                                                    <h4 className="text-2xl lg:text-3xl font-black text-black mb-3 leading-tight">
+                                                        {speaker.name}
+                                                    </h4>
+                                                    <p className="text-sm lg:text-base text-gray-700 leading-relaxed px-2">
+                                                        {speaker.title}
+                                                    </p>
+                                                </div>
+
+                                                {/* Expertise tags */}
+                                                <div className="flex flex-wrap gap-2 justify-center mb-6">
+                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">UX Expert</span>
+                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">AI Design</span>
+                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">Design Patterns</span>
+                                                </div>
+
+                                                {/* Smashing Magazine branding */}
+                                                <div className="text-center">
+                                                    <div className="inline-flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                                                        <div className="w-6 h-6 bg-orange-500 rounded"></div>
+                                                        <span className="text-xs font-semibold text-gray-700">Smashing Magazine</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Speaker CTA */}
+                                                <div className="mt-6">
+                                                    <Link
+                                                        href={`/speakers/${speaker.id}`}
+                                                        className="block w-full text-center bg-black text-js px-6 py-3 rounded-lg font-semibold text-sm hover:bg-gray-900 transition-colors duration-200 shadow-md hover:shadow-lg"
+                                                    >
+                                                        View Full Speaker Profile →
+                                                    </Link>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            // Single speaker - full layout
-                                            workshop.speakers.map((speaker) => (
-                                                <div key={speaker.id} className="mb-6">
-                                                    {/* Speaker image */}
-                                                    <div className="relative mx-auto mb-6 w-32 h-32 lg:w-40 lg:h-40">
-                                                        {/* Background glow effect */}
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-js/30 to-blue-300/30 rounded-full scale-110 blur-xl opacity-50"></div>
-                                                        {/* Main image container */}
-                                                        <div className="relative w-full h-full rounded-full overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-br from-gray-50 to-gray-100">
-                                                            <Image
-                                                                src={`${speaker.image}`}
-                                                                alt={speaker.name}
-                                                                width={160}
-                                                                height={160}
-                                                                className="w-full h-full object-cover object-center"
-                                                            />
-                                                        </div>
-                                                        {/* Floating accent badge */}
-                                                        <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-js to-blue-400 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow-lg border-2 border-white">
-                                                            <span className="text-lg lg:text-xl">📊</span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Speaker info */}
-                                                    <div className="text-center mb-6">
-                                                        <h4 className="text-2xl lg:text-3xl font-black text-black mb-3 leading-tight">
-                                                            {speaker.name}
-                                                        </h4>
-                                                        <p className="text-sm lg:text-base text-gray-700 leading-relaxed px-2">
-                                                            {speaker.title}
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Expertise tags */}
-                                                    <div className="flex flex-wrap gap-2 justify-center mb-6">
-                                                        <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">Observability</span>
-                                                        <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">Dynatrace</span>
-                                                        <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">DevOps</span>
-                                                    </div>
-
-                                                    {/* Speaker CTA */}
-                                                    <div className="mt-6">
-                                                        <Link
-                                                            href={`/speakers/${speaker.id}`}
-                                                            className="block w-full text-center bg-black text-js px-6 py-3 rounded-lg font-semibold text-sm hover:bg-gray-900 transition-colors duration-200 shadow-md hover:shadow-lg"
-                                                        >
-                                                            View Full Speaker Profile →
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -878,30 +869,30 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
-                                        <div className="text-4xl mb-4">📊</div>
-                                        <h4 className="font-bold text-black mb-2">Three Pillars</h4>
-                                        <p className="text-sm text-gray-600">Metrics, logs, and traces correlation</p>
+                                        <div className="text-4xl mb-4">🎯</div>
+                                        <h4 className="font-bold text-black mb-2">Intent Articulation</h4>
+                                        <p className="text-sm text-gray-600">Style lenses, daemons, and temperature controls</p>
                                     </div>
                                 </div>
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
-                                        <div className="text-4xl mb-4">🔔</div>
-                                        <h4 className="font-bold text-black mb-2">Smart Alerting</h4>
-                                        <p className="text-sm text-gray-600">AI-powered anomaly detection</p>
+                                        <div className="text-4xl mb-4">⚡</div>
+                                        <h4 className="font-bold text-black mb-2">Dynamic Interfaces</h4>
+                                        <p className="text-sm text-gray-600">Transform static AI output into dynamic UI</p>
                                     </div>
                                 </div>
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
-                                        <div className="text-4xl mb-4">💰</div>
-                                        <h4 className="font-bold text-black mb-2">Cost Management</h4>
-                                        <p className="text-sm text-gray-600">Efficient data ingestion strategies</p>
+                                        <div className="text-4xl mb-4">🧠</div>
+                                        <h4 className="font-bold text-black mb-2">AI UX Challenges</h4>
+                                        <p className="text-sm text-gray-600">Understand current AI product limitations</p>
                                     </div>
                                 </div>
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
-                                        <div className="text-4xl mb-4">🔍</div>
-                                        <h4 className="font-bold text-black mb-2">Distributed Tracing</h4>
-                                        <p className="text-sm text-gray-600">Debug with OpenTelemetry</p>
+                                        <div className="text-4xl mb-4">🤝</div>
+                                        <h4 className="font-bold text-black mb-2">Agentic UX Design</h4>
+                                        <p className="text-sm text-gray-600">Build trust and confidence in AI systems</p>
                                     </div>
                                 </div>
                             </div>
@@ -924,7 +915,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                 transition={{duration: 0.5}}
                                 className="mb-12"
                             >
-                                <HorizontalTimeline />
+                                <HorizontalTimeline seatsRemaining={seatsRemaining} />
                             </motion.div>
 
                             {/* Workshop Overview */}
@@ -941,10 +932,10 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                 </h2>
                                 <div className="prose prose-lg max-w-none">
                                     <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                                        Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application.
+                                        As product teams race to include AI in their products, they too often rely on good old-fashioned patterns like an assistant or chatbot. However, this experience is often painfully slow, responses are generic, and users have to meticulously explain to AI what they need — over and over.
                                     </p>
                                     <p className="text-gray-700 text-lg leading-relaxed">
-                                        You&apos;ll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. By the end, you&apos;ll understand how to create a mature observability setup that provides actionable insights for your applications.
+                                        In this full-day workshop with <strong>Vitaly Friedman</strong>, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, we&apos;ll explore brand new design patterns for better AI experiences, with daemons, clustering, style lenses, structured presets and templates, dynamic editing, temperature knobs and everything in-between!
                                     </p>
                                 </div>
                             </motion.div>
@@ -964,12 +955,12 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-blue-100 p-3 rounded-xl shrink-0">
-                                                <Activity className="text-blue-600" size={24} />
+                                                <Brain className="text-blue-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Three Pillars of Observability</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">AI UX State & Challenges</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Master metrics, logs, and traces with hands-on exploration using Dynatrace dashboards and correlation techniques.
+                                                    Understand how people use AI products today, main slowdowns, context awareness, capabilities awareness, and discoverability challenges.
                                                 </p>
                                             </div>
                                         </div>
@@ -977,12 +968,12 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-amber-100 p-3 rounded-xl shrink-0">
-                                                <AlertCircle className="text-amber-600" size={24} />
+                                                <Target className="text-amber-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Smart Alerting & AI-Powered Detection</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">Intent Articulation Patterns</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Configure symptom-based alerts and leverage Dynatrace AI to reduce noise and alert fatigue.
+                                                    Learn style lenses, daemons, temperature knobs and other patterns to help users navigate AI output faster and more precisely.
                                                 </p>
                                             </div>
                                         </div>
@@ -990,12 +981,12 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-green-100 p-3 rounded-xl shrink-0">
-                                                <BarChart className="text-green-600" size={24} />
+                                                <Layers className="text-green-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Cost-Effective Data Ingestion</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">Dynamic AI Interfaces</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Build efficient observability pipelines with strategic sampling, retention, and cardinality management.
+                                                    Transform AI&apos;s static output into dynamic and proactive UI with canvases, conversations, clustering, and dynamic views.
                                                 </p>
                                             </div>
                                         </div>
@@ -1003,12 +994,12 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-purple-100 p-3 rounded-xl shrink-0">
-                                                <Search className="text-purple-600" size={24} />
+                                                <Users2 className="text-purple-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Distributed Tracing for Debugging</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">Agentic UX Design</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Use OpenTelemetry and Dynatrace tracing to debug latency issues and service dependencies effectively.
+                                                    Design for agentic UX, support users in complex flows, consider accessibility, sustainability, and build trust in AI interfaces.
                                                 </p>
                                             </div>
                                         </div>
@@ -1144,7 +1135,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                                 
                                         <div className="p-4">
                                             <TicketSelection
-                                                options={observabilityWorkshopTickets}
+                                                options={aiDesignPatternsTickets}
                                                 onCheckout={handleCheckout}
                                                 workshopId={workshop.id}
                                                 ticketType="workshop"
@@ -1192,14 +1183,14 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     <div className="space-y-3 mb-4">
                                         {workshop.targetAudience.map((audience, index) => (
                                             <div key={index} className="bg-blue-50 rounded-lg p-3 flex items-center gap-3">
-                                                <Activity className="text-blue-600 flex-shrink-0" size={20} />
+                                                <Lightbulb className="text-blue-600 flex-shrink-0" size={20} />
                                                 <p className="font-medium text-gray-800 text-sm">{audience}</p>
                                             </div>
                                         ))}
                                     </div>
                                     <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
                                         <p className="text-sm font-medium text-gray-800">
-                                            <span className="text-blue-600 font-bold">Perfect for:</span> Anyone working with distributed systems who wants to improve their observability practices and learn hands-on with industry-leading tools.
+                                            <span className="text-blue-600 font-bold">Perfect for:</span> Anyone designing AI-powered products who wants to move beyond basic chatbot patterns to create truly helpful and efficient AI experiences.
                                         </p>
                                     </div>
                                 </div>
@@ -1237,7 +1228,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     </div>
                                     <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg">
                                         <p className="text-sm font-medium text-gray-800">
-                                            <span className="text-blue-600 font-bold">Note:</span> This is a hands-on workshop. Bring your laptop with a stable internet connection and come ready for interactive learning!
+                                            <span className="text-blue-600 font-bold">Note:</span> This is a full-day intensive workshop. Bring your laptop with design tools and come ready for hands-on learning and collaboration!
                                         </p>
                                     </div>
                                 </div>
@@ -1264,11 +1255,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                         <ul className="space-y-2 text-sm">
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">2 hours of hands-on training with expert instructors</span>
-                                            </li>
-                                            <li className="flex items-start">
-                                                <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">Access to Dynatrace environment for practical exercises</span>
+                                                <span className="text-gray-700">8 hours of hands-on training with Vitaly Friedman</span>
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
@@ -1276,17 +1263,121 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">Refreshments and networking opportunities</span>
+                                                <span className="text-gray-700">Lunch and refreshments throughout the day</span>
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">Follow-up resources and best practices guide</span>
+                                                <span className="text-gray-700">Follow-up resources and continued learning materials</span>
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">Hands-on experience with AstroShop demo application</span>
+                                                <span className="text-gray-700">Access to exclusive AI design pattern library</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">✓</span>
+                                                <span className="text-gray-700">Group exercises and practical design challenges</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <span className="text-blue-500 mr-2">✓</span>
+                                                <span className="text-gray-700">Networking opportunities with fellow designers</span>
                                             </li>
                                         </ul>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Group Discounts */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <button
+                                className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+                                onClick={() => setOpenFaq(openFaq === 'discounts' ? null : 'discounts')}
+                                aria-expanded={openFaq === 'discounts'}
+                            >
+                                <span className="font-bold text-lg text-gray-900">Are there team discounts and invoicing available?</span>
+                                <span className={`ml-4 transition-transform ${openFaq === 'discounts' ? 'rotate-180' : ''}`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
+                            {openFaq === 'discounts' && (
+                                <div className="px-6 pb-6 animate-fadeIn">
+                                    <p className="text-gray-700 mb-4">Yes! We offer team discounts and can provide invoicing for corporate bookings:</p>
+                                    <div className="space-y-3">
+                                        <div className="bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-green-600 font-bold">15% off</span>
+                                                <span className="text-gray-700">for teams of 3-4 people</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-green-600 font-bold">25% off</span>
+                                                <span className="text-gray-700">for teams of 5+ people</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 bg-blue-50 p-3 rounded-lg">
+                                        <p className="text-sm text-gray-700">
+                                            <span className="font-semibold">Need invoicing or have questions about team bookings?</span> Please reach out to us at <a href="mailto:hello@zurichjs.com" className="text-zurich underline">hello@zurichjs.com</a> and we&apos;ll be happy to help!
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Student/Unemployed Discount */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <button
+                                className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+                                onClick={() => setOpenFaq(openFaq === 'student' ? null : 'student')}
+                                aria-expanded={openFaq === 'student'}
+                            >
+                                <span className="font-bold text-lg text-gray-900">Do you offer student or unemployed discounts?</span>
+                                <span className={`ml-4 transition-transform ${openFaq === 'student' ? 'rotate-180' : ''}`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
+                            {openFaq === 'student' && (
+                                <div className="px-6 pb-6 animate-fadeIn">
+                                    <p className="text-gray-700 mb-4">
+                                        Yes! We offer special pricing for students and unemployed individuals to make our workshops more accessible.
+                                    </p>
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                                        <p className="text-sm text-gray-700">
+                                            <span className="font-semibold text-yellow-800">How to apply:</span> Send proof of your student status (student ID, enrollment certificate) or unemployment status (official documentation) to <a href="mailto:hello@zurichjs.com" className="text-zurich underline">hello@zurichjs.com</a> and we&apos;ll provide you with specialized pricing information.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Workshop Duration */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <button
+                                className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+                                onClick={() => setOpenFaq(openFaq === 'duration' ? null : 'duration')}
+                                aria-expanded={openFaq === 'duration'}
+                            >
+                                <span className="font-bold text-lg text-gray-900">How long is the workshop?</span>
+                                <span className={`ml-4 transition-transform ${openFaq === 'duration' ? 'rotate-180' : ''}`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
+                            {openFaq === 'duration' && (
+                                <div className="px-6 pb-6 animate-fadeIn">
+                                    <p className="text-gray-700 mb-3">
+                                        The workshop is a full-day intensive experience running from <strong>09:00 to 17:00</strong> (8 hours total) on March 23rd, 2026.
+                                    </p>
+                                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg">
+                                        <p className="text-sm text-gray-700">
+                                            <span className="font-semibold text-yellow-800">Schedule includes:</span> Regular breaks, a 60-minute lunch break, and networking time. If you require any special accommodations, please reach out to us at <a href="mailto:hello@zurichjs.com" className="text-zurich underline">hello@zurichjs.com</a>.
+                                        </p>
                                     </div>
                                 </div>
                             )}
@@ -1309,11 +1400,11 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                             {openFaq === 'venue' && (
                                 <div className="px-6 pb-6 animate-fadeIn">
                                     <p className="text-gray-700 mb-3">
-                                        The workshop will be held in <strong>Zürich, Switzerland</strong>. The exact venue will be announced closer to the event date.
+                                        The workshop will be held in Zürich, Switzerland. The exact venue will be announced closer to the event date.
                                     </p>
                                     <div className="bg-blue-50 p-3 rounded-lg">
                                         <p className="text-sm text-gray-700">
-                                            <span className="font-semibold">Venue features:</span> Modern presentation facilities, comfortable seating, reliable WiFi, and refreshments. The venue will be easily accessible by public transport. All registered participants will receive detailed venue information and directions 1 week before the workshop.
+                                            <span className="font-semibold">Venue features:</span> Wheelchair accessible, modern presentation facilities, comfortable seating, and reliable WiFi. All registered participants will receive detailed venue information and directions 1 week before the workshop.
                                         </p>
                                     </div>
                                 </div>
@@ -1366,30 +1457,30 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                             <CountdownTimer seatsRemaining={seatsRemaining} />
                         </div>
                         <p className="text-white/90 text-lg mb-4">
-                            Master observability with hands-on Dynatrace experience and expert guidance
+                            Master AI interface design with hands-on patterns and expert guidance
                         </p>
                         <div className="flex items-center justify-center gap-4 text-white/70 text-sm">
                             <span className="flex items-center gap-1">
-                                <Activity size={16} />
+                                <Brain size={16} />
                                 Only {seatsRemaining} seats left
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                                 <Calendar size={16} />
-                                October 28th, 2025
+                                March 23rd, 2026
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                                 <Clock size={16} />
-                                2 Hours
+                                Full Day
                             </span>
                         </div>
                     </div>
                     <button
                         onClick={scrollToRegistration}
-                        className="bg-white text-zurich px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
+                        className="bg-yellow-500 text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-400 transition-all transform hover:scale-105 shadow-lg hover:-translate-y-1"
                     >
-                        Secure Your Spot Now - {currentPricing.stage === 'early' ? '95' : '125'} CHF
+                        Secure Your Spot Now
                     </button>
                 </motion.div>
             </Section>
@@ -1398,13 +1489,23 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
 }
 
 export async function getStaticProps() {
-    // Fetch the speaker data using the getSpeakersByIds function
-    const speakerIds = ['indermohan-singh', 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6'];
+    // For now, we'll use a placeholder speaker ID until the actual speaker data is available
+    const speakerIds = ['vitaly-friedman']; // This should be replaced with the actual speaker ID when available
     const speakers = await getSpeakersByIds(speakerIds);
 
+    // For now, return mock speaker data if no speakers are found
     if (!speakers || speakers.length === 0) {
         return {
-            notFound: true,
+            props: {
+                speakers: [{
+                    id: 'vitaly-friedman',
+                    name: 'Vitaly Friedman',
+                    title: 'Creative Lead at Smashing Magazine & Senior UX Consultant',
+                    image: '/images/speakers/vitaly-friedman.jpg', // Placeholder image
+                    bio: 'Vitaly Friedman is a creative lead and co-founder of Smashing Magazine, as well as a senior UX consultant with the European Parliament. He has been working on AI interface design patterns and has extensive experience in creating better user experiences for AI-powered products.',
+                }]
+            },
+            revalidate: 60,
         };
     }
 

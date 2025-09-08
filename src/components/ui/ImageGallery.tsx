@@ -58,6 +58,18 @@ export default function ImageGallery({
     };
   }, [isOpen]);
 
+  const goToPrevious = useCallback(() => {
+    const newIndex = currentIndex === 0 ? photos.length - 1 : currentIndex - 1;
+    setCurrentIndex(newIndex);
+    scrollToThumbnail(newIndex);
+  }, [currentIndex, photos.length]);
+
+  const goToNext = useCallback(() => {
+    const newIndex = currentIndex === photos.length - 1 ? 0 : currentIndex + 1;
+    setCurrentIndex(newIndex);
+    scrollToThumbnail(newIndex);
+  }, [currentIndex, photos.length]);
+
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!isOpen) return;
 
@@ -72,24 +84,12 @@ export default function ImageGallery({
         goToNext();
         break;
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, goToPrevious, goToNext]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
-
-  const goToPrevious = () => {
-    const newIndex = currentIndex === 0 ? photos.length - 1 : currentIndex - 1;
-    setCurrentIndex(newIndex);
-    scrollToThumbnail(newIndex);
-  };
-
-  const goToNext = () => {
-    const newIndex = currentIndex === photos.length - 1 ? 0 : currentIndex + 1;
-    setCurrentIndex(newIndex);
-    scrollToThumbnail(newIndex);
-  };
 
   const handleImageLoad = () => {
     setIsLoading(false);

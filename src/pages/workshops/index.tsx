@@ -30,6 +30,18 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
     return map;
   }, {} as Record<string, Speaker>);
 
+  // Helper function to get speakers for a workshop
+  // Supports both single speaker (speakerId) and multiple speakers (speakerIds)
+  const getWorkshopSpeakers = (workshop: { speakerIds?: string[]; speakerId?: string }) => {
+    if (workshop.speakerIds && workshop.speakerIds.length > 0) {
+      return workshop.speakerIds.map((id: string) => speakersMap[id]).filter(Boolean);
+    }
+    if (workshop.speakerId && speakersMap[workshop.speakerId]) {
+      return [speakersMap[workshop.speakerId]];
+    }
+    return [];
+  };
+
   // Function to render workshop state badge
   const renderWorkshopStateBadge = (state: WorkshopState) => {
     if (state === 'confirmed') {
@@ -92,7 +104,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
               </p>
               <a 
                 href="mailto:hello@zurichjs.com" 
-                className="inline-flex items-center gap-2 bg-zurich text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-zurich/90 transition-colors w-full justify-center text-base sm:text-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                className="inline-flex items-center gap-2 bg-zurich text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-zurich/90 w-full justify-center text-base sm:text-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
@@ -127,7 +139,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {workshops.map((workshop, index) => {
-            const speaker = speakersMap[workshop.speakerId];
+            const workshopSpeakers = getWorkshopSpeakers(workshop);
 
             return (
                 <motion.div
@@ -139,7 +151,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                     onMouseEnter={() => setHoveredWorkshop(workshop.id)}
                     onMouseLeave={() => setHoveredWorkshop(null)}
                 >
-                  <Link href={`/workshops/${workshop.id}`} className="block h-full flex flex-col">
+                  <Link href={`/workshops/${workshop.id}`} className="flex flex-col h-full">
                     <div className="relative h-40 md:h-56 lg:h-64 overflow-hidden">
                       {renderWorkshopStateBadge(workshop.state)}
                       <div
@@ -148,13 +160,29 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                           }`}
                       >
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-[1]"></div>
-                        <Image 
-                          src={workshop.image}
-                          alt={workshop.title}
-                          fill
-                          className="object-cover"
-                          priority
-                        />
+                        {workshop.image ? (
+                          // Display workshop image if available
+                          <Image 
+                            src={workshop.image}
+                            alt={workshop.title}
+                            fill
+                            className="object-cover"
+                            priority
+                          />
+                        ) : (
+                          // Fallback: Display colored background with emoji and tag text
+                          <div 
+                            className="w-full h-full flex items-center justify-center"
+                            style={{ backgroundColor: workshop.iconColor }}
+                          >
+                            <div className="text-center text-white p-4">
+                              <div className="text-2xl md:text-3xl mb-2">{workshop.tag.split(' ')[0]}</div>
+                              <div className="text-sm md:text-base font-semibold opacity-90">
+                                {workshop.tag.substring(workshop.tag.indexOf(' ') + 1)}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -188,20 +216,52 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                       </div>
 
                       <div className="border-t border-gray-100 pt-3 md:pt-4 mt-auto flex items-center justify-between">
-                        {speaker && (
+                        {workshopSpeakers.length > 0 && (
                             <div className="flex items-center">
-                              <div className="relative mr-2 md:mr-3 w-7 h-7 md:w-10 md:h-10 overflow-hidden rounded-full border-2 border-yellow-500">
-                                <Image
-                                    src={`${speaker.image}?h=100`}
-                                    alt={speaker.name}
-                                    fill
-                                    className="object-cover"
-                                />
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="font-bold text-xs md:text-sm text-gray-900">{speaker.name}</span>
-                                <span className="text-[10px] md:text-xs text-gray-500">Instructor</span>
-                              </div>
+                              {workshopSpeakers.length === 1 ? (
+                                <>
+                                  <div className="relative mr-2 md:mr-3 w-7 h-7 md:w-10 md:h-10 overflow-hidden rounded-full border-2 border-yellow-500">
+                                    <Image
+                                        src={`${workshopSpeakers[0].image}?h=100`}
+                                        alt={workshopSpeakers[0].name}
+                                        fill
+                                        className="object-cover"
+                                    />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-xs md:text-sm text-gray-900">{workshopSpeakers[0].name}</span>
+                                    <span className="text-[10px] md:text-xs text-gray-500">Instructor</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex -space-x-1 mr-2 md:mr-3">
+                                    {workshopSpeakers.slice(0, 2).map((speaker: Speaker) => (
+                                      <div key={speaker.id} className="relative w-7 h-7 md:w-10 md:h-10 overflow-hidden rounded-full border-2 border-yellow-500 bg-white">
+                                        <Image
+                                            src={`${speaker.image}?h=100`}
+                                            alt={speaker.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                      </div>
+                                    ))}
+                                    {workshopSpeakers.length > 2 && (
+                                      <div className="relative w-7 h-7 md:w-10 md:h-10 overflow-hidden rounded-full border-2 border-yellow-500 bg-gray-100 flex items-center justify-center">
+                                        <span className="text-xs font-bold text-gray-600">+{workshopSpeakers.length - 2}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-xs md:text-sm text-gray-900">
+                                      {workshopSpeakers.map((s: Speaker) => s.name.split(' ')[0]).join(', ')}
+                                    </span>
+                                    <span className="text-[10px] md:text-xs text-gray-500">
+                                      {workshopSpeakers.length === 2 ? 'Instructors' : 'Instructors'}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
                             </div>
                         )}
 

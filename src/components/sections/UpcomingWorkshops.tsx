@@ -16,10 +16,11 @@ export interface Workshop {
   timeInfo: string;
   locationInfo: string;
   maxAttendees: number;
-  image: string;
+  image?: string; // Made optional for fallback support
   iconColor: string;
   tag: string;
-  speakerId: string;
+  speakerId: string; // Keep for backward compatibility
+  speakerIds?: string[]; // Support multiple speakers
   state: WorkshopState;
   speaker?: {
     id: string;
@@ -91,10 +92,30 @@ export default function UpcomingWorkshops({
           >
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col border border-gray-100">
               <div className="relative">
-                <div
-                  className="w-full h-48 bg-cover bg-center relative"
-                  style={{ backgroundImage: `url(${workshop.image})` }}
-                />
+                {workshop.image ? (
+                  <div
+                    className="w-full h-48 bg-cover bg-center relative"
+                    style={{ backgroundImage: `url(${workshop.image})` }}
+                  />
+                ) : (
+                  // Fallback graphic when no image is provided
+                  <div 
+                    className="w-full h-48 relative flex items-center justify-center"
+                    style={{ backgroundColor: workshop.iconColor }}
+                  >
+                    <div className="absolute inset-0 opacity-10">
+                      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <polygon points="0,100 30,80 50,90 80,70 100,85 100,100" fill="white"/>
+                        <polygon points="0,100 20,85 40,95 70,75 100,90 100,100" fill="white" opacity="0.5"/>
+                      </svg>
+                    </div>
+                    <div className="relative z-10 text-center text-white">
+                      <div className="text-4xl mb-2">{workshop.tag.split(' ')[0]}</div>
+                      <div className="text-lg font-bold px-4">{workshop.title}</div>
+                      <div className="text-sm opacity-90 mt-1">{workshop.subtitle}</div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="p-4 flex flex-col flex-grow">
                 <h3 className="text-xl font-bold mb-1">{workshop.title}</h3>

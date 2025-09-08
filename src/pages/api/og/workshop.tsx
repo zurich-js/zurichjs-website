@@ -13,7 +13,6 @@ export default async function handler(req: NextRequest) {
     const subtitle = searchParams.get('subtitle') || 'ZurichJS';
     const speakerName = searchParams.get('speakerName') || 'Workshop Instructor';
     const speakerImage = searchParams.get('speakerImage') || '';
-    const workshopId = searchParams.get('workshopId') || '';
     
     // Get the origin from the request URL
     const url = new URL(req.url);
@@ -26,8 +25,8 @@ export default async function handler(req: NextRequest) {
         ? `${origin}${speakerImage}` 
         : speakerImage;
 
-    // Add cache-busting parameter based on content
-    const contentHash = Buffer.from(`${title}-${subtitle}-${speakerName}-${workshopId}`).toString('base64').slice(0, 8);
+    // Add timestamp to ensure unique image generation
+    const timestamp = Date.now();
 
     return new ImageResponse(
       (
@@ -233,7 +232,7 @@ export default async function handler(req: NextRequest) {
               >
                 {speakerImage && absoluteSpeakerImage ? (
                   <img
-                    src={absoluteSpeakerImage.includes('?') ? absoluteSpeakerImage : `${absoluteSpeakerImage}?h=200&w=200&v=${contentHash}`}
+                    src={absoluteSpeakerImage.includes('?') ? absoluteSpeakerImage : `${absoluteSpeakerImage}?h=200&w=200&v=${timestamp}`}
                     alt={speakerName}
                     width={100}
                     height={100}
@@ -305,7 +304,9 @@ export default async function handler(req: NextRequest) {
         width: 1200,
         height: 630,
         headers: {
-          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
           'Content-Type': 'image/png',
         },
       }
@@ -320,7 +321,9 @@ export default async function handler(req: NextRequest) {
         status: 500,
         headers: {
           'Content-Type': 'text/plain',
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       }
     );

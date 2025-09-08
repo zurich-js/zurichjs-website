@@ -547,7 +547,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                     title: `${workshop.title} | ZurichJS Workshop`,
                     description: workshop.description.slice(0, 120) + '...',
                     type: 'website',
-                    image: `/api/og/workshop?title=${encodeURIComponent(workshop.title)}&subtitle=${encodeURIComponent(workshop.subtitle)}&speakerName=${encodeURIComponent(workshop.speaker.name)}&speakerImage=${encodeURIComponent(workshop.speaker.image)}`,
+                    image: `/api/og/workshop?title=${encodeURIComponent(workshop.title)}&subtitle=${encodeURIComponent(workshop.subtitle)}&speakerName=${encodeURIComponent(workshop.speaker.name)}&speakerImage=${encodeURIComponent(workshop.speaker.image)}&workshopId=${encodeURIComponent(workshop.id)}`,
                     url: `/workshops/${workshop.id}`
                 }}
             />

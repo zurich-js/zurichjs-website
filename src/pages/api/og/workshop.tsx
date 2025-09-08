@@ -13,6 +13,7 @@ export default async function handler(req: NextRequest) {
     const subtitle = searchParams.get('subtitle') || 'ZurichJS';
     const speakerName = searchParams.get('speakerName') || 'Workshop Instructor';
     const speakerImage = searchParams.get('speakerImage') || '';
+    const workshopId = searchParams.get('workshopId') || '';
     
     // Get the origin from the request URL
     const url = new URL(req.url);
@@ -21,7 +22,12 @@ export default async function handler(req: NextRequest) {
     // Create absolute URL for speaker image if it's not already absolute
     const absoluteSpeakerImage = speakerImage.startsWith('http') 
       ? speakerImage 
-      : `${origin}${speakerImage}`;
+      : speakerImage.startsWith('/') 
+        ? `${origin}${speakerImage}` 
+        : speakerImage;
+
+    // Add cache-busting parameter based on content
+    const contentHash = Buffer.from(`${title}-${subtitle}-${speakerName}-${workshopId}`).toString('base64').slice(0, 8);
 
     return new ImageResponse(
       (
@@ -182,9 +188,9 @@ export default async function handler(req: NextRequest) {
                   alignItems: 'center'
                 }}
               >
-                {speakerImage ? (
+                {speakerImage && absoluteSpeakerImage ? (
                   <img
-                    src={`${absoluteSpeakerImage}?h=150`}
+                    src={absoluteSpeakerImage.includes('?') ? absoluteSpeakerImage : `${absoluteSpeakerImage}?h=150&v=${contentHash}`}
                     alt={speakerName}
                     width={180}
                     height={180}
@@ -207,7 +213,7 @@ export default async function handler(req: NextRequest) {
                       color: '#757575',
                     }}
                   >
-                    {speakerName.charAt(0)}
+                    {speakerName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
@@ -250,12 +256,25 @@ export default async function handler(req: NextRequest) {
       {
         width: 1200,
         height: 630,
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'Content-Type': 'image/png',
+        },
       }
     );
   } catch (e) {
-    console.error('Error generating workshop OG image:', e);
-    return new Response(`Failed to generate image: ${e instanceof Error ? e.message : 'Unknown error'}`, {
-      status: 500,
-    });
+
+    
+    // Return a fallback error image
+    return new Response(
+      `Failed to generate OG image for workshop. Error: ${e instanceof Error ? e.message : 'Unknown error'}`, 
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-cache',
+        },
+      }
+    );
   }
 } 

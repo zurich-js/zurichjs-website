@@ -648,7 +648,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                     title: `${workshop.title} | ZurichJS Workshop`,
                     description: workshop.description.slice(0, 120) + '...',
                     type: 'website',
-                    image: `/api/og/workshop?title=${encodeURIComponent(workshop.title)}&subtitle=${encodeURIComponent(workshop.subtitle)}&speakerName=${encodeURIComponent(workshop.speakers.map(s => s.name).join(' & '))}&speakerImage=${encodeURIComponent(workshop.speakers[0]?.image || '')}`,
+                    image: `/api/og/workshop?title=${encodeURIComponent(workshop.title)}&subtitle=${encodeURIComponent(workshop.subtitle)}&speakerName=${encodeURIComponent(workshop.speakers.map(s => s.name).join(' & '))}&speakerImage=${encodeURIComponent(workshop.speakers[0]?.image || '')}&workshopId=${encodeURIComponent(workshop.id)}`,
                     url: `/workshops/${workshop.id}`
                 }}
             />

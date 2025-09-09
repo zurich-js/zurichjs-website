@@ -156,6 +156,16 @@ export const getPartners = () => {
             description: 'We help people contribute to open source.',
             blurb: 'Whether you\'re a contributor looking for something meaningful to build, or a maintainer looking for actual humans to help - not bots - we\'re here.'
         },
+        {
+            id: '17',
+            name: 'Storyblok',
+            logo: '/images/partners/storyblok.png',
+            url: 'https://www.storyblok.com/?utm_source=zurichjs',
+            type: 'supporting',
+            sponsorshipTier: 'silver',
+            description: 'A headless CMS made for humans. Built for the AI-driven content era.',
+            blurb: 'Storyblok is a headless CMS that enables developers and marketers to create, manage and optimize content experiences. With its API-first, component-based approach and intuitive visual editor, teams can build scalable websites and applications using frameworks like Next.js, Astro, Nuxt, React and more.'
+        },
     ];
 
     return partners;

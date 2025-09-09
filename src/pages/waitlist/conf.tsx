@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Users, Star, Gift, MapPin, Clock, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Calendar, Users, Star, Gift, MapPin, Clock, Sparkles, ExternalLink } from 'lucide-react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
@@ -9,27 +8,6 @@ import useReferrerTracking from '@/hooks/useReferrerTracking';
 
 export default function ConferenceWaitlist() {
   useReferrerTracking();
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    
-    // Load the waitlist widget scripts only on client side
-    if (typeof window !== 'undefined') {
-      // Load CSS
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.type = 'text/css';
-      link.href = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.css';
-      document.head.appendChild(link);
-
-      // Load JS
-      const script = document.createElement('script');
-      script.src = 'https://prod-waitlist-widget.s3.us-east-2.amazonaws.com/getwaitlist.min.js';
-      script.async = true;
-      document.head.appendChild(script);
-    }
-  }, []);
 
   return (
     <Layout>
@@ -103,6 +81,22 @@ export default function ConferenceWaitlist() {
             <br />
             Join us for quality talks, networking, and community building.
           </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <a
+              href="https://getwaitlist.com/waitlist/31042"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 bg-zurich hover:bg-zurich/90 text-white font-bold text-xl px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 group"
+            >
+              <span>Join the Waitlist</span>
+              <ExternalLink className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+            </a>
+          </motion.div>
         </motion.div>
       </Section>
 
@@ -192,7 +186,7 @@ export default function ConferenceWaitlist() {
               Be part of something extraordinary. Your journey starts here.
             </p>
 
-            {/* Waitlist Widget */}
+            {/* Waitlist Link */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
@@ -200,18 +194,18 @@ export default function ConferenceWaitlist() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/20"
             >
-              {isClient ? (
-                <div 
-                  id="getWaitlistContainer" 
-                  data-waitlist_id="31042" 
-                  data-widget_type="WIDGET_1"
-                ></div>
-              ) : (
-                <div className="py-16">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading waitlist...</p>
-                </div>
-              )}
+              <a
+                href="https://getwaitlist.com/waitlist/31042"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 bg-zurich hover:bg-zurich/90 text-white font-bold text-xl px-8 py-4 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105 group"
+              >
+                <span>Join the Waitlist</span>
+                <ExternalLink className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </a>
+              <p className="text-gray-600 mt-4 text-sm">
+                Click to join our waitlist and be the first to know about tickets, speakers, and updates!
+              </p>
             </motion.div>
           </motion.div>
         </div>

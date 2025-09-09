@@ -56,7 +56,7 @@ export const getWorkshops = (): Workshop[] => {
       description: 'Ready to build lightning-fast AI applications that scale globally? Master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch with Workers, AI capabilities, databases, and React.',
       dateInfo: 'September 9th, 2025',
       timeInfo: '18:00 - 20:30',
-      locationInfo: 'Venue TBA, Zürich',
+      locationInfo: 'Smallpdf AG, Zürich',
       maxAttendees: 30,
       image: '/images/workshops/full-stack-ai-cloudflare.png',
       iconColor: '#f59e0b', // amber-500

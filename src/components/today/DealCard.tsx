@@ -7,6 +7,7 @@ interface Deal {
   workshopHref: string;
   expiresAt: Date;
   discount: string;
+  couponCode?: string;
 }
 
 interface DealCardProps {
@@ -88,6 +89,16 @@ export default function DealCard({ deal }: DealCardProps) {
           {deal.description}
         </div>
 
+        {deal.couponCode && (
+          <div className="bg-black/20 rounded-xl p-3">
+            <div className="text-sm font-bold mb-1">🎫 COUPON CODE</div>
+            <div className="bg-white text-black rounded-lg px-3 py-2 font-black text-sm">
+              {deal.couponCode}
+            </div>
+            <div className="text-xs opacity-80 mt-1">Applied automatically when you click the link</div>
+          </div>
+        )}
+
         {!timeLeft.expired ? (
           <>
             <div className="bg-black/20 rounded-2xl p-4">
@@ -122,7 +133,7 @@ export default function DealCard({ deal }: DealCardProps) {
         )}
 
         <div className="text-xs opacity-75">
-          Valid 24hrs after meetup • Attendees only
+          {deal.couponCode ? 'Limited time offer • Use coupon code above' : 'Valid 24hrs after meetup • Attendees only'}
         </div>
       </div>
     </div>

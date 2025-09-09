@@ -15,7 +15,6 @@ import { getUpcomingEvents } from '@/sanity/queries';
 // Define our TypeScript interfaces
 interface PartnershipTier {
   name: string;
-  price: string;
   benefits: string[];
   highlighted?: boolean;
 }
@@ -67,54 +66,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
   // Define partnership tiers
   const partnershipTiers: PartnershipTier[] = [
     {
-      name: 'Custom Partner',
-      price: 'Negotiable',
-      benefits: [
-        'Tailored packages to meet specific sponsor needs',
-        'Exclusive sponsorship of events or workshops',
-        'Extended speaking opportunities',
-        'Customized branding options',
-        'Additional social media campaigns',
-        'Dedicated email promotions',
-        'Direct access to our network of international web experts',
-      ],
-    },
-    {
-      name: 'Venue Host',
-      price: 'Free (provide venue)',
-      benefits: [
-        'Logo displayed for specific event',
-        'Special recognition at hosted event',
-        'Company introduction at the hosted event',
-        'Social media mention for the event',
-        'Opportunity to distribute company swag',
-      ],
-    },
-    {
-      name: 'Community Partner',
-      price: 'CHF 700 / year or CHF 70 / month',
-      benefits: [
-        'Logo display on our website',
-        'Recognition at relevant events',
-        'Social media mentions',
-      ],
-    },
-    {
-      name: 'Silver Partner',
-      price: 'CHF 1,500 / year or CHF 150 / month',
-      benefits: [
-        'Logo display on website and event materials',
-        'Recognition at all events',
-        'Opportunities for company pitches at events',
-        'Job postings through our social channels',
-        'Social media mentions',
-        'Inclusion in swag bags',
-        'Input on event themes and speaker suggestions',
-      ],
-    },
-    {
       name: 'Gold Partner',
-      price: 'CHF 2,500 / year or CHF 250 / month',
       benefits: [
         'Prominent logo display on website and event materials',
         'Recognition at all events',
@@ -129,6 +81,48 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
         'Access to our international network of web experts',
       ],
       highlighted: true,
+    },
+    {
+      name: 'Silver Partner',
+      benefits: [
+        'Logo display on website and event materials',
+        'Recognition at all events',
+        'Opportunities for company pitches at events',
+        'Job postings through our social channels',
+        'Social media mentions',
+        'Inclusion in swag bags',
+        'Input on event themes and speaker suggestions',
+      ],
+    },
+    {
+      name: 'Community Partner',
+      benefits: [
+        'Logo display on our website',
+        'Recognition at relevant events',
+        'Social media mentions',
+      ],
+    },
+    {
+      name: 'Venue Host',
+      benefits: [
+        'Logo displayed for specific event',
+        'Special recognition at hosted event',
+        'Company introduction at the hosted event',
+        'Social media mention for the event',
+        'Opportunity to distribute company swag',
+      ],
+    },
+    {
+      name: 'Custom Partner',
+      benefits: [
+        'Tailored packages to meet specific sponsor needs',
+        'Exclusive sponsorship of events or workshops',
+        'Extended speaking opportunities',
+        'Customized branding options',
+        'Additional social media campaigns',
+        'Dedicated email promotions',
+        'Direct access to our network of international web experts',
+      ],
     },
   ];
 
@@ -284,16 +278,21 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 <p className="text-xl mb-6 text-gray-900">
                   Join forces with Zurich&apos;s most vibrant JavaScript community and connect with talented developers passionate about JS!
                 </p>
-                <p className="text-lg mb-8 text-gray-900">
+                <p className="text-lg mb-6 text-gray-900">
                   Support our mission to nurture the JavaScript ecosystem in Zurich while gaining visibility for your brand among developers, tech leads, and decision-makers.
                 </p>
+                <div className="bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg p-4 mb-8">
+                  <p className="text-blue-800 font-medium text-center">
+                    📞 Interested in sponsorship? Inquire about pricing and partnership details!
+                  </p>
+                </div>
                 <Button
                   href="#partnership-tiers"
                   variant="primary"
                   size="lg"
                   className="bg-blue-700 hover:bg-blue-600 text-white"
                 >
-                  Explore Partnership Options 🚀
+                  Discover Your Perfect Partnership 🎯
                 </Button>
               </motion.div>
 
@@ -593,7 +592,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                                  });
                                }}
                              >
-                               Visit {partner.name} →
+                               Discover {partner.name} →
                              </Button>
                           </div>
                         </div>
@@ -690,7 +689,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                                  });
                                }}
                              >
-                               Visit {partner.name} →
+                               Discover {partner.name} →
                              </Button>
                           </div>
                         </div>
@@ -972,103 +971,67 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
               className="text-center mb-12"
             >
               <h2 className="text-3xl font-bold mb-3 text-gray-900">Partnership Options 🌟</h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                Choose the partnership level that fits your goals and budget!
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-4">
+                Discover the partnership level that aligns with your goals - reach out to learn more about pricing and get started!
               </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+                <p className="text-blue-800 font-medium text-center">
+                  💬 Inquire about pricing below - no commitment required!
+                </p>
+              </div>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {partnershipTiers.map((tier, index) => {
-                // Calculate savings for yearly vs monthly payments
-                const hasBothPrices = tier.price.includes('/') && tier.price.includes('month');
-                let yearlyPrice = '';
-                let monthlyPrice = '';
-                let yearlySavings = 0;
+              {partnershipTiers.map((tier, index) => (
+                <motion.div
+                  key={tier.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={`bg-white rounded-lg shadow-lg overflow-hidden border flex flex-col h-full ${
+                    tier.highlighted ? 'border-blue-700 transform -translate-y-2 scale-105' : 'border-gray-200'
+                  }`}
+                >
+                  <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'} relative`}>
+                    <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
+                    <p className={`text-sm font-medium ${tier.highlighted ? 'text-yellow-200' : 'text-blue-600'}`}>
+                      💬 Inquire for pricing
+                    </p>
+                  </div>
 
-                if (hasBothPrices) {
-                  const priceText = tier.price;
-                  const yearMatch = priceText.match(/CHF\s+([\d,]+)/);
-                  const monthMatch = priceText.match(/CHF\s+([\d,]+)\s+\/\s+month/);
+                  <div className="p-6 flex-grow flex flex-col">
+                    <ul className="space-y-3 mb-6 flex-grow">
+                      {tier.benefits.map((benefit, i) => (
+                        <li key={i} className="flex items-start">
+                          <CheckCircle className="text-blue-700 mt-1 mr-2 flex-shrink-0" size={16} />
+                          <span className="text-gray-700">{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
 
-                  if (yearMatch && monthMatch) {
-                    const yearlyAmount = parseInt(yearMatch[1].replace(',', ''));
-                    const monthlyAmount = parseInt(monthMatch[1].replace(',', ''));
-
-                    yearlyPrice = `CHF ${yearMatch[1]}`;
-                    monthlyPrice = `CHF ${monthMatch[1]}/month`;
-                    yearlySavings = (monthlyAmount * 12) - yearlyAmount;
-                  }
-                } else {
-                  yearlyPrice = tier.price;
-                }
-
-                return (
-                  <motion.div
-                    key={tier.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className={`bg-white rounded-lg shadow-lg overflow-hidden border flex flex-col h-full ${
-                      tier.highlighted ? 'border-blue-700 transform -translate-y-2 scale-105' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'} relative`}>
-                      <h3 className="text-xl font-bold mb-1">{tier.name}</h3>
-
-                      {hasBothPrices ? (
-                        <div className="mt-2">
-                          <div className="text-2xl font-bold">{yearlyPrice}/year</div>
-                          <div className="text-sm mt-2">
-                            or {monthlyPrice}
-                          </div>
-                          {yearlySavings > 0 && (
-                            <div className={`text-sm mt-2 font-medium ${tier.highlighted ? 'text-yellow-300' : 'text-green-600'}`}>
-                              Save CHF {yearlySavings} with yearly payment!
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          <p className="text-2xl font-bold">{yearlyPrice}</p>
-                        </div>
-                      )}
+                    <div className="mt-auto">
+                      <Button
+                        onClick={() => {
+                          selectTier(tier.name.toLowerCase().split(' ')[0]);
+                          // Additional tracking for tier card CTA click
+                          track('partnership_tier_cta_click', {
+                            name: tier.name
+                          });
+                        }}
+                        variant={tier.highlighted ? 'primary' : 'outline'}
+                        className={`w-full text-sm transition-colors ${
+                          tier.highlighted 
+                            ? 'bg-blue-700 text-white hover:bg-blue-600' 
+                            : 'border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white'
+                        }`}
+                      >
+                        Inquire About {tier.name.split(' ')[0]} Pricing
+                      </Button>
                     </div>
-
-                    <div className="p-6 flex-grow flex flex-col">
-                      <ul className="space-y-3 mb-6 flex-grow">
-                        {tier.benefits.map((benefit, i) => (
-                          <li key={i} className="flex items-start">
-                            <CheckCircle className="text-blue-700 mt-1 mr-2 flex-shrink-0" size={16} />
-                            <span className="text-gray-700">{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <div className="mt-auto">
-                        <Button
-                          onClick={() => {
-                            selectTier(tier.name.toLowerCase().split(' ')[0]);
-                            // Additional tracking for tier card CTA click
-                            track('partnership_tier_cta_click', {
-                              name: tier.name,
-                              price: tier.price
-                            });
-                          }}
-                          variant={tier.highlighted ? 'primary' : 'outline'}
-                          className={`w-full text-sm transition-colors ${
-                            tier.highlighted 
-                              ? 'bg-blue-700 text-white hover:bg-blue-600' 
-                              : 'border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white'
-                          }`}
-                        >
-                          Become a {tier.name.split(' ')[0]} Partner
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                  </div>
+                </motion.div>
+              ))}
             </div>
         </Section>
 
@@ -1082,6 +1045,9 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
               className="max-w-3xl mx-auto"
             >
               <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">Let&apos;s Talk Partnership! 🎯</h2>
+              <p className="text-lg text-gray-700 text-center mb-8 max-w-2xl mx-auto">
+                Ready to partner with ZurichJS? Get in touch with us to discuss pricing, partnership details, and how we can work together to grow the JavaScript community in Zurich!
+              </p>
 
               {formState.submitted ? (
                 <motion.div
@@ -1102,7 +1068,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                     href="/events"
                     variant="secondary"
                   >
-                    View Upcoming Events
+                    Explore Our Community Events
                   </Button>
                 </motion.div>
               ) : (
@@ -1274,7 +1240,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                           Submitting...
                         </span>
                       ) : (
-                        'Submit Partnership Inquiry 🚀'
+                        'Inquire About Pricing 🚀'
                       )}
                     </Button>
                   </div>
@@ -1293,9 +1259,14 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
               className="text-center"
             >
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Grow with ZurichJS? 🚀</h2>
-              <p className="text-xl mb-8 max-w-3xl mx-auto">
+              <p className="text-xl mb-6 max-w-3xl mx-auto">
                 Let&apos;s join forces to create an even more vibrant JavaScript community in Zurich!
               </p>
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
+                <p className="text-yellow-200 font-medium text-center">
+                  💡 Inquire about sponsorship pricing - no strings attached!
+                </p>
+              </div>
               <Button
                 onClick={() => {
                   selectTier('gold');
@@ -1305,9 +1276,9 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 variant="primary"
                 size="lg"
                 className="bg-blue-700 text-white hover:bg-blue-600"
-              >
-                Become a Partner Today! 💛
-              </Button>
+                >
+                  Inquire About Partnership Pricing 💛
+                </Button>
             </motion.div>
         </Section>
     </Layout>

@@ -49,21 +49,22 @@ export const getWorkshops = (): Workshop[] => {
     //   speakerId: 'faris-aziz',
     //   state: 'interest' as WorkshopState
     // },
-    {
       id: 'ai-edge-application',
-      title: 'Building a Full-Stack AI Application on the Edge',
-      subtitle: 'Master Cloudflare Workers & AI Integration',
-      description: 'Ready to build lightning-fast AI applications that scale globally? Master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch with Workers, AI capabilities, databases, and React.',
-      dateInfo: 'September 9th, 2025',
-      timeInfo: '18:00 - 20:30',
-      locationInfo: 'Smallpdf AG, Zürich',
-      maxAttendees: 30,
-      image: '/images/workshops/full-stack-ai-cloudflare.png',
-      iconColor: '#f59e0b', // amber-500
-      tag: '🤖 AI & Edge Computing',
-      speakerId: 'speaker-c6fff8ee-97c5-4db1-8d6c-fb90ad1376e9',
-      state: 'confirmed' as WorkshopState
-    },
+    // {
+    //   id: 'ai-edge-application',
+    //   title: 'Building a Full-Stack AI Application on the Edge',
+    //   subtitle: 'Master Cloudflare Workers & AI Integration',
+    //   description: 'Ready to build lightning-fast AI applications that scale globally? Master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch with Workers, AI capabilities, databases, and React.',
+    //   dateInfo: 'September 9th, 2025',
+    //   timeInfo: '18:00 - 20:30',
+    //   locationInfo: 'Smallpdf AG, Zürich',
+    //   maxAttendees: 30,
+    //   image: '/images/workshops/full-stack-ai-cloudflare.png',
+    //   iconColor: '#f59e0b', // amber-500
+    //   tag: '🤖 AI & Edge Computing',
+    //   speakerId: 'speaker-c6fff8ee-97c5-4db1-8d6c-fb90ad1376e9',
+    //   state: 'confirmed' as WorkshopState
+    // },
     {
       id: 'observability-dynatrace',
       title: 'Observability in Action: Hands-On with Dynatrace',

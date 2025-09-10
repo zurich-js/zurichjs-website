@@ -15,6 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const {
       name,
       email,
+      streetAndNumber,
+      postcode,
+      city,
+      country,
       ticketTitle,
       price,
       eventId,
@@ -27,6 +31,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const missingFields = [];
     if (!name) missingFields.push('name');
     if (!email) missingFields.push('email');
+    if (!streetAndNumber) missingFields.push('streetAndNumber');
+    if (!postcode) missingFields.push('postcode');
+    if (!city) missingFields.push('city');
+    if (!country) missingFields.push('country');
     if (!ticketTitle) missingFields.push('ticketTitle');
     if (price === undefined) missingFields.push('price');
     if (!eventId && !workshopId) missingFields.push('eventId or workshopId');
@@ -46,6 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const reservation = {
       name,
       email,
+      streetAndNumber,
+      postcode,
+      city,
+      country,
       ticketTitle,
       price,
       userId,
@@ -69,6 +81,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       reservation: {
         name,
         email,
+        streetAndNumber,
+        postcode,
+        city,
+        country,
         ticketTitle,
         price,
         paymentMethod,

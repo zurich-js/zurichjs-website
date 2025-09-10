@@ -128,7 +128,7 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
 
       <Link href={`${deal.workshopHref}?coupon=${deal.couponCode}`} className="flex flex-col h-full">
         {/* Workshop Image/Icon */}
-        <div className="relative h-32 sm:h-36 overflow-hidden">
+        <div className="relative h-36 sm:h-60 overflow-hidden">
           <div
             className={`w-full h-full transition-transform duration-500 ${
               isHovered ? 'scale-110' : 'scale-100'

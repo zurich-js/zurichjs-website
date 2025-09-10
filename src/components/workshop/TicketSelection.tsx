@@ -240,7 +240,7 @@ export default function TicketSelection({
       {/* Features list */}
       {/* features are the same, so just pull it to the top and have easy button selection */}
       <ul className="space-y-2">
-        {defaultTicket.features.map((feature, index) => (
+        {(defaultTicket?.features || []).map((feature, index) => (
           <li key={index} className="flex items-center text-sm text-gray-700">
             <CheckCircle className="h-4 w-4 text-js mr-2 flex-shrink-0" />
             {feature}

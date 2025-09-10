@@ -73,7 +73,7 @@ export const getWorkshops = (): Workshop[] => {
       timeInfo: '16:00 - 18:00',
       locationInfo: 'Venue TBA, Zürich',
       maxAttendees: 25,
-      // image: '/images/workshops/observability-dynatrace.png',
+      image: '/images/workshops/observability-dynatrace.png',
       iconColor: '#f97316', // orange-500
       tag: '📊 Observability & Monitoring',
       speakerId: 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6',
@@ -88,7 +88,7 @@ export const getWorkshops = (): Workshop[] => {
       timeInfo: '09:00 - 17:00',
       locationInfo: 'Venue TBA, Zürich',
       maxAttendees: 30,
-      // image: '/images/workshops/ai-design-patterns-2026.png',
+      image: '/images/workshops/ai-design-patterns-2026.png',
       iconColor: '#f59e0b', // amber-500
       tag: '🧠 AI Interface Design',
       speakerId: 'vitaly-friedman',

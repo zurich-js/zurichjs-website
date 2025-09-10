@@ -58,6 +58,12 @@ export default function Hero({ event }: HeroProps) {
       {/* Primary Action Buttons */}
       <div className="flex flex-col gap-4 max-w-sm mx-auto">
         <Link
+          href="/feedback"
+          className="bg-gray-800 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-200 active:scale-95"
+        >
+          💭 Rate Event
+        </Link>
+        <Link
           href={`/events/${event.id}?feedback=true`}
           className="bg-js text-black font-bold py-4 px-8 rounded-2xl transition-all duration-200 active:scale-95"
         >

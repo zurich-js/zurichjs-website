@@ -140,6 +140,9 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
               </motion.div>
             )}
           </div>
+
+          {/* Sticky actions */}
+          <StickyActions />
         </Section>
       </>
     );
@@ -242,8 +245,8 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
         </div>
       </div>
 
-      {/* Sticky mobile actions */}
-      <StickyActions event={upcomingEvent} />
+      {/* Sticky actions */}
+      <StickyActions />
     </Section>
     </>
   );

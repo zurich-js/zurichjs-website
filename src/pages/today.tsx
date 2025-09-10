@@ -8,6 +8,7 @@ import Card from '@/components/today/Card';
 import Hero from '@/components/today/Hero';
 import ScheduleCard from '@/components/today/ScheduleCard';
 import StickyActions from '@/components/today/StickyActions';
+import TodaysSponsors from '@/components/today/TodaysSponsors';
 import WorkshopDeals from '@/components/today/WorkshopDeals';
 import { getUpcomingEvents, Event, getSpeakerById } from '@/sanity/queries';
 import { Speaker } from '@/types';
@@ -141,6 +142,19 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
                 </Card>
               </motion.div>
             )}
+
+            {/* Today's Sponsors */}
+            <motion.div
+              initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="max-w-4xl mx-auto"
+              data-section="sponsors"
+            >
+              <Card>
+                <TodaysSponsors />
+              </Card>
+            </motion.div>
           </div>
 
           {/* Sticky actions */}
@@ -187,17 +201,27 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
             </motion.div>
           )}
           
-          
-          
-          {/* Schedule - moved after actions */}
+          {/* Schedule */}
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             data-section="schedule"
           >
             <Card>
               <ScheduleCard event={upcomingEvent} />
+            </Card>
+          </motion.div>
+          
+          {/* Today's Sponsors - moved after schedule */}
+          <motion.div
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            data-section="sponsors"
+          >
+            <Card>
+              <TodaysSponsors />
             </Card>
           </motion.div>
         </div>
@@ -243,6 +267,19 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
               </Card>
             </motion.div>
           )}
+          
+          {/* Today's Sponsors - full width third row */}
+          <motion.div
+            initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="md:col-span-4 lg:col-span-6"
+            data-section="sponsors"
+          >
+            <Card>
+              <TodaysSponsors />
+            </Card>
+          </motion.div>
           
         </div>
       </div>

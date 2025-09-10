@@ -190,3 +190,81 @@ export const getSponsorshipPartners = () => {
 export const getRegularPartners = () => {
     return getPartners().filter(partner => !partner.sponsorshipTier);
 };
+
+// Today's Event Sponsors - easily configurable array
+export interface TodaySponsor {
+    id: string;
+    name: string;
+    logo: string;
+    url: string;
+    tier?: 'gold' | 'silver' | 'bronze' | 'supporting';
+    description?: string;
+}
+
+export const getTodaysSponsors = (): TodaySponsor[] => {
+    // Get existing partners for sponsors that are already in our system
+    const allPartners = getPartners();
+    const smallpdf = allPartners.find(p => p.name === 'Smallpdf');
+    const gyff = allPartners.find(p => p.name === 'GYFF');
+    const storyblok = allPartners.find(p => p.name === 'Storyblok');
+    const onlydust = allPartners.find(p => p.name === 'OnlyDust');
+
+    const sponsors: TodaySponsor[] = [
+        // Gold sponsors first
+        ...(smallpdf ? [{
+            id: smallpdf.id,
+            name: smallpdf.name,
+            logo: smallpdf.logo,
+            url: smallpdf.url,
+            tier: 'gold' as const,
+            description: 'Event venue and gold sponsor'
+        }] : []),
+        
+        
+        // Stripe - new sponsor
+        {
+            id: 'stripe-today',
+            name: 'Stripe',
+            logo: '/images/partners/stripe.png',
+            url: 'https://stripe.com',
+            tier: 'gold' as const,
+            description: 'Payment processing and financial infrastructure'
+        },
+        
+        ...(onlydust ? [{
+            id: onlydust.id,
+            name: onlydust.name,
+            logo: onlydust.logo,
+            url: onlydust.url,
+            tier: 'gold' as const,
+            description: onlydust.description
+        }] : []),
+
+        // Silver sponsors after
+        ...(gyff ? [{
+            id: gyff.id,
+            name: gyff.name,
+            logo: gyff.logo,
+            url: gyff.url,
+            tier: 'silver' as const,
+            description: gyff.description
+        }] : []),
+        
+        ...(storyblok ? [{
+            id: storyblok.id,
+            name: storyblok.name,
+            logo: storyblok.logo,
+            url: storyblok.url,
+            tier: 'silver' as const,
+            description: storyblok.description
+        }] : [])
+    ];
+
+    // Sort by tier (gold first, then silver, etc.)
+    return sponsors.sort((a, b) => {
+        const tierOrder = { gold: 0, silver: 1, bronze: 2, supporting: 3 };
+        const tierA = tierOrder[a.tier as keyof typeof tierOrder] ?? 4;
+        const tierB = tierOrder[b.tier as keyof typeof tierOrder] ?? 4;
+        return tierA - tierB;
+    });
+};

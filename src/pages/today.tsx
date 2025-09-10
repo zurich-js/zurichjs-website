@@ -10,7 +10,7 @@ import ScheduleCard from '@/components/today/ScheduleCard';
 import StickyActions from '@/components/today/StickyActions';
 import TodaysSponsors from '@/components/today/TodaysSponsors';
 import WorkshopDeals from '@/components/today/WorkshopDeals';
-import { getUpcomingEvents, Event, getSpeakerById } from '@/sanity/queries';
+import { Event, getSpeakerById, getEventById } from '@/sanity/queries';
 import { Speaker } from '@/types';
 
 interface TodayPageProps {
@@ -293,8 +293,7 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const upcomingEvents = await getUpcomingEvents();
-    const nextEvent = upcomingEvents[0] || null;
+    const nextEvent = await getEventById('zurich-js-meetup-8-flare-up-your-performance');
 
     // Fetch speaker data for workshops
     const observabilitySpeakerIds = ['indermohan-singh', 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6'];

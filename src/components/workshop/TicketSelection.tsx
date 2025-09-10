@@ -198,7 +198,7 @@ export default function TicketSelection({
               </div>
               
               {/* Price card */}
-              <div className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+              <div className="flex justify-between items-center">
                 {/* Price information */}
                 <div className="flex flex-col">
                   <div className="flex items-baseline">
@@ -210,8 +210,8 @@ export default function TicketSelection({
                     {(hasCoupon || communityDiscount) && (
                       <span className="ml-3 text-sm line-through text-gray-500">CHF {ticket.price}</span>
                     )}
+                    <span className="text-xs text-gray-600 block ml-1">per person</span>
                   </div>
-                  <span className="text-xs text-gray-600 mt-0.5">per person</span>
                 </div>
                 
                 {/* Discount badge */}
@@ -225,16 +225,6 @@ export default function TicketSelection({
                   </div>
                 )}
               </div>
-
-              {/* Features list */}
-              <ul className="space-y-2">
-                {ticket.features.map((feature, index) => (
-                  <li key={index} className="flex items-center text-sm text-gray-700">
-                    <CheckCircle className="h-4 w-4 text-js mr-2 flex-shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
             </div>
 
             {selectedTicket === getPriceId(ticket) && (
@@ -247,6 +237,16 @@ export default function TicketSelection({
           </button>
         </motion.div>
       ))}
+      {/* Features list */}
+      {/* features are the same, so just pull it to the top and have easy button selection */}
+      <ul className="space-y-2">
+        {ticket.features.map((feature, index) => (
+          <li key={index} className="flex items-center text-sm text-gray-700">
+            <CheckCircle className="h-4 w-4 text-js mr-2 flex-shrink-0" />
+            {feature}
+          </li>
+        ))}
+      </ul>
 
       {/* Payment options section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">

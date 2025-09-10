@@ -49,7 +49,6 @@ export const getWorkshops = (): Workshop[] => {
     //   speakerId: 'faris-aziz',
     //   state: 'interest' as WorkshopState
     // },
-      id: 'ai-edge-application',
     // {
     //   id: 'ai-edge-application',
     //   title: 'Building a Full-Stack AI Application on the Edge',

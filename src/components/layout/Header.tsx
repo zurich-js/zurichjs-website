@@ -92,7 +92,7 @@ export default function Header() {
     },
   ];
 
-  const coffeeItem: NavItem = { name: '☕ Buy us a coffee', path: '/buy-us-a-coffee' };
+  const coffeeItem: NavItem = { name: '❤️ Donate', path: '/buy-us-a-coffee' };
 
   // Admin quick actions - most commonly used admin features
   const adminQuickActions: NavSubItem[] = [
@@ -218,8 +218,8 @@ export default function Header() {
                 href={coffeeItem.path || '#'}
                 className={getCoffeeButtonClasses()}
               >
-                <span>☕</span>
-                <span className="text-sm whitespace-nowrap">Buy us a coffee</span>
+                <span>❤️</span>
+                <span className="text-sm whitespace-nowrap">Donate</span>
               </Link>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function Header() {
                   href={coffeeItem.path || '#'}
                   className={`${getCoffeeButtonClasses()} text-sm`}
                 >
-                  <span>☕</span>
+                  <span>❤️</span>
                 </Link>
               </li>
             </ul>
@@ -431,8 +431,8 @@ export default function Header() {
                   href={coffeeItem.path || '#'}
                   className={getMobileCoffeeButtonClasses()}
                 >
-                  <span>☕</span>
-                  <span>Buy us a coffee</span>
+                  <span>❤️</span>
+                  <span>Donate</span>
                 </Link>
               </div>
             </div>

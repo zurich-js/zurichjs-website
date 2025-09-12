@@ -56,6 +56,34 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
 
   const [coupon, setCoupon] = React.useState('zurichjs-community');
   const [qty, setQty] = React.useState('1');
+  const [tshirts, setTshirts] = React.useState<{ size: string; qty: number }[]>([]);
+  const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+  const firstTshirtSizeThatIsntAddedYet = sizes.find(size => !tshirts.find(t => t.size === size)) || 'S';
+
+  // Memoized handlers to prevent re-renders
+  const handleTshirtQtyChange = React.useCallback((index: number) => (v: string) => {
+    const newQty = parseInt(v) || 1;
+    setTshirts(prev => prev.map((t, i) =>
+      i === index ? { ...t, qty: newQty } : t
+    ));
+  }, []);
+
+  const handleTshirtSizeChange = React.useCallback((index: number) => (v: string) => {
+    setTshirts(prev => prev.map((t, i) =>
+      i === index ? { ...t, size: v } : t
+    ));
+  }, []);
+
+  // Get available sizes for a specific t-shirt row (excludes sizes used by other rows)
+  const getAvailableSizes = React.useCallback((currentIndex: number) => {
+    const usedSizes = tshirts
+      .filter((_, i) => i !== currentIndex) // Exclude current row
+      .map(t => t.size);
+
+    return sizes
+      .filter(size => !usedSizes.includes(size))
+      .map(size => ({ value: size, label: size }));
+  }, [tshirts]);
 
   const currentPricingTier = getCurrentPricingPeriod(pricing, '2025-11-12', '17:59');
 
@@ -235,20 +263,41 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                   </WorkshopPriceTitle>
                 }
                 right={
-                  <div className="grid grid-cols-[1fr_1fr_120px] items-center gap-1">
-                    <KitInputText
-                      type="number"
-                      value={qty}
-                      onChange={setQty}
-                      className="w-[120px]"
-                      valueTransform={(v) => v + ' x CHF 20'}
-                    />
-                    <KitSelect
-                      options={['S', 'M', 'L', 'XL'].map(size => ({ value: size, label: size }))}
-                      valueTransform={(v) => `Size: ${v}`}
-                    />
-                    <KitButton variant="white" className="w-full">Remove</KitButton>
-                  </div>
+                  <>
+                    {tshirts.map((tshirt, index) => (
+                      <div className="grid grid-cols-[1fr_1fr_120px] gap-1" key={`tshirt-${index}`}>
+                        <KitInputText
+                          type="number"
+                          value={tshirt.qty}
+                          onChange={handleTshirtQtyChange(index)}
+                          className="w-[120px]"
+                          valueTransform={(v) => v + ' x CHF 20'}
+                        />
+                        <KitSelect
+                          defaultValue={{ value: tshirt.size, label: tshirt.size }}
+                          options={getAvailableSizes(index)}
+                          onChange={handleTshirtSizeChange(index)}
+                          valueTransform={(v) => `Size: ${v}`}
+                        />
+                        <KitButton
+                          variant="white"
+                          className="w-full"
+                          onClick={() => setTshirts(prev => prev.filter((_, i) => i !== index))}
+                        >
+                          Remove
+                        </KitButton>
+                      </div>
+                    ))}
+                    {!!firstTshirtSizeThatIsntAddedYet &&
+                      <KitButton
+                        variant="white"
+                        className="w-full mt-1"
+                        onClick={() => setTshirts(p => [...p, { size: firstTshirtSizeThatIsntAddedYet, qty: 1}])}
+                      >
+                        Add {!!tshirts.length ? ' another' : ''}
+                      </KitButton>
+                    }
+                  </>
                 }
               />
             </div>

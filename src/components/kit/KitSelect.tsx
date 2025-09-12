@@ -10,6 +10,7 @@ type SelectOption = {
 
 export default function KitSelect({
   label,
+  defaultValue,
   onChange,
   options,
   multiple = false,
@@ -18,6 +19,7 @@ export default function KitSelect({
   ...props
 }: {
   label?: string;
+  defaultValue?: SelectOption | SelectOption[];
   onChange?: (option: string) => void;
   options: SelectOption[];
   multiple?: boolean;
@@ -25,7 +27,7 @@ export default function KitSelect({
   valueTransform?: (value: string | number) => string | number;
   [x: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
-  const [selected, setSelected] = React.useState<SelectOption|SelectOption[]>();
+  const [selected, setSelected] = React.useState<SelectOption|SelectOption[]|undefined>(defaultValue);
 
   const multiselect = Array.isArray(selected) && multiple;
 

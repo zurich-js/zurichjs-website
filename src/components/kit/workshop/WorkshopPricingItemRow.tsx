@@ -7,7 +7,7 @@ export default function WorkshopPricingItemRow({
 }) {
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex">
       <div className="basis-[300px]">
         {left}
       </div>

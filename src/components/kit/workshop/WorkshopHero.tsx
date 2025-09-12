@@ -12,12 +12,13 @@ export default function WorkshopHero({
   date,
   startTime,
   endTime,
-                                       durationString,
+  durationString,
   maxSeats,
   seatsLeft,
   discountPeriodTitle,
   discountPeriodEndDate,
   speaker,
+  rsvp,
 }: {
   title: string;
   description: string;
@@ -31,6 +32,7 @@ export default function WorkshopHero({
   discountPeriodTitle?: string;
   discountPeriodEndDate?: string; // YYYY-MM-DD
   speaker: Speaker
+  rsvp: string;
 }) {
 
   const duration = (() => {
@@ -61,7 +63,9 @@ export default function WorkshopHero({
             discountPeriodEndDate={discountPeriodEndDate}
           />
         ),
-        actions: <WorkshopActionsSlot />,
+        actions: <WorkshopActionsSlot
+          rsvp={rsvp}
+        />,
         card: (
           <WorkshopSpeakerCard speaker={speaker} />
         ),

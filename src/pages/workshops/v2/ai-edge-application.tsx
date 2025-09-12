@@ -51,6 +51,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
         maxSeats={30}
         seatsLeft={11}
         speaker={harshil}
+        rsvp={sections.price.slug}
       />
 
       <KitPageContent toc={sections} title={title}>

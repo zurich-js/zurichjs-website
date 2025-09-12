@@ -1,15 +1,22 @@
 import {Brain, CloudCog, Database, Atom} from "lucide-react";
 import React from "react";
 
+import KitButton from "@/components/kit/button/KitButton";
 import KitAccordion, {KitAccordionItem} from "@/components/kit/KitAccordion";
 import KitGrid, {KitGridItem} from "@/components/kit/KitGrid";
+import KitInputText from "@/components/kit/KitInputText";
 import KitList from "@/components/kit/KitList";
 import KitPageContent from "@/components/kit/KitPageContent";
 import KitPageSection from "@/components/kit/KitPageSection";
 import KitSectionContent from "@/components/kit/KitSectionContent";
 import KitSectionTitle from "@/components/kit/KitSectionTitle";
+import KitSelect from "@/components/kit/KitSelect";
+import {getCurrentPricingPeriod, PricingConfig} from "@/components/kit/utils/dateOperations";
 import {makeSlug} from "@/components/kit/utils/makeSlug";
 import WorkshopHero from "@/components/kit/workshop/WorkshopHero";
+import WorkshopPricingExpiration from "@/components/kit/workshop/WorkshopPricingExpiration";
+import WorkshopPricingItemRow from "@/components/kit/workshop/WorkshopPricingItemRow";
+import WorkshopPriceTitle from "@/components/kit/workshop/WorkshopPricingItemTitle";
 import WorkshopVenueInfo from "@/components/kit/workshop/WorkshopVenueInfo";
 import PageLayout from '@/components/layout/Layout';
 import CancelledCheckout from "@/components/workshop/CancelledCheckout";
@@ -27,9 +34,18 @@ const preSectionMap = {
   others: "Other Events"
 }
 
+const pricing: PricingConfig = {
+    early: { date: '2025-09-15', discount: 24, time: '23:59', title: 'Early bird', isOffer: true },
+    standard: { date: '2025-10-14', discount: 10, time: '23:59', title: 'Standard' },
+    late: { date: '2025-11-12', discount: 0, time: '17:59', title: 'Last minute' },
+}
+
 const sections: Record<string, { title: string, slug: string }> = Object.fromEntries(
   Object.entries(preSectionMap).map(([key, title]) => [key, { title, slug: makeSlug(title) }])
 )
+
+
+
 
 export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
   const harshil = {
@@ -38,13 +54,18 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
     companyLogo: 'https://cf-assets.www.cloudflare.com/dzlvafdwdttg/69wNwfiY5mFmgpd9eQFW6j/d5131c08085a977aa70f19e7aada3fa9/1pixel-down__1_.svg',
   }
 
+  const [coupon, setCoupon] = React.useState('zurichjs-community');
+  const [qty, setQty] = React.useState('1');
+
+  const currentPricingTier = getCurrentPricingPeriod(pricing, '2025-11-12', '17:59');
+
   return (
     <PageLayout>
       <WorkshopHero
         title={title}
         description="Ready to build lightning-fast AI applications that scale globally? In this hands-on workshop, you'll master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch. You'll start with the fundamentals of Cloudflare Workers and progressively add AI capabilities, databases, object storage, and a modern React frontend. By the end, you'll have deployed a production-ready AI application running on Cloudflare's global edge network."
         truncatedDescriptionAnchor="overview"
-        date="2025-09-09"
+        date="2025-11-12"
         startTime="18:00"
         endTime="21:00"
         durationString="3 hours"
@@ -52,6 +73,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
         seatsLeft={11}
         speaker={harshil}
         rsvp={sections.price.slug}
+        pricing={pricing}
       />
 
       <KitPageContent toc={sections} title={title}>
@@ -147,6 +169,89 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
               workshopId="ai-edge-application"
               workshopTitle={title}
             />
+            <div className="space-y-4">
+              {currentPricingTier.isOffer && (
+                <WorkshopPricingItemRow
+                  left={
+                    <WorkshopPriceTitle title={currentPricingTier.title} discount={currentPricingTier.discount}>
+                      Limited time
+                    </WorkshopPriceTitle>
+                  }
+                  right={
+                    <WorkshopPricingExpiration
+                      date={currentPricingTier.date}
+                      time={currentPricingTier.time}
+                    />
+                  }
+                />
+              )}
+              <WorkshopPricingItemRow
+                left={<WorkshopPriceTitle title="Discount code" discount={20}>
+                  Auto-applied
+                </WorkshopPriceTitle>}
+                right={
+                  <div className="grid grid-cols-[1fr_120px] items-center gap-1">
+                    <KitInputText value={coupon} onChange={setCoupon} className="min-w-[200px]" />
+                    <KitButton variant="white" className="w-full">Apply code</KitButton>
+                  </div>
+                }
+              />
+              <WorkshopPricingItemRow
+                left={
+                  <WorkshopPriceTitle title="How many tickets?" discount={20}>
+                    Group discount
+                  </WorkshopPriceTitle>
+                }
+                right={
+                  <KitInputText type="number" value={qty} onChange={setQty} className="w-[120px]" />
+                }
+              />
+              <WorkshopPricingItemRow
+                left={
+                <WorkshopPriceTitle title="Includes">
+                  <KitList
+                    className="list-disc list-inside text-kit-sm"
+                    listStyle="check"
+                    items={[
+                        '2.5 hours of hands-on training',
+                        'In-person Q&A with Cloudflare expert',
+                        'Snacks an Refreshments',
+                        'Workshop materials'
+                    ]}
+                  />
+                </WorkshopPriceTitle>}
+              />
+              <WorkshopPricingItemRow
+                left={
+                  <WorkshopPriceTitle title="Want to represent?" discount={20}>
+                    <p>
+                      Throw in a discounted T-shirt
+                    </p>
+                    <div className="mt-2 grid grid-cols-3 justify-start gap-2 w-fit">
+                      <div className="size-10 bg-kit-gray-medium"></div>
+                      <div className="size-10 bg-kit-gray-medium"></div>
+                      <div className="size-10 bg-kit-gray-medium"></div>
+                    </div>
+                  </WorkshopPriceTitle>
+                }
+                right={
+                  <div className="grid grid-cols-[1fr_1fr_120px] items-center gap-1">
+                    <KitInputText
+                      type="number"
+                      value={qty}
+                      onChange={setQty}
+                      className="w-[120px]"
+                      valueTransform={(v) => v + ' x CHF 20'}
+                    />
+                    <KitSelect
+                      options={['S', 'M', 'L', 'XL'].map(size => ({ value: size, label: size }))}
+                      valueTransform={(v) => `Size: ${v}`}
+                    />
+                    <KitButton variant="white" className="w-full">Remove</KitButton>
+                  </div>
+                }
+              />
+            </div>
           </KitSectionContent>
         </KitPageSection>
 

@@ -14,18 +14,22 @@ export default function KitSelect({
   options,
   multiple = false,
   placeholder = 'Choose an option...',
+  valueTransform,
   ...props
 }: {
-  label: string;
+  label?: string;
   onChange?: (option: string) => void;
   options: SelectOption[];
   multiple?: boolean;
   placeholder?: string;
+  valueTransform?: (value: string | number) => string | number;
   [x: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
   const [selected, setSelected] = React.useState<SelectOption|SelectOption[]>();
 
   const multiselect = Array.isArray(selected) && multiple;
+
+  console.log('selected', valueTransform);
 
   React.useEffect(() => {
     if (onChange) {
@@ -39,7 +43,7 @@ export default function KitSelect({
 
   return (
     <label className="flex flex-col gap-1 text-kit-sm">
-      <span>{label}</span>
+      {label && <span>{label}</span>}
       <Listbox value={selected} onChange={setSelected} multiple={multiple}>
         {({ open }) => (
           <>
@@ -50,7 +54,7 @@ export default function KitSelect({
               {({ open }) => (
                 <button
                   type="button"
-                  className={`p-2 px-4 flex items-center gap-1
+                  className={`p-2 px-4 flex items-center gap-1 min-h-[40px]
                   transition-all duration-300 focus:outline-0 focus:ring-2 focus: ring-zurich ring-offset-2
                   hover:border-kit-gray-dark border-2
                   ${open ? 'border-b-transparent hover:border-b-transparent rounded-t-[25px] border-kit-gray-dark' : 'rounded-[40px]  border-kit-gray-medium'}`}

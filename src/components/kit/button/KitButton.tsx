@@ -63,7 +63,7 @@ export default function KitButton({
     <KitComponent
       is={as ? as : 'button'}
       {...(as ? {} : { type: 'button' })}
-      className={`rounded-[40px] h-fit w-max border-2 transition-all duration-300
+      className={`rounded-[40px] h-fit min-w-max border-2 transition-all duration-300
       focus:outline-0 focus:ring-2 focus: ring-zurich ring-offset-2 select-none
       [&:disabled]:cursor-not-allowed [&:disabled]:opacity-80 ${outer} ${className} ${busy ? 'pointer-events-none' : ''}`}
       {...props}

@@ -1,4 +1,5 @@
 import KitHero from "@/components/kit/KitHero";
+import { calculateDuration, getCurrentPricingPeriod } from "@/components/kit/utils/dateOperations";
 import WorkshopActionsSlot from "@/components/kit/workshop/WorkshopActionsSlot";
 import {WorkshopDetailsRow} from "@/components/kit/workshop/WorkshopDetailsRow";
 import WorkshopSpeakerCard from "@/components/kit/workshop/WorkshopSpeakerCard";
@@ -15,10 +16,9 @@ export default function WorkshopHero({
   durationString,
   maxSeats,
   seatsLeft,
-  discountPeriodTitle,
-  discountPeriodEndDate,
   speaker,
   rsvp,
+  pricing
 }: {
   title: string;
   description: string;
@@ -29,21 +29,22 @@ export default function WorkshopHero({
   durationString?: string;
   maxSeats: number;
   seatsLeft: number;
-  discountPeriodTitle?: string;
-  discountPeriodEndDate?: string; // YYYY-MM-DD
   speaker: Speaker
   rsvp: string;
+  pricing?: {
+    [key: string]: {
+      date: string; // YYYY-MM-DD
+      discount: number; // percentage discount, e.g. 20
+      time: string; // HH:MM
+      title: string; // e.g. "Early Bird"
+    }
+  };
 }) {
 
-  const duration = (() => {
-    if (durationString) return durationString;
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-    const diff = end.getTime() - start.getTime();
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours > 0 ? hours + 'h' : ''}${hours > 0 && minutes > 0 ? ' ' : ''}${minutes > 0 ? minutes + 'm' : ''}`;
-  })();
+  const computedPricing = getCurrentPricingPeriod(pricing, date, startTime);
+
+  const duration = durationString || calculateDuration(startTime, endTime);
+
   return (
     <KitHero
       title={title}
@@ -59,8 +60,9 @@ export default function WorkshopHero({
             duration={duration}
             maxSeats={maxSeats}
             seatsLeft={seatsLeft}
-            discountPeriodTitle={discountPeriodTitle}
-            discountPeriodEndDate={discountPeriodEndDate}
+            discountPeriodTitle={computedPricing.title}
+            discountPeriodEndDate={computedPricing.date}
+            discountPeriodEndTime={computedPricing.time}
           />
         ),
         actions: <WorkshopActionsSlot

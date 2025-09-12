@@ -80,6 +80,20 @@ export const getWorkshops = (): Workshop[] => {
       state: 'confirmed' as WorkshopState
     },
     {
+      id: 'react-architecture',
+      title: 'Real-World React: The Architectural Crash Course for Scalability, Resilience, and Observability (feat. Next.js)',
+      subtitle: 'Intensive crash course covering architecture, resilience, and scalability patterns',
+      description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering in a fast-paced, hands-on format.',
+      dateInfo: 'November 12, 2025',
+      timeInfo: '17:00 - 20:00',
+      locationInfo: 'Venue TBA, Zürich',
+      maxAttendees: 25,
+      iconColor: '#06b6d4', // cyan-500 (React-like color)
+      tag: '⚛️ React Architecture & Performance',
+      speakerId: 'faris-aziz',
+      state: 'confirmed' as WorkshopState
+    },
+    {
       id: 'ai-design-patterns-2026',
       title: 'Design Patterns For AI Interfaces In 2026',
       subtitle: 'Master AI UX Design & Build Better User Experiences',

@@ -11,6 +11,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const {
       name,
       email,
+      streetAndNumber,
+      postcode,
+      city,
+      country,
       ticketTitle,
       price,
       paymentMethod,
@@ -35,6 +39,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const notificationMessage = `
       Name: ${name}
       Email: ${email}
+      Address: ${streetAndNumber || 'Not provided'}
+      Postcode: ${postcode || 'Not provided'}
+      City: ${city || 'Not provided'}
+      Country: ${country || 'Not provided'}
       Ticket: ${ticketTitle}
       Price: CHF ${price}
       Payment Method: ${paymentMethodText}

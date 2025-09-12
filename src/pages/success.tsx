@@ -20,6 +20,10 @@ export default function SuccessPage() {
     ticket_type?: string;
     name?: string;
     email?: string;
+    streetAndNumber?: string;
+    postcode?: string;
+    city?: string;
+    country?: string;
     ticket?: string;
     price?: string;
     method?: string;
@@ -77,7 +81,8 @@ export default function SuccessPage() {
   // Extract values from payment data for easier access
   const {
     session_id, workshop_id, event_id, ticket_type,
-    name, email, ticket, price, method, type, coupon
+    name, email, streetAndNumber, postcode, city, country,
+    ticket, price, method, type, coupon
   } = paymentData;
   
   // Check if this is a manual payment flow
@@ -142,6 +147,10 @@ export default function SuccessPage() {
             body: JSON.stringify({
               name,
               email: userEmail,
+              streetAndNumber,
+              postcode,
+              city,
+              country,
               ticketTitle: ticket,
               price,
               paymentMethod: method,

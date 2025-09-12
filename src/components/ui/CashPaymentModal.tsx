@@ -32,6 +32,10 @@ export default function CashPaymentModal({
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [streetAndNumber, setStreetAndNumber] = useState('');
+  const [postcode, setPostcode] = useState('');
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
   const [agreeToPayment, setAgreeToPayment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +83,7 @@ export default function CashPaymentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !email || !agreeToPayment) {
+    if (!name || !email || !streetAndNumber || !postcode || !city || !country || !agreeToPayment) {
       setError('Please fill out all fields and agree to the payment obligation.');
       return;
     }
@@ -96,6 +100,10 @@ export default function CashPaymentModal({
         body: JSON.stringify({
           name,
           email,
+          streetAndNumber,
+          postcode,
+          city,
+          country,
           ticketTitle,
           price,
           userId: isSignedIn ? user?.id : undefined,
@@ -117,6 +125,10 @@ export default function CashPaymentModal({
       const paymentData = {
         name,
         email,
+        streetAndNumber,
+        postcode,
+        city,
+        country,
         ticket: ticketTitle,
         price: price.toString(),
         method: paymentMethod,
@@ -220,12 +232,11 @@ export default function CashPaymentModal({
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('cash')}
-                        className={`p-2 rounded-lg border flex flex-col items-center transition cursor-pointer hover:cursor-pointer !cursor-pointer ${
+                        className={`p-2 rounded-lg border flex flex-col items-center transition cursor-pointer ${
                           paymentMethod === 'cash'
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        style={{cursor: 'pointer'}}
                       >
                         <DollarSign className={`h-5 w-5 mb-1 ${paymentMethod === 'cash' ? 'text-green-600' : 'text-gray-500'}`} />
                         <span className={`text-xs font-medium ${paymentMethod === 'cash' ? 'text-green-800' : 'text-gray-700'}`}>Cash on Site</span>
@@ -237,12 +248,11 @@ export default function CashPaymentModal({
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('bank')}
-                        className={`p-2 rounded-lg border flex flex-col items-center transition cursor-pointer hover:cursor-pointer !cursor-pointer ${
+                        className={`p-2 rounded-lg border flex flex-col items-center transition cursor-pointer ${
                           paymentMethod === 'bank'
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        style={{cursor: 'pointer'}}
                       >
                         <CreditCard className={`h-5 w-5 mb-1 ${paymentMethod === 'bank' ? 'text-green-600' : 'text-gray-500'}`} />
                         <span className={`text-xs font-medium ${paymentMethod === 'bank' ? 'text-green-800' : 'text-gray-700'}`}>Bank Transfer</span>
@@ -285,6 +295,73 @@ export default function CashPaymentModal({
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
                         placeholder="Your email address"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Address Fields */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm text-gray-800">Billing Address</h4>
+                    
+                    <div>
+                      <label htmlFor="streetAndNumber" className="block text-xs font-medium text-gray-700 mb-1">
+                        Street & Number
+                      </label>
+                      <input
+                        type="text"
+                        id="streetAndNumber"
+                        value={streetAndNumber}
+                        onChange={(e) => setStreetAndNumber(e.target.value)}
+                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                        placeholder="e.g. Bahnhofstrasse 123"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label htmlFor="postcode" className="block text-xs font-medium text-gray-700 mb-1">
+                          Postcode
+                        </label>
+                        <input
+                          type="text"
+                          id="postcode"
+                          value={postcode}
+                          onChange={(e) => setPostcode(e.target.value)}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          placeholder="8001"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="city" className="block text-xs font-medium text-gray-700 mb-1">
+                          City
+                        </label>
+                        <input
+                          type="text"
+                          id="city"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          placeholder="Zurich"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="country" className="block text-xs font-medium text-gray-700 mb-1">
+                        Country
+                      </label>
+                      <input
+                        type="text"
+                        id="country"
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                        placeholder="Switzerland"
                         required
                       />
                     </div>

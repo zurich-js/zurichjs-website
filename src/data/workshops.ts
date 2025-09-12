@@ -83,7 +83,7 @@ export const getWorkshops = (): Workshop[] => {
       id: 'react-architecture',
       title: 'Real-World React: The Architectural Crash Course for Scalability, Resilience, and Observability (feat. Next.js)',
       subtitle: 'Intensive crash course covering architecture, resilience, and scalability patterns',
-      description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering in a fast-paced, hands-on format.',
+      description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering in a fast-paced, hands-on format. Previously delivered at CityJS Athens, ReactJS Day, and CityJS London with 5.0/5 rating.',
       dateInfo: 'November 12, 2025',
       timeInfo: '17:00 - 20:00',
       locationInfo: 'Venue TBA, Zürich',

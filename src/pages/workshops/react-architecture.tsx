@@ -950,6 +950,112 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                                 </div>
                             </motion.div>
 
+                            {/* Workshop Value Proposition */}
+                            <motion.div
+                                initial={{opacity: 0, y: 20}}
+                                whileInView={{opacity: 1, y: 0}}
+                                viewport={{once: true}}
+                                transition={{duration: 0.5, delay: 0.1}}
+                                className="mb-12"
+                            >
+                                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 lg:p-8">
+                                    <h3 className="text-2xl font-bold text-green-900 mb-6">
+                                        💰 Exceptional Value - Same Workshop, Half the Price
+                                    </h3>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                                        {/* Left side - Value Stats */}
+                                        <div className="lg:col-span-1">
+                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                <div className="text-center">
+                                                    <div className="text-3xl font-black text-green-700">50%</div>
+                                                    <div className="text-sm text-green-600 font-medium">Cheaper</div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="text-3xl font-black text-green-700">5.0</div>
+                                                    <div className="text-sm text-green-600 font-medium">Rating</div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <p className="text-sm text-green-800 font-medium">
+                                                    <span className="line-through text-gray-500">Conference: ~CHF 400</span>
+                                                </p>
+                                                <p className="text-lg text-green-900 font-bold">
+                                                    Here: CHF 195-250 ✨
+                                                </p>
+                                                <div className="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full inline-block">
+                                                    100% Would Recommend
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Right side - Real Attendee Testimonials */}
+                                        <div className="lg:col-span-2 space-y-4">
+                                            <div className="text-center lg:text-left mb-4">
+                                                <h4 className="text-lg font-bold text-green-900 mb-1">
+                                                    What Real Conference Attendees Said:
+                                                </h4>
+                                                <p className="text-xs text-green-700">
+                                                    From <strong>CityJS Athens</strong>, <strong>ReactJS Day</strong>, and <strong>CityJS London</strong>
+                                                </p>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
+                                                <div className="bg-white rounded-lg p-4 shadow-sm border border-green-100">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                                            M
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm text-gray-700 italic mb-2">
+                                                                &quot;To be honest it was the <strong>highlight of the conference</strong> for me. Very informative.&quot;
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="text-xs text-gray-500">ReactJS Day attendee</div>
+                                                                <div className="flex text-yellow-400 text-sm">★★★★★</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="bg-white rounded-lg p-4 shadow-sm border border-green-100">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                                            A
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm text-gray-700 italic mb-2">
+                                                                &quot;The tutor was <strong>fun, easy going</strong> and he knew his subject well.&quot;
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="text-xs text-gray-500">CityJS Athens attendee</div>
+                                                                <div className="flex text-yellow-400 text-sm">★★★★★</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="bg-white rounded-lg p-4 shadow-sm border border-green-100 md:col-span-2 lg:col-span-1 xl:col-span-2">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                                            D
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm text-gray-700 italic mb-2">
+                                                                &quot;The <strong>practical examples</strong> with a well thought repo&quot;
+                                                            </p>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="text-xs text-gray-500">CityJS London attendee</div>
+                                                                <div className="flex text-yellow-400 text-sm">★★★★★</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+
                             {/* What You'll Learn Grid */}
                             <motion.div
                                 initial={{opacity: 0, y: 20}}

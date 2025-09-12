@@ -39,7 +39,7 @@ export default function Section({
   id = ''
 }: SectionProps) {
   const baseStyles = 'w-full';
-  const containerStyles = 'container mx-auto px-6';
+  const containerStyles = 'container mx-auto px-6 max-w-[1440px]';
 
   if (animate) {
     return (

@@ -1,5 +1,8 @@
+
 import { motion } from 'framer-motion';
+import localFont from "next/font/local";
 import { useRouter } from 'next/router';
+import React from 'react';
 import { useState, useEffect } from 'react';
 
 import AnnouncementBanner from '../AnnouncementBanner';
@@ -8,15 +11,30 @@ import Button from '../ui/Button';
 import Footer from './Footer';
 import Header from './Header';
 
+const figtree = localFont({
+  src: [
+    {
+      path: '../../../public/Figtree-VariableFont_wght.ttf',
+      style: 'normal',
+    },
+    {
+      path: '../../../public/Figtree-Italic-VariableFont_wght.ttf',
+      style: 'italic',
+    }
+  ],
+})
+
 interface LayoutProps {
   children: React.ReactNode;
   hideSupportButton?: boolean;
 }
 
+
 export default function Layout({ children, hideSupportButton }: LayoutProps) {
   const router = useRouter();
+
   const [showSupportButton, setShowSupportButton] = useState(false);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       // Show button after scrolling 40px, but only if not hidden and not on admin pages
@@ -24,9 +42,9 @@ export default function Layout({ children, hideSupportButton }: LayoutProps) {
       const isAdminPage = router.pathname.startsWith('/admin');
       setShowSupportButton(scrollPosition > 40 && !hideSupportButton && !isAdminPage);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
-    
+
     // Clean up event listener
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -34,7 +52,7 @@ export default function Layout({ children, hideSupportButton }: LayoutProps) {
   }, [hideSupportButton, router.pathname]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-js to-js-dark">
+    <div className={`flex flex-col min-h-screen bg-white ${figtree.className}`}>
       <div className="sticky top-0 z-[60]">
         <AnnouncementBanner />
         <div className="relative bg-transparent">

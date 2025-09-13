@@ -102,6 +102,7 @@ export default function KitInputText({
     className = '',
     valueTransform,
     children,
+    disabled,
     ...props
 }: {
   label?: string;
@@ -113,6 +114,7 @@ export default function KitInputText({
   className?: string;
   valueTransform?: (value: string | number) => string | number;
   children?: React.ReactNode;
+  disabled?: boolean;
   [x: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
   // Use transformed component if valueTransform is provided
@@ -143,11 +145,13 @@ export default function KitInputText({
         placeholder={placeholder}
         className={
           `rounded-[40px] leading-6 p-2 px-4
-          border-2 border-kit-gray-medium hover:border-kit-gray-dark
+          border-2 border-kit-gray-medium
           transition-all duration-300 focus:outline-0 focus:ring-2
-          focus: ring-zurich ring-offset-2 placeholder:text-kit-gray
+          ring-offset-2 placeholder:text-kit-gray
+          ${disabled ? 'bg-kit-gray-light cursor-not-allowed' : 'hover:border-kit-gray-dark focus: ring-zurich'}
           ${className}`
         }
+        disabled={disabled}
         {...props}
       />
       {children}

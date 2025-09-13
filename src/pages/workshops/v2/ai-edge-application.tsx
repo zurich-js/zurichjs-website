@@ -87,7 +87,9 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
     couponDetails,
     isLoadingCoupon,
     couponError,
-    couponStatusText
+    couponStatusText,
+    isFreeWorkshop,
+    isSingleUseCoupon
   } = useCouponEnhanced({
     workshopId: 'ai-edge-application',
     workshopTitle: title
@@ -320,7 +322,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                     </WorkshopPriceTitle>
                   }
                   right={
-                    <div className="grid grid-cols-[1fr_120px] items-center gap-1">
+                    <div className="grid grid-cols-[1fr_120px] gap-1">
                       <div className="min-w-[200px] relative">
                         <KitInputText
                           value={couponCode}
@@ -355,12 +357,22 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                   </WorkshopPriceTitle>
                 }
                 right={
-                  <KitInputText
-                    type="number"
-                    value={qty}
-                    onChange={(e) => setQty(parseInt(e) || 1)}
-                    className="w-[120px]"
-                  />
+                  <div className="flex flex-col items-end gap-1">
+                    <KitInputText
+                      type="number"
+                      value={qty}
+                      min={1}
+                      max={10}
+                      onChange={(e) => setQty(parseInt(e) || 1)}
+                      className="w-[120px]"
+                      disabled={isFreeWorkshop && isSingleUseCoupon}
+                    />
+                    {isFreeWorkshop && isSingleUseCoupon && (
+                      <p className="text-kit-xs text-kit-green">
+                        Single-use coupon
+                      </p>
+                    )}
+                  </div>
                 }
               />
               <WorkshopPricingItemRow

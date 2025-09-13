@@ -1,3 +1,4 @@
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronUp } from 'lucide-react';
 import React from 'react';
@@ -75,16 +76,30 @@ export function WorkshopPricingRow({
 export function WorkshopPricingSubtotal({
   quantity,
   price,
+  isFree = false,
 }: {
   quantity: number;
   price: number;
+  isFree?: boolean;
 }) {
   return (
     <div className="grid grid-cols-[3fr_40px_80px_80px] gap-2.5 items-center text-kit-sm text-black">
       <p className="font-medium">Subtotal</p>
       <p className="text-right">{quantity}x</p>
-      <p className="text-right text-kit-base"><span className="text-kit-xs">CHF</span> { roundToNearestHalf(price) }</p>
-      <p className="text-right text-kit-base"><span className="text-kit-xs">CHF</span> { roundToNearestHalf(price * quantity) }</p>
+      <p className="text-right text-kit-base">
+        {isFree ? <span className="text-kit-green">FREE</span> : (
+          <>
+            <span className="text-kit-xs">CHF</span> { roundToNearestHalf(price) }
+          </>
+        )}
+      </p>
+      <p className="text-right text-kit-base">
+        {isFree ? <span className="text-kit-green">FREE</span> : (
+          <>
+            <span className="text-kit-xs">CHF</span> { roundToNearestHalf(price * quantity) }
+          </>
+        )}
+      </p>
     </div>
   )
 }
@@ -105,7 +120,9 @@ export function WorkshopPricingSection({
       return sum + (basePrice * (row.discount || 0) / 100);
     }, 0);
 
-    const finalPricePerItem = basePrice - totalDiscountAmount;
+    // Handle 100%+ discount - workshop becomes free
+    const finalPricePerItem = Math.max(0, basePrice - totalDiscountAmount);
+    const isFree = finalPricePerItem === 0 && totalDiscountAmount >= basePrice;
 
   return (
       <div className="flex flex-col gap-1">
@@ -141,7 +158,7 @@ export function WorkshopPricingSection({
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.2, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
         >
-          <WorkshopPricingSubtotal quantity={quantity} price={finalPricePerItem} />
+          <WorkshopPricingSubtotal quantity={quantity} price={finalPricePerItem} isFree={isFree} />
         </motion.div>
       </div>
   );
@@ -150,59 +167,67 @@ export function WorkshopPricingSection({
 export function WorkshopPricingSummary({
   sections,
 }: { sections: PricingSection[] }) {
-    const [isExpanded, setIsExpanded] = React.useState(false);
-    const onToggleExpanded = () => setIsExpanded(!isExpanded);
-
   return (
     <div className="bg-white border-2 pb-4 border-kit-gray-medium rounded-lg overflow-hidden">
-      {/* Summary Header */}
-      <div
-        className="relative flex items-center justify-between p-4 cursor-pointer group/control"
-        onClick={onToggleExpanded}
-      >
-        <div className="absolute pointer-events-none z-10 w-full top-0 -translate-y-full left-0 right-0 bottom-0 bg-gradient-to-b  from-kit-gray-light to-white group-hover/control:translate-y-0 transition-transform duration-300 ease-in-out" />
-        <h3 className="text-lg font-medium relative z-20">Summary</h3>
-        <ChevronUp size={20} className={`relative z-20 transition-transform duration-300 ease-in-out ${isExpanded ? 'rotate-0' : 'rotate-180'}`} />
-      </div>
+      <Disclosure>
+        {({ open }) => (
+          <>
+            {/* Summary Header */}
+            <DisclosureButton className="relative flex items-center justify-between p-4 cursor-pointer group/control focus:outline-0 focus:ring-2 focus:ring-zurich ring-offset-0 w-[calc(100%-4px)] mx-auto">
+              <div className="absolute pointer-events-none z-10 w-full top-0 -translate-y-full left-0 right-0 bottom-0 bg-gradient-to-b from-kit-gray-light to-white group-hover/control:translate-y-0 transition-transform duration-300 ease-in-out" />
+              <h3 className="text-lg font-medium relative z-20">Summary</h3>
+              <motion.div
+                className="relative z-20"
+                animate={{ rotate: open ? 0 : 180 }}
+                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              >
+                <ChevronUp size={20} />
+              </motion.div>
+            </DisclosureButton>
 
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{
-                duration: 0.4,
-                ease: [0.4, 0, 0.2, 1],
-                opacity: { duration: 0.2 }
-              }}
-              className="overflow-hidden"
-            >
-              <div className="p-4 space-y-6">
-                <AnimatePresence mode="popLayout">
-                  {sections.map((section, index) => {
-                    return (
-                      <motion.div
-                        key={`section-${section.header.title}-${index}`}
-                        initial={{ opacity: 0, y: 10, height: 0 }}
-                        animate={{ opacity: 1, y: 0, height: "auto" }}
-                        exit={{ opacity: 0, y: -10, height: 0 }}
-                        transition={{
-                          duration: 0.3,
-                          delay: index * 0.1,
-                          ease: [0.4, 0, 0.2, 1]
-                        }}
-                        className="overflow-hidden"
-                      >
-                        <WorkshopPricingSection section={section} />
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            <DisclosurePanel>
+              <AnimatePresence>
+                {open && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{
+                      duration: 0.4,
+                      ease: [0.4, 0, 0.2, 1],
+                      opacity: { duration: 0.2 }
+                    }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 space-y-6">
+                      <AnimatePresence mode="popLayout">
+                        {sections.map((section, index) => {
+                          return (
+                            <motion.div
+                              key={`section-${section.header.title}-${index}`}
+                              initial={{ opacity: 0, y: 10, height: 0 }}
+                              animate={{ opacity: 1, y: 0, height: "auto" }}
+                              exit={{ opacity: 0, y: -10, height: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                delay: index * 0.1,
+                                ease: [0.4, 0, 0.2, 1]
+                              }}
+                              className="overflow-hidden"
+                            >
+                              <WorkshopPricingSection section={section} />
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </DisclosurePanel>
+          </>
+        )}
+      </Disclosure>
     </div>
   );
 }
@@ -222,7 +247,8 @@ export function WorkshopPricingTotals({
         return sum + (basePrice * (row.discount || 0) / 100);
       }, 0);
 
-      const finalPricePerItem = basePrice - totalDiscountAmount;
+      // Handle 100%+ discount - workshop becomes free
+      const finalPricePerItem = Math.max(0, basePrice - totalDiscountAmount);
       return sectionSum + (finalPricePerItem * quantity);
     }, 0);
   })();
@@ -231,7 +257,11 @@ export function WorkshopPricingTotals({
     const totalWithoutDiscounts = sections.reduce((sum, section) => sum + (section.header.price * section.header.quantity), 0);
     return totalWithoutDiscounts - totalCost;
   })();
-  const totalDiscountPercent = roundToNearestHalf(((totalSavings / (totalCost + totalSavings)) * 100));
+
+  // Handle division by zero when workshop is free
+  const totalDiscountPercent = totalSavings > 0 && (totalCost + totalSavings) > 0
+    ? roundToNearestHalf(((totalSavings / (totalCost + totalSavings)) * 100))
+    : 0;
 
   const items = sections.map((section) => `${section.header.quantity} ${section.header.title}`)
 
@@ -271,18 +301,26 @@ export function WorkshopPricingTotals({
             transition={{ duration: 0.4, delay: 0.1, ease: [0.4, 0, 0.2, 1] }}
             key={totalCost} // Re-animate when total changes
           >
-            <span className="text-kit-xl">CHF </span>
-            {roundToNearestHalf(totalCost)}
+            {totalCost === 0 ? (
+              <span className="text-kit-green">FREE</span>
+            ) : (
+              <>
+                <span className="text-kit-xl">CHF </span>
+                {roundToNearestHalf(totalCost)}
+              </>
+            )}
           </motion.p>
-          <motion.p
-            className="text-kit-green text-kit-md text-right"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-            key={totalDiscountPercent} // Re-animate when discount changes
-          >
-            <b>{totalDiscountPercent}%</b> discount, saving CHF <b>{roundToNearestHalf(totalSavings)}</b>
-          </motion.p>
+          {totalCost !== 0 && (
+            <motion.p
+              className="text-kit-green text-kit-md text-right"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              key={totalDiscountPercent}
+            >
+              <b>{totalDiscountPercent}%</b> discount, saving CHF <b>{roundToNearestHalf(totalSavings)}</b>
+            </motion.p>
+          )}
         </div>
       </div>
       <motion.div

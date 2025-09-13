@@ -18,6 +18,9 @@ interface CouponDetails {
   currency: string | null;
   name: string | null;
   isValid: boolean;
+  maxRedemptions: number | null;
+  timesRedeemed: number;
+  isFullyRedeemed: boolean;
 }
 
 interface UseCouponEnhancedReturn {
@@ -36,6 +39,8 @@ interface UseCouponEnhancedReturn {
   couponError: string | null;
   isCommunityCoupon: boolean;
   couponStatusText: string;
+  isFreeWorkshop: boolean;
+  isSingleUseCoupon: boolean;
 }
 
 export function useCouponEnhanced({
@@ -194,6 +199,10 @@ export function useCouponEnhanced({
     }
   };
 
+  // Check if workshop is free due to coupon
+  const isFreeWorkshop = couponDetails?.percentOff === 100 || couponDetails?.amountOff === 10000; // 10000 cents = 100 CHF
+  const isSingleUseCoupon = couponDetails?.maxRedemptions === 1;
+
   return {
     couponCode,
     setCouponCode,
@@ -209,6 +218,8 @@ export function useCouponEnhanced({
     isLoadingCoupon,
     couponError,
     isCommunityCoupon,
-    couponStatusText
+    couponStatusText,
+    isFreeWorkshop,
+    isSingleUseCoupon
   };
 }

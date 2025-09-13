@@ -3,6 +3,7 @@ import Image from "next/image";
 import React, {useEffect, useState} from "react";
 
 import KitButton from "@/components/kit/button/KitButton";
+import {SBBButton} from "@/components/kit/button/SBBButton";
 import KitCopyableText from "@/components/kit/KitCopyableText";
 
 function GoogleMapsButton({ link, ...props }: { link: string}) {
@@ -35,28 +36,6 @@ function GoogleMapsButton({ link, ...props }: { link: string}) {
       {...props}
     >
       View on Google Maps
-    </KitButton>
-  )
-}
-
-export function SBBButton({ link }: { link: string}) {
-  return (
-    <KitButton
-      customIcon={(
-        <div className="bg-[#EC0001] rounded-full flex items-center justify-center h-full aspect-square p-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="14" viewBox="0 0 24 14" fill="none">
-            <path d="M6 13.0132H9.4875L4.8 8.39056H10.6125V13.0132H13.3875V8.39056H19.2375L14.5125 13.0132H18L24 7L18.0375 0.986755H14.55L19.2375 5.60944H13.3875V0.986755H10.6125V5.60944H4.8L9.4875 0.986755H6L0 7L6 13.0132Z" fill="white"/>
-          </svg>
-        </div>
-      )}
-      tight={true}
-      variant="black"
-      as={'a' as React.ElementType}
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      Getting there from Zurich HB
     </KitButton>
   )
 }

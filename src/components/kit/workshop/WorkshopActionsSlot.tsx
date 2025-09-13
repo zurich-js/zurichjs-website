@@ -1,14 +1,17 @@
 import {Plus, Share2} from "lucide-react";
 
 import KitButton from "@/components/kit/button/KitButton";
+import KitPill from "@/components/kit/KitPill";
 
 
 export default function WorkshopActionsSlot({
   rsvp,
-  wishlist
+  wishlist,
+  totalDiscountPc
 }: {
   rsvp?: string;
   wishlist?: string;
+  totalDiscountPc: number;
 }) {
   function onShare() {
     if (navigator.share) {
@@ -29,9 +32,12 @@ export default function WorkshopActionsSlot({
       <KitButton
         as="a"
         variant="black"
-        className="flex-1 text-center"
+        className="flex-1 text-center relative"
         {...(rsvp ? { href: `#${rsvp}` } : { disabled: true })}
       >
+        <KitPill color="orange" className="absolute -top-2 -right-2">
+          {totalDiscountPc}% off
+        </KitPill>
         Grab a seat
       </KitButton>
       <KitButton

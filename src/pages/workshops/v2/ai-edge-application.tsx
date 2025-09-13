@@ -1,4 +1,5 @@
-import {Brain, CloudCog, Database, Atom} from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import {Brain, CloudCog, Database, Atom, Check, Plus} from "lucide-react";
 import React from "react";
 
 import KitButton from "@/components/kit/button/KitButton";
@@ -12,16 +13,32 @@ import KitSectionContent from "@/components/kit/KitSectionContent";
 import KitSectionTitle from "@/components/kit/KitSectionTitle";
 import KitSelect from "@/components/kit/KitSelect";
 import {getCurrentPricingPeriod, PricingConfig} from "@/components/kit/utils/dateOperations";
+import {calculateTotalDiscount, calculateCouponDiscount} from "@/components/kit/utils/discountOperations";
 import {makeSlug} from "@/components/kit/utils/makeSlug";
 import WorkshopHero from "@/components/kit/workshop/WorkshopHero";
 import WorkshopPricingExpiration from "@/components/kit/workshop/WorkshopPricingExpiration";
 import WorkshopPricingItemRow from "@/components/kit/workshop/WorkshopPricingItemRow";
 import WorkshopPriceTitle from "@/components/kit/workshop/WorkshopPricingItemTitle";
+import {WorkshopPricingSummary, WorkshopPricingTotals} from "@/components/kit/workshop/WorkshopPricingSummary";
 import WorkshopVenueInfo from "@/components/kit/workshop/WorkshopVenueInfo";
 import PageLayout from '@/components/layout/Layout';
 import CancelledCheckout from "@/components/workshop/CancelledCheckout";
+import { useCouponEnhanced } from "@/hooks/useCouponEnhanced";
 import {getSpeakerById} from "@/sanity/queries";
 import {Speaker} from "@/types";
+
+const WORKSHOP_PRICE = 125;
+const EARLY_BIRD_DISCOUNT = 20;
+const STANDARD_DISCOUNT = 10;
+
+const GROUP_DISCOUNT = 10;
+const GROUP_DISCOUNT_5PLUS = 20;
+
+const TSHIRT_DISCOUNT = 20;
+const TSHIRT_PRICE = 25;
+const TSHIRT_BUNDLE_DISCOUNT = 10;
+const TSHIRT_BUNDLE_DISCOUNT_3PLUS = 15;
+const TSHIRT_QTY_DISCOUNT = 10;
 
 
 const title = "Building a Full-Stack AI Application on the Edge"
@@ -35,30 +52,46 @@ const preSectionMap = {
 }
 
 const pricing: PricingConfig = {
-    early: { date: '2025-09-15', discount: 24, time: '23:59', title: 'Early bird', isOffer: true },
-    standard: { date: '2025-10-14', discount: 10, time: '23:59', title: 'Standard' },
-    late: { date: '2025-11-12', discount: 0, time: '17:59', title: 'Last minute' },
+  early: { date: '2025-09-15', discount: EARLY_BIRD_DISCOUNT, time: '23:59', title: 'Early bird', isOffer: true },
+  standard: { date: '2025-10-14', discount: STANDARD_DISCOUNT, time: '23:59', title: 'Standard' },
+  late: { date: '2025-11-12', discount: 0, time: '17:59', title: 'Last minute' },
 }
 
 const sections: Record<string, { title: string, slug: string }> = Object.fromEntries(
   Object.entries(preSectionMap).map(([key, title]) => [key, { title, slug: makeSlug(title) }])
 )
 
-
+const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
 
 export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
+  const { user } = useUser();
   const harshil = {
     ...speaker,
     company: 'Cloudflare Inc.',
     companyLogo: 'https://cf-assets.www.cloudflare.com/dzlvafdwdttg/69wNwfiY5mFmgpd9eQFW6j/d5131c08085a977aa70f19e7aada3fa9/1pixel-down__1_.svg',
   }
 
-  const [coupon, setCoupon] = React.useState('zurichjs-community');
-  const [qty, setQty] = React.useState('1');
+  const [qty, setQty] = React.useState(1);
   const [tshirts, setTshirts] = React.useState<{ size: string; qty: number }[]>([]);
-  const sizes = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
   const firstTshirtSizeThatIsntAddedYet = sizes.find(size => !tshirts.find(t => t.size === size)) || 'S';
+
+  // Use coupon hook
+  const {
+    couponCode,
+    setCouponCode,
+    applyCoupon,
+    isCouponApplied,
+    isCouponCodeValid,
+    handleKeyPress,
+    couponDetails,
+    isLoadingCoupon,
+    couponError,
+    couponStatusText
+  } = useCouponEnhanced({
+    workshopId: 'ai-edge-application',
+    workshopTitle: title
+  });
 
   // Memoized handlers to prevent re-renders
   const handleTshirtQtyChange = React.useCallback((index: number) => (v: string) => {
@@ -85,7 +118,68 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
       .map(size => ({ value: size, label: size }));
   }, [tshirts]);
 
-  const currentPricingTier = getCurrentPricingPeriod(pricing, '2025-11-12', '17:59');
+  const totalTshirtQuantity = tshirts.reduce((sum, t) => sum + t.qty, 0);
+
+  const currentPricingTier = React.useMemo(()=> getCurrentPricingPeriod(pricing, '2025-11-12', '17:59'), [pricing]);
+  const couponDiscountInfo = calculateCouponDiscount(couponDetails);
+  const totalDiscountInfo = React.useMemo(() => calculateTotalDiscount(
+    WORKSHOP_PRICE,
+    currentPricingTier,
+    couponDetails,
+    isCouponApplied
+  ), [currentPricingTier, couponDetails, isCouponApplied]);
+
+
+  const pricingSections = [
+    {
+      header: {
+        title: "Workshop tickets",
+        quantity: qty,
+        price: WORKSHOP_PRICE
+      },
+      discounts: [
+        ...(currentPricingTier.discount > 0 ? [{
+          title: currentPricingTier.title,
+          quantity: qty,
+          discount: currentPricingTier.discount
+        }] : []),
+        ...(couponDiscountInfo.percent && couponDiscountInfo.percent > 0 ? [{
+          title: "Voucher",
+          quantity: qty,
+          discount: couponDiscountInfo.percent
+        }] : []),
+        ...(qty > 1 ? [{
+          title: "Group",
+          quantity: qty,
+          discount: qty >= 5 ? GROUP_DISCOUNT_5PLUS : GROUP_DISCOUNT
+        }] : [])
+      ]
+    },
+    ...(tshirts.length > 0 ? [{
+      header: {
+        title: "T-Shirts",
+        quantity: totalTshirtQuantity,
+        price: TSHIRT_PRICE
+      },
+      discounts: [
+        {
+          title: "Workshop bundle",
+          quantity: totalTshirtQuantity,
+          discount: TSHIRT_BUNDLE_DISCOUNT
+        },
+        ...(couponDiscountInfo.percent && couponDiscountInfo.percent > 0 ? [{
+          title: "Voucher",
+          quantity: totalTshirtQuantity,
+          discount: couponDiscountInfo.percent
+        }] : []),
+        ...(totalTshirtQuantity > 1 ? [{
+          title: "Quantity",
+          quantity: totalTshirtQuantity,
+          discount: totalTshirtQuantity >= 3 ? TSHIRT_BUNDLE_DISCOUNT_3PLUS : TSHIRT_QTY_DISCOUNT
+        }] : [])
+      ]
+    }] : [])
+  ]
 
   return (
     <PageLayout>
@@ -102,6 +196,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
         speaker={harshil}
         rsvp={sections.price.slug}
         pricing={pricing}
+        totalDiscountPc={totalDiscountInfo.percent}
       />
 
       <KitPageContent toc={sections} title={title}>
@@ -123,7 +218,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
 
         <KitPageSection id={sections.learn.slug} layout="section">
           <KitSectionTitle>
-            What you&#39;ll learn
+            {sections.learn.title}
             <a href="" className="text-kit-sm text-zurich block mt-2 underline hover:opacity-70 w-fit">See full syllabus</a>
           </KitSectionTitle>
           <KitSectionContent>
@@ -146,11 +241,13 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
 
         <KitPageSection id={sections.faq.slug} layout="section">
           <KitSectionTitle>
-            Frequently asked qestions
+            {sections.faq.title}
           </KitSectionTitle>
           <KitSectionContent>
             <KitAccordion>
-              <KitAccordionItem title="Are there group discounts? I could bring a friend..." content="content" />
+              <KitAccordionItem title="Are there group discounts? I could bring a friend...">
+                For groups of 2 or more, we offer an additional discount of {GROUP_DISCOUNT}% on each ticket. For groups of 5 or more, the discount increases to {GROUP_DISCOUNT_5PLUS}% per ticket.
+              </KitAccordionItem>
               <KitAccordionItem title="Can I get a discount if I'm unemployed?">
                 <p className="mb-1">We hold a strong belief: <b><i>Never let finances be a blocker to learning</i></b></p>
                 <p>We know everyone’s situation is different, so if you ever want to join one of our paid events but the cost is a challenge, reach out to us.
@@ -190,9 +287,9 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
 
         <KitPageSection id={sections.price.slug} layout="section">
           <KitSectionTitle>
-            Pricing and Registration
+            {sections.price.title}
           </KitSectionTitle>
-          <KitSectionContent>
+          <KitSectionContent className="space-y-8 pt-4">
             <CancelledCheckout
               workshopId="ai-edge-application"
               workshopTitle={title}
@@ -213,16 +310,43 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                   }
                 />
               )}
-              <WorkshopPricingItemRow
-                left={<WorkshopPriceTitle title="Discount code" discount={20}>
-                  Auto-applied
-                </WorkshopPriceTitle>}
-                right={
-                  <div className="grid grid-cols-[1fr_120px] items-center gap-1">
-                    <KitInputText value={coupon} onChange={setCoupon} className="min-w-[200px]" />
-                    <KitButton variant="white" className="w-full">Apply code</KitButton>
-                  </div>
-                }
+                <WorkshopPricingItemRow
+                  left={
+                     <WorkshopPriceTitle
+                       title="Voucher"
+                       discount={couponDiscountInfo.percent || undefined}
+                     >
+                      {couponStatusText || (user ? '' : 'Sign in for community discount')}
+                    </WorkshopPriceTitle>
+                  }
+                  right={
+                    <div className="grid grid-cols-[1fr_120px] items-center gap-1">
+                      <div className="min-w-[200px] relative">
+                        <KitInputText
+                          value={couponCode}
+                          onChange={setCouponCode}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Enter coupon code..."
+                          className="w-full"
+                          extra={couponError && (
+                              <div className="text-red-500 text-xs mt-1">{couponError}</div>
+                          )}
+                        >
+                          {isCouponApplied && isCouponCodeValid && (
+                            <Check size={16} className="absolute z-20 pointer-events-none right-3 top-3.5 text-green-500" style={{ opacity: isCouponApplied ? 1 : 0 }} />
+                          )}
+                        </KitInputText>
+                      </div>
+                      <KitButton
+                        variant="white"
+                        className="w-full"
+                        onClick={applyCoupon}
+                        disabled={!isCouponCodeValid || isLoadingCoupon}
+                      >
+                        {isLoadingCoupon ? '...' : 'Apply code'}
+                      </KitButton>
+                    </div>
+                  }
               />
               <WorkshopPricingItemRow
                 left={
@@ -231,7 +355,12 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                   </WorkshopPriceTitle>
                 }
                 right={
-                  <KitInputText type="number" value={qty} onChange={setQty} className="w-[120px]" />
+                  <KitInputText
+                    type="number"
+                    value={qty}
+                    onChange={(e) => setQty(parseInt(e) || 1)}
+                    className="w-[120px]"
+                  />
                 }
               />
               <WorkshopPricingItemRow
@@ -241,29 +370,29 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                     className="list-disc list-inside text-kit-sm"
                     listStyle="check"
                     items={[
-                        '2.5 hours of hands-on training',
-                        'In-person Q&A with Cloudflare expert',
-                        'Snacks an Refreshments',
-                        'Workshop materials'
+                      '2.5 hours of hands-on training',
+                      'In-person Q&A with Cloudflare expert',
+                      'Snacks an Refreshments',
+                      'Workshop materials'
                     ]}
                   />
                 </WorkshopPriceTitle>}
               />
               <WorkshopPricingItemRow
                 left={
-                  <WorkshopPriceTitle title="Want to represent?" discount={20}>
+                  <WorkshopPriceTitle title="Want to represent?" discount={TSHIRT_DISCOUNT}>
                     <p>
                       Throw in a discounted T-shirt
                     </p>
                     <div className="mt-2 grid grid-cols-3 justify-start gap-2 w-fit">
-                      <div className="size-10 bg-kit-gray-medium"></div>
-                      <div className="size-10 bg-kit-gray-medium"></div>
-                      <div className="size-10 bg-kit-gray-medium"></div>
+                      <div className="size-10 bg-kit-gray-medium rounded-md"></div>
+                      <div className="size-10 bg-kit-gray-medium rounded-md"></div>
+                      <div className="size-10 bg-kit-gray-medium rounded-md"></div>
                     </div>
                   </WorkshopPriceTitle>
                 }
                 right={
-                  <>
+                  <div className="space-y-1">
                     {tshirts.map((tshirt, index) => (
                       <div className="grid grid-cols-[1fr_1fr_120px] gap-1" key={`tshirt-${index}`}>
                         <KitInputText
@@ -271,7 +400,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                           value={tshirt.qty}
                           onChange={handleTshirtQtyChange(index)}
                           className="w-[120px]"
-                          valueTransform={(v) => v + ' x CHF 20'}
+                          valueTransform={(v) => v + ` x CHF ${TSHIRT_PRICE * ((100 - TSHIRT_DISCOUNT)/100)}`}
                         />
                         <KitSelect
                           defaultValue={{ value: tshirt.size, label: tshirt.size }}
@@ -289,24 +418,30 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
                       </div>
                     ))}
                     {!!firstTshirtSizeThatIsntAddedYet &&
-                      <KitButton
-                        variant="white"
-                        className="w-full mt-1"
-                        onClick={() => setTshirts(p => [...p, { size: firstTshirtSizeThatIsntAddedYet, qty: 1}])}
-                      >
-                        Add {!!tshirts.length ? ' another' : ''}
-                      </KitButton>
+                      <div className="flex justify-end">
+                        <KitButton
+                          variant="ghost"
+                          onClick={() => setTshirts(p => [...p, { size: firstTshirtSizeThatIsntAddedYet, qty: 1}])}
+                          lucideIcon={Plus}
+                        >
+                          Add {!!tshirts.length ? ' another' : ''}
+                        </KitButton>
+                      </div>
                     }
-                  </>
+                  </div>
                 }
               />
+            </div>
+            <div className="overflow-hidden">
+              <WorkshopPricingSummary sections={pricingSections} />
+              <WorkshopPricingTotals sections={pricingSections} />
             </div>
           </KitSectionContent>
         </KitPageSection>
 
         <KitPageSection id={sections.venue.slug} layout="section">
           <KitSectionTitle>
-            Venue info
+            {sections.venue.title}
           </KitSectionTitle>
           <KitSectionContent>
             <WorkshopVenueInfo
@@ -321,7 +456,7 @@ export default function AiEdgeApplication({ speaker }: { speaker: Speaker }) {
 
         <KitPageSection id={sections.others.slug} layout="full">
           <KitSectionTitle>
-            Can&#39;t make it?
+            {sections.others.title}
             <p className="text-kit-sm mt-1">Check out our other events</p>
           </KitSectionTitle>
         </KitPageSection>

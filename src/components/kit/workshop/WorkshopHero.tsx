@@ -18,7 +18,8 @@ export default function WorkshopHero({
   seatsLeft,
   speaker,
   rsvp,
-  pricing
+  pricing,
+  totalDiscountPc
 }: {
   title: string;
   description: string;
@@ -39,6 +40,7 @@ export default function WorkshopHero({
       title: string; // e.g. "Early Bird"
     }
   };
+  totalDiscountPc: number;
 }) {
 
   const computedPricing = getCurrentPricingPeriod(pricing, date, startTime);
@@ -67,6 +69,7 @@ export default function WorkshopHero({
         ),
         actions: <WorkshopActionsSlot
           rsvp={rsvp}
+          totalDiscountPc={totalDiscountPc}
         />,
         card: (
           <WorkshopSpeakerCard speaker={speaker} />

@@ -14,7 +14,7 @@ function KitInputTextTransformed({
   label?: string;
   value?: string | number;
   type?: 'text' | 'email' | 'password' | 'number';
-  extra?: string;
+  extra?: string | React.ReactNode;
   onChange?: (value: string) => void;
   placeholder?: string;
   className?: string;
@@ -101,16 +101,18 @@ export default function KitInputText({
     extra,
     className = '',
     valueTransform,
+    children,
     ...props
 }: {
   label?: string;
   value?: string | number;
   type?: 'text' | 'email' | 'password' | 'number';
-  extra?: string;
+  extra?: string | React.ReactNode;
   onChange?: (value: string) => void;
   placeholder?: string;
   className?: string;
   valueTransform?: (value: string | number) => string | number;
+  children?: React.ReactNode;
   [x: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 }) {
   // Use transformed component if valueTransform is provided
@@ -148,6 +150,7 @@ export default function KitInputText({
         }
         {...props}
       />
+      {children}
       {extra && <span className="text-kit-xs text-kit-gray-dark">{extra}</span>}
     </label>
   )

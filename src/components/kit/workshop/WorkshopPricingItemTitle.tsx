@@ -8,14 +8,14 @@ export default function WorkshopPricingItemTitle({
   children
 }: {
   title: string;
-  discount?: number;
+  discount?: number | string;
   children: React.ReactNode;
 }) {
 
-  const numberDiscount = (() => {
+  const displayDiscount = (() => {
     if (!discount) return null
-    if (discount < 1) {
-      return '-' + discount * 100 + '%'
+    if (typeof discount === 'string') {
+      return discount
     }
     return '-' + discount + '%'
   })()
@@ -26,7 +26,7 @@ export default function WorkshopPricingItemTitle({
         {title}
         {discount && (
           <KitPill color="green" className="inline-block ml-1 -translate-y-0.5">
-            {numberDiscount}
+            {displayDiscount}
           </KitPill>
         )}
       </h3>

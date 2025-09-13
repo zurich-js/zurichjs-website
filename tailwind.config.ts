@@ -32,6 +32,7 @@ const config: Config = {
         'kit-md': ['1.125rem', '130%'], // 18px
         'kit-lg': ['1.5rem', '110%'], // 24px
         'kit-xl': ['2rem', '110%'], // 32px
+        'kit-2xl': ['3rem', '110%'], // 48px
         'kit-huge': ['4.5rem', '110%'], // 72px
       },
       screens: {
@@ -39,7 +40,7 @@ const config: Config = {
       },
       minWidth: {
         'screen-xs': "400px",
-      }
+      },
     },
   },
   plugins: [

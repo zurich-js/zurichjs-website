@@ -17,7 +17,7 @@ export default function KitButton({
   tight?: boolean;
   lucideIcon?: LucideIcon;
   customIcon?: React.ReactNode;
-  variant?: 'white' | 'black';
+  variant?: 'white' | 'black' | 'ghost' | 'custom';
   children?: React.ReactNode;
   className?: string;
   as?: React.ElementType;
@@ -35,7 +35,7 @@ export default function KitButton({
   let outer = '';
   let inner = '';
   if (tight) {
-    outer = outerForTight;
+    outer = outerForTight + ' ';
     if ((!!lucideIcon || !!customIcon) && !!children) {
       inner = innerForTightWithIconAndChildren;
     }
@@ -55,8 +55,12 @@ export default function KitButton({
   }
 
   outer += variant === 'white'
-    ? ' bg-kit-gray-light text-black border-kit-gray-medium hover:bg-white hover:border-black focus:bg-white focus:border-black'
-    : ' bg-black text-white border-black hover:bg-white hover:text-black hover:border-black hover:shadow-lg hover:shadow-white focus:bg-white focus:text-black focus:border-black';
+    ? 'bg-kit-gray-light text-black border-kit-gray-medium hover:bg-white hover:border-black focus:bg-white focus:border-black'
+    : variant === 'black'
+      ? 'bg-black text-white border-black hover:bg-white hover:text-black hover:border-black hover:shadow-lg hover:shadow-white focus:bg-white focus:text-black focus:border-black'
+      : variant === 'ghost'
+        ? 'bg-transparent text-black border-transparent hover:bg-white hover:border-black focus:bg-white focus:border-black'
+        : '';
 
 
   return (

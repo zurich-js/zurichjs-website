@@ -1,5 +1,6 @@
 import {motion} from "framer-motion";
 import { Linkedin, Users, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from 'next/link';
 import { useState, useEffect } from "react";
 
@@ -190,6 +191,20 @@ export default function LandingHero({
                         >
                             Submit a talk
                         </Button>
+                        <a
+                            href="https://donate.raisenow.io/qnnqt"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-3 bg-black text-white px-6 py-3 rounded-lg font-semibold transform hover:scale-105 transition-transform hover:bg-gray-800"
+                        >
+                            <Image
+                                src="/images/twint-logo.webp"
+                                alt="TWINT"
+                                width={36}
+                                height={36}
+                            />
+                            Donate with TWINT
+                        </a>
                     </div>
 
                     {/* Social Media Links */}

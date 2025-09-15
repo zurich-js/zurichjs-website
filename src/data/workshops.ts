@@ -71,7 +71,7 @@ export const getWorkshops = (): Workshop[] => {
       description: 'Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application.',
       dateInfo: 'October 28, 2025',
       timeInfo: '16:00 - 18:00',
-      locationInfo: 'Venue TBA, Zürich',
+      locationInfo: 'Smallpdf AG, Zürich',
       maxAttendees: 25,
       image: '/images/workshops/observability-dynatrace.png',
       iconColor: '#f97316', // orange-500

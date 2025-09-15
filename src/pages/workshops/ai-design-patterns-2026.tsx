@@ -24,14 +24,14 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
     const earlyBirdEnd = new Date('2025-12-01');
     const lateBirdStart = new Date('2026-03-01');
     const workshopDate = new Date('2026-03-23');
-    
+
     // Calculate early bird seats remaining
     const soldTickets = 30 - seatsRemaining; // Note: This should use totalSeats from parent component
     const earlyBirdSoldOut = soldTickets >= 10;
-    
+
     const milestones = [
-        { 
-            name: 'Early Bird Pricing', 
+        {
+            name: 'Early Bird Pricing',
             date: 'First 10 seats OR until Dec 1st, 2025',
             price: 'CHF 525',
             endDate: earlyBirdEnd,
@@ -41,8 +41,8 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             icon: '🐦',
             extraInfo: !earlyBirdSoldOut && now < earlyBirdEnd ? `${Math.max(0, 10 - soldTickets)} early bird seats left` : null
         },
-        { 
-            name: 'Standard Pricing', 
+        {
+            name: 'Standard Pricing',
             date: 'Dec 1st, 2025 - Mar 1st, 2026',
             price: 'CHF 595',
             endDate: lateBirdStart,
@@ -51,8 +51,8 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             bgColor: 'bg-blue-50',
             icon: '💼'
         },
-        { 
-            name: 'Late Bird Pricing', 
+        {
+            name: 'Late Bird Pricing',
             date: 'Mar 1st - Mar 23rd, 2026',
             price: 'CHF 625',
             endDate: workshopDate,
@@ -61,8 +61,8 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             bgColor: 'bg-orange-50',
             icon: '⚡'
         },
-        { 
-            name: 'Workshop Day', 
+        {
+            name: 'Workshop Day',
             date: 'March 23rd, 2026',
             price: '09:00 - 17:00',
             endDate: workshopDate,
@@ -72,27 +72,27 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             icon: '🎯'
         }
     ];
-    
+
     const getCurrentMilestone = () => {
         if (now < earlyBirdEnd && !earlyBirdSoldOut) return 0;
         if (now < lateBirdStart) return 1;
         if (now < workshopDate) return 2;
         return 3;
     };
-    
+
     const currentMilestone = getCurrentMilestone();
-    
+
     return (
         <div className="mb-12">
             <h3 className="text-2xl font-bold text-black mb-6 text-center">Timeline & Pricing</h3>
             <div className="relative">
                 {/* Main timeline line */}
                 <div className="absolute top-8 left-4 right-4 h-1 bg-gray-200 rounded-full"></div>
-                <div 
+                <div
                     className="absolute top-8 left-4 h-1 bg-zurich rounded-full transition-all duration-1000"
                     style={{ width: `${(currentMilestone / (milestones.length - 1)) * 100}%` }}
                 ></div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {milestones.map((milestone, index) => (
                         <div key={milestone.name} className="relative">
@@ -106,7 +106,7 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
                                     {milestone.icon}
                                 </div>
                             </div>
-                            
+
                             {/* Milestone card */}
                             <div className={`${milestone.bgColor} rounded-xl p-4 border-2 ${
                                 index === currentMilestone 
@@ -197,15 +197,15 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
       const now = new Date().getTime();
       const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
       const workshopStart = new Date('2026-03-23T09:00:00').getTime();
-      
+
       // Calculate sold tickets and early bird seats left
       const totalSeats = 30;
       const soldTickets = totalSeats - seatsRemaining;
       const earlyBirdSoldOut = soldTickets >= 10;
-      
+
       // Determine which countdown to show
       let targetTime;
-      
+
       if (!earlyBirdSoldOut && now < earlyBirdEnd) {
         // Show early bird countdown
         targetTime = earlyBirdEnd;
@@ -213,9 +213,9 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
         // Show workshop countdown
         targetTime = workshopStart;
       }
-      
+
       const difference = targetTime - now;
-      
+
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -238,16 +238,16 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   const now = new Date().getTime();
   const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
   const workshopStart = new Date('2026-03-23T09:00:00').getTime();
-  
+
   const totalSeats = 30;
   const soldTickets = totalSeats - seatsRemaining;
   const earlyBirdSoldOut = soldTickets >= 10;
-  
+
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
-  
+
   // Determine countdown label
-  const countdownLabel = !earlyBirdSoldOut && now < earlyBirdEnd 
-    ? "Early Bird Ends In:" 
+  const countdownLabel = !earlyBirdSoldOut && now < earlyBirdEnd
+    ? "Early Bird Ends In:"
     : "Workshop Starts In:";
 
   if (isExpired && now >= workshopStart) {
@@ -285,7 +285,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
     const { track } = useEvents();
     const router = useRouter();
     const { canceled, coupon } = router.query;
-    
+
     // Authentication and discount system
     const { isSignedIn, startCheckout } = useAuthenticatedCheckout({
         onError: (error) => {
@@ -293,14 +293,14 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
         },
     });
     const { couponCode, couponData } = useCoupon();
-    
+
     // Determine discount status
     const hasCoupon = couponData && couponData.isValid;
     const communityDiscount = isSignedIn && !hasCoupon;
-    
+
     // FAQ accordion state
     const [openFaq, setOpenFaq] = useState<string | null>(null);
-    
+
 
     // Workshop data
     const workshop: WorkshopDetails = {
@@ -311,7 +311,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
         timeInfo: "09:00 - 17:00 (8 hours, lunch included)",
         locationInfo: "Venue TBA, Zürich",
         price: "525 CHF (Early Bird) / 595 CHF / 625 CHF (Late Bird)",
-        description: "As product teams race to include AI in their products, they too often rely on good old-fashioned patterns like an assistant or chatbot. However, this experience is often painfully slow, responses are generic, and users have to meticulously explain to AI what they need — over and over. In this full-day workshop with Vitaly Friedman, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, we'll explore brand new design patterns for better AI experiences, with daemons, clustering, style lenses, structured presets and templates, dynamic editing, temperature knobs and everything in-between!",
+        description: "As product teams race to include AI in their products, they too often rely on good old-fashioned patterns like an assistant or chatbot. However, this experience is often painfully slow, responses are generic, and users have to meticulously explain to AI what they need — over and over. In this full-day workshop with Vitaly Friedman, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, we'll explore brand new design patterns for better AI experiences, with daemons, clustering, style lenses, structured defaults and templates, dynamic editing, temperature knobs and everything in-between!",
         maxAttendees: 30,
         speakers: speakers,
         topics: [
@@ -391,7 +391,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                     "Style lenses and output customization",
                     "Daemon patterns for proactive AI",
                     "Temperature controls and user agency",
-                    "Structured presets and templates"
+                    "Structured defaults and templates"
                 ]
             },
             {
@@ -663,7 +663,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                 <span className="font-bold text-xs sm:text-sm">Only {seatsRemaining} seats left!</span>
                             </div>
                             <div className="hidden sm:block h-6 w-px bg-white/30"></div>
-                            
+
                             <div className="flex items-center gap-2">
                                 <Calendar size={16} className="text-white" />
                                 <span className="text-xs sm:text-sm">March 23rd, 2026</span>
@@ -693,7 +693,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                         <polygon points="0,100 20,85 40,95 70,75 100,90 100,100" fill="currentColor" opacity="0.5"/>
                     </svg>
                 </div>
-                
+
                 <div className="relative z-10">
                     {/* Back to workshops link */}
                     <div className="container mx-auto px-4 pt-6 pb-0">
@@ -799,7 +799,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                     {/* Speaker card header */}
                                     <div className="text-center mb-6">
                                         <div className="text-sm font-bold text-gray-600 mb-2">Workshop Instructor</div>
-                                        
+
                                         {workshop.speakers.map((speaker) => (
                                             <div key={speaker.id}>
                                                 {/* Speaker image */}
@@ -1117,7 +1117,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
 
                                     {/* Cancelled Checkout Feedback */}
                                     {canceled === 'true' && (
-                                        <CancelledCheckout 
+                                        <CancelledCheckout
                                             workshopId={workshop.id}
                                             workshopTitle={workshop.title}
                                         />
@@ -1132,7 +1132,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                 <span>Workshop Registration</span>
                                                     </div>
                                                 </div>
-                                                
+
                                         <div className="p-4">
                                             <TicketSelection
                                                 options={aiDesignPatternsTickets}
@@ -1162,7 +1162,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                     <h2 className="text-3xl lg:text-4xl font-black text-black mb-8 text-center">
                         Frequently Asked Questions
                     </h2>
-                    
+
                     <div className="space-y-4">
                         {/* Who Should Attend */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">

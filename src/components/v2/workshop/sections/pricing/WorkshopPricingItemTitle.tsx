@@ -1,6 +1,6 @@
 import React from 'react';
 
-import KitPill from "@/components/kit/KitPill";
+import KitPill from "@/components/v2/kit/KitPill";
 
 export default function WorkshopPricingItemTitle({
   title,

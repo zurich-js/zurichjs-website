@@ -2,9 +2,9 @@ import { Send, TicketX, PartyPopper } from 'lucide-react';
 import { useRouter } from 'next/router';
 import React from 'react';
 
-import KitButton from "@/components/kit/button/KitButton";
-import KitInputText from "@/components/kit/KitInputText";
-import KitSelect from "@/components/kit/KitSelect";
+import KitButton from "@/components/v2/kit/button/KitButton";
+import KitInputText from "@/components/v2/kit/inputs/KitInputText";
+import KitSelect from "@/components/v2/kit/inputs/KitSelect";
 
 interface CancelledCheckoutProps {
   workshopId: string;

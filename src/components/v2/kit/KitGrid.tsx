@@ -1,7 +1,7 @@
 import {LucideIcon} from "lucide-react";
 import React from "react";
 
-import KitComponent from "@/components/kit/utils/KitComponent";
+import KitComponent from "@/components/v2/kit/utils/KitComponent";
 
 export function KitGridItem({
   icon,

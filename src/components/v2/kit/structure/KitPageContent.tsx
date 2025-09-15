@@ -1,19 +1,22 @@
 import React from "react";
 
-import {makeSlug} from "@/components/kit/utils/makeSlug";
+import {makeSlug} from "@/components/v2/kit/utils/makeSlug";
 
 export default function KitPageContent({
   children,
   className = '',
   toc,
+  includeTOC = true,
   title,
 }: {
   children: React.ReactNode;
   className?: string;
   toc?: Record<string, { title: string, slug: string }>;
+  includeTOC?: boolean;
   title: string;
 }) {
   const [activeSection, setActiveSection] = React.useState<string | null>(null);
+  const tocEnabled = includeTOC && toc && Object.keys(toc).length > 0;
 
   const titleSlug = makeSlug(title);
 
@@ -54,12 +57,13 @@ export default function KitPageContent({
       }
   }, [activeSection, titleSlug]);
 
+
   return (
     <div className={`bg-white container mx-auto px-6 max-w-[1440px] py-10 flex justify-between ${className}`}>
-      <div className={`w-full flex flex-col gap-20 flex-1 ${toc ? 'max-w-[920px]' : ''}`}>
+      <div className={`w-full flex flex-col gap-20 flex-1 ${tocEnabled ? 'max-w-[920px]' : ''}`}>
         {children}
       </div>
-      {toc && Object.keys(toc)?.length && (
+      {tocEnabled && Object.keys(toc)?.length && (
         <ul className="basis-[200px] shrink-0 grow-0 sticky top-[68px] h-fit flex flex-col gap-1">
           {Object.values(toc).map((item, index) => (
             <li

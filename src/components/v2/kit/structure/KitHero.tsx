@@ -1,8 +1,8 @@
 import React from 'react';
 
-import KitTruncatedTextWithAnchor from "@/components/kit/KitTruncatedTextWithAnchor";
-import {makeSlug} from "@/components/kit/utils/makeSlug";
 import Section from "@/components/Section";
+import KitTruncatedTextWithAnchor from "@/components/v2/kit/KitTruncatedTextWithAnchor";
+import {makeSlug} from "@/components/v2/kit/utils/makeSlug";
 
 interface KitHeroProps {
   slots?: {

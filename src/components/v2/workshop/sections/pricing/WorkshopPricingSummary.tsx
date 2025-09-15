@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronUp } from 'lucide-react';
 import React from 'react';
 
-import KitButton from "@/components/kit/button/KitButton";
-import KitList from "@/components/kit/KitList";
-import KitPill from "@/components/kit/KitPill";
-import { roundToNearestHalf } from '@/components/kit/utils/discountOperations';
+import KitButton from "@/components/v2/kit/button/KitButton";
+import KitList from "@/components/v2/kit/KitList";
+import KitPill from "@/components/v2/kit/KitPill";
+import { roundToNearestHalf } from '@/components/v2/kit/utils/discountOperations';
 
 interface PricingHeader {
     title: string;
@@ -169,7 +169,7 @@ export function WorkshopPricingSummary({
 }: { sections: PricingSection[] }) {
   return (
     <div className="bg-white border-2 pb-4 border-kit-gray-medium rounded-lg overflow-hidden">
-      <Disclosure>
+      <Disclosure defaultOpen={true}>
         {({ open }) => (
           <>
             {/* Summary Header */}

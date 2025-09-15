@@ -37,28 +37,16 @@ export function calculateTimeDifference(fromDate: Date, toDate: Date): TimeUnits
  */
 export function calculateTimeRemaining(
   targetDate: string,
-  targetTime: string,
+  targetTime?: string,
   options: TimeRemainingOptions = {}
 ): string {
   const now = new Date();
-  const targetDateTime = new Date(targetDate + 'T' + targetTime);
+  const targetDateTime = new Date(targetDate + 'T' + (targetTime??0));
   const timeUnits = calculateTimeDifference(now, targetDateTime);
 
   return formatTimeUnits(timeUnits, options);
 }
 
-/**
- * Calculate time remaining from now until a target Date object
- */
-export function calculateTimeRemainingFromDate(
-  targetDate: Date,
-  options: TimeRemainingOptions = {}
-): string {
-  const now = new Date();
-  const timeUnits = calculateTimeDifference(now, targetDate);
-
-  return formatTimeUnits(timeUnits, options);
-}
 
 /**
  * Calculate duration between two time strings (HH:MM format)
@@ -118,6 +106,13 @@ function formatTimeUnits(timeUnits: TimeUnits, options: TimeRemainingOptions = {
   return parts.join(' ');
 }
 
+export function formatDateForWorkshop(dateString: string) {
+  const date = new Date(dateString);
+  const day = date.getDate();
+  const monthShort = date.toLocaleString('default', { month: "long" }).substring(0, 3);
+  return { day, monthShort };
+};
+
 /**
  * Get time units for display in cards/components (like WorkshopPricingExpiration)
  */
@@ -134,137 +129,55 @@ export function getTimeUnitsFromStrings(date: string, time: string): TimeUnits {
   return getTimeUnitsForDisplay(targetDate);
 }
 
-/**
- * Check if a date/time has passed
- */
-export function hasTimePassed(targetDate: string, targetTime: string): boolean {
-  const now = new Date();
-  const targetDateTime = new Date(targetDate + 'T' + targetTime);
-  return now >= targetDateTime;
-}
 
-/**
- * Check if a Date object has passed
- */
-export function hasDatePassed(targetDate: Date): boolean {
-  const now = new Date();
-  return now >= targetDate;
-}
+
+
 
 /**
  * Pricing period configuration
  */
-export interface PricingPeriod {
+export interface PricingConfig {
   date: string; // YYYY-MM-DD - EXPIRATION date
   time: string; // HH:MM - EXPIRATION time
   title: string; // e.g. "Early Bird"
   discount: number; // percentage discount, e.g. 20
-  isOffer?: boolean; // optional flag to mark special offers
 }
-
-export interface PricingConfig {
-  [key: string]: PricingPeriod;
-}
-
-/**
- * Alternative, more explicit pricing structure
- * This makes it clearer that dates are expiration dates
- */
-export interface PricingPeriodExplicit {
-  expiresAt: string; // ISO date string or YYYY-MM-DDTHH:MM
-  title: string; // e.g. "Early Bird"
-  discount: number; // percentage discount, e.g. 20
-  isOffer?: boolean; // optional flag to mark special offers
-}
-
-export interface PricingConfigExplicit {
-  [key: string]: PricingPeriodExplicit;
-}
-
-/**
- * Helper to convert explicit pricing config to legacy format
- */
-export function convertExplicitToLegacy(config: PricingConfigExplicit): PricingConfig {
-  const result: PricingConfig = {};
-  
-  for (const [key, period] of Object.entries(config)) {
-    const [date, time] = period.expiresAt.includes('T') 
-      ? period.expiresAt.split('T')
-      : [period.expiresAt, '23:59'];
-    
-    result[key] = {
-      date,
-      time,
-      title: period.title,
-      discount: period.discount,
-      isOffer: period.isOffer,
-    };
-  }
-  
-  return result;
-}
-
 /**
  * Find the current active pricing period based on current time
  * The dates in pricing periods represent EXPIRATION dates, not start dates
  * Returns the period that is currently active (not yet expired)
  */
-export function getCurrentPricingPeriod(
-  pricing: PricingConfig | undefined,
-  fallbackDate: string,
-  fallbackTime: string
-): PricingPeriod {
-  if (!pricing || Object.keys(pricing).length === 0) {
-    return {
-      date: fallbackDate,
-      time: fallbackTime,
-      title: 'Standard',
-      discount: 0,
-    };
+export function getActivePricingPhase(
+  pricingPhases: PricingConfig[],
+): PricingConfig {
+  if (!pricingPhases?.length) {
+    throw new Error('No pricing phases provided');
   }
 
   const now = new Date();
-
-  // Sort pricing periods by expiration date/time (ascending - earliest expiration first)
-  const sortedKeys = Object.keys(pricing).sort((a, b) => {
-    const aDate = new Date(pricing[a].date + 'T' + pricing[a].time);
-    const bDate = new Date(pricing[b].date + 'T' + pricing[b].time);
-    return aDate.getTime() - bDate.getTime();
-  });
-
-  // Find the first period that hasn't expired yet
-  for (const key of sortedKeys) {
-    const period = pricing[key];
+  for (const period of pricingPhases) {
     const expirationDate = new Date(period.date + 'T' + period.time);
-    
-    // If current time is before the expiration date, this period is still active
     if (now < expirationDate) {
-      return period;
+      return { ...period };
     }
   }
-
-  // If all periods have expired, return the last one (most recent expiration)
-  return pricing[sortedKeys[sortedKeys.length - 1]];
+  return { ...pricingPhases[pricingPhases.length - 1] };
 }
 
-/**
- * Get all pricing periods sorted by date/time
- */
-export function getSortedPricingPeriods(pricing: PricingConfig): Array<{ key: string; period: PricingPeriod; dateTime: Date }> {
-  return Object.keys(pricing)
-    .map(key => ({
-      key,
-      period: pricing[key],
-      dateTime: new Date(pricing[key].date + 'T' + pricing[key].time)
-    }))
-    .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
-}
-
-/**
- * Check if a pricing period is currently active
- */
-export function isPricingPeriodActive(period: PricingPeriod): boolean {
-  const now = new Date();
-  const periodDateTime = new Date(period.date + 'T' + period.time);
-  return now >= periodDateTime;
+export function getTotalDiscountForPhase({
+  phase,  couponPercent,  couponAmount,  basePrice
+}: {
+  phase: PricingConfig;
+  couponPercent?: number | null;
+  couponAmount?: number | null;
+  basePrice?: number
+}): number {
+    let totalPercent = phase.discount || 0;
+    if (!!couponPercent) {
+      totalPercent += couponPercent;
+    }
+    else if (!!couponAmount && basePrice) {
+      totalPercent += (couponAmount / basePrice) * 100;
+    }
+    return Math.min(totalPercent, 100); // Cap at 100%
 }

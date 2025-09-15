@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { getTimeUnitsFromStrings } from '../utils/dateOperations';
+import { getTimeUnitsFromStrings } from '../../../kit/utils/dateOperations';
 
 function ExpCard({children}: {children: React.ReactNode}) {
   return (

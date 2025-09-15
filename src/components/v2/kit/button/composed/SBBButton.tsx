@@ -1,8 +1,8 @@
 import React from "react";
 
-import KitButton from "@/components/kit/button/KitButton";
+import KitButton from "@/components/v2/kit/button/KitButton";
 
-export function SBBButton({ link }: { link: string}) {
+export default function SBBButton({ link }: { link: string}) {
   return (
     <KitButton
       customIcon={(

@@ -26,7 +26,7 @@ function SpeakerSocialLink({ url, icon }: { url: string, icon: 'linkedin' | 'twi
   )
 }
 
-export default function WorkshopSpeakerCard({
+export default function WorkshopHero_Speaker({
   speaker,
   className = ''
 }: WorkshopSpeakerCardProps) {

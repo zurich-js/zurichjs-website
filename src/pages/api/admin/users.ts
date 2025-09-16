@@ -23,7 +23,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     console.log('Users API: Processing request', { query: req.query });
     
-    const { page = '1', limit = '10', query = '' } = req.query;
+    const { page, limit, query = '' } = req.query;
+    
+    // If no page or limit provided, return all users
+    if (!page || !limit) {
+      console.log('Users API: No pagination provided, fetching all users');
+      
+      const client = await clerkClient();
+      const queryParams: UserQueryParams = {
+        limit: 500, // Use a high limit to get all users
+        offset: 0,
+        orderBy: '-created_at',
+      };
+      
+      if (query) {
+        queryParams.query = query as string;
+      }
+      
+      const { data: users, totalCount } = await client.users.getUserList(queryParams);
+      
+      return res.status(200).json({
+        users: users || [],
+        pagination: {
+          total: totalCount || 0,
+          pages: 1,
+          page: 1,
+          limit: totalCount || 0
+        }
+      });
+    }
     
     const pageNumber = parseInt(page as string, 10);
     const limitNumber = parseInt(limit as string, 10);

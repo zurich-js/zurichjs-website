@@ -117,74 +117,92 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
     });
   };
 
-  const exportToCSV = () => {
-    const csvHeaders = [
-      'ID',
-      'First Name',
-      'Last Name',
-      'Username',
-      'Email',
-      'Last Sign In',
-      'Created At',
-      'Credits',
-      'Role',
-      'Company',
-      'Experience',
-      'Newsletter',
-      'Interests',
-      'Referrals Count',
-      'Referred By'
-    ];
+  const exportToCSV = async () => {
+    try {
+      setIsLoading(true);
 
-    const csvData = users.map(user => {
-      const metadata = user.unsafeMetadata || {};
-      const surveyData = metadata.surveyData || {} as NonNullable<ClerkUser['unsafeMetadata']>['surveyData'];
-      const referrals = metadata.referrals || [];
-      const referredBy = metadata.referredBy;
+      // Fetch all users for export
+      const response = await fetch(`/api/admin/users?export=true${searchQuery ? `&query=${searchQuery}` : ''}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch users for export');
+      }
 
-      return [
-        user.id,
-        user.firstName || '',
-        user.lastName || '',
-        user.username || '',
-        user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress || '',
-        user.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : '',
-        new Date(user.createdAt).toISOString(),
-        metadata.credits || 0,
-        surveyData?.role || '',
-        surveyData?.company || '',
-        surveyData?.experience || '',
-        surveyData?.newsletter ? 'Yes' : 'No',
-        Array.isArray(surveyData?.interests) ? surveyData.interests.join('; ') : '',
-        referrals.length,
-        referredBy ? `${referredBy.name} (${referredBy.userId})` : ''
+      const data = await response.json();
+      const allUsers = data.users || [];
+
+      const csvHeaders = [
+        'ID',
+        'First Name',
+        'Last Name',
+        'Username',
+        'Email',
+        'Last Sign In',
+        'Created At',
+        'Credits',
+        'Role',
+        'Company',
+        'Experience',
+        'Newsletter',
+        'Interests',
+        'Referrals Count',
+        'Referred By'
       ];
-    });
 
-    const csvContent = [
-      csvHeaders.join(','),
-      ...csvData.map(row =>
-        row.map(field => {
-          const stringField = String(field);
-          if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
-            return `"${stringField.replace(/"/g, '""')}"`;
-          }
-          return stringField;
-        }).join(',')
-      )
-    ].join('\n');
+      const csvData = allUsers.map((user: ClerkUser) => {
+        const metadata = user.unsafeMetadata || {};
+        const surveyData = metadata.surveyData || {} as NonNullable<ClerkUser['unsafeMetadata']>['surveyData'];
+        const referrals = metadata.referrals || [];
+        const referredBy = metadata.referredBy;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+        return [
+          user.id,
+          user.firstName || '',
+          user.lastName || '',
+          user.username || '',
+          user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress || '',
+          user.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : '',
+          new Date(user.createdAt).toISOString(),
+          metadata.credits || 0,
+          surveyData?.role || '',
+          surveyData?.company || '',
+          surveyData?.experience || '',
+          surveyData?.newsletter ? 'Yes' : 'No',
+          Array.isArray(surveyData?.interests) ? surveyData.interests.join('; ') : '',
+          referrals.length,
+          referredBy ? `${referredBy.name} (${referredBy.userId})` : ''
+        ];
+      });
 
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `zurichjs-users-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const csvContent = [
+        csvHeaders.join(','),
+        ...csvData.map((row: (string | number)[]) =>
+          row.map((field: string | number) => {
+            const stringField = String(field);
+            if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+              return `"${stringField.replace(/"/g, '""')}"`;
+            }
+            return stringField;
+          }).join(',')
+        )
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `zurichjs-users-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error('Error exporting users:', error);
+      alert('Failed to export users. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -252,11 +270,11 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
             </div>
             <button
               onClick={exportToCSV}
-              className="flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
-              disabled={users.length === 0}
+              className="flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
               <Download size={16} className="mr-2" />
-              Export CSV
+              {isLoading ? 'Exporting...' : 'Export CSV'}
             </button>
           </div>
         </div>

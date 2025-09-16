@@ -1,5 +1,5 @@
 import { OrganizationSwitcher } from '@clerk/nextjs';
-import { User, Search, Calendar, UserCog, ArrowLeft, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Search, Calendar, UserCog, ArrowLeft, ArrowRight, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -117,6 +117,77 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
     });
   };
 
+  const exportToCSV = () => {
+    const csvHeaders = [
+      'ID',
+      'First Name',
+      'Last Name',
+      'Username',
+      'Email',
+      'Last Sign In',
+      'Created At',
+      'Credits',
+      'Role',
+      'Company',
+      'Experience',
+      'Newsletter',
+      'Interests',
+      'Referrals Count',
+      'Referred By'
+    ];
+
+    const csvData = users.map(user => {
+      const metadata = user.unsafeMetadata || {};
+      const surveyData = metadata.surveyData || {} as NonNullable<ClerkUser['unsafeMetadata']>['surveyData'];
+      const referrals = metadata.referrals || [];
+      const referredBy = metadata.referredBy;
+
+      return [
+        user.id,
+        user.firstName || '',
+        user.lastName || '',
+        user.username || '',
+        user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress || '',
+        user.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : '',
+        new Date(user.createdAt).toISOString(),
+        metadata.credits || 0,
+        surveyData?.role || '',
+        surveyData?.company || '',
+        surveyData?.experience || '',
+        surveyData?.newsletter ? 'Yes' : 'No',
+        Array.isArray(surveyData?.interests) ? surveyData.interests.join('; ') : '',
+        referrals.length,
+        referredBy ? `${referredBy.name} (${referredBy.userId})` : ''
+      ];
+    });
+
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvData.map(row =>
+        row.map(field => {
+          const stringField = String(field);
+          if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+            return `"${stringField.replace(/"/g, '""')}"`;
+          }
+          return stringField;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `zurichjs-users-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <Layout>
       <Head>
@@ -175,8 +246,18 @@ export default function AdminUsersPage({ users, pagination, searchQuery }: Users
             </button>
           </form>
           
-          <div className="p-4 bg-gray-100 rounded-lg">
-            <p className="text-sm text-gray-600">Total users: <span className="font-semibold">{pagination.total}</span></p>
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-gray-100 rounded-lg">
+              <p className="text-sm text-gray-600">Total users: <span className="font-semibold">{pagination.total}</span></p>
+            </div>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+              disabled={users.length === 0}
+            >
+              <Download size={16} className="mr-2" />
+              Export CSV
+            </button>
           </div>
         </div>
         

@@ -32,11 +32,15 @@
   button {
     cursor: pointer;
   }
-  
+  /* Style unstyled links */
+  a:not([class]) {
+    @apply text-zurich underline hover:opacity-70;
+  }
+
   /* Ensure all interactive elements have cursor pointer */
-  [role="button"], 
-  input[type="button"], 
-  input[type="submit"], 
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
   input[type="reset"],
   .cursor-pointer {
     cursor: pointer;
@@ -48,95 +52,95 @@
   .btn-primary {
     @apply bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
   }
-  
+
   .btn-primary:hover {
     @apply bg-blue-700;
   }
-  
+
   .btn-primary:focus {
     @apply ring-2 ring-blue-500 ring-offset-2;
   }
-  
+
   .btn-secondary {
     @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
   }
-  
+
   .btn-secondary:hover {
     @apply bg-gray-200 text-gray-800;
   }
-  
+
   .btn-secondary:focus {
     @apply ring-2 ring-gray-500 ring-offset-2;
   }
-  
+
   .btn-outline {
     @apply border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 cursor-pointer;
   }
-  
+
   .btn-outline:hover {
     @apply bg-gray-50 border-gray-400 text-gray-800;
   }
-  
+
   .btn-outline:focus {
     @apply ring-2 ring-gray-500 ring-offset-2;
   }
-  
+
   /* Icon button hover states */
   .icon-button {
     @apply p-2 rounded-full transition-colors duration-200 cursor-pointer;
   }
-  
+
   .icon-button:hover {
     @apply bg-gray-100;
   }
-  
+
   .icon-button:focus {
     @apply ring-2 ring-gray-500 ring-offset-2;
   }
-  
+
   /* Filter chip hover states */
   .filter-chip {
     @apply inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 cursor-pointer;
   }
-  
+
   .filter-chip-active {
     @apply bg-blue-100 text-blue-800;
   }
-  
+
   .filter-chip-active:hover {
     @apply bg-blue-200;
   }
-  
+
   /* Form elements with proper hover states */
   .form-select {
     @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 cursor-pointer;
   }
-  
+
   .form-select:hover {
     @apply border-gray-400;
   }
-  
+
   .form-input {
     @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200;
   }
-  
+
   .form-input:hover {
     @apply border-gray-400;
   }
-  
+
   /* Modal overlay buttons */
   .modal-nav-button {
     @apply p-2 rounded-full bg-black bg-opacity-50 text-white transition-colors duration-200 cursor-pointer;
   }
-  
+
   .modal-nav-button:hover {
     @apply bg-opacity-70;
   }
-  
+
   .modal-nav-button:focus {
     @apply ring-2 ring-white ring-offset-2;
   }
-  
+
   /* Accessible focus states for all interactive elements */
   .focus-visible {
     @apply ring-2 ring-blue-500 ring-offset-2;

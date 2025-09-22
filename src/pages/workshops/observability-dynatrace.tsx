@@ -280,10 +280,10 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
         subtitle: "Master Modern System Observability & Monitoring",
         dateInfo: "October 28, 2025",
         timeInfo: "16:00 - 18:00 (2 hours, refreshments included)",
-        locationInfo: "Venue TBA, Zürich",
+        locationInfo: "Smallpdf, AG Steinstrasse 21, 8003 Zürich",
         price: "95 CHF (Early Bird) / 125 CHF",
         description: "Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application. You'll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. By the end, you'll understand how to create a mature observability setup that provides actionable insights for your applications.",
-        maxAttendees: 25,
+        maxAttendees: 10,
         speakers: speakers,
         topics: [
             {
@@ -436,7 +436,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
     };
 
     // Single source of truth for seats
-    const seatsRemaining = 24; // Only 1 seat taken so far
+    const seatsRemaining = 7; // 3 seats taken so far
     const isSoldOut = seatsRemaining <= 0;
 
     // Get current pricing stage for display
@@ -699,7 +699,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                         <div className="text-xs lg:text-sm text-gray-600 font-medium">2 hours</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
-                                        <div className="text-sm lg:text-base font-bold text-blue-600 mb-1">Venue TBA</div>
+                                        <div className="text-sm lg:text-base font-bold text-blue-600 mb-1">Smallpdf</div>
                                         <div className="text-xs lg:text-sm text-gray-600 font-medium">Zürich</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
@@ -1323,11 +1323,19 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                             {openFaq === 'venue' && (
                                 <div className="px-6 pb-6 animate-fadeIn">
                                     <p className="text-gray-700 mb-3">
-                                        The workshop will be held in <strong>Zürich, Switzerland</strong>. The exact venue will be announced closer to the event date.
+                                        The workshop will be held at <strong>Smallpdf, AG</strong> in Zürich, Switzerland.
                                     </p>
+                                    <div className="bg-blue-50 p-3 rounded-lg mb-3">
+                                        <p className="text-sm text-gray-700">
+                                            <span className="font-semibold">Address:</span><br/>
+                                            Smallpdf, AG<br/>
+                                            Steinstrasse 21<br/>
+                                            8003 Zürich, Switzerland
+                                        </p>
+                                    </div>
                                     <div className="bg-blue-50 p-3 rounded-lg">
                                         <p className="text-sm text-gray-700">
-                                            <span className="font-semibold">Venue features:</span> Modern presentation facilities, comfortable seating, reliable WiFi, and refreshments. The venue will be easily accessible by public transport. All registered participants will receive detailed venue information and directions 1 week before the workshop.
+                                            <span className="font-semibold">Venue features:</span> Modern presentation facilities, comfortable seating, reliable WiFi, and refreshments. The venue is easily accessible by public transport. All registered participants will receive detailed directions 1 week before the workshop.
                                         </p>
                                     </div>
                                 </div>

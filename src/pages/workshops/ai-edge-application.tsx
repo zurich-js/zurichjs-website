@@ -48,7 +48,7 @@ interface WorkshopPageProps {
     speaker: Speaker;
 }
 
-// --- Smart Countdown Component ---
+// --- Smart Countdown KitComponent ---
 function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -64,10 +64,10 @@ function CountdownTimer() {
     const updateTimer = () => {
       const now = new Date().getTime();
       const workshopStart = new Date('2025-09-09T18:00:00').getTime();
-      
+
       // Workshop countdown only
       const difference = workshopStart - now;
-      
+
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -119,7 +119,7 @@ function CountdownTimer() {
 
 
 
-// --- Accordion Component ---
+// --- Accordion KitComponent ---
 function Accordion({ phases }: { phases: WorkshopDetails['phases'] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   return (
@@ -347,7 +347,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                 ],
                 concepts: [
                     "Modern build tools",
-                    "Component-based architecture",
+                    "KitComponent-based architecture",
                     "State management patterns",
                     "Development vs production builds"
                 ]
@@ -467,7 +467,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
             );
             setShowCouponInput(false);
             setCouponCode('');
-            
+
             // Track coupon application
             track('coupon_applied', {
                 workshop_id: workshop.id,
@@ -488,7 +488,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
             undefined,
             { shallow: false } // Changed to false to ensure Stripe prices refresh
         );
-        
+
         // Track coupon removal
         track('coupon_removed', {
             workshop_id: workshop.id,
@@ -790,7 +790,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                     A complete AI-powered application with data persistence, file storage, and an interactive frontend running on Cloudflare&apos;s global edge network.
                                 </p>
                             </div>
-                            
+
                             {/* Key Highlights Grid */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="text-center p-4 bg-amber-50 rounded-lg border border-amber-200">
@@ -913,7 +913,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h2 className="text-xl sm:text-2xl font-bold text-black">What You&apos;ll Take Away</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
                             </div>
-                            
+
                             <div className="space-y-3">
                                 {workshop.takeaways.map((takeaway, index) => (
                                     <div key={index} className="flex items-start bg-gray-50 p-3 rounded-lg">
@@ -924,11 +924,11 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
                                 ))}
                             </div>
-                            
+
                         </motion.div>
                         </div>
                     </div>
-                    
+
                     {/* Registration Section - Right Column (1/3 width on desktop) */}
                     <div className="lg:col-span-1 order-1 lg:order-2">
                         <motion.div
@@ -953,7 +953,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             </div>
 
                             {canceled === 'true' ? (
-                                <CancelledCheckout 
+                                <CancelledCheckout
                                     workshopId="ai-edge-application"
                                     workshopTitle={workshop.title}
                                 />
@@ -972,7 +972,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                                 {seatsRemaining} seats left
                                             </div>
                                         </div>
-                                        
+
                                         {/* Main price display */}
                                         <div className="bg-white rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 border border-zurich/20">
                                             <div className="text-center sm:text-left">
@@ -986,7 +986,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         {/* Availability banner */}
                                         <div className="bg-gradient-to-r from-red-100 to-orange-100 border border-red-200 rounded-lg px-2 sm:px-3 py-2">
                                             <div className="flex items-center justify-center gap-1 sm:gap-2 text-red-800">
@@ -1013,7 +1013,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                                 </button>
                                             )}
                                         </div>
-                                        
+
                                         {coupon ? (
                                             <div className="flex items-center justify-between bg-green-100 border border-green-300 rounded-lg p-3">
                                                 <div className="flex items-center gap-2">
@@ -1045,7 +1045,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                                 </button>
                                             </div>
                                         )}
-                                        
+
                                         {!coupon && (
                                             <div className="mt-3 text-xs text-zurich">
                                                 💡 ZurichJS members get 20% off automatically when logged in!
@@ -1105,7 +1105,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             <h2 className="text-xl font-bold text-black">Who Should Attend</h2>
                             <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
                         </div>
-                        
+
                         <div className="space-y-3">
                             {workshop.targetAudience.map((audience, index) => (
                                 <div key={index} className="bg-blue-50 rounded-lg p-3 flex items-center gap-3">
@@ -1114,7 +1114,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 </div>
                             ))}
                         </div>
-                        
+
                         <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
                             <p className="text-sm font-medium text-gray-800">
                                 <span className="text-blue-600 font-bold">Perfect for:</span> Developers ready to dive deep into edge computing and AI integration with hands-on experience.
@@ -1135,7 +1135,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                             <h2 className="text-xl font-bold text-black">Prerequisites & Requirements</h2>
                             <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
                         </div>
-                        
+
                         <div className="mb-4">
                             <h3 className="text-base font-bold text-gray-800 mb-3">Software Prerequisites:</h3>
                             <div className="space-y-2">
@@ -1169,7 +1169,7 @@ export default function AIEdgeWorkshopPage({ speaker }: WorkshopPageProps) {
                                 </ul>
                             </div>
                         </div>
-                        
+
                         <div className="bg-purple-50 border-l-4 border-purple-400 p-3 rounded-lg">
                             <p className="text-sm font-medium text-gray-800">
                                 <span className="text-purple-600 font-bold">Note:</span> We&apos;ll provide step-by-step guidance for all Cloudflare setup during the workshop. Free tier accounts are sufficient for all exercises.
@@ -1250,4 +1250,4 @@ export async function getStaticProps() {
         },
         revalidate: 60, // Revalidate the page every 60 seconds
     };
-} 
+}

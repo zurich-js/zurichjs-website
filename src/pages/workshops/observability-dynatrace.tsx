@@ -21,23 +21,12 @@ import { Speaker } from '@/types';
 // Horizontal Timeline Component
 function HorizontalTimeline() {
     const now = new Date();
-    const earlyBirdEnd = new Date('2025-10-01T23:59:59');
     const workshopDate = new Date('2025-10-28T16:00:00');
-    
+
     const milestones = [
-        { 
-            name: 'Early Bird Pricing', 
-            date: 'Until Oct 1st, 2025',
-            price: 'CHF 95',
-            endDate: earlyBirdEnd,
-            color: 'bg-green-500',
-            textColor: 'text-green-700',
-            bgColor: 'bg-green-50',
-            icon: '🐦'
-        },
-        { 
-            name: 'Standard Pricing', 
-            date: 'Oct 1st - Oct 28th, 2025',
+        {
+            name: 'Registration Open',
+            date: 'Now - Oct 28th, 2025',
             price: 'CHF 125',
             endDate: workshopDate,
             color: 'bg-zurich',
@@ -45,8 +34,8 @@ function HorizontalTimeline() {
             bgColor: 'bg-blue-50',
             icon: '💼'
         },
-        { 
-            name: 'Workshop Day', 
+        {
+            name: 'Workshop Day',
             date: 'October 28th, 2025',
             price: '16:00 - 18:00',
             endDate: workshopDate,
@@ -56,13 +45,12 @@ function HorizontalTimeline() {
             icon: '🎯'
         }
     ];
-    
+
     const getCurrentMilestone = () => {
-        if (now < earlyBirdEnd) return 0;
-        if (now < workshopDate) return 1;
-        return 2;
+        if (now < workshopDate) return 0;
+        return 1;
     };
-    
+
     const currentMilestone = getCurrentMilestone();
     
     return (
@@ -76,7 +64,7 @@ function HorizontalTimeline() {
                     style={{ width: `${(currentMilestone / (milestones.length - 1)) * 100}%` }}
                 ></div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {milestones.map((milestone, index) => (
                         <div key={milestone.name} className="relative">
                             {/* Timeline dot */}
@@ -173,22 +161,10 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const earlyBirdEnd = new Date('2025-10-01T23:59:59').getTime();
       const workshopStart = new Date('2025-10-28T16:00:00').getTime();
-      
-      // Determine which countdown to show
-      let targetTime;
-      
-      if (now < earlyBirdEnd) {
-        // Show early bird countdown
-        targetTime = earlyBirdEnd;
-      } else {
-        // Show workshop countdown
-        targetTime = workshopStart;
-      }
-      
-      const difference = targetTime - now;
-      
+
+      const difference = workshopStart - now;
+
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -209,18 +185,11 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   if (!isClient) return null;
 
   const now = new Date().getTime();
-  const earlyBirdEnd = new Date('2025-10-01T23:59:59').getTime();
   const workshopStart = new Date('2025-10-28T16:00:00').getTime();
-  
+
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
-  
-  // Determine countdown label
-  let countdownLabel;
-  if (now < earlyBirdEnd) {
-    countdownLabel = "Early Bird Ends In:";
-  } else {
-    countdownLabel = "Workshop Starts In:";
-  }
+
+  const countdownLabel = "Workshop Starts In:";
 
   if (isExpired && now >= workshopStart) {
     return (
@@ -281,7 +250,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
         dateInfo: "October 28, 2025",
         timeInfo: "16:00 - 18:00 (2 hours, refreshments included)",
         locationInfo: "Smallpdf, AG Steinstrasse 21, 8003 Zürich",
-        price: "95 CHF (Early Bird) / 125 CHF",
+        price: "125 CHF",
         description: "Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application. You'll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. By the end, you'll understand how to create a mature observability setup that provides actionable insights for your applications.",
         maxAttendees: 10,
         speakers: speakers,
@@ -438,20 +407,6 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
     // Single source of truth for seats
     const seatsRemaining = 7; // 3 seats taken so far
     const isSoldOut = seatsRemaining <= 0;
-
-    // Get current pricing stage for display
-    const getCurrentPricingStage = () => {
-        const now = new Date();
-        const earlyBirdEnd = new Date('2025-10-01T23:59:59');
-        
-        if (now < earlyBirdEnd) {
-            return { stage: 'early', price: 95, endDate: earlyBirdEnd };
-        } else {
-            return { stage: 'standard', price: 125, endDate: new Date('2025-10-28T16:00:00') };
-        }
-    };
-
-    const currentPricing = getCurrentPricingStage();
 
     // Handle checkout with proper ticket selection
     const handleCheckout = async (priceId: string) => {
@@ -1411,7 +1366,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                         onClick={scrollToRegistration}
                         className="bg-white text-zurich px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
                     >
-                        Secure Your Spot Now - {currentPricing.stage === 'early' ? '95' : '125'} CHF
+                        Secure Your Spot Now - 125 CHF
                     </button>
                 </motion.div>
             </Section>

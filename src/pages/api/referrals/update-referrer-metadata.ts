@@ -1,6 +1,9 @@
 import { clerkClient, getAuth } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 interface ReferralInfo {
   userId: string;
   name: string;
@@ -23,7 +26,7 @@ interface UserMetadata {
   [key: string]: unknown;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -144,4 +147,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error in update-referrer-metadata API:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'referrals-update-referrer-metadata',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

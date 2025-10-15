@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
+
 
 interface PlatformNotification {
   title: string;
@@ -44,7 +47,7 @@ interface PlatformNotification {
   };
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -100,4 +103,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error sending notification:', error);
     return res.status(500).json({ error: 'Failed to send notification' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'notifications-send',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

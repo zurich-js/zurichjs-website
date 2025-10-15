@@ -1,10 +1,13 @@
 import { getAuth, clerkClient } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -58,3 +61,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
   }
 }
+
+export default withTelemetry(handler, {
+  spanName: 'events-register-interest',
+  attributes: {
+    'api.category': 'events',
+    'service': 'event-management',
+  },
+});

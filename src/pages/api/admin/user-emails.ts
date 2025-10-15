@@ -1,6 +1,9 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 interface UserEmail {
   id: string;
   name: string;
@@ -15,7 +18,7 @@ interface UserEmail {
   };
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -68,4 +71,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error fetching user emails:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'admin-user-emails',
+  attributes: {
+    'api.category': 'admin',
+    'service': 'management',
+  },
+});

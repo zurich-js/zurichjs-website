@@ -1,4 +1,3 @@
-// pages/api/submit-talk.ts
 import { createReadStream } from 'fs';
 import path from 'path';
 
@@ -7,7 +6,19 @@ import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuidv4 } from 'uuid';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
+
+
+
+// pages/api/submit-talk.ts
+
+
+
+
+
+
 
 
 // Initialize Sanity client
@@ -29,7 +40,7 @@ export const config = {
 
 
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -266,3 +277,11 @@ export default async function handler(
     return res.status(500).json({ error: 'Failed to submit talk' });
   }
 }
+
+export default withTelemetry(handler, {
+  spanName: 'submit-talk',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

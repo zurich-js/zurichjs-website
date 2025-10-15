@@ -1,10 +1,13 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 // Example API route to process referrals
 // In a real implementation, you would connect to a database
 // and store/update referral information
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -50,4 +53,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error processing referral:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'referrals-process',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

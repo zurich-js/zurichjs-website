@@ -3,7 +3,10 @@ import crypto from 'crypto';
 import { createClient } from '@sanity/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { getEventById } from '@/sanity/queries';
+
 
 // Types
 interface ComprehensiveFeedbackData {
@@ -39,7 +42,7 @@ const sanityClient = createClient({
   useCdn: false,
 });
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false,
@@ -223,3 +226,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
   }
 }
+
+export default withTelemetry(handler, {
+  spanName: 'event-feedback',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

@@ -3,7 +3,10 @@ import crypto from 'crypto';
 import { createClient } from '@sanity/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';
+
 
 // Types to match the client-side types
 interface ProductFeedbackData {
@@ -66,7 +69,7 @@ function isComprehensiveFeedback(feedback: FeedbackData): feedback is Comprehens
     return 'selectedEventId' in feedback && 'overallRating' in feedback;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
     if (req.method !== 'POST') {
         return res.status(405).json({ 
             success: false,
@@ -435,3 +438,11 @@ async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, 
         feedbackId: createdFeedback._id
     });
 }
+
+export default withTelemetry(handler, {
+  spanName: 'feedback',
+  attributes: {
+    'api.category': 'feedback',
+    'service': 'user-feedback',
+  },
+});

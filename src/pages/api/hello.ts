@@ -1,7 +1,10 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 
+
 import { withTelemetry } from '@/lib/multiplayer';
+
+// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+
 
 type Data = {
   name: string;

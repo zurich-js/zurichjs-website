@@ -1,7 +1,10 @@
 import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
+
 
 // Disable the default body parser to handle form-data
 export const config = {
@@ -10,7 +13,7 @@ export const config = {
   },
 };
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -115,4 +118,12 @@ ${message}
     
     return res.status(500).json({ error: 'Failed to submit application' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'submit-volunteer',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

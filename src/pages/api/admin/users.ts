@@ -1,6 +1,9 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 // Define the possible order by fields that Clerk API accepts
 type OrderByField = 'created_at' | 'updated_at' | 'email_address' | 'web3wallet' | 
                     'first_name' | 'last_name' | 'phone_number' | 'username' | 
@@ -15,7 +18,7 @@ interface UserQueryParams {
   query?: string;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -112,4 +115,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       stack: error instanceof Error && process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'admin-users',
+  attributes: {
+    'api.category': 'admin',
+    'service': 'management',
+  },
+});

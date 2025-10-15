@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { getFeedbackBySpeakerId } from '@/sanity/queries';
 import { verifyToken } from '@/utils/tokens';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -37,3 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ message: 'Error fetching feedback', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 }
+
+export default withTelemetry(handler, {
+  spanName: 'speaker-feedback-[token]',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

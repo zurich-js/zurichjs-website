@@ -1,10 +1,13 @@
 import { getAuth } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 // In a real app, you would use a database to store this information
 const paymentReservations = new Map();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -101,4 +104,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       error: 'An error occurred while processing your request'
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'cash-payment',
+  attributes: {
+    'api.category': 'payment',
+    'service': 'cash',
+  },
+});

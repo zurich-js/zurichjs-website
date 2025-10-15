@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -75,4 +78,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       error: 'Failed to send notification',
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'notify-payment-reservation',
+  attributes: {
+    'api.category': 'notification',
+    'service': 'notifications',
+  },
+});

@@ -1,11 +1,14 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+
+
+import { withTelemetry, createChildSpan } from '@/lib/multiplayer';
+
 /**
  * Example API route demonstrating Multiplayer.app integration
  * This shows how to use the telemetry middleware and create custom spans
  */
 
-import { NextApiRequest, NextApiResponse } from 'next';
 
-import { withTelemetry, createChildSpan } from '@/lib/multiplayer';
 
 type ResponseData = {
   success: boolean;

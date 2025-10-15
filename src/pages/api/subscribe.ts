@@ -1,11 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 // EmailOctopus API details
 const API_KEY = process.env.EMAIL_OCTOPUS_API_KEY;
 const LIST_ID = process.env.EMAIL_OCTOPUS_LIST_ID;
 const API_URL = 'https://emailoctopus.com/api/1.6';
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -57,4 +60,12 @@ export default async function handler(
       error: 'Failed to subscribe. Please try again later.' 
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'subscribe',
+  attributes: {
+    'api.category': 'marketing',
+    'service': 'newsletter',
+  },
+});

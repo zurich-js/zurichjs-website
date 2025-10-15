@@ -1,6 +1,9 @@
 import { clerkClient } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 // Define types for survey data
 interface SurveyData {
   role: string;
@@ -14,7 +17,7 @@ interface UserMetadata {
   surveyData?: SurveyData;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -117,4 +120,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.error('Error fetching user stats:', error);
     return res.status(500).json({ error: 'Failed to fetch user statistics' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'admin-user-stats',
+  attributes: {
+    'api.category': 'admin',
+    'service': 'management',
+  },
+});

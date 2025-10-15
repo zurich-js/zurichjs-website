@@ -1,13 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
+
 
 type ResponseData = {
   success: boolean;
   message: string;
 }
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseData>
 ) {
@@ -61,4 +64,12 @@ export default async function handler(
       message: 'Failed to submit partnership inquiry' 
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'partnership-inquiry',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

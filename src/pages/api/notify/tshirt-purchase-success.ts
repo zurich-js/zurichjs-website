@@ -1,14 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 import { stripe } from '@/lib/stripe';
+
 
 interface TshirtPurchaseSuccessBody {
   sessionId: string;
   userEmail: string;
 }
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -80,4 +83,12 @@ Session ID: ${sessionId}`,
       error: error.message || 'An unknown error occurred',
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'notify-tshirt-purchase-success',
+  attributes: {
+    'api.category': 'notification',
+    'service': 'notifications',
+  },
+});

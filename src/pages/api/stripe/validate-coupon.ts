@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { stripe } from '@/lib/stripe';
 
-export default async function handler(
+
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -48,4 +51,12 @@ export default async function handler(
         : error.message || 'Error validating coupon',
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'stripe-validate-coupon',
+  attributes: {
+    'api.category': 'payment',
+    'service': 'stripe',
+  },
+});

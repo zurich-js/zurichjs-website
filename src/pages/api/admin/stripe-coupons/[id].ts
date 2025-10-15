@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { stripe } from '@/lib/stripe';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { id } = req.query;
 
   if (!id || typeof id !== 'string') {
@@ -81,4 +84,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'stripe-coupons-[id]',
+  attributes: {
+    'api.category': 'admin',
+    'service': 'management',
+  },
+});

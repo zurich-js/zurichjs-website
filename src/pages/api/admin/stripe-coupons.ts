@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { stripe } from '@/lib/stripe';
 
-export default async function handler(
+
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -117,4 +120,12 @@ export default async function handler(
     res.setHeader('Allow', ['GET', 'POST']);
     res.status(405).json({ message: 'Method not allowed' });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'admin-stripe-coupons',
+  attributes: {
+    'api.category': 'admin',
+    'service': 'management',
+  },
+});

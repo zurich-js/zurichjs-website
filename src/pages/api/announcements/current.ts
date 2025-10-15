@@ -1,8 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { getCurrentAnnouncement } from '@/sanity/queries';
 
-export default async function handler(
+
+async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
@@ -35,4 +38,12 @@ export default async function handler(
         console.error('Error fetching announcement:', error);
         return res.status(500).json({ message: 'Error fetching announcement' });
     }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'announcements-current',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

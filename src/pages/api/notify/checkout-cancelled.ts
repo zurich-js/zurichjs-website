@@ -1,6 +1,9 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+
+import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
+
 
 interface CheckoutCancelledBody {
   workshopId?: string;
@@ -11,7 +14,7 @@ interface CheckoutCancelledBody {
   email: string;
 }
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -58,4 +61,12 @@ Customer Email: ${email}`,
       error: error.message || 'An unknown error occurred',
     });
   }
-} 
+}
+
+export default withTelemetry(handler, {
+  spanName: 'notify-checkout-cancelled',
+  attributes: {
+    'api.category': 'notification',
+    'service': 'notifications',
+  },
+});

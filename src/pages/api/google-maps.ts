@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-export default function handler(
+
+
+import { withTelemetry } from '@/lib/multiplayer';
+function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -27,3 +30,11 @@ export default function handler(
     url: responseString
   });
 }
+
+export default withTelemetry(handler, {
+  spanName: 'google-maps',
+  attributes: {
+    'api.category': 'external',
+    'service': 'maps',
+  },
+});

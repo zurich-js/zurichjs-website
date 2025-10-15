@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
+import { withTelemetry } from '@/lib/multiplayer';
+import { stripe } from '@/lib/stripe';
 import { encodePaymentData } from '@/utils/encoding';
-
-import { stripe } from '../../../lib/stripe';
 
 interface CheckoutRequestBody {
   priceId: string;
@@ -14,7 +14,7 @@ interface CheckoutRequestBody {
   ticketType?: 'workshop' | 'event';
 }
 
-export default async function handler(
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -116,3 +116,11 @@ export default async function handler(
     });
   }
 }
+
+export default withTelemetry(handler, {
+  spanName: 'stripe-checkout-session-create',
+  attributes: {
+    'api.category': 'payment',
+    'service': 'stripe',
+  },
+});

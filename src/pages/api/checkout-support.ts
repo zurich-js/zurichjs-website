@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 
+
+
+import { withTelemetry } from '@/lib/multiplayer';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-08-27.basil',
 });
@@ -9,7 +12,7 @@ const SUPPORT_PRODUCT_ID = process.env.NODE_ENV === 'production'
   ? 'prod_SkD5vsBEz5iO6W' // You'll fill this in later
   : 'prod_SkCbG5XY7IZzkT'; // Test product ID
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -119,3 +122,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: message });
   }
 }
+
+export default withTelemetry(handler, {
+  spanName: 'checkout-support',
+  attributes: {
+    'api.category': 'general',
+    'service': 'api',
+  },
+});

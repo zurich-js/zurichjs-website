@@ -246,12 +246,12 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
     const workshop: WorkshopDetails = {
         id: "observability-dynatrace",
         title: "Observability in Action: Hands-On with Dynatrace",
-        subtitle: "Master Modern System Observability & Monitoring",
+        subtitle: "Master Modern System Observability & Monitoring - Beginner Friendly!",
         dateInfo: "October 28, 2025",
         timeInfo: "16:00 - 18:00 (2 hours, refreshments included)",
         locationInfo: "Smallpdf, AG Steinstrasse 21, 8003 Zürich",
         price: "125 CHF",
-        description: "Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application. You'll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. By the end, you'll understand how to create a mature observability setup that provides actionable insights for your applications.",
+        description: "Perfect for beginners and experienced developers alike! Learn modern observability with hands-on experience using Dynatrace. This beginner-friendly workshop will guide you through the three pillars of observability - metrics, logs, and traces - with practical exercises using the AstroShop application. You'll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. No prior observability experience required - we'll start from the fundamentals and build up your skills!",
         maxAttendees: 10,
         speakers: speakers,
         topics: [
@@ -286,17 +286,18 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
             "Practical experience with Dynatrace for real-world observability scenarios"
         ],
         targetAudience: [
-            "DevOps Engineers managing complex distributed systems",
-            "Site Reliability Engineers focused on system reliability",
-            "Full-stack Developers interested in production monitoring",
-            "Platform Engineers building observability infrastructure"
+            "Beginners curious about observability and monitoring",
+            "Developers wanting to understand production systems better",
+            "DevOps Engineers looking to level up their monitoring skills",
+            "Anyone interested in learning how to debug and monitor applications",
+            "Tech enthusiasts eager to learn industry-standard tools"
         ],
         prerequisites: [
-            "Basic understanding of web applications and APIs",
-            "Familiarity with system monitoring concepts",
-            "Experience with distributed systems (microservices preferred)",
-            "Laptop with stable internet connection",
-            "Basic knowledge of logging and metrics"
+            "Curiosity and eagerness to learn (most important!)",
+            "Basic familiarity with web applications (no expert knowledge needed)",
+            "A laptop with stable internet connection",
+            "No prior observability experience required - we'll teach you everything!",
+            "Enthusiasm for hands-on learning"
         ],
         phases: [
             {
@@ -405,7 +406,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
     };
 
     // Single source of truth for seats
-    const seatsRemaining = 7; // 3 seats taken so far
+    const seatsRemaining = 3; // 7 seats taken so far
     const isSoldOut = seatsRemaining <= 0;
 
     // Handle checkout with proper ticket selection
@@ -640,7 +641,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
 
                                 {/* Subtitle */}
                                 <p className="text-lg lg:text-xl text-gray-800 mb-8 lg:mb-10 leading-relaxed max-w-2xl">
-                                    Master Modern System Observability & Monitoring with hands-on Dynatrace experience
+                                    Beginner-friendly hands-on workshop to master modern observability & monitoring with Dynatrace
                                 </p>
 
                                 {/* Metadata cards */}
@@ -896,10 +897,10 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                 </h2>
                                 <div className="prose prose-lg max-w-none">
                                     <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                                        Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application.
+                                        <strong>Perfect for beginners!</strong> This hands-on workshop welcomes everyone - no prior observability experience needed. We&apos;ll start from the basics and guide you through the three pillars of observability - metrics, logs, and traces - using the AstroShop application as our playground.
                                     </p>
                                     <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                                        You&apos;ll discover how to build alerting that reduces noise, implement cost-effective data ingestion strategies, and use distributed tracing as a debugging superpower. By the end, you&apos;ll understand how to create a mature observability setup that provides actionable insights for your applications.
+                                        You&apos;ll learn practical skills like building smart alerts, managing costs effectively, and using tracing to debug issues like a pro. Our expert instructors will walk you through everything step-by-step, making complex concepts easy to understand. By the end, you&apos;ll have the confidence to implement observability in your own projects!
                                     </p>
                                     <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg mt-6">
                                         <div className="flex items-start">
@@ -1168,7 +1169,57 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     </div>
                                     <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
                                         <p className="text-sm font-medium text-gray-800">
-                                            <span className="text-blue-600 font-bold">Perfect for:</span> Anyone working with distributed systems who wants to improve their observability practices and learn hands-on with industry-leading tools.
+                                            <span className="text-blue-600 font-bold">Perfect for:</span> Anyone curious about observability - from complete beginners to experienced developers wanting to deepen their knowledge with hands-on practice.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Beginner Friendly */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                            <button
+                                className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+                                onClick={() => setOpenFaq(openFaq === 'beginner' ? null : 'beginner')}
+                                aria-expanded={openFaq === 'beginner'}
+                            >
+                                <span className="font-bold text-lg text-gray-900">Is this workshop really beginner-friendly?</span>
+                                <span className={`ml-4 transition-transform ${openFaq === 'beginner' ? 'rotate-180' : ''}`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </span>
+                            </button>
+                            {openFaq === 'beginner' && (
+                                <div className="px-6 pb-6 animate-fadeIn">
+                                    <p className="text-gray-700 mb-4">
+                                        <strong>Absolutely yes!</strong> This workshop is designed to welcome everyone, regardless of experience level.
+                                    </p>
+                                    <div className="space-y-3">
+                                        <div className="bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                                            <p className="text-sm text-gray-800">
+                                                <span className="font-bold text-green-700">✓ No Prerequisites:</span> No prior observability experience needed. We start from the fundamentals.
+                                            </p>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                                            <p className="text-sm text-gray-800">
+                                                <span className="font-bold text-green-700">✓ Step-by-Step Guidance:</span> Our expert instructors guide you through each concept with clear explanations.
+                                            </p>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                                            <p className="text-sm text-gray-800">
+                                                <span className="font-bold text-green-700">✓ Hands-On Learning:</span> Learn by doing with practical exercises designed for all skill levels.
+                                            </p>
+                                        </div>
+                                        <div className="bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+                                            <p className="text-sm text-gray-800">
+                                                <span className="font-bold text-green-700">✓ Supportive Environment:</span> Small group size ensures personalized attention and support.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg mt-4">
+                                        <p className="text-sm text-gray-700">
+                                            <span className="font-semibold">Even better for experienced developers:</span> If you already have some knowledge, you&apos;ll still gain valuable hands-on experience with Dynatrace and learn advanced techniques!
                                         </p>
                                     </div>
                                 </div>
@@ -1206,7 +1257,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                                     </div>
                                     <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg">
                                         <p className="text-sm font-medium text-gray-800">
-                                            <span className="text-blue-600 font-bold">Note:</span> This is a hands-on workshop. Bring your laptop with a stable internet connection and come ready for interactive learning!
+                                            <span className="text-blue-600 font-bold">Note:</span> This is a hands-on, beginner-friendly workshop. Just bring your laptop with internet access and your enthusiasm to learn - we&apos;ll take care of the rest!
                                         </p>
                                     </div>
                                 </div>
@@ -1343,7 +1394,7 @@ export default function ObservabilityWorkshopPage({ speakers }: WorkshopPageProp
                             <CountdownTimer seatsRemaining={seatsRemaining} />
                         </div>
                         <p className="text-white/90 text-lg mb-4">
-                            Master observability with hands-on Dynatrace experience and expert guidance
+                            Beginner-friendly hands-on workshop - Learn observability with Dynatrace from expert instructors
                         </p>
                         <div className="flex items-center justify-center gap-4 text-white/70 text-sm">
                             <span className="flex items-center gap-1">

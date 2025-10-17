@@ -14,13 +14,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!sizeQuantities || !priceId || !totalQuantity) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
-  
+
   // Validate sizeQuantities
   const validSizes = ['S', 'M', 'L', 'XL', 'XXL'];
-  const hasValidItems = Object.entries(sizeQuantities).some(([size, qty]) => 
+  const hasValidItems = Object.entries(sizeQuantities).some(([size, qty]) =>
     validSizes.includes(size) && typeof qty === 'number' && qty > 0
   );
-  
+
   if (!hasValidItems) {
     return res.status(400).json({ error: 'No valid items in order' });
   }
@@ -34,7 +34,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // Create Stripe Checkout session
   try {
+    let customerId: string | undefined;
+
+    if (delivery && deliveryAddress) {
+      // Normalize to Stripe shapes
+      const fullName = deliveryAddress.fullName;
+      const line1 = deliveryAddress.streetAdress;
+      const city = deliveryAddress.city;
+      const postal_code = deliveryAddress.zip;
+      const country = 'CH'; // Switzerland only
+
+      const customer = await stripe.customers.create({
+        email: email,
+        name: fullName,
+        address: { line1, city, postal_code, country },
+        shipping: {
+          name: fullName,
+          address: { line1, city, postal_code, country },
+        },
+      });
+
+      customerId = customer.id;
+    }
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
+
       line_items: Object.entries(sizeQuantities)
         .filter(([, qty]) => (qty as number) > 0)
         .map(([, qty]) => ({
@@ -45,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       discounts,
       success_url: `${req.headers.origin}/tshirt?success=true&session_id={CHECKOUT_SESSION_ID}&delivery=${delivery}`,
       cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
-      metadata: {
+        metadata: {
         sizes: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
         sizeQuantities: JSON.stringify(sizeQuantities),
         delivery: delivery ? 'true' : 'false',
@@ -70,25 +94,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     };
 
-    // Set customer email if provided
-    if (email) {
+    if (customerId) {
+      sessionParams.customer = customerId;
+    } else if (email) {
       sessionParams.customer_email = email;
+    } else {
+      // Force Stripe to collect the email when not given
+      sessionParams.customer_creation = 'always'
     }
 
     // Configure address collection for delivery orders
     if (delivery) {
       // Collect shipping address when delivery is selected
       sessionParams.shipping_address_collection = {
-        allowed_countries: ['CH'], // Switzerland only as mentioned in UI
+        allowed_countries: ['CH'], 
       };
-      
-      // Pre-fill shipping address if provided
-      if (deliveryAddress) {
-        sessionParams.customer_creation = 'always';
-        
-        // Store address in session metadata for reference, but Stripe will collect fresh address
-        // The user will still need to enter/confirm address in Stripe checkout for security
-      }
     } else {
       // For pickup orders, we still collect billing address but not shipping
       sessionParams.billing_address_collection = 'required';

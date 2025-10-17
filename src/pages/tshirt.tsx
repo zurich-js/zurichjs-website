@@ -384,8 +384,15 @@ Delivery Method: Meetup Pickup`,
           isMember: Boolean(communityCouponCode || hasCoupon),
           shippingRateId: delivery ? SHIPPING_RATE_ID : undefined,
           couponCode: hasCoupon ? couponCode : communityCouponCode,
-          email: userEmail,
-          deliveryAddress: delivery ? deliveryAddress : undefined,
+          email: userEmail || deliveryAddress.email,
+          deliveryAddress: delivery ? {
+            fullName: deliveryAddress.name,
+            streetAdress: deliveryAddress.address,       
+            city: deliveryAddress.city,
+            zip: deliveryAddress.zipCode,          
+            country: 'CH',
+          }
+            : undefined,
         }),
       });
       const data = await res.json();
@@ -1361,7 +1368,7 @@ Delivery Method: Meetup Pickup`,
                           </div>
                         )}
 
-                        {hasCoupon && couponData &&(
+                        {hasCoupon && couponData && (
                           <div className="flex justify-between items-center text-amber-700">
                             <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
                               <Ticket className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />

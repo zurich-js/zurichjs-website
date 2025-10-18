@@ -88,6 +88,7 @@ export const getWorkshops = (): Workshop[] => {
       timeInfo: '17:00 - 20:00',
       locationInfo: 'Venue TBA, Zürich',
       maxAttendees: 25,
+      image: '/images/workshops/react-architecture.png',
       iconColor: '#06b6d4', // cyan-500 (React-like color)
       tag: '⚛️ React Architecture & Performance',
       speakerId: 'faris-aziz',

@@ -1,5 +1,5 @@
 export type PartnerType = 'venue' | 'conference' | 'community' | 'supporting';
-export type SponsorshipTier = 'gold' | 'silver' | 'community' | 'other';
+export type SponsorshipTier = 'champion' | 'builder' | 'friend' | 'supporter' | 'other';
 
 export interface Partner {
     id: string;
@@ -132,7 +132,7 @@ export const getPartners = () => {
             logo: '/images/partners/imagekit.png',
             url: 'https://imagekit.io?utm_source=zurichjs&utm_medium=website',
             type: 'supporting',
-            sponsorshipTier: 'gold',
+            sponsorshipTier: 'champion',
             description: 'Image and Video API plus AI-powered DAM',
             blurb: 'ImageKit is a complete media management solution that helps developers and businesses optimize, transform, and deliver images and videos through a global CDN. With powerful APIs, real-time transformations, and AI-powered digital asset management, ImageKit streamlines media workflows while improving web performance and user experience.'
         },
@@ -142,19 +142,9 @@ export const getPartners = () => {
             logo: '/images/partners/gyff.png',
             url: 'https://www.getyourfreefast.ch',
             type: 'supporting',
-            sponsorshipTier: 'silver',
+            sponsorshipTier: 'supporter',
             description: 'Swiss platform connecting IT experts with businesses',
             blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
-        },
-        {
-            id: '16',
-            name: 'OnlyDust',
-            logo: '/images/partners/only-dust-logo.webp',
-            url: 'https://onlydust.com',
-            type: 'supporting',
-            sponsorshipTier: 'gold',
-            description: 'We help people contribute to open source.',
-            blurb: 'Whether you\'re a contributor looking for something meaningful to build, or a maintainer looking for actual humans to help - not bots - we\'re here.'
         },
         {
             id: '17',
@@ -162,7 +152,7 @@ export const getPartners = () => {
             logo: '/images/partners/storyblok.png',
             url: 'https://www.storyblok.com/?utm_source=zurichjs',
             type: 'supporting',
-            sponsorshipTier: 'silver',
+            sponsorshipTier: 'supporter',
             description: 'A headless CMS made for humans. Built for the AI-driven content era.',
             blurb: 'Storyblok is a headless CMS that enables developers and marketers to create, manage and optimize content experiences. With its API-first, component-based approach and intuitive visual editor, teams can build scalable websites and applications using frameworks like Next.js, Astro, Nuxt, React and more.'
         },
@@ -197,7 +187,7 @@ export interface TodaySponsor {
     name: string;
     logo: string;
     url: string;
-    tier?: 'gold' | 'silver' | 'bronze' | 'supporting';
+    tier?: 'champion' | 'builder' | 'friend' | 'supporter';
     description?: string;
 }
 
@@ -207,46 +197,46 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
     const smallpdf = allPartners.find(p => p.name === 'Smallpdf');
     const gyff = allPartners.find(p => p.name === 'GYFF');
     const storyblok = allPartners.find(p => p.name === 'Storyblok');
-    const onlydust = allPartners.find(p => p.name === 'OnlyDust');
+    const imagekit = allPartners.find(p => p.name === 'ImageKit');
 
     const sponsors: TodaySponsor[] = [
-        // Gold sponsors first
+        // Community Champion tier
+        ...(imagekit ? [{
+            id: imagekit.id,
+            name: imagekit.name,
+            logo: imagekit.logo,
+            url: imagekit.url,
+            tier: 'champion' as const,
+            description: imagekit.description
+        }] : []),
+        
+        // Community Builder tier (hosts that pay for food and drink)
         ...(smallpdf ? [{
             id: smallpdf.id,
             name: smallpdf.name,
             logo: smallpdf.logo,
             url: smallpdf.url,
-            tier: 'gold' as const,
-            description: 'Event venue and gold sponsor'
+            tier: 'builder' as const,
+            description: 'Event venue and food & drinks sponsor'
         }] : []),
         
-        
-        // Stripe - new sponsor
+        // Community Friend tier
         {
-            id: 'stripe-today',
-            name: 'Stripe',
-            logo: '/images/partners/stripe.png',
-            url: 'https://stripe.com',
-            tier: 'gold' as const,
-            description: 'Payment processing and financial infrastructure'
+            id: 'dynatrace-today',
+            name: 'Dynatrace',
+            logo: '/images/partners/dynatrace.png',
+            url: 'https://www.dynatrace.com',
+            tier: 'friend' as const,
+            description: 'Observability and application performance monitoring'
         },
-        
-        ...(onlydust ? [{
-            id: onlydust.id,
-            name: onlydust.name,
-            logo: onlydust.logo,
-            url: onlydust.url,
-            tier: 'gold' as const,
-            description: onlydust.description
-        }] : []),
 
-        // Silver sponsors after
+        // Community Supporter tier
         ...(gyff ? [{
             id: gyff.id,
             name: gyff.name,
             logo: gyff.logo,
             url: gyff.url,
-            tier: 'silver' as const,
+            tier: 'supporter' as const,
             description: gyff.description
         }] : []),
         
@@ -255,14 +245,14 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
             name: storyblok.name,
             logo: storyblok.logo,
             url: storyblok.url,
-            tier: 'silver' as const,
+            tier: 'supporter' as const,
             description: storyblok.description
         }] : [])
     ];
 
-    // Sort by tier (gold first, then silver, etc.)
+    // Sort by tier (champion first, then builder, friend, supporter)
     return sponsors.sort((a, b) => {
-        const tierOrder = { gold: 0, silver: 1, bronze: 2, supporting: 3 };
+        const tierOrder = { champion: 0, builder: 1, friend: 2, supporter: 3 };
         const tierA = tierOrder[a.tier as keyof typeof tierOrder] ?? 4;
         const tierB = tierOrder[b.tier as keyof typeof tierOrder] ?? 4;
         return tierA - tierB;

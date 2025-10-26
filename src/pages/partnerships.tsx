@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Building, Users, Gift, Coffee, Rocket, CheckCircle, MapPin, Home, Calendar, Wrench } from 'lucide-react';
+import { Users, CheckCircle, Home, Calendar, Wrench } from 'lucide-react';
 import Image from 'next/image';
 import { useState, ChangeEvent, FormEvent } from 'react';
 
@@ -10,13 +10,22 @@ import Button from '@/components/ui/Button';
 import { getPartnersByType, getPartnersBySponsorshipTier, getRegularPartners } from '@/data';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
-import { getUpcomingEvents } from '@/sanity/queries';
+import { getUpcomingEvents, getStats } from '@/sanity/queries';
 
 // Define our TypeScript interfaces
+interface PricingOption {
+  label: string;
+  amount: string;
+  note?: string;
+}
+
 interface PartnershipTier {
+  id: string;
   name: string;
-  benefits: string[];
+  pricingOptions: PricingOption[];
+  perks: string[];
   highlighted?: boolean;
+  description?: string;
 }
 
 interface FormState {
@@ -31,16 +40,7 @@ interface FormState {
   isSubmitting: boolean;
 }
 
-interface PartnershipPageProps {
-  upcomingEvent: {
-    title: string;
-    date: string;
-    location: string;
-    image: string;
-  };
-}
-
-export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
+export default function Partnerships() {
   useReferrerTracking();
   const { track } = useEvents();
 
@@ -51,7 +51,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
     email: '',
     phone: '',
     message: '',
-    tierInterest: 'gold',
+    tierInterest: 'champion',
     submitted: false,
     error: '',
     isSubmitting: false,
@@ -63,66 +63,92 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
     venueCapacity: '',
   });
 
+  // Add state for expandable speakers section
+  const [showAllSpeakers, setShowAllSpeakers] = useState(false);
+
   // Define partnership tiers
   const partnershipTiers: PartnershipTier[] = [
     {
-      name: 'Gold Partner',
-      benefits: [
-        'Prominent logo display on website and event materials',
-        'Recognition at all events',
-        'Opportunities to speak at meetups',
-        'Company pitches during events',
-        'Booth space at larger gatherings',
-        'Job postings through our social channels',
-        'Regular social media mentions',
-        'Inclusion in swag bags',
-        'Option to host online/physical workshops',
-        'Priority in suggesting event themes and speakers',
-        'Access to our international network of web experts',
+      id: 'champion',
+      name: 'Community Champion',
+      pricingOptions: [
+        { label: 'Yearly', amount: 'CHF 7\'500', note: '(2 months free)' },
+        { label: 'Monthly', amount: 'CHF 750' },
+        { label: 'One-time', amount: 'CHF 1\'000' },
+      ],
+      perks: [
+        'XL logo on our site and partner list',
+        'Branded photos of the event',
+        'Sponsor slides or video at each meetup',
+        'Personal shoutout and introduction at events',
+        'Featured mention in event announcements',
+        'Direct access to recruit from our talent pool',
+        'Priority input on future meetup topics',
+        'Co-host one exclusive workshop per year',
+        'Swag distribution at events',
       ],
       highlighted: true,
     },
     {
-      name: 'Silver Partner',
-      benefits: [
-        'Logo display on website and event materials',
-        'Recognition at all events',
-        'Opportunities for company pitches at events',
-        'Job postings through our social channels',
-        'Social media mentions',
-        'Inclusion in swag bags',
-        'Input on event themes and speaker suggestions',
+      id: 'builder',
+      name: 'Community Builder',
+      pricingOptions: [
+        { label: 'Yearly', amount: 'CHF 5\'000', note: '(2 months free)' },
+        { label: 'Monthly', amount: 'CHF 500' },
+        { label: 'One-time', amount: 'CHF 700' },
+      ],
+      perks: [
+        'Large logo on our site and partner list',
+        '2 sponsor slides in rotation at meetups',
+        'Social media mentions and shoutouts',
+        'Name-drop and recognition at events',
+        'Access to post job opportunities',
+        'Swag distribution at events',
       ],
     },
     {
-      name: 'Community Partner',
-      benefits: [
-        'Logo display on our website',
-        'Recognition at relevant events',
-        'Social media mentions',
+      id: 'friend',
+      name: 'Community Friend',
+      pricingOptions: [
+        { label: 'Yearly', amount: 'CHF 3\'000', note: '(2 months free)' },
+        { label: 'Monthly', amount: 'CHF 300' },
+        { label: 'One-time', amount: 'CHF 400' },
+      ],
+      perks: [
+        'Medium logo on our site and partner list',
+        '1 sponsor slide in rotation at meetups',
+        'Name-drop and recognition at events',
+        'Swag distribution at events',
       ],
     },
     {
-      name: 'Venue Host',
-      benefits: [
-        'Logo displayed for specific event',
-        'Special recognition at hosted event',
+      id: 'supporter',
+      name: 'Community Supporter',
+      pricingOptions: [
+        { label: 'Yearly', amount: 'CHF 1\'500', note: '(2 months free)' },
+        { label: 'Monthly', amount: 'CHF 150' },
+        { label: 'One-time', amount: 'CHF 250' },
+      ],
+      perks: [
+        'Small logo on our site and partner list',
+        '1 sponsor slide in rotation at meetups',
+        'Swag distribution at events',
+      ],
+    },
+    {
+      id: 'host',
+      name: 'Community Host',
+      pricingOptions: [
+        { label: 'Event', amount: 'Free', note: '(when hosting)' },
+      ],
+      perks: [
+        'Qualify as Community Supporter when you host an event',
+        'Qualify as Builder, Friend, or Champion when you host and provide catering',
+        'Logo recognition for the event',
         'Company introduction at the hosted event',
-        'Social media mention for the event',
-        'Opportunity to distribute company swag',
+        'Social media mentions',
       ],
-    },
-    {
-      name: 'Custom Partner',
-      benefits: [
-        'Tailored packages to meet specific sponsor needs',
-        'Exclusive sponsorship of events or workshops',
-        'Extended speaking opportunities',
-        'Customized branding options',
-        'Additional social media campaigns',
-        'Dedicated email promotions',
-        'Direct access to our network of international web experts',
-      ],
+      description: 'Host our meetup at your venue and become a valued community partner. Catering contributions unlock higher tier benefits.',
     },
   ];
 
@@ -133,8 +159,8 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
   const supportingPartners = getPartnersByType('supporting');
 
   // Get partners by sponsorship tier
-  const goldPartners = getPartnersBySponsorshipTier('gold');
-  const silverPartners = getPartnersBySponsorshipTier('silver');
+  const championPartners = getPartnersBySponsorshipTier('champion');
+  const supporterPartners = getPartnersBySponsorshipTier('supporter');
   const regularPartners = getRegularPartners();
 
   // Handle form input changes
@@ -187,8 +213,8 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
           phone: formState.phone,
           message: formState.message,
           tierInterest: formState.tierInterest,
-          // Include venue details if the selected tier is 'venue'
-          ...(formState.tierInterest === 'venue' && {
+          // Include venue details if the selected tier is 'host'
+          ...(formState.tierInterest === 'host' && {
             venueDetails: {
               canProvideFoodDrinks: venueDetails.canProvideFoodDrinks,
               venueCapacity: venueDetails.venueCapacity
@@ -264,234 +290,539 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
         }}
       />
 
+      {/* Sticky CTA Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="fixed bottom-6 right-6 z-50"
+      >
+        <Button
+          href="#inquiry-form"
+          variant="primary"
+          className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all"
+          onClick={() => track('sticky_cta_contact_click')}
+        >
+          Contact Us
+        </Button>
+      </motion.div>
+
+      {/* Hero Section */}
       <Section variant="gradient" padding="lg" className="mt-20">
-            <div className="flex flex-col lg:flex-row items-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="lg:w-1/2 lg:pr-12 mb-10 lg:mb-0"
-              >
-                <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
-                  Partner with ZurichJS! 🤝
-                </h1>
-                <p className="text-xl mb-6 text-gray-900">
-                  Join forces with Zurich&apos;s most vibrant JavaScript community and connect with talented developers passionate about JS!
-                </p>
-                <p className="text-lg mb-6 text-gray-900">
-                  Support our mission to nurture the JavaScript ecosystem in Zurich while gaining visibility for your brand among developers, tech leads, and decision-makers.
-                </p>
-                <div className="bg-white/80 backdrop-blur-sm border border-blue-200 rounded-lg p-4 mb-8">
-                  <p className="text-blue-800 font-medium text-center">
-                    📞 Interested in sponsorship? Inquire about pricing and partnership details!
-                  </p>
-                </div>
-                <Button
-                  href="#partnership-tiers"
-                  variant="primary"
-                  size="lg"
-                  className="bg-blue-700 hover:bg-blue-600 text-white"
-                >
-                  Discover Your Perfect Partnership 🎯
-                </Button>
-              </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-5xl mx-auto"
+        >
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black mb-8 text-gray-900 tracking-tight">
+            SUPPORT ZURICHJS
+          </h1>
+          <div className="space-y-6 text-lg md:text-xl text-gray-800 leading-relaxed mb-10">
+            <p>
+              We launched ZurichJS on November 14, 2024 using only personal savings, donated time, and late nights. The community showed up—not just for tech, but to connect across backgrounds, languages, and experience levels.
+            </p>
+            <p>
+              Less than a year later, ZurichJS has become:
+            </p>
+            <ul className="list-none space-y-3 ml-6">
+              <li className="flex items-start">
+                <span className="text-blue-600 mr-3">•</span>
+                <span>A trusted developer event brand, already recognized across Europe.</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-600 mr-3">•</span>
+                <span>A hub for engineers from diverse backgrounds and disciplines.</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-blue-600 mr-3">•</span>
+                <span>A growing platform run as a structured, legal nonprofit.</span>
+              </li>
+            </ul>
+          </div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="lg:w-1/2"
-              >
-                <div className="bg-white p-6 rounded-lg shadow-lg">
-                  <div className="relative h-64 w-full mb-4 rounded overflow-hidden">
+          <div className="flex flex-col sm:flex-row gap-4 justify-start">
+            <Button
+              href="#sponsorship-tiers"
+              variant="primary"
+              size="lg"
+              className="bg-gray-900 hover:bg-gray-800 text-white font-semibold"
+              onClick={() => track('hero_become_sponsor_click')}
+            >
+              Become a Sponsor
+            </Button>
+            <Button
+              href="#sponsorship-tiers"
+              variant="outline"
+              size="lg"
+              className="border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-semibold"
+              onClick={() => track('hero_host_event_click')}
+            >
+              Host an Event
+            </Button>
+            <Button
+              href="mailto:hello@zurichjs.com?subject=ZurichJS Sponsorship Prospectus Request"
+              variant="outline"
+              size="lg"
+              className="border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white font-semibold"
+              onClick={() => track('hero_request_prospectus_click')}
+            >
+              Request the Prospectus
+            </Button>
+          </div>
+        </motion.div>
+      </Section>
+
+      {/* Why ZurichJS Works */}
+      <Section variant="white" padding="lg">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-black mb-8 text-gray-900 tracking-tight">
+              Why ZurichJS works
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Left Column */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="space-y-6 text-gray-800 leading-relaxed"
+            >
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">Our ambition</h3>
+                <p>
+                  The Zurich tech scene had meetups before, but many faded post-pandemic. We stepped in because Zurich still had potential that nobody was shaping. We set out to build something people actually trust.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">Beliefs & values</h3>
+                <p>
+                  Trust. Authenticity. Quality. We act responsibly with the trust the community gives us, and we focus on delivering high-quality technical experiences where everyone feels included. We&apos;ve built this by volunteering our own time and effort.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">How we operate</h3>
+                <p>
+                  We don&apos;t do shallow &quot;networking drinks&quot;. We bring conference-level content into an accessible meetup format.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Right Column */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="space-y-6 text-gray-800 leading-relaxed"
+            >
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">Momentum</h3>
+                <p>
+                  ZurichJS quickly became one of the most active developer communities in Zurich. We consistently fill rooms, attract international speakers, and people now travel in to attend. Workshops in 2025 proved people are willing to travel across borders just to be in the room.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">Community loop</h3>
+                <p>
+                  After almost every event, new volunteers step forward and speakers get meaningful feedback to refine their talks. This is now part of our DNA.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold mb-3 text-gray-900">Positioning</h3>
+                <p className="font-semibold">
+                  ZurichJS is becoming a reference point for more than just the local scene.
+                </p>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Core Team */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-12 pt-8 border-t border-gray-200"
+          >
+            <p className="text-sm font-semibold text-gray-600 mb-6">CORE TEAM</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  name: 'Faris Aziz',
+                  image: '/images/team/faris.jpg',
+                  linkedin: 'https://linkedin.com/in/farisaziz12',
+                  description: 'Co-founder · Staff Software Engineer, conference speaker'
+                },
+                {
+                  name: 'Bogdan Mihai Ilie',
+                  image: '/images/team/bogdan.jpg',
+                  linkedin: 'https://linkedin.com/in/ilie-bogdan',
+                  description: 'Co-founder · Frontend specialist, passionate about inclusive tech communities'
+                },
+                {
+                  name: 'Nadja Hesselbjerg',
+                  image: '/images/team/nadja.png',
+                  linkedin: 'https://www.linkedin.com/in/nadja-r%C3%B8mer-hesselbjerg-47002a12b/',
+                  description: 'Frontend developer with a flair for sleek, user-friendly experiences'
+                }
+              ].map((member, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
                     <Image
-                      src={upcomingEvent.image}
-                      alt="ZurichJS Meetup"
+                      src={member.image}
+                      alt={member.name}
                       fill
-                      className="object-cover object-top"
+                      className="object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <h3 className="text-xl font-bold">{upcomingEvent.title}</h3>
-                      <div className="flex items-center mt-2 text-sm">
-                        <MapPin size={14} className="mr-1" />
-                        <span>{upcomingEvent.location}</span>
-                      </div>
-                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="font-bold text-gray-900">Our next meetup is coming up soon! 📅</p>
-                    <p className="text-gray-700">Become a partner and get featured at our events!</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-900 text-sm">{member.name}</h3>
+                      <a
+                        href={member.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-blue-600 transition-colors"
+                        aria-label={`${member.name}'s LinkedIn`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z" />
+                        </svg>
+                      </a>
+                    </div>
+                    <p className="text-xs text-gray-600 leading-snug">{member.description}</p>
                   </div>
                 </div>
-              </motion.div>
+              ))}
             </div>
-        </Section>
+          </motion.div>
+        </div>
+      </Section>
 
-        {/* Why Partner With Us */}
-        <Section variant="white">
+      {/* Proof / Stats Block */}
+      <Section variant="gray" padding="lg">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-black mb-8 text-gray-900 tracking-tight">
+              What you get access to
+            </h2>
+          </motion.div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+            {[
+              { number: '900', label: 'members across ZurichJS and Vue Zurich' },
+              { number: '50-100', label: 'RSVPs per meetup, 70-80% confirmed participation' },
+              { number: '15000+', label: 'website views in 6 months' },
+              { number: '450+', label: 'LinkedIn followers' },
+              { number: '35%', label: 'repeat attendees' },
+              { number: '114', label: 'peak RSVP rate' },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-white p-6 rounded-lg shadow-sm"
+              >
+                <div className="text-4xl font-black text-blue-600 mb-2">{stat.number}</div>
+                <div className="text-gray-700 leading-snug">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Growth Description */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="space-y-4 text-gray-800 leading-relaxed max-w-4xl"
+          >
+            <p>
+              Growth is organic, driven by word of mouth and social channels. We now pull people from outside Zurich. Attendees travel from neighbouring countries, and international speakers approach us to be part of the program.
+            </p>
+            <p className="font-semibold">
+              This positions ZurichJS within the wider European JavaScript network.
+            </p>
+          </motion.div>
+        </div>
+      </Section>
+
+      {/* Speaker Credibility */}
+      <Section variant="white" padding="lg">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-black mb-8 text-gray-900 tracking-tight">
+              Who&apos;s been on stage
+            </h2>
+          </motion.div>
+
+          {/* Speaker Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 mb-6">
+            {[
+              { name: 'Matteo Collina', bio: 'Co-Founder/CTO @ Platformatic · Node.js TSC member · Fastify Lead Maintainer' },
+              { name: 'Elian Van Cutsem', bio: 'Lead DevRel at React Bricks · CTO at Vulpo · Astro Maintainer · devs.gent meetup organiser' },
+              { name: 'Ewa Gasperowicz', bio: 'Senior Developer Relations Engineer at Google' },
+              { name: 'Harshil Agrawal', bio: 'Developer Educator @ Cloudflare' },
+              { name: 'Indermohan Singh', bio: 'Senior Developer Advocate for Dynatrace Apps · Developer · Musician' },
+              { name: 'Dani Coll', bio: 'Senior Developer Advocate @ Dynatrace' },
+              { name: 'Vitaly Friedman', bio: 'Founder & Creative Lead at Smashing Magazine' },
+              { name: 'Rahul Nanwani', bio: 'CEO @ ImageKit.io' },
+              { name: 'Salih Güler', bio: 'Senior Developer Advocate, AWS' },
+              { name: 'Wout Mertens', bio: 'Head of Product at StratoKit SA · Qwik Core Contributor' },
+              { name: 'Nico Martin', bio: 'Frontend Developer and Google Developer Expert for Web Technologies and AI' },
+              { name: 'Adam Berecz', bio: 'Founder of Vueform' },
+              { name: 'Christian Wörz', bio: 'Expert Fullstack Engineer · Microsoft MVP (Web Dev & Dev Tools)' },
+              { name: 'Savas Vedova', bio: 'Staff Frontend Engineer at GitLab · Founder at Stormkit' },
+              { name: 'Samir Akarion', bio: 'Developer Advocate @ Gatling' },
+              { name: 'Bert De Swaef', bio: 'Owner, Founder at Vulpo Digital Studio' },
+              { name: 'Aleksej Dix', bio: 'Founder of Allyship.dev' },
+              { name: 'Alex Suzuki', bio: 'Solopreneur · Author of STRICH (Barcode Scanning for Web Apps) · Father of two' },
+              { name: 'Jan Hesters', bio: 'CTO @ ReactSquad & SocialKit' },
+            ]
+            .slice(0, showAllSpeakers ? undefined : 6)
+            .map((speaker, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                className="border-b border-gray-200 pb-4"
+              >
+                <div className="font-bold text-gray-900">{speaker.name}</div>
+                <div className="text-sm text-gray-700 mt-1">{speaker.bio}</div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Show More/Less Button */}
+          <div className="text-center mb-10">
+            <button
+              onClick={() => setShowAllSpeakers(!showAllSpeakers)}
+              className="inline-flex items-center px-6 py-3 rounded-lg bg-gray-900 hover:bg-gray-800 text-white font-semibold transition-all"
+            >
+              {showAllSpeakers ? 'Show Less Speakers' : 'Show All Speakers (19)'}
+            </button>
+          </div>
+
+          {/* Speaker Quality Statement */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="space-y-4 text-gray-800 leading-relaxed max-w-4xl"
+          >
+            <p>
+              ZurichJS isn&apos;t just for conference-level speakers. We run <strong>PRO events</strong> featuring international speakers, and <strong>community events</strong> showcasing local talent. We mix and match to balance for the community—it&apos;s open for all, whether you&apos;re speaking or running workshops.
+            </p>
+            <p>
+              We only work with speakers we trust, and we support them properly. A large share travel in from outside Zurich. We help them with what they need, from comms to logistics, so they can deliver with confidence.
+            </p>
+            <p className="font-semibold">
+              Sponsors benefit from that same environment of trust.
+            </p>
+          </motion.div>
+        </div>
+      </Section>
+
+        {/* Sponsorship Tiers - 2x2 Grid + Host */}
+        <Section variant="gray" padding="lg" id="sponsorship-tiers">
+          <div className="max-w-7xl mx-auto">
+            {/* Section Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-center mb-12"
+              className="mb-12"
             >
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">Why Partner With ZurichJS? ✨</h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-                Partnering with ZurichJS gives you unique access to connect with the JavaScript community in Zurich.
+              <h2 className="text-4xl md:text-5xl font-black mb-6 text-gray-900 tracking-tight">
+                Sponsorship tiers
+              </h2>
+              <p className="text-lg text-gray-800 leading-relaxed max-w-3xl">
+                We offer clear, transparent sponsorship options. Pick the level that works for your goals.
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Users size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Connect with Top Talent</h3>
-                <p className="text-gray-700">
-                  Get direct access to a community of 375+ JavaScript developers, from juniors to tech leads and CTOs.
-                </p>
-              </motion.div>
+            {/* First 4 tiers in 2x2 grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-6 lg:mb-8">
+              {partnershipTiers.slice(0, 4).map((tier, index) => (
+                <motion.div
+                  key={tier.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                  className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 flex flex-col h-full ${
+                    tier.highlighted
+                      ? 'border-yellow-400 ring-4 ring-yellow-100'
+                      : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  {/* Tier Header */}
+                  <div className={`p-6 ${tier.highlighted ? 'bg-gradient-to-br from-yellow-50 to-amber-50' : 'bg-gray-50'}`}>
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-2xl font-bold text-gray-900">{tier.name}</h3>
+                      {tier.highlighted && (
+                        <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full">
+                          POPULAR
+                        </span>
+                      )}
+                    </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Building size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Enhance Your Brand</h3>
-                <p className="text-gray-700">
-                  Boost your company&apos;s visibility in the tech community and position yourself as a JavaScript supporter.
-                </p>
-              </motion.div>
+                    {/* Pricing Options */}
+                    <div className="space-y-2">
+                      {tier.pricingOptions.map((option, idx) => (
+                        <div key={idx} className="flex items-baseline justify-between">
+                          <span className="text-sm font-medium text-gray-600">{option.label}:</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-gray-900">{option.amount}</span>
+                            {option.note && (
+                              <span className="text-xs text-gray-500">{option.note}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Rocket size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Share Knowledge</h3>
-                <p className="text-gray-700">
-                  Showcase your technical expertise with speaking slots and contribute to the growth of the JS ecosystem.
-                </p>
-              </motion.div>
+                  {/* Tier Perks */}
+                  <div className="p-6 flex-grow flex flex-col">
+                    <ul className="space-y-3 mb-6 flex-grow">
+                      {tier.perks.map((perk, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <CheckCircle className={`${tier.highlighted ? 'text-yellow-500' : 'text-blue-500'} mt-0.5 flex-shrink-0`} size={18} />
+                          <span className="text-gray-700 text-sm leading-relaxed">{perk}</span>
+                        </li>
+                      ))}
+                    </ul>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Coffee size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Host Memorable Events</h3>
-                <p className="text-gray-700">
-                  Open your office space for meetups and showcase your company culture to the community.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Gift size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Provide Swag & Prizes</h3>
-                <p className="text-gray-700">
-                  Get your branded merchandise into the hands of engaged developers through giveaways and contests.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Users size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Recruit Passionate Devs</h3>
-                <p className="text-gray-700">
-                  Find your next team member from a pool of passionate JavaScript developers interested in growth.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.7 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <CheckCircle size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Build Credibility</h3>
-                <p className="text-gray-700">
-                  Establish your company as a trusted voice in the JavaScript ecosystem through consistent community engagement.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.8 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <MapPin size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Local Impact</h3>
-                <p className="text-gray-700">
-                  Make a meaningful contribution to Zurich&apos;s tech scene and help foster innovation in the local community.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-                className="bg-gray-50 p-6 rounded-lg"
-              >
-                <div className="text-blue-700 mb-4">
-                  <Rocket size={36} />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-gray-900">Stay Ahead</h3>
-                <p className="text-gray-700">
-                  Keep your team updated with the latest JavaScript trends and technologies through our community events.
-                </p>
-              </motion.div>
+                    {/* CTA Button */}
+                    <Button
+                      onClick={() => {
+                        selectTier(tier.id);
+                        track('sponsorship_tier_cta_click', {
+                          name: tier.name,
+                          tierId: tier.id
+                        });
+                      }}
+                      variant={tier.highlighted ? 'primary' : 'outline'}
+                      className={`w-full ${
+                        tier.highlighted
+                          ? 'bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold'
+                          : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
+                      }`}
+                    >
+                      Become a Sponsor
+                    </Button>
+                  </div>
+                </motion.div>
+              ))}
             </div>
+
+            {/* Host Tier - Full Width */}
+            {partnershipTiers[4] && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.4 }}
+                whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border-2 border-gray-200 hover:border-blue-300"
+              >
+                <div className="md:flex">
+                  {/* Left Side - Header and Pricing */}
+                  <div className="md:w-1/3 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-b md:border-b-0 md:border-r border-gray-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Home className="text-blue-600" size={24} />
+                      <h3 className="text-2xl font-bold text-gray-900">{partnershipTiers[4].name}</h3>
+                    </div>
+
+                    {partnershipTiers[4].description && (
+                      <p className="text-gray-700 mb-4 text-sm leading-relaxed">
+                        {partnershipTiers[4].description}
+                      </p>
+                    )}
+
+                    <div className="space-y-2">
+                      {partnershipTiers[4].pricingOptions.map((option, idx) => (
+                        <div key={idx} className="flex items-baseline justify-between">
+                          <span className="text-sm font-medium text-gray-600">{option.label}:</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-bold text-green-600">{option.amount}</span>
+                            {option.note && (
+                              <span className="text-xs text-gray-500">{option.note}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Right Side - Perks and CTA */}
+                  <div className="md:w-2/3 p-6 flex flex-col">
+                    <ul className="space-y-3 mb-6 flex-grow">
+                      {partnershipTiers[4].perks.map((perk, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <CheckCircle className="text-blue-500 mt-0.5 flex-shrink-0" size={18} />
+                          <span className="text-gray-700 text-sm leading-relaxed">{perk}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      onClick={() => {
+                        selectTier(partnershipTiers[4].id);
+                        track('sponsorship_tier_cta_click', {
+                          name: partnershipTiers[4].name,
+                          tierId: partnershipTiers[4].id
+                        });
+                      }}
+                      variant="outline"
+                      className="w-full md:w-auto border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
+                    >
+                      Contact Us About Hosting
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
         </Section>
 
         {/* Current Partners - Sponsors First */}
-        {(goldPartners.length > 0 || silverPartners.length > 0) && (
+        {(championPartners.length > 0 || supporterPartners.length > 0) && (
           <Section variant="white">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -506,8 +837,8 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
               </p>
             </motion.div>
 
-            {/* Gold Partners Section */}
-            {goldPartners.length > 0 && (
+            {/* Champion Partners Section */}
+            {championPartners.length > 0 && (
               <div className="mb-20">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -520,7 +851,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                     <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mr-4">
                       <span className="text-2xl">🥇</span>
                     </div>
-                    <h3 className="text-3xl font-bold text-gray-900">Gold Sponsors</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">Community Champions</h3>
                   </div>
                   <p className="text-lg text-gray-700 max-w-3xl mx-auto">
                     These phenomenal partners keep the JavaScript passion burning bright in our hearts. Their exceptional support helps our community thrive beyond our wildest dreams! 🔥
@@ -528,7 +859,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 </motion.div>
 
                 <div className="space-y-16">
-                  {goldPartners.map((partner, index) => (
+                  {championPartners.map((partner, index) => (
                     <motion.div
                       key={partner.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -603,8 +934,8 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
               </div>
             )}
 
-            {/* Silver Partners Section */}
-            {silverPartners.length > 0 && (
+            {/* Supporter Partners Section */}
+            {supporterPartners.length > 0 && (
               <div className="mb-20">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -617,7 +948,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                     <div className="w-12 h-12 bg-gradient-to-r from-gray-300 to-gray-500 rounded-full flex items-center justify-center mr-4">
                       <span className="text-2xl">🥈</span>
                     </div>
-                    <h3 className="text-3xl font-bold text-gray-900">Silver Sponsors</h3>
+                    <h3 className="text-3xl font-bold text-gray-900">Community Supporters</h3>
                   </div>
                   <p className="text-lg text-gray-700 max-w-3xl mx-auto">
                     These wonderful partners nurture our JavaScript passion and help our community flourish. We&apos;re deeply grateful for their commitment to keeping our love for JS alive! 💙
@@ -625,7 +956,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                 </motion.div>
 
                 <div className="space-y-12">
-                  {silverPartners.map((partner, index) => (
+                  {supporterPartners.map((partner, index) => (
                     <motion.div
                       key={partner.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -961,82 +1292,98 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
           </Section>
         )}
 
-        {/* Partnership Tiers */}
-        <Section variant="white" id="partnership-tiers">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl font-bold mb-3 text-gray-900">Partnership Options 🌟</h2>
-              <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-4">
-                Discover the partnership level that aligns with your goals - reach out to learn more about pricing and get started!
-              </p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
-                <p className="text-blue-800 font-medium text-center">
-                  💬 Inquire about pricing below - no commitment required!
-                </p>
-              </div>
-            </motion.div>
+        {/* Previous Partners and Sponsors - Auto-scrolling Section */}
+        <Section variant="gray" padding="lg">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">Previous Partners and Sponsors</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              We&apos;re grateful to all the companies and organizations that have supported ZurichJS over the years.
+            </p>
+          </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {partnershipTiers.map((tier, index) => (
-                <motion.div
-                  key={tier.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`bg-white rounded-lg shadow-lg overflow-hidden border flex flex-col h-full ${
-                    tier.highlighted ? 'border-blue-700 transform -translate-y-2 scale-105' : 'border-gray-200'
-                  }`}
+          {/* Auto-scrolling logos container */}
+          <div className="relative overflow-hidden">
+            {/* Gradient overlays for smooth fade effect */}
+            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-gray-50 to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-gray-50 to-transparent z-10" />
+
+            {/* Scrolling container */}
+            <div className="flex animate-scroll">
+              {/* First set of logos - only showing previous partners/sponsors not currently displayed */}
+              {[
+                { name: 'Voxxed Days Zurich', logo: '/images/partners/voxxed-days-zurich.png' },
+                { name: 'Stripe', logo: '/images/partners/stripe.png' },
+                { name: 'DotJS', logo: '/images/partners/dotjs.png' },
+                { name: 'React Paris', logo: '/images/partners/react-paris.png' },
+                { name: 'Dynatrace', logo: '/images/partners/dynatrace.png' },
+              ].map((partner, index) => (
+                <div
+                  key={`first-${index}`}
+                  className="flex-shrink-0 w-40 h-24 mx-6 flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300"
                 >
-                  <div className={`p-6 ${tier.highlighted ? 'bg-blue-700 text-white' : 'bg-gray-50'} relative`}>
-                    <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
-                    <p className={`text-sm font-medium ${tier.highlighted ? 'text-yellow-200' : 'text-blue-600'}`}>
-                      💬 Inquire for pricing
-                    </p>
-                  </div>
+                  <Image
+                    src={partner.logo}
+                    alt={partner.name}
+                    width={160}
+                    height={96}
+                    className="object-contain max-w-full max-h-full"
+                  />
+                </div>
+              ))}
 
-                  <div className="p-6 flex-grow flex flex-col">
-                    <ul className="space-y-3 mb-6 flex-grow">
-                      {tier.benefits.map((benefit, i) => (
-                        <li key={i} className="flex items-start">
-                          <CheckCircle className="text-blue-700 mt-1 mr-2 flex-shrink-0" size={16} />
-                          <span className="text-gray-700">{benefit}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <div className="mt-auto">
-                      <Button
-                        onClick={() => {
-                          selectTier(tier.name.toLowerCase().split(' ')[0]);
-                          // Additional tracking for tier card CTA click
-                          track('partnership_tier_cta_click', {
-                            name: tier.name
-                          });
-                        }}
-                        variant={tier.highlighted ? 'primary' : 'outline'}
-                        className={`w-full text-sm transition-colors ${
-                          tier.highlighted 
-                            ? 'bg-blue-700 text-white hover:bg-blue-600' 
-                            : 'border-blue-700 text-blue-700 hover:bg-blue-700 hover:text-white'
-                        }`}
-                      >
-                        Inquire About {tier.name.split(' ')[0]} Pricing
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
+              {/* Duplicate set for seamless loop */}
+              {[
+                { name: 'Voxxed Days Zurich', logo: '/images/partners/voxxed-days-zurich.png' },
+                { name: 'Stripe', logo: '/images/partners/stripe.png' },
+                { name: 'DotJS', logo: '/images/partners/dotjs.png' },
+                { name: 'React Paris', logo: '/images/partners/react-paris.png' },
+                { name: 'Dynatrace', logo: '/images/partners/dynatrace.png' },
+              ].map((partner, index) => (
+                <div
+                  key={`second-${index}`}
+                  className="flex-shrink-0 w-40 h-24 mx-6 flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300"
+                >
+                  <Image
+                    src={partner.logo}
+                    alt={partner.name}
+                    width={160}
+                    height={96}
+                    className="object-contain max-w-full max-h-full"
+                  />
+                </div>
               ))}
             </div>
+          </div>
+
+          {/* Add CSS for the animation */}
+          <style jsx>{`
+            @keyframes scroll {
+              0% {
+                transform: translateX(0);
+              }
+              100% {
+                transform: translateX(-50%);
+              }
+            }
+
+            .animate-scroll {
+              animation: scroll 40s linear infinite;
+            }
+
+            .animate-scroll:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
         </Section>
 
         {/* Partnership Inquiry Form */}
-        <Section variant="gray" id="inquiry-form">
+        <Section variant="white" id="inquiry-form">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -1044,9 +1391,9 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
               transition={{ duration: 0.5 }}
               className="max-w-3xl mx-auto"
             >
-              <h2 className="text-3xl font-bold mb-6 text-center text-gray-900">Let&apos;s Talk Partnership! 🎯</h2>
-              <p className="text-lg text-gray-700 text-center mb-8 max-w-2xl mx-auto">
-                Ready to partner with ZurichJS? Get in touch with us to discuss pricing, partnership details, and how we can work together to grow the JavaScript community in Zurich!
+              <h2 className="text-4xl md:text-5xl font-black mb-6 text-gray-900 tracking-tight">Start a conversation</h2>
+              <p className="text-lg text-gray-800 leading-relaxed mb-8 max-w-2xl">
+                Interested in sponsoring or hosting? Get in touch. We&apos;ll walk you through the details and answer any questions.
               </p>
 
               {formState.submitted ? (
@@ -1114,11 +1461,11 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                           onChange={handleInputChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
                         >
-                          <option value="gold">Gold Partner</option>
-                          <option value="silver">Silver Partner</option>
-                          <option value="community">Community Partner</option>
-                          <option value="venue">Venue Host</option>
-                          <option value="custom">Custom Partner</option>
+                          <option value="champion">Community Champion</option>
+                          <option value="builder">Community Builder</option>
+                          <option value="friend">Community Friend</option>
+                          <option value="supporter">Community Supporter</option>
+                          <option value="host">Community Host</option>
                         </select>
                       </div>
                     </div>
@@ -1186,8 +1533,8 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                     />
                   </div>
 
-                  {/* Venue-specific fields that only appear when "Venue Host" is selected */}
-                  {formState.tierInterest === 'venue' && (
+                  {/* Venue-specific fields that only appear when "Community Host" is selected */}
+                  {formState.tierInterest === 'host' && (
                     <div className="mb-6 p-4 bg-blue-50 rounded-md border border-blue-100">
                       <h3 className="text-xl font-bold mb-4 text-gray-900">Venue Information</h3>
 
@@ -1240,7 +1587,7 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
                           Submitting...
                         </span>
                       ) : (
-                        'Inquire About Pricing 🚀'
+                        'Send Inquiry'
                       )}
                     </Button>
                   </div>
@@ -1250,35 +1597,31 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
         </Section>
 
         {/* Final CTA */}
-        <Section variant="black" padding="lg">
+        <Section variant="gradient" padding="lg" className="bg-gradient-to-br from-yellow-50 to-amber-50">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="text-center"
+              className="max-w-4xl mx-auto"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Grow with ZurichJS? 🚀</h2>
-              <p className="text-xl mb-6 max-w-3xl mx-auto">
-                Let&apos;s join forces to create an even more vibrant JavaScript community in Zurich!
+              <h2 className="text-4xl md:text-5xl font-black mb-6 text-gray-900 tracking-tight">
+                Join the movement
+              </h2>
+              <p className="text-lg md:text-xl text-gray-800 leading-relaxed mb-8">
+                ZurichJS is built on trust, quality, and authenticity. When you sponsor us, you&apos;re not just buying a logo slot—you&apos;re backing a community that developers actually show up for.
               </p>
-              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 mb-8 max-w-2xl mx-auto">
-                <p className="text-yellow-200 font-medium text-center">
-                  💡 Inquire about sponsorship pricing - no strings attached!
-                </p>
-              </div>
               <Button
                 onClick={() => {
-                  selectTier('gold');
-                  // Additional tracking for final CTA click
+                  selectTier('champion');
                   track('partnership_final_cta_click');
                 }}
                 variant="primary"
                 size="lg"
-                className="bg-blue-700 text-white hover:bg-blue-600"
-                >
-                  Inquire About Partnership Pricing 💛
-                </Button>
+                className="bg-gray-900 hover:bg-gray-800 text-white font-semibold"
+              >
+                Get Started
+              </Button>
             </motion.div>
         </Section>
     </Layout>
@@ -1287,10 +1630,12 @@ export default function Partnerships({ upcomingEvent }: PartnershipPageProps) {
 
 export async function getStaticProps() {
   const upcomingEvents = await getUpcomingEvents();
+  const stats = await getStats();
 
   return {
     props: {
       upcomingEvent: upcomingEvents[0],
+      stats,
     },
   };
 }

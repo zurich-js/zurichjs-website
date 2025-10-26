@@ -21,13 +21,13 @@ import { Speaker } from '@/types';
 // Horizontal Timeline Component
 function HorizontalTimeline() {
     const now = new Date();
-    const earlyBirdEnd = new Date('2025-11-01T23:59:59');
-    const workshopDate = new Date('2025-11-12T17:00:00');
+    const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00'); // 1 AM CEST
+    const workshopDate = new Date('2025-11-12T17:30:00');
     
     const milestones = [
         { 
             name: 'Early Bird Pricing', 
-            date: 'Until Nov 1st, 2025',
+            date: 'Until Oct 28th, 2025',
             price: 'CHF 195',
             endDate: earlyBirdEnd,
             color: 'bg-green-500',
@@ -37,7 +37,7 @@ function HorizontalTimeline() {
         },
         { 
             name: 'Standard Pricing', 
-            date: 'Nov 1st - Nov 12th, 2025',
+            date: 'Oct 28th - Nov 12th, 2025',
             price: 'CHF 250',
             endDate: workshopDate,
             color: 'bg-zurich',
@@ -48,7 +48,7 @@ function HorizontalTimeline() {
         { 
             name: 'Workshop Day', 
             date: 'November 12th, 2025',
-            price: '17:00 - 20:00',
+            price: '17:30 - 20:30',
             endDate: workshopDate,
             color: 'bg-red-500',
             textColor: 'text-red-700',
@@ -173,8 +173,8 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const earlyBirdEnd = new Date('2025-11-01T23:59:59').getTime();
-      const workshopStart = new Date('2025-11-12T17:00:00').getTime();
+      const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00').getTime(); // 1 AM CEST
+      const workshopStart = new Date('2025-11-12T17:30:00').getTime();
       
       // Determine which countdown to show
       let targetTime;
@@ -209,8 +209,8 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   if (!isClient) return null;
 
   const now = new Date().getTime();
-  const earlyBirdEnd = new Date('2025-11-01T23:59:59').getTime();
-  const workshopStart = new Date('2025-11-12T17:00:00').getTime();
+  const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00').getTime(); // 1 AM CEST
+  const workshopStart = new Date('2025-11-12T17:30:00').getTime();
   
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
   
@@ -279,11 +279,11 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
         title: "Real-World React: The Architectural Crash Course for Scalability, Resilience, and Observability (feat. Next.js)",
         subtitle: "Intensive crash course covering architecture, resilience, and scalability patterns",
         dateInfo: "November 12, 2025",
-        timeInfo: "17:00 - 20:00 (3 hours, refreshments included)",
+        timeInfo: "17:30 - 20:30 (3 hours, refreshments included)",
         locationInfo: "Venue TBA, Zürich",
         price: "195 CHF (Early Bird) / 250 CHF",
         description: "An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering through rapid-fire lessons, hands-on exercises, and real-world examples. Perfect for developers who want to level up their React skills quickly and efficiently.",
-        maxAttendees: 25,
+        maxAttendees: 15,
         speakers: speakers,
         topics: [
             {
@@ -437,18 +437,18 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
     };
 
     // Single source of truth for seats
-    const seatsRemaining = 25; // All seats available initially
+    const seatsRemaining = 6; // 9 out of 15 seats already taken
     const isSoldOut = seatsRemaining <= 0;
 
     // Get current pricing stage for display
     const getCurrentPricingStage = () => {
         const now = new Date();
-        const earlyBirdEnd = new Date('2025-11-01T23:59:59');
+        const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00'); // 1 AM CEST
         
         if (now < earlyBirdEnd) {
             return { stage: 'early', price: 195, endDate: earlyBirdEnd };
         } else {
-            return { stage: 'standard', price: 250, endDate: new Date('2025-11-12T17:00:00') };
+            return { stage: 'standard', price: 250, endDate: new Date('2025-11-12T17:30:00') };
         }
     };
 
@@ -696,7 +696,7 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                                         <div className="text-xs lg:text-sm text-gray-600 font-medium">Nov 2025</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
-                                        <div className="text-sm lg:text-base font-bold text-black mb-1">17:00-20:00</div>
+                                        <div className="text-sm lg:text-base font-bold text-black mb-1">17:30-20:30</div>
                                         <div className="text-xs lg:text-sm text-gray-600 font-medium">3 hours</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">

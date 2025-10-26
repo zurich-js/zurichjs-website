@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
-type SectionVariant = 'gradient' | 'js' | 'black' | 'white' | 'gray' | 'transparent';
+type SectionVariant = 'gradient' | 'js' | 'js-dark' | 'zurich' | 'black' | 'white' | 'gray' | 'transparent';
 type SectionPadding = 'sm' | 'md' | 'lg';
 
 interface SectionProps {
@@ -17,6 +17,8 @@ interface SectionProps {
 const variantStyles: Record<SectionVariant, string> = {
   'gradient': 'bg-gradient-to-br from-js to-js-dark',
   'js': 'bg-js',
+  'js-dark': 'bg-js-dark',
+  'zurich': 'bg-zurich',
   'black': 'bg-black text-white',
   'white': 'bg-white',
   'gray': 'bg-gray-50',

@@ -160,6 +160,8 @@ export default function Partnerships() {
 
   // Get partners by sponsorship tier
   const championPartners = getPartnersBySponsorshipTier('champion');
+  const builderPartners = getPartnersBySponsorshipTier('builder');
+  const friendPartners = getPartnersBySponsorshipTier('friend');
   const supporterPartners = getPartnersBySponsorshipTier('supporter');
   const regularPartners = getRegularPartners();
 
@@ -919,6 +921,200 @@ export default function Partnerships() {
                                  track('sponsor_visit', {
                                    sponsorName: partner.name,
                                    sponsorTier: 'gold',
+                                   sponsorUrl: partner.url
+                                 });
+                               }}
+                             >
+                               Discover {partner.name} →
+                             </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Builder Partners Section */}
+            {builderPartners.length > 0 && (
+              <div className="mb-20">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-300 to-blue-500 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">🏗️</span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-gray-900">Community Builders</h3>
+                  </div>
+                  <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+                    These amazing partners fuel our JavaScript passion and help our community flourish. Their support means the world to us! 💛
+                  </p>
+                </motion.div>
+
+                <div className="space-y-12">
+                  {builderPartners.map((partner, index) => (
+                    <motion.div
+                      key={partner.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-blue-50 to-sky-50 p-8 rounded-2xl border-2 border-blue-200"
+                    >
+                      <div className="flex flex-col lg:flex-row items-center lg:items-start text-center lg:text-left">
+                        <div className="flex-shrink-0 mb-6 lg:mb-0 lg:mr-8">
+                          <motion.a
+                            href={partner.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => {
+                              handlePartnerClick(partner.name, 'builder');
+                              track('sponsor_logo_click', {
+                                sponsorName: partner.name,
+                                sponsorTier: 'builder',
+                                sponsorUrl: partner.url
+                              });
+                            }}
+                          >
+                            <div className="w-48 h-24 sm:w-56 sm:h-28 lg:w-64 lg:h-32 relative bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                              <Image
+                                src={partner.logo}
+                                alt={partner.name}
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
+                          </motion.a>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{partner.name}</h4>
+                                                     {partner.blurb && (
+                             <div className="text-gray-700 leading-relaxed text-base sm:text-lg lg:text-xl mb-6">
+                               {partner.blurb.split('\n').map((line, index) => (
+                                 <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                                   {line}
+                                 </p>
+                               ))}
+                             </div>
+                           )}
+                          <div className="mt-4">
+                                                         <Button
+                               href={partner.url}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               variant="primary"
+                               className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto lg:w-auto"
+                               onClick={() => {
+                                 handlePartnerClick(partner.name, 'builder');
+                                 track('sponsor_visit', {
+                                   sponsorName: partner.name,
+                                   sponsorTier: 'builder',
+                                   sponsorUrl: partner.url
+                                 });
+                               }}
+                             >
+                               Discover {partner.name} →
+                             </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Friend Partners Section */}
+            {friendPartners.length > 0 && (
+              <div className="mb-20">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="text-center mb-12"
+                >
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-300 to-green-500 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">🤝</span>
+                    </div>
+                    <h3 className="text-3xl font-bold text-gray-900">Community Friends</h3>
+                  </div>
+                  <p className="text-lg text-gray-700 max-w-3xl mx-auto">
+                    These wonderful partners support our JavaScript community and help us create amazing experiences. We&apos;re grateful for their partnership! 💚
+                  </p>
+                </motion.div>
+
+                <div className="space-y-12">
+                  {friendPartners.map((partner, index) => (
+                    <motion.div
+                      key={partner.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200"
+                    >
+                      <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left">
+                        <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-6">
+                          <motion.a
+                            href={partner.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => {
+                              handlePartnerClick(partner.name, 'friend');
+                              track('sponsor_logo_click', {
+                                sponsorName: partner.name,
+                                sponsorTier: 'friend',
+                                sponsorUrl: partner.url
+                              });
+                            }}
+                          >
+                            <div className="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 relative bg-white p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                              <Image
+                                src={partner.logo}
+                                alt={partner.name}
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
+                          </motion.a>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3">{partner.name}</h4>
+                                                     {partner.blurb && (
+                             <div className="text-gray-700 leading-relaxed text-sm sm:text-base md:text-lg mb-4">
+                               {partner.blurb.split('\n').map((line, index) => (
+                                 <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                                   {line}
+                                 </p>
+                               ))}
+                             </div>
+                           )}
+                          <div className="mt-4">
+                                                         <Button
+                               href={partner.url}
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               variant="outline"
+                               className="border-green-400 text-green-700 hover:bg-green-700 hover:text-white w-full sm:w-auto"
+                               onClick={() => {
+                                 handlePartnerClick(partner.name, 'friend');
+                                 track('sponsor_visit', {
+                                   sponsorName: partner.name,
+                                   sponsorTier: 'friend',
                                    sponsorUrl: partner.url
                                  });
                                }}

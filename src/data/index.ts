@@ -156,6 +156,16 @@ export const getPartners = () => {
             description: 'A headless CMS made for humans. Built for the AI-driven content era.',
             blurb: 'Storyblok is a headless CMS that enables developers and marketers to create, manage and optimize content experiences. With its API-first, component-based approach and intuitive visual editor, teams can build scalable websites and applications using frameworks like Next.js, Astro, Nuxt, React and more.'
         },
+        {
+            id: '18',
+            name: 'Sentry',
+            logo: '/images/partners/sentry.png',
+            url: 'https://sentry.io/welcome',
+            type: 'supporting',
+            sponsorshipTier: 'friend',
+            description: 'Application monitoring and error tracking platform',
+            blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
+        },
     ];
 
     return partners;

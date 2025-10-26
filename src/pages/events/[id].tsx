@@ -1,6 +1,6 @@
 import { atcb_action } from 'add-to-calendar-button-react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, Building, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, ChevronRight, Building, Ticket } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -20,6 +20,7 @@ import useEvents from '@/hooks/useEvents';
 import { useStripePrice } from '@/hooks/useStripePrice';
 import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
 import { ProductDemo } from '@/types';
+import { getRelatedWorkshops } from '@/utils/workshopEventMatcher';
 
 interface EventDetailPageProps {
   event: Event & { duration?: number };
@@ -33,9 +34,12 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
   const { price: stripePrice } = useStripePrice(event.stripePriceId);
   const { track } = useEvents();
-  
+
   // Check if we're in feedback mode
   const isFeedbackMode = router.query.feedback === 'true';
+
+  // Get related workshops that occur on the same day or up to 48h before the event
+  const relatedWorkshops = event.datetime ? getRelatedWorkshops(event.datetime) : [];
 
   // Calculate if event is upcoming
   const isUpcoming = new Date(event.datetime) > new Date();
@@ -510,7 +514,41 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </div>
             </motion.div>
           </div>
-          
+
+          {/* Related Workshops Cross-Promotion - Compact Banner */}
+          {relatedWorkshops.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-8"
+            >
+              {relatedWorkshops.map((workshop) => (
+                <Link
+                  key={workshop.id}
+                  href={`/workshops/${workshop.id}`}
+                  className="block bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 p-4 rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-grow">
+                      <span className="text-2xl">🎓</span>
+                      <div>
+                        <p className="text-white font-bold text-sm md:text-base">{workshop.title}</p>
+                        <p className="text-blue-100 text-xs md:text-sm">
+                          {workshop.dateInfo} • {workshop.timeInfo}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-2 rounded-md transition-colors">
+                      <span className="text-white text-xs md:text-sm font-medium">View Workshop</span>
+                      <ChevronRight size={16} className="text-white" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </motion.div>
+          )}
+
           {/* Add spacing between the event image and content below */}
           <div className="mt-16"></div>
 
@@ -561,10 +599,19 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   transition={{ duration: 0.5 }}
                   className="mb-12"
                 >
-                  <h2 className="text-2xl font-bold mb-3 py-2">
-                    Event Schedule 📅
-                  </h2>
-                  <p className="text-sm text-gray-500 italic mb-6">Times are estimates and subject to change</p>
+                  <details className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <summary className="cursor-pointer font-bold text-xl md:text-2xl flex items-center justify-between list-none p-5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">📅</span>
+                        <span>Event Schedule</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs md:text-sm text-gray-500 font-normal">Click to expand</span>
+                        <ChevronRight size={20} className="transition-transform group-open:rotate-90 flex-shrink-0 text-blue-600" />
+                      </div>
+                    </summary>
+                    <div className="px-5 pb-5">
+                      <p className="text-sm text-gray-500 italic mb-6 pt-2">Times are estimates and subject to change</p>
                   
                   {(() => {
                     // Schedule generation logic
@@ -792,6 +839,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       </div>
                     );
                   })()}
+                    </div>
+                  </details>
                 </motion.div>
               )}
 
@@ -804,10 +853,18 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   transition={{ duration: 0.5 }}
                   className="mb-12"
                 >
-                  <h2 className="text-2xl font-bold mb-6 py-2">
-                    Amazing Talks at This Event 🎤
-                  </h2>
-                  <div className="space-y-8">
+                  <details className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <summary className="cursor-pointer font-bold text-xl md:text-2xl flex items-center justify-between list-none p-5 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">🎤</span>
+                        <span>Amazing Talks at This Event</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs md:text-sm text-gray-500 font-normal">Click to expand</span>
+                        <ChevronRight size={20} className="transition-transform group-open:rotate-90 flex-shrink-0 text-blue-600" />
+                      </div>
+                    </summary>
+                    <div className="px-5 pb-5 pt-2 space-y-8">
                     {event.talks.map((talk, index) => (
                       <motion.div
                         key={talk.id}
@@ -928,7 +985,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         </div>
                       </motion.div>
                     ))}
-                  </div>
+                    </div>
+                  </details>
                 </motion.div>
               )}
 
@@ -939,24 +997,28 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
+                  className="bg-gradient-to-r from-yellow-50 to-amber-50 p-5 rounded-lg shadow-md mb-12 border-l-4 border-yellow-400"
                 >
-                  <h3 className="text-xl font-bold mb-3">Want to give a talk? 🎤</h3>
-                  <p className="mb-4">
-                    We&apos;re looking for JavaScript enthusiasts to share their knowledge at this event!
-                    {hasRegularSlotAvailable && hasLightningSlotAvailable && (
-                      <span> We have slots available for <strong>both regular talks (20-30 mins)</strong> and <strong>lightning talks (5-10 mins)</strong>.</span>
-                    )}
-                    {hasRegularSlotAvailable && !hasLightningSlotAvailable && (
-                      <span> We have <strong>{2 - regularTalks.length} slot{regularTalks.length === 1 ? '' : 's'} available for regular talks (20-30 mins)</strong>.</span>
-                    )}
-                    {!hasRegularSlotAvailable && hasLightningSlotAvailable && (
-                      <span> We have <strong>1 slot available for a lightning talk (5-10 mins)</strong>.</span>
-                    )}
-                  </p>
-                  <Button href="/cfp" variant="primary" className="bg-black text-js hover:bg-gray-800" target="_blank" rel="noopener noreferrer">
-                    Submit a Talk Proposal
-                  </Button>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">🎤</span>
+                    <div className="flex-grow">
+                      <h3 className="text-lg font-bold mb-2">Open Speaking Slots</h3>
+                      <p className="text-sm mb-3">
+                        {hasRegularSlotAvailable && hasLightningSlotAvailable && (
+                          <span>Regular talks (20-30 mins) and lightning talks (5-10 mins) available.</span>
+                        )}
+                        {hasRegularSlotAvailable && !hasLightningSlotAvailable && (
+                          <span>{2 - regularTalks.length} regular talk slot{regularTalks.length === 1 ? '' : 's'} (20-30 mins) available.</span>
+                        )}
+                        {!hasRegularSlotAvailable && hasLightningSlotAvailable && (
+                          <span>1 lightning talk slot (5-10 mins) available.</span>
+                        )}
+                      </p>
+                      <Button href="/cfp" variant="primary" size="sm" className="bg-black text-js hover:bg-gray-800" target="_blank" rel="noopener noreferrer">
+                        Submit Proposal
+                      </Button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
 
@@ -967,15 +1029,20 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="bg-gray-50 p-6 rounded-lg shadow-md mb-12"
+                  className="bg-gray-50 p-4 rounded-lg shadow-sm mb-12 border-l-4 border-gray-300"
                 >
-                  <h3 className="text-xl font-bold mb-3">All talk slots are filled! 🎉</h3>
-                  <p className="mb-4">
-                    We&apos;ve reached our maximum number of talks for this event. Please check our future events for speaking opportunities or submit a proposal for consideration at upcoming meetups.
-                  </p>
-                  <Button href="/cfp" variant="outline" className="border-black text-black hover:bg-black hover:text-js" target="_blank" rel="noopener noreferrer">
-                    Submit for Future Events
-                  </Button>
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">✓</span>
+                    <div>
+                      <h3 className="text-base font-bold mb-1">All Slots Filled</h3>
+                      <p className="text-sm text-gray-700 mb-3">
+                        This event is full. Submit a proposal for future events.
+                      </p>
+                      <Button href="/cfp" variant="outline" size="sm" className="border-black text-black hover:bg-black hover:text-js" target="_blank" rel="noopener noreferrer">
+                        Submit for Future Events
+                      </Button>
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </div>
@@ -1066,7 +1133,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     Save the Date
                   </h3>
                   <p className="mb-4">Don&apos;t miss this event! Add it to your calendar to get notified.</p>
-                  
+
                   {isClient && (
                     <button
                       onClick={() => {
@@ -1085,34 +1152,46 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </motion.div>
               )}
 
-              {/* What to Bring */}
+
+              {/* What to Bring - Collapsible */}
               {isUpcoming && !isFeedbackMode && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="bg-white p-6 rounded-lg shadow-md mb-8"
+                  className="mb-8"
                 >
-                  <h3 className="text-xl font-bold mb-3">What to Bring 💼</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="text-yellow-500 mr-2">•</span>
-                      <span>Your curious JavaScript mind!</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-yellow-500 mr-2">•</span>
-                      <span>Questions for speakers</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-yellow-500 mr-2">•</span>
-                      <span>Business cards for networking</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-yellow-500 mr-2">•</span>
-                      <span>Laptop (optional)</span>
-                    </li>
-                  </ul>
+                  <details className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <summary className="cursor-pointer font-bold text-lg flex items-center justify-between list-none p-4 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">💼</span>
+                        <span>What to Bring</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500 font-normal">Click to expand</span>
+                        <ChevronRight size={18} className="transition-transform group-open:rotate-90 text-blue-600" />
+                      </div>
+                    </summary>
+                    <ul className="px-4 pb-4 pt-2 space-y-2 text-sm">
+                      <li className="flex items-start">
+                        <span className="text-yellow-500 mr-2">•</span>
+                        <span>Your curious JavaScript mind!</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-yellow-500 mr-2">•</span>
+                        <span>Questions for speakers</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-yellow-500 mr-2">•</span>
+                        <span>Business cards for networking</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-yellow-500 mr-2">•</span>
+                        <span>Laptop (optional)</span>
+                      </li>
+                    </ul>
+                  </details>
                 </motion.div>
               )}
 
@@ -1253,21 +1332,19 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  className={`${event.isProMeetup ? 'bg-blue-100' : 'bg-js'} p-6 rounded-lg shadow-md text-center`}
+                  className={`${event.isProMeetup ? 'bg-blue-100' : 'bg-js'} p-5 rounded-lg shadow-md text-center`}
                 >
-                  <h3 className="text-xl font-bold mb-3">Ready to Join Us? 🚀</h3>
-                  <p className="mb-4">
-                    Don&apos;t miss this amazing JavaScript event!
+                  <h3 className="text-lg font-bold mb-3">
                     {event.datetime ? (
                       event.isProMeetup ? (
-                        event.stripePriceId ? ' Secure your ticket now!' : " We're finalizing ticket sales - check back soon!"
+                        event.stripePriceId ? 'Secure Your Spot 🎟️' : "Registration Opening Soon"
                       ) : (
-                        event.meetupUrl ? ' RSVP now to secure your spot.' : " We're finalizing the details - check back soon!"
+                        event.meetupUrl ? 'Reserve Your Spot 🚀' : "Details Coming Soon"
                       )
                     ) : (
-                      ' We&apos;re still working on the details but save some space in your calendar!'
+                      'Save the Date'
                     )}
-                  </p>
+                  </h3>
                   {event.isProMeetup ? (
                     event.stripePriceId ? (
                       <Button

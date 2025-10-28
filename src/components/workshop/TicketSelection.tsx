@@ -43,16 +43,16 @@ export default function TicketSelection({
   ticketType,
 }: TicketSelectionProps) {
   // Find auto-select ticket or default to first one if only one option
-  const defaultTicket = options.find(option => option.autoSelect) || 
+  const defaultTicket = options.find(option => option.autoSelect) ||
                       (options.length === 1 ? options[0] : null);
-  
+
   const [selectedTicket, setSelectedTicket] = useState<string | null>(
     defaultTicket ? (isTestMode && defaultTicket.testPriceId ? defaultTicket.testPriceId : defaultTicket.id) : null
   );
-  
+
   // Cash payment modal state
   const [showCashModal, setShowCashModal] = useState(false);
-  
+
   const { startCheckout, isLoading, isSignedIn } = useAuthenticatedCheckout({
     onError: (error) => {
       alert(error.message);
@@ -74,10 +74,10 @@ export default function TicketSelection({
 
     try {
       const selectedOption = options.find(option => getPriceId(option) === selectedTicket);
-      
+
       // Determine ticket type and ID
       const type = ticketType || selectedOption?.ticketType || (workshopId ? 'workshop' : 'event');
-      
+
       await startCheckout({
         priceId: selectedTicket,
         workshopId: type === 'workshop' ? (selectedOption?.workshopId || workshopId) : undefined,
@@ -90,7 +90,7 @@ export default function TicketSelection({
       console.error('Checkout failed:', error);
     }
   };
-  
+
   const handleCashPayment = () => {
     if (!selectedTicket) return;
     setShowCashModal(true);
@@ -127,19 +127,19 @@ export default function TicketSelection({
     }
     return '';
   };
-  
+
   // Get the currently selected ticket details
   const getSelectedTicketDetails = () => {
     if (!selectedTicket) return null;
     return options.find(option => getPriceId(option) === selectedTicket);
   };
-  
+
   const selectedTicketDetails = getSelectedTicketDetails();
 
   return (
     <div className={`space-y-4 ${className}`}>
       {communityDiscount && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2 px-4 rounded-lg shadow-md mb-4 flex items-center justify-center"
@@ -153,7 +153,7 @@ export default function TicketSelection({
       )}
 
       {hasCoupon && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 px-4 rounded-lg shadow-md mb-4 flex items-center justify-center"
@@ -162,7 +162,7 @@ export default function TicketSelection({
             <Ticket size={14} className="text-indigo-600" />
           </div>
           <span className="font-bold text-sm">
-            {couponData.percentOff ? `${couponData.percentOff}% off` : `CHF ${couponData.amountOff ? (couponData.amountOff / 100).toFixed(2) : 0} off`} 
+            {couponData.percentOff ? `${couponData.percentOff}% off` : `CHF ${couponData.amountOff ? (couponData.amountOff / 100).toFixed(2) : 0} off`}
             {" "}with coupon: {couponData.code}
           </span>
           <Star size={14} className="text-yellow-300 ml-2" />
@@ -174,7 +174,7 @@ export default function TicketSelection({
           {couponError}
         </div>
       )}
-      
+
       {options.map((ticket) => (
         <motion.div
           key={ticket.id}
@@ -196,24 +196,24 @@ export default function TicketSelection({
                 <h4 className="text-lg font-bold text-gray-900">{ticket.title}</h4>
                 <p className="text-sm text-gray-600 mt-1">{ticket.description}</p>
               </div>
-              
+
               {/* Price card */}
               <div className="flex justify-between items-center">
                 {/* Price information */}
                 <div className="flex flex-col">
                   <div className="flex items-baseline">
-                    <span className="text-2xl font-bold text-gray-900">CHF {(hasCoupon || communityDiscount) 
-                      ? getDiscountedPrice(ticket.price).toFixed(0) 
+                    <span className="text-2xl font-bold text-gray-900">CHF {(hasCoupon || communityDiscount)
+                      ? getDiscountedPrice(ticket.price).toFixed(0)
                       : ticket.price}
                     </span>
-                    
+
                     {(hasCoupon || communityDiscount) && (
                       <span className="ml-3 text-sm line-through text-gray-500">CHF {ticket.price}</span>
                     )}
                     <span className="text-xs text-gray-600 block ml-1">per person</span>
                   </div>
                 </div>
-                
+
                 {/* Discount badge */}
                 {(hasCoupon || communityDiscount) && (
                   <div className="flex-shrink-0">
@@ -261,7 +261,7 @@ export default function TicketSelection({
           </svg>
           {isLoading || isCouponLoading ? 'Processing...' : 'Pay Online'}
         </Button>
-        
+
         <Button
           onClick={handleCashPayment}
           disabled={!selectedTicket || isLoading || isCouponLoading}
@@ -282,14 +282,14 @@ export default function TicketSelection({
           </div>
         )}
       </div>
-      
+
       {/* Cash Payment Modal */}
       {selectedTicketDetails && (
         <CashPaymentModal
           isOpen={showCashModal}
           onClose={() => setShowCashModal(false)}
           ticketTitle={selectedTicketDetails.title}
-          price={hasCoupon || communityDiscount 
+          price={hasCoupon || communityDiscount
             ? getDiscountedPrice(selectedTicketDetails.price)
             : selectedTicketDetails.price}
           eventId={ticketType === 'event' ? eventId : undefined}
@@ -299,4 +299,4 @@ export default function TicketSelection({
       )}
     </div>
   );
-} 
+}

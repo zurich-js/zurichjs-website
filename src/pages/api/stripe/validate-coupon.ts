@@ -36,6 +36,9 @@ async function handler(
       currency: coupon.currency,
       name: coupon.name,
       isValid: coupon.valid,
+      maxRedemptions: coupon.max_redemptions,
+      timesRedeemed: coupon.times_redeemed,
+      isFullyRedeemed: coupon.max_redemptions ? coupon.times_redeemed >= coupon.max_redemptions : false,
     };
 
     return res.status(200).json(couponData);

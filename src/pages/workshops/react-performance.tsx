@@ -360,7 +360,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 </div>
                                 <p className="text-sm italic text-gray-600 bg-purple-50 p-3 rounded-lg">&quot;Join me to explore practical strategies for building performant and
                                     resilient React applications that stand up to real-world challenges.&quot;</p>
-                                
+
                                 <div className="mt-5 bg-gray-50 p-4 rounded-lg">
                                     <p className="font-bold text-purple-600">{workshop.priceInfo}</p>
                                     <p className="text-sm text-gray-500">Limited spots available</p>
@@ -610,7 +610,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h2 className="text-2xl font-bold text-black">What You&apos;ll Take Away</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
                             </div>
-                            
+
                             <div className="grid md:grid-cols-2 gap-5">
                                 {workshop.takeaways.map((takeaway, index) => (
                                     <div key={index} className="flex items-start bg-gray-50 p-4 rounded-lg">
@@ -621,7 +621,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <div className="mt-6 bg-yellow-50 border-l-4 border-js p-4 rounded-lg">
                                 <p className="text-sm font-medium text-gray-800">
                                     <span className="text-yellow-600 font-bold">Note:</span> All participants will receive the full workshop materials including code samples, slides, and cheatsheets to review at their own pace after the session.
@@ -642,7 +642,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h2 className="text-2xl font-bold text-black">Who Should Attend</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
                             </div>
-                            
+
                             <div className="grid md:grid-cols-3 gap-4">
                                 {workshop.targetAudience.map((audience, index) => (
                                     <div key={index} className="bg-purple-50 rounded-lg p-5 text-center">
@@ -651,7 +651,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <div className="mt-6 bg-purple-50 border-l-4 border-purple-500 p-4 rounded-lg">
                                 <p className="text-sm font-medium text-gray-800">
                                     <span className="text-purple-600 font-bold">Perfect for:</span> Teams looking to implement real-world performance optimization strategies without over-engineering their solutions.
@@ -672,7 +672,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 <h2 className="text-2xl font-bold text-black">Workshop Requirements</h2>
                                 <div className="h-1 flex-grow bg-gray-200 ml-3"></div>
                             </div>
-                            
+
                             <div className="space-y-4">
                                 {workshop.prerequisites.map((prerequisite, index) => (
                                     <div key={index} className="flex items-center bg-blue-50 p-4 rounded-lg">
@@ -684,7 +684,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             <div className="mt-6 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
                                 <p className="text-sm font-medium text-gray-800">
                                     <span className="text-blue-600 font-bold">Pro tip:</span> For the best experience, we recommend reviewing the React docs on hooks and performance optimization before the workshop.
@@ -707,7 +707,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             <div className="absolute -right-3 -top-3 bg-js text-black text-xs font-bold px-3 py-1 rounded-full shadow-md">
                                 Limited Spots!
                             </div>
-                            
+
                             <h3 className="text-xl font-bold mb-4 flex items-center text-black">
                                 <Users className="mr-2 text-js" size={22} />
                                 Secure Your Spot
@@ -741,7 +741,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                 Join our exclusive workshop for practical React performance techniques you can apply immediately to your projects.
                             </p>
 
-                            {/* GetWaitlist Component */}
+                            {/* GetWaitlist KitComponent */}
                             <div
                                 id="getWaitlistContainer"
                                 data-waitlist_id="26499"
@@ -777,7 +777,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <p className="text-gray-600 text-sm">Core performance principles and React&apos;s rendering mechanisms</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-start">
                                     <div className="bg-purple-100 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mr-3">
                                         <span className="font-bold text-purple-700">2</span>
@@ -787,7 +787,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <p className="text-gray-600 text-sm">Interactive exercises on real-world performance scenarios</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-start">
                                     <div className="bg-purple-100 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mr-3">
                                         <span className="font-bold text-purple-700">3</span>
@@ -797,7 +797,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                                         <p className="text-gray-600 text-sm">Exploring resilience patterns and monitoring strategies</p>
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-start">
                                     <div className="bg-purple-100 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mr-3">
                                         <span className="font-bold text-purple-700">4</span>
@@ -969,7 +969,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
 
                     <h2 className="text-4xl font-bold mb-5 text-js">Ready to Build Performant React Apps That Scale? 🚀</h2>
                     <p className="text-xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                        Join this exclusive 2-hour workshop to learn pragmatic performance techniques directly 
+                        Join this exclusive 2-hour workshop to learn pragmatic performance techniques directly
                         applicable to your real-world React and NextJS applications. Limited spots available!
                     </p>
 
@@ -988,14 +988,14 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                             onClick={shareWorkshop}
                             className="bg-gray-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-700 transition-colors w-full sm:w-auto"
                         >
-                            <Share2 size={18} className="inline mr-2"/> 
+                            <Share2 size={18} className="inline mr-2"/>
                             Share with Your Team
                         </button>
                     </div>
 
                     <div className="mt-8 bg-gray-800 rounded-lg p-4 max-w-xl mx-auto">
                         <p className="text-white text-sm">
-                            &quot;This workshop focuses on actionable techniques you can implement immediately in your projects. 
+                            &quot;This workshop focuses on actionable techniques you can implement immediately in your projects.
                             No fluff, just practical performance strategies that work in production.&quot;
                         </p>
                         <p className="text-js font-bold mt-2">— {workshop.speaker.name}, Workshop Instructor</p>

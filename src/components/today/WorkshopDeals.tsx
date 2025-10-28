@@ -128,7 +128,7 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
 
       <Link href={`${deal.workshopHref}?coupon=${deal.couponCode}`} className="flex flex-col h-full">
         {/* Workshop Image/Icon */}
-        <div className="relative h-36 sm:h-60 overflow-hidden">
+        <div className="relative h-32 sm:h-48 overflow-hidden">
           <div
             className={`w-full h-full transition-transform duration-500 ${
               isHovered ? 'scale-110' : 'scale-100'
@@ -287,11 +287,13 @@ export default function WorkshopDeals({ deals }: WorkshopDealsProps) {
         <p className="text-xs text-gray-600 mt-1">Limited time offers on our premium workshops</p>
       </div>
 
-      {/* Workshop Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {deals.map((deal) => (
-          <WorkshopDealCard key={deal.id} deal={deal} />
-        ))}
+      {/* Workshop Cards - Constrained width for better image aspect ratio */}
+      <div className="flex justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-5xl w-full">
+          {deals.map((deal) => (
+            <WorkshopDealCard key={deal.id} deal={deal} />
+          ))}
+        </div>
       </div>
 
       {/* Footer */}

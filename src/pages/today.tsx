@@ -16,7 +16,7 @@ import { Speaker } from '@/types';
 interface TodayPageProps {
   upcomingEvent: Event | null;
   speakers: {
-    observabilitySpeakers: Speaker[];
+    reactArchitectureSpeakers: Speaker[];
     aiDesignSpeakers: Speaker[];
   };
 }
@@ -29,38 +29,29 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
   }, []);
 
   // Create workshop deals data
-  const createWorkshopDeals = (event?: Event | null, speakerData?: { observabilitySpeakers: Speaker[]; aiDesignSpeakers: Speaker[]; }) => {
-    let dealExpiry = new Date();
-    
-    if (event) {
-      // Deal expires 24 hours after the meetup ends
-      const meetupDate = new Date(event.datetime);
-      const meetupEndTime = new Date(meetupDate.getTime() + 4 * 60 * 60 * 1000); // Assume 4 hour meetup
-      dealExpiry = new Date(meetupEndTime.getTime() + 24 * 60 * 60 * 1000); // +24 hours
-    } else {
-      // If no event, set to 7 days from now for demo purposes
-      dealExpiry.setDate(dealExpiry.getDate() + 7);
-    }
+  const createWorkshopDeals = (event?: Event | null, speakerData?: { reactArchitectureSpeakers: Speaker[]; aiDesignSpeakers: Speaker[]; }) => {
+    // Both deals expire at midnight on October 29th, 2025
+    const dealExpiry = new Date('2025-10-29T00:00:00');
 
     return [
       {
-        id: 'observability-dynatrace',
-        title: 'Observability in Action: Hands-On with Dynatrace',
-        subtitle: 'Master Modern System Observability & Monitoring',
-        description: 'Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application.',
-        dateInfo: 'October 28, 2025',
-        timeInfo: '16:00 - 18:00',
+        id: 'react-architecture',
+        title: 'Real-World React: The Architectural Crash Course',
+        subtitle: 'Master Scalability, Resilience, and Observability',
+        description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering through rapid-fire lessons and hands-on exercises.',
+        dateInfo: 'November 12, 2025',
+        timeInfo: '17:00 - 20:00',
         locationInfo: 'Venue TBA, Zürich',
         maxAttendees: 25,
-        workshopHref: '/workshops/observability-dynatrace',
-        image: '/images/workshops/observability-dynatrace.png',
-        couponCode: 'dynatrace-deal',
-        discount: '40%',
-        discountPercentage: 40,
-        tag: '📊 Observability & Monitoring',
-        iconColor: '#f97316',
+        workshopHref: '/workshops/react-architecture',
+        image: '/images/workshops/react-architecture.png',
+        couponCode: 'react-oct-deal',
+        discount: '30%',
+        discountPercentage: 30,
+        tag: '⚛️ React Architecture & Performance',
+        iconColor: '#0ea5e9',
         expiresAt: dealExpiry,
-        instructors: speakerData?.observabilitySpeakers?.map(speaker => ({
+        instructors: speakerData?.reactArchitectureSpeakers?.map(speaker => ({
           id: speaker.id,
           name: speaker.name,
           title: speaker.title || 'Workshop Instructor',
@@ -78,7 +69,7 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
         maxAttendees: 30,
         workshopHref: '/workshops/ai-design-patterns-2026',
         image: '/images/workshops/ai-design-patterns-2026.png',
-        couponCode: 'ai-design-deal',
+        couponCode: 'vitaly-oct-deal',
         discount: '30%',
         discountPercentage: 30,
         tag: '🧠 AI Interface Design',
@@ -293,14 +284,14 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const nextEvent = await getEventById('zurich-js-meetup-8-flare-up-your-performance');
+    const nextEvent = await getEventById('pro-zurichjs-meetup-9');
 
     // Fetch speaker data for workshops
-    const observabilitySpeakerIds = ['indermohan-singh', 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6'];
+    const reactArchitectureSpeakerIds = ['faris-aziz'];
     const aiDesignSpeakerIds = ['vitaly-friedman'];
 
-    const [observabilitySpeakers, aiDesignSpeakers] = await Promise.all([
-      Promise.all(observabilitySpeakerIds.map(id => getSpeakerById(id))).then(speakers => speakers.filter(Boolean) as Speaker[]),
+    const [reactArchitectureSpeakers, aiDesignSpeakers] = await Promise.all([
+      Promise.all(reactArchitectureSpeakerIds.map(id => getSpeakerById(id))).then(speakers => speakers.filter(Boolean) as Speaker[]),
       Promise.all(aiDesignSpeakerIds.map(id => getSpeakerById(id))).then(speakers => speakers.filter(Boolean) as Speaker[])
     ]);
 
@@ -308,7 +299,7 @@ export async function getStaticProps() {
       props: {
         upcomingEvent: nextEvent,
         speakers: {
-          observabilitySpeakers,
+          reactArchitectureSpeakers,
           aiDesignSpeakers
         }
       },
@@ -322,7 +313,7 @@ export async function getStaticProps() {
       props: {
         upcomingEvent: null,
         speakers: {
-          observabilitySpeakers: [],
+          reactArchitectureSpeakers: [],
           aiDesignSpeakers: []
         }
       },

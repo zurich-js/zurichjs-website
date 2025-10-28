@@ -4,6 +4,20 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        {/* Favicon and App Icons */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/logo-square.png" />
+
+        {/* Theme Color for Mobile Browsers */}
+        <meta name="theme-color" content="#F7DF1E" />
+
+        {/* Verification Tags (add when available) */}
+        {/* <meta name="google-site-verification" content="your-verification-code" /> */}
+
+        {/* Preconnect to External Domains for Performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://cdn.sanity.io" />
         {/* Begin Inspectlet Asynchronous Code */}
         <script
           type="text/javascript"

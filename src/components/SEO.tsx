@@ -33,6 +33,12 @@ interface MetaTag {
   content: string;
 }
 
+interface GeoData {
+  region?: string;
+  placename?: string;
+  position?: string;
+}
+
 interface SEOProps {
   title: string;
   description: string;
@@ -41,6 +47,9 @@ interface SEOProps {
   twitter?: TwitterData;
   additionalMetaTags?: MetaTag[];
   noindex?: boolean;
+  keywords?: string[];
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  geo?: GeoData;
 }
 
 const SEO = ({
@@ -51,39 +60,81 @@ const SEO = ({
   twitter,
   additionalMetaTags,
   noindex = false,
+  keywords = [],
+  structuredData,
+  geo,
 }: SEOProps) => {
   const router = useRouter();
   const url = canonical || `https://zurichjs.com${router.asPath}`;
-  
+
   // Default OG data if not provided
   const defaultOpenGraph: OpenGraphData = {
     title,
     description,
     type: 'website',
     url,
-    image: '/logo-square.png', // Replace with your default OG image
+    image: 'https://zurichjs.com/logo-square.png',
   };
 
   const og = { ...defaultOpenGraph, ...openGraph };
+
+  // Default Twitter config
+  const defaultTwitter: TwitterData = {
+    cardType: 'summary_large_image',
+    site: '@zurichjs',
+  };
+
+  const tw = { ...defaultTwitter, ...twitter };
 
   return (
     <Head>
       <title>{title}</title>
       <meta name="description" content={description} />
-      
+
+      {/* Language */}
+      <meta httpEquiv="content-language" content="en" />
+      <meta property="og:locale" content="en_US" />
+
       {/* Canonical URL */}
-      {canonical && <link rel="canonical" href={canonical} />}
-      
+      <link rel="canonical" href={canonical || url} />
+
       {/* Robots meta tag */}
-      {noindex && <meta name="robots" content="noindex,nofollow" />}
-      
+      {noindex ? (
+        <meta name="robots" content="noindex,nofollow" />
+      ) : (
+        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+      )}
+
+      {/* Keywords */}
+      {keywords.length > 0 && (
+        <meta name="keywords" content={keywords.join(', ')} />
+      )}
+
+      {/* Geographic targeting */}
+      {geo && (
+        <>
+          {geo.region && <meta name="geo.region" content={geo.region} />}
+          {geo.placename && <meta name="geo.placename" content={geo.placename} />}
+          {geo.position && <meta name="geo.position" content={geo.position} />}
+          <meta name="ICBM" content={geo.position || '47.3769,8.5417'} />
+        </>
+      )}
+
       {/* Open Graph */}
+      <meta property="og:site_name" content="ZurichJS" />
       <meta property="og:title" content={og.title} />
       <meta property="og:description" content={og.description} />
       <meta property="og:type" content={og.type || 'website'} />
       <meta property="og:url" content={og.url || url} />
-      {og.image && <meta property="og:image" content={og.image} />}
-      
+      {og.image && (
+        <>
+          <meta property="og:image" content={og.image} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta property="og:image:alt" content={title} />
+        </>
+      )}
+
       {/* Open Graph Article */}
       {og.type === 'article' && og.article && (
         <>
@@ -101,7 +152,7 @@ const SEO = ({
           ))}
         </>
       )}
-      
+
       {/* Open Graph Profile */}
       {og.type === 'profile' && og.profile && (
         <>
@@ -116,23 +167,31 @@ const SEO = ({
           )}
         </>
       )}
-      
+
       {/* Twitter */}
-      {twitter && (
-        <>
-          <meta name="twitter:card" content={twitter.cardType || 'summary'} />
-          {twitter.handle && <meta name="twitter:creator" content={twitter.handle} />}
-          {twitter.site && <meta name="twitter:site" content={twitter.site} />}
-          <meta name="twitter:title" content={og.title} />
-          <meta name="twitter:description" content={og.description} />
-          {og.image && <meta name="twitter:image" content={og.image} />}
-        </>
-      )}
-      
+      <meta name="twitter:card" content={tw.cardType || 'summary_large_image'} />
+      <meta name="twitter:site" content={tw.site || '@zurichjs'} />
+      {tw.handle && <meta name="twitter:creator" content={tw.handle} />}
+      <meta name="twitter:title" content={og.title} />
+      <meta name="twitter:description" content={og.description} />
+      {og.image && <meta name="twitter:image" content={og.image} />}
+
       {/* Additional meta tags */}
       {additionalMetaTags?.map((tag) => (
         <meta key={tag.name} name={tag.name} content={tag.content} />
       ))}
+
+      {/* Structured Data (JSON-LD) */}
+      {structuredData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              Array.isArray(structuredData) ? structuredData : structuredData
+            ),
+          }}
+        />
+      )}
     </Head>
   );
 };

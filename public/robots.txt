@@ -1,0 +1,44 @@
+# Robots.txt for ZurichJS
+# Allow all search engines to crawl our content
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /profile/
+Disallow: /checkout/
+
+# Allow specific API routes for OG images
+Allow: /api/og/
+
+# Sitemap location
+Sitemap: https://zurichjs.com/sitemap.xml
+
+# Optimize crawl rate for major search engines
+User-agent: Googlebot
+Crawl-delay: 0
+
+User-agent: Bingbot
+Crawl-delay: 0
+
+User-agent: Slurp
+Crawl-delay: 1
+
+# AI/LLM Crawlers - Allow them to discover our content
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /

@@ -1,4 +1,4 @@
-import { Disclosure } from '@headlessui/react';
+import { Disclosure, DisclosurePanel, DisclosureButton } from '@headlessui/react';
 import { atcb_action } from 'add-to-calendar-button-react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, ChevronRight, Building, Ticket, ChevronDown } from 'lucide-react';
@@ -780,7 +780,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                     <div className={`bg-white rounded-lg overflow-hidden border transition-all duration-200 ${
                                       open ? 'border-zurich shadow-lg' : 'border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
                                     }`}>
-                                      <Disclosure.Button className="w-full p-3 sm:p-4 text-left">
+                                      <DisclosureButton className="w-full p-3 sm:p-4 text-left">
                                         <div className="flex items-center justify-between">
                                           <div className="flex items-center gap-2 flex-1 min-w-0">
                                             <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
@@ -828,9 +828,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                             </div>
                                           )}
                                         </div>
-                                      </Disclosure.Button>
+                                      </DisclosureButton>
 
-                                      <Disclosure.Panel>
+                                      <DisclosurePanel>
                                         {() => (
                                           <motion.div
                                             initial={{ opacity: 0, height: 0 }}
@@ -920,7 +920,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                             )}
                                           </motion.div>
                                         )}
-                                      </Disclosure.Panel>
+                                      </DisclosurePanel>
                                     </div>
                                   )}
                                 </Disclosure>

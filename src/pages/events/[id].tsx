@@ -1,6 +1,7 @@
+import { Disclosure } from '@headlessui/react';
 import { atcb_action } from 'add-to-calendar-button-react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, ChevronRight, Building, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, ChevronRight, Building, Ticket, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -61,7 +62,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const formatDateCEST = (date: string, options: Intl.DateTimeFormatOptions) => {
     // Create a date object
     const dateObj = new Date(date);
-    
+
     // Format the date in CEST timezone (Europe/Zurich)
     return new Intl.DateTimeFormat('en-GB', {
       ...options,
@@ -101,7 +102,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   // Add-to-calendar function
   const addToCalendar = () => {
     if (!event.datetime) return;
-    
+
     // Track the calendar add event
     track('add_to_calendar', {
       event_id: event.id,
@@ -109,20 +110,20 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       event_date: event.datetime,
       is_pro_meetup: event.isProMeetup
     });
-    
+
     // Create date objects using the event datetime
     const dateObj = new Date(event.datetime);
-    
+
     // Duration in minutes (default: 3 hours = 180 minutes)
     const durationMinutes = event.duration || 180;
-    
+
     // Format dates for calendar - ensure we use YYYY-MM-DD format
     const formatDate = (date: Date): string => {
       return date.toLocaleDateString('en-CA', {
         timeZone: 'Europe/Zurich'
       }); // en-CA uses YYYY-MM-DD format
     };
-    
+
     // Format time with hours and minutes in 24-hour format (HH:MM)
     const formatTime = (date: Date): string => {
       return date.toLocaleTimeString('en-GB', {
@@ -132,26 +133,26 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         timeZone: 'Europe/Zurich'
       });
     };
-    
+
     // Get start time components in Zurich timezone
     const startDate = formatDate(dateObj);
     const startTime = formatTime(dateObj);
-    
+
     // Calculate end time
     // Create a date object using the formatted date and time strings to ensure timezone consistency
     const [startHours, startMinutes] = startTime.split(':').map(Number);
     let endDate = startDate; // Usually same day for most events
-    
+
     // Calculate end hours and minutes
     let endHours = startHours + Math.floor(durationMinutes / 60);
     let endMinutes = startMinutes + (durationMinutes % 60);
-    
+
     // Adjust for minute overflow
     if (endMinutes >= 60) {
       endHours += 1;
       endMinutes -= 60;
     }
-    
+
     // Handle next day overflow (if event runs past midnight)
     if (endHours >= 24) {
       // Create a new date object for the end date by adding one day
@@ -160,10 +161,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       endDate = formatDate(nextDay);
       endHours = endHours % 24;
     }
-    
+
     // Format end time properly with leading zeros
     const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-    
+
     // Debug logging to help troubleshoot timezone issues
     console.log('Calendar event details:', {
       original: {
@@ -179,7 +180,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         targetTimezone: 'Europe/Zurich'
       }
     });
-    
+
     atcb_action({
       name: event.title,
       startDate,
@@ -199,7 +200,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const shareEvent = async () => {
     // Create base URL
     const baseUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/events/${event.id}`;
-    
+
     // Add UTM parameters for tracking
     const utmParams = new URLSearchParams({
       utm_source: 'share_button',
@@ -207,7 +208,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       utm_campaign: 'event_share',
       utm_content: event.id
     }).toString();
-    
+
     // Complete share URL with UTM parameters
     const shareUrl = `${baseUrl}?${utmParams}`;
 
@@ -222,7 +223,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       : 'TBD';
 
     const shareText = `Join me at ${event.title} on ${formattedDate} with ZurichJS!`;
-    
+
     // Track share event
     track('share_event', {
       event_id: event.id,
@@ -257,7 +258,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       console.error('Clipboard API not available');
       return;
     }
-    
+
     navigator.clipboard.writeText(text)
       .then(() => {
         setCopySuccess(true);
@@ -277,7 +278,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         document.body.appendChild(textarea);
         textarea.focus();
         textarea.select();
-        
+
         try {
           const successful = document.execCommand('copy');
           if (successful) {
@@ -291,7 +292,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         } catch (err) {
           console.error('Fallback clipboard copy failed:', err);
         }
-        
+
         document.body.removeChild(textarea);
       });
   };
@@ -326,7 +327,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
         }}
       />
 
-      <div className="pt-20 bg-gradient-to-br from-js to-js-dark">
         {/* Hero Section */}
         <Section variant="gradient">
           <div className="mb-4">
@@ -464,7 +464,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     {copySuccess ? 'Link copied! 👍' : 'Share event'}
                   </Button>
                 )}
-                
+
                 {isClient && event.datetime && (
                   <Button
                     onClick={() => {
@@ -556,7 +556,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
             {/* Main Content */}
             <div className="lg:w-2/3">
               {/* Feedback Section - Only shows when in feedback mode */}
-              <EventFeedback 
+              <EventFeedback
                 event={{
                   id: event.id,
                   title: event.title,
@@ -569,7 +569,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     speakers: talk.speakers
                   }))
                 }}
-                isFeedbackMode={isFeedbackMode} 
+                isFeedbackMode={isFeedbackMode}
               />
 
               {/* Feedback Button for Past Events */}
@@ -592,403 +592,379 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
               {/* Schedule */}
               {event.talks.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="mb-12"
-                >
-                  <details className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                    <summary className="cursor-pointer font-bold text-xl md:text-2xl flex items-center justify-between list-none p-5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">📅</span>
-                        <span>Event Schedule</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs md:text-sm text-gray-500 font-normal">Click to expand</span>
-                        <ChevronRight size={20} className="transition-transform group-open:rotate-90 flex-shrink-0 text-blue-600" />
-                      </div>
-                    </summary>
-                    <div className="px-5 pb-5">
-                      <p className="text-sm text-gray-500 italic mb-6 pt-2">Times are estimates and subject to change</p>
-                  
-                  {(() => {
-                    // Schedule generation logic
-                    const getTypeColor = (type?: string, durationMins?: number) => {
-                      if (durationMins && durationMins < 10) {
-                        return 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800';
-                      }
-                      switch (type?.toLowerCase()) {
-                        case 'talk':
-                        case 'presentation':
-                          return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800';
-                        case 'break':
-                        case 'networking':
-                          return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800';
-                        case 'welcome':
-                        case 'opening':
-                          return 'bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900';
-                        case 'closing':
-                        case 'wrap-up':
-                          return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800';
-                        default:
-                          return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800';
-                      }
-                    };
+                <Section id="schedule" variant="white" className="rounded" padding="sm">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <h2 className="text-2xl font-bold mb-3 py-2">
+                      Event Schedule
+                    </h2>
+                    <p className="text-sm text-gray-500 italic mb-6">Times are estimates and subject to change</p>
 
-                    const getTypeEmoji = (type?: string, durationMins?: number) => {
-                      if (durationMins && durationMins < 10) return '⚡';
-                      switch (type?.toLowerCase()) {
-                        case 'talk':
-                        case 'presentation': return '🎤';
-                        case 'break':
-                        case 'networking': return '🍕';
-                        case 'welcome':
-                        case 'opening': return '👋';
-                        case 'closing':
-                        case 'wrap-up': return '🎉';
-                        default: return '📋';
-                      }
-                    };
-
-                    // Create schedule from event data with proper timing
-                    const eventDate = new Date(event.datetime);
-                    
-                    // Doors open: 17:30-18:30
-                    const doorsOpenTime = new Date(eventDate);
-                    doorsOpenTime.setHours(17, 30, 0, 0);
-                    
-                    // Welcome & intro: 18:30-18:45
-                    const welcomeTime = new Date(eventDate);
-                    welcomeTime.setHours(18, 30, 0, 0);
-                    
-                    // First talk starts at 18:50
-                    const firstTalkTime = new Date(eventDate);
-                    firstTalkTime.setHours(18, 50, 0, 0);
-
-                    const baseSchedule = [
-                      {
-                        time: doorsOpenTime.toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit',
-                          hour12: false 
-                        }),
-                        title: "Doors Open",
-                        type: "welcome",
-                        durationMins: 60,
-                        speaker: undefined,
-                        speakerIds: undefined
-                      },
-                      {
-                        time: welcomeTime.toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit',
-                          hour12: false 
-                        }),
-                        title: "Welcome & Intro",
-                        type: "opening",
-                        durationMins: 15,
-                        speaker: undefined,
-                        speakerIds: undefined
-                      }
-                    ];
-
-                    // Add talks from Sanity data with proper timing and break logic
-                    let currentTime = firstTalkTime.getTime();
-                    const talksSchedule: Array<{
-                      time: string;
-                      title: string;
-                      speaker?: string;
-                      speakerIds?: string[];
-                      type: string;
-                      durationMins: number;
-                    }> = [];
-                    
-                    event.talks.forEach((talk, index) => {
-                      const talkTime = new Date(currentTime);
-                      const duration = talk.durationMinutes || 20;
-                      
-                      const scheduleItem = {
-                        time: talkTime.toLocaleTimeString('en-US', { 
-                          hour: '2-digit', 
-                          minute: '2-digit',
-                          hour12: false 
-                        }),
-                        title: talk.title,
-                        speaker: talk.speakers.map(s => s.name).join(', '),
-                        speakerIds: talk.speakers.map(s => s.id),
-                        type: talk.type || 'talk',
-                        durationMins: duration
+                    {(() => {
+                      // Schedule generation logic
+                      const getTypeColor = (type?: string, durationMins?: number) => {
+                        if (durationMins && durationMins < 10) {
+                          return 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800';
+                        }
+                        switch (type?.toLowerCase()) {
+                          case 'talk':
+                          case 'presentation':
+                            return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800';
+                          case 'break':
+                          case 'networking':
+                            return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800';
+                          case 'welcome':
+                          case 'opening':
+                            return 'bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900';
+                          case 'closing':
+                          case 'wrap-up':
+                            return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800';
+                          default:
+                            return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800';
+                        }
                       };
-                      
-                      talksSchedule.push(scheduleItem);
-                      currentTime += duration * 60000; // Add talk duration
-                      
-                      // Add 15 min break after 2 talks (index 1 means 2nd talk, 0-indexed)
-                      if (index === 1) {
-                        const breakTime = new Date(currentTime);
-                        talksSchedule.push({
-                          time: breakTime.toLocaleTimeString('en-US', { 
-                            hour: '2-digit', 
+
+                      const getTypeEmoji = (type?: string, durationMins?: number) => {
+                        if (durationMins && durationMins < 10) return '⚡';
+                        switch (type?.toLowerCase()) {
+                          case 'talk':
+                          case 'presentation': return '🎤';
+                          case 'break':
+                          case 'networking': return '🍕';
+                          case 'welcome':
+                          case 'opening': return '👋';
+                          case 'closing':
+                          case 'wrap-up': return '🎉';
+                          default: return '📋';
+                        }
+                      };
+
+                      // Create schedule from event data with proper timing
+                      const eventDate = new Date(event.datetime);
+
+                      // Doors open: 17:30-18:30
+                      const doorsOpenTime = new Date(eventDate);
+                      doorsOpenTime.setHours(17, 30, 0, 0);
+
+                      // Welcome & intro: 18:30-18:45
+                      const welcomeTime = new Date(eventDate);
+                      welcomeTime.setHours(18, 30, 0, 0);
+
+                      // First talk starts at 18:50
+                      const firstTalkTime = new Date(eventDate);
+                      firstTalkTime.setHours(18, 50, 0, 0);
+
+                      const baseSchedule = [
+                        {
+                          time: doorsOpenTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
                             minute: '2-digit',
-                            hour12: false 
+                            hour12: false
                           }),
-                          title: "Pizza Break",
-                          type: "break",
+                          title: "Doors Open",
+                          type: "welcome",
+                          durationMins: 60,
+                          speaker: undefined,
+                          speakerIds: undefined,
+                          talkId: undefined
+                        },
+                        {
+                          time: welcomeTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                          }),
+                          title: "Welcome & Intro",
+                          type: "opening",
                           durationMins: 15,
                           speaker: undefined,
-                          speakerIds: undefined
-                        });
-                        currentTime += 15 * 60000; // Add break duration
-                      } else if (index < event.talks.length - 1) {
-                        // Add 5 min buffer between other talks
-                        currentTime += 5 * 60000;
-                      }
-                    });
+                          speakerIds: undefined,
+                          talkId: undefined
+                        }
+                      ];
 
-                    // Add networking at the end - starts after last talk, ends at 21:30
-                    const networkingStartTime = new Date(currentTime + 5 * 60000); // 5 min buffer after last talk
-                    const networkingEndTime = new Date(eventDate);
-                    networkingEndTime.setHours(21, 30, 0, 0);
-                    
-                    // Calculate networking duration from start time to 21:30
-                    const networkingDuration = Math.max(30, Math.round((networkingEndTime.getTime() - networkingStartTime.getTime()) / 60000));
-                    
-                    const endSchedule = [{
-                      time: networkingStartTime.toLocaleTimeString('en-US', { 
-                        hour: '2-digit', 
-                        minute: '2-digit',
-                        hour12: false 
-                      }),
-                      title: "Networking & Drinks",
-                      type: "closing",
-                      durationMins: networkingDuration,
-                      speaker: undefined,
-                      speakerIds: undefined
-                    }];
+                      // Add talks from Sanity data with proper timing and break logic
+                      let currentTime = firstTalkTime.getTime();
+                      const talksSchedule: Array<{
+                        time: string;
+                        title: string;
+                        speaker?: string;
+                        speakerIds?: string[];
+                        type: string;
+                        durationMins: number;
+                        talkId?: string;
+                      }> = [];
 
-                    const schedule = [...baseSchedule, ...talksSchedule, ...endSchedule];
+                      event.talks.forEach((talk, index) => {
+                        const talkTime = new Date(currentTime);
+                        const duration = talk.durationMinutes || 20;
 
-                    return (
-                      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md mb-8">
-                        <div className="space-y-2 sm:space-y-3">
-                          {schedule.map((item, index) => (
-                            <div
-                              key={index}
-                              className="bg-gray-50 rounded-lg sm:rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-sm hover:shadow-md p-3 sm:p-4"
-                            >
-                              {/* Mobile optimized layout */}
-                              <div className="space-y-2">
-                                {/* Time, Type and Duration Row */}
+                        const scheduleItem = {
+                          time: talkTime.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                          }),
+                          title: talk.title,
+                          speaker: talk.speakers.map(s => s.name).join(', '),
+                          speakerIds: talk.speakers.map(s => s.id),
+                          type: talk.type || 'talk',
+                          durationMins: duration,
+                          talkId: talk.id
+                        };
+
+                        talksSchedule.push(scheduleItem);
+                        currentTime += duration * 60000; // Add talk duration
+
+                        // Add 15 min break after 2 talks (index 1 means 2nd talk, 0-indexed)
+                        if (index === 1) {
+                          const breakTime = new Date(currentTime);
+                          talksSchedule.push({
+                            time: breakTime.toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            }),
+                            title: "Pizza Break",
+                            type: "break",
+                            durationMins: 15,
+                            speaker: undefined,
+                            speakerIds: undefined,
+                            talkId: undefined
+                          });
+                          currentTime += 15 * 60000; // Add break duration
+                        } else if (index < event.talks.length - 1) {
+                          // Add 5 min buffer between other talks
+                          currentTime += 5 * 60000;
+                        }
+                      });
+
+                      // Add networking at the end - starts after last talk, ends at 21:30
+                      const networkingStartTime = new Date(currentTime + 5 * 60000); // 5 min buffer after last talk
+                      const networkingEndTime = new Date(eventDate);
+                      networkingEndTime.setHours(21, 30, 0, 0);
+
+                      // Calculate networking duration from start time to 21:30
+                      const networkingDuration = Math.max(30, Math.round((networkingEndTime.getTime() - networkingStartTime.getTime()) / 60000));
+
+                      const endSchedule = [{
+                        time: networkingStartTime.toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }),
+                        title: "Networking & Drinks",
+                        type: "closing",
+                        durationMins: networkingDuration,
+                        speaker: undefined,
+                        speakerIds: undefined,
+                        talkId: undefined
+                      }];
+
+                      const schedule = [...baseSchedule, ...talksSchedule, ...endSchedule];
+
+                      return (
+                        <div className="space-y-3">
+                          {schedule.map((item, index) => {
+                            const isTalk = item.talkId !== undefined;
+                            const talk = isTalk ? event.talks.find(t => t.id === item.talkId) : null;
+
+                            if (isTalk && talk) {
+                              return (
+                                <Disclosure key={index}>
+                                  {({ open }) => (
+                                    <div className={`bg-white rounded-lg overflow-hidden border transition-all duration-200 ${
+                                      open ? 'border-zurich shadow-lg' : 'border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
+                                    }`}>
+                                      <Disclosure.Button className="w-full p-3 sm:p-4 text-left">
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
+                                              {item.time}
+                                            </div>
+
+                                            <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
+                                              <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
+                                              <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
+                                            </div>
+                                          </div>
+
+                                          <div className="flex items-center gap-2 flex-shrink-0">
+                                            {item.durationMins && (
+                                              <div className="text-xs text-gray-500 font-medium">
+                                                {item.durationMins}m
+                                              </div>
+                                            )}
+
+                                            <ChevronDown className={`h-5 w-5 text-zurich transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                                          </div>
+                                        </div>
+
+                                        <div className="mt-2">
+                                          <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
+                                            {item.title}
+                                          </h3>
+
+                                          {item.speaker && (
+                                            <div className="text-xs sm:text-sm text-gray-600 mt-1">
+                                              {item.speakerIds && item.speakerIds.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                  {item.speakerIds.map((speakerId: string, speakerIndex: number) => {
+                                                    const speakerName = item.speaker!.split(', ')[speakerIndex];
+                                                    return (
+                                                      <span key={speakerId} className="text-zurich font-bold">
+                                                        {speakerName}
+                                                      </span>
+                                                    );
+                                                  })}
+                                                </div>
+                                              ) : (
+                                                <span className="text-zurich font-bold">{item.speaker}</span>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </Disclosure.Button>
+
+                                      <Disclosure.Panel>
+                                        {({ close }) => (
+                                          <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                            className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-gray-100"
+                                          >
+                                            {talk.description && (
+                                              <p className="text-gray-700 mb-4 mt-3">
+                                                {talk.description.split('\n').map((line, i) => (
+                                                  <Fragment key={i}>
+                                                    {line}
+                                                    {i < talk.description!.split('\n').length - 1 && <br />}
+                                                  </Fragment>
+                                                ))}
+                                              </p>
+                                            )}
+
+                                            <div className="space-y-3 mb-4">
+                                              <h4 className="font-semibold text-gray-700 text-sm">
+                                                {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
+                                              </h4>
+                                              {talk.speakers.map((speaker) => (
+                                                <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                                  <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                                                    <Image
+                                                      src={speaker.image ? `${speaker.image}?h=150` : '/images/speakers/default.jpg'}
+                                                      alt={speaker.name}
+                                                      fill
+                                                      className="object-cover"
+                                                    />
+                                                  </div>
+                                                  <div className="flex-grow">
+                                                    <div className="font-bold">{speaker.name}</div>
+                                                    <div className="text-gray-600 text-sm">{speaker.title}</div>
+                                                  </div>
+                                                  <Link
+                                                    href={`/speakers/${speaker.id}`}
+                                                    className="flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                                                  >
+                                                    <ExternalLink size={14} className="mr-1" />
+                                                    View Profile
+                                                  </Link>
+                                                </div>
+                                              ))}
+                                            </div>
+
+                                            {(!isUpcoming && (talk.slides || talk.videoUrl)) && (
+                                              <div className="flex flex-wrap gap-2 mb-4">
+                                                {talk.slides && (
+                                                  <a
+                                                    href={talk.slides}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors"
+                                                  >
+                                                    <ExternalLink size={14} className="mr-1" />
+                                                    Slides
+                                                  </a>
+                                                )}
+
+                                                {talk.videoUrl && (
+                                                  <a
+                                                    href={talk.videoUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
+                                                  >
+                                                    <ExternalLink size={14} className="mr-1" />
+                                                    Video Recording
+                                                  </a>
+                                                )}
+                                              </div>
+                                            )}
+
+                                            {(talk.productDemos?.length || talk.productDemo) && (
+                                              <div className="pt-3 border-t border-gray-100">
+                                                <ProductDemoHighlight
+                                                  productDemos={talk.productDemos?.length
+                                                    ? talk.productDemos as unknown as ProductDemo[]
+                                                    : [talk.productDemo as unknown as ProductDemo]
+                                                  }
+                                                  isUpcoming={isUpcoming}
+                                                />
+                                              </div>
+                                            )}
+                                          </motion.div>
+                                        )}
+                                      </Disclosure.Panel>
+                                    </div>
+                                  )}
+                                </Disclosure>
+                              );
+                            }
+
+                            // Non-talk items (doors open, breaks, networking)
+                            return (
+                              <div
+                                key={index}
+                                className="bg-white rounded-lg border border-gray-100 shadow-sm p-3 sm:p-4"
+                              >
                                 <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    {/* Time Badge */}
+                                  <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
                                       {item.time}
                                     </div>
-                                    
-                                    {/* Type Badge - compact on mobile */}
+
                                     <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
                                       <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
                                       <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
                                     </div>
                                   </div>
-                                  
-                                  {/* Duration */}
+
                                   {item.durationMins && (
-                                    <div className="text-xs text-gray-500 font-medium">
+                                    <div className="text-xs text-gray-500 font-medium flex-shrink-0">
                                       {item.durationMins}m
                                     </div>
                                   )}
                                 </div>
-                                
-                                {/* Content Row */}
-                                <div>
-                                  <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight">
-                                    {item.title}
-                                  </h3>
-                                  
-                                  {item.speaker && (
-                                    <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                                      {item.speakerIds && item.speakerIds.length > 0 ? (
-                                        <div className="flex flex-wrap gap-1">
-                                          {item.speakerIds.map((speakerId: string, speakerIndex: number) => {
-                                            const speakerName = item.speaker!.split(', ')[speakerIndex];
-                                            return (
-                                              <Link 
-                                                key={speakerId}
-                                                href={`/speakers/${speakerId}`}
-                                                className="text-zurich font-bold hover:text-zurich/80 transition-colors underline"
-                                              >
-                                                {speakerName}
-                                              </Link>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : (
-                                        <span className="text-zurich font-bold">{item.speaker}</span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
+
+                                <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-tight mt-2">
+                                  {item.title}
+                                </h3>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
-                      </div>
-                    );
-                  })()}
-                    </div>
-                  </details>
-                </motion.div>
+                      );
+                    })()}
+                  </motion.div>
+                </Section>
               )}
 
-              {/* Talks */}
-              {event.talks.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="mb-12"
-                >
-                  <details className="group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                    <summary className="cursor-pointer font-bold text-xl md:text-2xl flex items-center justify-between list-none p-5 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">🎤</span>
-                        <span>Amazing Talks at This Event</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs md:text-sm text-gray-500 font-normal">Click to expand</span>
-                        <ChevronRight size={20} className="transition-transform group-open:rotate-90 flex-shrink-0 text-blue-600" />
-                      </div>
-                    </summary>
-                    <div className="px-5 pb-5 pt-2 space-y-8">
-                    {event.talks.map((talk, index) => (
-                      <motion.div
-                        key={talk.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        className="bg-white p-6 rounded-lg shadow-md"
-                      >
-                        <div className="flex flex-col md:flex-row gap-6">
-                          <div className="w-full">
-                            <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-4">
-                              <h3 className="text-xl font-bold">{talk.title}</h3>
-                              <span className={`text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0 ${
-                                (!talk.durationMinutes || talk.durationMinutes < 10) 
-                                  ? 'bg-yellow-100 text-yellow-800' 
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}>
-                                {(!talk.durationMinutes || talk.durationMinutes < 15) ? '⚡ Lightning Talk' : '🎤 Regular Talk'}
-                              </span>
-                            </div>
-
-                            {talk.description && (
-                              <p className="text-gray-700 mb-4">
-                                {talk.description?.split('\n').map((line, i) => (
-                                  <Fragment key={i}>
-                                    {line}
-                                    {i < talk.description!.split('\n').length - 1 && <br />}
-                                  </Fragment>
-                                ))}
-                              </p>
-                            )}
-
-                            <div className="mb-4 text-gray-600 flex items-center gap-3">
-                              {talk.durationMinutes && (
-                                <div className="flex items-center bg-gray-100 px-2 py-0.5 rounded-md">
-                                  <Clock size={12} className="mr-1 text-gray-500" />
-                                  <span className="text-sm font-medium">
-                                    {talk.durationMinutes} min{talk.durationMinutes !== 1 ? 's' : ''}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="space-y-3 mb-4">
-                              <h4 className="font-semibold text-gray-700">
-                                {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
-                              </h4>
-                              {talk.speakers.map((speaker) => (
-                                <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
-                                  <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                                    <Image
-                                      src={speaker.image ? `${speaker.image}?h=150` : '/images/speakers/default.jpg'}
-                                      alt={speaker.name}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  </div>
-                                  <div className="flex-grow mt-2 sm:mt-0">
-                                    <div className="font-bold">{speaker.name}</div>
-                                    <div className="text-gray-600 text-sm">{speaker.title}</div>
-                                  </div>
-                                  <Link
-                                    href={`/speakers/${speaker.id}`}
-                                    className="mt-2 sm:mt-0 flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
-                                  >
-                                    <ExternalLink size={14} className="mr-1" />
-                                    View Profile
-                                  </Link>
-                                </div>
-                              ))}
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              {/* Talk links here (slides, video recordings, etc.) */}
-                              {!isUpcoming && talk.slides && (
-                                <a
-                                  href={talk.slides}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors"
-                                >
-                                  <ExternalLink size={14} className="mr-1" />
-                                  Slides
-                                </a>
-                              )}
-
-                              {!isUpcoming && talk.videoUrl && (
-                                <a
-                                  href={talk.videoUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors"
-                                >
-                                  <ExternalLink size={14} className="mr-1" />
-                                  Video Recording
-                                </a>
-                              )}
-                            </div>
-                            
-                            {/* Product Demo highlights */}
-                            {talk.productDemos && talk.productDemos.length > 0 ? (
-                              <div className="mt-4 pt-3 border-t border-gray-100">
-                                <ProductDemoHighlight 
-                                  productDemos={talk.productDemos as unknown as ProductDemo[]}
-                                  isUpcoming={isUpcoming}
-                                />
-                              </div>
-                            ) : talk.productDemo && (
-                              <div className="mt-4 pt-3 border-t border-gray-100">
-                                <ProductDemoHighlight 
-                                  productDemos={[talk.productDemo as unknown as ProductDemo]}
-                                  isUpcoming={isUpcoming}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    </div>
-                  </details>
-                </motion.div>
-              )}
 
               {/* Submit a Talk CTA (for upcoming events) */}
               {isUpcoming && hasSlotsAvailable && !isFeedbackMode && (
@@ -1104,13 +1080,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       </div>
                     </div>
                     <p className="text-sm text-gray-500 animate-pulse mb-4">⏳ We&apos;re finalizing the perfect spot...</p>
-                    
+
                     <div className="mt-4 bg-blue-50 p-4 rounded-lg">
                       <h4 className="font-medium text-blue-700 mb-2">Want to host this event? 🏢</h4>
                       <p className="text-sm text-gray-700 mb-3">
                         Have a cool office space? Hosting a ZurichJS meetup is a great way to showcase your company and connect with the JavaScript community!
                       </p>
-                      <Link href="/partnerships#partnership-tiers" className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors" target="_blank" rel="noopener noreferrer">
+                      <Link href="/partnerships#sponsorship-tiers" className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors" target="_blank" rel="noopener noreferrer">
                         <Building size={16} className="mr-2" />
                         Partner with us as a Venue Host
                       </Link>
@@ -1250,8 +1226,8 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         <p className="text-sm text-gray-700 mb-3">
                           Don&apos;t let cost be a barrier to learning. We offer scholarships, discounts, and special rates for underrepresented groups, career changers, and those with accessibility needs.
                         </p>
-                        <a 
-                          href="mailto:hello@zurichjs.com" 
+                        <a
+                          href="mailto:hello@zurichjs.com"
                           className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1449,7 +1425,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </motion.div>
             </Section>
           )}
-      </div>
     </Layout>
   );
 }

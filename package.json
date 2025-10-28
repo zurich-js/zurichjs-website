@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.14.3",
+    "@headlessui/react": "^2.2.9",
     "@imagekit/next": "^2.1.2",
     "@multiplayer-app/session-recorder-browser": "^1.2.6",
     "@next/third-parties": "^15.2.2",

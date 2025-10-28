@@ -831,7 +831,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                       </Disclosure.Button>
 
                                       <Disclosure.Panel>
-                                        {({ close }) => (
+                                        {() => (
                                           <motion.div
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}

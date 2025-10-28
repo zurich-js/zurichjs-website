@@ -24,7 +24,7 @@ export default function WorkshopPricingItemTitle({
     <div>
       <h3 className="text-kit-base font-medium">
         {title}
-        {discount && (
+        {!!discount && (
           <KitPill color="green" className="inline-block ml-1 -translate-y-0.5">
             {displayDiscount}
           </KitPill>

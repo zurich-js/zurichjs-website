@@ -29,7 +29,7 @@ export default function AiEdgeApplication({ speaker, config }: { speaker: Speake
         title={config.workshop.title}
         description="Ready to build lightning-fast AI applications that scale globally? In this hands-on workshop, you'll master the Cloudflare Developer Platform by building a complete full-stack AI application from scratch. You'll start with the fundamentals of Cloudflare Workers and progressively add AI capabilities, databases, object storage, and a modern React frontend. By the end, you'll have deployed a production-ready AI application running on Cloudflare's global edge network."
         truncatedDescriptionAnchor="overview"
-        date="2025-11-12"
+        date="2026-01-01"
         startTime="18:00"
         endTime="21:00"
         maxSeats={30}
@@ -213,19 +213,19 @@ export async function getStaticProps() {
       },
       phases: [
         {
-          date: '2025-09-15',
+          date: '2025-10-15',
           discount: 30,
           time: '23:59',
           title: 'Early bird'
         },
         {
-          date: '2025-10-14',
-          discount: 20,
+          date: '2025-11-14',
+          discount: 10,
           time: '23:59',
           title: 'Standard'
         },
         {
-          date: '2025-11-12',
+          date: '2025-12-12',
           discount: 0,
           time: '17:59',
           title: 'Last minute'

@@ -29,13 +29,13 @@ interface FeedbackData {
   productFeedback?: ProductFeedbackData;
 }
 
-const ProductFeedback = ({ 
-  productDemo, 
+const ProductFeedback = ({
+  productDemo,
   onChange,
   expanded,
   onToggleExpand
-}: { 
-  productDemo: ProductDemo | null; 
+}: {
+  productDemo: ProductDemo | null;
   onChange: (data: ProductFeedbackData) => void;
   expanded: boolean;
   onToggleExpand: () => void;
@@ -47,7 +47,7 @@ const ProductFeedback = ({
   const [learningPreferences, setLearningPreferences] = useState<string[]>([]);
   const [showDetailedFeedback, setShowDetailedFeedback] = useState<boolean>(false);
   const [detailedFeedback, setDetailedFeedback] = useState<string>('');
-  
+
   const interestOptions = [
     "I'm interested in using this product",
     "I'm already evaluating this product",
@@ -55,7 +55,7 @@ const ProductFeedback = ({
     "I want a demo for my team",
     "I want to see pricing options"
   ];
-  
+
   const learningOptions = [
     "Documentation",
     "Video tutorials",
@@ -64,7 +64,7 @@ const ProductFeedback = ({
     "Live demo",
     "Code examples"
   ];
-  
+
   // Create data update function that's called manually on changes
   const updateFeedbackData = useCallback((updates: Partial<{
     rating: number;
@@ -79,10 +79,10 @@ const ProductFeedback = ({
     if (updates.questions !== undefined) setQuestions(updates.questions);
     if (updates.learningPreferences !== undefined) setLearningPreferences(updates.learningPreferences);
     if (updates.detailedFeedback !== undefined) setDetailedFeedback(updates.detailedFeedback);
-    
+
     // Get product ID properly
     const productId = productDemo?._id || '';
-      
+
     // Call the parent's onChange with combined data
     onChange({
       productId,
@@ -94,7 +94,7 @@ const ProductFeedback = ({
       detailedFeedback: updates.detailedFeedback !== undefined ? updates.detailedFeedback : detailedFeedback
     });
   }, [productDemo, onChange, rating, interests, questions, learningPreferences, detailedFeedback]);
-  
+
   // Toggle an item in an array of strings
   const toggleArrayItem = (array: string[], item: string) => {
     return array.includes(item)
@@ -107,7 +107,7 @@ const ProductFeedback = ({
     if (rating > 0) {
       const isHighRating = rating >= 4;
       // Only reset feedback when crossing the threshold
-      if ((isHighRating && detailedFeedback.includes('could be improved')) || 
+      if ((isHighRating && detailedFeedback.includes('could be improved')) ||
           (!isHighRating && detailedFeedback.includes('liked so much'))) {
         setDetailedFeedback('');
         // Also update parent with empty feedback
@@ -117,13 +117,13 @@ const ProductFeedback = ({
   }, [rating, detailedFeedback, updateFeedbackData]);
 
   return (
-    <motion.div 
+    <motion.div
       className="mt-4 bg-blue-50 rounded-lg border border-blue-200 overflow-hidden"
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       transition={{ duration: 0.3 }}
     >
-      <div 
+      <div
         className="p-4 bg-blue-100 flex justify-between items-center cursor-pointer hover:bg-blue-200 transition-colors"
         onClick={onToggleExpand}
       >
@@ -135,9 +135,9 @@ const ProductFeedback = ({
           {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
       </div>
-      
+
       {expanded && (
-        <motion.div 
+        <motion.div
           className="p-4"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -146,12 +146,12 @@ const ProductFeedback = ({
           <div className="flex items-center gap-3 mb-4">
             {productDemo?.logo && (
               <div className="h-12 w-12 relative flex-shrink-0">
-                <Image 
-                  src={productDemo?.logo} 
-                  alt={`${productDemo?.name} logo`} 
+                <Image
+                  src={productDemo?.logo}
+                  alt={`${productDemo?.name} logo`}
                   width={48}
                   height={48}
-                  className="h-full w-full object-contain" 
+                  className="h-full w-full object-contain"
                 />
               </div>
             )}
@@ -161,9 +161,9 @@ const ProductFeedback = ({
                 <p className="text-sm text-gray-600">{productDemo?.description}</p>
               )}
               {productDemo?.websiteUrl && (
-                <a 
-                  href={productDemo?.websiteUrl} 
-                  target="_blank" 
+                <a
+                  href={productDemo?.websiteUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs inline-flex items-center mt-1 text-blue-600 hover:text-blue-800"
                 >
@@ -172,7 +172,7 @@ const ProductFeedback = ({
               )}
             </div>
           </div>
-          
+
           <div className="space-y-4 mt-4">
             {/* Product Rating */}
             <div className="space-y-2">
@@ -201,28 +201,28 @@ const ProductFeedback = ({
                 ))}
                 {(hoverRating > 0 || rating > 0) && (
                   <span className="ml-2 text-sm text-gray-600">
-                    {hoverRating > 0 ? 
-                      (hoverRating === 5 ? "Excellent!" : 
-                       hoverRating === 4 ? "Very good" : 
-                       hoverRating === 3 ? "Good" : 
+                    {hoverRating > 0 ?
+                      (hoverRating === 5 ? "Excellent!" :
+                       hoverRating === 4 ? "Very good" :
+                       hoverRating === 3 ? "Good" :
                        hoverRating === 2 ? "Fair" : "Needs improvement") :
-                      (rating === 5 ? "Excellent!" : 
-                       rating === 4 ? "Very good" : 
-                       rating === 3 ? "Good" : 
+                      (rating === 5 ? "Excellent!" :
+                       rating === 4 ? "Very good" :
+                       rating === 3 ? "Good" :
                        rating === 2 ? "Fair" : "Needs improvement")
                     }
                   </span>
                 )}
               </div>
             </div>
-            
+
             {/* Conditional Detailed Feedback Field based on rating */}
             {rating > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-medium text-gray-700">
-                    {rating >= 4 
-                      ? "What did you like so much about this product?" 
+                    {rating >= 4
+                      ? "What did you like so much about this product?"
                       : "What could be improved about this product?"}
                   </label>
                   <button
@@ -234,7 +234,7 @@ const ProductFeedback = ({
                     {showDetailedFeedback ? "Hide" : "Add details"}
                   </button>
                 </div>
-                
+
                 {showDetailedFeedback && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
@@ -244,8 +244,8 @@ const ProductFeedback = ({
                     <textarea
                       value={detailedFeedback}
                       onChange={(e) => updateFeedbackData({ detailedFeedback: e.target.value })}
-                      placeholder={rating >= 4 
-                        ? "What features or aspects did you find most valuable?" 
+                      placeholder={rating >= 4
+                        ? "What features or aspects did you find most valuable?"
                         : "What specific aspects would make this product better for you?"}
                       rows={2}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -254,7 +254,7 @@ const ProductFeedback = ({
                 )}
               </div>
             )}
-            
+
             {/* Interests */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -267,8 +267,8 @@ const ProductFeedback = ({
                       type="checkbox"
                       id={`interest-${index}`}
                       checked={interests.includes(option)}
-                      onChange={() => updateFeedbackData({ 
-                        interests: toggleArrayItem(interests, option) 
+                      onChange={() => updateFeedbackData({
+                        interests: toggleArrayItem(interests, option)
                       })}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
@@ -282,7 +282,7 @@ const ProductFeedback = ({
                 ))}
               </div>
             </div>
-            
+
             {/* Questions */}
             <div className="space-y-2">
               <label htmlFor="product-questions" className="block text-sm font-medium text-gray-700">
@@ -297,7 +297,7 @@ const ProductFeedback = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
             {/* Learning Preferences */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -310,8 +310,8 @@ const ProductFeedback = ({
                       type="checkbox"
                       id={`learning-${index}`}
                       checked={learningPreferences.includes(option)}
-                      onChange={() => updateFeedbackData({ 
-                        learningPreferences: toggleArrayItem(learningPreferences, option) 
+                      onChange={() => updateFeedbackData({
+                        learningPreferences: toggleArrayItem(learningPreferences, option)
                       })}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
@@ -325,7 +325,7 @@ const ProductFeedback = ({
                 ))}
               </div>
             </div>
-            
+
             <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded-md">
               This feedback will be shared with the product team to help improve their offering.
             </div>
@@ -336,23 +336,23 @@ const ProductFeedback = ({
   );
 };
 
-const FeedbackForm = ({ 
-  eventId, 
-  talkId, 
-  talkTitle, 
-  speakerId, 
-  speakerName, 
-  onSubmit, 
+const FeedbackForm = ({
+  eventId,
+  talkId,
+  talkTitle,
+  speakerId,
+  speakerName,
+  onSubmit,
   isSubmitted,
   productDemo,
   productDemos
 }: FeedbackFormProps) => {
   const { user, isLoaded } = useUser();
-  
+
   // Initialize product demos once during component creation
   const initialProductDemos = productDemos?.length ? productDemos : (productDemo ? [productDemo] : []);
   const initialActiveDemo = productDemo || (initialProductDemos.length > 0 ? initialProductDemos[0] : null);
-  
+
   const [rating, setRating] = useState<number>(0);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [comment, setComment] = useState<string>('');
@@ -382,18 +382,18 @@ const FeedbackForm = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (rating === 0) {
       setErrorMessage('Please select a rating before submitting');
       return;
     }
-    
+
     setIsSubmitting(true);
     setErrorMessage('');
-    
+
     // Get the email either from state or directly from user object
     const submissionEmail = user?.primaryEmailAddress?.emailAddress || email;
-    
+
     try {
       await onSubmit({
         eventId,
@@ -413,7 +413,7 @@ const FeedbackForm = ({
           detailedFeedback: productFeedback.detailedFeedback
         } : undefined
       });
-      
+
       setLocalSubmitted(true);
     } catch (error) {
       console.error('Failed to submit feedback:', error);
@@ -429,13 +429,13 @@ const FeedbackForm = ({
 
   if (localSubmitted) {
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
         className="p-6 bg-green-50 rounded-lg border border-green-200 text-center"
       >
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
@@ -445,7 +445,7 @@ const FeedbackForm = ({
         <h4 className="font-bold text-lg mb-2">Thank you for your feedback on &ldquo;{talkTitle}&rdquo;!</h4>
         <p className="text-gray-600 mb-3">Your insights help {speakerName} improve and our community grow.</p>
         <div className="text-sm text-green-600 font-medium">Feedback submitted successfully</div>
-        
+
         {activeProductDemo && productFeedback && productFeedback.rating > 0 && (
           <div className="mt-3 pt-3 border-t border-green-200">
             <p className="text-gray-600">Your product feedback for <strong>{activeProductDemo.name}</strong> has been recorded.</p>
@@ -479,10 +479,10 @@ const FeedbackForm = ({
 
   const applyPreset = (preset: string) => {
     // Check if any preset is already in the comment
-    const existingPresetIndex = commentPresets.findIndex(p => 
+    const existingPresetIndex = commentPresets.findIndex(p =>
       comment.includes(p.value)
     );
-    
+
     if (existingPresetIndex !== -1) {
       // Replace the existing preset with the new one
       const existingPreset = commentPresets[existingPresetIndex].value;
@@ -529,8 +529,8 @@ const FeedbackForm = ({
   };
 
   return (
-    <motion.form 
-      onSubmit={handleSubmit} 
+    <motion.form
+      onSubmit={handleSubmit}
       className="space-y-4 p-6 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -556,7 +556,7 @@ const FeedbackForm = ({
           </div>
         )}
       </div>
-      
+
       <div className="space-y-2">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           How would you rate this talk?
@@ -583,7 +583,7 @@ const FeedbackForm = ({
               </motion.button>
             ))}
             {(hoverRating > 0 || rating > 0) && (
-              <motion.span 
+              <motion.span
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="ml-2 text-sm text-gray-600"
@@ -594,7 +594,7 @@ const FeedbackForm = ({
           </div>
         </div>
       </div>
-      
+
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <label htmlFor={`comment-${talkId}`} className="block text-sm font-medium text-gray-700">
@@ -611,7 +611,7 @@ const FeedbackForm = ({
         </div>
 
         {showPresets && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -646,7 +646,7 @@ const FeedbackForm = ({
           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 transition-all"
         />
       </div>
-      
+
       {/* Email field - only show if user is not logged in */}
       {(!isLoaded || !user) && (
         <div className="space-y-2">
@@ -666,7 +666,7 @@ const FeedbackForm = ({
           />
         </div>
       )}
-      
+
       {/* Show a message when user is logged in */}
       {isLoaded && user && (
         <div className="space-y-2">
@@ -681,19 +681,19 @@ const FeedbackForm = ({
           </p>
         </div>
       )}
-      
+
       {/* Product Feedback Section */}
       {activeProductDemo && (
-        <ProductFeedback 
+        <ProductFeedback
           productDemo={activeProductDemo}
           onChange={handleProductFeedbackChange}
           expanded={showProductFeedback}
           onToggleExpand={() => setShowProductFeedback(!showProductFeedback)}
         />
       )}
-      
+
       {errorMessage && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm"
@@ -701,7 +701,7 @@ const FeedbackForm = ({
           {errorMessage}
         </motion.div>
       )}
-      
+
       <motion.button
         type="submit"
         disabled={isSubmitting}
@@ -759,7 +759,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
   const [completionPercentage, setCompletionPercentage] = useState<number>(0);
   const [mockDemosAdded, setMockDemosAdded] = useState<boolean>(false);
   const [eventWithMockDemos, setEventWithMockDemos] = useState(event);
-  
+
   // Count total speaker-talk combinations
   const countTotalFeedbackForms = (event: EventFeedbackProps['event']) => {
     let count = 0;
@@ -768,16 +768,16 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
     });
     return count;
   };
-  
+
   // Load previously submitted feedbacks from localStorage
   useEffect(() => {
     const storageKey = `zurichjs-feedback-${event.id}`;
     const storedFeedbacks = localStorage.getItem(storageKey);
-    
+
     if (storedFeedbacks) {
       const feedbacks = JSON.parse(storedFeedbacks);
       setSubmittedFeedbacks(feedbacks);
-      
+
       // Calculate completion percentage based on speaker-talk combinations
       const totalFeedbackForms = countTotalFeedbackForms(event);
       if (totalFeedbackForms > 0) {
@@ -790,7 +790,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
     setEventWithMockDemos(event);
     setMockDemosAdded(false);
   }, [event]);
-  
+
   const handleFeedbackSubmit = async (feedbackData: FeedbackData) => {
     try {
       // Send feedback to the API
@@ -801,39 +801,39 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
         },
         body: JSON.stringify(feedbackData),
       });
-      
+
       if (!response.ok) {
         // Try to parse error message from response
         const errorData = await response.json().catch(() => ({}));
-        
+
         if (errorData.message) {
           throw new Error(errorData.message);
         }
-        
+
         // If we can't get a specific message, use the status text
         throw new Error(`Failed to submit feedback: ${response.statusText}`);
       }
-      
+
       // Generate a unique key for this talk-speaker combination
       const feedbackKey = `${feedbackData.talkId}-${feedbackData.speakerId}`;
-      
+
       // Update local storage to mark this talk-speaker combination as submitted
       const storageKey = `zurichjs-feedback-${event.id}`;
       const updatedFeedbacks = {
         ...submittedFeedbacks,
         [feedbackKey]: true,
       };
-      
+
       localStorage.setItem(storageKey, JSON.stringify(updatedFeedbacks));
       setSubmittedFeedbacks(updatedFeedbacks);
-      
+
       // Recalculate completion percentage based on speaker-talk combinations
       const totalFeedbackForms = countTotalFeedbackForms(eventWithMockDemos);
       if (totalFeedbackForms > 0) {
         const submittedCount = Object.keys(updatedFeedbacks).length;
         setCompletionPercentage(Math.round((submittedCount / totalFeedbackForms) * 100));
       }
-      
+
     } catch (error) {
       console.error('Error submitting feedback:', error);
       throw error;
@@ -876,7 +876,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
 
     // Clone the event talks to avoid mutating the original
     const updatedTalks = [...event.talks];
-    
+
     // Add product demos to talks (up to 3)
     for (let i = 0; i < Math.min(updatedTalks.length, mockDemos.length); i++) {
       updatedTalks[i] = {
@@ -892,7 +892,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
     });
     setMockDemosAdded(true);
   };
-  
+
   if (!isFeedbackMode) {
     return null;
   }
@@ -906,7 +906,7 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="mt-8 mb-12"
+      className=""
     >
       <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg mb-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -922,13 +922,13 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
               )}
             </p>
           </div>
-          
+
           {totalForms > 0 && (
             <div className="bg-white rounded-lg p-3 shadow-sm border border-yellow-100 min-w-[150px]">
               <p className="text-sm text-gray-600 mb-1">Completion Status:</p>
               <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                <motion.div 
-                  className="bg-yellow-500 h-2.5 rounded-full" 
+                <motion.div
+                  className="bg-yellow-500 h-2.5 rounded-full"
                   initial={{ width: "0%" }}
                   animate={{ width: `${completionPercentage}%` }}
                   transition={{ duration: 0.5 }}
@@ -951,14 +951,14 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
               } px-2 py-1 rounded-md hover:bg-gray-200`}
             >
               <Beaker size={12} className="mr-1" />
-              {mockDemosAdded 
-                ? `Remove Test Product Demos (${mockDemoCount})` 
+              {mockDemosAdded
+                ? `Remove Test Product Demos (${mockDemoCount})`
                 : 'Add Test Product Demos'}
             </button>
           </div>
         )}
       </div>
-      
+
       <div className="space-y-6">
         {eventWithMockDemos.talks.map((talk) => (
           <div key={talk.id}>

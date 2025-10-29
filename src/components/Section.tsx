@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
 type SectionVariant = 'gradient' | 'js' | 'js-dark' | 'zurich' | 'black' | 'white' | 'gray' | 'transparent';
-type SectionPadding = 'sm' | 'md' | 'lg';
+type SectionPadding = 'sm' | 'md' | 'lg' | 'none';
 
 interface SectionProps {
   children: ReactNode;
@@ -26,6 +26,7 @@ const variantStyles: Record<SectionVariant, string> = {
 };
 
 const paddingStyles: Record<SectionPadding, string> = {
+  'none': '',
   'sm': 'py-4 lg:py-8',
   'md': 'py-4 lg:py-16',
   'lg': 'py-4 lg:py-24'

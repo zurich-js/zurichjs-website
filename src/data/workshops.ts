@@ -64,21 +64,21 @@ export const getWorkshops = (): Workshop[] => {
     //   speakerId: 'speaker-c6fff8ee-97c5-4db1-8d6c-fb90ad1376e9',
     //   state: 'confirmed' as WorkshopState
     // },
-    {
-      id: 'observability-dynatrace',
-      title: 'Observability in Action: Hands-On with Dynatrace',
-      subtitle: 'Master Modern System Observability & Monitoring',
-      description: 'Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application.',
-      dateInfo: 'October 28, 2025',
-      timeInfo: '16:00 - 18:00',
-      locationInfo: 'Smallpdf AG, Zürich',
-      maxAttendees: 25,
-      image: '/images/workshops/observability-dynatrace.png',
-      iconColor: '#f97316', // orange-500
-      tag: '📊 Observability & Monitoring',
-      speakerId: 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6',
-      state: 'confirmed' as WorkshopState
-    },
+    // {
+    //   id: 'observability-dynatrace',
+    //   title: 'Observability in Action: Hands-On with Dynatrace',
+    //   subtitle: 'Master Modern System Observability & Monitoring',
+    //   description: 'Learn to master modern observability with hands-on experience using Dynatrace. This workshop will teach you the three pillars of observability - metrics, logs, and traces - through practical exercises with the AstroShop application.',
+    //   dateInfo: 'October 28, 2025',
+    //   timeInfo: '16:00 - 18:00',
+    //   locationInfo: 'Smallpdf AG, Zürich',
+    //   maxAttendees: 25,
+    //   image: '/images/workshops/observability-dynatrace.png',
+    //   iconColor: '#f97316', // orange-500
+    //   tag: '📊 Observability & Monitoring',
+    //   speakerId: 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6',
+    //   state: 'confirmed' as WorkshopState
+    // },
     {
       id: 'react-architecture',
       title: 'Real-World React: The Architectural Crash Course for Scalability, Resilience, and Observability (feat. Next.js)',
@@ -133,7 +133,19 @@ export const getWorkshops = (): Workshop[] => {
 
 // Helper function to get only confirmed workshops
 export const getConfirmedWorkshops = (): Workshop[] => {
-  return getWorkshops().filter(workshop => workshop.state === 'confirmed');
+  // filter by date in the future
+  const workshops = getWorkshops();
+  const futureWorkshops = workshops.filter(workshop => {
+    if (workshop.dateInfo === 'TBD') {
+      return true;
+    }
+    // next, combine timeInfo to dateInfo to create a Date object and check present time
+    const dateTimeString = `${workshop.dateInfo} ${workshop.timeInfo.split(' - ')[0]}`;
+    const workshopDate = new Date(dateTimeString);
+    const now = new Date();
+    return workshopDate >= now;
+  })
+  return futureWorkshops.filter(workshop => workshop.state === 'confirmed');
 };
 
 // Helper function to get upcoming workshops for homepage

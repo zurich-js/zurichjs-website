@@ -21,23 +21,12 @@ import { Speaker } from '@/types';
 // Horizontal Timeline Component
 function HorizontalTimeline() {
     const now = new Date();
-    const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00'); // 1 AM CEST
     const workshopDate = new Date('2025-11-12T17:30:00');
-    
+
     const milestones = [
-        { 
-            name: 'Early Bird Pricing', 
-            date: 'Until Oct 28th, 2025',
-            price: 'CHF 195',
-            endDate: earlyBirdEnd,
-            color: 'bg-green-500',
-            textColor: 'text-green-700',
-            bgColor: 'bg-green-50',
-            icon: '🐦'
-        },
-        { 
-            name: 'Standard Pricing', 
-            date: 'Oct 28th - Nov 12th, 2025',
+        {
+            name: 'Standard Pricing',
+            date: 'Until Nov 12th, 2025',
             price: 'CHF 250',
             endDate: workshopDate,
             color: 'bg-zurich',
@@ -45,8 +34,8 @@ function HorizontalTimeline() {
             bgColor: 'bg-blue-50',
             icon: '💼'
         },
-        { 
-            name: 'Workshop Day', 
+        {
+            name: 'Workshop Day',
             date: 'November 12th, 2025',
             price: '17:30 - 20:30',
             endDate: workshopDate,
@@ -56,13 +45,12 @@ function HorizontalTimeline() {
             icon: '🎯'
         }
     ];
-    
+
     const getCurrentMilestone = () => {
-        if (now < earlyBirdEnd) return 0;
-        if (now < workshopDate) return 1;
-        return 2;
+        if (now < workshopDate) return 0;
+        return 1;
     };
-    
+
     const currentMilestone = getCurrentMilestone();
     
     return (
@@ -76,7 +64,7 @@ function HorizontalTimeline() {
                     style={{ width: `${(currentMilestone / (milestones.length - 1)) * 100}%` }}
                 ></div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
                     {milestones.map((milestone, index) => (
                         <div key={milestone.name} className="relative">
                             {/* Timeline dot */}
@@ -173,20 +161,11 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00').getTime(); // 1 AM CEST
       const workshopStart = new Date('2025-11-12T17:30:00').getTime();
-      
-      // Determine which countdown to show
-      let targetTime;
-      
-      if (now < earlyBirdEnd) {
-        // Show early bird countdown
-        targetTime = earlyBirdEnd;
-      } else {
-        // Show workshop countdown
-        targetTime = workshopStart;
-      }
-      
+
+      // Show workshop countdown
+      const targetTime = workshopStart;
+
       const difference = targetTime - now;
       
       if (difference > 0) {
@@ -209,18 +188,12 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   if (!isClient) return null;
 
   const now = new Date().getTime();
-  const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00').getTime(); // 1 AM CEST
   const workshopStart = new Date('2025-11-12T17:30:00').getTime();
-  
+
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
-  
-  // Determine countdown label
-  let countdownLabel;
-  if (now < earlyBirdEnd) {
-    countdownLabel = "Early Bird Ends In:";
-  } else {
-    countdownLabel = "Workshop Starts In:";
-  }
+
+  // Countdown label
+  const countdownLabel = "Workshop Starts In:";
 
   if (isExpired && now >= workshopStart) {
     return (
@@ -280,8 +253,8 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
         subtitle: "Intensive crash course covering architecture, resilience, and scalability patterns",
         dateInfo: "November 12, 2025",
         timeInfo: "17:30 - 20:30 (3 hours, refreshments included)",
-        locationInfo: "Venue TBA, Zürich",
-        price: "195 CHF (Early Bird) / 250 CHF",
+        locationInfo: "Orbiz Josef, Zürich",
+        price: "250 CHF",
         description: "An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering through rapid-fire lessons, hands-on exercises, and real-world examples. Perfect for developers who want to level up their React skills quickly and efficiently.",
         maxAttendees: 15,
         speakers: speakers,
@@ -439,20 +412,6 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
     // Single source of truth for seats
     const seatsRemaining = 6; // 9 out of 15 seats already taken
     const isSoldOut = seatsRemaining <= 0;
-
-    // Get current pricing stage for display
-    const getCurrentPricingStage = () => {
-        const now = new Date();
-        const earlyBirdEnd = new Date('2025-10-28T01:00:00+02:00'); // 1 AM CEST
-        
-        if (now < earlyBirdEnd) {
-            return { stage: 'early', price: 195, endDate: earlyBirdEnd };
-        } else {
-            return { stage: 'standard', price: 250, endDate: new Date('2025-11-12T17:30:00') };
-        }
-    };
-
-    const currentPricing = getCurrentPricingStage();
 
     // Handle checkout with proper ticket selection
     const handleCheckout = async (priceId: string) => {
@@ -700,7 +659,7 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                                         <div className="text-xs lg:text-sm text-gray-600 font-medium">3 hours</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
-                                        <div className="text-sm lg:text-base font-bold text-blue-600 mb-1">Venue TBA</div>
+                                        <div className="text-sm lg:text-base font-bold text-blue-600 mb-1">Orbiz Josef</div>
                                         <div className="text-xs lg:text-sm text-gray-600 font-medium">Zürich</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
@@ -980,7 +939,7 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                                                     <span className="line-through text-gray-500">Conference: ~CHF 400</span>
                                                 </p>
                                                 <p className="text-lg text-green-900 font-bold">
-                                                    Here: CHF 195-250 ✨
+                                                    Here: CHF 250 ✨
                                                 </p>
                                                 <div className="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full inline-block">
                                                     100% Would Recommend
@@ -1416,11 +1375,11 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                             {openFaq === 'venue' && (
                                 <div className="px-6 pb-6 animate-fadeIn">
                                     <p className="text-gray-700 mb-3">
-                                        The workshop will be held in <strong>Zürich, Switzerland</strong>. The exact venue will be announced closer to the event date.
+                                        The workshop will be held at <strong>Orbiz Josef</strong> in <strong>Zürich, Switzerland</strong>.
                                     </p>
                                     <div className="bg-blue-50 p-3 rounded-lg">
                                         <p className="text-sm text-gray-700">
-                                            <span className="font-semibold">Venue features:</span> Modern presentation facilities, comfortable seating, reliable WiFi, power outlets for laptops, and refreshments. The venue will be easily accessible by public transport. All registered participants will receive detailed venue information and directions 1 week before the workshop.
+                                            <span className="font-semibold">Venue features:</span> Modern presentation facilities, comfortable seating, reliable WiFi, power outlets for laptops, and refreshments. The venue is easily accessible by public transport. All registered participants will receive detailed venue information and directions 1 week before the workshop.
                                         </p>
                                     </div>
                                 </div>
@@ -1496,7 +1455,7 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                         onClick={scrollToRegistration}
                         className="bg-white text-zurich px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"
                     >
-                        Secure Your Spot Now - {currentPricing.stage === 'early' ? '195' : '250'} CHF
+                        Secure Your Spot Now - 250 CHF
                     </button>
                 </motion.div>
             </Section>

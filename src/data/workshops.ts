@@ -85,9 +85,9 @@ export const getWorkshops = (): Workshop[] => {
       subtitle: 'Intensive crash course covering architecture, resilience, and scalability patterns',
       description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering in a fast-paced, hands-on format. Previously delivered at CityJS Athens, ReactJS Day, and CityJS London with 5.0/5 rating.',
       dateInfo: 'November 12, 2025',
-      timeInfo: '17:00 - 20:00',
-      locationInfo: 'Venue TBA, Zürich',
-      maxAttendees: 25,
+      timeInfo: '17:30 - 20:30',
+      locationInfo: 'Orbiz Josef, Zürich',
+      maxAttendees: 15,
       image: '/images/workshops/react-architecture.png',
       iconColor: '#06b6d4', // cyan-500 (React-like color)
       tag: '⚛️ React Architecture & Performance',

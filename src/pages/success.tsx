@@ -1,6 +1,7 @@
 import { useUser } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
 import { CheckCircle, ArrowLeft, DollarSign, CreditCard, Calendar, FileText, Mail } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useEffect, useState, useRef } from 'react';
@@ -432,8 +433,13 @@ export default function SuccessPage() {
             >
               <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6 shadow-sm">
                 <div className="flex items-center justify-center mb-4">
-                  <div className="bg-purple-100 p-3 rounded-full">
-                    <span className="text-2xl">👕</span>
+                  <div className="relative w-full h-48 rounded-2xl overflow-hidden bg-white shadow-lg border-4 border-purple-200">
+                    <Image
+                      src="/images/merch/shirt-mock.png"
+                      alt="ZurichJS T-Shirt"
+                      fill
+                      className="object-contain p-2 border-4 border-purple-200 rounded-2xl"
+                    />
                   </div>
                 </div>
                 <h3 className="text-center text-xl font-bold text-gray-900 mb-3">

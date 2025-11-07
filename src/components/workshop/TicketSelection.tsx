@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { CheckCircle, Star, Zap, Ticket, Tag, DollarSign } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import Button from '@/components/ui/Button';
 import CashPaymentModal from '@/components/ui/CashPaymentModal';
@@ -49,9 +49,13 @@ export default function TicketSelection({
   const [selectedTicket, setSelectedTicket] = useState<string | null>(
     defaultTicket ? (isTestMode && defaultTicket.testPriceId ? defaultTicket.testPriceId : defaultTicket.id) : null
   );
-  
+
   // Cash payment modal state
   const [showCashModal, setShowCashModal] = useState(false);
+
+  // Ref for payment buttons section
+  const paymentButtonsRef = useRef<HTMLDivElement>(null);
+  const [highlightButtons, setHighlightButtons] = useState(false);
   
   const { startCheckout, isLoading, isSignedIn } = useAuthenticatedCheckout({
     onError: (error) => {
@@ -63,6 +67,22 @@ export default function TicketSelection({
   // Determine what discount to display
   const hasCoupon = couponData && couponData.isValid;
   const communityDiscount = isSignedIn && !hasCoupon;
+
+  // Scroll to payment buttons and highlight when ticket is selected
+  useEffect(() => {
+    if (selectedTicket && paymentButtonsRef.current) {
+      // Scroll to payment buttons with center alignment
+      paymentButtonsRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+
+      // Trigger highlight animation
+      setHighlightButtons(true);
+      const timer = setTimeout(() => setHighlightButtons(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTicket]);
 
   const handleCheckout = async () => {
     if (!selectedTicket) return;
@@ -217,10 +237,10 @@ export default function TicketSelection({
                 {/* Discount badge */}
                 {(hasCoupon || communityDiscount) && (
                   <div className="flex-shrink-0">
-                    <div className="bg-green-600 text-white text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5">
+                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-md">
                       <Tag size={10} className="shrink-0" />
                       <span>{getDiscountLabel()}</span>
-                      <span className="uppercase text-[10px] bg-green-700 px-1 py-0.5 rounded">OFF</span>
+                      <span className="uppercase text-[10px] bg-orange-600 px-1 py-0.5 rounded">OFF</span>
                     </div>
                   </div>
                 )}
@@ -249,27 +269,69 @@ export default function TicketSelection({
       </ul>
 
       {/* Payment options section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-        <Button
-          onClick={handleCheckout}
-          disabled={!selectedTicket || isLoading || isCouponLoading}
-          className="w-full bg-zurich text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all py-3 rounded-lg flex items-center justify-center"
+      <div ref={paymentButtonsRef} className="mt-6">
+        {/* Instruction banner */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className={`mb-4 p-3 rounded-lg border-2 transition-all ${
+            selectedTicket
+              ? 'bg-js/10 border-js'
+              : 'bg-gray-50 border-gray-300'
+          }`}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-            <rect width="20" height="14" x="2" y="5" rx="2" />
-            <line x1="2" x2="22" y1="10" y2="10" />
-          </svg>
-          {isLoading || isCouponLoading ? 'Processing...' : 'Pay Online'}
-        </Button>
-        
-        <Button
-          onClick={handleCashPayment}
-          disabled={!selectedTicket || isLoading || isCouponLoading}
-          className="w-full bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all py-3 rounded-lg flex items-center justify-center"
+          <div className="flex items-center justify-center gap-2">
+            {selectedTicket ? (
+              <>
+                <CheckCircle className="h-5 w-5 text-js flex-shrink-0" />
+                <p className="text-sm font-semibold text-gray-900">
+                  Great! Now choose your payment method:
+                </p>
+              </>
+            ) : (
+              <>
+                <Ticket className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <p className="text-sm font-medium text-gray-600">
+                  Select a ticket above to continue
+                </p>
+              </>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+          animate={highlightButtons ? {
+            scale: [1, 1.02, 1],
+            boxShadow: [
+              "0 0 0 0px rgba(234, 179, 8, 0)",
+              "0 0 0 4px rgba(234, 179, 8, 0.3)",
+              "0 0 0 0px rgba(234, 179, 8, 0)"
+            ]
+          } : {}}
+          transition={{ duration: 0.6 }}
         >
-          <DollarSign className="h-5 w-5 mr-2" />
-          Pay in Person
-        </Button>
+          <Button
+            onClick={handleCheckout}
+            disabled={!selectedTicket || isLoading || isCouponLoading}
+            className="w-full bg-zurich text-white hover:bg-blue-600 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all py-3 rounded-lg flex items-center justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <rect width="20" height="14" x="2" y="5" rx="2" />
+              <line x1="2" x2="22" y1="10" y2="10" />
+            </svg>
+            {isLoading || isCouponLoading ? 'Processing...' : 'Pay Online'}
+          </Button>
+
+          <Button
+            onClick={handleCashPayment}
+            disabled={!selectedTicket || isLoading || isCouponLoading}
+            className="w-full bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:text-gray-500 font-semibold shadow-md hover:shadow-lg transition-all py-3 rounded-lg flex items-center justify-center"
+          >
+            <DollarSign className="h-5 w-5 mr-2" />
+            Pay in Person
+          </Button>
+        </motion.div>
       </div>
 
       <div className="text-xs text-gray-600 text-center mt-4 flex flex-col gap-2 bg-gray-50 p-3 rounded-lg">

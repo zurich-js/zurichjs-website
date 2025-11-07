@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, DollarSign, CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 import Button from '@/components/ui/Button';
 import { encodePaymentData } from '@/utils/encoding';
@@ -77,8 +78,9 @@ export default function CashPaymentModal({
     };
   }, [shouldShowModal, onClose]);
 
-  // If modal is closed, don't render anything
+  // If modal is closed or not on client, don't render anything
   if (!shouldShowModal) return null;
+  if (typeof window === 'undefined') return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,35 +150,40 @@ export default function CashPaymentModal({
     }
   };
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {shouldShowModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ zIndex: 9999999 }}
+        >
           {/* Backdrop */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm" 
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+            style={{ zIndex: 9999998 }}
             onClick={() => {
               setShouldShowModal(false);
               onClose();
             }}
           ></motion.div>
-          
+
           {/* Modal */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ 
+            transition={{
               type: "spring",
               damping: 25,
               stiffness: 400,
               duration: 0.3
             }}
-            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative z-10 mx-4 sm:mx-0 border border-green-100"
+            className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden relative mx-4 sm:mx-0 border border-green-100"
+            style={{ zIndex: 9999999 }}
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-green-600 to-green-500 px-5 py-3 flex justify-between items-center rounded-t-xl">
@@ -413,4 +420,6 @@ export default function CashPaymentModal({
       )}
     </AnimatePresence>
   );
+
+  return createPortal(modalContent, document.body);
 } 

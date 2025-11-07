@@ -654,7 +654,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
             />
 
             {/* Sticky Info Banner */}
-            <div className="sticky top-0 z-40 bg-zurich text-white shadow-lg">
+            <div className="sticky top-0 z-30 bg-zurich text-white shadow-lg">
                 <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left w-full sm:w-auto">
@@ -694,7 +694,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                     </svg>
                 </div>
                 
-                <div className="relative z-10">
+                <div className="relative z-0">
                     {/* Back to workshops link */}
                     <div className="container mx-auto px-4 pt-6 pb-0">
                         <Link href="/workshops" className="inline-flex items-center text-black hover:underline text-sm font-medium">
@@ -1088,12 +1088,12 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                         Sign in to unlock your <strong>20% community discount</strong> on workshop tickets
                                                     </p>
                                                             </div>
-                                                <a
-                                                    href={`/sign-in?redirect=${encodeURIComponent(router.asPath)}`}
+                                                <Link
+                                                    href="/workshops/ai-design-patterns-2026?signup=true"
                                                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                                                 >
                                                     Sign In
-                                                </a>
+                                                </Link>
                                                 </div>
                                             </div>
                                         )}

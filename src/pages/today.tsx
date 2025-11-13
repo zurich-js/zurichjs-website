@@ -31,33 +31,9 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
   // Create workshop deals data
   const createWorkshopDeals = (event?: Event | null, speakerData?: { reactArchitectureSpeakers: Speaker[]; aiDesignSpeakers: Speaker[]; }) => {
     // Both deals expire at midnight on October 29th, 2025
-    const dealExpiry = new Date('2025-10-29T00:00:00');
+    const dealExpiry = new Date('2025-11-15T00:00:00');
 
     return [
-      {
-        id: 'react-architecture',
-        title: 'Real-World React: The Architectural Crash Course',
-        subtitle: 'Master Scalability, Resilience, and Observability',
-        description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering through rapid-fire lessons and hands-on exercises.',
-        dateInfo: 'November 12, 2025',
-        timeInfo: '17:00 - 20:00',
-        locationInfo: 'Venue TBA, Zürich',
-        maxAttendees: 25,
-        workshopHref: '/workshops/react-architecture',
-        image: '/images/workshops/react-architecture.png',
-        couponCode: 'react-oct-deal',
-        discount: '30%',
-        discountPercentage: 30,
-        tag: '⚛️ React Architecture & Performance',
-        iconColor: '#0ea5e9',
-        expiresAt: dealExpiry,
-        instructors: speakerData?.reactArchitectureSpeakers?.map(speaker => ({
-          id: speaker.id,
-          name: speaker.name,
-          title: speaker.title || 'Workshop Instructor',
-          image: speaker.image
-        })) || []
-      },
       {
         id: 'ai-design-patterns-2026',
         title: 'Design Patterns For AI Interfaces In 2026',
@@ -69,7 +45,7 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
         maxAttendees: 30,
         workshopHref: '/workshops/ai-design-patterns-2026',
         image: '/images/workshops/ai-design-patterns-2026.png',
-        couponCode: 'vitaly-oct-deal',
+        couponCode: 'vitaly-nov-deal',
         discount: '30%',
         discountPercentage: 30,
         tag: '🧠 AI Interface Design',
@@ -284,7 +260,7 @@ export default function TodayPage({ upcomingEvent, speakers }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const nextEvent = await getEventById('pro-zurichjs-meetup-9');
+    const nextEvent = await getEventById('zurichjs-10-1st-anniversary-special-edition');
 
     // Fetch speaker data for workshops
     const reactArchitectureSpeakerIds = ['faris-aziz'];

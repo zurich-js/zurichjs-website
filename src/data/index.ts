@@ -166,6 +166,16 @@ export const getPartners = () => {
             description: 'Application monitoring and error tracking platform',
             blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
         },
+        {
+            id: '19',
+            name: 'Digitec Galaxus',
+            logo: '/images/partners/digitec-galaxus.png',
+            url: 'https://www.digitec.ch/',
+            type: 'supporting',
+            sponsorshipTier: 'builder',
+            description: 'Switzerland\'s largest online retailer',
+            blurb: 'Digitec Galaxus is Switzerland\'s largest online retailer for electronics, home, and lifestyle products.'
+        },
     ];
 
     return partners;
@@ -204,41 +214,31 @@ export interface TodaySponsor {
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
-    const smallpdf = allPartners.find(p => p.name === 'Smallpdf');
+    const digitecGalaxus = allPartners.find(p => p.name === 'Digitec Galaxus');
     const gyff = allPartners.find(p => p.name === 'GYFF');
     const storyblok = allPartners.find(p => p.name === 'Storyblok');
-    const imagekit = allPartners.find(p => p.name === 'ImageKit');
+    const sentry = allPartners.find(p => p.name === 'Sentry');
 
     const sponsors: TodaySponsor[] = [
-        // Community Champion tier
-        ...(imagekit ? [{
-            id: imagekit.id,
-            name: imagekit.name,
-            logo: imagekit.logo,
-            url: imagekit.url,
-            tier: 'champion' as const,
-            description: imagekit.description
-        }] : []),
-        
         // Community Builder tier (hosts that pay for food and drink)
-        ...(smallpdf ? [{
-            id: smallpdf.id,
-            name: smallpdf.name,
-            logo: smallpdf.logo,
-            url: smallpdf.url,
+        ...(digitecGalaxus ? [{
+            id: digitecGalaxus.id,
+            name: digitecGalaxus.name,
+            logo: digitecGalaxus.logo,
+            url: digitecGalaxus.url,
             tier: 'builder' as const,
-            description: 'Event venue and food & drinks sponsor'
+            description: digitecGalaxus.description
         }] : []),
         
         // Community Friend tier
-        {
-            id: 'dynatrace-today',
-            name: 'Dynatrace',
-            logo: '/images/partners/dynatrace.png',
-            url: 'https://www.dynatrace.com',
+        ...(sentry ? [{
+            id: sentry.id,
+            name: sentry.name,
+            logo: sentry.logo,
+            url: sentry.url,
             tier: 'friend' as const,
-            description: 'Observability and application performance monitoring'
-        },
+            description: sentry.description
+        }] : []),
 
         // Community Supporter tier
         ...(gyff ? [{

@@ -11,7 +11,8 @@
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
       "Bash(pkill:*)",
-      "Bash(npm run typecheck:*)"
+      "Bash(npm run typecheck:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": []
   }

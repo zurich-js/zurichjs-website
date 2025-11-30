@@ -79,19 +79,33 @@ export const getWorkshops = (): Workshop[] => {
     //   speakerId: 'speaker-e9fed3d8-151c-422f-9e43-bd20160183a6',
     //   state: 'confirmed' as WorkshopState
     // },
+    // {
+    //   id: 'react-architecture',
+    //   title: 'Real-World React: The Architectural Crash Course for Scalability, Resilience, and Observability (feat. Next.js)',
+    //   subtitle: 'Intensive crash course covering architecture, resilience, and scalability patterns',
+    //   description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering in a fast-paced, hands-on format. Previously delivered at CityJS Athens, ReactJS Day, and CityJS London with 5.0/5 rating.',
+    //   dateInfo: 'November 12, 2025',
+    //   timeInfo: '17:30 - 20:30',
+    //   locationInfo: 'Orbiz Josef, Zürich',
+    //   maxAttendees: 15,
+    //   image: '/images/workshops/react-architecture.png',
+    //   iconColor: '#06b6d4', // cyan-500 (React-like color)
+    //   tag: '⚛️ React Architecture & Performance',
+    //   speakerId: 'faris-aziz',
+    //   state: 'confirmed' as WorkshopState
+    // },
     {
-      id: 'react-architecture',
-      title: 'Real-World React: The Architectural Crash Course for Scalability, Resilience, and Observability (feat. Next.js)',
-      subtitle: 'Intensive crash course covering architecture, resilience, and scalability patterns',
-      description: 'An intensive 3-hour crash course teaching you to build React applications that survive production. Master essential architecture patterns, performance optimization, and resilience engineering in a fast-paced, hands-on format. Previously delivered at CityJS Athens, ReactJS Day, and CityJS London with 5.0/5 rating.',
-      dateInfo: 'November 12, 2025',
-      timeInfo: '17:30 - 20:30',
-      locationInfo: 'Orbiz Josef, Zürich',
-      maxAttendees: 15,
-      image: '/images/workshops/react-architecture.png',
-      iconColor: '#06b6d4', // cyan-500 (React-like color)
-      tag: '⚛️ React Architecture & Performance',
-      speakerId: 'faris-aziz',
+      id: 'zerotoshipped-fullstack-2026',
+      title: 'ZeroToShipped Fullstack',
+      subtitle: 'Ship a Vertical Slice from Idea to Deployment',
+      description: 'Cut through the noise and ship a vertical slice from idea to deployment with ruthless prioritisation. Ship a production-ready app as a team. We focus on ruthless prioritisation, developer experience, and reliable deployments.',
+      dateInfo: 'February 26, 2026',
+      timeInfo: '14:00 - 18:00',
+      locationInfo: 'Venue TBA, Zürich',
+      maxAttendees: 10,
+      iconColor: '#f59e0b', // amber-500
+      tag: '🚀 Fullstack Development',
+      speakerId: 'kitze',
       state: 'confirmed' as WorkshopState
     },
     {

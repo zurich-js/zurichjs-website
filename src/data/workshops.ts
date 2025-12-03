@@ -95,20 +95,6 @@ export const getWorkshops = (): Workshop[] => {
     //   state: 'confirmed' as WorkshopState
     // },
     {
-      id: 'zerotoshipped-fullstack-2026',
-      title: 'ZeroToShipped Fullstack',
-      subtitle: 'Ship a Vertical Slice from Idea to Deployment',
-      description: 'Cut through the noise and ship a vertical slice from idea to deployment with ruthless prioritisation. Ship a production-ready app as a team. We focus on ruthless prioritisation, developer experience, and reliable deployments.',
-      dateInfo: 'February 26, 2026',
-      timeInfo: '14:00 - 18:00',
-      locationInfo: 'Venue TBA, Zürich',
-      maxAttendees: 10,
-      iconColor: '#f59e0b', // amber-500
-      tag: '🚀 Fullstack Development',
-      speakerId: 'kitze',
-      state: 'confirmed' as WorkshopState
-    },
-    {
       id: 'ai-design-patterns-2026',
       title: 'Design Patterns For AI Interfaces In 2026',
       subtitle: 'Master AI UX Design & Build Better User Experiences',

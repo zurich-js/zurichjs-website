@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -45,10 +44,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'users-[id]',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

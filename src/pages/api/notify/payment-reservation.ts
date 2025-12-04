@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
@@ -80,10 +79,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'notify-payment-reservation',
-  attributes: {
-    'api.category': 'notification',
-    'service': 'notifications',
-  },
-});
+export default handler;

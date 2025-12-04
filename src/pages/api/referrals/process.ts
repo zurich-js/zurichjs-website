@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 // Example API route to process referrals
 // In a real implementation, you would connect to a database
 // and store/update referral information
@@ -55,10 +54,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'referrals-process',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

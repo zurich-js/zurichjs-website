@@ -2,7 +2,6 @@ import { getAuth, clerkClient } from '@clerk/nextjs/server';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
@@ -62,10 +61,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'events-register-interest',
-  attributes: {
-    'api.category': 'events',
-    'service': 'event-management',
-  },
-});
+export default handler;

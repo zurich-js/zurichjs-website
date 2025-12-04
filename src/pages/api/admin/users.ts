@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 // Define the possible order by fields that Clerk API accepts
 type OrderByField = 'created_at' | 'updated_at' | 'email_address' | 'web3wallet' | 
                     'first_name' | 'last_name' | 'phone_number' | 'username' | 
@@ -117,10 +116,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'admin-users',
-  attributes: {
-    'api.category': 'admin',
-    'service': 'management',
-  },
-});
+export default handler;

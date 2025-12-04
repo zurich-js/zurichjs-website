@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 interface UserEmail {
   id: string;
   name: string;
@@ -73,10 +72,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'admin-user-emails',
-  attributes: {
-    'api.category': 'admin',
-    'service': 'management',
-  },
-});
+export default handler;

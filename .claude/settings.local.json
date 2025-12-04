@@ -12,7 +12,9 @@
       "Bash(curl:*)",
       "Bash(pkill:*)",
       "Bash(npm run typecheck:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(rm:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 // Define types for survey data
 interface SurveyData {
   role: string;
@@ -122,10 +121,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'admin-user-stats',
-  attributes: {
-    'api.category': 'admin',
-    'service': 'management',
-  },
-});
+export default handler;

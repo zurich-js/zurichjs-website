@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { getFeedbackBySpeakerId } from '@/sanity/queries';
 import { verifyToken } from '@/utils/tokens';
 
@@ -41,10 +40,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'speaker-feedback-[token]',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

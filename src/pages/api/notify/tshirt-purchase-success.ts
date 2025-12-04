@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 import { stripe } from '@/lib/stripe';
 
@@ -85,10 +84,4 @@ Session ID: ${sessionId}`,
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'notify-tshirt-purchase-success',
-  attributes: {
-    'api.category': 'notification',
-    'service': 'notifications',
-  },
-});
+export default handler;

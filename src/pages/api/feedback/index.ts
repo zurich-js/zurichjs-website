@@ -4,7 +4,6 @@ import { createClient } from '@sanity/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';
 
 
@@ -439,10 +438,4 @@ async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, 
     });
 }
 
-export default withTelemetry(handler, {
-  spanName: 'feedback',
-  attributes: {
-    'api.category': 'feedback',
-    'service': 'user-feedback',
-  },
-});
+export default handler;

@@ -4,7 +4,6 @@ import { createClient } from '@sanity/client';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { getEventById } from '@/sanity/queries';
 
 
@@ -227,10 +226,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'event-feedback',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

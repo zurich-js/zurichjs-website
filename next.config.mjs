@@ -1,13 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Enable instrumentation for OpenTelemetry
-  experimental: {
-    instrumentationHook: true,
-  },
   env: {
     NEXT_PUBLIC_ZURICHJS_ADMIN_ORG_ID: process.env.ZURICHJS_ADMIN_ORG_ID,
-    NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY: process.env.NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY,
   },
   images: {
     remotePatterns: [

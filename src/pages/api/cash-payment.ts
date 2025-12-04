@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 // In a real app, you would use a database to store this information
 const paymentReservations = new Map();
 
@@ -106,10 +105,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'cash-payment',
-  attributes: {
-    'api.category': 'payment',
-    'service': 'cash',
-  },
-});
+export default handler;

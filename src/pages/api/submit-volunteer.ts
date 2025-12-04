@@ -2,7 +2,6 @@ import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
@@ -120,10 +119,4 @@ ${message}
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'submit-volunteer',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

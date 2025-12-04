@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { stripe } from '@/lib/stripe';
 
 
@@ -122,10 +121,4 @@ async function handler(
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'admin-stripe-coupons',
-  attributes: {
-    'api.category': 'admin',
-    'service': 'management',
-  },
-});
+export default handler;

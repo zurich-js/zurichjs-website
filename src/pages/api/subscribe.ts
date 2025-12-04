@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 // EmailOctopus API details
 const API_KEY = process.env.EMAIL_OCTOPUS_API_KEY;
 const LIST_ID = process.env.EMAIL_OCTOPUS_LIST_ID;
@@ -62,10 +61,4 @@ async function handler(
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'subscribe',
-  attributes: {
-    'api.category': 'marketing',
-    'service': 'newsletter',
-  },
-});
+export default handler;

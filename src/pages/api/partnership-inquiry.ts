@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
@@ -66,10 +65,4 @@ async function handler(
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'partnership-inquiry',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

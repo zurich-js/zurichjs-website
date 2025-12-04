@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { stripe } from '@/lib/stripe';
 import { encodePaymentData } from '@/utils/encoding';
 
@@ -117,10 +116,4 @@ async function handler(
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'stripe-checkout-session-create',
-  attributes: {
-    'api.category': 'payment',
-    'service': 'stripe',
-  },
-});
+export default handler;

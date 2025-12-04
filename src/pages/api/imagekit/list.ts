@@ -1,7 +1,6 @@
 import ImageKit from "imagekit";
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { withTelemetry } from '@/lib/multiplayer';
 
 import { ImageKitFile } from '../../../types/gallery';
 import { isVideoFile, getAllThumbnailSizes } from '../../../utils/thumbnailGenerator';
@@ -93,10 +92,4 @@ async function handler(
     }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'imagekit-list',
-  attributes: {
-    'api.category': 'media',
-    'service': 'image-storage',
-  },
-});
+export default handler;

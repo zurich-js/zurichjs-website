@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
@@ -63,10 +62,4 @@ Customer Email: ${email}`,
   }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'notify-checkout-cancelled',
-  attributes: {
-    'api.category': 'notification',
-    'service': 'notifications',
-  },
-});
+export default handler;

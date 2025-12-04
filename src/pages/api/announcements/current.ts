@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
-import { withTelemetry } from '@/lib/multiplayer';
 import { getCurrentAnnouncement } from '@/sanity/queries';
 
 
@@ -40,10 +39,4 @@ async function handler(
     }
 }
 
-export default withTelemetry(handler, {
-  spanName: 'announcements-current',
-  attributes: {
-    'api.category': 'general',
-    'service': 'api',
-  },
-});
+export default handler;

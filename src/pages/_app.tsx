@@ -12,6 +12,29 @@ import posthog from 'posthog-js'
 import { PostHogProvider } from 'posthog-js/react'
 import { useEffect } from 'react'
 
+// Strip traceparent headers from all fetch requests to prevent CORS issues
+if (typeof window !== 'undefined') {
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    if (init?.headers) {
+      if (init.headers instanceof Headers) {
+        init.headers.delete('traceparent');
+        init.headers.delete('tracestate');
+      } else if (Array.isArray(init.headers)) {
+        init.headers = init.headers.filter(
+          ([key]) => key.toLowerCase() !== 'traceparent' && key.toLowerCase() !== 'tracestate'
+        );
+      } else if (typeof init.headers === 'object') {
+        const headers = { ...init.headers } as Record<string, string>;
+        delete headers['traceparent'];
+        delete headers['tracestate'];
+        init.headers = headers;
+      }
+    }
+    return originalFetch.call(this, input, init);
+  };
+}
+
 import { useCheckUserSurvey } from '@/hooks/useCheckUserSurvey';
 const AuthCheck = ({ children }: { children: React.ReactNode }) => {
   
@@ -26,7 +49,7 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, isValid, router])
 
-  // Identify the user with PostHog and SessionRecorder when they log in
+  // Identify the user with PostHog when they log in
   useEffect(() => {
     if (user) {
       // PostHog identification
@@ -35,31 +58,6 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
         name: user.fullName,
         clerk_id: user.id
       });
-
-      // DISABLED: SessionRecorder session attributes
-      // if (process.env.NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY && typeof window !== 'undefined') {
-      //   import('@multiplayer-app/session-recorder-browser')
-      //     .then((module) => {
-      //       const SessionRecorder = module.default;
-      //
-      //       try {
-      //         SessionRecorder.setSessionAttributes({
-      //           userId: user.id,
-      //           userName: user.fullName || 'Unknown',
-      //           userEmail: user.primaryEmailAddress?.emailAddress || '',
-      //           clerkId: user.id,
-      //           // Add any additional user attributes you want to track
-      //           hasProfileImage: !!user.imageUrl,
-      //           createdAt: user.createdAt ? new Date(user.createdAt).toISOString() : '',
-      //         });
-      //       } catch (error) {
-      //         console.warn('Failed to set SessionRecorder session attributes:', error);
-      //       }
-      //     })
-      //     .catch((error) => {
-      //       console.warn('Failed to load SessionRecorder for user attributes:', error);
-      //     });
-      // }
     }
   }, [user]);
   
@@ -67,26 +65,9 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Register an event listener for signing out
     const unsubscribe = clerk.addListener(({ session }) => {
-      // If session changes to null (user signs out), reset PostHog and clear SessionRecorder attributes
+      // If session changes to null (user signs out), reset PostHog
       if (!session && clerk.session === null) {
         posthog.reset();
-
-        // DISABLED: Clear SessionRecorder session attributes
-        // if (process.env.NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY && typeof window !== 'undefined') {
-        //   import('@multiplayer-app/session-recorder-browser')
-        //     .then((module) => {
-        //       const SessionRecorder = module.default;
-        //
-        //       try {
-        //         SessionRecorder.setSessionAttributes({});
-        //       } catch (error) {
-        //         console.warn('Failed to clear SessionRecorder session attributes:', error);
-        //       }
-        //     })
-        //     .catch((error) => {
-        //       console.warn('Failed to load SessionRecorder for logout:', error);
-        //     });
-        // }
       }
     });
     
@@ -102,49 +83,9 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
 export default function App({ Component, pageProps }: AppProps) { 
 
   useEffect(() => {
-    // DISABLED: Initialize SessionRecorder only if API key is available
-    // if (process.env.NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY) {
-    //   // Dynamically import SessionRecorder only in the browser
-    //   import('@multiplayer-app/session-recorder-browser')
-    //     .then((module) => {
-    //       const SessionRecorder = module.default;
-    //
-    //       try {
-    //         // Get the current domain for API route propagation
-    //         const currentDomain = window.location.origin;
-    //
-    //         SessionRecorder.init({
-    //           application: 'zurichjs-website',
-    //           version: '1.0.0',
-    //           environment: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-    //           apiKey: process.env.NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY as string,
-    //           // Propagate trace headers to API routes for full-stack correlation
-    //           propagateTraceHeaderCorsUrls: [
-    //             // Local API routes
-    //             new RegExp(`${currentDomain}/api/.*`, 'i'),
-    //             // Production domain (update with your production domain if different)
-    //             new RegExp('https://.*\\.vercel\\.app/api/.*', 'i'),
-    //             // Custom domain (if you have one)
-    //             // new RegExp('https://zurichjs\\.com/api/.*', 'i'),
-    //           ],
-    //         });
-    //
-    //         console.log('✅ Multiplayer session recorder initialized');
-    //       } catch (error) {
-    //         console.warn('Failed to initialize SessionRecorder:', error);
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.warn('Failed to load SessionRecorder:', error);
-    //     });
-    // } else {
-    //   console.warn('NEXT_PUBLIC_MULTIPLAYER_OTLP_KEY is not set. SessionRecorder will not be initialized.');
-    // }
-
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
-      person_profiles: 'always' as const, // or 'always' to create profiles for anonymous users as well
-      // Enable debug mode in development
+      person_profiles: 'always' as const,
       loaded: (posthog) => {
         if (process.env.NODE_ENV === 'development') posthog.debug()
       }

@@ -1,3 +1,4 @@
+import ConfBanner from '@/components/banners/ConfBanner';
 import Layout from '@/components/layout/Layout';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
@@ -35,15 +36,18 @@ interface HomeProps {
   stats: StatsData;
   partners: Partner[];
   upcomingWorkshops: Workshop[];
+  confTicketsSold: number;
 }
 
-export default function Home({ upcomingEvents, speakers, stats, partners, upcomingWorkshops }: HomeProps) {
+export default function Home({ upcomingEvents, speakers, stats, partners, upcomingWorkshops, confTicketsSold }: HomeProps) {
   useReferrerTracking();
 
   const structuredData = generateHomePageStructuredData();
 
   return (
     <Layout>
+      {/* Conference CTA Banner */}
+      <ConfBanner ticketsSold={confTicketsSold} />
       <SEO
         title="ZurichJS | JavaScript & TypeScript Meetup Community in Zurich, Switzerland"
         description="Join ZurichJS, the premier JavaScript and TypeScript community in Zurich. Free meetups, expert speakers, workshops on React, Node.js, Vue, Angular, AI, and modern web development. Networking events for developers in Zurich, Switzerland, and nearby German cities."
@@ -110,15 +114,13 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
   );
 }
 
-export async function getStaticProps() {
-  // This would be replaced with actual CMS fetching
-
+export async function getServerSideProps() {
   const stats = await getStats();
   const upcomingEvents = await getUpcomingEvents();
   const speakers = await getSpeakers({ shouldFilterVisible: true });
   const partners = getPartners();
   const upcomingWorkshops = getUpcomingWorkshops();
-  
+
   // Fetch speaker data for each workshop
   const workshopsWithSpeakers = await Promise.all(
     upcomingWorkshops.map(async (workshop) => {
@@ -129,14 +131,27 @@ export async function getStaticProps() {
       };
     })
   );
-  
+
+  // Fetch conference ticket sales count
+  let confTicketsSold = 0;
+  try {
+    const ticketRes = await fetch('https://conf.zurichjs.com/api/admin/tickets');
+    if (ticketRes.ok) {
+      const ticketData = await ticketRes.json();
+      confTicketsSold = ticketData?.sold ?? ticketData?.count ?? 0;
+    }
+  } catch {
+    // Silently fail - default to 0 tickets sold
+  }
+
   return {
     props: {
       upcomingEvents,
       speakers: speakers,
       stats,
       partners,
-      upcomingWorkshops: workshopsWithSpeakers
+      upcomingWorkshops: workshopsWithSpeakers,
+      confTicketsSold,
     },
   };
 }

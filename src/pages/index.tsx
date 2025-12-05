@@ -1,3 +1,4 @@
+import ConfBanner from '@/components/banners/ConfBanner';
 import Layout from '@/components/layout/Layout';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
@@ -44,6 +45,8 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
 
   return (
     <Layout>
+      {/* Conference CTA Banner */}
+      <ConfBanner />
       <SEO
         title="ZurichJS | JavaScript & TypeScript Meetup Community in Zurich, Switzerland"
         description="Join ZurichJS, the premier JavaScript and TypeScript community in Zurich. Free meetups, expert speakers, workshops on React, Node.js, Vue, Angular, AI, and modern web development. Networking events for developers in Zurich, Switzerland, and nearby German cities."
@@ -110,15 +113,13 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
   );
 }
 
-export async function getStaticProps() {
-  // This would be replaced with actual CMS fetching
-
+export async function getServerSideProps() {
   const stats = await getStats();
   const upcomingEvents = await getUpcomingEvents();
   const speakers = await getSpeakers({ shouldFilterVisible: true });
   const partners = getPartners();
   const upcomingWorkshops = getUpcomingWorkshops();
-  
+
   // Fetch speaker data for each workshop
   const workshopsWithSpeakers = await Promise.all(
     upcomingWorkshops.map(async (workshop) => {
@@ -129,14 +130,14 @@ export async function getStaticProps() {
       };
     })
   );
-  
+
   return {
     props: {
       upcomingEvents,
       speakers: speakers,
       stats,
       partners,
-      upcomingWorkshops: workshopsWithSpeakers
+      upcomingWorkshops: workshopsWithSpeakers,
     },
   };
 }

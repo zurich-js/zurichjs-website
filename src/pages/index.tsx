@@ -36,10 +36,9 @@ interface HomeProps {
   stats: StatsData;
   partners: Partner[];
   upcomingWorkshops: Workshop[];
-  confTicketsSold: number;
 }
 
-export default function Home({ upcomingEvents, speakers, stats, partners, upcomingWorkshops, confTicketsSold }: HomeProps) {
+export default function Home({ upcomingEvents, speakers, stats, partners, upcomingWorkshops }: HomeProps) {
   useReferrerTracking();
 
   const structuredData = generateHomePageStructuredData();
@@ -47,7 +46,7 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
   return (
     <Layout>
       {/* Conference CTA Banner */}
-      <ConfBanner ticketsSold={confTicketsSold} />
+      <ConfBanner />
       <SEO
         title="ZurichJS | JavaScript & TypeScript Meetup Community in Zurich, Switzerland"
         description="Join ZurichJS, the premier JavaScript and TypeScript community in Zurich. Free meetups, expert speakers, workshops on React, Node.js, Vue, Angular, AI, and modern web development. Networking events for developers in Zurich, Switzerland, and nearby German cities."
@@ -132,18 +131,6 @@ export async function getServerSideProps() {
     })
   );
 
-  // Fetch conference ticket sales count
-  let confTicketsSold = 0;
-  try {
-    const ticketRes = await fetch('https://conf.zurichjs.com/api/admin/tickets');
-    if (ticketRes.ok) {
-      const ticketData = await ticketRes.json();
-      confTicketsSold = ticketData?.sold ?? ticketData?.count ?? 0;
-    }
-  } catch {
-    // Silently fail - default to 0 tickets sold
-  }
-
   return {
     props: {
       upcomingEvents,
@@ -151,7 +138,6 @@ export async function getServerSideProps() {
       stats,
       partners,
       upcomingWorkshops: workshopsWithSpeakers,
-      confTicketsSold,
     },
   };
 }

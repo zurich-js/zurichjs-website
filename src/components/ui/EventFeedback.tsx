@@ -859,13 +859,6 @@ export default function EventFeedback({ event, isFeedbackMode }: EventFeedbackPr
         websiteUrl: 'https://www.sonarqube.org/'
       },
       {
-        _id: 'imagekit',
-        name: 'ImageKit',
-        description: 'Real-time image optimization and transformation service.',
-        logo: 'https://avatars.githubusercontent.com/u/34096591?s=280&v=4',
-        websiteUrl: 'https://imagekit.io/'
-      },
-      {
         _id: 'stripe',
         name: 'Stripe',
         description: 'Payment processing platform for internet businesses.',

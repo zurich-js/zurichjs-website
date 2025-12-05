@@ -127,16 +127,6 @@ export const getPartners = () => {
             description: 'Software licenses and tools for ZurichJS'
         },
         {
-            id: '14',
-            name: 'ImageKit',
-            logo: '/images/partners/imagekit.png',
-            url: 'https://imagekit.io?utm_source=zurichjs&utm_medium=website',
-            type: 'supporting',
-            sponsorshipTier: 'champion',
-            description: 'Image and Video API plus AI-powered DAM',
-            blurb: 'ImageKit is a complete media management solution that helps developers and businesses optimize, transform, and deliver images and videos through a global CDN. With powerful APIs, real-time transformations, and AI-powered digital asset management, ImageKit streamlines media workflows while improving web performance and user experience.'
-        },
-        {
             id: '15',
             name: 'GYFF',
             logo: '/images/partners/gyff.png',
@@ -165,16 +155,6 @@ export const getPartners = () => {
             sponsorshipTier: 'friend',
             description: 'Application monitoring and error tracking platform',
             blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
-        },
-        {
-            id: '19',
-            name: 'Digitec Galaxus',
-            logo: '/images/partners/digitec-galaxus.png',
-            url: 'https://www.digitec.ch/',
-            type: 'supporting',
-            sponsorshipTier: 'builder',
-            description: 'Switzerland\'s largest online retailer',
-            blurb: 'Digitec Galaxus is Switzerland\'s largest online retailer for electronics, home, and lifestyle products.'
         },
     ];
 
@@ -214,22 +194,11 @@ export interface TodaySponsor {
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
-    const digitecGalaxus = allPartners.find(p => p.name === 'Digitec Galaxus');
     const gyff = allPartners.find(p => p.name === 'GYFF');
     const storyblok = allPartners.find(p => p.name === 'Storyblok');
     const sentry = allPartners.find(p => p.name === 'Sentry');
 
     const sponsors: TodaySponsor[] = [
-        // Community Builder tier (hosts that pay for food and drink)
-        ...(digitecGalaxus ? [{
-            id: digitecGalaxus.id,
-            name: digitecGalaxus.name,
-            logo: digitecGalaxus.logo,
-            url: digitecGalaxus.url,
-            tier: 'builder' as const,
-            description: digitecGalaxus.description
-        }] : []),
-        
         // Community Friend tier
         ...(sentry ? [{
             id: sentry.id,

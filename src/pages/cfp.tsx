@@ -84,7 +84,7 @@ export default function CFP({ submissionStats }: CFPProps) {
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<NodeJS.Timeout>(undefined);
 
   // Helper function to generate email body with current form data
   const generateEmailBody = () => {

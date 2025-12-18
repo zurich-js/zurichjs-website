@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+ 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
 import { ArrowDown, ArrowUp, Calendar, Download, Star, Filter } from 'lucide-react';

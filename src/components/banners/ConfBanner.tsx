@@ -9,9 +9,9 @@ const CONF_URL = 'https://conf.zurichjs.com';
 const UTM_PARAMS = '?utm_source=zurichjs&utm_medium=website&utm_campaign=conf2026&utm_content=banner';
 
 const slides = [
-  { text: 'Blind Bird tickets on sale', short: 'Blind Bird on sale' },
+  { text: 'Early Bird tickets on sale', short: 'Early Bird on sale' },
+  { text: 'First speakers revealed', short: 'Speakers revealed' },
   { text: 'September 11, 2026', short: 'Sept 11, 2026' },
-  { text: 'International speakers', short: 'Global speakers' },
 ];
 
 export default function ConfBanner({ className = '' }: ConfBannerProps) {
@@ -35,7 +35,7 @@ export default function ConfBanner({ className = '' }: ConfBannerProps) {
       whileHover={{ backgroundColor: '#1a1a1a' }}
     >
       <div className="px-4 py-3 sm:py-2.5">
-        <div className="flex items-center justify-center gap-2.5 sm:gap-3">
+        <div className="flex items-center justify-center gap-2.5 sm:gap-4">
           {/* Badge */}
           <span className="bg-[#F7DF1E] text-black text-xs font-bold px-2 py-1 sm:py-0.5 rounded whitespace-nowrap flex-shrink-0">
             ZurichJS Conf
@@ -52,8 +52,8 @@ export default function ConfBanner({ className = '' }: ConfBannerProps) {
                 transition={{ duration: 0.2 }}
                 className="text-white text-sm font-medium block truncate"
               >
-                <span className="hidden sm:inline">{slides[currentSlide].text}</span>
-                <span className="sm:hidden">{slides[currentSlide].short}</span>
+                <span className="hidden sm:block">{slides[currentSlide].text}</span>
+                <span className="block sm:hidden">{slides[currentSlide].short}</span>
               </motion.span>
             </AnimatePresence>
           </div>

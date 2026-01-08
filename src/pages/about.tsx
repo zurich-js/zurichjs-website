@@ -1101,6 +1101,62 @@ export async function getStaticProps() {
           description: 'Smallpdf graciously hosted our 4th meetup, joining our roster of generous venue partners alongside Ginetta, novu ag, and GetYourGuide in Zurich.',
           image: '/images/community/meetup-3-crowd.jpg',
         },
+        {
+          id: '2025-05-15',
+          year: 'May 2025',
+          title: 'May the Code be with you',
+          description: 'We heard from local JS Jedi Masters about the way of a founder and dove deep on performance testing.',
+          image: '/images/community/may-the-force.webp',
+        },
+        {
+          id: '2025-06-19',
+          year: 'June 2025',
+          title: 'Explore JavaScript on the Server Side',
+          description: 'This meetup and the workshop were all about server side JavaScript and Node.js.',
+          image: '/images/community/june-workshop.png',
+        },
+        {
+          id: '2025-07-24',
+          year: 'July 2025',
+          title: 'Sizzling hot JavaScript in July',
+          description: 'Astro and PHP plus our friends from Belgium joined us for an exciting summer meetup and brought some merch in their bags.',
+          image: '/images/community/sizzling-june.webp',
+        },
+        {
+          id: '2025-09-10',
+          year: 'September 2025',
+          title: 'Flare up your performance',
+          description: 'Cloudflare joined us to share insights on optimizing web performance and security.',
+          image: '/images/community/cloudflare.png',
+        },
+        {
+          id: '2025-10-28',
+          year: 'October 2025',
+          title: '(H)aunt the Gaps in your Apps',
+          description: 'Our spooky October meetup focused on identifying and fixing performance gaps and bugs in web applications with the support of Dynatrace, just in time for Halloween!',
+          image: '/images/community/haunt-the-gaps.webp',
+        },
+        {
+          id: '2025-11-13',
+          year: 'November 2025',
+          title: 'One year anniversary is here!',
+          description: 'We celebrated our first anniversary with a special meetup back where it all started at Pause im Foifi presented by Digitec/Galaxus!',
+          image: '/images/community/1year-anniversary.webp',
+        },
+        {
+            id: '2026-01-22',
+            year: 'January 2026',
+            title: 'Vue x Stripe!',
+            description: 'We partnered with Stripe and Get Your Guide to bring an exciting Vue.js focused meetup to our community!',
+            image: '/images/community/vue-zurich.jpeg',
+        }
+        /*        {
+          id: '2026-01-22',
+          year: 'February 2026',
+          title: 'Front-Conf Warmup',
+          description: 'We are the official warump meetup for Front-Conf 2026 in Zurich!',
+          image: '/images/community/meetup-3-crowd.jpg',
+      }*/
       ],
       stats,
       pastEvents

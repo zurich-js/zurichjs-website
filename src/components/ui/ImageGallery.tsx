@@ -35,6 +35,17 @@ export default function ImageGallery({
   // Filter only photos for the gallery
   const photos = media.filter(item => item.type === 'photo');
 
+  const scrollToThumbnail = (index: number) => {
+    const thumbnailElement = document.getElementById(`thumbnail-${index}`);
+    if (thumbnailElement) {
+      thumbnailElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  };
+
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
@@ -123,17 +134,6 @@ export default function ImageGallery({
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(photo?.url || '');
-    }
-  };
-
-  const scrollToThumbnail = (index: number) => {
-    const thumbnailElement = document.getElementById(`thumbnail-${index}`);
-    if (thumbnailElement) {
-      thumbnailElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
     }
   };
 

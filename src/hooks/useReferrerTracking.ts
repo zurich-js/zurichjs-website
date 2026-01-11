@@ -97,6 +97,7 @@ export default function useReferrerTracking({
   };
   
   // Track on initial page load
+  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     trackReferrer();
   }, []);

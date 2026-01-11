@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
-import { createClient } from '@sanity/client';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { createClient } from 'next-sanity';
 
 
 import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';

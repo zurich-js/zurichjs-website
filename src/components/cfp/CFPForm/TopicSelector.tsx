@@ -15,10 +15,10 @@ export default function TopicSelector({ selectedTopics, onTopicChange, error }: 
         <div className="flex items-center justify-center w-10 h-10 bg-js rounded-full text-black font-bold mr-4 shadow-sm">
           3
         </div>
-        <label className="text-xl font-bold">Talk Topics *</label>
+        <label className="text-xl font-bold">Meetup Talk Topics *</label>
       </div>
       <p className="text-gray-600 mb-4 ml-14">
-        Select the topics that best describe your talk. Choose multiple if relevant.
+        Select the topics that best describe your meetup talk. Choose multiple if relevant.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
         {TALK_TOPICS.map(topic => (
@@ -27,10 +27,10 @@ export default function TopicSelector({ selectedTopics, onTopicChange, error }: 
             type="button"
             onClick={() => onTopicChange(topic)}
             className={`
-              flex items-center justify-center px-3 py-3 sm:py-2
+              flex items-center justify-center px-3 py-3
               rounded-lg text-sm font-medium
               transition-all transform active:scale-95
-              min-h-[44px]
+              min-h-[52px] text-center
               ${
                 selectedTopics.includes(topic)
                   ? 'bg-js text-black shadow-md ring-2 ring-js ring-offset-2'
@@ -38,8 +38,8 @@ export default function TopicSelector({ selectedTopics, onTopicChange, error }: 
               }
             `}
           >
-            <Tag size={14} className="mr-1 flex-shrink-0" />
-            <span className="truncate">{topic}</span>
+            <Tag size={14} className="mr-1.5 flex-shrink-0" />
+            <span className="leading-tight">{topic}</span>
           </button>
         ))}
       </div>

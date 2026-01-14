@@ -23,9 +23,9 @@ export default function TalkSection({
         <div className="flex items-center justify-center w-10 h-10 bg-js rounded-full text-black font-bold mr-4 shadow-sm">
           2
         </div>
-        <h3 className="text-xl font-bold">Talk Details</h3>
+        <h3 className="text-xl font-bold">Meetup Talk Details</h3>
       </div>
-      <p className="text-gray-600 mb-6 ml-14">Share the details of your talk proposal with us.</p>
+      <p className="text-gray-600 mb-6 ml-14">Share the details of your meetup talk proposal with us.</p>
 
       <FormInput
         label="Talk Title"

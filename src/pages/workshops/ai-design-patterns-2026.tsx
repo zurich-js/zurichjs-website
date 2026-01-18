@@ -22,8 +22,8 @@ import { Speaker } from '@/types';
 function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
     const now = new Date();
     const earlyBirdEnd = new Date('2025-12-01');
-    const lateBirdStart = new Date('2026-03-01');
-    const workshopDate = new Date('2026-03-23');
+    const lateBirdStart = new Date('2026-02-01');
+    const workshopDate = new Date('2026-02-26');
     
     // Calculate early bird seats remaining
     const soldTickets = 30 - seatsRemaining; // Note: This should use totalSeats from parent component
@@ -43,7 +43,7 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
         },
         { 
             name: 'Standard Pricing', 
-            date: 'Dec 1st, 2025 - Mar 1st, 2026',
+            date: 'Dec 1st, 2025 - Feb 1st, 2026',
             price: 'CHF 595',
             endDate: lateBirdStart,
             color: 'bg-zurich',
@@ -53,7 +53,7 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
         },
         { 
             name: 'Late Bird Pricing', 
-            date: 'Mar 1st - Mar 23rd, 2026',
+            date: 'Feb 1st - Feb 26rd, 2026',
             price: 'CHF 625',
             endDate: workshopDate,
             color: 'bg-orange-500',
@@ -63,7 +63,7 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
         },
         { 
             name: 'Workshop Day', 
-            date: 'March 23rd, 2026',
+            date: 'February 26th, 2026',
             price: '09:00 - 17:00',
             endDate: workshopDate,
             color: 'bg-red-500',
@@ -196,7 +196,7 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
     const updateTimer = () => {
       const now = new Date().getTime();
       const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
-      const workshopStart = new Date('2026-03-23T09:00:00').getTime();
+      const workshopStart = new Date('2026-02-26T09:00:00').getTime();
       
       // Calculate sold tickets and early bird seats left
       const totalSeats = 30;
@@ -237,7 +237,7 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
 
   const now = new Date().getTime();
   const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
-  const workshopStart = new Date('2026-03-23T09:00:00').getTime();
+  const workshopStart = new Date('2026-02-26T09:00:00').getTime();
   
   const totalSeats = 30;
   const soldTickets = totalSeats - seatsRemaining;
@@ -307,7 +307,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
         id: "ai-design-patterns-2026",
         title: "Design Patterns For AI Interfaces In 2026",
         subtitle: "Master AI UX Design & Build Better User Experiences",
-        dateInfo: "March 23, 2026",
+        dateInfo: "February 26th, 2026",
         timeInfo: "09:00 - 17:00 (8 hours, lunch included)",
         locationInfo: "Venue TBA, Zürich",
         price: "525 CHF (Early Bird) / 595 CHF / 625 CHF (Late Bird)",
@@ -666,7 +666,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                             
                             <div className="flex items-center gap-2">
                                 <Calendar size={16} className="text-white" />
-                                <span className="text-xs sm:text-sm">March 23rd, 2026</span>
+                                <span className="text-xs sm:text-sm">February 26th, 2026</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-end">
@@ -1467,7 +1467,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                             <span>•</span>
                             <span className="flex items-center gap-1">
                                 <Calendar size={16} />
-                                March 23rd, 2026
+                                February 26th, 2026
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">

@@ -99,7 +99,7 @@ export const getWorkshops = (): Workshop[] => {
       title: 'Design Patterns For AI Interfaces In 2026',
       subtitle: 'Master AI UX Design & Build Better User Experiences',
       description: 'Master modern AI interface design through practical patterns that go beyond chatbots, creating experiences that help users articulate intent and get work done faster. Full-day intensive workshop with Vitaly Friedman.',
-      dateInfo: 'March 23, 2026',
+      dateInfo: 'February 26th, 2026',
       timeInfo: '09:00 - 17:00',
       locationInfo: 'Venue TBA, Zürich',
       maxAttendees: 30,

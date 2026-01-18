@@ -42,7 +42,7 @@ export const aiDesignPatternsTickets: TicketOption[] = [
     testPriceId: 'price_1S51HyGxQziVA7Fs9gUB9xIM', // Test environment price ID
     ticketType: 'workshop',
     workshopId: 'ai-design-patterns-2026',
-    availableFrom: '2026-03-01', // Starts March 1st, 2026
+    availableFrom: '2026-02-01', // Starts March 1st, 2026
     features: [
       '8 hours of intensive learning',
       'Lunch and refreshments included',

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Users, Share2, ChevronLeft, Brain, Lightbulb, Users2, Target, Layers } from 'lucide-react';
+import { Calendar, Clock, Users, Share2, ChevronLeft, BarChart3, Lightbulb, Users2, Target, TrendingUp } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -9,8 +9,8 @@ import PageLayout from '@/components/layout/Layout';
 import Section from "@/components/Section";
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
-import { aiDesignPatternsTickets } from '@/components/workshop/aiDesignPatternsTickets';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
+import { measureUxDesignImpactTickets } from '@/components/workshop/measureUxDesignImpactTickets';
 import TicketSelection from '@/components/workshop/TicketSelection';
 import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
@@ -21,29 +21,13 @@ import { Speaker } from '@/types';
 // Horizontal Timeline Component
 function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
     const now = new Date();
-    const earlyBirdEnd = new Date('2025-12-01');
-    const lateBirdStart = new Date('2026-03-01');
-    const workshopDate = new Date('2026-03-23');
-    
-    // Calculate early bird seats remaining
-    const soldTickets = 30 - seatsRemaining; // Note: This should use totalSeats from parent component
-    const earlyBirdSoldOut = soldTickets >= 10;
-    
+    const lateBirdStart = new Date('2026-02-01');
+    const workshopDate = new Date('2026-02-26');
+
     const milestones = [
-        { 
-            name: 'Early Bird Pricing', 
-            date: 'First 10 seats OR until Dec 1st, 2025',
-            price: 'CHF 525',
-            endDate: earlyBirdEnd,
-            color: 'bg-green-500',
-            textColor: 'text-green-700',
-            bgColor: 'bg-green-50',
-            icon: '🐦',
-            extraInfo: !earlyBirdSoldOut && now < earlyBirdEnd ? `${Math.max(0, 10 - soldTickets)} early bird seats left` : null
-        },
-        { 
-            name: 'Standard Pricing', 
-            date: 'Dec 1st, 2025 - Mar 1st, 2026',
+        {
+            name: 'Standard Pricing',
+            date: 'Until Feb 1st, 2026',
             price: 'CHF 595',
             endDate: lateBirdStart,
             color: 'bg-zurich',
@@ -51,9 +35,9 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             bgColor: 'bg-blue-50',
             icon: '💼'
         },
-        { 
-            name: 'Late Bird Pricing', 
-            date: 'Mar 1st - Mar 23rd, 2026',
+        {
+            name: 'Late Bird Pricing',
+            date: 'Feb 1st - Feb 26th, 2026',
             price: 'CHF 625',
             endDate: workshopDate,
             color: 'bg-orange-500',
@@ -61,9 +45,9 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             bgColor: 'bg-orange-50',
             icon: '⚡'
         },
-        { 
-            name: 'Workshop Day', 
-            date: 'March 23rd, 2026',
+        {
+            name: 'Workshop Day',
+            date: 'February 26th, 2026',
             price: '09:00 - 17:00',
             endDate: workshopDate,
             color: 'bg-red-500',
@@ -72,13 +56,15 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
             icon: '🎯'
         }
     ];
-    
+
     const getCurrentMilestone = () => {
-        if (now < earlyBirdEnd && !earlyBirdSoldOut) return 0;
-        if (now < lateBirdStart) return 1;
-        if (now < workshopDate) return 2;
-        return 3;
+        if (now < lateBirdStart) return 0;
+        if (now < workshopDate) return 1;
+        return 2;
     };
+
+    // Keep seatsRemaining in scope for potential future use
+    void seatsRemaining;
     
     const currentMilestone = getCurrentMilestone();
     
@@ -93,7 +79,7 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
                     style={{ width: `${(currentMilestone / (milestones.length - 1)) * 100}%` }}
                 ></div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {milestones.map((milestone, index) => (
                         <div key={milestone.name} className="relative">
                             {/* Timeline dot */}
@@ -129,11 +115,6 @@ function HorizontalTimeline({ seatsRemaining }: { seatsRemaining: number }) {
                                 }`}>
                                         {milestone.price}
                                 </div>
-                                    {milestone.extraInfo && (
-                                        <div className="mt-1 text-xs text-green-600 font-semibold">
-                                            {milestone.extraInfo}
-                                </div>
-                                    )}
                                     {index === currentMilestone && (
                                         <div className="mt-2 text-xs bg-zurich text-white px-2 py-1 rounded-full">
                                             Current
@@ -191,31 +172,17 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
   });
   const [isClient, setIsClient] = useState(false);
 
+  // Keep seatsRemaining in scope for potential future use
+  void seatsRemaining;
+
   useEffect(() => {
     setIsClient(true);
     const updateTimer = () => {
       const now = new Date().getTime();
-      const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
-      const workshopStart = new Date('2026-03-23T09:00:00').getTime();
-      
-      // Calculate sold tickets and early bird seats left
-      const totalSeats = 30;
-      const soldTickets = totalSeats - seatsRemaining;
-      const earlyBirdSoldOut = soldTickets >= 10;
-      
-      // Determine which countdown to show
-      let targetTime;
-      
-      if (!earlyBirdSoldOut && now < earlyBirdEnd) {
-        // Show early bird countdown
-        targetTime = earlyBirdEnd;
-      } else {
-        // Show workshop countdown
-        targetTime = workshopStart;
-      }
-      
-      const difference = targetTime - now;
-      
+      const workshopStart = new Date('2026-02-26T09:00:00').getTime();
+
+      const difference = workshopStart - now;
+
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -231,24 +198,16 @@ function CountdownTimer({ seatsRemaining }: { seatsRemaining: number }) {
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [seatsRemaining]);
+  }, []);
 
   if (!isClient) return null;
 
   const now = new Date().getTime();
-  const earlyBirdEnd = new Date('2025-12-01T23:59:59').getTime();
-  const workshopStart = new Date('2026-03-23T09:00:00').getTime();
-  
-  const totalSeats = 30;
-  const soldTickets = totalSeats - seatsRemaining;
-  const earlyBirdSoldOut = soldTickets >= 10;
-  
+  const workshopStart = new Date('2026-02-26T09:00:00').getTime();
+
   const isExpired = timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes === 0 && timeLeft.seconds === 0;
-  
-  // Determine countdown label
-  const countdownLabel = !earlyBirdSoldOut && now < earlyBirdEnd 
-    ? "Early Bird Ends In:" 
-    : "Workshop Starts In:";
+
+  const countdownLabel = "Workshop Starts In:";
 
   if (isExpired && now >= workshopStart) {
     return (
@@ -304,103 +263,103 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
 
     // Workshop data
     const workshop: WorkshopDetails = {
-        id: "ai-design-patterns-2026",
-        title: "Design Patterns For AI Interfaces In 2026",
-        subtitle: "Master AI UX Design & Build Better User Experiences",
-        dateInfo: "March 23, 2026",
+        id: "measure-ux-design-impact",
+        title: "How To Measure UX and Design Impact",
+        subtitle: "Define, Track & Prove Your Design Success",
+        dateInfo: "February 26, 2026",
         timeInfo: "09:00 - 17:00 (8 hours, lunch included)",
         locationInfo: "Venue TBA, Zürich",
         price: "525 CHF (Early Bird) / 595 CHF / 625 CHF (Late Bird)",
-        description: "As product teams race to include AI in their products, they too often rely on good old-fashioned patterns like an assistant or chatbot. However, this experience is often painfully slow, responses are generic, and users have to meticulously explain to AI what they need — over and over. In this full-day workshop with Vitaly Friedman, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, we'll explore brand new design patterns for better AI experiences, with daemons, clustering, style lenses, structured presets and templates, dynamic editing, temperature knobs and everything in-between!",
+        description: "How do we measure the quality of UX? What metrics to use? How to bridge business objectives and UX goals? How to remove bias and guesswork from our design decisions? And how to measure and make a case for the impact of your UX work? In this full-day workshop with Vitaly Friedman, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, you'll learn how to define design success, establish team-specific design KPIs, track them effectively, and integrate accountability and ownership for these metrics into your design process.",
         maxAttendees: 30,
         speakers: speakers,
         topics: [
             {
-                title: "AI UX State & Challenges",
-                description: "Understand how people use AI products today, main slowdowns, context awareness, capabilities awareness, and discoverability challenges.",
-                icon: <Brain className="text-zurich" size={24} />
-            },
-            {
-                title: "Intent Articulation Patterns",
-                description: "Learn style lenses, daemons, temperature knobs and other patterns to help users navigate AI output faster and more precisely.",
+                title: "Defining Design Success",
+                description: "Learn how to define what success looks like for your design team, translate ambiguous objectives into practical goals, and align UX metrics with business needs.",
                 icon: <Target className="text-zurich" size={24} />
             },
             {
-                title: "Dynamic AI Interfaces",
-                description: "Transform AI's static output into dynamic and proactive UI with canvases, conversations, clustering, and dynamic views.",
-                icon: <Layers className="text-zurich" size={24} />
+                title: "UX Metrics & KPIs",
+                description: "Master SUS, UMUX-Lite, NPS, CSAT, CES, and other key metrics. Build KPI trees and understand how to choose the right mix of qualitative and quantitative measures.",
+                icon: <BarChart3 className="text-zurich" size={24} />
             },
             {
-                title: "Agentic UX Design",
-                description: "Design for agentic UX, support users in complex flows, consider accessibility, sustainability, and build trust in AI interfaces.",
+                title: "Research Methods & Data",
+                description: "Choose the right UX research methods, use Top Tasks methodology to prioritize user needs, and apply gap analysis and Kano model for better insights.",
+                icon: <TrendingUp className="text-zurich" size={24} />
+            },
+            {
+                title: "Ownership & Culture",
+                description: "Establish ownership and accountability for design KPIs, improve team culture with better meetings, time estimates, and collaboration strategies.",
                 icon: <Users2 className="text-zurich" size={24} />
             }
         ],
         takeaways: [
-            "Practical design patterns from various AI products and interfaces with actionable takeaways",
-            "Better understanding of how to approach AI projects and prevent risks and technical challenges",
-            "Increased comfort and confidence in designing AI features and experiences",
-            "Toolbox of techniques for intent articulation with style lenses, daemons, and temperature controls",
-            "Methods to transform static AI output into dynamic, proactive user interfaces",
-            "Understanding of agentic UX design for complex workflows and task support",
-            "Knowledge of accessibility and sustainability considerations in AI interactions",
-            "Strategies to build user trust and confidence in AI-powered interfaces"
+            "How to make and track the impact of your design effort",
+            "How to define the notion of design success for your team",
+            "How to measure design work against business goals and needs",
+            "How to choose the right mix of qualitative and quantitative research",
+            "How to define KPIs that focus on user needs but also respect business needs",
+            "How to use Top Tasks methodology to understand and prioritize user's tasks",
+            "How to make sense of SUS, UMUX, UMUX-Lite, SPRQ, North Star Metric, NPS, CLV, CSAT, CES, MAU, MRR/ARR and business KPIs",
+            "How to build a design KPI tree for each team and department"
         ],
         targetAudience: [
-            "Product Designers looking to design better AI-powered interfaces",
-            "UX Designers working on AI features and experiences",
-            "Product Managers overseeing AI product development",
-            "Design Leaders building AI strategy for their teams"
+            "UX Designers wanting to prove and communicate design impact",
+            "Product Designers looking to align design work with business goals",
+            "Design Managers establishing design metrics for their teams",
+            "Product Managers seeking to integrate UX measurement into their process"
         ],
         prerequisites: [
             "Basic understanding of UX/UI design principles",
             "Some experience with digital product design",
-            "Interest in AI and machine learning applications",
-            "No specific AI technical knowledge required - focus is on design patterns",
-            "Laptop with design tools (Figma, Sketch, or similar) for group exercises"
+            "Interest in design measurement and research methods",
+            "No specific data analysis knowledge required - focus is on practical application",
+            "Laptop for group exercises and collaborative work"
         ],
         phases: [
             {
-                title: "State of AI in 2026 & Current Challenges",
+                title: "Defining Design Success & Setting Goals",
                 duration: "90 minutes",
-                description: "Explore how people actually use AI products today, identify main pain points, and understand frequent challenges in AI UX",
+                description: "Explore how to define what success looks like for your design team and translate ambiguous objectives into practical, measurable goals",
                 activities: [
-                    "Review current AI product landscape and user behaviors",
-                    "Analyze successful and failed AI interface examples",
-                    "Identify common UX bottlenecks in AI interactions",
-                    "Explore context awareness and capability discovery issues"
+                    "Review how leading organizations define design success",
+                    "Practice translating business objectives into UX goals",
+                    "Identify key stakeholders and their success criteria",
+                    "Map the relationship between UX metrics and business outcomes"
                 ],
                 concepts: [
-                    "AI adoption patterns and user expectations",
-                    "Chatbot UX limitations and alternatives",
-                    "Context awareness challenges",
-                    "Discoverability in AI interfaces"
+                    "OKRs vs. KPIs vs. metrics - understanding the differences",
+                    "North Star Metric and how to identify yours",
+                    "Bridging business objectives and UX goals",
+                    "Removing bias and guesswork from design decisions"
                 ]
             },
             {
-                title: "Intent Articulation & Navigation Patterns",
+                title: "Understanding UX Metrics & KPIs",
                 duration: "120 minutes",
-                description: "Learn how to help users articulate intent and navigate AI output with advanced design patterns",
+                description: "Deep dive into the world of UX metrics - learn what each metric measures, when to use it, and how to interpret results",
                 activities: [
-                    "Design style lenses for different output types",
-                    "Create daemon patterns for proactive assistance",
-                    "Implement temperature knobs for output control",
-                    "Practice structured preset design"
+                    "Hands-on practice with SUS and UMUX-Lite scoring",
+                    "Analyze real-world NPS and CSAT data examples",
+                    "Calculate and interpret customer effort scores",
+                    "Build your first KPI dashboard framework"
                 ],
                 concepts: [
-                    "Style lenses and output customization",
-                    "Daemon patterns for proactive AI",
-                    "Temperature controls and user agency",
-                    "Structured presets and templates"
+                    "SUS, UMUX, UMUX-Lite, SPRQ explained",
+                    "NPS, CLV, CSAT, CES - customer-focused metrics",
+                    "MAU, MRR/ARR and business KPIs",
+                    "TPI (Task Performance Indicator) and feedback scoring"
                 ]
             },
             {
                 title: "Lunch Break & Networking",
                 duration: "60 minutes",
-                description: "Enjoy lunch with fellow designers and continue discussions about AI UX challenges and solutions",
+                description: "Enjoy lunch with fellow designers and share experiences about measuring UX in your organizations",
                 activities: [
-                    "Networking with other AI designers",
-                    "Informal discussions about workshop topics",
+                    "Networking with other UX professionals",
+                    "Informal discussions about measurement challenges",
                     "Q&A with the instructor",
                     "Sharing experiences from current projects"
                 ],
@@ -408,75 +367,75 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                     "Peer learning and experience sharing",
                     "Building design community connections",
                     "Real-world application discussions",
-                    "Industry trend insights"
+                    "Industry best practices exchange"
                 ]
             },
             {
-                title: "Dynamic AI Interfaces & Canvases",
+                title: "Research Methods & Data Collection",
                 duration: "120 minutes",
-                description: "Transform static AI output into dynamic interfaces with canvases, conversations, and navigation patterns",
+                description: "Learn to choose the right UX research methods and collect meaningful data to inform your design decisions",
                 activities: [
-                    "Design AI canvases for complex data exploration",
-                    "Create conversation-to-canvas navigation flows",
-                    "Implement clustering and tabbed views",
-                    "Practice dynamic view switching patterns"
+                    "Practice Top Tasks methodology for prioritization",
+                    "Conduct gap analysis exercises",
+                    "Apply Kano model to feature evaluation",
+                    "Design a research plan for your current project"
                 ],
                 concepts: [
-                    "AI canvas design principles",
-                    "Conversation-canvas integration",
-                    "Clustering and data organization",
-                    "Dynamic view management"
+                    "Qualitative vs. quantitative research selection",
+                    "Top Tasks methodology for user prioritization",
+                    "Gap analysis techniques",
+                    "Kano model for feature importance"
                 ]
             },
             {
-                title: "Agentic UX & Trust Building",
+                title: "Building KPI Trees & Accountability",
                 duration: "90 minutes",
-                description: "Design for agentic experiences, complex workflows, accessibility, and building user trust in AI systems",
+                description: "Create design KPI trees for teams and departments, establish ownership and accountability for metrics",
                 activities: [
-                    "Design agentic workflows for complex tasks",
-                    "Create accessibility patterns for AI interfaces",
-                    "Develop trust-building interaction patterns",
-                    "Practice sustainable AI design approaches"
+                    "Build a KPI tree for your team or department",
+                    "Assign ownership and accountability for metrics",
+                    "Create reporting cadences and review processes",
+                    "Develop buy-in strategies for stakeholders"
                 ],
                 concepts: [
-                    "Agentic UX design principles",
-                    "Accessibility in AI interactions",
-                    "Trust and confidence building",
-                    "Sustainable AI interface design"
+                    "KPI tree construction methodology",
+                    "Ownership and accountability frameworks",
+                    "Getting buy-in for design metrics",
+                    "Translating goals for each team/department"
                 ]
             },
             {
-                title: "Group Design Exercise & Review",
+                title: "Group Exercise: Design Your Measurement Framework",
                 duration: "90 minutes",
-                description: "Apply learned patterns in a practical group exercise, designing AI experiences on paper with peer review",
+                description: "Apply all learned concepts in a practical group exercise, creating a complete UX measurement framework",
                 activities: [
-                    "Break into design groups for hands-on exercise",
-                    "Apply workshop patterns to real design challenge",
-                    "Create paper prototypes of AI interfaces",
-                    "Present and review group solutions"
+                    "Break into groups with similar industry contexts",
+                    "Design a complete measurement framework",
+                    "Present and review group solutions",
+                    "Get feedback from peers and instructor"
                 ],
                 concepts: [
-                    "Practical pattern application",
-                    "Collaborative design process",
-                    "Rapid prototyping techniques",
+                    "Practical framework application",
+                    "Collaborative problem-solving",
+                    "Real-world constraint handling",
                     "Peer feedback and iteration"
                 ]
             },
             {
-                title: "Wrap-up & Action Planning",
+                title: "Team Culture & Wrap-up",
                 duration: "30 minutes",
-                description: "Consolidate learnings, plan next steps, and discuss how to apply patterns to current projects",
+                description: "Discuss improving team culture, better meetings, time estimates, and collaboration - then consolidate learnings",
                 activities: [
-                    "Review key takeaways and patterns learned",
+                    "Review strategies for better design team meetings",
+                    "Discuss expectation management techniques",
                     "Plan application to current projects",
-                    "Exchange contacts with fellow participants",
-                    "Get resources for continued learning"
+                    "Exchange contacts and get continued learning resources"
                 ],
                 concepts: [
-                    "Pattern synthesis and integration",
-                    "Implementation planning",
-                    "Continued learning resources",
-                    "Community building"
+                    "Team culture improvement strategies",
+                    "Effective meetings and collaboration",
+                    "In-house and remote team dynamics",
+                    "Continued learning and community"
                 ]
             }
         ]
@@ -659,14 +618,14 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left w-full sm:w-auto">
                             <div className="flex items-center gap-2">
-                                <Brain size={18} className="text-white" />
+                                <BarChart3 size={18} className="text-white" />
                                 <span className="font-bold text-xs sm:text-sm">Only {seatsRemaining} seats left!</span>
                             </div>
                             <div className="hidden sm:block h-6 w-px bg-white/30"></div>
-                            
+
                             <div className="flex items-center gap-2">
                                 <Calendar size={16} className="text-white" />
-                                <span className="text-xs sm:text-sm">March 23rd, 2026</span>
+                                <span className="text-xs sm:text-sm">February 26th, 2026</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-end">
@@ -710,24 +669,24 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                             <div className="lg:col-span-7 order-1">
                                 {/* Category pill */}
                                 <div className="inline-flex items-center bg-black text-js px-4 py-2 rounded-full text-sm font-bold mb-6">
-                                    🧠 AI Interface Design
+                                    📊 UX Measurement & Design Impact
                                 </div>
 
                                 {/* Workshop title */}
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black mb-4 lg:mb-6 text-black leading-tight">
-                                    Design Patterns For AI Interfaces In 2026
+                                    How To Measure UX and Design Impact
                                 </h1>
 
                                 {/* Subtitle */}
                                 <p className="text-lg lg:text-xl text-gray-800 mb-8 lg:mb-10 leading-relaxed max-w-2xl">
-                                    Master AI UX Design & Build Better User Experiences that go beyond chatbots
+                                    Define, track & prove your design success with practical KPIs and metrics
                                 </p>
 
                                 {/* Metadata cards */}
                                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 lg:mb-10">
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
-                                        <div className="text-2xl lg:text-3xl font-black text-black mb-1">23rd</div>
-                                        <div className="text-xs lg:text-sm text-gray-600 font-medium">Mar 2026</div>
+                                        <div className="text-2xl lg:text-3xl font-black text-black mb-1">26th</div>
+                                        <div className="text-xs lg:text-sm text-gray-600 font-medium">Feb 2026</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
                                         <div className="text-sm lg:text-base font-bold text-black mb-1">09:00-17:00</div>
@@ -775,19 +734,19 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
                                             <div className="text-2xl">🎯</div>
-                                            <span className="text-sm font-medium text-gray-800">Intent Articulation Patterns</span>
+                                            <span className="text-sm font-medium text-gray-800">Define Design Success</span>
                                         </div>
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
-                                            <div className="text-2xl">⚡</div>
-                                            <span className="text-sm font-medium text-gray-800">Dynamic AI Interfaces</span>
+                                            <div className="text-2xl">📊</div>
+                                            <span className="text-sm font-medium text-gray-800">UX Metrics & KPIs</span>
                                         </div>
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
-                                            <div className="text-2xl">🧠</div>
-                                            <span className="text-sm font-medium text-gray-800">AI UX State & Challenges</span>
+                                            <div className="text-2xl">🔬</div>
+                                            <span className="text-sm font-medium text-gray-800">Research Methods</span>
                                         </div>
                                         <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3">
                                             <div className="text-2xl">🤝</div>
-                                            <span className="text-sm font-medium text-gray-800">Agentic UX Design</span>
+                                            <span className="text-sm font-medium text-gray-800">Ownership & Culture</span>
                                         </div>
                                     </div>
                                 </div>
@@ -818,7 +777,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                     </div>
                                                     {/* Floating accent badge */}
                                                     <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-js to-amber-400 rounded-full w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center shadow-lg border-2 border-white">
-                                                        <span className="text-lg lg:text-xl">🧠</span>
+                                                        <span className="text-lg lg:text-xl">📊</span>
                                                     </div>
                                                 </div>
 
@@ -835,8 +794,8 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                 {/* Expertise tags */}
                                                 <div className="flex flex-wrap gap-2 justify-center mb-6">
                                                     <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">UX Expert</span>
-                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">AI Design</span>
-                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">Design Patterns</span>
+                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">Design Metrics</span>
+                                                    <span className="bg-js/10 text-black px-3 py-1 rounded-full text-xs font-semibold border border-js/20">UX Research</span>
                                                 </div>
 
                                                 {/* Smashing Magazine branding */}
@@ -870,29 +829,29 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
                                         <div className="text-4xl mb-4">🎯</div>
-                                        <h4 className="font-bold text-black mb-2">Intent Articulation</h4>
-                                        <p className="text-sm text-gray-600">Style lenses, daemons, and temperature controls</p>
+                                        <h4 className="font-bold text-black mb-2">Define Success</h4>
+                                        <p className="text-sm text-gray-600">Translate business goals into UX metrics</p>
                                     </div>
                                 </div>
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
-                                        <div className="text-4xl mb-4">⚡</div>
-                                        <h4 className="font-bold text-black mb-2">Dynamic Interfaces</h4>
-                                        <p className="text-sm text-gray-600">Transform static AI output into dynamic UI</p>
+                                        <div className="text-4xl mb-4">📊</div>
+                                        <h4 className="font-bold text-black mb-2">UX Metrics & KPIs</h4>
+                                        <p className="text-sm text-gray-600">Master SUS, NPS, CSAT, and more</p>
                                     </div>
                                 </div>
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
-                                        <div className="text-4xl mb-4">🧠</div>
-                                        <h4 className="font-bold text-black mb-2">AI UX Challenges</h4>
-                                        <p className="text-sm text-gray-600">Understand current AI product limitations</p>
+                                        <div className="text-4xl mb-4">🔬</div>
+                                        <h4 className="font-bold text-black mb-2">Research Methods</h4>
+                                        <p className="text-sm text-gray-600">Top Tasks, Kano model, gap analysis</p>
                                     </div>
                                 </div>
                                 <div className="text-center">
                                     <div className="bg-white rounded-xl p-6 shadow-sm border border-black/10 hover:shadow-md transition-shadow duration-200">
                                         <div className="text-4xl mb-4">🤝</div>
-                                        <h4 className="font-bold text-black mb-2">Agentic UX Design</h4>
-                                        <p className="text-sm text-gray-600">Build trust and confidence in AI systems</p>
+                                        <h4 className="font-bold text-black mb-2">Ownership & Culture</h4>
+                                        <p className="text-sm text-gray-600">Build accountability for design KPIs</p>
                                     </div>
                                 </div>
                             </div>
@@ -932,10 +891,10 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                 </h2>
                                 <div className="prose prose-lg max-w-none">
                                     <p className="text-gray-700 text-lg leading-relaxed mb-6">
-                                        As product teams race to include AI in their products, they too often rely on good old-fashioned patterns like an assistant or chatbot. However, this experience is often painfully slow, responses are generic, and users have to meticulously explain to AI what they need — over and over.
+                                        How do we measure the quality of UX? What metrics to use? How to bridge business objectives and UX goals? How to remove bias and guesswork from our design decisions? And how to measure and make a case for the impact of your UX work?
                                     </p>
                                     <p className="text-gray-700 text-lg leading-relaxed">
-                                        In this full-day workshop with <strong>Vitaly Friedman</strong>, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, we&apos;ll explore brand new design patterns for better AI experiences, with daemons, clustering, style lenses, structured presets and templates, dynamic editing, temperature knobs and everything in-between!
+                                        In this full-day workshop with <strong>Vitaly Friedman</strong>, senior UX consultant with the European Parliament and creative lead of Smashing Magazine, you&apos;ll learn how to define design success, establish team-specific design KPIs, track them effectively, and integrate accountability and ownership for these metrics into your design process. You&apos;ll discover how to translate ambiguous objectives into practical goals, and how to make sense of KPRs, SUS, UMUX-Lite, TPI, KPI trees, feedback scoring, gap analysis, Kano model — and how to choose the right UX research method to get better results.
                                     </p>
                                 </div>
                             </motion.div>
@@ -955,12 +914,12 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-blue-100 p-3 rounded-xl shrink-0">
-                                                <Brain className="text-blue-600" size={24} />
+                                                <Target className="text-blue-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">AI UX State & Challenges</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">Defining Design Success</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Understand how people use AI products today, main slowdowns, context awareness, capabilities awareness, and discoverability challenges.
+                                                    Learn how to define what success looks like for your design team, translate ambiguous objectives into practical goals, and align UX metrics with business needs.
                                                 </p>
                                             </div>
                                         </div>
@@ -968,12 +927,12 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-amber-100 p-3 rounded-xl shrink-0">
-                                                <Target className="text-amber-600" size={24} />
+                                                <BarChart3 className="text-amber-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Intent Articulation Patterns</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">UX Metrics & KPIs</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Learn style lenses, daemons, temperature knobs and other patterns to help users navigate AI output faster and more precisely.
+                                                    Master SUS, UMUX-Lite, NPS, CSAT, CES, and other key metrics. Build KPI trees and understand how to choose the right mix of qualitative and quantitative measures.
                                                 </p>
                                             </div>
                                         </div>
@@ -981,12 +940,12 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                     <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
                                         <div className="flex items-start gap-4">
                                             <div className="bg-green-100 p-3 rounded-xl shrink-0">
-                                                <Layers className="text-green-600" size={24} />
+                                                <TrendingUp className="text-green-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Dynamic AI Interfaces</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">Research Methods & Data</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Transform AI&apos;s static output into dynamic and proactive UI with canvases, conversations, clustering, and dynamic views.
+                                                    Choose the right UX research methods, use Top Tasks methodology to prioritize user needs, and apply gap analysis and Kano model for better insights.
                                                 </p>
                                             </div>
                                         </div>
@@ -997,9 +956,9 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                 <Users2 className="text-purple-600" size={24} />
                                             </div>
                                             <div>
-                                                <h3 className="text-xl font-bold text-black mb-2">Agentic UX Design</h3>
+                                                <h3 className="text-xl font-bold text-black mb-2">Ownership & Culture</h3>
                                                 <p className="text-gray-600 text-sm leading-relaxed">
-                                                    Design for agentic UX, support users in complex flows, consider accessibility, sustainability, and build trust in AI interfaces.
+                                                    Establish ownership and accountability for design KPIs, improve team culture with better meetings, time estimates, and collaboration strategies.
                                                 </p>
                                             </div>
                                         </div>
@@ -1089,7 +1048,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                     </p>
                                                             </div>
                                                 <Link
-                                                    href="/workshops/ai-design-patterns-2026?signup=true"
+                                                    href="/workshops/measure-ux-design-impact?signup=true"
                                                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors"
                                                 >
                                                     Sign In
@@ -1135,7 +1094,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                                 
                                         <div className="p-4">
                                             <TicketSelection
-                                                options={aiDesignPatternsTickets}
+                                                options={measureUxDesignImpactTickets}
                                                 onCheckout={handleCheckout}
                                                 workshopId={workshop.id}
                                                 ticketType="workshop"
@@ -1190,7 +1149,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                     </div>
                                     <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg">
                                         <p className="text-sm font-medium text-gray-800">
-                                            <span className="text-blue-600 font-bold">Perfect for:</span> Anyone designing AI-powered products who wants to move beyond basic chatbot patterns to create truly helpful and efficient AI experiences.
+                                            <span className="text-blue-600 font-bold">Perfect for:</span> Anyone working in design who wants to measure and prove the impact of their work, establish meaningful KPIs, and align design efforts with business goals.
                                         </p>
                                     </div>
                                 </div>
@@ -1271,11 +1230,11 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">Access to exclusive AI design pattern library</span>
+                                                <span className="text-gray-700">Access to exclusive UX metrics templates and frameworks</span>
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
-                                                <span className="text-gray-700">Group exercises and practical design challenges</span>
+                                                <span className="text-gray-700">Group exercises and practical KPI design challenges</span>
                                             </li>
                                             <li className="flex items-start">
                                                 <span className="text-blue-500 mr-2">✓</span>
@@ -1372,7 +1331,7 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                             {openFaq === 'duration' && (
                                 <div className="px-6 pb-6 animate-fadeIn">
                                     <p className="text-gray-700 mb-3">
-                                        The workshop is a full-day intensive experience running from <strong>09:00 to 17:00</strong> (8 hours total) on March 23rd, 2026.
+                                        The workshop is a full-day intensive experience running from <strong>09:00 to 17:00</strong> (8 hours total) on February 26th, 2026.
                                     </p>
                                     <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-lg">
                                         <p className="text-sm text-gray-700">
@@ -1457,17 +1416,17 @@ export default function AIDesignPatternsWorkshopPage({ speakers }: WorkshopPageP
                             <CountdownTimer seatsRemaining={seatsRemaining} />
                         </div>
                         <p className="text-white/90 text-lg mb-4">
-                            Master AI interface design with hands-on patterns and expert guidance
+                            Master UX measurement with practical KPIs, metrics, and expert guidance
                         </p>
                         <div className="flex items-center justify-center gap-4 text-white/70 text-sm">
                             <span className="flex items-center gap-1">
-                                <Brain size={16} />
+                                <BarChart3 size={16} />
                                 Only {seatsRemaining} seats left
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                                 <Calendar size={16} />
-                                March 23rd, 2026
+                                February 26th, 2026
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">

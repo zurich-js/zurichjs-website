@@ -1,23 +1,6 @@
 import { TicketOption } from './TicketSelection';
 
-export const aiDesignPatternsTickets: TicketOption[] = [
-  {
-    id: 'price_1S51PrGxQziVA7FsrDPnC7Qo',
-    title: 'Early Bird Ticket',
-    description: 'Limited time offer - Only 10 tickets available!',
-    price: 525,
-    testPriceId: 'price_1S51HyGxQziVA7Fsee4czI58', // Test environment price ID
-    ticketType: 'workshop',
-    workshopId: 'ai-design-patterns-2026',
-    availableUntil: '2025-12-01', // Early bird ends December 1st, 2025
-    features: [
-      '8 hours of intensive learning',
-      'Lunch and refreshments included',
-      'Workshop materials provided',
-      'Early bird special pricing'
-    ],
-    autoSelect: true,
-  },
+export const measureUxDesignImpactTickets: TicketOption[] = [
   {
     id: 'price_1S51PrGxQziVA7FsvNtDc9M3',
     title: 'Standard Ticket',
@@ -25,14 +8,14 @@ export const aiDesignPatternsTickets: TicketOption[] = [
     price: 595,
     testPriceId: 'price_1S51HyGxQziVA7FsooqBy3Hf', // Test environment price ID
     ticketType: 'workshop',
-    workshopId: 'ai-design-patterns-2026',
-    availableFrom: '2025-12-01', // Available after early bird ends
-    availableUntil: '2026-03-01', // Until late bird starts
+    workshopId: 'measure-ux-design-impact',
+    availableUntil: '2026-02-01', // Until late bird starts
     features: [
       '8 hours of intensive learning',
       'Lunch and refreshments included',
       'Workshop materials provided',
     ],
+    autoSelect: true,
   },
   {
     id: 'price_1S51PrGxQziVA7FspIyTNwxg',
@@ -41,8 +24,8 @@ export const aiDesignPatternsTickets: TicketOption[] = [
     price: 625,
     testPriceId: 'price_1S51HyGxQziVA7Fs9gUB9xIM', // Test environment price ID
     ticketType: 'workshop',
-    workshopId: 'ai-design-patterns-2026',
-    availableFrom: '2026-03-01', // Starts March 1st, 2026
+    workshopId: 'measure-ux-design-impact',
+    availableFrom: '2026-02-01', // Starts February 1st, 2026
     features: [
       '8 hours of intensive learning',
       'Lunch and refreshments included',

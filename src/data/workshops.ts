@@ -95,17 +95,17 @@ export const getWorkshops = (): Workshop[] => {
     //   state: 'confirmed' as WorkshopState
     // },
     {
-      id: 'ai-design-patterns-2026',
-      title: 'Design Patterns For AI Interfaces In 2026',
-      subtitle: 'Master AI UX Design & Build Better User Experiences',
-      description: 'Master modern AI interface design through practical patterns that go beyond chatbots, creating experiences that help users articulate intent and get work done faster. Full-day intensive workshop with Vitaly Friedman.',
-      dateInfo: 'March 23, 2026',
+      id: 'measure-ux-design-impact',
+      title: 'How To Measure UX and Design Impact',
+      subtitle: 'Define, Track & Prove Your Design Success',
+      description: 'Learn how to define design success, establish team-specific design KPIs, track them effectively, and integrate accountability for these metrics into your design process. Full-day intensive workshop with Vitaly Friedman.',
+      dateInfo: 'February 26, 2026',
       timeInfo: '09:00 - 17:00',
       locationInfo: 'Venue TBA, Zürich',
       maxAttendees: 30,
-      image: '/images/workshops/ai-design-patterns-2026.png',
-      iconColor: '#f59e0b', // amber-500
-      tag: '🧠 AI Interface Design',
+      image: '/images/workshops/measure-ux-design-impact.png',
+      iconColor: '#3b82f6', // blue-500
+      tag: '📊 UX Measurement & Design Impact',
       speakerId: 'vitaly-friedman',
       state: 'confirmed' as WorkshopState
     },

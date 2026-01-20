@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Code, Users, Lightbulb, Globe, Heart, Star } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 
 import Section from "@/components/Section";
 

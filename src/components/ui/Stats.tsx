@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Users, Calendar, Mic, UserPlus, Sparkles } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 
 // Define TypeScript interfaces for data structure
 interface StatsData {

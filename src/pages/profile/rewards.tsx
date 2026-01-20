@@ -1,7 +1,7 @@
 import { useUser } from '@clerk/nextjs';
 import { Gift, ArrowLeft, Award, Star, ShoppingBag, ChevronDown, ChevronUp, Mail } from 'lucide-react';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';

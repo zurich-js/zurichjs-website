@@ -26,7 +26,7 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<NodeJS.Timeout>(null);
 
   // Load saved form data on component mount
   useEffect(() => {

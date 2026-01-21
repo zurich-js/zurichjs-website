@@ -156,6 +156,16 @@ export const getPartners = () => {
             description: 'Application monitoring and error tracking platform',
             blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
         },
+        {
+            id: '19',
+            name: 'Stripe',
+            logo: '/images/partners/stripe.png',
+            url: 'https://stripe.com',
+            type: 'supporting',
+            sponsorshipTier: 'builder',
+            description: 'Financial infrastructure for the internet',
+            blurb: 'Stripe is a financial infrastructure platform for businesses. Millions of companies use Stripe to accept payments, grow revenue, and accelerate new business opportunities.'
+        },
     ];
 
     return partners;
@@ -194,19 +204,29 @@ export interface TodaySponsor {
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
+    const getYourGuide = allPartners.find(p => p.name === 'Get Your Guide');
+    const stripe = allPartners.find(p => p.name === 'Stripe');
     const gyff = allPartners.find(p => p.name === 'GYFF');
-    const storyblok = allPartners.find(p => p.name === 'Storyblok');
-    const sentry = allPartners.find(p => p.name === 'Sentry');
 
     const sponsors: TodaySponsor[] = [
-        // Community Friend tier
-        ...(sentry ? [{
-            id: sentry.id,
-            name: sentry.name,
-            logo: sentry.logo,
-            url: sentry.url,
+        // Community Builder tier (Gold sponsor)
+        ...(stripe ? [{
+            id: stripe.id,
+            name: stripe.name,
+            logo: stripe.logo,
+            url: stripe.url,
+            tier: 'builder' as const,
+            description: stripe.description
+        }] : []),
+
+        // Community Friend tier (Venue sponsor)
+        ...(getYourGuide ? [{
+            id: getYourGuide.id,
+            name: getYourGuide.name,
+            logo: getYourGuide.logo,
+            url: getYourGuide.url,
             tier: 'friend' as const,
-            description: sentry.description
+            description: 'Venue sponsor for this event'
         }] : []),
 
         // Community Supporter tier
@@ -217,15 +237,6 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
             url: gyff.url,
             tier: 'supporter' as const,
             description: gyff.description
-        }] : []),
-        
-        ...(storyblok ? [{
-            id: storyblok.id,
-            name: storyblok.name,
-            logo: storyblok.logo,
-            url: storyblok.url,
-            tier: 'supporter' as const,
-            description: storyblok.description
         }] : [])
     ];
 

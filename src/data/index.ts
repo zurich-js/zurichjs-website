@@ -160,7 +160,7 @@ export const getPartners = () => {
             id: '19',
             name: 'Stripe',
             logo: '/images/partners/stripe.png',
-            url: 'https://stripe.com',
+            url: 'https://forms.gle/9LN2tnmm9JubThgTA', // TODO: temp fix for current meetup
             type: 'supporting',
             sponsorshipTier: 'builder',
             description: 'Financial infrastructure for the internet',

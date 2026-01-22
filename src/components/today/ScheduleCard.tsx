@@ -17,39 +17,24 @@ interface ScheduleItem {
 
 export default function ScheduleCard({ event }: ScheduleCardProps) {
   const getTypeColor = (type?: string, durationMins?: number) => {
-    if (durationMins && durationMins < 10) {
-      return 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800';
+    if (durationMins && durationMins <= 10) {
+      return 'bg-gray-500 text-white';
     }
     switch (type?.toLowerCase()) {
       case 'talk':
       case 'presentation':
-        return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800';
+        return 'bg-black text-white';
       case 'break':
       case 'networking':
-        return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800';
+        return 'bg-green-100 text-green-800';
       case 'welcome':
       case 'opening':
-        return 'bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900';
+        return 'bg-js/20 text-js-darker';
       case 'closing':
       case 'wrap-up':
         return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800';
       default:
-        return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800';
-    }
-  };
-
-  const getTypeEmoji = (type?: string, durationMins?: number) => {
-    if (durationMins && durationMins < 10) return '⚡';
-    switch (type?.toLowerCase()) {
-      case 'talk':
-      case 'presentation': return '🎤';
-      case 'break':
-      case 'networking': return '☕';
-      case 'welcome':
-      case 'opening': return '👋';
-      case 'closing':
-      case 'wrap-up': return '🎉';
-      default: return '📋';
+        return 'bg-gradient-to-r from-black to-gray-800 text-white';
     }
   };
 
@@ -121,10 +106,10 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
     if (index === 1) {
       const breakTime = new Date(currentTime);
       talksSchedule.push({
-        time: breakTime.toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
+        time: breakTime.toLocaleTimeString('en-US', {
+          hour: '2-digit',
           minute: '2-digit',
-          hour12: false 
+          hour12: false
         }),
         title: "Pizza Break",
         type: "break",
@@ -169,7 +154,7 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
         {schedule.map((item, index) => (
           <div
             key={index}
-            className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 hover:border-gray-200 transition-all duration-200 shadow-md hover:shadow-lg p-2.5 sm:p-3"
+            className="bg-gray-100 rounded-xl sm:rounded-2xl p-2.5 sm:p-3"
           >
             {/* Mobile optimized layout */}
             <div className="space-y-2">
@@ -177,14 +162,8 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {/* Time Badge */}
-                  <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[45px] text-center flex-shrink-0">
+                  <div className={`px-2 py-1 rounded-md text-xs font-bold min-w-[45px] text-center flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
                     {item.time}
-                  </div>
-                  
-                  {/* Type Badge - compact on mobile */}
-                  <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
-                    <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
-                    <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
                   </div>
                 </div>
                 

@@ -48,7 +48,7 @@ export default function TodayHero({ event }: HeroProps) {
         <TodayCard>
             <div className="space-y-4">
                 <h2 className="text-left font-semibold text-sm uppercase tracking-tight">Support us</h2>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Link
                         href="/feedback"
                         className="flex-1 bg-black text-white hover:bg-black/90 font-bold py-4 px-8 rounded-2xl transition-all duration-200"

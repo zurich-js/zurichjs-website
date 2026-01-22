@@ -35,9 +35,9 @@ export const getPartners = () => {
             id: '3',
             name: 'Get Your Guide',
             logo: '/images/partners/get-your-guide.png',
-            url: 'https://www.gyg.com/',
+            url: 'https://qrco.de/bgTBWh',
             type: 'venue',
-            description: 'Hosting venue for ZurichJS meetups'
+            description: 'Software company hosting us for Vue Zurich/ZurichJS meetups'
         },
         {
             id: '4',

@@ -111,7 +111,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                       href={confTicketUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-yellow-400 font-bold py-3 px-6 rounded-xl text-center hover:bg-yellow-300 transition-colors shadow-lg whitespace-nowrap"
+                      className="w-full sm:w-fit bg-yellow-400 font-bold py-3 px-6 rounded-xl text-center hover:bg-yellow-300 transition-colors shadow-lg whitespace-nowrap"
                     >
                       Grab your ticket
                     </a>

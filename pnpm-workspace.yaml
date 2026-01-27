@@ -1,3 +1,4 @@
+packages: []
 onlyBuiltDependencies:
   - '@clerk/shared'
   - core-js

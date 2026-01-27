@@ -166,7 +166,7 @@ export default function LandingHero({
             initial={isClient ? { opacity: 0, y: 30 } : { opacity: 1, y: 0 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex-1 flex flex-col order-2"
+            className="flex-1 flex flex-col order-3 lg:order-2"
           >
             {/* Section Label */}
             <h2 className="text-xs font-bold uppercase tracking-wider text-black/70 mb-4">
@@ -195,8 +195,8 @@ export default function LandingHero({
             </div>
           </motion.div>
 
-          {/* Mobile: Conference Card and Actions (order 3) */}
-          <div className="flex flex-col gap-6 lg:hidden order-3">
+          {/* Mobile: Conference Card and Actions (order 2 on mobile) */}
+          <div className="flex flex-col gap-6 lg:hidden order-2">
             <ConferencePromoCard onConfClick={handleConfClick} />
 
             {/* Secondary Actions - Mobile */}
@@ -275,12 +275,12 @@ function EventCard({
 }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-      {/* Next Event Pill */}
+      {/* Next Meetup Pill */}
       <span
         className="inline-block px-3 py-1 text-xs font-bold uppercase tracking-wide text-black rounded-full mb-4"
         style={{ backgroundColor: COLORS.nextEventPillYellow }}
       >
-        Next Event
+        Next Meetup
       </span>
 
       {/* Title */}

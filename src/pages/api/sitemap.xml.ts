@@ -29,7 +29,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       // Workshop pages
       { url: '/workshops/accessibility-fundamentals', priority: '0.7', changefreq: 'monthly' },
-      { url: '/workshops/measure-ux-design-impact', priority: '0.8', changefreq: 'weekly' },
       { url: '/workshops/astro-zero-to-hero', priority: '0.7', changefreq: 'monthly' },
 
       // Policy pages

@@ -1,4 +1,3 @@
-import ConfBanner from '@/components/banners/ConfBanner';
 import Layout from '@/components/layout/Layout';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
@@ -45,8 +44,6 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
 
   return (
     <Layout>
-      {/* Conference CTA Banner */}
-      <ConfBanner />
       <SEO
         title="ZurichJS | JavaScript & TypeScript Meetup Community in Zurich, Switzerland"
         description="Join ZurichJS, the premier JavaScript and TypeScript community in Zurich. Free meetups, expert speakers, workshops on React, Node.js, Vue, Angular, AI, and modern web development. Networking events for developers in Zurich, Switzerland, and nearby German cities."

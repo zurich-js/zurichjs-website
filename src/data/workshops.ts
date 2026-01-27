@@ -94,21 +94,6 @@ export const getWorkshops = (): Workshop[] => {
     //   speakerId: 'faris-aziz',
     //   state: 'confirmed' as WorkshopState
     // },
-    {
-      id: 'measure-ux-design-impact',
-      title: 'How To Measure UX and Design Impact',
-      subtitle: 'Define, Track & Prove Your Design Success',
-      description: 'Learn how to define design success, establish team-specific design KPIs, track them effectively, and integrate accountability for these metrics into your design process. Full-day intensive workshop with Vitaly Friedman.',
-      dateInfo: 'February 26, 2026',
-      timeInfo: '09:00 - 17:00',
-      locationInfo: 'Venue TBA, Zürich',
-      maxAttendees: 30,
-      image: '/images/workshops/measure-ux-design-impact.png',
-      iconColor: '#3b82f6', // blue-500
-      tag: '📊 UX Measurement & Design Impact',
-      speakerId: 'vitaly-friedman',
-      state: 'confirmed' as WorkshopState
-    },
     // Example workshop with no image (fallback) and multiple instructors
     // {
     //   id: 'javascript-fundamentals',

@@ -13,7 +13,7 @@ import TodaysSponsors from '@/components/today/TodaysSponsors';
 import { Event, getEventById } from '@/sanity/queries';
 
 interface TodayPageProps {
-  upcomingEvent: Event// | null;
+  upcomingEvent: Event | null;
 }
 
 export default function TodayPage({ upcomingEvent }: TodayPageProps) {
@@ -59,10 +59,10 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
       <Header />
       <Section variant="gradient" padding="lg" className="min-h-screen pb-24 md:pb-8 pt-20 sm:pt-24 px-3 sm:px-4">
       <SEO
-        title={`${upcomingEvent.title} - Today - ZurichJS`}
-        description={upcomingEvent.description || `Join us today for ${upcomingEvent.title}`}
+        title={`${upcomingEvent?.title || 'Today'} - Today - ZurichJS`}
+        description={upcomingEvent?.description || 'Your hub for today\'s ZurichJS event'}
       />
-      
+
       <div className="space-y-6 max-w-screen-xl mx-auto">
           {/* ZurichJS Conf 2026 - Top Priority - full width */}
           <motion.div
@@ -121,28 +121,30 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
             </TodayCard>
           </motion.div>
 
-          <div className="flex flex-col gap-6 md:flex-row">
-              <motion.div
-                initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="contents"
-              >
-                <TodayHero event={upcomingEvent} />
-              </motion.div>
+          {upcomingEvent && (
+            <div className="flex flex-col gap-6 md:flex-row">
+                <motion.div
+                  initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="contents"
+                >
+                  <TodayHero event={upcomingEvent} />
+                </motion.div>
 
-              <motion.div
-                initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.15 }}
-                className=""
-                data-section="schedule"
-              >
-                <TodayCard className="h-full">
-                  <ScheduleCard event={upcomingEvent} />
-                </TodayCard>
-              </motion.div>
-          </div>
+                <motion.div
+                  initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
+                  className=""
+                  data-section="schedule"
+                >
+                  <TodayCard className="h-full">
+                    <ScheduleCard event={upcomingEvent} />
+                  </TodayCard>
+                </motion.div>
+            </div>
+          )}
 
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}

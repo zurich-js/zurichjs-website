@@ -137,16 +137,6 @@ export const getPartners = () => {
             blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
         },
         {
-            id: '17',
-            name: 'Storyblok',
-            logo: '/images/partners/storyblok.png',
-            url: 'https://www.storyblok.com/?utm_source=zurichjs',
-            type: 'supporting',
-            sponsorshipTier: 'supporter',
-            description: 'A headless CMS made for humans. Built for the AI-driven content era.',
-            blurb: 'Storyblok is a headless CMS that enables developers and marketers to create, manage and optimize content experiences. With its API-first, component-based approach and intuitive visual editor, teams can build scalable websites and applications using frameworks like Next.js, Astro, Nuxt, React and more.'
-        },
-        {
             id: '18',
             name: 'Sentry',
             logo: '/images/partners/sentry.png',

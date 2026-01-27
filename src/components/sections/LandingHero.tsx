@@ -74,6 +74,10 @@ export default function LandingHero({
     track('button_click', { name: 'view_all_events' });
   };
 
+  const handleViewEventDetailsClick = () => {
+    track('button_click', { name: 'view_event_details' });
+  };
+
   const handleReserveSpotClick = (eventTitle: string) => {
     track('event_rsvp', {
       name: 'reserve_spot',
@@ -170,7 +174,7 @@ export default function LandingHero({
           >
             {/* Section Label */}
             <h2 className="text-xs font-bold uppercase tracking-wider text-black/70 mb-4">
-              Upcoming Events
+              Upcoming Meetups
             </h2>
 
             {/* Event Cards Container */}
@@ -193,20 +197,22 @@ export default function LandingHero({
                 />
               )}
             </div>
-          </motion.div>
-
-          {/* Mobile: Conference Card and Actions (order 2 on mobile) */}
-          <div className="flex flex-col gap-6 lg:hidden order-2">
-            <ConferencePromoCard onConfClick={handleConfClick} />
 
             {/* Secondary Actions - Mobile */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:hidden">
               <Link
                 href={nextEvent?.meetupUrl || '/events'}
                 className="inline-flex items-center justify-center px-6 py-3 bg-white text-black font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black w-full sm:w-auto"
                 onClick={handleJoinMeetupClick}
               >
                 Join Next Meetup
+              </Link>
+              <Link
+                href={`/events/${nextEvent?.id || ''}`}
+                className="inline-flex items-center justify-center px-6 py-3 bg-white text-black font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black w-full sm:w-auto"
+                onClick={handleViewEventDetailsClick}
+              >
+                View Event Details
               </Link>
               <Link
                 href="/events"
@@ -216,6 +222,11 @@ export default function LandingHero({
                 View All Events
               </Link>
             </div>
+          </motion.div>
+
+          {/* Mobile: Conference Card (order 2 on mobile) */}
+          <div className="lg:hidden order-2">
+            <ConferencePromoCard onConfClick={handleConfClick} />
           </div>
         </div>
       </div>

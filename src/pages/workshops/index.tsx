@@ -118,26 +118,55 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
       </Section>
 
       <Section variant="white">
-        <div className="mb-6 md:mb-8 flex flex-wrap gap-4">
-          <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 w-full">
-            <div className="flex flex-col xs:flex-row gap-3 justify-start">
-              <div className="flex items-center gap-2">
-                <div className="bg-zurich text-white px-2 py-1 rounded-md text-xs font-bold flex items-center">
-                  <span>🎟️ Confirmed</span>
+        {workshops.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-12 md:py-16"
+          >
+            <div className="bg-gray-50 rounded-xl p-8 md:p-12 max-w-2xl mx-auto border border-gray-200">
+              <div className="text-4xl md:text-5xl mb-4">📚</div>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
+                No Workshops Coming Up
+              </h2>
+              <p className="text-gray-600 mb-6 text-sm md:text-base">
+                We don&apos;t have any workshops scheduled at the moment, but we&apos;re always looking for passionate people to help organize new ones!
+              </p>
+              <a
+                href="mailto:hello@zurichjs.com"
+                className="inline-flex items-center gap-2 bg-zurich text-white px-6 py-3 rounded-lg font-bold hover:bg-zurich/90 transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                Reach Out to Help Organize
+              </a>
+            </div>
+          </motion.div>
+        ) : (
+          <>
+            <div className="mb-6 md:mb-8 flex flex-wrap gap-4">
+              <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 w-full">
+                <div className="flex flex-col xs:flex-row gap-3 justify-start">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-zurich text-white px-2 py-1 rounded-md text-xs font-bold flex items-center">
+                      <span>🎟️ Confirmed</span>
+                    </div>
+                    <span className="text-gray-600 text-xs sm:text-sm">Ready to book tickets now</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold flex items-center">
+                      <span>📋 Coming Soon</span>
+                    </div>
+                    <span className="text-gray-600 text-xs sm:text-sm">Join waitlist to make it happen</span>
+                  </div>
                 </div>
-                <span className="text-gray-600 text-xs sm:text-sm">Ready to book tickets now</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold flex items-center">
-                  <span>📋 Coming Soon</span>
-                </div>
-                <span className="text-gray-600 text-xs sm:text-sm">Join waitlist to make it happen</span>
               </div>
             </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {workshops.map((workshop, index) => {
             const workshopSpeakers = getWorkshopSpeakers(workshop);
 
@@ -279,7 +308,9 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                   </Link>
                 </motion.div>
             )})}
-        </div>
+            </div>
+          </>
+        )}
       </Section>
 
       <Section variant="black" padding="lg">

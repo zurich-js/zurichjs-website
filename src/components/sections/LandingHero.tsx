@@ -185,6 +185,7 @@ export default function LandingHero({
                   event={nextEvent}
                   formatDate={formatEventDate}
                   onReserveClick={handleReserveSpotClick}
+                  onViewDetailsClick={handleViewEventDetailsClick}
                   onSubmitTalkClick={handleSubmitTalkClick}
                 />
               )}
@@ -199,21 +200,7 @@ export default function LandingHero({
             </div>
 
             {/* Secondary Actions - Mobile */}
-            <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:hidden">
-              <Link
-                href={nextEvent?.meetupUrl || '/events'}
-                className="inline-flex items-center justify-center px-6 py-3 bg-white text-black font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black w-full sm:w-auto"
-                onClick={handleJoinMeetupClick}
-              >
-                Join Next Meetup
-              </Link>
-              <Link
-                href={`/events/${nextEvent?.id || ''}`}
-                className="inline-flex items-center justify-center px-6 py-3 bg-white text-black font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black w-full sm:w-auto"
-                onClick={handleViewEventDetailsClick}
-              >
-                View Event Details
-              </Link>
+            <div className="flex justify-center mt-4 lg:hidden">
               <Link
                 href="/events"
                 className="inline-flex items-center justify-center text-black font-medium hover:underline focus:outline-none focus:underline py-3"
@@ -277,11 +264,13 @@ function EventCard({
   event,
   formatDate,
   onReserveClick,
+  onViewDetailsClick,
   onSubmitTalkClick
 }: {
   event: Event;
   formatDate: (datetime: string) => string;
   onReserveClick: (title: string) => void;
+  onViewDetailsClick: () => void;
   onSubmitTalkClick: () => void;
 }) {
   return (
@@ -310,6 +299,16 @@ function EventCard({
           <span>{event.location}</span>
         </div>
       </div>
+
+      {/* View Event Details Button - Mobile only */}
+      <Link
+        href={`/events/${event.id}`}
+        className="block lg:hidden w-full text-center px-5 py-3 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90 mb-3"
+        style={{ backgroundColor: COLORS.darkNavy }}
+        onClick={onViewDetailsClick}
+      >
+        View Event Details
+      </Link>
 
       {/* Reserve Button */}
       <a

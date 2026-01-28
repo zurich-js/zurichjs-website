@@ -300,10 +300,10 @@ function EventCard({
         </div>
       </div>
 
-      {/* View Event Details Button - Mobile only */}
+      {/* View Event Details Button */}
       <Link
         href={`/events/${event.id}`}
-        className="block lg:hidden w-full text-center px-5 py-3 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90 mb-3"
+        className="block w-full text-center px-5 py-3 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90 mb-3"
         style={{ backgroundColor: COLORS.darkNavy }}
         onClick={onViewDetailsClick}
       >

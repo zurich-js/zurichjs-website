@@ -124,15 +124,15 @@ export default function Header() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Logo
-                textClasses={scrolled ? 'fill-black' : 'fill-black'}
-                className="h-5 w-auto"
-              />
-            </motion.div>
+              <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+              >
+                  <Logo
+                      variant="black"
+                      className="h-5 w-auto"
+                  />
+              </motion.div>
           </Link>
 
           {/* Desktop Navigation */}

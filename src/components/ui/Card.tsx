@@ -28,20 +28,21 @@ export default function Card({
     const eventItem = item as Event;
     return (
       <motion.div
-        whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl"
+        className="bg-white rounded-lg overflow-hidden group"
         {...props}
       >
         <Link href={`/events/${eventItem.id}`} className="block">
           <div className="relative h-64 w-full">
             {eventItem.image ? (
-              <Image
-                src={eventItem.image as string}
-                alt={`${eventItem.title} - ZurichJS event`}
-                fill
-                className="object-cover"
-              />
+              <div className="overflow-hidden size-full">
+                  <Image
+                      src={eventItem.image as string}
+                      alt={`${eventItem.title} - ZurichJS event`}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                  />
+              </div>
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
                 <div className="text-center">
@@ -54,15 +55,11 @@ export default function Card({
                 </div>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-              <span className="bg-blue-700 text-xs text-white px-2 py-1 rounded-full mb-2 inline-block">
-                Don&apos;t miss it!
-              </span>
-              <h3 className="text-lg font-bold line-clamp-2">{eventItem.title}</h3>
+            <div className="absolute bottom-0 left-0 right-0">
+              <h3 className="text-lg font-bold line-clamp-2 text-transparent">{eventItem.title}</h3>
             </div>
           </div>
-          <div className="p-4">
+          <div className="p-4 bg-white relative z-10">
             <div className="flex items-center text-blue-700 mb-2 font-medium">
               <Calendar size={16} className="mr-1" />
               <span className="text-sm">

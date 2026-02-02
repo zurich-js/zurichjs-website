@@ -55,9 +55,9 @@ export default function UpcomingEvents({
           <Button
             href="/events"
             variant="outline"
-            className="border-blue-700 text-blue-700 hover:bg-blue-50"
+            className="border-blue-700 text-blue-700"
           >
-            View All Events 🗓️
+            View All Events
           </Button>
         </motion.div>
       </div>
@@ -92,7 +92,7 @@ export default function UpcomingEvents({
           size="lg"
           className="bg-blue-700 hover:bg-blue-600 text-white"
         >
-          Join Next Meetup 🚀
+          Join next Meetup
         </Button>
         <p className="mt-4">
           Awesome JS talks, cool people, and snacks - what&apos;s not to love? <br />

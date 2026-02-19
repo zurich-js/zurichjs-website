@@ -1,14 +1,26 @@
 import { SignInButton, useUser } from '@clerk/nextjs';
-import { Zap, Ticket, Truck, Shirt, CheckCircle, Users, ChevronLeft, Loader2, Gift, Package, Shield, Clock, Heart, Award, ArrowRight, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
+import { Zap, Ticket, ChevronLeft, Loader2, Gift, Shield, Clock, Heart, Award, ArrowRight, AlertTriangle, CheckCircle, Users } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import PageLayout from '@/components/layout/Layout';
 import SEO from '@/components/SEO';
+import {
+  TshirtProductConfig,
+  TshirtPaymentMethod,
+  TshirtDeliveryOptions,
+  TshirtOrderReview,
+  TshirtConfirmation,
+  TshirtStepIndicator,
+  BASE_PRICE,
+  DELIVERY_ADDON,
+  SizeQuantity
+} from '@/components/tshirt';
 import Button from '@/components/ui/Button';
 import CashPaymentModal from '@/components/ui/CashPaymentModal';
+import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
 import useEvents from '@/hooks/useEvents';
@@ -19,13 +31,6 @@ const TSHIRT_PRICE_ID = process.env.NODE_ENV === 'development'
 const SHIPPING_RATE_ID = process.env.NODE_ENV === 'development'
   ? 'shr_1RnePLGxQziVA7FsEWPBRYAA' // Development/Test shipping rate ID
   : 'shr_1RneNbGxQziVA7FsmyQbFuTM'; // Production shipping rate ID
-const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
-const BASE_PRICE = 25;
-const DELIVERY_ADDON = 10;
-
-type SizeQuantity = {
-  [size: string]: number;
-};
 
 export default function TshirtPage() {
   const [stock, setStock] = useState<Record<string, number>>({});
@@ -44,7 +49,11 @@ export default function TshirtPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { couponCode, couponData, error: couponError, applyDiscount } = useCoupon();
   const { isSignedIn, userEmail } = useAuthenticatedCheckout();
-  const { track } = useEvents();
+  const { track, captureError } = useEvents();
+
+  // Track if component is mounted to avoid hydration mismatches
+  const [isMounted, setIsMounted] = useState(false);
+  const hasTrackedPageView = useRef(false);
 
   // Community discount logic
   const hasCoupon = couponData && couponData.isValid;
@@ -132,9 +141,17 @@ export default function TshirtPage() {
     fetchStock();
   }, []);
 
-  // Track page view
+  // Set mounted state after initial render to avoid hydration mismatches
   useEffect(() => {
-    track('tshirt_page_viewed', {});
+    setIsMounted(true);
+  }, []);
+
+  // Track page view only once
+  useEffect(() => {
+    if (!hasTrackedPageView.current) {
+      hasTrackedPageView.current = true;
+      track('tshirt_page_viewed', {});
+    }
   }, [track]);
 
   // Pre-fill form data from user account
@@ -629,585 +646,73 @@ Delivery Method: Meetup Pickup`,
           <div className="grid lg:grid-cols-3 gap-8 lg:gap-12 w-full min-w-0">
             {/* Configuration Panel */}
             <div className="lg:col-span-2 w-full min-w-0">
+              <ErrorBoundary
+                fallbackTitle="Checkout Error"
+                fallbackMessage="Something went wrong during checkout. Please try again."
+                onReset={() => {
+                  setStep(0);
+                  setCheckoutError('');
+                  setLoading(false);
+                }}
+                context={{ page: 'tshirt', step }}
+              >
               <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 overflow-hidden">
                 {/* Progress Steps */}
-                <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6 lg:gap-8 mb-8 sm:mb-10">
-                  <div
-                    className={`flex flex-col items-center transition-all duration-500 cursor-pointer hover:scale-105 ${step === 0 ? 'text-black scale-110' : 'text-gray-400'} min-w-0 flex-shrink-0`}
-                    onClick={() => step > 0 && setStep(0)}
-                  >
-                    <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-500 ${step === 0 ? 'bg-black text-js shadow-lg' : step > 0 ? 'bg-green-500 text-white' : 'bg-gray-100'}`}>
-                      {step > 0 ? (
-                        <CheckCircle size={16} className="sm:w-5 sm:h-5 animate-bounce" />
-                      ) : (
-                        <Shirt size={16} className="sm:w-5 sm:h-5" />
-                      )}
-                      {step === 0 && (
-                        <div className="absolute -top-1 -right-1">
-                          {/* pulsing animation */}
-                          <span className="absolute inline-flex h-4 w-4 rounded-full bg-js opacity-75 animate-ping"></span>
-                          {/* static circle stays visible */}
-                          <span className="relative inline-flex h-4 w-4 rounded-full bg-js"></span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs sm:text-sm mt-1 sm:mt-2 font-semibold text-center">Configure</span>
-                  </div>
-
-                  <div className={`relative h-1 w-6 sm:w-8 md:w-10 lg:w-12 rounded-full transition-all duration-700 flex-1 max-w-[3rem] ${step > 0 ? 'bg-gradient-to-r from-black to-js' : 'bg-gray-200'}`}>
-                    {step > 0 && (
-                      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-js to-js-dark rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-
-                  <div
-                    className={`flex flex-col items-center transition-all duration-500 cursor-pointer hover:scale-105 ${step === 1 ? 'text-black scale-110' : 'text-gray-400'} min-w-0 flex-shrink-0`}
-                    onClick={() => step > 1 && setStep(1)}
-                  >
-                    <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-500 ${step === 1 ? 'bg-black text-js shadow-lg' : step > 1 ? 'bg-green-500 text-white' : 'bg-gray-100'}`}>
-                      {step > 1 ? (
-                        <CheckCircle size={16} className="sm:w-5 sm:h-5 animate-bounce" />
-                      ) : (
-                        <CreditCard size={14} className="sm:w-4 sm:h-4" />
-                      )}
-                      {step === 1 && (
-                        <div className="absolute -top-1 -right-1">
-                          {/* pulsing animation */}
-                          <span className="absolute inline-flex h-4 w-4 rounded-full bg-js opacity-75 animate-ping"></span>
-                          {/* static circle stays visible */}
-                          <span className="relative inline-flex h-4 w-4 rounded-full bg-js"></span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs sm:text-sm mt-1 sm:mt-2 font-semibold text-center">Payment</span>
-                  </div>
-
-                  <div className={`relative h-1 w-4 sm:w-6 md:w-8 rounded-full transition-all duration-700 flex-1 max-w-[2rem] ${step > 1 ? 'bg-gradient-to-r from-black to-js' : 'bg-gray-200'}`}>
-                    {step > 1 && (
-                      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-js to-js-dark rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-
-                  <div
-                    className={`flex flex-col items-center transition-all duration-500 cursor-pointer hover:scale-105 ${step === 2 ? 'text-black scale-110' : 'text-gray-400'} min-w-0 flex-shrink-0`}
-                    onClick={() => step > 2 && setStep(2)}
-                  >
-                    <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-500 ${step === 2 ? 'bg-black text-js shadow-lg' : step > 2 ? 'bg-green-500 text-white' : 'bg-gray-100'}`}>
-                      {step > 2 ? (
-                        <CheckCircle size={16} className="sm:w-5 sm:h-5 animate-bounce" />
-                      ) : (
-                        <Truck size={14} className="sm:w-4 sm:h-4" />
-                      )}
-                      {step === 2 && (
-                        <div className="absolute -top-1 -right-1">
-                          {/* pulsing animation */}
-                          <span className="absolute inline-flex h-4 w-4 rounded-full bg-js opacity-75 animate-ping"></span>
-                          {/* static circle stays visible */}
-                          <span className="relative inline-flex h-4 w-4 rounded-full bg-js"></span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs sm:text-sm mt-1 sm:mt-2 font-semibold text-center">Delivery</span>
-                  </div>
-
-                  <div className={`relative h-1 w-4 sm:w-6 md:w-8 rounded-full transition-all duration-700 flex-1 max-w-[2rem] ${step > 2 ? 'bg-gradient-to-r from-black to-js' : 'bg-gray-200'}`}>
-                    {step > 2 && (
-                      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-js to-js-dark rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-
-                  <div
-                    className={`flex flex-col items-center transition-all duration-500 cursor-pointer hover:scale-105 ${step === 3 ? 'text-black scale-110' : 'text-gray-400'} min-w-0 flex-shrink-0`}
-                    onClick={() => step > 3 && setStep(3)}
-                  >
-                    <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-500 ${step === 3 ? 'bg-black text-js shadow-lg' : step > 3 ? 'bg-green-500 text-white' : 'bg-gray-100'}`}>
-                      {step > 3 ? (
-                        <CheckCircle size={16} className="sm:w-5 sm:h-5 animate-bounce" />
-                      ) : (
-                        <Package size={14} className="sm:w-4 sm:h-4" />
-                      )}
-                      {step === 3 && (
-                        <div className="absolute -top-1 -right-1">
-                          {/* pulsing animation */}
-                          <span className="absolute inline-flex h-4 w-4 rounded-full bg-js opacity-75 animate-ping"></span>
-                          {/* static circle stays visible */}
-                          <span className="relative inline-flex h-4 w-4 rounded-full bg-js"></span>
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs sm:text-sm mt-1 sm:mt-2 font-semibold text-center">Review</span>
-                  </div>
-
-                  <div className={`relative h-1 w-4 sm:w-6 md:w-8 rounded-full transition-all duration-700 flex-1 max-w-[2rem] ${step > 3 ? 'bg-gradient-to-r from-black to-js' : 'bg-gray-200'}`}>
-                    {step > 3 && (
-                      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-js to-js-dark rounded-full animate-pulse"></div>
-                    )}
-                  </div>
-
-                  <div className={`flex flex-col items-center transition-all duration-500 ${step === 4 ? 'text-black scale-110' : 'text-gray-400'} min-w-0 flex-shrink-0`}>
-                    <div className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-500 ${step === 4 ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100'}`}>
-                      <CheckCircle size={16} className={`sm:w-5 sm:h-5 ${step === 4 ? 'animate-bounce' : ''}`} />
-                    </div>
-                    <span className="text-xs sm:text-sm mt-1 sm:mt-2 font-semibold text-center">Complete</span>
-                  </div>
-                </div>
+                <TshirtStepIndicator step={step} onStepClick={setStep} />
 
                 {/* Step Content */}
                 {step === 0 && (
-                  <div className="space-y-6">
-
-                    {/* Size & Quantity Selection */}
-                    <div>
-                      <div className="flex items-center gap-3 mb-6">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Shirt className="w-4 h-4 sm:w-5 sm:h-5 text-js" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-bold text-lg sm:text-xl text-gray-900">Choose Your Fit</h3>
-                          <p className="text-xs sm:text-sm text-gray-600">Unisex comfort for everyone • Perfect for meetups • Max 10 items total</p>
-                        </div>
-                      </div>
-
-                      {stockLoading ? (
-                        <div className="text-center py-8">
-                          <div className="inline-flex items-center gap-2 text-gray-600">
-                            <div className="w-4 h-4 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
-                            <span className="text-sm">Checking stock availability...</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {SIZES.map((sz) => {
-                            const stockCount = stock[sz] || 0;
-                            const currentQty = sizeQuantities[sz] || 0;
-                            const isLowStock = stockCount <= 5 && stockCount > 0 && !stockError;
-                            const isOutOfStock = stockCount === 0 && !stockError;
-                            const isStockUnknown = stockError;
-
-                            return (
-                              <div key={sz} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${currentQty > 0
-                                ? 'bg-js/10 border-js shadow-md'
-                                : isOutOfStock && !isStockUnknown
-                                  ? 'bg-gray-50 border-gray-200 opacity-75'
-                                  : 'bg-white border-gray-200 hover:border-gray-300'
-                                }`}>
-                                <div className="flex items-center gap-4">
-                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${currentQty > 0
-                                    ? 'bg-black text-js'
-                                    : isOutOfStock && !isStockUnknown
-                                      ? 'bg-gray-200 text-gray-500'
-                                      : 'bg-gray-100 text-gray-700'
-                                    }`}>
-                                    {sz}
-                                  </div>
-                                  <div>
-                                    <div className="font-semibold text-gray-900">Size {sz}</div>
-                                    <div className="text-sm text-gray-600">
-                                      {!isStockUnknown && stockCount > 0 && (
-                                        <span className={isLowStock ? 'text-orange-600' : 'text-green-600'}>
-                                          {stockCount} in stock
-                                        </span>
-                                      )}
-                                      {!isStockUnknown && isOutOfStock && (
-                                        <span className="text-red-600">Sold out</span>
-                                      )}
-                                      {isStockUnknown && (
-                                        <span className="text-yellow-600">Stock unknown</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                  <button
-                                    className="w-8 h-8 rounded-lg border border-gray-300 bg-white font-bold text-lg hover:border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-black"
-                                    onClick={() => setSizeQuantities(prev => ({ ...prev, [sz]: Math.max(0, (prev[sz] || 0) - 1) }))}
-                                    disabled={currentQty <= 0 || (isOutOfStock && !isStockUnknown)}
-                                    aria-label={`Decrease quantity for size ${sz}`}
-                                  >
-                                    −
-                                  </button>
-
-                                  <div className="bg-gray-100 px-3 py-1 rounded-lg min-w-[3rem] text-center font-bold">
-                                    {currentQty}
-                                  </div>
-
-                                  <button
-                                    className="w-8 h-8 rounded-lg border border-gray-300 bg-white font-bold text-lg hover:border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-black"
-                                    onClick={() => setSizeQuantities(prev => ({ ...prev, [sz]: Math.min(stockCount, totalQuantity < 10 ? (prev[sz] || 0) + 1 : (prev[sz] || 0)) }))}
-                                    disabled={(isOutOfStock && !isStockUnknown) || currentQty >= stockCount || totalQuantity >= 10}
-                                    aria-label={`Increase quantity for size ${sz}`}
-                                  >
-                                    +
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-
-                          {/* Order Summary */}
-                          <div className="bg-gray-50 rounded-xl p-4 mt-6">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-semibold text-gray-900">Total Items:</span>
-                              <span className="font-bold text-lg">{totalQuantity}</span>
-                            </div>
-                            {Object.entries(sizeQuantities)
-                              .filter(([, qty]) => qty > 0)
-                              .map(([size, qty]) => (
-                                <div key={size} className="flex justify-between items-center text-sm text-gray-600">
-                                  <span>Size {size}:</span>
-                                  <span>{qty} × CHF {BASE_PRICE} = CHF {qty * BASE_PRICE}</span>
-                                </div>
-                              ))
-                            }
-
-                          </div>
-
-
-                          {!stockLoading && stockError && (
-                            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm">
-                              ⚠️ Unable to check stock at the moment. Please reach out to support at hello@zurichjs.com for assistance.
-                            </div>
-                          )}
-
-                          {totalQuantity === 0 && (
-                            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
-                              💡 Select quantities for the sizes you want to add them to your cart.
-                            </div>
-                          )}
-
-                          {totalQuantity >= 10 && (
-                            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-700 text-sm">
-                              ⚠️ Maximum 10 items per order reached.
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
+                  <TshirtProductConfig
+                    stock={stock}
+                    stockLoading={stockLoading}
+                    stockError={stockError}
+                    sizeQuantities={sizeQuantities}
+                    setSizeQuantities={setSizeQuantities}
+                    totalQuantity={totalQuantity}
+                  />
                 )}
 
                 {/* Step 1: Payment Method */}
                 {step === 1 && (
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Choose Payment Method</h3>
-                      <p className="text-gray-600">Select how you&apos;d like to pay for your ZurichJS t-shirt</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <button
-                        className={`p-6 rounded-2xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-green-500 transform hover:scale-105 ${paymentMethod === 'online'
-                          ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-500 shadow-xl scale-105'
-                          : 'bg-white border-gray-200 hover:border-green-300 hover:shadow-md'
-                          }`}
-                        onClick={() => handlePaymentMethodSelect('online')}
-                      >
-                        <div className="text-center">
-                          <CreditCard className="w-12 h-12 mx-auto mb-3 text-green-600" />
-                          <h4 className="font-bold text-lg mb-2">💳 Pay Online</h4>
-                          <p className="text-sm text-gray-600">Card • TWINT • Instant • Home delivery available</p>
-                        </div>
-                      </button>
-
-                      <button
-                        className={`p-6 rounded-2xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-500 transform hover:scale-105 ${paymentMethod === 'cash'
-                          ? 'bg-gradient-to-br from-amber-50 to-amber-100 border-amber-500 shadow-xl scale-105'
-                          : 'bg-white border-gray-200 hover:border-amber-300 hover:shadow-md'
-                          }`}
-                        onClick={() => handlePaymentMethodSelect('cash')}
-                      >
-                        <div className="text-center">
-                          <Banknote className="w-12 h-12 mx-auto mb-3 text-amber-600" />
-                          <h4 className="font-bold text-lg mb-2">💰 Pay Cash</h4>
-                          <p className="text-sm text-gray-600">At meetup • Free pickup • Meet the community ✨</p>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
+                  <TshirtPaymentMethod
+                    paymentMethod={paymentMethod}
+                    onSelect={handlePaymentMethodSelect}
+                  />
                 )}
 
                 {/* Step 2: Delivery Options */}
                 {step === 2 && (
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Choose Delivery Method</h3>
-                      <p className="text-gray-600">How would you like to receive your ZurichJS t-shirt?</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <button
-                        className={`p-6 rounded-2xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F1E271] transform hover:scale-105 ${!delivery
-                          ? 'bg-gradient-to-br from-[#F1E271] to-yellow-200 border-[#F1E271] shadow-xl scale-105'
-                          : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
-                          }`}
-                        onClick={() => setDelivery(false)}
-                      >
-                        <div className="text-center">
-                          <Users className="w-12 h-12 mx-auto mb-3 text-gray-800" />
-                          <h4 className="font-bold text-lg mb-2">🎪 Meetup Pickup</h4>
-                          <div className="text-2xl font-bold mb-2 text-green-700">FREE</div>
-                          <p className="text-sm text-gray-600">Join us at the next meetup • Meet fellow developers</p>
-                          <p className="text-xs text-gray-500 mt-2">
-                            {paymentMethod === 'cash'
-                              ? 'Perfect for cash payment!'
-                              : 'Available with online or cash payment'
-                            }
-                          </p>
-                        </div>
-                      </button>
-
-                      <button
-                        className={`p-6 rounded-2xl border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#F1E271] transform hover:scale-105 ${delivery
-                          ? 'bg-gradient-to-br from-[#F1E271] to-yellow-200 border-[#F1E271] shadow-xl scale-105'
-                          : paymentMethod === 'cash'
-                            ? 'bg-gray-100 border-gray-300 opacity-50 cursor-not-allowed'
-                            : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
-                          }`}
-                        onClick={() => {
-                          if (paymentMethod === 'cash') return; // Prevent selection for cash
-                          setDelivery(true);
-                        }}
-                        disabled={paymentMethod === 'cash'}
-                      >
-                        <div className="text-center">
-                          <Truck className="w-12 h-12 mx-auto mb-3 text-gray-800" />
-                          <h4 className="font-bold text-lg mb-2">🚚 Home Delivery</h4>
-                          <div className="text-2xl font-bold mb-2 text-gray-900">+CHF 10</div>
-                          <p className="text-sm text-gray-600">Switzerland only • 5-10 business days</p>
-                          <p className="text-xs text-gray-500 mt-1">Includes tracking & insurance</p>
-                          {paymentMethod === 'cash' && (
-                            <p className="text-xs text-red-600 mt-2">Not available with cash payment</p>
-                          )}
-                        </div>
-                      </button>
-                    </div>
-
-                    {/* Cash Payment Details Form */}
-                    {paymentMethod === 'cash' && (
-                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 space-y-4">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Banknote className="w-5 h-5 text-amber-600" />
-                          <h4 className="font-bold text-lg text-amber-900">Contact Details for Cash Payment</h4>
-                        </div>
-                        {userLoaded && user ? (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                            <p className="text-sm text-green-700">
-                              ✓ Information taken from your account profile
-                            </p>
-                          </div>
-                        ) : null}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                            <input
-                              type="text"
-                              value={cashPaymentDetails.firstName}
-                              onChange={(e) => setCashPaymentDetails(prev => ({ ...prev, firstName: e.target.value }))}
-                              disabled={!!(userLoaded && user)}
-                              className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-                                }`}
-                              placeholder="Your first name"
-                              required
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                            <input
-                              type="text"
-                              value={cashPaymentDetails.lastName}
-                              onChange={(e) => setCashPaymentDetails(prev => ({ ...prev, lastName: e.target.value }))}
-                              disabled={!!(userLoaded && user)}
-                              className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-                                }`}
-                              placeholder="Your last name"
-                              required
-                            />
-                          </div>
-                          <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                            <input
-                              type="email"
-                              value={cashPaymentDetails.email}
-                              onChange={(e) => setCashPaymentDetails(prev => ({ ...prev, email: e.target.value }))}
-                              disabled={!!(userLoaded && user)}
-                              className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent ${userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-                                }`}
-                              placeholder="your.email@example.com"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <p className="text-sm text-blue-700">
-                            💡 We&apos;ll use this information to contact you about pickup details at the next meetup.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {delivery && (
-                      <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4">
-                        <h4 className="font-bold text-lg text-gray-900 mb-4">Delivery Address</h4>
-                        {userLoaded && user ? (
-                          <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                            <p className="text-sm text-green-700">
-                              ✓ Name and email taken from your account profile
-                            </p>
-                          </div>
-                        ) : null}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
-                            <input
-                              type="text"
-                              value={deliveryAddress.name}
-                              onChange={(e) => setDeliveryAddress(prev => ({ ...prev, name: e.target.value }))}
-                              disabled={!!(userLoaded && user)}
-                              required
-                              className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-                                }`}
-                              placeholder="Your full name"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                            <input
-                              type="email"
-                              value={deliveryAddress.email}
-                              onChange={(e) => setDeliveryAddress(prev => ({ ...prev, email: e.target.value }))}
-                              disabled={!!(userLoaded && user)}
-                              required
-                              className={`w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent ${userLoaded && user ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
-                                }`}
-                              placeholder="your.email@example.com"
-                            />
-                          </div>
-                          <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Street Address *</label>
-                            <input
-                              type="text"
-                              value={deliveryAddress.address}
-                              onChange={(e) => setDeliveryAddress(prev => ({ ...prev, address: e.target.value }))}
-                              required
-                              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                              placeholder="Street address"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
-                            <input
-                              type="text"
-                              value={deliveryAddress.city}
-                              onChange={(e) => setDeliveryAddress(prev => ({ ...prev, city: e.target.value }))}
-                              required
-                              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                              placeholder="City"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code *</label>
-                            <input
-                              type="text"
-                              value={deliveryAddress.zipCode}
-                              onChange={(e) => setDeliveryAddress(prev => ({ ...prev, zipCode: e.target.value }))}
-                              required
-                              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                              placeholder="ZIP code"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-sm text-amber-800">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-medium">
-                          {delivery
-                            ? 'Delivery within 5-10 business days to Swiss addresses (includes tracking & insurance)'
-                            : 'Available for pickup at our next meetup event'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  <TshirtDeliveryOptions
+                    delivery={delivery}
+                    setDelivery={setDelivery}
+                    paymentMethod={paymentMethod}
+                    deliveryAddress={deliveryAddress}
+                    setDeliveryAddress={setDeliveryAddress}
+                    cashPaymentDetails={cashPaymentDetails}
+                    setCashPaymentDetails={setCashPaymentDetails}
+                    isUserLoggedIn={!!(userLoaded && user)}
+                    isMounted={isMounted}
+                  />
                 )}
 
                 {/* Step 3: Review */}
                 {step === 3 && (
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Review Your Order</h3>
-                      <p className="text-gray-600">Please review your order details before completing your purchase</p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">Product:</span>
-                          <span>ZurichJS T-Shirt</span>
-                        </div>
-                        {Object.entries(sizeQuantities)
-                          .filter(([, qty]) => qty > 0)
-                          .map(([size, qty]) => (
-                            <div key={size} className="flex justify-between items-center text-sm">
-                              <span className="text-gray-600">Size {size}:</span>
-                              <span>{qty} × CHF {BASE_PRICE} = CHF {qty * BASE_PRICE}</span>
-                            </div>
-                          ))
-                        }
-                        <div className="flex justify-between items-center font-semibold pt-2 border-t">
-                          <span>Total Items:</span>
-                          <span>{totalQuantity}</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Payment Method:</span>
-                        <span>{paymentMethod === 'cash' ? 'Cash at Meetup' : 'Online Payment'}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Delivery:</span>
-                        <span>{delivery ? 'Home Delivery (+CHF 10)' : 'Meetup Pickup (Free)'}</span>
-                      </div>
-                      {(communityDiscount || hasCoupon) && (
-                        <div className="flex justify-between items-center text-green-700">
-                          <span className="font-medium">Discount:</span>
-                          <span>-{discountLabel}</span>
-                        </div>
-                      )}
-                      <div className="border-t pt-4">
-                        <div className="flex justify-between items-center text-xl font-bold">
-                          <span>Total:</span>
-                          <span>CHF {discountedTotal.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {checkoutError && (
-                      <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-                        {checkoutError}
-                      </div>
-                    )}
-                  </div>
+                  <TshirtOrderReview
+                    sizeQuantities={sizeQuantities}
+                    totalQuantity={totalQuantity}
+                    paymentMethod={paymentMethod}
+                    delivery={delivery}
+                    discountedTotal={discountedTotal}
+                    discountLabel={discountLabel}
+                    hasCoupon={hasCoupon}
+                    communityDiscount={communityDiscount}
+                    checkoutError={checkoutError}
+                  />
                 )}
 
                 {/* Step 4: Confirmation */}
                 {step === 4 && (
-                  <div className="text-center space-y-6">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                      <CheckCircle className="w-12 h-12 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Order Confirmed! 🎉</h3>
-                      <p className="text-gray-600 mb-6">
-                        {paymentMethod === 'cash'
-                          ? "Amazing! We'll see you at the next meetup. Can't wait to welcome you to the community! 💛"
-                          : "Welcome to the family! Your shirt is on its way. We'll keep you updated every step of the journey. 🚀"
-                        }
-                      </p>
-                    </div>
-                  </div>
+                  <TshirtConfirmation paymentMethod={paymentMethod} />
                 )}
 
                 {/* Navigation Buttons */}
@@ -1264,7 +769,7 @@ Delivery Method: Meetup Pickup`,
                   </div>
                 )}
               </div>
-
+              </ErrorBoundary>
             </div>
             {/* Order Summary */}
             <div className="lg:col-span-1 w-full min-w-0">

@@ -159,7 +159,7 @@ export const getPartners = () => {
         {
             id: '20',
             name: 'Supabase',
-            logo: '/images/partners/supabase.svg',
+            logo: '/images/partners/supabase.png',
             url: 'https://supabase.com',
             type: 'supporting',
             sponsorshipTier: 'builder',
@@ -169,7 +169,7 @@ export const getPartners = () => {
         {
             id: '21',
             name: 'Remotion',
-            logo: '/images/partners/remotion.svg',
+            logo: '/images/partners/remotion.png',
             url: 'https://remotion.dev',
             type: 'supporting',
             sponsorshipTier: 'friend',

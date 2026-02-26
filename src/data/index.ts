@@ -150,11 +150,31 @@ export const getPartners = () => {
             id: '19',
             name: 'Stripe',
             logo: '/images/partners/stripe.png',
-            url: 'https://forms.gle/9LN2tnmm9JubThgTA', // TODO: temp fix for current meetup
+            url: 'https://stripe.com',
             type: 'supporting',
             sponsorshipTier: 'builder',
             description: 'Financial infrastructure for the internet',
             blurb: 'Stripe is a financial infrastructure platform for businesses. Millions of companies use Stripe to accept payments, grow revenue, and accelerate new business opportunities.'
+        },
+        {
+            id: '20',
+            name: 'Supabase',
+            logo: '/images/partners/supabase.svg',
+            url: 'https://supabase.com',
+            type: 'supporting',
+            sponsorshipTier: 'builder',
+            description: 'The open source Firebase alternative',
+            blurb: 'Supabase is an open source Firebase alternative. Start your project with a Postgres database, Authentication, instant APIs, Edge Functions, Realtime subscriptions, Storage, and Vector embeddings.'
+        },
+        {
+            id: '21',
+            name: 'Remotion',
+            logo: '/images/partners/remotion.svg',
+            url: 'https://remotion.dev',
+            type: 'supporting',
+            sponsorshipTier: 'friend',
+            description: 'Make videos programmatically with React',
+            blurb: 'Remotion is a framework for creating videos programmatically using React. Write video templates in React, render them using Node.js or in the cloud.'
         },
     ];
 
@@ -194,29 +214,39 @@ export interface TodaySponsor {
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
-    const getYourGuide = allPartners.find(p => p.name === 'Get Your Guide');
-    const stripe = allPartners.find(p => p.name === 'Stripe');
+    const supabase = allPartners.find(p => p.name === 'Supabase');
+    const remotion = allPartners.find(p => p.name === 'Remotion');
     const gyff = allPartners.find(p => p.name === 'GYFF');
+    const sentry = allPartners.find(p => p.name === 'Sentry');
 
     const sponsors: TodaySponsor[] = [
         // Community Builder tier (Gold sponsor)
-        ...(stripe ? [{
-            id: stripe.id,
-            name: stripe.name,
-            logo: stripe.logo,
-            url: stripe.url,
+        ...(supabase ? [{
+            id: supabase.id,
+            name: supabase.name,
+            logo: supabase.logo,
+            url: supabase.url,
             tier: 'builder' as const,
-            description: stripe.description
+            description: supabase.description
         }] : []),
 
-        // Community Friend tier (Venue sponsor)
-        ...(getYourGuide ? [{
-            id: getYourGuide.id,
-            name: getYourGuide.name,
-            logo: getYourGuide.logo,
-            url: getYourGuide.url,
+        // Community Friend tier
+        ...(remotion ? [{
+            id: remotion.id,
+            name: remotion.name,
+            logo: remotion.logo,
+            url: remotion.url,
             tier: 'friend' as const,
-            description: 'Venue sponsor for this event'
+            description: remotion.description
+        }] : []),
+
+        ...(sentry ? [{
+            id: sentry.id,
+            name: sentry.name,
+            logo: sentry.logo,
+            url: sentry.url,
+            tier: 'friend' as const,
+            description: sentry.description
         }] : []),
 
         // Community Supporter tier

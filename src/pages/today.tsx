@@ -6,10 +6,12 @@ import Header from '@/components/layout/Header';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import ScheduleCard from '@/components/today/ScheduleCard';
+import SentryRaffle from '@/components/today/SentryRaffle';
 import StickyActions from '@/components/today/StickyActions';
 import TodayCard from '@/components/today/TodayCard';
 import TodayHero from '@/components/today/TodayHero';
 import TodaysSponsors from '@/components/today/TodaysSponsors';
+import VereinInquiry from '@/components/today/VereinInquiry';
 import { Event, getEventById } from '@/sanity/queries';
 
 interface TodayPageProps {
@@ -157,6 +159,30 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               <TodaysSponsors />
             </TodayCard>
           </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div
+              initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              data-section="raffle"
+            >
+              <TodayCard className="h-full">
+                <SentryRaffle />
+              </TodayCard>
+            </motion.div>
+
+            <motion.div
+              initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              data-section="verein"
+            >
+              <TodayCard className="h-full">
+                <VereinInquiry />
+              </TodayCard>
+            </motion.div>
+          </div>
       </div>
 
       {/* Sticky actions */}
@@ -168,7 +194,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const upcomingEvent = await getEventById('jan-2026');
+    const upcomingEvent = await getEventById('feb-2026');
 
     return {
       props: {

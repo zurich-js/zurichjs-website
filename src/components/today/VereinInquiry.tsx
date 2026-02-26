@@ -4,16 +4,32 @@ export default function VereinInquiry() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const subject = encodeURIComponent('ZurichJS Verein Membership Inquiry');
-    const body = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\n\n${message || 'I would like to learn more about ZurichJS Verein membership.'}`
-    );
-    window.open(`mailto:hello@zurichjs.com?subject=${subject}&body=${body}`, '_self');
-    setSubmitted(true);
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/verein-inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to submit');
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -32,13 +48,17 @@ export default function VereinInquiry() {
 
       {submitted ? (
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
-          <p className="text-green-800 font-semibold">Your email client should open shortly!</p>
+          <p className="text-green-800 font-semibold">Inquiry sent!</p>
           <p className="text-green-600 text-sm mt-1">
-            If it didn&apos;t open, email us at{' '}
-            <a href="mailto:hello@zurichjs.com" className="underline">hello@zurichjs.com</a>
+            We&apos;ll get back to you soon.
           </p>
           <button
-            onClick={() => setSubmitted(false)}
+            onClick={() => {
+              setSubmitted(false);
+              setName('');
+              setEmail('');
+              setMessage('');
+            }}
             className="mt-3 text-sm text-green-700 underline"
           >
             Send another inquiry
@@ -90,11 +110,16 @@ export default function VereinInquiry() {
             />
           </div>
 
+          {error && (
+            <p className="text-red-600 text-sm">{error}</p>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-black text-white font-bold py-4 px-8 rounded-2xl hover:bg-black/90 transition-colors duration-200"
+            disabled={submitting}
+            className="w-full bg-black text-white font-bold py-4 px-8 rounded-2xl hover:bg-black/90 transition-colors duration-200 disabled:opacity-50"
           >
-            Send Inquiry
+            {submitting ? 'Sending...' : 'Send Inquiry'}
           </button>
         </form>
       )}

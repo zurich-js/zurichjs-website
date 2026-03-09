@@ -981,6 +981,74 @@ export const getTalkSubmissionStats = async (): Promise<TalkSubmissionStats> => 
  * 
  * @returns Promise with array of recent talk examples
  */
+// CFP Analytics types and queries
+
+export interface CFPSubmission {
+  _id: string;
+  id: string;
+  title: string;
+  description: string;
+  durationMinutes: number;
+  level: string;
+  tags: string[];
+  status: string;
+  submittedAt: string;
+  _createdAt: string;
+  speaker: {
+    _id: string;
+    name: string;
+    email: string;
+    title: string;
+    bio: string;
+    linkedin: string;
+    github: string;
+    twitter: string;
+    image: string;
+  } | null;
+}
+
+export const getCFPSubmissions = async (): Promise<CFPSubmission[]> => {
+  try {
+    const submissions = await client.fetch(`
+      *[_type == "talkSubmission"] | order(submittedAt desc) {
+        _id,
+        "id": id.current,
+        title,
+        description,
+        durationMinutes,
+        level,
+        tags,
+        status,
+        submittedAt,
+        _createdAt,
+        "speaker": speakers[0]->{
+          _id,
+          name,
+          email,
+          title,
+          bio,
+          linkedin,
+          github,
+          twitter,
+          "image": image.asset->url
+        }
+      }
+    `);
+
+    return submissions.map((s: CFPSubmission) => ({
+      ...s,
+      submittedAt: s.submittedAt || s._createdAt,
+      status: s.status || 'pending',
+      level: s.level || 'intermediate',
+      durationMinutes: s.durationMinutes || 0,
+      tags: s.tags || [],
+    }));
+  } catch (error) {
+    console.error('Error fetching CFP submissions:', error);
+    throw error;
+  }
+};
+
 export const getRecentTalkExamples = async (): Promise<Array<{title: string; abstract: string}>> => {
   try {
     const talks = await client.fetch(`

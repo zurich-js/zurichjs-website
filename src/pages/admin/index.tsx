@@ -1,11 +1,18 @@
 import { OrganizationSwitcher } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
-import { MessageSquare, BarChart, Users, Tag, Link as LinkIcon, CreditCard } from 'lucide-react';
+import { MessageSquare, BarChart, Users, Tag, Link as LinkIcon, CreditCard, FileText } from 'lucide-react';
 import Link from 'next/link';
 
 import Layout from '@/components/layout/Layout';
 
 const adminRoutes = [
+    {
+        name: 'CFP Analytics',
+        description: 'Review CFP submissions, speaker demographics, topic coverage, and operational insights',
+        icon: <FileText className="w-6 h-6" />,
+        href: '/admin/cfp',
+        color: 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+    },
     {
         name: 'Feedback Analytics',
         description: 'View and analyze feedback from events, speakers, and talks',

@@ -1,0 +1,472 @@
+---
+export const prerender = false;
+
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+import { getEventById } from '../../sanity/queries/events';
+import { format } from 'date-fns';
+import TicketSelection from '../../components/workshop/TicketSelection';
+import { Image } from 'astro:assets';
+
+const { id } = Astro.params;
+
+if (!id) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const event = await getEventById(id);
+
+if (!event) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const eventDate = new Date(event.datetime);
+const isPast = eventDate < new Date();
+const formattedDate = format(eventDate, 'EEEE, MMMM d, yyyy');
+const formattedTime = format(eventDate, 'HH:mm');
+
+// --- Schedule calculation ---
+interface ScheduleItem {
+  time: string;
+  title: string;
+  duration: number;
+  type: 'doors' | 'welcome' | 'talk' | 'lightning' | 'break' | 'networking';
+  talk?: typeof event.talks[number];
+  emoji: string;
+}
+
+const schedule: ScheduleItem[] = [];
+
+if (event.talks.length > 0) {
+  // Doors open at 17:30
+  const doorsOpen = new Date(eventDate);
+  doorsOpen.setHours(17, 30, 0, 0);
+  schedule.push({ time: format(doorsOpen, 'HH:mm'), title: 'Doors Open', duration: 60, type: 'doors', emoji: '🚪' });
+
+  // Welcome at 18:30
+  const welcomeTime = new Date(eventDate);
+  welcomeTime.setHours(18, 30, 0, 0);
+  schedule.push({ time: format(welcomeTime, 'HH:mm'), title: 'Welcome & Intro', duration: 15, type: 'welcome', emoji: '👋' });
+
+  // First talk at 18:50
+  const firstTalk = new Date(eventDate);
+  firstTalk.setHours(18, 50, 0, 0);
+  let currentTime = firstTalk.getTime();
+
+  event.talks.forEach((talk, index) => {
+    const talkTime = new Date(currentTime);
+    const duration = talk.durationMinutes || 20;
+    const isLightning = duration < 10;
+
+    schedule.push({
+      time: format(talkTime, 'HH:mm'),
+      title: talk.title,
+      duration,
+      type: isLightning ? 'lightning' : 'talk',
+      talk,
+      emoji: isLightning ? '⚡' : '🎤',
+    });
+
+    currentTime += duration * 60000;
+
+    // Pizza break after 2nd talk
+    if (index === 1) {
+      const breakTime = new Date(currentTime);
+      schedule.push({ time: format(breakTime, 'HH:mm'), title: 'Pizza Break', duration: 15, type: 'break', emoji: '🍕' });
+      currentTime += 15 * 60000;
+    } else if (index < event.talks.length - 1) {
+      currentTime += 5 * 60000;
+    }
+  });
+
+  // Networking after last talk (5 min buffer)
+  const networkingStart = new Date(currentTime + 5 * 60000);
+  const networkingEnd = new Date(eventDate);
+  networkingEnd.setHours(21, 30, 0, 0);
+  const networkingDuration = Math.max(30, Math.round((networkingEnd.getTime() - networkingStart.getTime()) / 60000));
+
+  schedule.push({ time: format(networkingStart, 'HH:mm'), title: 'Networking & Drinks', duration: networkingDuration, type: 'networking', emoji: '🎉' });
+}
+
+// --- Open speaking slots calculation ---
+const regularTalks = event.talks.filter(t => t.durationMinutes && t.durationMinutes >= 10);
+const lightningTalks = event.talks.filter(t => t.durationMinutes && t.durationMinutes < 10);
+
+const REGULAR_MAX = 3;
+const LIGHTNING_MAX = 2;
+const POINTS_MAX = 10;
+const currentPoints = (regularTalks.length * 3) + lightningTalks.length;
+const hasRegularSlot = !isPast && regularTalks.length < REGULAR_MAX && (currentPoints + 3) <= POINTS_MAX;
+const hasLightningSlot = !isPast && lightningTalks.length < LIGHTNING_MAX && (currentPoints + 1) <= POINTS_MAX;
+const hasSlotsAvailable = hasRegularSlot || hasLightningSlot;
+
+// Helper for type-indicator colors
+function getTypeClasses(type: ScheduleItem['type']) {
+  switch (type) {
+    case 'doors':
+    case 'welcome':
+      return 'bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900';
+    case 'talk':
+      return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800';
+    case 'lightning':
+      return 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800';
+    case 'break':
+      return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800';
+    case 'networking':
+      return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800';
+  }
+}
+---
+
+<PageLayout
+  title={`${event.title} | ZurichJS Events`}
+  description={event.description || `${event.title} - A ZurichJS meetup event in Zurich.`}
+  keywords={['ZurichJS event', 'JavaScript meetup', event.location, event.title]}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="animate-fade-in-up max-w-4xl mx-auto">
+      <div class="flex items-center gap-3 mb-4">
+        <a href="/events" class="text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-1 text-sm font-medium">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          All Events
+        </a>
+        <span class="text-gray-400">/</span>
+        {isPast ? (
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-700">
+            Past Event
+          </span>
+        ) : (
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-200 text-green-800">
+            Upcoming
+          </span>
+        )}
+        {event.isProMeetup && (
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-200 text-purple-800">
+            Pro Meetup
+          </span>
+        )}
+      </div>
+      <h1 class="text-3xl md:text-5xl font-bold mb-4">{event.title}</h1>
+      <div class="flex flex-wrap gap-6 text-gray-800">
+        <p class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          {formattedDate}
+        </p>
+        <p class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          {formattedTime}
+        </p>
+        <p class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+          {event.location}
+        </p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Event Content -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+          {event.image && (
+            <div class="rounded-2xl overflow-hidden mb-8">
+              <Image src={event.image} alt={event.title} width={800} height={450} class="w-full object-cover" />
+            </div>
+          )}
+
+          {event.description && (
+            <div class="mb-8">
+              <h2 class="text-2xl font-bold mb-4">About This Event</h2>
+              <div class="prose prose-gray max-w-none">
+                <p class="text-gray-600 leading-relaxed whitespace-pre-line">{event.description}</p>
+              </div>
+            </div>
+          )}
+
+          <!-- Schedule -->
+          {schedule.length > 0 && (
+            <div class="mb-8">
+              <h2 class="text-2xl font-bold mb-3">Event Schedule</h2>
+              <p class="text-sm text-gray-500 italic mb-6">Times are estimates and subject to change</p>
+              <div class="space-y-2">
+                {schedule.map((item) => {
+                  const isTalk = item.type === 'talk' || item.type === 'lightning';
+
+                  if (isTalk && item.talk) {
+                    const talk = item.talk;
+                    return (
+                      <details class="group bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300 transition-all duration-200 open:border-[#F7DF1E] open:shadow-lg">
+                        <summary class="w-full p-3 sm:p-4 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                          <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                              <div class="bg-black text-[#F7DF1E] px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
+                                {item.time}
+                              </div>
+                              <div class={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeClasses(item.type)}`}>
+                                <span class="sm:hidden">{item.emoji}</span>
+                                <span class="hidden sm:inline">{item.emoji} {item.type}</span>
+                              </div>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                              <div class="text-xs text-gray-500 font-medium">{item.duration}m</div>
+                              <svg class="h-5 w-5 text-[#F7DF1E] transition-transform duration-200 group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                          </div>
+                          <div class="mt-2">
+                            <h3 class="font-bold text-gray-900 text-sm sm:text-base leading-tight">{item.title}</h3>
+                            {talk.speakers.length > 0 && (
+                              <div class="flex flex-wrap gap-1 text-xs sm:text-sm text-zurich font-bold mt-1">
+                                {talk.speakers.map((s) => <span>{s.name}</span>)}
+                              </div>
+                            )}
+                          </div>
+                        </summary>
+                        <div class="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-gray-100">
+                          {talk.description && (
+                            <p class="text-gray-700 mb-4 mt-3 whitespace-pre-line">{talk.description}</p>
+                          )}
+                          {talk.speakers.length > 0 && (
+                            <div class="space-y-3 mb-4">
+                              <h4 class="font-semibold text-gray-700 text-sm">
+                                {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
+                              </h4>
+                              {talk.speakers.map((speaker) => (
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                  <Image
+                                    src={speaker.image ? `${speaker.image}?h=150` : '/images/speakers/default.jpg'}
+                                    alt={speaker.name}
+                                    width={64}
+                                    height={64}
+                                    class="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                  />
+                                  <div class="flex-grow">
+                                    <div class="font-bold">{speaker.name}</div>
+                                    {speaker.title && <div class="text-gray-600 text-sm">{speaker.title}</div>}
+                                  </div>
+                                  <a
+                                    href={`/speakers/${speaker.id}`}
+                                    class="flex-shrink-0 inline-flex items-center text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full hover:bg-purple-200 transition-colors"
+                                  >
+                                    <svg class="mr-1" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    View Profile
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {talk.tags && talk.tags.length > 0 && (
+                            <div class="flex flex-wrap gap-1.5 mb-4">
+                              {talk.tags.map((tag) => (
+                                <span class="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs">{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                          {isPast && (talk.slides || talk.videoUrl) && (
+                            <div class="flex flex-wrap gap-2 mb-4">
+                              {talk.slides && (
+                                <a href={talk.slides} target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full hover:bg-blue-200 transition-colors">
+                                  <svg class="mr-1" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                  Slides
+                                </a>
+                              )}
+                              {talk.videoUrl && (
+                                <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-sm bg-red-100 text-red-700 px-3 py-1 rounded-full hover:bg-red-200 transition-colors">
+                                  <svg class="mr-1" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                  Video Recording
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </details>
+                    );
+                  }
+
+                  // Non-talk items (doors, welcome, break, networking)
+                  return (
+                    <div class="bg-white rounded-lg p-3 sm:p-4">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                          <div class="bg-black text-[#F7DF1E] px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
+                            {item.time}
+                          </div>
+                          <div class={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeClasses(item.type)}`}>
+                            <span class="sm:hidden">{item.emoji}</span>
+                            <span class="hidden sm:inline">{item.emoji} {item.type}</span>
+                          </div>
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium flex-shrink-0">{item.duration}m</div>
+                      </div>
+                      <h3 class="font-bold text-gray-900 text-sm sm:text-base leading-tight mt-2">{item.title}</h3>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <!-- Open Speaking Slots -->
+          {!isPast && hasSlotsAvailable && (
+            <div class="mb-8 bg-gradient-to-r from-yellow-50 to-amber-50 p-5 rounded-lg shadow-md">
+              <div class="flex items-start gap-3">
+                <div class="flex-grow">
+                  <h3 class="text-lg font-bold mb-2">Open Speaking Slots</h3>
+                  <p class="text-sm mb-3">
+                    {hasRegularSlot && hasLightningSlot && (
+                      <span>Regular talks (20-30 mins) and lightning talks (5-10 mins) available.</span>
+                    )}
+                    {hasRegularSlot && !hasLightningSlot && (
+                      <span>{REGULAR_MAX - regularTalks.length} regular talk slot{REGULAR_MAX - regularTalks.length !== 1 ? 's' : ''} (20-30 mins) available.</span>
+                    )}
+                    {!hasRegularSlot && hasLightningSlot && (
+                      <span>1 lightning talk slot (5-10 mins) available.</span>
+                    )}
+                  </p>
+                  <a href="/cfp" class="inline-block bg-black text-[#F7DF1E] px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors">
+                    Submit Proposal
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+          {!isPast && !hasSlotsAvailable && event.talks.length > 0 && (
+            <div class="mb-8 bg-gradient-to-r from-yellow-50 to-amber-50 p-5 rounded-lg shadow-md">
+              <div class="flex items-start gap-3">
+                <span class="text-xl">✓</span>
+                <div>
+                  <h3 class="text-base font-bold mb-1">All Slots Filled</h3>
+                  <p class="text-sm text-gray-700 mb-3">This event is full. Submit a proposal for future events.</p>
+                  <a href="/cfp" class="inline-block border border-black text-black px-4 py-2 rounded-lg text-sm font-bold hover:bg-black hover:text-[#F7DF1E] transition-colors">
+                    Submit for Future Events
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="sticky top-32 space-y-6">
+            <!-- Event Details Card -->
+            <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+              <h3 class="font-bold mb-4">Event Details</h3>
+              <dl class="space-y-3 text-sm">
+                <div>
+                  <dt class="text-gray-500">Date</dt>
+                  <dd class="font-medium">{formattedDate}</dd>
+                </div>
+                <div>
+                  <dt class="text-gray-500">Time</dt>
+                  <dd class="font-medium">{formattedTime}</dd>
+                </div>
+                <div>
+                  <dt class="text-gray-500">Location</dt>
+                  <dd class="font-medium">{event.location}</dd>
+                </div>
+                {event.address && (
+                  <div>
+                    <dt class="text-gray-500">Address</dt>
+                    <dd class="font-medium">{event.address}</dd>
+                  </div>
+                )}
+                {event.attendees > 0 && (
+                  <div>
+                    <dt class="text-gray-500">Attendees</dt>
+                    <dd class="font-medium">{event.attendees}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt class="text-gray-500">Talks</dt>
+                  <dd class="font-medium">{event.talks.length}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <!-- Google Maps -->
+            {event.address && (
+              <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100">
+                <div class="aspect-video w-full" id="event-map">
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    style="border:0"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.GOOGLE_MAPS_API_KEY || ''}&q=${encodeURIComponent(event.address + ', ' + event.location)}`}
+                    allowfullscreen
+                  ></iframe>
+                </div>
+                <div class="p-4">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.address + ', ' + event.location)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    Open in Google Maps
+                  </a>
+                </div>
+              </div>
+            )}
+
+            <!-- RSVP / Meetup Link -->
+            {!isPast && event.meetupUrl && (
+              <a
+                href={event.meetupUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block w-full text-center bg-gray-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-all duration-200 hover:shadow-lg"
+              >
+                RSVP on Meetup
+              </a>
+            )}
+
+            <!-- Ticket Selection for Pro Meetups -->
+            {!isPast && event.isProMeetup && event.stripePriceId && (
+              <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <h3 class="font-bold mb-4">Get Tickets</h3>
+                <TicketSelection
+                  client:visible
+                  options={[{
+                    id: event.stripePriceId,
+                    title: 'Event Ticket',
+                    description: `Ticket for ${event.title}`,
+                    price: 0,
+                    features: ['Access to all talks', 'Networking', 'Food & drinks'],
+                    ticketType: 'event',
+                    eventId: event.id,
+                  }]}
+                  eventId={event.id}
+                  ticketType="event"
+                />
+              </div>
+            )}
+
+            <!-- Speakers -->
+            {event.talks.flatMap(t => t.speakers).length > 0 && (
+              <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                <h3 class="font-bold mb-4">Speakers</h3>
+                <div class="space-y-3">
+                  {[...new Map(event.talks.flatMap(t => t.speakers).map(s => [s.id, s])).values()].map((speaker) => (
+                    <a href={`/speakers/${speaker.id}`} class="flex items-center gap-3 hover:bg-gray-100 rounded-lg p-2 -mx-2 transition-colors">
+                      <Image src={speaker.image} alt={speaker.name} width={40} height={40} class="w-10 h-10 rounded-full object-cover" />
+                      <div>
+                        <p class="font-medium text-sm">{speaker.name}</p>
+                        {speaker.title && <p class="text-xs text-gray-500">{speaker.title}</p>}
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

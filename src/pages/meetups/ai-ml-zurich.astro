@@ -1,0 +1,179 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+
+const aiTopics = [
+  {
+    title: 'LLMs & Generative AI',
+    description: 'Building applications with large language models, prompt engineering, and AI agents using JavaScript.',
+  },
+  {
+    title: 'Machine Learning in the Browser',
+    description: 'TensorFlow.js, ONNX Runtime, and running ML models directly in web applications.',
+  },
+  {
+    title: 'AI-Powered Developer Tools',
+    description: 'Copilot integrations, AI code review, automated testing, and intelligent IDE features.',
+  },
+  {
+    title: 'RAG & Vector Databases',
+    description: 'Retrieval-augmented generation, embeddings, and building knowledge-driven applications.',
+  },
+  {
+    title: 'Computer Vision & NLP',
+    description: 'Image recognition, natural language processing, and multimodal AI in JavaScript applications.',
+  },
+  {
+    title: 'MLOps & Deployment',
+    description: 'Deploying ML models to production, monitoring, and scaling AI-powered services.',
+  },
+];
+
+const pastTalkExamples = [
+  'Building AI Agents with LangChain.js',
+  'Real-Time ML Inference in the Browser',
+  'Integrating OpenAI APIs in Next.js Apps',
+  'Vector Search with Supabase and pgvector',
+  'AI-Powered Code Generation Workflows',
+  'Fine-Tuning Models for Domain-Specific Tasks',
+];
+---
+
+<PageLayout
+  title="AI & ML Zurich | ZurichJS"
+  description="AI and Machine Learning events at ZurichJS meetups."
+  keywords={['AI Zurich', 'machine learning Zurich', 'JavaScript AI', 'LLM meetup', 'AI developer events Switzerland']}
+>
+  <!-- Hero -->
+  <Section variant="black" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <span class="inline-block bg-purple-500/20 text-purple-300 text-sm font-semibold px-4 py-1 rounded-full mb-4">
+        AI & Machine Learning
+      </span>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        AI & ML at <span class="bg-js/20 px-2 rounded text-js">ZurichJS</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-300">
+        Exploring the intersection of artificial intelligence, machine learning, and the JavaScript
+        ecosystem. From LLMs to browser-based ML, we cover it all.
+      </p>
+    </div>
+  </Section>
+
+  <!-- About -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">AI Meets JavaScript</h2>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            AI and machine learning are transforming how we build software, and JavaScript is at the
+            forefront. From running models in the browser with TensorFlow.js to building AI agents
+            with LangChain, the JS ecosystem has become a powerful platform for AI development.
+          </p>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            At ZurichJS, we regularly feature talks and workshops on AI and ML topics. Whether you are
+            an AI practitioner looking to leverage web technologies, or a web developer curious about
+            integrating AI into your applications, our events bridge both worlds.
+          </p>
+          <p class="text-gray-700 leading-relaxed">
+            Zurich is a hub for AI research and development, home to ETH Zurich, Google Research, and
+            numerous AI startups. Our community taps into this rich ecosystem to bring you cutting-edge
+            content.
+          </p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 border border-purple-100">
+          <h3 class="font-bold text-gray-900 mb-4">AI at ZurichJS</h3>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3 text-gray-700 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Regular AI/ML talks at monthly meetups
+            </li>
+            <li class="flex items-start gap-3 text-gray-700 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Hands-on workshops with AI tools and APIs
+            </li>
+            <li class="flex items-start gap-3 text-gray-700 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Speakers from ETH, Google, and local AI startups
+            </li>
+            <li class="flex items-start gap-3 text-gray-700 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Networking with AI practitioners and researchers
+            </li>
+            <li class="flex items-start gap-3 text-gray-700 text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Demos of real-world AI applications built with JS
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Topics -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Topics We Explore</h2>
+        <p class="text-gray-600">The AI and machine learning landscape through a JavaScript lens.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {aiTopics.map((topic, i) => (
+          <div class={`bg-white rounded-xl p-6 border border-gray-100 shadow-sm animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}>
+            <h3 class="font-bold text-gray-900 mb-2">{topic.title}</h3>
+            <p class="text-gray-600 text-sm">{topic.description}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- Past Talk Examples -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-3xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Example Talk Topics</h2>
+        <p class="text-gray-600">A sample of the types of AI/ML talks featured at ZurichJS events.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {pastTalkExamples.map((talk, i) => (
+          <div class={`flex items-center gap-3 bg-gray-50 rounded-xl px-5 py-4 border border-gray-100 animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}>
+            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-600"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </div>
+            <span class="text-gray-700 text-sm font-medium">{talk}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- CTA -->
+  <Section variant="black" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Interested in AI & ML?</h2>
+      <p class="text-gray-300 text-lg mb-8">
+        Join our next meetup to hear about the latest in AI and JavaScript. Have an AI talk idea?
+        We would love to feature it.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="https://www.meetup.com/zurichjs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-center gap-2 bg-js text-black px-6 py-3 rounded-xl font-semibold hover:bg-js-dark transition-colors"
+        >
+          Join the Next Event
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+        <a
+          href="mailto:hello@zurichjs.com?subject=AI%2FML%20Talk%20Proposal"
+          class="inline-flex items-center justify-center gap-2 bg-white/10 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+        >
+          Propose an AI Talk
+        </a>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

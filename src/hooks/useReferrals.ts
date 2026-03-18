@@ -1,8 +1,5 @@
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/router';
+import { useUser } from '@clerk/clerk-react';
 import { useState, useEffect } from 'react';
-
-import { sendPlatformNotification } from '@/lib/notification';
 
 interface ReferralData {
   credits: number;
@@ -33,7 +30,6 @@ interface ReferredBy {
 
 export const useReferrals = () => {
   const { user } = useUser();
-  const router = useRouter();
   const [referralData, setReferralData] = useState<ReferralData>({ 
     credits: 0, 
     referrals: [], 
@@ -66,17 +62,16 @@ export const useReferrals = () => {
   // Check if there's a referral in the URL or localStorage
   useEffect(() => {
     const checkForReferral = () => {
-      // Check URL for referral token
-      const { ref } = router.query;
-      
-      if (ref && typeof ref === 'string') {
-        // Store referral in localStorage
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get('ref');
+
+      if (ref) {
         localStorage.setItem('zurichjs_referral', ref);
       }
     };
-    
+
     checkForReferral();
-  }, [router.query]);
+  }, []);
 
   // Load referral data for the current user
   useEffect(() => {
@@ -305,17 +300,19 @@ export const useReferrals = () => {
         // Continue even if this fails, as we've already updated the current user's metadata
       }
       
-      // 5. Send platform notification
+      // 5. Send platform notification via API
       try {
-        await sendPlatformNotification({
-          title: 'New Referral Signup',
-          message: `${referrerName} successfully referred ${user.fullName || user.username || 'New User'} to ZurichJS!`,
-          priority: 0,
-          sound: 'success',
+        await fetch('/api/notifications/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: 'New Referral Signup',
+            message: `${referrerName} successfully referred ${user.fullName || user.username || 'New User'} to ZurichJS!`,
+            priority: 0,
+          }),
         });
       } catch (error) {
         console.error('Error sending platform notification:', error);
-        // Continue even if notification fails
       }
       
       return true;

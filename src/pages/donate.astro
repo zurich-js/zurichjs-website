@@ -1,0 +1,128 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+import { Image } from 'astro:assets';
+---
+
+<PageLayout
+  title="Donate | ZurichJS"
+  description="Support ZurichJS community with a donation via TWINT or cash."
+  keywords={['donate', 'support', 'zurichjs', 'twint', 'javascript', 'community', 'zurich']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        Support <span class="bg-white/20 px-2 rounded">ZurichJS</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Your contribution helps us keep meetups free, provide food and drinks, and grow the JavaScript community in Zurich.
+      </p>
+    </div>
+  </Section>
+
+  <!-- TWINT Donation -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-2xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
+        <div class="p-8 text-center">
+          <div class="flex items-center justify-center gap-3 mb-6">
+            <Image src="/images/twint-logo.webp" alt="TWINT" width={96} height={32} class="h-8 inline" />
+            <h2 class="text-2xl font-bold">Donate via TWINT</h2>
+          </div>
+          <p class="text-gray-600 mb-8">
+            Scan the QR code below with your TWINT app to make a donation. Every contribution, big or small, makes a difference.
+          </p>
+          <div class="bg-gray-50 rounded-xl p-6 inline-block">
+            <Image
+              src="/images/twint-code.jpg"
+              alt="TWINT QR Code"
+              width={320}
+              height={320}
+              class="max-w-xs mx-auto rounded-lg shadow-lg"
+            />
+          </div>
+          <p class="text-sm text-gray-500 mt-4">
+            Open your TWINT app and scan this QR code to donate
+          </p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Cash & Other Options -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-4xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Cash at Events -->
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 animate-fade-in-up stagger-1">
+          <div class="w-14 h-14 bg-js rounded-xl flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M2 10h2"></path>
+              <path d="M20 10h2"></path>
+              <path d="M2 14h2"></path>
+              <path d="M20 14h2"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3">Cash at Events</h3>
+          <p class="text-gray-600">
+            You can also donate cash in person at any of our monthly meetups. Just look for the donation box or speak to one of the organizers.
+          </p>
+        </div>
+
+        <!-- Buy Us a Coffee -->
+        <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 animate-fade-in-up stagger-2">
+          <div class="w-14 h-14 bg-js rounded-xl flex items-center justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
+              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
+              <line x1="6" y1="2" x2="6" y2="4"></line>
+              <line x1="10" y1="2" x2="10" y2="4"></line>
+              <line x1="14" y1="2" x2="14" y2="4"></line>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold mb-3">More Ways to Support</h3>
+          <p class="text-gray-600 mb-4">
+            Looking for other ways to support ZurichJS? Check out our support page for additional options including recurring donations.
+          </p>
+          <a
+            href="/buy-us-a-coffee"
+            class="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-800 transition-colors"
+          >
+            View more options
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- What Your Donation Supports -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-3xl mx-auto text-center animate-fade-in-up">
+      <h2 class="text-3xl font-bold mb-8">What Your Donation Supports</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="p-4">
+          <div class="text-3xl mb-3">&#127860;</div>
+          <h3 class="font-bold mb-1">Food & Drinks</h3>
+          <p class="text-sm text-gray-600">Pizza, snacks, and beverages at every meetup</p>
+        </div>
+        <div class="p-4">
+          <div class="text-3xl mb-3">&#127916;</div>
+          <h3 class="font-bold mb-1">Venue & Equipment</h3>
+          <p class="text-sm text-gray-600">Quality venues and AV equipment for speakers</p>
+        </div>
+        <div class="p-4">
+          <div class="text-3xl mb-3">&#127891;</div>
+          <h3 class="font-bold mb-1">Community Growth</h3>
+          <p class="text-sm text-gray-600">Workshops, swag, and community initiatives</p>
+        </div>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

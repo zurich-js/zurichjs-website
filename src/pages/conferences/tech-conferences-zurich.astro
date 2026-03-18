@@ -1,0 +1,44 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+---
+
+<PageLayout
+  title="Tech Conferences in Zurich | ZurichJS"
+  description="Guide to tech conferences in Zurich, Switzerland for JavaScript and web developers."
+  keywords={['Tech Conferences Zurich', 'JavaScript Conference Switzerland', 'ZurichJS Conf']}
+>
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <h1 class="text-4xl font-bold mb-6">Tech Conferences in Zurich</h1>
+      <p class="text-xl text-gray-600 mb-12">Your guide to developer conferences in Zurich and the Swiss tech ecosystem.</p>
+
+      <div class="space-y-8">
+        <div class="bg-js/10 border border-js/20 rounded-xl p-8">
+          <h2 class="text-2xl font-bold mb-3">ZurichJS Conf 2026</h2>
+          <p class="text-gray-700 mb-4">The first-ever ZurichJS Conference is coming! A full-day conference dedicated to JavaScript, TypeScript, and modern web development.</p>
+          <a href="/waitlist/conf" class="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors">
+            Join the Waitlist
+          </a>
+        </div>
+
+        <div class="prose prose-lg max-w-none">
+          <h2>Zurich's Tech Conference Scene</h2>
+          <p>Zurich is one of Europe's leading tech hubs, home to ETH Zurich, Google's largest engineering office outside the US, and hundreds of startups.</p>
+
+          <h3>Notable Tech Conferences in Switzerland</h3>
+          <ul>
+            <li><strong>ZurichJS Conf</strong> - JavaScript and TypeScript (Coming 2026)</li>
+            <li><strong>Swiss PGDay</strong> - PostgreSQL community</li>
+            <li><strong>DevOpsDays Zurich</strong> - DevOps and SRE</li>
+            <li><strong>AI+X Summit</strong> - Artificial Intelligence</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="/" class="text-blue-600 hover:underline">Back to Home</a>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

@@ -1,4 +1,5 @@
-import { useAuth, useUser, SignInButton } from '@clerk/nextjs';
+import { useAuth, SignInButton } from '@clerk/astro/react';
+import { useUser } from '@clerk/clerk-react';
 import { useState } from 'react';
 
 import Button from '@/components/ui/Button';

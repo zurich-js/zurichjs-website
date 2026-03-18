@@ -1,0 +1,57 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+---
+
+<PageLayout
+  title="404 - Page Not Found | ZurichJS"
+  description="The page you're looking for doesn't exist."
+  noindex={true}
+>
+  <Section variant="js" padding="none" class="min-h-[80vh] flex items-center justify-center">
+    <div class="text-center animate-fade-in-up max-w-xl mx-auto py-16">
+      <!-- Console-style error display -->
+      <div class="bg-gray-900 rounded-xl shadow-2xl overflow-hidden mb-8 text-left">
+        <div class="flex items-center gap-2 px-4 py-3 bg-gray-800">
+          <span class="w-3 h-3 rounded-full bg-red-500"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500"></span>
+          <span class="ml-2 text-gray-400 text-sm font-mono">console</span>
+        </div>
+        <div class="p-6 font-mono text-sm space-y-2">
+          <p class="text-red-400">
+            <span class="text-gray-500">&#62;</span> Uncaught Error: PageNotFoundError
+          </p>
+          <p class="text-gray-400 pl-4">
+            at Router.navigate("/...")
+          </p>
+          <p class="text-gray-400 pl-4">
+            at ZurichJS.render()
+          </p>
+          <p class="text-yellow-300 mt-4">
+            <span class="text-gray-500">&#62;</span> console.log("This page doesn't exist!")
+          </p>
+          <p class="text-green-400 mt-4">
+            <span class="text-gray-500">&#62;</span> <span class="text-blue-400">suggestion</span>: Try navigating back home <span class="animate-pulse">_</span>
+          </p>
+        </div>
+      </div>
+
+      <h1 class="text-7xl font-black mb-4 text-gray-900">404</h1>
+      <p class="text-xl text-gray-800 mb-8">
+        Looks like this page took a wrong turn in Zurich.
+      </p>
+
+      <a
+        href="/"
+        class="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        Return Home
+      </a>
+    </div>
+  </Section>
+</PageLayout>

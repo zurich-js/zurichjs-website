@@ -1,21 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
-
+import type { APIContext } from 'astro';
 import { stripe } from '@/lib/stripe';
 
+export const prerender = false;
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export async function GET({ url }: APIContext) {
+  const code = url.searchParams.get('code');
 
-  const { code } = req.query;
-
-  if (!code || typeof code !== 'string') {
-    return res.status(400).json({ error: 'Coupon code is required' });
+  if (!code) {
+    return new Response(JSON.stringify({ error: 'Coupon code is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -23,7 +18,10 @@ async function handler(
     const coupon = await stripe.coupons.retrieve(code);
 
     if (!coupon || !coupon.valid) {
-      return res.status(400).json({ error: 'Invalid coupon code' });
+      return new Response(JSON.stringify({ error: 'Invalid coupon code' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Format the coupon data for the client
@@ -37,19 +35,23 @@ async function handler(
       isValid: coupon.valid,
     };
 
-    return res.status(200).json(couponData);
+    return new Response(JSON.stringify(couponData), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Error validating coupon:', err);
-    
+
     const error = err as { statusCode?: number; message: string };
     const statusCode = error.statusCode || 500;
-    
-    return res.status(statusCode).json({
-      error: statusCode === 404 
-        ? 'Coupon not found' 
+
+    return new Response(JSON.stringify({
+      error: statusCode === 404
+        ? 'Coupon not found'
         : error.message || 'Error validating coupon',
+    }), {
+      status: statusCode,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

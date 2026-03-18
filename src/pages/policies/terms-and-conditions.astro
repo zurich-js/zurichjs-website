@@ -1,0 +1,76 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+---
+
+<PageLayout
+  title="Terms and Conditions | ZurichJS"
+  description="ZurichJS Terms and Conditions for using our website and attending our events."
+  keywords={['ZurichJS', 'JavaScript Zurich', 'terms and conditions', 'terms of service', 'event policies']}
+>
+  <Section variant="white" padding="lg">
+    <div class="animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">Terms and Conditions</h1>
+      <p class="text-gray-500 mb-8">Terms governing the use of our website and participation in our events.</p>
+
+      <div class="space-y-8">
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Website Use</h2>
+          <p class="text-gray-700 leading-relaxed mb-3">
+            By accessing and using the ZurichJS website, you agree to the following terms:
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700 leading-relaxed">
+            <li>You will use the website only for lawful purposes and in accordance with these Terms.</li>
+            <li>You will not attempt to gain unauthorized access to any part of the website, its servers, or any connected systems.</li>
+            <li>You will not use the website in a way that could damage, disable, or impair the site or interfere with other users' access.</li>
+            <li>The content on this website is provided for general information purposes and may be updated without notice.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Event Registration</h2>
+          <p class="text-gray-700 leading-relaxed mb-3">
+            When registering for ZurichJS events, workshops, or meetups:
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700 leading-relaxed">
+            <li>You agree to provide accurate and complete registration information.</li>
+            <li>Event attendance is subject to availability and may require confirmation.</li>
+            <li>ZurichJS reserves the right to refuse entry or remove any attendee who violates our <a href="/policies/code-of-conduct" class="text-yellow-600 hover:text-yellow-700 underline">Code of Conduct</a>.</li>
+            <li>Event details, including dates, venues, and speakers, are subject to change. We will make reasonable efforts to notify registered attendees of any significant changes.</li>
+            <li>By attending our events, you consent to being photographed or recorded for promotional purposes unless you notify us otherwise.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Intellectual Property</h2>
+          <p class="text-gray-700 leading-relaxed">
+            All content on the ZurichJS website, including text, graphics, logos, and images, is the property of ZurichJS or its content creators and is protected by applicable intellectual property laws. You may not reproduce, distribute, or create derivative works from any content on this website without prior written permission. Presentation materials shared at events remain the intellectual property of their respective authors unless otherwise stated.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Limitation of Liability</h2>
+          <p class="text-gray-700 leading-relaxed">
+            ZurichJS and its organizers shall not be held liable for any direct, indirect, incidental, or consequential damages arising from the use of this website or attendance at our events. This includes, but is not limited to, loss of data, loss of profit, or personal injury. We make no warranties or representations about the accuracy or completeness of the content on this website or the content of any external sites linked from it.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Contact</h2>
+          <p class="text-gray-700 leading-relaxed">
+            If you have any questions about these Terms and Conditions, please contact us at
+            <a href="mailto:hello@zurichjs.com" class="text-yellow-600 hover:text-yellow-700 underline">hello@zurichjs.com</a>.
+          </p>
+        </section>
+      </div>
+
+      <hr class="my-8 border-gray-200" />
+
+      <p class="text-sm text-gray-400 mb-6">Last updated: March 2026</p>
+
+      <a href="/" class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium">
+        &larr; Back to Home
+      </a>
+    </div>
+  </Section>
+</PageLayout>

@@ -1,25 +1,18 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 import { stripe } from '@/lib/stripe';
 
+export const prerender = false;
 
 interface TshirtPurchaseSuccessBody {
   sessionId: string;
   userEmail: string;
 }
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { sessionId, userEmail } = req.body as TshirtPurchaseSuccessBody;
+    const { sessionId, userEmail } = await context.request.json() as TshirtPurchaseSuccessBody;
 
     // Retrieve session details from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
@@ -32,19 +25,19 @@ async function handler(
     const totalQuantity = parseInt(session.metadata?.totalQuantity || '0');
     const sessionEmail = session.metadata?.userEmail || '';
     const couponCode = session.metadata?.couponCode || '';
-    
+
     // Get payment information
     const paymentIntent = session.payment_intent;
     const paymentIntentId = typeof paymentIntent === 'string' ? paymentIntent : paymentIntent?.id || 'Unknown';
-    
+
     const totalAmount = session.amount_total ? (session.amount_total / 100) : 0;
-    
+
     // Format sizes for display
     const sizesDisplay = Object.entries(sizeQuantities)
       .filter(([, qty]) => (qty as number) > 0)
       .map(([size, qty]) => `${size} (${qty})`)
       .join(', ');
-    
+
     // Get coupon information
     let couponInfo = '';
     if (couponCode) {
@@ -73,15 +66,19 @@ Session ID: ${sessionId}`,
       priority: 1,
     });
 
-    return res.status(200).json({ success: true });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Failed to send tshirt purchase notification:', err);
     const error = err as { message: string };
-    
-    return res.status(500).json({
+
+    return new Response(JSON.stringify({
       error: error.message || 'An unknown error occurred',
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

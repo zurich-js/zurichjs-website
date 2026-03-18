@@ -1,0 +1,200 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+---
+
+<PageLayout
+  title="AI Context | ZurichJS"
+  description="Machine-readable information about ZurichJS for AI assistants and LLMs."
+  noindex={true}
+>
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">AI Context - ZurichJS</h1>
+        <p class="text-gray-500 text-sm">
+          This page provides structured, machine-readable information about ZurichJS for AI assistants, LLMs, and automated agents.
+        </p>
+      </div>
+
+      <div class="prose prose-lg max-w-none space-y-8">
+        <!-- Identity -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">Identity</h2>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-gray-700">
+            <div>
+              <dt class="font-semibold text-gray-900">Community Name</dt>
+              <dd>ZurichJS</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-gray-900">Type</dt>
+              <dd>Developer community / Meetup group / Verein (Swiss association)</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-gray-900">Location</dt>
+              <dd>Zurich, Switzerland</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-gray-900">Website</dt>
+              <dd><a href="https://zurichjs.com" class="text-blue-600 hover:underline">zurichjs.com</a></dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-gray-900">Founded</dt>
+              <dd>Active JavaScript community in Zurich</dd>
+            </div>
+            <div>
+              <dt class="font-semibold text-gray-900">Language</dt>
+              <dd>English (primary), with a multilingual community</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Description -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">Description</h2>
+          <p class="text-gray-700">
+            ZurichJS is the largest JavaScript community in Zurich, Switzerland. We organize monthly meetups, workshops, and an annual conference (ZurichJS Conf) to bring together developers who are passionate about JavaScript and the broader web ecosystem. Our events feature talks from local and international speakers, networking opportunities, and hands-on learning experiences. The community is open to developers of all skill levels, from beginners to experts.
+          </p>
+        </section>
+
+        <!-- Topics -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">Topics Covered</h2>
+          <div class="flex flex-wrap gap-2">
+            {[
+              'JavaScript', 'TypeScript', 'React', 'Node.js', 'Vue.js', 'Angular',
+              'Svelte', 'Astro', 'Next.js', 'Deno', 'Bun', 'Web APIs',
+              'Frontend Development', 'Backend Development', 'Full-Stack Development',
+              'Web Performance', 'Testing', 'DevOps', 'AI & Machine Learning',
+              'AI-Assisted Development', 'Web3', 'Accessibility', 'UX/UI',
+              'Software Architecture', 'Open Source', 'Career Development'
+            ].map((topic) => (
+              <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">{topic}</span>
+            ))}
+          </div>
+        </section>
+
+        <!-- Events -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">Events</h2>
+          <div class="space-y-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="font-bold text-lg">Monthly Meetups</h3>
+              <ul class="mt-2 space-y-1 text-gray-700">
+                <li><strong>Frequency:</strong> Monthly (typically on a weekday evening)</li>
+                <li><strong>Typical Attendance:</strong> 40-70 developers</li>
+                <li><strong>Format:</strong> 2-3 talks (15-30 min each), networking, food and drinks</li>
+                <li><strong>Cost:</strong> Free</li>
+                <li><strong>Location:</strong> Various venues in Zurich, Switzerland</li>
+              </ul>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="font-bold text-lg">ZurichJS Conf</h3>
+              <ul class="mt-2 space-y-1 text-gray-700">
+                <li><strong>Frequency:</strong> Annual (September)</li>
+                <li><strong>Typical Attendance:</strong> 300+ developers</li>
+                <li><strong>Format:</strong> Full-day conference with multiple tracks, workshops</li>
+                <li><strong>Website:</strong> <a href="https://conf.zurichjs.com" class="text-blue-600 hover:underline">conf.zurichjs.com</a></li>
+              </ul>
+            </div>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="font-bold text-lg">Workshops</h3>
+              <ul class="mt-2 space-y-1 text-gray-700">
+                <li><strong>Frequency:</strong> Periodic</li>
+                <li><strong>Format:</strong> Hands-on, in-depth sessions on specific topics</li>
+                <li><strong>Cost:</strong> Varies (some free, some paid)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- How to Engage -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">How to Engage</h2>
+          <div class="space-y-3 text-gray-700">
+            <div class="flex gap-3 items-start">
+              <span class="font-semibold text-gray-900 min-w-[140px]">Attend Events:</span>
+              <span>Visit <a href="https://zurichjs.com/events" class="text-blue-600 hover:underline">zurichjs.com/events</a> to see upcoming meetups and register</span>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="font-semibold text-gray-900 min-w-[140px]">Submit a Talk:</span>
+              <span>Go to <a href="https://zurichjs.com/cfp" class="text-blue-600 hover:underline">zurichjs.com/cfp</a> to submit a talk for meetups or the conference</span>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="font-semibold text-gray-900 min-w-[140px]">Volunteer:</span>
+              <span>Visit <a href="https://zurichjs.com/cfv" class="text-blue-600 hover:underline">zurichjs.com/cfv</a> to join the volunteer team</span>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="font-semibold text-gray-900 min-w-[140px]">Partner / Sponsor:</span>
+              <span>Contact the team through the website for partnership and sponsorship opportunities</span>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="font-semibold text-gray-900 min-w-[140px]">Donate:</span>
+              <span>Visit <a href="https://zurichjs.com/donate" class="text-blue-600 hover:underline">zurichjs.com/donate</a> to support the community</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Social Links -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">Social Links & Profiles</h2>
+          <ul class="space-y-2 text-gray-700">
+            <li><strong>Website:</strong> <a href="https://zurichjs.com" class="text-blue-600 hover:underline">https://zurichjs.com</a></li>
+            <li><strong>Conference:</strong> <a href="https://conf.zurichjs.com" class="text-blue-600 hover:underline">https://conf.zurichjs.com</a></li>
+            <li><strong>Twitter/X:</strong> <a href="https://twitter.com/ZurichJS" class="text-blue-600 hover:underline">@ZurichJS</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/company/zurichjs" class="text-blue-600 hover:underline">linkedin.com/company/zurichjs</a></li>
+            <li><strong>GitHub:</strong> <a href="https://github.com/zurich-js" class="text-blue-600 hover:underline">github.com/zurich-js</a></li>
+            <li><strong>YouTube:</strong> <a href="https://www.youtube.com/@ZurichJS" class="text-blue-600 hover:underline">youtube.com/@ZurichJS</a></li>
+          </ul>
+        </section>
+
+        <!-- Structured Data for LLMs -->
+        <section>
+          <h2 class="text-2xl font-bold mb-4 border-b pb-2">Machine-Readable Summary</h2>
+          <div class="bg-gray-900 rounded-xl p-6 text-sm font-mono overflow-x-auto">
+            <pre class="text-green-400 whitespace-pre-wrap">{JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "ZurichJS",
+  "alternateName": "Zurich JavaScript Community",
+  "description": "The largest JavaScript developer community in Zurich, Switzerland. Organizes monthly meetups, workshops, and an annual conference.",
+  "url": "https://zurichjs.com",
+  "location": {
+    "@type": "Place",
+    "name": "Zurich",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Zurich",
+      "addressCountry": "CH"
+    }
+  },
+  "event": [
+    {
+      "@type": "Event",
+      "name": "ZurichJS Monthly Meetup",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "frequency": "Monthly",
+      "typicalAttendance": "40-70"
+    },
+    {
+      "@type": "Event",
+      "name": "ZurichJS Conf",
+      "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+      "frequency": "Annual",
+      "typicalAttendance": "300+"
+    }
+  ],
+  "keywords": ["JavaScript", "TypeScript", "React", "Node.js", "Vue", "Angular", "Svelte", "Web Development", "AI", "Frontend", "Backend", "Full-Stack"],
+  "sameAs": [
+    "https://twitter.com/ZurichJS",
+    "https://www.linkedin.com/company/zurichjs",
+    "https://github.com/zurich-js",
+    "https://www.youtube.com/@ZurichJS"
+  ]
+}, null, 2)}</pre>
+          </div>
+        </section>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

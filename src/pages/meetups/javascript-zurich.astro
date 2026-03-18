@@ -1,0 +1,205 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+
+const topics = [
+  { name: 'React & Next.js', icon: 'Frontend frameworks for building modern UIs' },
+  { name: 'Node.js & Deno', icon: 'Server-side JavaScript runtimes and APIs' },
+  { name: 'TypeScript', icon: 'Type-safe JavaScript development at scale' },
+  { name: 'Vue & Angular', icon: 'Full-featured frameworks for enterprise apps' },
+  { name: 'Testing & DevOps', icon: 'CI/CD, testing strategies, and tooling' },
+  { name: 'AI & Machine Learning', icon: 'Using JS/TS for AI-powered applications' },
+];
+
+const format = [
+  {
+    title: 'Welcome & Announcements',
+    duration: '5 min',
+    description: 'Community updates, upcoming events, and job opportunities.',
+  },
+  {
+    title: 'Talk 1',
+    duration: '25-30 min',
+    description: 'In-depth technical talk from a community or guest speaker.',
+  },
+  {
+    title: 'Break & Networking',
+    duration: '15 min',
+    description: 'Grab food, drinks, and chat with fellow developers.',
+  },
+  {
+    title: 'Talk 2',
+    duration: '25-30 min',
+    description: 'Second technical talk covering a different topic.',
+  },
+  {
+    title: 'Open Networking',
+    duration: '30+ min',
+    description: 'Stick around for conversations, questions, and connections.',
+  },
+];
+---
+
+<PageLayout
+  title="JavaScript Zurich Meetup | ZurichJS"
+  description="Join the JavaScript Zurich meetup - monthly events for JS developers."
+  keywords={['JavaScript Zurich', 'JS meetup Zurich', 'TypeScript meetup', 'monthly JavaScript event Zurich', 'developer meetup Switzerland']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <span class="inline-block bg-black/10 text-black text-sm font-semibold px-4 py-1 rounded-full mb-4">
+        Monthly Meetup
+      </span>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        JavaScript <span class="bg-white/20 px-2 rounded">Zurich</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Zurich's original JavaScript meetup. Every month, we bring together developers to share knowledge,
+        explore new technologies, and grow as a community.
+      </p>
+    </div>
+  </Section>
+
+  <!-- About the Meetup -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div>
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">About the Meetup</h2>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            JavaScript Zurich is a free, monthly meetup for anyone interested in JavaScript, TypeScript,
+            and modern web development. Founded in 2023, we have grown into one of the most active
+            developer communities in the Zurich area.
+          </p>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            Each event features two talks from experienced developers -- covering everything from frontend
+            frameworks and backend architectures to DevOps, testing, and emerging technologies like AI.
+          </p>
+          <p class="text-gray-700 leading-relaxed">
+            We rotate between venues across Zurich, hosted by our generous partner companies. Food, drinks,
+            and great conversations are always included.
+          </p>
+        </div>
+        <div class="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+          <h3 class="font-bold text-gray-900 mb-4">Quick Facts</h3>
+          <dl class="space-y-4">
+            <div>
+              <dt class="text-sm text-gray-500">Frequency</dt>
+              <dd class="font-semibold text-gray-900">Monthly (usually last Wednesday)</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Time</dt>
+              <dd class="font-semibold text-gray-900">18:30 - 21:00</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Location</dt>
+              <dd class="font-semibold text-gray-900">Rotating venues in Zurich</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Cost</dt>
+              <dd class="font-semibold text-green-600">Free - always!</dd>
+            </div>
+            <div>
+              <dt class="text-sm text-gray-500">Language</dt>
+              <dd class="font-semibold text-gray-900">English</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- History -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-3xl mx-auto animate-fade-in-up">
+      <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">Our Story</h2>
+      <div class="prose prose-gray max-w-none">
+        <p class="text-gray-700 leading-relaxed mb-4">
+          ZurichJS started in 2023 when a small group of JavaScript developers in Zurich decided the city
+          needed a dedicated, regular meetup for the JS ecosystem. What began as casual gatherings quickly
+          grew as word spread through the local tech community.
+        </p>
+        <p class="text-gray-700 leading-relaxed mb-4">
+          Today, we are one of the largest JavaScript communities in Switzerland. We have hosted dozens of
+          events, featured speakers from across Europe, and partnered with some of Zurich's top tech companies.
+        </p>
+        <p class="text-gray-700 leading-relaxed">
+          Our community is diverse -- from junior developers attending their first meetup to seasoned
+          architects sharing years of experience. That mix is what makes JavaScript Zurich special.
+        </p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Topics -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Topics We Cover</h2>
+        <p class="text-gray-600">Our talks span the entire JavaScript ecosystem and beyond.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {topics.map((topic, i) => (
+          <div class={`bg-gray-50 rounded-xl p-6 border border-gray-100 animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}>
+            <h3 class="font-bold text-gray-900 mb-1">{topic.name}</h3>
+            <p class="text-gray-600 text-sm">{topic.icon}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- Event Format -->
+  <Section variant="black" padding="lg">
+    <div class="max-w-3xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold mb-4">Typical Event Format</h2>
+        <p class="text-gray-300">Here is what to expect when you join us.</p>
+      </div>
+      <div class="space-y-4">
+        {format.map((item, i) => (
+          <div class={`flex items-start gap-4 bg-white/5 rounded-xl p-5 border border-white/10 animate-fade-in-up stagger-${Math.min(i + 1, 5)}`}>
+            <div class="shrink-0 w-20 text-center">
+              <span class="inline-block bg-js/20 text-js text-xs font-bold px-3 py-1 rounded-full">
+                {item.duration}
+              </span>
+            </div>
+            <div>
+              <h3 class="font-bold text-white mb-1">{item.title}</h3>
+              <p class="text-gray-400 text-sm">{item.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- How to Join -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Join the Next Meetup</h2>
+      <p class="text-gray-800 text-lg mb-8">
+        Our meetups are free and open to everyone. Just RSVP on Meetup and show up. No experience level
+        required -- beginners and experts are equally welcome.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="https://www.meetup.com/zurichjs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition-colors"
+        >
+          RSVP on Meetup
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+        <a
+          href="/contact"
+          class="inline-flex items-center justify-center gap-2 bg-white/90 text-black px-6 py-3 rounded-xl font-semibold hover:bg-white transition-colors"
+        >
+          Want to Speak?
+        </a>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

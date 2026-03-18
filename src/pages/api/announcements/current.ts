@@ -1,42 +1,38 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
+import { getCurrentAnnouncement } from '@/sanity/queries/announcements';
 
+export const prerender = false;
 
-import { getCurrentAnnouncement } from '@/sanity/queries';
+export async function GET({ url }: APIContext) {
+  try {
+    const isLoggedIn = url.searchParams.get('isLoggedIn') === 'true';
+    const now = new Date().toISOString();
 
+    const announcements = await getCurrentAnnouncement();
 
-async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
-    if (req.method !== 'GET') {
-        return res.status(405).json({ message: 'Method not allowed' });
-    }
+    // Filter announcements based on conditions
+    const currentAnnouncement = announcements.find(announcement => {
+      const { conditions } = announcement;
 
-    try {
-        const isLoggedIn = req.query.isLoggedIn === 'true';
-        const now = new Date().toISOString();
+      // Check if announcement is within date range
+      const isWithinDateRange = (!conditions?.startDate || conditions.startDate <= now) &&
+        (!conditions?.endDate || conditions.endDate >= now);
 
-        const announcements = await getCurrentAnnouncement();
+      // Check if login is required and user is logged in
+      const meetsLoginRequirement = !conditions?.requiresLogin || isLoggedIn;
 
-        // Filter announcements based on conditions
-        const currentAnnouncement = announcements.find(announcement => {
-            const { conditions } = announcement;
+      return isWithinDateRange && meetsLoginRequirement;
+    });
 
-            // Check if announcement is within date range
-            const isWithinDateRange = (!conditions?.startDate || conditions.startDate <= now) &&
-                (!conditions?.endDate || conditions.endDate >= now);
-
-            // Check if login is required and user is logged in
-            const meetsLoginRequirement = !conditions?.requiresLogin || isLoggedIn;
-
-            return isWithinDateRange && meetsLoginRequirement;
-        });
-
-        return res.status(200).json(currentAnnouncement || null);
-    } catch (error) {
-        console.error('Error fetching announcement:', error);
-        return res.status(500).json({ message: 'Error fetching announcement' });
-    }
+    return new Response(JSON.stringify(currentAnnouncement || null), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error fetching announcement:', error);
+    return new Response(JSON.stringify({ message: 'Error fetching announcement' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
-
-export default handler;

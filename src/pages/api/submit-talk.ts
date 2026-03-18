@@ -1,57 +1,22 @@
-import { createReadStream } from 'fs';
-import path from 'path';
-
-import formidable from 'formidable';
-import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from 'next-sanity';
+import type { APIContext } from 'astro';
+import { createClient } from '@sanity/client';
 import { v4 as uuidv4 } from 'uuid';
-
 
 import { sendPlatformNotification } from '@/lib/notification';
 
-
-
-// pages/api/submit-talk.ts
-
-
-
-
-
-
-
+export const prerender = false;
 
 // Initialize Sanity client
 const sanityClient = createClient({
   projectId: "viqjrovw",
   dataset: "production",
-  apiVersion: '2024-01-01', // Use the latest API version
-  token: process.env.SANITY_TOKEN,
-  useCdn: false, // We need fresh data and ability to write
+  apiVersion: '2024-01-01',
+  token: import.meta.env.SANITY_TOKEN,
+  useCdn: false,
 });
 
-
-// Disable the default body parser to handle form-data
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-
-
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Parse the multipart form data
-  const form = formidable({
-    keepExtensions: true,
-    multiples: false,
-  });
+export async function POST(context: APIContext) {
+  let submitterInfo = 'Unknown user';
 
   try {
     // Send notification that submission process has started
@@ -61,29 +26,27 @@ async function handler(
       priority: 0,
     });
 
-    // Parse the form
-    const [fields, files] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
-      form.parse(req, (err: unknown, fields: formidable.Fields, files: formidable.Files) => {
-        if (err) reject(err);
-        resolve([fields, files]);
-      });
-    });
+    // Parse the multipart form data using native Web API
+    const formData = await context.request.formData();
 
     // Extract values from form fields
-    const firstName = Array.isArray(fields.firstName) ? fields.firstName[0] : fields.firstName || '';
-    const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || '';
+    const firstName = formData.get('firstName')?.toString() || '';
+    const lastName = formData.get('lastName')?.toString() || '';
     const name = `${firstName} ${lastName}`;
-    const jobTitle = Array.isArray(fields.jobTitle) ? fields.jobTitle[0] : fields.jobTitle || '';
-    const biography = Array.isArray(fields.biography) ? fields.biography[0] : fields.biography || '';
-    const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || '';
-    const linkedinProfile = Array.isArray(fields.linkedinProfile) ? fields.linkedinProfile[0] : fields.linkedinProfile || '';
-    const githubProfile = Array.isArray(fields.githubProfile) ? fields.githubProfile[0] : fields.githubProfile || '';
-    const twitterHandle = Array.isArray(fields.twitterHandle) ? fields.twitterHandle[0] : fields.twitterHandle || '';
-    const title = Array.isArray(fields.title) ? fields.title[0] : fields.title || '';
-    const description = Array.isArray(fields.description) ? fields.description[0] : fields.description || '';
-    const talkLength = Array.isArray(fields.talkLength) ? fields.talkLength[0] : fields.talkLength || '';
-    const talkLevel = Array.isArray(fields.talkLevel) ? fields.talkLevel[0] : fields.talkLevel || '';
-    const topics = fields.topics ? JSON.parse((Array.isArray(fields.topics) ? fields.topics[0] : fields.topics).toString()) : [];
+    const jobTitle = formData.get('jobTitle')?.toString() || '';
+    const biography = formData.get('biography')?.toString() || '';
+    const email = formData.get('email')?.toString() || '';
+    const linkedinProfile = formData.get('linkedinProfile')?.toString() || '';
+    const githubProfile = formData.get('githubProfile')?.toString() || '';
+    const twitterHandle = formData.get('twitterHandle')?.toString() || '';
+    const title = formData.get('title')?.toString() || '';
+    const description = formData.get('description')?.toString() || '';
+    const talkLength = formData.get('talkLength')?.toString() || '';
+    const talkLevel = formData.get('talkLevel')?.toString() || '';
+    const topicsRaw = formData.get('topics')?.toString() || '[]';
+    const topics = JSON.parse(topicsRaw);
+
+    submitterInfo = `${firstName} ${lastName} (${email})`;
 
     // Send notification with submission details
     await sendPlatformNotification({
@@ -93,14 +56,20 @@ async function handler(
     });
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !linkedinProfile || !jobTitle || !biography|| !title || !description) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!firstName || !lastName || !email || !linkedinProfile || !jobTitle || !biography || !title || !description) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     if (!topics || topics.length === 0) {
-      return res.status(400).json({ error: 'Please select at least one topic' });
+      return new Response(JSON.stringify({ error: 'Please select at least one topic' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
-    
+
     // Convert talk length to integer
     const durationMinutes = parseInt(talkLength || '0', 10);
 
@@ -118,15 +87,14 @@ async function handler(
     let speakerDoc;
 
     // Handle image upload to Sanity if present
-    const speakerImage = Array.isArray(files.speakerImage) 
-      ? files.speakerImage[0] 
-      : files.speakerImage;
+    const speakerImage = formData.get('speakerImage') as File | null;
     let imageAsset = null;
 
-    if (speakerImage && speakerImage.filepath) {
-      // Upload the image to Sanity
-      imageAsset = await sanityClient.assets.upload('image', createReadStream(speakerImage.filepath), {
-        filename: path.basename(speakerImage.originalFilename || 'speaker-image.jpg'),
+    if (speakerImage && speakerImage.size > 0) {
+      // Convert File to buffer for Sanity upload
+      const buffer = Buffer.from(await speakerImage.arrayBuffer());
+      imageAsset = await sanityClient.assets.upload('image', buffer, {
+        filename: speakerImage.name || 'speaker-image.jpg',
       });
     }
 
@@ -159,13 +127,13 @@ async function handler(
           }
         };
       }
-      
+
       // Add social links if provided
       if (githubProfile) {
         speakerDoc.github = `https://github.com/${githubProfile}`;
       }
-      if (typeof twitterHandle === 'string') {
-        speakerDoc.twitter = `https://twitter.com/${(twitterHandle).replace('@', '')}`;
+      if (twitterHandle) {
+        speakerDoc.twitter = `https://twitter.com/${twitterHandle.replace('@', '')}`;
       }
 
       // Create the speaker in Sanity
@@ -180,23 +148,23 @@ async function handler(
         _type: 'reference',
         _ref: existingSpeakers._id
       };
-      
+
       // Update the existing speaker with new information if provided
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateFields = {} as any;
-      
+
       if (jobTitle) updateFields.title = jobTitle;
       if (biography) updateFields.bio = biography;
       if (linkedinProfile) updateFields.linkedin = linkedinProfile;
-      
+
       if (githubProfile) {
         updateFields.github = `https://github.com/${githubProfile}`;
       }
-      
-      if (typeof twitterHandle === 'string') {
-        updateFields.twitter = `https://twitter.com/${(twitterHandle).replace('@', '')}`;
+
+      if (twitterHandle) {
+        updateFields.twitter = `https://twitter.com/${twitterHandle.replace('@', '')}`;
       }
-      
+
       // Update image if a new one was uploaded
       if (imageAsset) {
         updateFields.image = {
@@ -207,7 +175,7 @@ async function handler(
           }
         };
       }
-      
+
       // Only update if there are fields to update
       if (Object.keys(updateFields).length > 0) {
         await sanityClient.patch(existingSpeakers._id)
@@ -224,7 +192,7 @@ async function handler(
         current: talkId
       },
       title,
-      bio:biography,
+      bio: biography,
       description,
       durationMinutes,
       level: talkLevel,
@@ -234,7 +202,7 @@ async function handler(
       submittedAt: new Date().toISOString(),
     };
 
-    const { _id } =await sanityClient.create(talkDoc);
+    const { _id } = await sanityClient.create(talkDoc);
 
     // Send success notification
     await sendPlatformNotification({
@@ -245,36 +213,23 @@ async function handler(
       url_title: 'View Submission',
     });
 
-    return res.status(200).json({ success: true, message: 'Talk submitted successfully' });
+    return new Response(JSON.stringify({ success: true, message: 'Talk submitted successfully' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error submitting talk:', error);
-    
-    // Get form data for error notification if possible
-    let submitterInfo = 'Unknown user';
-    try {
-      const [errorFields] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
-        form.parse(req, (err: unknown, fields: formidable.Fields, files: formidable.Files) => {
-          if (err) reject(err);
-          resolve([fields, files]);
-        });
-      });
-      
-      if (errorFields.firstName && errorFields.lastName && errorFields.email) {
-        submitterInfo = `${errorFields.firstName} ${errorFields.lastName} (${errorFields.email})`;
-      }
-    } catch (formError) {
-      console.error('Could not parse form data for error notification:', formError);
-    }
-    
+
     // Send failure notification with submitter info
     await sendPlatformNotification({
       title: 'CFP Submission Failed',
       message: `Error processing submission from ${submitterInfo}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       priority: 2,
     });
-    
-    return res.status(500).json({ error: 'Failed to submit talk' });
+
+    return new Response(JSON.stringify({ error: 'Failed to submit talk' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

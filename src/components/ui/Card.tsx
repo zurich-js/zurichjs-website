@@ -1,7 +1,5 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, Sparkles } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
 
 import type { Event } from '@/sanity/queries';
 
@@ -32,15 +30,14 @@ export default function Card({
         className="bg-white rounded-lg overflow-hidden group"
         {...props}
       >
-        <Link href={`/events/${eventItem.id}`} className="block">
+        <a href={`/events/${eventItem.id}`} className="block">
           <div className="relative h-64 w-full">
             {eventItem.image ? (
               <div className="overflow-hidden size-full">
-                  <Image
+                  <img
                       src={eventItem.image as string}
                       alt={`${eventItem.title} - ZurichJS event`}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out w-full h-full absolute inset-0"
                   />
               </div>
             ) : (
@@ -94,7 +91,7 @@ export default function Card({
               </div>
             )}
           </div>
-        </Link>
+        </a>
       </motion.div>
     );
   }
@@ -108,13 +105,12 @@ export default function Card({
         className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl"
         {...props}
       >
-        <Link href={`/speakers/${speakerItem.id}`} className="block">
+        <a href={`/speakers/${speakerItem.id}`} className="block">
           <div className="relative h-64 w-full">
-            <Image
+            <img
               src={speakerItem.image || '/images/speakers/default.jpg'}
               alt={`${speakerItem.name} - ZurichJS speaker`}
-              fill
-              className="object-cover object-center"
+              className="object-cover object-center w-full h-full absolute inset-0"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
             <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -137,7 +133,7 @@ export default function Card({
               </div>
             )}
           </div>
-        </Link>
+        </a>
       </motion.div>
     );
   }

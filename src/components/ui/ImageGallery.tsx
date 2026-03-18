@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, Download, Share2, Sparkles } from 'lucide-react';
-import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 
 import { generateOptimizedImage, generateSizes } from '../../utils/thumbnailGenerator';
@@ -217,17 +216,14 @@ export default function ImageGallery({
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
               </div>
             )}
-            <Image
+            <img
               src={generateOptimizedImage(photos[currentIndex].url, 'modal')}
               alt={`${eventTitle} - Photo ${currentIndex + 1}`}
               width={1200}
               height={800}
               className="max-w-full max-h-[calc(100vh-240px)] object-contain rounded-lg"
-              sizes={generateSizes()}
               onLoad={handleImageLoad}
               onError={handleImageError}
-              priority
-              quality={90}
             />
           </motion.div>
         </AnimatePresence>
@@ -249,13 +245,12 @@ export default function ImageGallery({
                       : 'border-transparent hover:border-white/50'
                   }`}
                 >
-                  <Image
+                  <img
                     src={generateOptimizedImage(photo.url, 'gallery')}
                     alt={`Thumbnail ${index + 1}`}
                     width={64}
                     height={64}
                     className="w-full h-full object-cover"
-                    sizes="64px"
                   />
                 </button>
               ))}

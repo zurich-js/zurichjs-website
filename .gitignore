@@ -16,6 +16,7 @@ package-lock.json
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -38,3 +39,6 @@ yarn-error.log*
 next-env.d.ts
 
 .idea/
+
+# Local Netlify folder
+.netlify

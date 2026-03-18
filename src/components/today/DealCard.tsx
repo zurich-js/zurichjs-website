@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 interface Deal {
@@ -119,12 +118,12 @@ export default function DealCard({ deal }: DealCardProps) {
               </div>
             </div>
             
-            <Link
+            <a
               href={deal.workshopHref}
               className="block bg-js hover:bg-js-dark text-black font-black py-4 px-6 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg"
             >
               💎 GET {deal.discount} OFF NOW!
-            </Link>
+            </a>
           </>
         ) : (
           <div className="bg-gray-500 text-white py-4 px-6 rounded-2xl font-bold">

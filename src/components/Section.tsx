@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 type SectionVariant = 'gradient' | 'js' | 'js-dark' | 'zurich' | 'black' | 'white' | 'gray' | 'transparent';
 type SectionPadding = 'sm' | 'md' | 'lg' | 'none';
@@ -37,33 +36,15 @@ export default function Section({
   variant = 'white',
   className = '',
   containerClassName = '',
-  animate = true,
   padding = 'md',
   id = ''
 }: SectionProps) {
-  const baseStyles = 'w-full';
-  const containerStyles = 'container mx-auto px-6';
-
-  if (animate) {
-    return (
-      <motion.section
-        id={id}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className={`${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${className}`}
-      >
-        <div className={`${containerStyles} ${containerClassName} h-full`}>
-          {children}
-        </div>
-      </motion.section>
-    );
-  }
-
   return (
-    <section id={id} className={`${baseStyles} ${variantStyles[variant]} ${paddingStyles[padding]} ${className}`}>
-      <div className={`${containerStyles} ${containerClassName}`}>
+    <section
+      id={id}
+      className={`w-full ${variantStyles[variant]} ${paddingStyles[padding]} ${className} animate-fade-in`}
+    >
+      <div className={`container mx-auto px-6 ${containerClassName}`}>
         {children}
       </div>
     </section>

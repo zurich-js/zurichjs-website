@@ -1,0 +1,14 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+export const prerender = false;
+---
+
+<PageLayout title="Community Survey | ZurichJS" description="Complete your ZurichJS community profile." noindex={true}>
+  <div id="survey-app">
+    <!-- Survey React island will be mounted here -->
+    <div class="container mx-auto px-4 py-8 pt-16">
+      <h1 class="text-3xl font-bold mb-4">Community Survey</h1>
+      <p class="text-gray-600">Loading survey...</p>
+    </div>
+  </div>
+</PageLayout>

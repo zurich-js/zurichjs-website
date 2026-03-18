@@ -1,21 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 import Stripe from 'stripe';
 
-
+export const prerender = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-08-27.basil',
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { priceId, quantity, customerEmail, couponCode, mode } = req.body;
+export async function POST(context: APIContext) {
+  const { priceId, quantity, customerEmail, couponCode, mode } = await context.request.json();
 
   if (!priceId || !quantity || !customerEmail) {
-    return res.status(400).json({ error: 'Missing required fields: priceId, quantity, customerEmail' });
+    return new Response(JSON.stringify({ error: 'Missing required fields: priceId, quantity, customerEmail' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -44,13 +43,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
+    const origin = context.request.headers.get('origin') || '';
+
     // Create Checkout Session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       line_items: lineItems,
       mode: 'payment',
       customer_email: customerEmail, // This is the correct parameter for receipt email
-      success_url: `${req.headers.origin}/admin/tap-to-pay?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.origin}/admin/tap-to-pay?payment=cancelled`,
+      success_url: `${origin}/admin/tap-to-pay?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/admin/tap-to-pay?payment=cancelled`,
       metadata: {
         productId: product.id,
         productName: product.name,
@@ -68,9 +69,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     };
 
     // For iOS devices, optimize the checkout experience
-    const userAgent = req.headers['user-agent'] || '';
+    const userAgent = context.request.headers.get('user-agent') || '';
     const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-    
+
     if (isIOS) {
       // Optimize for mobile experience
       sessionParams.billing_address_collection = 'auto';
@@ -81,9 +82,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       url: session.url,
       sessionId: session.id,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: unknown) {
     console.error('Error creating checkout session:', err);
@@ -91,8 +95,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
       message = (err as { message: string }).message;
     }
-    return res.status(500).json({ error: message });
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

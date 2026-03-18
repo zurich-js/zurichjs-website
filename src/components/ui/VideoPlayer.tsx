@@ -1,5 +1,4 @@
 import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
-import Image from 'next/image';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface VideoPlayerProps {
@@ -188,12 +187,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             {/* Thumbnail overlay */}
       {showThumbnail && thumbnail && !thumbnailError && (
         <div className="absolute inset-0 cursor-pointer" onClick={handlePlayClick}>
-          <Image
+          <img
             src={thumbnail}
             alt={title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover w-full h-full absolute inset-0"
             onError={handleThumbnailError}
           />
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

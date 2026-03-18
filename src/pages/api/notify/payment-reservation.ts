@@ -1,14 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 
+export const prerender = false;
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
     const {
       name,
@@ -24,11 +20,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       eventId,
       ticketType,
       coupon,
-    } = req.body;
+    } = await context.request.json();
 
     // Validate required fields
     if (!name || !email || !ticketTitle || !price || !paymentMethod) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Create payment method text for notifications
@@ -36,7 +35,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Create notification title
     const notificationTitle = `New ${paymentMethodText} Reservation: ${ticketTitle}`;
-    
+
     // Create notification message with all relevant details
     const notificationMessage = `
       Name: ${name}
@@ -54,8 +53,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       ${coupon ? `Coupon: ${coupon}` : 'No coupon applied'}
       Time: ${new Date().toISOString()}
     `;
-    
-    
+
+
     await sendPlatformNotification({
       title: notificationTitle,
       message: notificationMessage,
@@ -63,20 +62,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       sound: 'incoming',
     });
 
-    // In a real implementation, this would also send emails to:
-    // 1. The user confirming their reservation
-    // 2. The admin team to process the manual payment
-
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       success: true,
       message: 'Notification sent successfully',
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error sending payment reservation notification:', error);
-    return res.status(500).json({
+    return new Response(JSON.stringify({
       error: 'Failed to send notification',
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

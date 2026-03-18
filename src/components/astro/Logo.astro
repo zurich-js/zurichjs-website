@@ -1,0 +1,15 @@
+---
+interface Props {
+  variant?: 'black' | 'white';
+  class?: string;
+}
+
+const { variant = 'black', class: className = '' } = Astro.props;
+const fillColor = variant === 'white' ? '#FFFFFF' : '#000000';
+---
+
+<svg class={className} viewBox="0 0 400 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="0" y="45" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill={fillColor}>
+    ZurichJS
+  </text>
+</svg>

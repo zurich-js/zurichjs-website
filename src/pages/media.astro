@@ -1,0 +1,153 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+
+const placeholderImages = [
+  { id: 1, alt: 'ZurichJS meetup talk', category: 'meetups' },
+  { id: 2, alt: 'Networking at ZurichJS', category: 'networking' },
+  { id: 3, alt: 'Workshop session', category: 'workshops' },
+  { id: 4, alt: 'Speaker presentation', category: 'meetups' },
+  { id: 5, alt: 'Community gathering', category: 'networking' },
+  { id: 6, alt: 'ZurichJS event venue', category: 'meetups' },
+  { id: 7, alt: 'Panel discussion', category: 'meetups' },
+  { id: 8, alt: 'Post-meetup networking', category: 'networking' },
+  { id: 9, alt: 'Hands-on workshop', category: 'workshops' },
+];
+
+const categories = ['all', 'meetups', 'networking', 'workshops'];
+---
+
+<PageLayout
+  title="Media | ZurichJS"
+  description="Photos and videos from ZurichJS events."
+  keywords={['ZurichJS photos', 'JavaScript meetup photos', 'Zurich tech events gallery', 'ZurichJS media']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        Media <span class="bg-white/20 px-2 rounded">Gallery</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Photos and videos from ZurichJS meetups, workshops, and community events.
+      </p>
+    </div>
+  </Section>
+
+  <!-- Filter Bar -->
+  <Section variant="white" padding="sm">
+    <div class="max-w-5xl mx-auto animate-fade-in-up">
+      <div class="flex flex-wrap gap-2 justify-center">
+        {categories.map((category) => (
+          <button
+            class={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              category === 'all'
+                ? 'bg-black text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            data-category={category}
+          >
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </button>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- Gallery Grid -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-6xl mx-auto animate-fade-in-up">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {placeholderImages.map((image, i) => (
+          <div
+            class={`group relative aspect-[4/3] bg-gray-100 rounded-2xl overflow-hidden border border-gray-100 animate-fade-in-up stagger-${Math.min(i + 1, 6)}`}
+            data-gallery-category={image.category}
+          >
+            <!-- Placeholder with pattern -->
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+              <div class="text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mx-auto mb-2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <p class="text-gray-400 text-sm">Photo coming soon</p>
+              </div>
+            </div>
+
+            <!-- Hover overlay -->
+            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end">
+              <div class="p-4 translate-y-full group-hover:translate-y-0 transition-transform">
+                <p class="text-white text-sm font-medium">{image.alt}</p>
+                <span class="inline-block mt-1 px-2 py-0.5 bg-white/20 text-white text-xs rounded-full">
+                  {image.category}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Load More Placeholder -->
+      <div class="text-center mt-12">
+        <p class="text-gray-500 mb-4">More photos will be added as we migrate our gallery.</p>
+        <a
+          href="https://www.meetup.com/zurichjs/photos/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+        >
+          View Photos on Meetup
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Video Section -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-4xl mx-auto text-center animate-fade-in-up">
+      <h2 class="text-3xl font-bold text-gray-900 mb-4">Videos</h2>
+      <p class="text-gray-600 mb-8">Recorded talks and highlights from our events.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          <div class="aspect-video bg-gray-100 flex items-center justify-center">
+            <div class="text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mx-auto mb-2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <p class="text-gray-400 text-sm">Video coming soon</p>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-gray-900">Meetup Highlights</h3>
+            <p class="text-gray-500 text-sm">Recorded talks and event recaps</p>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          <div class="aspect-video bg-gray-100 flex items-center justify-center">
+            <div class="text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 mx-auto mb-2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <p class="text-gray-400 text-sm">Video coming soon</p>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-gray-900">Workshop Recordings</h3>
+            <p class="text-gray-500 text-sm">Hands-on workshop sessions</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- CTA -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Have Photos to Share?</h2>
+      <p class="text-gray-800 text-lg mb-8">
+        Took photos at a ZurichJS event? We would love to feature them in our gallery. Send them our way!
+      </p>
+      <a
+        href="mailto:hello@zurichjs.com?subject=ZurichJS%20Event%20Photos"
+        class="inline-flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition-colors"
+      >
+        Submit Photos
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </Section>
+</PageLayout>

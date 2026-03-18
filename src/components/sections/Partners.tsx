@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 import Section from "@/components/Section";
@@ -99,11 +98,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       onClick={() => handlePartnerClick(partner, 'champion_logo')}
                     >
                       <div className="w-56 h-28 sm:w-64 sm:h-32 lg:w-72 lg:h-36 relative bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                        <Image
+                        <img
                           src={partner.logo}
                           alt={partner.name}
-                          fill
-                          className="object-contain"
+                          className="object-contain w-full h-full absolute inset-0"
                         />
                       </div>
                     </motion.a>
@@ -190,11 +188,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       onClick={() => handlePartnerClick(partner, 'builder_logo')}
                     >
                       <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 relative bg-white p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <Image
+                        <img
                           src={partner.logo}
                           alt={partner.name}
-                          fill
-                          className="object-contain"
+                          className="object-contain w-full h-full absolute inset-0"
                         />
                       </div>
                     </motion.a>
@@ -281,11 +278,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       onClick={() => handlePartnerClick(partner, 'friend_logo')}
                     >
                       <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 relative bg-white p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <Image
+                        <img
                           src={partner.logo}
                           alt={partner.name}
-                          fill
-                          className="object-contain"
+                          className="object-contain w-full h-full absolute inset-0"
                         />
                       </div>
                     </motion.a>
@@ -372,11 +368,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       onClick={() => handlePartnerClick(partner, 'supporter_logo')}
                     >
                       <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 relative bg-white p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                        <Image
+                        <img
                           src={partner.logo}
                           alt={partner.name}
-                          fill
-                          className="object-contain"
+                          className="object-contain w-full h-full absolute inset-0"
                         />
                       </div>
                     </motion.a>
@@ -457,11 +452,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                 aria-label={`Visit ${partner.name} website`}
                 onClick={() => handlePartnerClick(partner, 'regular')}
               >
-                <Image
+                <img
                   src={partner.logo}
                   alt={`${partner.name} logo`}
-                  fill
-                  className="object-contain"
+                  className="object-contain w-full h-full absolute inset-0"
                 />
               </motion.a>
             ))}

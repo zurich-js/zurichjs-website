@@ -1,0 +1,60 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+export const prerender = false;
+---
+
+<PageLayout title="Checkout Success | ZurichJS" description="Your purchase was successful!">
+  <Section variant="white" padding="none" class="min-h-[80vh] flex items-center justify-center">
+    <div class="text-center animate-fade-in-up max-w-lg mx-auto py-16 px-4">
+      <!-- Checkmark icon -->
+      <div class="mb-8 inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-100">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="48"
+          height="48"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-green-600"
+        >
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </div>
+
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Purchase Complete!</h1>
+      <div class="bg-js h-1 w-24 mx-auto mb-6 rounded-full"></div>
+      <p class="text-lg text-gray-600 mb-10">
+        Thank you for your purchase. You'll receive a confirmation email shortly with your order details.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="/profile"
+          class="inline-flex items-center justify-center gap-2 bg-gray-900 text-white px-8 py-3 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-200 hover:shadow-lg"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          View Profile
+        </a>
+        <a
+          href="/events"
+          class="inline-flex items-center justify-center gap-2 border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Browse Events
+        </a>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

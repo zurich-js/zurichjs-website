@@ -1,6 +1,4 @@
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 interface WorkshopInstructor {
@@ -126,7 +124,7 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
         🔥 {deal.discount} OFF
       </div>
 
-      <Link href={`${deal.workshopHref}?coupon=${deal.couponCode}`} className="flex flex-col h-full">
+      <a href={`${deal.workshopHref}?coupon=${deal.couponCode}`} className="flex flex-col h-full">
         {/* Workshop Image/Icon */}
         <div className="relative h-32 sm:h-48 overflow-hidden">
           <div
@@ -136,12 +134,10 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-[1]"></div>
             {deal.image ? (
-              <Image 
+              <img
                 src={deal.image}
                 alt={deal.title}
-                fill
-                className="object-cover"
-                priority
+                className="object-cover w-full h-full absolute inset-0"
               />
             ) : (
               <div 
@@ -200,11 +196,10 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                   {deal.instructors.length === 1 ? (
                     <>
                       <div className="relative mr-2 w-6 h-6 overflow-hidden rounded-full border border-gray-200">
-                        <Image
+                        <img
                           src={`${deal.instructors[0].image}?h=50`}
                           alt={deal.instructors[0].name}
-                          fill
-                          className="object-cover"
+                          className="object-cover w-full h-full absolute inset-0"
                         />
                       </div>
                       <div className="flex flex-col">
@@ -217,11 +212,10 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                       <div className="flex -space-x-1 mr-2">
                         {deal.instructors.slice(0, 2).map((instructor) => (
                           <div key={instructor.id} className="relative w-6 h-6 overflow-hidden rounded-full border border-gray-200 bg-white">
-                            <Image
+                            <img
                               src={`${instructor.image}?h=50`}
                               alt={instructor.name}
-                              fill
-                              className="object-cover"
+                              className="object-cover w-full h-full absolute inset-0"
                             />
                           </div>
                         ))}
@@ -267,7 +261,7 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
             </div>
           </div>
         </div>
-      </Link>
+      </a>
     </div>
   );
 }

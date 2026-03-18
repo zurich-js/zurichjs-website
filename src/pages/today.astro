@@ -1,0 +1,97 @@
+---
+export const prerender = false;
+
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+import { Image } from 'astro:assets';
+import { getEventById } from '../sanity/queries/events';
+import TodayHero from '../components/today/TodayHero';
+import TodayCard from '../components/today/TodayCard';
+import ScheduleCard from '../components/today/ScheduleCard';
+import TodaysSponsors from '../components/today/TodaysSponsors';
+import VereinInquiry from '../components/today/VereinInquiry';
+import StickyActions from '../components/today/StickyActions';
+
+let upcomingEvent = null;
+try {
+  upcomingEvent = await getEventById('march-2026');
+} catch (error) {
+  console.error('Error fetching event:', error);
+}
+
+const confSpeakers = [
+  { name: 'Daniel Roe', title: 'Nuxt Core Team Lead @ Vercel', avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/88af311d-3b9b-40f0-a6c7-bf8e64e72fbb/profile.png' },
+  { name: 'Dominik Dorfmeister', title: 'Maintainer of TanStack Query @ Sentry', avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/52d2ca7b-9b1c-443e-868a-47e03ab0948b/profile.png' },
+  { name: 'Ramona Schwering', title: 'GDE for Web Technologies @ Auth0', avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/9f322e13-eb71-4cd6-9108-5c3cbc913378/profile.png' },
+  { name: 'Scott Tolinski', title: 'Co-Host of Syntax.fm @ Sentry', avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/1997857c-7093-44e6-88d6-87a4c33bb836/profile.png' },
+  { name: 'Tejas Kumar', title: 'ConTejas Host @ IBM', avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/fc996038-c5cd-4029-bfd3-9c73fac48a75/profile.png' },
+];
+
+const confTicketUrl = 'https://conf.zurichjs.com?utm_source=zurichjs&utm_medium=today_page&utm_campaign=conf_2026';
+---
+
+<PageLayout
+  title={`${upcomingEvent?.title || 'Today'} - Today | ZurichJS`}
+  description={upcomingEvent?.description || "Your hub for today's ZurichJS event"}
+>
+  <Section variant="gradient" padding="lg" class="min-h-screen pb-24 md:pb-8 px-3 sm:px-4">
+    <div class="space-y-10 max-w-screen-xl mx-auto">
+
+      <!-- ZurichJS Conf 2026 -->
+      <div class="bg-black rounded-3xl p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div class="flex-1">
+            <p class="text-sm text-white mb-2">11 SEPT 2026</p>
+            <h2 class="text-3xl font-black text-white mb-2">ZurichJS Conf 2026</h2>
+            <p class="text-white text-sm max-w-xl">The first-ever ZurichJS Conference! 1 day, 1 track, world-renowned experts.</p>
+            <p class="text-blue-200 text-xs mt-1">Warm-up events & workshops included</p>
+          </div>
+          <div class="flex flex-col items-start sm:flex-row sm:items-center gap-4">
+            <div class="flex -space-x-3">
+              {confSpeakers.map((speaker) => (
+                <div class="w-14 h-14 rounded-full bg-white border-2 border-white overflow-hidden" title={`${speaker.name} - ${speaker.title}`}>
+                  <Image src={speaker.avatar} alt={speaker.name} width={56} height={56} class="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+            <a
+              href={confTicketUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="w-full sm:w-fit bg-yellow-400 font-bold py-3 px-6 rounded-xl text-center hover:bg-yellow-300 transition-colors shadow-lg whitespace-nowrap"
+            >
+              Grab your ticket
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event Hero + Schedule -->
+      {upcomingEvent && (
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <TodayHero client:load event={upcomingEvent} />
+          <TodayCard client:load className="h-full">
+            <ScheduleCard client:load event={upcomingEvent} />
+          </TodayCard>
+        </div>
+      )}
+
+      <!-- Sponsors -->
+      <div class="mt-10">
+        <TodayCard client:visible>
+          <TodaysSponsors client:visible />
+        </TodayCard>
+      </div>
+
+      <!-- Verein -->
+      <div class="mt-10">
+        <TodayCard client:visible>
+          <VereinInquiry client:visible />
+        </TodayCard>
+      </div>
+    </div>
+
+    <!-- Sticky actions -->
+    <StickyActions client:load />
+  </Section>
+</PageLayout>

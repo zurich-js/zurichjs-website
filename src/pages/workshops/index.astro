@@ -1,0 +1,177 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+import { getUpcomingWorkshops, getWorkshops } from '../../data/workshops';
+import { getSpeakerById } from '../../sanity/queries/speakers';
+import { Image } from 'astro:assets';
+
+const allWorkshops = getWorkshops();
+const upcomingWorkshops = getUpcomingWorkshops();
+
+// Fetch speaker data for all workshops
+const workshopsWithSpeakers = await Promise.all(
+  allWorkshops.map(async (workshop) => {
+    const speaker = await getSpeakerById(workshop.speakerId);
+    return { ...workshop, speaker };
+  })
+);
+
+const confirmedWorkshops = workshopsWithSpeakers.filter(w => w.state === 'confirmed');
+const interestWorkshops = workshopsWithSpeakers.filter(w => w.state === 'interest');
+---
+
+<PageLayout
+  title="Workshops | ZurichJS"
+  description="JavaScript and TypeScript workshops in Zurich."
+  keywords={['JavaScript workshops Zurich', 'TypeScript training', 'web development workshop', 'coding workshop Switzerland']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        Our <span class="bg-white/20 px-2 rounded">Workshops</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Hands-on JavaScript and TypeScript workshops led by industry experts. Level up your skills with practical, project-based learning.
+      </p>
+    </div>
+  </Section>
+
+  <!-- Confirmed Workshops -->
+  <Section variant="white" padding="lg">
+    <div class="animate-fade-in-up">
+      <h2 class="text-3xl font-bold mb-8">Confirmed Workshops</h2>
+
+      {confirmedWorkshops.length === 0 ? (
+        <div class="text-center py-12 bg-gray-50 rounded-2xl">
+          <p class="text-gray-500 text-lg">No confirmed workshops at the moment. Check back soon!</p>
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {confirmedWorkshops.map((workshop) => (
+            <a href={`/workshops/${workshop.id}`} class="group block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+              {workshop.image ? (
+                <div class="aspect-video overflow-hidden bg-gray-100">
+                  <Image src={workshop.image} alt={workshop.title} width={600} height={338} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                </div>
+              ) : (
+                <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                </div>
+              )}
+              <div class="p-6">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Confirmed
+                  </span>
+                  {workshop.tag && (
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                      {workshop.tag}
+                    </span>
+                  )}
+                </div>
+                <h3 class="text-xl font-bold mb-1 group-hover:text-blue-600 transition-colors">{workshop.title}</h3>
+                {workshop.subtitle && (
+                  <p class="text-sm text-gray-500 mb-3">{workshop.subtitle}</p>
+                )}
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{workshop.description}</p>
+
+                <div class="space-y-1.5 text-sm text-gray-600 mb-4">
+                  <p class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    {workshop.dateInfo}
+                  </p>
+                  <p class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    {workshop.timeInfo}
+                  </p>
+                  <p class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    {workshop.locationInfo}
+                  </p>
+                  <p class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Max {workshop.maxAttendees} attendees
+                  </p>
+                </div>
+
+                {workshop.speaker && (
+                  <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+                    <Image src={workshop.speaker.image} alt={workshop.speaker.name} width={32} height={32} class="w-8 h-8 rounded-full object-cover" />
+                    <div>
+                      <p class="text-sm font-medium">{workshop.speaker.name}</p>
+                      {workshop.speaker.title && (
+                        <p class="text-xs text-gray-500">{workshop.speaker.title}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </Section>
+
+  <!-- Interest / Upcoming Workshops -->
+  {interestWorkshops.length > 0 && (
+    <Section variant="gray" padding="lg">
+      <div class="animate-fade-in-up">
+        <h2 class="text-3xl font-bold mb-4">Gauging Interest</h2>
+        <p class="text-gray-600 mb-8">These workshops are in the planning phase. Show your interest and help us decide which to run next!</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {interestWorkshops.map((workshop) => (
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-6">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Gauging Interest
+                </span>
+                {workshop.tag && (
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                    {workshop.tag}
+                  </span>
+                )}
+              </div>
+              <h3 class="text-lg font-bold mb-1">{workshop.title}</h3>
+              {workshop.subtitle && (
+                <p class="text-sm text-gray-500 mb-3">{workshop.subtitle}</p>
+              )}
+              <p class="text-gray-600 text-sm mb-4 line-clamp-3">{workshop.description}</p>
+
+              {workshop.speaker && (
+                <div class="flex items-center gap-3 pt-4 border-t border-gray-100">
+                  <Image src={workshop.speaker.image} alt={workshop.speaker.name} width={32} height={32} class="w-8 h-8 rounded-full object-cover" />
+                  <div>
+                    <p class="text-sm font-medium">{workshop.speaker.name}</p>
+                    {workshop.speaker.title && (
+                      <p class="text-xs text-gray-500">{workshop.speaker.title}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </Section>
+  )}
+
+  <!-- CTA -->
+  <Section variant="white" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Want to Lead a Workshop?</h2>
+      <p class="text-gray-600 mb-6">
+        We are looking for experienced developers to lead hands-on workshops. If you have expertise to share, we'd love to hear from you.
+      </p>
+      <a
+        href="/cfp"
+        class="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+      >
+        Propose a Workshop
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </Section>
+</PageLayout>

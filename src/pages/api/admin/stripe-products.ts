@@ -1,17 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 import Stripe from 'stripe';
 
-
+export const prerender = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-08-27.basil',
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function GET(_context: APIContext) {
   try {
     // Fetch all active products
     const products = await stripe.products.list({
@@ -49,15 +45,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Filter out products without prices
     const validProducts = productsWithPrices.filter(product => product.prices.length > 0);
 
-    return res.status(200).json(validProducts);
+    return new Response(JSON.stringify(validProducts), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Error fetching Stripe products:', err);
     let message = 'Unknown error';
     if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
       message = (err as { message: string }).message;
     }
-    return res.status(500).json({ error: message });
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/nextjs";
+import { useUser } from "@clerk/astro/react";
 
 // Define the expected shape of survey data
 interface SurveyData {

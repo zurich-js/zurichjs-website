@@ -1,31 +1,21 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 
+export const prerender = false;
 
-type ResponseData = {
-  success: boolean;
-  message: string;
-}
-
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData>
-) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } = req.body;
-    
+    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } = await context.request.json();
+
     // Basic validation
     if (!companyName || !contactName || !email) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Missing required fields' 
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Missing required fields'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -49,20 +39,24 @@ async function handler(
 
     // Send the notification
     await sendPlatformNotification(notificationMessage);
-    
+
     // Return success response
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Partnership inquiry submitted successfully' 
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Partnership inquiry submitted successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
-    
+
   } catch (error) {
     console.error('Partnership inquiry error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Failed to submit partnership inquiry' 
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Failed to submit partnership inquiry'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

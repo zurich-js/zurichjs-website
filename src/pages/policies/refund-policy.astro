@@ -1,0 +1,75 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+---
+
+<PageLayout
+  title="Refund Policy | ZurichJS"
+  description="ZurichJS Refund Policy for workshops, events, and merchandise."
+  keywords={['ZurichJS', 'JavaScript Zurich', 'refund policy', 'ticket refund', 'workshop refund', 'merchandise']}
+>
+  <Section variant="white" padding="lg">
+    <div class="animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">Refund Policy</h1>
+      <p class="text-gray-500 mb-8">Our policies for refunds on workshops, events, and merchandise.</p>
+
+      <div class="space-y-8">
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Workshop &amp; Event Tickets</h2>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            We understand that plans can change. Below is our policy for handling ticket refunds and transfers for paid ZurichJS workshops and events.
+          </p>
+
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Ticket Transfers</h3>
+          <p class="text-gray-700 leading-relaxed mb-4">
+            If you are unable to attend an event, you may transfer your ticket to another person at no additional cost. To arrange a transfer, please email us at
+            <a href="mailto:hello@zurichjs.com" class="text-yellow-600 hover:text-yellow-700 underline">hello@zurichjs.com</a>
+            with the name and email address of the new attendee at least 48 hours before the event.
+          </p>
+
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Refund Exceptions</h3>
+          <p class="text-gray-700 leading-relaxed mb-3">
+            While tickets are generally non-refundable, we offer full refunds in the following circumstances:
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700 leading-relaxed mb-4">
+            <li><strong>Event cancellation:</strong> If ZurichJS cancels an event, all ticket holders will receive a full refund.</li>
+            <li><strong>Significant date or venue change:</strong> If the event date or location changes substantially and you can no longer attend, you are entitled to a full refund.</li>
+            <li><strong>Duplicate purchase:</strong> If you accidentally purchase multiple tickets, we will refund the duplicates.</li>
+          </ul>
+
+          <h3 class="text-xl font-bold text-gray-900 mb-3">Processing</h3>
+          <p class="text-gray-700 leading-relaxed">
+            Approved refunds will be processed within 10 business days and returned to the original payment method. To request a refund, please email
+            <a href="mailto:hello@zurichjs.com" class="text-yellow-600 hover:text-yellow-700 underline">hello@zurichjs.com</a>
+            with your order confirmation number and the reason for your request.
+          </p>
+        </section>
+
+        <section>
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">T-Shirt &amp; Merchandise</h2>
+          <p class="text-gray-700 leading-relaxed mb-3">
+            For t-shirts and other ZurichJS merchandise:
+          </p>
+          <ul class="list-disc list-inside space-y-2 text-gray-700 leading-relaxed">
+            <li>Merchandise orders can be cancelled for a full refund before they are shipped.</li>
+            <li>Once an item has been shipped, refunds are only available if the item arrives damaged or defective.</li>
+            <li>Size exchanges may be accommodated subject to stock availability. Please contact us within 14 days of receiving your order.</li>
+            <li>Custom or personalized items are non-refundable.</li>
+          </ul>
+          <p class="text-gray-700 leading-relaxed mt-3">
+            For all merchandise-related inquiries, please contact
+            <a href="mailto:hello@zurichjs.com" class="text-yellow-600 hover:text-yellow-700 underline">hello@zurichjs.com</a>.
+          </p>
+        </section>
+      </div>
+
+      <hr class="my-8 border-gray-200" />
+
+      <p class="text-sm text-gray-400 mb-6">Last updated: March 2026</p>
+
+      <a href="/" class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-medium">
+        &larr; Back to Home
+      </a>
+    </div>
+  </Section>
+</PageLayout>

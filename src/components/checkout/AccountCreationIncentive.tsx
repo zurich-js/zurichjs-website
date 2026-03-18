@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/astro/react';
 import { motion } from 'framer-motion';
 import { Gift, ArrowRight, Users, Calendar, TicketCheck } from 'lucide-react';
 

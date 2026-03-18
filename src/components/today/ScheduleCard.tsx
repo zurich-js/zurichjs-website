@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { Event } from '@/sanity/queries';
 
 interface ScheduleCardProps {
@@ -188,13 +186,13 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
                         {item.speakerIds.map((speakerId, speakerIndex) => {
                           const speakerName = item.speaker!.split(', ')[speakerIndex];
                           return (
-                            <Link 
+                            <a
                               key={speakerId}
                               href={`/speakers/${speakerId}`}
                               className="text-zurich font-bold hover:text-zurich/80 transition-colors underline"
                             >
                               {speakerName}
-                            </Link>
+                            </a>
                           );
                         })}
                       </div>

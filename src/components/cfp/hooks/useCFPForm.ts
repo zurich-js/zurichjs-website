@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, type ChangeEvent } from 'react';
 
 import { STORAGE_KEY } from '../constants';
 import { FormState, ValidationErrors, initialFormState } from '../types';

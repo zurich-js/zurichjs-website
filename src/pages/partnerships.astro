@@ -1,0 +1,191 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+import Partners from '../components/sections/Partners';
+import { getPartners, getSponsorshipPartners } from '../data';
+
+const partners = getPartners();
+const sponsorshipPartners = getSponsorshipPartners();
+
+const tiers = [
+  {
+    name: 'Community Champion',
+    price: 'CHF 2,000+/year',
+    color: 'from-yellow-400 to-yellow-500',
+    badge: 'bg-yellow-100 text-yellow-800',
+    benefits: [
+      'Logo on all event pages and slides',
+      'Dedicated shoutout at every meetup',
+      'Social media feature (quarterly)',
+      'Job postings shared with community',
+      'Booth/table at events',
+      'Priority venue hosting',
+      '5-minute sponsor slot at meetups',
+    ],
+  },
+  {
+    name: 'Community Builder',
+    price: 'CHF 1,000+/year',
+    color: 'from-gray-300 to-gray-400',
+    badge: 'bg-gray-100 text-gray-800',
+    benefits: [
+      'Logo on website and event pages',
+      'Shoutout at meetups',
+      'Social media mention (bi-annual)',
+      'Job postings shared with community',
+      'Booth/table at select events',
+    ],
+  },
+  {
+    name: 'Community Friend',
+    price: 'CHF 500+/year',
+    color: 'from-orange-300 to-orange-400',
+    badge: 'bg-orange-100 text-orange-800',
+    benefits: [
+      'Logo on website',
+      'Thank-you mention at meetups',
+      'Social media mention (annual)',
+      'Job posting (1 per quarter)',
+    ],
+  },
+  {
+    name: 'Community Supporter',
+    price: 'In-kind / CHF 250+',
+    color: 'from-blue-300 to-blue-400',
+    badge: 'bg-blue-100 text-blue-800',
+    benefits: [
+      'Logo on website',
+      'Thank-you mention at meetups',
+      'Great for in-kind contributions (food, swag, licenses)',
+    ],
+  },
+];
+---
+
+<PageLayout
+  title="Partnerships | ZurichJS"
+  description="Partner with ZurichJS to reach Zurich's JavaScript developer community."
+  keywords={['ZurichJS partnerships', 'sponsor JavaScript meetup', 'Zurich tech sponsorship', 'developer community sponsor']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        Partner with <span class="bg-white/20 px-2 rounded">ZurichJS</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Reach Zurich's most engaged JavaScript developer community. Support open-source education
+        and connect with top talent.
+      </p>
+    </div>
+  </Section>
+
+  <!-- Why Partner -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Why Partner With Us?</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">
+          ZurichJS is one of the largest and most active JavaScript communities in Switzerland. Partnering
+          with us puts your brand in front of engaged developers who build with the latest technologies.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="w-14 h-14 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Targeted Reach</h3>
+          <p class="text-gray-600 text-sm">Connect directly with JavaScript and TypeScript developers, from juniors to senior architects.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-14 h-14 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Brand Visibility</h3>
+          <p class="text-gray-600 text-sm">Your logo on our website, event pages, social media, and mentioned at every meetup.</p>
+        </div>
+        <div class="text-center">
+          <div class="w-14 h-14 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          </div>
+          <h3 class="text-lg font-bold text-gray-900 mb-2">Talent Pipeline</h3>
+          <p class="text-gray-600 text-sm">Access a pool of skilled developers for hiring, with job posting opportunities at events.</p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Partnership Tiers -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-5xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Partnership Tiers</h2>
+        <p class="text-gray-600 max-w-xl mx-auto">
+          Choose the level that works best for your organization. All tiers include logo placement and community recognition.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {tiers.map((tier, i) => (
+          <div class={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-fade-in-up stagger-${i + 1}`}>
+            <div class={`bg-gradient-to-r ${tier.color} p-6`}>
+              <span class={`inline-block px-3 py-1 rounded-full text-xs font-bold ${tier.badge} mb-2`}>
+                {tier.name}
+              </span>
+              <div class="text-2xl font-bold text-white">{tier.price}</div>
+            </div>
+            <div class="p-6">
+              <ul class="space-y-3">
+                {tier.benefits.map((benefit) => (
+                  <li class="flex items-start gap-3 text-gray-700 text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500 shrink-0 mt-0.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- Current Partners -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8 animate-fade-in-up">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Our Current Partners</h2>
+        <p class="text-gray-600 max-w-xl mx-auto">
+          We are proud to work with these organizations that support the Zurich JavaScript community.
+        </p>
+      </div>
+      <Partners client:visible partners={partners} />
+    </div>
+  </Section>
+
+  <!-- CTA -->
+  <Section variant="black" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Become a Partner</h2>
+      <p class="text-gray-300 text-lg mb-8">
+        Interested in partnering with ZurichJS? Let's talk about how we can work together to support
+        the JavaScript community in Zurich.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="mailto:hello@zurichjs.com?subject=ZurichJS%20Partnership%20Inquiry"
+          class="inline-flex items-center justify-center gap-2 bg-js text-black px-6 py-3 rounded-xl font-semibold hover:bg-js-dark transition-colors"
+        >
+          Contact Us About Partnerships
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+        </a>
+        <a
+          href="/about"
+          class="inline-flex items-center justify-center gap-2 bg-white/10 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+        >
+          Learn About ZurichJS
+        </a>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

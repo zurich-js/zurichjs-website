@@ -1,5 +1,4 @@
 import { AlertTriangle, RefreshCw, Mail } from 'lucide-react';
-import { useRouter } from 'next/router';
 import { useState } from 'react';
 
 import Button from '@/components/ui/Button';
@@ -14,7 +13,6 @@ export default function CancelledCheckout({ workshopId, workshopTitle }: Cancell
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,14 +43,9 @@ export default function CancelledCheckout({ workshopId, workshopTitle }: Cancell
 
   const handleTryAgain = () => {
     // Remove the canceled query parameter
-    const { pathname, query } = router;
-    const newQuery = { ...query };
-    delete newQuery.canceled;
-    
-    router.replace({
-      pathname,
-      query: newQuery,
-    }, undefined, { shallow: true });
+    const url = new URL(window.location.href);
+    url.searchParams.delete('canceled');
+    window.location.href = url.toString();
   };
 
   if (submitted) {

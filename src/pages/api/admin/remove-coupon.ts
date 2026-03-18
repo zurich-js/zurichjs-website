@@ -1,7 +1,6 @@
-import { getAuth } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 
-
+export const prerender = false;
 
 interface Coupon {
   code: string;
@@ -10,21 +9,23 @@ interface Coupon {
   isActive: boolean;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { userId } = getAuth(req);
+    const { userId } = context.locals.auth();
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    const { userId: targetUserId, couponCode } = req.body;
+    const { userId: targetUserId, couponCode } = await context.request.json();
 
     if (!targetUserId || !couponCode) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // First, fetch the current user data to get existing metadata
@@ -66,11 +67,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       throw new Error('Failed to update user metadata');
     }
 
-    return res.status(200).json({ success: true });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error removing coupon:', error);
-    return res.status(500).json({ error: 'Failed to remove coupon' });
+    return new Response(JSON.stringify({ error: 'Failed to remove coupon' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

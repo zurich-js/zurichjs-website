@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 
+export const prerender = false;
 
 interface PlatformNotification {
   title: string;
@@ -46,31 +46,30 @@ interface PlatformNotification {
   };
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const notification: PlatformNotification = req.body;
-    
+    const notification: PlatformNotification = await context.request.json();
+
     // Validate required fields
     if (!notification.title || !notification.message || !notification.type) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
-    
+
     // Set default priority if not provided
     if (!notification.priority) {
       notification.priority = 'normal';
     }
-    
+
     // Map priority strings to numbers for the notification system
     const priorityMap = {
       'low': 0,
-      'normal': 1, 
+      'normal': 1,
       'high': 2
     };
-    
+
     // Log detailed data for debugging (especially useful for feedback)
     if (notification.type === 'event' && notification.feedbackData) {
       console.log('Detailed feedback submission:', {
@@ -80,7 +79,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         timestamp: new Date().toISOString()
       });
     }
-    
+
     // Log Tap to Pay transactions for audit trail
     if (notification.type === 'tap_to_pay_success') {
       console.log('Tap to Pay transaction completed:', {
@@ -88,7 +87,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         notification: notification,
       });
     }
-    
+
     // Send the notification using the real notification system
     await sendPlatformNotification({
       title: notification.title,
@@ -96,12 +95,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       priority: priorityMap[notification.priority],
       slackChannel: notification.slackChannel || undefined
     });
-    
-    return res.status(200).json({ success: true });
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error sending notification:', error);
-    return res.status(500).json({ error: 'Failed to send notification' });
+    return new Response(JSON.stringify({ error: 'Failed to send notification' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

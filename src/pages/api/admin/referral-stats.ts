@@ -1,7 +1,7 @@
-import { clerkClient } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
+import { clerkClient } from '@clerk/astro/server';
 
-
+export const prerender = false;
 
 interface ReferralData {
   userId: string;
@@ -21,14 +21,10 @@ interface UserReferralMetadata {
   };
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function GET(_context: APIContext) {
   try {
     const client = await clerkClient();
-    
+
     // Fetch all users to analyze referral data
     const usersList = await client.users.getUserList({
       limit: 500, // Increase limit to get more users
@@ -65,7 +61,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (userReferrals.length > 0) {
         activeReferrers++;
         totalReferrals += userReferrals.length;
-        
+
         // Calculate credits earned by this user
         const creditsEarned = userReferrals.reduce((sum, ref) => sum + (ref.creditValue || 0), 0);
         totalCreditsEarned += creditsEarned;
@@ -137,16 +133,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       recentReferrals: recentReferrals.slice(0, 10), // Last 10 referrals
     };
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       stats,
       topReferrers: topReferrers.slice(0, 10), // Top 10 referrers
       rewardThresholds,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error fetching referral stats:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

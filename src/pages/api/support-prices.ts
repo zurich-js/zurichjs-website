@@ -1,22 +1,17 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 import Stripe from 'stripe';
 
-
+export const prerender = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-08-27.basil',
 });
 
-const SUPPORT_PRODUCT_ID = process.env.NODE_ENV === 'production' 
+const SUPPORT_PRODUCT_ID = process.env.NODE_ENV === 'production'
   ? 'prod_SkD5vsBEz5iO6W' // You'll fill this in later
   : 'prod_SkCbG5XY7IZzkT'; // Test product ID
 
-
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function GET(_context: APIContext) {
   try {
     // Fetch all prices for the support product
     const prices = await stripe.prices.list({
@@ -49,15 +44,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
     };
 
-    return res.status(200).json(formattedData);
+    return new Response(JSON.stringify(formattedData), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Error fetching support prices:', err);
     let message = 'Unknown error';
     if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
       message = (err as { message: string }).message;
     }
-    return res.status(500).json({ error: message });
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

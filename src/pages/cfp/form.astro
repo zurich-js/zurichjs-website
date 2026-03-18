@@ -1,0 +1,55 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+import CFPForm from '../../components/cfp/CFPForm/index.tsx';
+
+export const prerender = false;
+---
+
+<PageLayout title="Submit a Meetup Talk | ZurichJS" description="Submit your talk proposal for an upcoming ZurichJS meetup. Share your JavaScript knowledge with the community!">
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="animate-fade-in-up max-w-3xl mx-auto">
+      <a href="/cfp" class="text-gray-700 hover:text-gray-900 transition-colors flex items-center gap-1 text-sm font-medium mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        Back to CFP options
+      </a>
+      <h1 class="text-3xl md:text-5xl font-bold mb-4">
+        Submit a <span class="bg-white/20 px-2 rounded">Meetup Talk</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Share your JavaScript knowledge at one of our monthly meetups. We welcome speakers of all experience levels!
+      </p>
+    </div>
+  </Section>
+
+  <!-- Guidelines -->
+  <Section variant="white" padding="md">
+    <div class="max-w-3xl mx-auto">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+          <div class="text-2xl mb-2">🎤</div>
+          <h3 class="font-bold text-sm mb-1">Talk Content</h3>
+          <p class="text-xs text-gray-600">JavaScript, TypeScript, web tech — beginner to advanced topics welcome.</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+          <div class="text-2xl mb-2">⏱️</div>
+          <h3 class="font-bold text-sm mb-1">Talk Length</h3>
+          <p class="text-xs text-gray-600">Lightning (5 min) or standard (25 min). Pick what suits your topic.</p>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+          <div class="text-2xl mb-2">📅</div>
+          <h3 class="font-bold text-sm mb-1">Monthly Meetups</h3>
+          <p class="text-xs text-gray-600">We host meetups every month. Submit anytime — we'll find a slot for you.</p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Form -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-3xl mx-auto">
+      <CFPForm client:load />
+    </div>
+  </Section>
+</PageLayout>

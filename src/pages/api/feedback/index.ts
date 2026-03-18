@@ -1,11 +1,13 @@
+import type { APIContext } from 'astro';
 import crypto from 'crypto';
+import { createClient } from '@sanity/client';
 
-import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from 'next-sanity';
+import { sendPlatformNotification } from '@/lib/notification';
+import { getEventById } from '@/sanity/queries/events';
+import { getSpeakerById } from '@/sanity/queries/speakers';
+import { getTalkById } from '@/sanity/queries/talks';
 
-
-import { getEventById, getSpeakerById, getTalkById } from '@/sanity/queries';
-
+export const prerender = false;
 
 // Types to match the client-side types
 interface ProductFeedbackData {
@@ -47,20 +49,13 @@ interface LegacyFeedbackData {
 
 type FeedbackData = ComprehensiveFeedbackData | LegacyFeedbackData;
 
-type ResponseData = {
-  success: boolean;
-  message: string;
-  feedbackId?: string;
-  error?: string;
-};
-
 // Initialize Sanity client
 const sanityClient = createClient({
     projectId: "viqjrovw",
     dataset: "production",
-    apiVersion: '2024-01-01', // Use the latest API version
-    token: process.env.SANITY_TOKEN,
-    useCdn: false, // We need fresh data and ability to write
+    apiVersion: '2024-01-01',
+    token: import.meta.env.SANITY_TOKEN,
+    useCdn: false,
 });
 
 // Helper function to check if feedback is comprehensive type
@@ -68,39 +63,38 @@ function isComprehensiveFeedback(feedback: FeedbackData): feedback is Comprehens
     return 'selectedEventId' in feedback && 'overallRating' in feedback;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ 
-            success: false,
-            message: 'Method not allowed' 
-        });
-    }
-
+export async function POST(context: APIContext) {
     try {
-        const feedback: FeedbackData = req.body;
+        const feedback: FeedbackData = await context.request.json();
 
         if (isComprehensiveFeedback(feedback)) {
-            return await handleComprehensiveFeedback(feedback, req, res);
+            return await handleComprehensiveFeedback(feedback, context);
         } else {
-            return await handleLegacyFeedback(feedback, req, res);
+            return await handleLegacyFeedback(feedback, context);
         }
     } catch (error) {
         console.error('Error processing feedback:', error);
-        return res.status(500).json({
+        return new Response(JSON.stringify({
             success: false,
             message: 'Error processing feedback',
             error: error instanceof Error ? error.message : 'Unknown error'
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 }
 
-async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+async function handleLegacyFeedback(feedback: LegacyFeedbackData, context: APIContext) {
     const { eventId, talkId, speakerId, rating, comment, submittedAt, productFeedback } = feedback;
 
     if (!eventId || !talkId || !speakerId || !rating || !submittedAt) {
-        return res.status(400).json({ 
+        return new Response(JSON.stringify({
             success: false,
-            message: 'Missing required fields' 
+            message: 'Missing required fields'
+        }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
@@ -108,9 +102,12 @@ async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRe
     const event = await getEventById(eventId);
 
     if (!event) {
-        return res.status(404).json({ 
+        return new Response(JSON.stringify({
             success: false,
-            message: 'Event not found' 
+            message: 'Event not found'
+        }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
@@ -118,9 +115,12 @@ async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRe
     const speaker = await getSpeakerById(speakerId);
 
     if (!speaker) {
-        return res.status(404).json({
+        return new Response(JSON.stringify({
             success: false,
             message: 'Speaker not found. Please contact the administrator.'
+        }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
@@ -131,24 +131,27 @@ async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRe
     );
 
     if (!talk) {
-        return res.status(404).json({
+        return new Response(JSON.stringify({
             success: false,
             message: 'Talk not found. Please contact the administrator.'
+        }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
     // Create a hash of the IP address to help prevent duplicate submissions
-    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const ipAddress = context.request.headers.get('x-forwarded-for') || '';
     const ipHash = crypto
         .createHash('sha256')
-        .update(typeof ipAddress === 'string' ? ipAddress : ipAddress[0] || '')
+        .update(ipAddress)
         .digest('hex');
 
     // Create a browser fingerprint from user agent and other headers
-    const userAgent = req.headers['user-agent'] || '';
-    const accept = req.headers['accept'] || '';
-    const acceptLanguage = req.headers['accept-language'] || '';
-    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const userAgent = context.request.headers.get('user-agent') || '';
+    const accept = context.request.headers.get('accept') || '';
+    const acceptLanguage = context.request.headers.get('accept-language') || '';
+    const acceptEncoding = context.request.headers.get('accept-encoding') || '';
 
     const browserFingerprint = crypto
         .createHash('sha256')
@@ -164,9 +167,9 @@ async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRe
 
     // Check for existing feedback from this user for this talk
     const existingFeedback = await sanityClient.fetch(
-        `*[_type == "feedback" && 
-    references($eventId) && 
-    references($talkId) && 
+        `*[_type == "feedback" &&
+    references($eventId) &&
+    references($talkId) &&
     (ipHash == $ipHash || browserFingerprint == $browserFingerprint)][0]`,
         {
             eventId,
@@ -177,9 +180,12 @@ async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRe
     );
 
     if (existingFeedback) {
-        return res.status(409).json({
+        return new Response(JSON.stringify({
             success: false,
             message: 'You have already submitted feedback for this talk'
+        }), {
+            status: 409,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
@@ -254,39 +260,38 @@ async function handleLegacyFeedback(feedback: LegacyFeedbackData, req: NextApiRe
         const eventTitle = eventObj?.title || 'Unknown Event';
         const talkTitle = talkObj?.title || 'Unknown Talk';
         const speakerName = speakerObj?.name || 'Unknown Speaker';
-        const ratingStars = '⭐'.repeat(rating);
-        
-        await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: `New Feedback Received ${ratingStars}`,
-                message: `Rating: ${rating}/5 stars\nEvent: ${eventTitle}\nTalk: "${talkTitle}" by ${speakerName}\nComment: ${comment.length > 100 ? comment.substring(0, 100) + '...' : comment}`,
-                type: 'other',
-                priority: rating <= 2 ? 'high' : 'normal', // High priority for poor ratings
-            }),
+        const ratingStars = '\u2B50'.repeat(rating);
+
+        await sendPlatformNotification({
+            title: `New Feedback Received ${ratingStars}`,
+            message: `Rating: ${rating}/5 stars\nEvent: ${eventTitle}\nTalk: "${talkTitle}" by ${speakerName}\nComment: ${comment.length > 100 ? comment.substring(0, 100) + '...' : comment}`,
+            priority: rating <= 2 ? 2 : 1,
         });
     } catch (notificationError) {
         console.error('Failed to send feedback notification:', notificationError);
         // Don't fail the feedback submission if notification fails
     }
 
-    return res.status(201).json({ 
+    return new Response(JSON.stringify({
         success: true,
         message: 'Feedback submitted successfully',
         feedbackId: createdFeedback._id
+    }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
     });
 }
 
-async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, req: NextApiRequest, res: NextApiResponse<ResponseData>) {
+async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, context: APIContext) {
     const { selectedEventId, overallRating, foodOptions, drinks, talks, timing, execution, improvements, futureTopics, worthTime, wouldRecommend, dealOfDay, additionalComments, submittedAt } = feedback;
 
     if (!selectedEventId || !overallRating || !submittedAt) {
-        return res.status(400).json({ 
+        return new Response(JSON.stringify({
             success: false,
-            message: 'Missing required fields' 
+            message: 'Missing required fields'
+        }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
@@ -294,24 +299,27 @@ async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, 
     const event = await getEventById(selectedEventId);
 
     if (!event) {
-        return res.status(404).json({ 
+        return new Response(JSON.stringify({
             success: false,
-            message: 'Event not found' 
+            message: 'Event not found'
+        }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
     // Create a hash of the IP address to help prevent duplicate submissions
-    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const ipAddress = context.request.headers.get('x-forwarded-for') || '';
     const ipHash = crypto
         .createHash('sha256')
-        .update(typeof ipAddress === 'string' ? ipAddress : ipAddress[0] || '')
+        .update(ipAddress)
         .digest('hex');
 
     // Create a browser fingerprint from user agent and other headers
-    const userAgent = req.headers['user-agent'] || '';
-    const accept = req.headers['accept'] || '';
-    const acceptLanguage = req.headers['accept-language'] || '';
-    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const userAgent = context.request.headers.get('user-agent') || '';
+    const accept = context.request.headers.get('accept') || '';
+    const acceptLanguage = context.request.headers.get('accept-language') || '';
+    const acceptEncoding = context.request.headers.get('accept-encoding') || '';
 
     const browserFingerprint = crypto
         .createHash('sha256')
@@ -327,8 +335,8 @@ async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, 
 
     // Check for existing comprehensive feedback from this user for this event
     const existingFeedback = await sanityClient.fetch(
-        `*[_type == "comprehensiveFeedback" && 
-    references($eventId) && 
+        `*[_type == "comprehensiveFeedback" &&
+    references($eventId) &&
     (ipHash == $ipHash || browserFingerprint == $browserFingerprint)][0]`,
         {
             eventId: selectedEventId,
@@ -338,9 +346,12 @@ async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, 
     );
 
     if (existingFeedback) {
-        return res.status(409).json({
+        return new Response(JSON.stringify({
             success: false,
             message: 'You have already submitted comprehensive feedback for this event'
+        }), {
+            status: 409,
+            headers: { 'Content-Type': 'application/json' },
         });
     }
 
@@ -411,31 +422,25 @@ async function handleComprehensiveFeedback(feedback: ComprehensiveFeedbackData, 
     // Send notification about new comprehensive feedback
     try {
         const eventTitle = eventObj?.title || 'Unknown Event';
-        const ratingStars = '⭐'.repeat(overallRating);
+        const ratingStars = '\u2B50'.repeat(overallRating);
         const avgRating = Math.round((foodOptions.rating + drinks.rating + talks.rating + timing.rating + execution.rating) / 5 * 10) / 10;
-        
-        await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                title: `New Comprehensive Feedback ${ratingStars}`,
-                message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\nEvent: ${eventTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + '...' : improvements}`,
-                type: 'other',
-                priority: overallRating <= 2 ? 'high' : 'normal',
-            }),
+
+        await sendPlatformNotification({
+            title: `New Comprehensive Feedback ${ratingStars}`,
+            message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\nEvent: ${eventTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + '...' : improvements}`,
+            priority: overallRating <= 2 ? 2 : 1,
         });
     } catch (notificationError) {
         console.error('Failed to send comprehensive feedback notification:', notificationError);
         // Don't fail the feedback submission if notification fails
     }
 
-    return res.status(201).json({ 
+    return new Response(JSON.stringify({
         success: true,
         message: 'Comprehensive feedback submitted successfully',
         feedbackId: createdFeedback._id
+    }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
     });
 }
-
-export default handler;

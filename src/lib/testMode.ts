@@ -20,7 +20,7 @@ export function getTestModeConfig(urlTestDate?: string): TestModeConfig {
   
   if (enabled) {
     // Priority: URL parameter > Environment variable
-    const testDateString = urlTestDate || process.env.NEXT_PUBLIC_TEST_CURRENT_DATE;
+    const testDateString = urlTestDate || (import.meta.env?.PUBLIC_TEST_CURRENT_DATE as string);
     
     if (testDateString) {
       try {

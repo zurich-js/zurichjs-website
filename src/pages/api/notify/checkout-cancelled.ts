@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 
+export const prerender = false;
 
 interface CheckoutCancelledBody {
   workshopId?: string;
@@ -13,23 +13,16 @@ interface CheckoutCancelledBody {
   email: string;
 }
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { 
+    const {
       workshopId,
       eventId,
-      ticketType, 
-      itemTitle, 
-      reason, 
-      email 
-    } = req.body as CheckoutCancelledBody;
+      ticketType,
+      itemTitle,
+      reason,
+      email
+    } = await context.request.json() as CheckoutCancelledBody;
 
     // Determine purchase type
     const isWorkshop = ticketType === 'workshop' || Boolean(workshopId);
@@ -51,15 +44,19 @@ Customer Email: ${email}`,
     await sendPlatformNotification(message);
 
     // Return success response
-    return res.status(200).json({ success: true });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Failed to send cancellation notification:', err);
     const error = err as { message: string };
-    
-    return res.status(500).json({
+
+    return new Response(JSON.stringify({
       error: error.message || 'An unknown error occurred',
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

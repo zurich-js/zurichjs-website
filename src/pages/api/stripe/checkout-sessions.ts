@@ -1,7 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 import { stripe } from '@/lib/stripe';
 import { encodePaymentData } from '@/utils/encoding';
+
+export const prerender = false;
 
 interface CheckoutRequestBody {
   priceId: string;
@@ -13,35 +14,34 @@ interface CheckoutRequestBody {
   ticketType?: 'workshop' | 'event';
 }
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST({ request }: APIContext) {
   try {
-    const { 
-      priceId, 
-      email, 
-      quantity = 1, 
-      couponCode, 
-      workshopId, 
+    const {
+      priceId,
+      email,
+      quantity = 1,
+      couponCode,
+      workshopId,
       eventId,
       ticketType
-    } = req.body as CheckoutRequestBody;
+    } = await request.json() as CheckoutRequestBody;
 
     if (!priceId) {
-      return res.status(400).json({ error: 'Price ID is required' });
+      return new Response(JSON.stringify({ error: 'Price ID is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     if (isNaN(quantity) || quantity < 1) {
-      return res.status(400).json({ error: 'Invalid quantity' });
+      return new Response(JSON.stringify({ error: 'Invalid quantity' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    const origin = req.headers.origin || 'http://localhost:3000';
-    
+    const origin = request.headers.get('origin') || 'http://localhost:3000';
+
     // Determine the right path for success and cancel URLs
     let returnPath = '';
     if (workshopId) {
@@ -49,7 +49,7 @@ async function handler(
     } else if (eventId) {
       returnPath = `/events/${eventId}`;
     }
-    
+
     // For Stripe success URL, we keep session_id as a separate parameter and encode other data
     // IMPORTANT: Do NOT include session_id in the encoded data - it must remain a separate parameter
     const paymentData = {
@@ -59,11 +59,11 @@ async function handler(
       coupon: couponCode,
       // Do NOT include session_id here as Stripe needs to replace it in the URL
     };
-    
+
     // Build success URL with Stripe session ID placeholder and encoded data
     // Note: Must use exactly {CHECKOUT_SESSION_ID} as the literal string for Stripe to replace it
     const successUrl = `${origin}/success?session_id={CHECKOUT_SESSION_ID}&data=${encodePaymentData(paymentData)}`;
-    
+
     // Build cancel URL
     const cancelUrl = `${origin}${returnPath}?canceled=true${couponCode ? `&coupon=${encodeURIComponent(couponCode)}` : ''}`;
 
@@ -72,7 +72,7 @@ async function handler(
       // Validate the coupon exists before using it
       try {
         const coupon = await stripe.coupons.retrieve(couponCode);
-        
+
         if (coupon && coupon.valid) {
           discountOptions = {
             discounts: [{ coupon: couponCode }]
@@ -106,14 +106,18 @@ async function handler(
     });
 
     // Return the URL in the response body instead of redirecting
-    return res.status(200).json({ url: session.url });
+    return new Response(JSON.stringify({ url: session.url }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Checkout error:', err);
     const error = err as { statusCode?: number; message: string };
-    return res.status(error.statusCode || 500).json({
+    return new Response(JSON.stringify({
       error: error.message,
+    }), {
+      status: error.statusCode || 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

@@ -1,0 +1,14 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+export const prerender = false;
+---
+
+<PageLayout title="UTM Tracking | Admin | ZurichJS" description="View UTM tracking data." noindex={true}>
+  <div id="admin-utm-tracking-app">
+    <!-- Admin UTM tracking React island will be mounted here -->
+    <div class="container mx-auto px-4 py-8 pt-16">
+      <h1 class="text-3xl font-bold mb-4">UTM Tracking</h1>
+      <p class="text-gray-600">Loading UTM tracking data...</p>
+    </div>
+  </div>
+</PageLayout>

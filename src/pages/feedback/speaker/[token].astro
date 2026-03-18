@@ -1,0 +1,20 @@
+---
+import PageLayout from '../../../layouts/PageLayout.astro';
+export const prerender = false;
+
+const { token } = Astro.params;
+
+if (!token) {
+  return Astro.redirect('/feedback');
+}
+---
+
+<PageLayout title="Speaker Feedback | ZurichJS" description="Submit feedback for a ZurichJS speaker.">
+  <div id="speaker-feedback-app" data-token={token}>
+    <!-- Speaker feedback React island will be mounted here -->
+    <div class="container mx-auto px-4 py-8 pt-16">
+      <h1 class="text-3xl font-bold mb-4">Speaker Feedback</h1>
+      <p class="text-gray-600">Loading feedback form...</p>
+    </div>
+  </div>
+</PageLayout>

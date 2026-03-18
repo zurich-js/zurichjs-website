@@ -1,0 +1,206 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+import { Image } from 'astro:assets';
+
+const organizers = [
+  {
+    name: 'Faris Aziz',
+    role: 'Founder',
+    image: '/images/team/faris.jpg',
+    email: 'hello@zurichjs.com',
+    linkedin: 'https://www.linkedin.com/in/farisaziz/',
+  },
+  {
+    name: 'Hugo Sousa',
+    role: 'Co-Organizer',
+    image: '/images/team/hugo.jpg',
+    email: 'hello@zurichjs.com',
+    linkedin: 'https://www.linkedin.com/in/hugosousa/',
+  },
+];
+
+const faqs = [
+  {
+    question: 'How can I speak at a ZurichJS event?',
+    answer: 'We are always looking for speakers! Send us an email at hello@zurichjs.com with your talk proposal, including a title, short abstract, and a bit about yourself. We welcome talks of all levels.',
+  },
+  {
+    question: 'Can my company host a ZurichJS meetup?',
+    answer: 'Absolutely! We partner with companies across Zurich to host our meetups. Hosting includes providing a venue, and optionally food and drinks. Get in touch to discuss the details.',
+  },
+  {
+    question: 'How do I join ZurichJS?',
+    answer: 'Just show up! Our meetups are free and open to everyone. Join us on Meetup.com to get notified about upcoming events. No registration or membership fee required.',
+  },
+  {
+    question: 'Can I sponsor ZurichJS?',
+    answer: 'Yes! We offer several sponsorship tiers. Visit our partnerships page or email us at hello@zurichjs.com to learn about sponsorship opportunities.',
+  },
+  {
+    question: 'Where do your events take place?',
+    answer: 'Our meetups rotate between various venues in Zurich, typically hosted by partner companies. The exact location is announced with each event on our Meetup page.',
+  },
+  {
+    question: 'I have a different question. How can I reach you?',
+    answer: 'Drop us an email at hello@zurichjs.com and we will get back to you as soon as we can. You can also reach us on LinkedIn.',
+  },
+];
+---
+
+<PageLayout
+  title="Contact | ZurichJS"
+  description="Get in touch with the ZurichJS community."
+  keywords={['contact ZurichJS', 'JavaScript Zurich contact', 'speak at ZurichJS', 'host meetup Zurich']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        Get in <span class="bg-white/20 px-2 rounded">Touch</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Have a question, want to speak, or interested in partnering? We would love to hear from you.
+      </p>
+    </div>
+  </Section>
+
+  <!-- Contact Options -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Email -->
+        <a
+          href="mailto:hello@zurichjs.com"
+          class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-md hover:border-js/30 transition-all group stagger-1 animate-fade-in-up"
+        >
+          <div class="w-14 h-14 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-js/20 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Email</h3>
+          <p class="text-gray-600 text-sm mb-3">For general inquiries, talk proposals, and partnerships.</p>
+          <span class="text-js-dark font-semibold text-sm">hello@zurichjs.com</span>
+        </a>
+
+        <!-- LinkedIn -->
+        <a
+          href="https://linkedin.com/company/zurichjs"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-md hover:border-js/30 transition-all group stagger-2 animate-fade-in-up"
+        >
+          <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-100 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" class="text-blue-600"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">LinkedIn</h3>
+          <p class="text-gray-600 text-sm mb-3">Follow us for updates and connect with the community.</p>
+          <span class="text-blue-600 font-semibold text-sm">linkedin.com/company/zurichjs</span>
+        </a>
+
+        <!-- Meetup -->
+        <a
+          href="https://www.meetup.com/zurichjs/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center hover:shadow-md hover:border-js/30 transition-all group stagger-3 animate-fade-in-up"
+        >
+          <div class="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-red-100 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">Meetup</h3>
+          <p class="text-gray-600 text-sm mb-3">RSVP to upcoming events and join the community.</p>
+          <span class="text-red-500 font-semibold text-sm">meetup.com/zurichjs</span>
+        </a>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Organizer Cards -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">The Organizers</h2>
+        <p class="text-gray-600 max-w-xl mx-auto">
+          Reach out directly to one of our organizers.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+        {organizers.map((person, i) => (
+          <div class={`bg-white rounded-2xl p-8 shadow-sm border border-gray-100 animate-fade-in-up stagger-${i + 1}`}>
+            <div class="flex items-center gap-4 mb-4">
+              <Image
+                src={person.image}
+                alt={person.name}
+                width={64}
+                height={64}
+                class="w-16 h-16 rounded-full object-cover border-2 border-js/20"
+              />
+              <div>
+                <h3 class="text-lg font-bold text-gray-900">{person.name}</h3>
+                <p class="text-js-dark font-medium text-sm">{person.role}</p>
+              </div>
+            </div>
+            <div class="flex gap-3">
+              <a
+                href={`mailto:${person.email}`}
+                class="inline-flex items-center gap-2 text-gray-600 hover:text-js-dark text-sm font-medium transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                Email
+              </a>
+              <a
+                href={person.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 text-sm font-medium transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- FAQ -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-3xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+        <p class="text-gray-600">Quick answers to common questions about ZurichJS.</p>
+      </div>
+      <div class="space-y-4">
+        {faqs.map((faq) => (
+          <details class="group bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+            <summary class="flex items-center justify-between p-6 cursor-pointer font-semibold text-gray-900 hover:text-js-dark transition-colors">
+              {faq.question}
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 ml-4 text-gray-400 group-open:rotate-180 transition-transform"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+              {faq.answer}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- CTA -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Ready to Connect?</h2>
+      <p class="text-gray-800 text-lg mb-8">
+        Whether you want to speak, sponsor, host, or just attend -- we would love to hear from you.
+      </p>
+      <a
+        href="mailto:hello@zurichjs.com"
+        class="inline-flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition-colors"
+      >
+        Send Us an Email
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </Section>
+</PageLayout>

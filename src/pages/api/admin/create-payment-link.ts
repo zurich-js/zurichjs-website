@@ -1,21 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 import Stripe from 'stripe';
 
-
+export const prerender = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-08-27.basil',
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { cartItems, couponCode } = req.body;
+export async function POST(context: APIContext) {
+  const { cartItems, couponCode } = await context.request.json();
 
   if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-    return res.status(400).json({ error: 'Missing required field: cartItems (must be non-empty array)' });
+    return new Response(JSON.stringify({ error: 'Missing required field: cartItems (must be non-empty array)' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -25,7 +24,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     for (const item of cartItems) {
       if (!item.priceId || !item.quantity || !item.productId) {
-        return res.status(400).json({ error: 'Each cart item must have priceId, quantity, and productId' });
+        return new Response(JSON.stringify({ error: 'Each cart item must have priceId, quantity, and productId' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
 
       // Validate the price and product exist
@@ -56,6 +58,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
+    const origin = context.request.headers.get('origin') || '';
+
     // No customer creation - anonymous payments
 
     // Create Payment Link
@@ -71,7 +75,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       after_completion: {
         type: 'redirect',
         redirect: {
-          url: `${req.headers.origin}/admin/tap-to-pay?payment=success`,
+          url: `${origin}/admin/tap-to-pay?payment=success`,
         },
       },
       allow_promotion_codes: true,
@@ -82,12 +86,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     };
 
     // Add shipping address collection for physical products
-    const requiresShipping = productDetails.some(product => 
+    const requiresShipping = productDetails.some(product =>
       product.name.toLowerCase().includes('shirt') ||
       product.name.toLowerCase().includes('hoodie') ||
       product.name.toLowerCase().includes('merch')
     );
-    
+
     if (requiresShipping) {
       paymentLinkParams.shipping_address_collection = {
         allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'CH'],
@@ -102,13 +106,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // For now, we'll use a simple QR code service
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentLink.url)}`;
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       paymentLink: {
         id: paymentLink.id,
         url: paymentLink.url,
         qr_code: qrCodeUrl,
       },
       products: productDetails,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: unknown) {
     console.error('Error creating payment link:', err);
@@ -116,8 +123,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
       message = (err as { message: string }).message;
     }
-    return res.status(500).json({ error: message });
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

@@ -1,4 +1,5 @@
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/astro/react';
+import { useUser } from '@clerk/clerk-react';
 import { useState } from 'react';
 
 interface UseAuthenticatedCheckoutProps {

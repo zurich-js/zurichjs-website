@@ -1,25 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 
-
+export const prerender = false;
 
 // EmailOctopus API details
 const API_KEY = process.env.EMAIL_OCTOPUS_API_KEY;
 const LIST_ID = process.env.EMAIL_OCTOPUS_LIST_ID;
 const API_URL = 'https://emailoctopus.com/api/1.6';
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { email } = req.body;
+export async function POST({ request }: APIContext) {
+  const { email } = await request.json();
 
   if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
+    return new Response(JSON.stringify({ error: 'Email is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -46,19 +41,26 @@ async function handler(
     if (!response.ok) {
       // Handle EmailOctopus specific errors
       if (data.error?.code === 'MEMBER_EXISTS_WITH_EMAIL_ADDRESS') {
-        return res.status(400).json({ error: 'You are already subscribed!' });
+        return new Response(JSON.stringify({ error: 'You are already subscribed!' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
-      
+
       throw new Error(data.error?.message || 'Failed to subscribe');
     }
 
-    return res.status(200).json({ success: true });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Newsletter subscription error:', error);
-    return res.status(500).json({ 
-      error: 'Failed to subscribe. Please try again later.' 
+    return new Response(JSON.stringify({
+      error: 'Failed to subscribe. Please try again later.'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

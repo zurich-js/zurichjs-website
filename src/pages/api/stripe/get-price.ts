@@ -1,39 +1,38 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
-
+import type { APIContext } from 'astro';
 import { stripe } from '@/lib/stripe';
 
+export const prerender = false;
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+export async function GET({ url }: APIContext) {
+  const priceId = url.searchParams.get('priceId');
 
-  const { priceId } = req.query;
-
-  if (!priceId || typeof priceId !== 'string') {
-    return res.status(400).json({ error: 'Price ID is required' });
+  if (!priceId) {
+    return new Response(JSON.stringify({ error: 'Price ID is required' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
     const price = await stripe.prices.retrieve(priceId);
-    
-    return res.status(200).json({
+
+    return new Response(JSON.stringify({
       id: price.id,
       unitAmount: price.unit_amount,
       currency: price.currency,
       type: price.type,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: unknown) {
     console.error('Error fetching price:', err);
     const error = err as { statusCode?: number; message: string };
-    return res.status(error.statusCode || 500).json({
+    return new Response(JSON.stringify({
       error: error.message || 'Error fetching price',
+    }), {
+      status: error.statusCode || 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

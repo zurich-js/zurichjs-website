@@ -1,27 +1,29 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 
-
-import { getFeedbackBySpeakerId } from '@/sanity/queries';
+import { getFeedbackBySpeakerId } from '@/sanity/queries/feedback';
 import { verifyToken } from '@/utils/tokens';
 
+export const prerender = false;
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function GET(context: APIContext) {
   try {
-    const { token } = req.query;
+    const { token } = context.params;
 
     if (!token || typeof token !== 'string') {
-      return res.status(400).json({ message: 'Missing token' });
+      return new Response(JSON.stringify({ message: 'Missing token' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Verify the token and extract the speaker ID
     const payload = verifyToken(token);
 
     if (!payload || !payload.speakerId) {
-      return res.status(401).json({ message: 'Invalid or expired token' });
+      return new Response(JSON.stringify({ message: 'Invalid or expired token' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     const { speakerId } = payload;
@@ -30,14 +32,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const feedbackData = await getFeedbackBySpeakerId(speakerId);
 
     if (!feedbackData) {
-      return res.status(404).json({ message: 'Speaker not found' });
+      return new Response(JSON.stringify({ message: 'Speaker not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    res.status(200).json(feedbackData);
+    return new Response(JSON.stringify(feedbackData), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error fetching feedback:', error);
-    res.status(500).json({ message: 'Error fetching feedback', error: error instanceof Error ? error.message : 'Unknown error' });
+    return new Response(JSON.stringify({ message: 'Error fetching feedback', error: error instanceof Error ? error.message : 'Unknown error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

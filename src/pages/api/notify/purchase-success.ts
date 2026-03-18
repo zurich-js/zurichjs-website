@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 import { stripe } from '@/lib/stripe';
 
+export const prerender = false;
 
 interface PurchaseSuccessBody {
   sessionId: string;
@@ -14,16 +14,9 @@ interface PurchaseSuccessBody {
   coupon?: string;
 }
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { sessionId, workshopId, eventId, ticketType, email, coupon } = req.body as PurchaseSuccessBody;
+    const { sessionId, workshopId, eventId, ticketType, email, coupon } = await context.request.json() as PurchaseSuccessBody;
 
     // Determine purchase type and item name
     const isWorkshop = ticketType === 'workshop' || Boolean(workshopId);
@@ -32,7 +25,7 @@ async function handler(
     // Get the item name based on the ID
     let itemName = 'Unknown Purchase';
     let itemId = '';
-    
+
     if (isWorkshop) {
       itemId = workshopId || '';
       if (workshopId === 'nodejs-threads') {
@@ -54,28 +47,28 @@ async function handler(
       const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
         expand: ['line_items']
       });
-      
+
       // Get price information
       const lineItems = session.line_items?.data;
       if (lineItems && lineItems.length > 0) {
         const amount = lineItems[0].amount_total / 100; // Convert from cents to currency unit
         const currency = lineItems[0].currency.toUpperCase();
         const quantity = lineItems[0].quantity || 1;
-        
+
         priceInfo = `Amount: ${amount} ${currency} × ${quantity}`;
       }
-      
+
       // First check if we have the coupon in our request body (from base64 encoded data)
       if (coupon) {
         couponInfo = `Coupon used: ${coupon}`;
-      } 
+      }
       // Fall back to the metadata from Stripe session
       else if (session.metadata?.couponCode) {
         couponInfo = `Coupon used: ${session.metadata.couponCode}`;
       }
     } catch (err) {
       console.warn('Could not retrieve session information', err);
-      
+
       // If we couldn't get session info but have coupon in the request, use that
       if (coupon) {
         couponInfo = `Coupon used: ${coupon}`;
@@ -99,15 +92,19 @@ ${couponInfo}`,
     await sendPlatformNotification(message);
 
     // Return success response
-    return res.status(200).json({ success: true });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (err: unknown) {
     console.error('Failed to send purchase notification:', err);
     const error = err as { message: string };
-    
-    return res.status(500).json({
+
+    return new Response(JSON.stringify({
       error: error.message || 'An unknown error occurred',
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

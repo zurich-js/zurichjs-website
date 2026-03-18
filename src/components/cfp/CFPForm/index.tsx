@@ -1,17 +1,11 @@
-import { motion } from 'framer-motion';
-import { Save, MessageCircle } from 'lucide-react';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { FormEvent } from 'react';
+import { type FormEvent, useState, useEffect } from 'react';
 
-import Button from '@/components/ui/Button';
 import { FeatureFlags } from '@/constants';
 import useEvents from '@/hooks/useEvents';
 
 import { useCFPForm } from '../hooks/useCFPForm';
 import { useFormValidation } from '../hooks/useFormValidation';
 
-import AutoSaveIndicator from './AutoSaveIndicator';
-import ErrorBanner from './ErrorBanner';
 import SpeakerSection from './SpeakerSection';
 import SuccessState from './SuccessState';
 import TalkSection from './TalkSection';
@@ -19,7 +13,13 @@ import TopicSelector from './TopicSelector';
 
 export default function CFPForm() {
   const { track } = useEvents();
-  const showDeepDiveOption = useFeatureFlagEnabled(FeatureFlags.CfpDeepDiveOption);
+  const [showDeepDiveOption, setShowDeepDiveOption] = useState(false);
+  useEffect(() => {
+    try {
+      const ph = (window as unknown as { posthog?: { isFeatureEnabled?: (f: string) => boolean } }).posthog;
+      if (ph?.isFeatureEnabled) setShowDeepDiveOption(ph.isFeatureEnabled(FeatureFlags.CfpDeepDiveOption) ?? false);
+    } catch { /* */ }
+  }, []);
 
   const {
     formState,
@@ -36,7 +36,7 @@ export default function CFPForm() {
     generateEmailBody,
   } = useCFPForm(track);
 
-  const { validateForm, hasErrors } = useFormValidation();
+  const { validateForm, hasErrors, getErrorCount } = useFormValidation();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -50,6 +50,8 @@ export default function CFPForm() {
         errorFields: Object.keys(errors).join(', '),
       });
       setFormState(prev => ({ ...prev, error: 'Please fix the highlighted errors below' }));
+      // Scroll to top of form to show error
+      document.getElementById('cfp-form-top')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
 
@@ -123,117 +125,114 @@ export default function CFPForm() {
     return <SuccessState />;
   }
 
+  const errorCount = getErrorCount(validationErrors);
+
   return (
-    <>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <h2 className="text-2xl sm:text-3xl font-bold">Submit Your Talk</h2>
-        <AutoSaveIndicator
-          isAutoSaving={isAutoSaving}
-          lastSaved={lastSaved}
-          hasLoadedFromStorage={hasLoadedFromStorage}
-        />
-      </div>
-
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-start gap-2 text-sm text-blue-800">
-          <Save size={16} className="mt-0.5 text-blue-600 flex-shrink-0" />
-          <span>
-            <strong>Don&apos;t worry about finishing in one go!</strong> Your progress is
-            automatically saved to your browser as you type. You can close this page and return
-            later to continue where you left off.
-          </span>
+    <div id="cfp-form-top">
+      {/* Auto-save status */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          {isAutoSaving ? (
+            <>
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+              <span>Saving...</span>
+            </>
+          ) : lastSaved ? (
+            <>
+              <svg className="h-4 w-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5" /></svg>
+              <span>Draft saved {lastSaved.toLocaleTimeString()}</span>
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" /><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" /><path d="M7 3v4a1 1 0 0 0 1 1h7" /></svg>
+              <span>Auto-save enabled</span>
+            </>
+          )}
         </div>
+        {hasLoadedFromStorage && (
+          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Restored from draft</span>
+        )}
       </div>
 
-      <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-start gap-2 text-sm text-green-800">
-          <MessageCircle size={16} className="mt-0.5 text-green-600 flex-shrink-0" />
-          <span>
-            <strong>Having trouble?</strong> You can always email your talk proposal directly to{' '}
-            <a href="mailto:hello@zurichjs.com" className="underline font-semibold">
-              hello@zurichjs.com
-            </a>{' '}
-            if you encounter any issues with this form.
-          </span>
+      {/* Error banner */}
+      {formState.error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <svg className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+            <div>
+              <p className="font-semibold text-red-800">{formState.error}</p>
+              {errorCount > 0 && (
+                <p className="text-sm text-red-600 mt-1">{errorCount} field{errorCount !== 1 ? 's' : ''} need{errorCount === 1 ? 's' : ''} attention</p>
+              )}
+              {errorCount === 0 && (
+                <p className="text-sm text-red-600 mt-2">
+                  Having trouble? Email your proposal to{' '}
+                  <a href={`mailto:hello@zurichjs.com?subject=Talk Proposal: ${formState.title || 'New Talk'}&body=${encodeURIComponent(generateEmailBody())}`} className="underline font-semibold">
+                    hello@zurichjs.com
+                  </a>
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
-      <motion.form
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+      <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 md:p-8 rounded-lg shadow-md"
+        className="space-y-2"
         encType="multipart/form-data"
       >
-        {formState.error && (
-          <ErrorBanner
-            error={formState.error}
+        {/* Step 1: Speaker */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm">
+          <SpeakerSection
+            formState={formState}
             validationErrors={validationErrors}
-            generateEmailBody={generateEmailBody}
-            onEmailFallback={() => track('email_fallback_used', { error: formState.error })}
+            onInputChange={handleInputChange}
+            onImageChange={handleImageChange}
           />
-        )}
+        </div>
 
-        <SpeakerSection
-          formState={formState}
-          validationErrors={validationErrors}
-          onInputChange={handleInputChange}
-          onImageChange={handleImageChange}
-        />
+        {/* Step 2: Talk */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm">
+          <TalkSection
+            formState={formState}
+            validationErrors={validationErrors}
+            onInputChange={handleInputChange}
+            showDeepDiveOption={!!showDeepDiveOption}
+          />
+        </div>
 
-        <TalkSection
-          formState={formState}
-          validationErrors={validationErrors}
-          onInputChange={handleInputChange}
-          showDeepDiveOption={!!showDeepDiveOption}
-        />
+        {/* Step 3: Topics */}
+        <div className="bg-white rounded-2xl p-6 md:p-8 border border-gray-100 shadow-sm">
+          <TopicSelector
+            selectedTopics={formState.topics}
+            onTopicChange={handleTopicChange}
+            error={validationErrors.topics}
+          />
+        </div>
 
-        <TopicSelector
-          selectedTopics={formState.topics}
-          onTopicChange={handleTopicChange}
-          error={validationErrors.topics}
-        />
-
-        <div className="flex justify-end">
-          <Button
+        {/* Submit */}
+        <div className="pt-4">
+          <button
             type="submit"
-            variant="primary"
-            size="lg"
             disabled={formState.isSubmitting}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto bg-black text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             {formState.isSubmitting ? (
               <>
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
                 Submitting...
               </>
             ) : (
               'Submit Your Talk'
             )}
-          </Button>
+          </button>
+          <p className="text-xs text-gray-500 mt-3">
+            Having trouble? Email your proposal to{' '}
+            <a href="mailto:hello@zurichjs.com" className="underline text-blue-600">hello@zurichjs.com</a>
+          </p>
         </div>
-      </motion.form>
-    </>
+      </form>
+    </div>
   );
 }

@@ -1,0 +1,157 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+
+const CONFERENCE_CFP_URL = 'https://conf.zurichjs.com/cfp';
+---
+
+<PageLayout
+  title="Call for Papers | ZurichJS"
+  description="Submit your talk to speak at ZurichJS meetups and conferences. Share your JavaScript expertise with the community!"
+  keywords={['call for papers', 'cfp', 'speak', 'talk', 'zurichjs', 'javascript', 'conference', 'meetup']}
+  ogImage="/api/og/cfp"
+>
+  <Section variant="white" padding="none" class="min-h-[80vh] flex flex-col items-center justify-center">
+    <div class="w-full max-w-4xl mx-auto py-16 px-4">
+      <!-- Header -->
+      <div class="text-center mb-12 max-w-2xl mx-auto animate-fade-in-up">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">
+          Share Your <span class="bg-js px-2 rounded">Knowledge</span>
+        </h1>
+        <p class="text-xl text-gray-600">
+          Choose where you'd like to speak. We'd love to hear from you!
+        </p>
+      </div>
+
+      <!-- Side-by-side selector -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in-up stagger-1">
+        <!-- Conference Option -->
+        <a
+          href={CONFERENCE_CFP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group relative flex flex-col p-8 bg-white border-2 border-gray-200 rounded-2xl hover:border-js hover:shadow-xl transition-all duration-300"
+        >
+          <div class="absolute -top-3 left-6">
+            <span class="bg-js text-black text-xs font-bold px-3 py-1 rounded-full">
+              Sept 2026
+            </span>
+          </div>
+
+          <div class="flex items-center justify-center w-16 h-16 bg-js rounded-xl mb-6 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+          </div>
+
+          <h2 class="text-2xl font-bold mb-3 flex items-center">
+            Conference Talk
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 text-gray-400 group-hover:text-black transition-colors">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </h2>
+
+          <p class="text-gray-600 mb-6 flex-grow">
+            Present at ZurichJS Conf, our annual full-day JavaScript conference with 300+ attendees.
+          </p>
+
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Full-day event in September
+            </li>
+            <li class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              300+ developers
+            </li>
+          </ul>
+
+          <div class="mt-6 pt-6 border-t border-gray-100">
+            <span class="inline-flex items-center text-black font-semibold group-hover:underline">
+              Submit conference talk
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </span>
+          </div>
+        </a>
+
+        <!-- Meetup Option -->
+        <a
+          href="/cfp/form"
+          class="group relative flex flex-col p-8 bg-white border-2 border-gray-200 rounded-2xl hover:border-js hover:shadow-xl transition-all duration-300"
+        >
+          <div class="absolute -top-3 left-6">
+            <span class="bg-gray-800 text-white text-xs font-bold px-3 py-1 rounded-full">
+              Monthly
+            </span>
+          </div>
+
+          <div class="flex items-center justify-center w-16 h-16 bg-js rounded-xl mb-6 group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+
+          <h2 class="text-2xl font-bold mb-3">Meetup Talk</h2>
+
+          <p class="text-gray-600 mb-6 flex-grow">
+            Speak at one of our monthly meetups. Perfect for first-time speakers or trying out new material.
+          </p>
+
+          <ul class="space-y-2 text-sm text-gray-500">
+            <li class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Monthly events
+            </li>
+            <li class="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              40-70 developers
+            </li>
+          </ul>
+
+          <div class="mt-6 pt-6 border-t border-gray-100">
+            <span class="inline-flex items-center text-black font-semibold group-hover:underline">
+              Submit meetup talk
+              <span class="ml-2">&rarr;</span>
+            </span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Footer note -->
+      <p class="mt-12 text-gray-500 text-center max-w-lg mx-auto animate-fade-in-up stagger-2">
+        Not sure which to choose? Meetups are great for testing ideas before the conference, and we welcome speakers of all experience levels.
+      </p>
+    </div>
+  </Section>
+</PageLayout>

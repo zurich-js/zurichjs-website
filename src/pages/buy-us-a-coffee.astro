@@ -1,0 +1,250 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import Section from '../components/astro/Section.astro';
+import { Image } from 'astro:assets';
+
+const supportOptions = [
+  { amount: 5, label: 'A Coffee', description: 'Helps cover small event costs' },
+  { amount: 10, label: 'A Pizza Slice', description: 'Contributes to food at meetups' },
+  { amount: 25, label: 'A Round of Drinks', description: 'Covers beverages for an event' },
+  { amount: 50, label: 'Event Supporter', description: 'Significant contribution to a meetup' },
+];
+
+const monthlyOptions = [
+  { amount: 5, label: 'Supporter', description: 'Steady monthly support' },
+  { amount: 10, label: 'Backer', description: 'Help us plan ahead' },
+  { amount: 25, label: 'Champion', description: 'Major ongoing support' },
+];
+
+const faqs = [
+  {
+    question: 'Where does my money go?',
+    answer: 'Your contribution goes directly toward funding ZurichJS events: food and drinks at meetups, venue costs when needed, equipment and supplies, speaker gifts, community swag, and website hosting. We are a registered Verein (Swiss association) and operate transparently.',
+  },
+  {
+    question: 'Is my donation tax-deductible?',
+    answer: 'ZurichJS is a registered Verein in Switzerland. Please consult with your tax advisor regarding deductibility, as rules vary by canton and individual circumstances.',
+  },
+  {
+    question: 'Can I cancel a recurring donation?',
+    answer: 'Yes, you can cancel your monthly support at any time. You will receive a confirmation email with a link to manage your subscription after your first payment.',
+  },
+  {
+    question: 'Are there other ways to support ZurichJS?',
+    answer: 'Absolutely! You can also support us by hosting an event at your company, sponsoring food or drinks, speaking at a meetup, or simply spreading the word. Visit our partnerships page for corporate sponsorship options.',
+  },
+  {
+    question: 'Can I donate via TWINT?',
+    answer: 'Yes! Scroll down to find our TWINT QR code for a quick, easy Swiss-friendly payment option.',
+  },
+];
+---
+
+<PageLayout
+  title="Buy Us a Coffee | ZurichJS"
+  description="Support the ZurichJS community with a one-time or recurring donation."
+  keywords={['support ZurichJS', 'donate JavaScript community', 'buy coffee ZurichJS', 'Zurich meetup donation']}
+>
+  <!-- Hero -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-3xl mx-auto">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">
+        Buy Us a <span class="bg-white/20 px-2 rounded">Coffee</span>
+      </h1>
+      <p class="text-lg md:text-xl text-gray-800">
+        Love what ZurichJS does? Help us keep meetups free, well-catered, and growing.
+        Every contribution makes a difference.
+      </p>
+    </div>
+  </Section>
+
+  <!-- One-Time Support -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">One-Time Support</h2>
+        <p class="text-gray-600">Pick an amount or enter your own. Payments are processed securely via Stripe.</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {supportOptions.map((option, i) => (
+          <button
+            class={`bg-white rounded-2xl p-6 shadow-sm border border-gray-100 text-center hover:shadow-md hover:border-js/30 transition-all group animate-fade-in-up stagger-${i + 1}`}
+            data-amount={option.amount}
+            data-type="one-time"
+          >
+            <div class="text-3xl font-bold text-gray-900 mb-1">CHF {option.amount}</div>
+            <div class="text-js-dark font-semibold text-sm mb-1">{option.label}</div>
+            <div class="text-gray-500 text-xs">{option.description}</div>
+          </button>
+        ))}
+      </div>
+
+      <!-- Custom Amount -->
+      <div class="max-w-md mx-auto">
+        <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-center">
+          <label for="custom-amount" class="block text-sm font-medium text-gray-700 mb-2">
+            Or enter a custom amount (CHF)
+          </label>
+          <div class="flex items-center gap-3 justify-center">
+            <span class="text-gray-500 font-medium">CHF</span>
+            <input
+              id="custom-amount"
+              type="number"
+              min="1"
+              placeholder="15"
+              class="w-24 px-4 py-2 border border-gray-200 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-js/50 focus:border-js"
+            />
+          </div>
+          <a
+            href="/api/checkout-support"
+            class="inline-flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition-colors mt-4 w-full"
+          >
+            Support ZurichJS
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </a>
+          <p class="text-xs text-gray-400 mt-2">Secure payment via Stripe</p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Monthly Support -->
+  <Section variant="black" padding="lg">
+    <div class="max-w-4xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold mb-4">Monthly Support</h2>
+        <p class="text-gray-300">
+          Become a regular supporter and help us plan ahead. Cancel anytime.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+        {monthlyOptions.map((option, i) => (
+          <button
+            class={`bg-white/5 rounded-2xl p-6 border border-white/10 text-center hover:bg-white/10 hover:border-white/20 transition-all animate-fade-in-up stagger-${i + 1}`}
+            data-amount={option.amount}
+            data-type="monthly"
+          >
+            <div class="text-3xl font-bold text-white mb-1">CHF {option.amount}<span class="text-lg text-gray-400">/mo</span></div>
+            <div class="text-js font-semibold text-sm mb-1">{option.label}</div>
+            <div class="text-gray-400 text-xs">{option.description}</div>
+          </button>
+        ))}
+      </div>
+      <p class="text-center text-gray-500 text-sm mt-6">
+        Monthly subscriptions are managed through Stripe. You can cancel at any time.
+      </p>
+    </div>
+  </Section>
+
+  <!-- TWINT -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-2xl mx-auto animate-fade-in-up">
+      <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="p-8 text-center">
+          <div class="flex items-center justify-center gap-3 mb-6">
+            <Image src="/images/twint-logo.webp" alt="TWINT" width={96} height={32} class="h-8 inline" />
+            <h2 class="text-2xl font-bold">Donate via TWINT</h2>
+          </div>
+          <p class="text-gray-600 mb-8">
+            Prefer TWINT? Scan the QR code below with your TWINT app to make a donation.
+          </p>
+          <div class="bg-gray-50 rounded-xl p-6 inline-block">
+            <Image
+              src="/images/twint-code.jpg"
+              alt="TWINT QR Code for ZurichJS donations"
+              width={320}
+              height={320}
+              class="max-w-xs mx-auto rounded-lg shadow-lg"
+            />
+          </div>
+          <p class="text-sm text-gray-500 mt-4">
+            Open your TWINT app and scan this QR code to donate
+          </p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- What Your Support Funds -->
+  <Section variant="gray" padding="lg">
+    <div class="max-w-4xl mx-auto text-center animate-fade-in-up">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8">Where Your Money Goes</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="w-12 h-12 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><path d="M17 8h1a4 4 0 1 1 0 8h-1"></path><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path><line x1="6" y1="2" x2="6" y2="4"></line><line x1="10" y1="2" x2="10" y2="4"></line><line x1="14" y1="2" x2="14" y2="4"></line></svg>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Food & Drinks</h3>
+          <p class="text-sm text-gray-600">Pizza, snacks, and beverages at every meetup</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="w-12 h-12 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Venues</h3>
+          <p class="text-sm text-gray-600">Costs for event spaces and equipment</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="w-12 h-12 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Infrastructure</h3>
+          <p class="text-sm text-gray-600">Website hosting, tools, and services</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div class="w-12 h-12 bg-js/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-js-dark"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </div>
+          <h3 class="font-bold text-gray-900 mb-1">Community</h3>
+          <p class="text-sm text-gray-600">Swag, speaker gifts, and growth initiatives</p>
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <!-- FAQ -->
+  <Section variant="white" padding="lg">
+    <div class="max-w-3xl mx-auto animate-fade-in-up">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+      </div>
+      <div class="space-y-4">
+        {faqs.map((faq) => (
+          <details class="group bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+            <summary class="flex items-center justify-between p-6 cursor-pointer font-semibold text-gray-900 hover:text-js-dark transition-colors">
+              {faq.question}
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 ml-4 text-gray-400 group-open:rotate-180 transition-transform"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="px-6 pb-6 text-gray-600 leading-relaxed">
+              {faq.answer}
+            </div>
+          </details>
+        ))}
+      </div>
+    </div>
+  </Section>
+
+  <!-- CTA -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Thank You for Your Support</h2>
+      <p class="text-gray-800 text-lg mb-8">
+        Every contribution, no matter the size, helps us keep the Zurich JavaScript community thriving.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a
+          href="/donate"
+          class="inline-flex items-center justify-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-semibold hover:bg-gray-900 transition-colors"
+        >
+          Donate via TWINT
+        </a>
+        <a
+          href="/partnerships"
+          class="inline-flex items-center justify-center gap-2 bg-white/90 text-black px-6 py-3 rounded-xl font-semibold hover:bg-white transition-colors"
+        >
+          Corporate Sponsorship
+        </a>
+      </div>
+    </div>
+  </Section>
+</PageLayout>

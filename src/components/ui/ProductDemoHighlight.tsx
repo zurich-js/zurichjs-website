@@ -1,5 +1,4 @@
 import { ExternalLink } from 'lucide-react';
-import Image from 'next/image';
 import React from 'react';
 
 import { ProductDemo } from '@/types';
@@ -39,11 +38,10 @@ const ProductDemoHighlight: React.FC<ProductDemoHighlightProps> = ({ productDemo
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
               {demo.logo ? (
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-white rounded-lg p-2 border border-purple-100 shadow-sm overflow-hidden">
-                  <Image 
-                    src={demo.logo} 
-                    alt={demo.name} 
-                    fill
-                    className="object-contain p-1"
+                  <img
+                    src={demo.logo}
+                    alt={demo.name}
+                    className="object-contain p-1 w-full h-full absolute inset-0"
                   />
                 </div>
               ) : (

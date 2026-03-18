@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 
 import { FormState, ValidationErrors } from '../types';
 
@@ -61,7 +61,10 @@ export default function TalkSection({
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js hover:border-gray-400 transition-all"
           >
             <option value="5">Lightning Talk (5 min)</option>
-            <option value="25">Standard Talk (25 min)</option>
+            <option value="10">Short Talk (10 min)</option>
+            <option value="15">Medium Talk (15 min)</option>
+            <option value="20">Standard Talk (20 min)</option>
+            <option value="25">Extended Talk (25 min)</option>
             {showDeepDiveOption && <option value="35">Deep Dive (35 min)</option>}
           </select>
         </div>

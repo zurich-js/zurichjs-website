@@ -1,12 +1,18 @@
 import { motion } from 'framer-motion';
 import { FileText, Clock, Calendar } from 'lucide-react';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { useState, useEffect } from 'react';
 
 import Section from '@/components/Section';
 import { FeatureFlags } from '@/constants';
 
 export default function SubmissionGuidelines() {
-  const showDeepDiveOption = useFeatureFlagEnabled(FeatureFlags.CfpDeepDiveOption);
+  const [showDeepDiveOption, setShowDeepDiveOption] = useState(false);
+  useEffect(() => {
+    try {
+      const ph = (window as unknown as { posthog?: { isFeatureEnabled?: (f: string) => boolean } }).posthog;
+      if (ph?.isFeatureEnabled) setShowDeepDiveOption(ph.isFeatureEnabled(FeatureFlags.CfpDeepDiveOption) ?? false);
+    } catch { /* */ }
+  }, []);
 
   const guidelines = [
     {

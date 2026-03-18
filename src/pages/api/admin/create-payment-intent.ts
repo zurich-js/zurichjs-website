@@ -1,21 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 import Stripe from 'stripe';
 
-
+export const prerender = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-08-27.basil',
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { priceId, quantity, customerEmail, couponCode } = req.body;
+export async function POST(context: APIContext) {
+  const { priceId, quantity, customerEmail, couponCode } = await context.request.json();
 
   if (!priceId || !quantity || !customerEmail) {
-    return res.status(400).json({ error: 'Missing required fields: priceId, quantity, customerEmail' });
+    return new Response(JSON.stringify({ error: 'Missing required fields: priceId, quantity, customerEmail' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -64,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       description: `${product.name} (Qty: ${quantity})${couponCode ? ` - Coupon: ${couponCode}` : ''}`,
     });
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       paymentIntent: {
         id: paymentIntent.id,
         amount: paymentIntent.amount,
@@ -83,6 +82,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         percent_off: couponDetails.percent_off,
         amount_off: couponDetails.amount_off,
       } : null,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (err: unknown) {
     console.error('Error creating payment intent:', err);
@@ -90,8 +92,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
       message = (err as { message: string }).message;
     }
-    return res.status(500).json({ error: message });
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

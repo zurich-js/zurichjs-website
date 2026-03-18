@@ -1,27 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 
-type ResponseData = {
-  success: boolean;
-  message: string;
-}
+export const prerender = false;
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<ResponseData>
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message } = await context.request.json();
 
     if (!name || !email) {
-      return res.status(400).json({
+      return new Response(JSON.stringify({
         success: false,
         message: 'Missing required fields'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -31,17 +24,21 @@ async function handler(
       priority: 0
     });
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       success: true,
       message: 'Verein inquiry submitted successfully'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Verein inquiry error:', error);
-    return res.status(500).json({
+    return new Response(JSON.stringify({
       success: false,
       message: 'Failed to submit inquiry'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

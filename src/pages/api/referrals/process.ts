@@ -1,23 +1,22 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 
-
+export const prerender = false;
 
 // Example API route to process referrals
 // In a real implementation, you would connect to a database
 // and store/update referral information
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const { referrerId, userId, purchaseType } = req.body;
-    // userEmail is also available in req.body but not used in this example
+    const { referrerId, userId, purchaseType } = await context.request.json();
+    // userEmail is also available in the body but not used in this example
 
     // Validate required fields
     if (!referrerId || !userId) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return new Response(JSON.stringify({ message: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // In a real implementation, you would:
@@ -40,18 +39,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Mock response with referrer info
     // In a real implementation, you would fetch this from your database
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       success: true,
       referrer: {
         id: referrerId,
         email: 'referrer@example.com', // This would come from your database
         creditAmount
       }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error processing referral:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return new Response(JSON.stringify({ message: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

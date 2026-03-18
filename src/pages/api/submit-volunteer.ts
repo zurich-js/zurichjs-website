@@ -1,31 +1,10 @@
-import formidable from 'formidable';
-import { NextApiRequest, NextApiResponse } from 'next';
-
+import type { APIContext } from 'astro';
 
 import { sendPlatformNotification } from '@/lib/notification';
 
+export const prerender = false;
 
-// Disable the default body parser to handle form-data
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // Parse the multipart form data
-  const form = formidable({
-    keepExtensions: true,
-    multiples: false,
-  });
-
+export async function POST(context: APIContext) {
   try {
     // Send notification that submission process has started
     await sendPlatformNotification({
@@ -34,32 +13,34 @@ async function handler(
       priority: 0,
     });
 
-    // Parse the form
-    const [fields] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
-      form.parse(req, (err: unknown, fields: formidable.Fields, files: formidable.Files) => {
-        if (err) reject(err);
-        resolve([fields, files]);
-      });
-    });
+    // Parse the multipart form data using native Web API
+    const formData = await context.request.formData();
 
     // Extract values from form fields
-    const firstName = Array.isArray(fields.firstName) ? fields.firstName[0] : fields.firstName || '';
-    const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || '';
+    const firstName = formData.get('firstName')?.toString() || '';
+    const lastName = formData.get('lastName')?.toString() || '';
     const name = `${firstName} ${lastName}`;
-    const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || '';
-    const linkedinProfile = Array.isArray(fields.linkedinProfile) ? fields.linkedinProfile[0] : fields.linkedinProfile || '';
-    const githubProfile = Array.isArray(fields.githubProfile) ? fields.githubProfile[0] : fields.githubProfile || '';
-    const message = Array.isArray(fields.message) ? fields.message[0] : fields.message || '';
-    const availability = Array.isArray(fields.availability) ? fields.availability[0] : fields.availability || '';
-    const interests = fields.interests ? JSON.parse((Array.isArray(fields.interests) ? fields.interests[0] : fields.interests).toString()) : [];
+    const email = formData.get('email')?.toString() || '';
+    const linkedinProfile = formData.get('linkedinProfile')?.toString() || '';
+    const githubProfile = formData.get('githubProfile')?.toString() || '';
+    const message = formData.get('message')?.toString() || '';
+    const availability = formData.get('availability')?.toString() || '';
+    const interestsRaw = formData.get('interests')?.toString() || '[]';
+    const interests = JSON.parse(interestsRaw);
 
     // Validate required fields
     if (!firstName || !lastName || !email || !linkedinProfile || !message) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     if (!interests || interests.length === 0) {
-      return res.status(400).json({ error: 'Please select at least one area of interest' });
+      return new Response(JSON.stringify({ error: 'Please select at least one area of interest' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Format the availability text for better readability
@@ -101,22 +82,23 @@ ${message}
       url_title: 'Reply via Email',
     });
 
-    // Here you would typically store the volunteer in your database
-    // For now, we're just sending the notification
-
-    return res.status(200).json({ success: true, message: 'Application submitted successfully' });
+    return new Response(JSON.stringify({ success: true, message: 'Application submitted successfully' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error submitting volunteer application:', error);
-    
+
     // Send failure notification
     await sendPlatformNotification({
       title: 'Volunteer Application Failed',
       message: `Error processing volunteer application: ${error instanceof Error ? error.message : 'Unknown error'}`,
       priority: 2,
     });
-    
-    return res.status(500).json({ error: 'Failed to submit application' });
+
+    return new Response(JSON.stringify({ error: 'Failed to submit application' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

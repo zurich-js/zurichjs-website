@@ -1,19 +1,14 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import type { APIContext } from 'astro';
 
-
-
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-
+export const prerender = false;
 
 type Data = {
   name: string;
 };
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>,
-) {
-  res.status(200).json({ name: "John Doe" });
+export async function GET(_context: APIContext) {
+  return new Response(JSON.stringify({ name: "John Doe" } as Data), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
-
-export default handler;

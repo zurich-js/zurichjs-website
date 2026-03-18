@@ -1,4 +1,3 @@
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 export interface CouponData {
@@ -12,12 +11,17 @@ export interface CouponData {
 }
 
 export function useCoupon() {
-  const router = useRouter();
-  const { coupon: couponCode } = router.query;
-  
+  const [couponCode, setCouponCode] = useState<string | undefined>(undefined);
   const [couponData, setCouponData] = useState<CouponData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Read coupon from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('coupon') || undefined;
+    setCouponCode(code);
+  }, []);
 
   // Validate the coupon when couponCode changes
   useEffect(() => {
@@ -29,15 +33,15 @@ export function useCoupon() {
     const validateCoupon = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(`/api/stripe/validate-coupon?code=${couponCode}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Failed to validate coupon');
         }
-        
+
         const data = await response.json();
         setCouponData(data);
       } catch (err) {
@@ -52,7 +56,6 @@ export function useCoupon() {
     validateCoupon();
   }, [couponCode]);
 
-  // Calculate the discount for a given price
   const applyDiscount = (price: number): number => {
     if (!couponData || !couponData.isValid) return price;
 
@@ -68,10 +71,10 @@ export function useCoupon() {
   };
 
   return {
-    couponCode: couponCode as string | undefined,
+    couponCode,
     couponData,
     isLoading,
     error,
     applyDiscount,
   };
-} 
+}

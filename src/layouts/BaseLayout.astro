@@ -1,0 +1,214 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  keywords?: string[];
+  ogImage?: string;
+  ogType?: 'website' | 'article' | 'profile';
+  canonical?: string;
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  geo?: {
+    region?: string;
+    placename?: string;
+    position?: string;
+  };
+  noindex?: boolean;
+  twitter?: {
+    cardType?: string;
+    site?: string;
+    handle?: string;
+  };
+}
+
+const {
+  title,
+  description,
+  keywords = [],
+  ogImage = 'https://zurichjs.com/logo-square.png',
+  ogType = 'website',
+  canonical,
+  structuredData,
+  geo,
+  noindex = false,
+  twitter,
+} = Astro.props;
+
+const url = canonical || new URL(Astro.url.pathname, Astro.site).href;
+const tw = { cardType: 'summary_large_image', site: '@zurichjs', ...twitter };
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/logo-square.png" />
+    <meta name="theme-color" content="#F7DF1E" />
+
+    <!-- Language -->
+    <meta http-equiv="content-language" content="en" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href={url} />
+
+    <!-- Robots -->
+    {noindex ? (
+      <meta name="robots" content="noindex,nofollow" />
+    ) : (
+      <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    )}
+
+    <!-- Keywords -->
+    {keywords.length > 0 && (
+      <meta name="keywords" content={keywords.join(', ')} />
+    )}
+
+    <!-- Geographic targeting -->
+    {geo && (
+      <>
+        {geo.region && <meta name="geo.region" content={geo.region} />}
+        {geo.placename && <meta name="geo.placename" content={geo.placename} />}
+        {geo.position && <meta name="geo.position" content={geo.position} />}
+        <meta name="ICBM" content={geo.position || '47.3769,8.5417'} />
+      </>
+    )}
+
+    <!-- Open Graph -->
+    <meta property="og:site_name" content="ZurichJS" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={url} />
+    {ogImage && (
+      <>
+        <meta property="og:image" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={title} />
+      </>
+    )}
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content={tw.cardType} />
+    <meta name="twitter:site" content={tw.site} />
+    {tw.handle && <meta name="twitter:creator" content={tw.handle} />}
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
+
+    <!-- Structured Data -->
+    {structuredData && (
+      <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    )}
+
+    <!-- Preconnects (only ones actually used) -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="preconnect" href="https://cdn.sanity.io" />
+
+    <!-- Tailwind CSS -->
+    <style is:global>
+      @import '../styles/globals.css';
+    </style>
+  </head>
+  <body class="antialiased">
+    <div class="flex flex-col min-h-screen" style="background-color: #F0DC62;">
+      <slot />
+    </div>
+
+    <!-- Deferred PostHog Analytics -->
+    <script is:inline define:vars={{ posthogKey: import.meta.env.PUBLIC_POSTHOG_KEY, posthogHost: import.meta.env.PUBLIC_POSTHOG_HOST }}>
+      if (posthogKey) {
+        window.addEventListener('load', function() {
+          requestIdleCallback(function() {
+            var s = document.createElement('script');
+            s.src = 'https://us-assets.i.posthog.com/static/array.js';
+            s.onload = function() {
+              window.posthog.init(posthogKey, {
+                api_host: posthogHost || 'https://us.i.posthog.com',
+                person_profiles: 'always',
+              });
+              window.posthog.capture('$pageview');
+            };
+            document.head.appendChild(s);
+          });
+        });
+      }
+    </script>
+
+    <!-- Deferred Google Analytics -->
+    <script is:inline>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-GWWBJT7QS5';
+          s.async = true;
+          document.head.appendChild(s);
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', 'G-GWWBJT7QS5');
+        }, 1000);
+      });
+    </script>
+
+    <!-- Deferred Inspectlet -->
+    <script is:inline>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          window.__insp = window.__insp || [];
+          __insp.push(['wid', 1327741264]);
+          var insp = document.createElement('script');
+          insp.type = 'text/javascript';
+          insp.async = true;
+          insp.id = 'inspsync';
+          insp.src = 'https://cdn.inspectlet.com/inspectlet.js?wid=1327741264&r=' + Math.floor(new Date().getTime()/3600000);
+          document.head.appendChild(insp);
+        }, 3000);
+      });
+    </script>
+
+    <!-- Deferred LinkedIn Insight Tag -->
+    <script is:inline>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          window._linkedin_partner_id = '7172098';
+          window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+          window._linkedin_data_partner_ids.push('7172098');
+          var s = document.createElement('script');
+          s.type = 'text/javascript';
+          s.async = true;
+          s.src = 'https://snap.licdn.com/li.lms-analytics/insight.min.js';
+          document.head.appendChild(s);
+        }, 3000);
+      });
+    </script>
+
+    <!-- Strip traceparent headers -->
+    <script is:inline>
+      (function() {
+        var origFetch = window.fetch;
+        window.fetch = function(input, init) {
+          if (init && init.headers) {
+            if (init.headers instanceof Headers) {
+              init.headers.delete('traceparent');
+              init.headers.delete('tracestate');
+            } else if (typeof init.headers === 'object' && !Array.isArray(init.headers)) {
+              var h = Object.assign({}, init.headers);
+              delete h['traceparent'];
+              delete h['tracestate'];
+              init.headers = h;
+            }
+          }
+          return origFetch.call(this, input, init);
+        };
+      })();
+    </script>
+  </body>
+</html>

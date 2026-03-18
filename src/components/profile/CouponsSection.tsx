@@ -1,4 +1,4 @@
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/clerk-react';
 import { Tag, Check, ArrowRight, Loader2 } from 'lucide-react';
 
 import Button from '@/components/ui/Button';

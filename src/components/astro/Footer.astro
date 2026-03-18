@@ -1,0 +1,91 @@
+---
+import Section from './Section.astro';
+const currentYear = new Date().getFullYear();
+---
+
+<footer>
+  <Section variant="black">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <!-- About -->
+      <div>
+        <h3 class="text-2xl font-bold text-js mb-4">ZurichJS</h3>
+        <p class="mb-6">
+          Zurich&apos;s vibrant community for JavaScript enthusiasts. Join us to connect,
+          learn, and grow with fellow developers.
+        </p>
+        <div class="flex space-x-4">
+          <a
+            href="https://linkedin.com/company/zurichjs"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-js hover-lift transition-colors"
+            aria-label="LinkedIn"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="text-xl font-bold text-js mb-4">Quick Links</h3>
+        <ul class="space-y-2">
+          <li><a href="/events" class="hover:text-js transition-colors">Events</a></li>
+          <li><a href="/speakers" class="hover:text-js transition-colors">Speakers</a></li>
+          <li><a href="/media" class="hover:text-js transition-colors">Photos & Videos</a></li>
+          <li><a href="/cfp" class="hover:text-js transition-colors">Call for Papers</a></li>
+          <li><a href="/partnerships" class="hover:text-js transition-colors">Partnerships</a></li>
+          <li><a href="/about" class="hover:text-js transition-colors">About Us</a></li>
+        </ul>
+      </div>
+
+      <!-- Policies -->
+      <div>
+        <h3 class="text-xl font-bold text-js mb-4">Policies</h3>
+        <ul class="space-y-2">
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+            <a href="/policies/code-of-conduct" class="hover:text-js transition-colors">Code of Conduct</a>
+          </li>
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <a href="/policies/terms-and-conditions" class="hover:text-js transition-colors">Terms and Conditions</a>
+          </li>
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <a href="/policies/privacy-policy" class="hover:text-js transition-colors">Privacy Policy</a>
+          </li>
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+            <a href="/policies/refund-policy" class="hover:text-js transition-colors">Refund Policy</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div>
+        <h3 class="text-xl font-bold text-js mb-4">Contact</h3>
+        <ul class="space-y-3">
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Zurich, Switzerland</span>
+          </li>
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <span>Regular meetups throughout the year</span>
+          </li>
+          <li class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 text-js"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <a href="mailto:hello@zurichjs.com" class="hover:text-js transition-colors">hello@zurichjs.com</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 pt-8 mt-8 text-center text-gray-400">
+      <p>&copy; {currentYear} Swiss JavaScript Group (<a href="https://www.uid.admin.ch/Detail.aspx?uid_id=CHE255581547" target="_blank" rel="noopener noreferrer" class="hover:text-js transition-colors">CHE-255.581.547</a>). All rights reserved.</p>
+      <p class="mt-2 text-sm">Made with &#x1F49B; by the JavaScript community in Zurich</p>
+      <p class="mt-3 text-xs text-gray-500">ZurichJS is part of the Swiss JavaScript Group, a non-profit association registered in Switzerland.</p>
+    </div>
+  </Section>
+</footer>

@@ -27,7 +27,6 @@ import {
   Keyboard,
   Smartphone
 } from 'lucide-react';
-import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 
 interface AIEffect {
@@ -353,17 +352,14 @@ export default function AIFunMode({ isOpen, onClose, imageUrl, imageAlt, eventTi
               </div>
             )}
             
-            <Image
+            <img
               src={processedImageUrl || imageUrl}
               alt={`${imageAlt} - AI Enhanced`}
               width={1200}
               height={800}
               className="max-w-full max-h-[calc(100vh-240px)] object-contain rounded-lg"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
               onLoad={() => setIsLoading(false)}
               onError={() => setIsLoading(false)}
-              priority
-              quality={90}
             />
           </motion.div>
         </AnimatePresence>

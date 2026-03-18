@@ -1,7 +1,7 @@
-import { clerkClient, getAuth } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
+import { clerkClient } from '@clerk/astro/server';
 
-
+export const prerender = false;
 
 interface ReferralInfo {
   userId: string;
@@ -25,92 +25,110 @@ interface UserMetadata {
   [key: string]: unknown;
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   // Add logging to track API calls
   console.log('update-referrer-metadata API called', new Date().toISOString());
 
   try {
     // Get current user session to verify authentication
-    const { userId } = getAuth(req);
-    
+    const auth = context.locals.auth();
+    const userId = auth?.userId;
+
     if (!userId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return new Response(JSON.stringify({ message: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    const { 
-      referrerId, 
-      refereeId, 
-      refereeName, 
-      refereeEmail, 
-      date, 
-      type, 
-      creditValue 
-    } = req.body;
+    const {
+      referrerId,
+      refereeId,
+      refereeName,
+      refereeEmail,
+      date,
+      type,
+      creditValue
+    } = await context.request.json();
 
     console.log('Request payload:', { referrerId, refereeId, type });
 
     // Validate required fields
     if (!referrerId || !refereeId) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return new Response(JSON.stringify({ message: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Prevent circular references - don't allow someone to be referred by someone they referred
     if (referrerId === refereeId) {
       console.log('Prevented self-referral attempt');
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Self-referrals are not allowed' 
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Self-referrals are not allowed'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
     // Verify this is a legitimate request
     if (userId !== refereeId) {
       console.log('Unauthorized referral attempt:', { userId, refereeId });
-      return res.status(403).json({ message: 'Forbidden: User can only update their own referral data' });
+      return new Response(JSON.stringify({ message: 'Forbidden: User can only update their own referral data' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     try {
       // Initialize the clerk client
-      const client = await clerkClient();
-      
+      const client = clerkClient(context);
+
       // Get the referrer user from Clerk
       const user = await client.users.getUser(referrerId);
 
       if (!user) {
-        return res.status(404).json({ message: 'Referrer not found' });
+        return new Response(JSON.stringify({ message: 'Referrer not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
 
       // Get current metadata
       const currentMetadata = user.unsafeMetadata as UserMetadata;
-      
+
       // Check if the referrer has a referredBy property pointing to the referee (circular reference)
       if (currentMetadata?.referredBy && (currentMetadata.referredBy as ReferredBy).userId === refereeId) {
         console.log('Prevented circular reference detected:', { referrerId, refereeId });
-        return res.status(409).json({
+        return new Response(JSON.stringify({
           success: false,
           message: 'Circular reference detected. Cannot create mutual referral relationship.'
+        }), {
+          status: 409,
+          headers: { 'Content-Type': 'application/json' },
         });
       }
-      
+
       // Initialize or update the referrals array
       const referrals = currentMetadata?.referrals || [];
-      
+
       // Check if the referee is already in the referrer's referrals list
       const existingReferral = referrals.find(ref => ref.userId === refereeId);
-      
+
       if (existingReferral) {
         // Already in the list, no need to add again
         console.log('Referral already exists:', { referrerId, refereeId });
-        return res.status(200).json({ 
-          success: true, 
-          message: 'Referrer metadata already updated previously' 
+        return new Response(JSON.stringify({
+          success: true,
+          message: 'Referrer metadata already updated previously'
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
         });
       }
-      
+
       // Add new referral
       const newReferral: ReferralInfo = {
         userId: refereeId,
@@ -122,7 +140,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       };
 
       console.log('Adding new referral:', newReferral);
-      
+
       // Update the referrer's metadata
       await client.users.updateUser(referrerId, {
         unsafeMetadata: {
@@ -134,18 +152,25 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
 
       console.log('Referrer metadata updated successfully');
-      return res.status(200).json({ 
-        success: true, 
+      return new Response(JSON.stringify({
+        success: true,
         message: 'Referrer metadata updated successfully'
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
       });
     } catch (error) {
       console.error('Error updating referrer in Clerk:', error);
-      return res.status(500).json({ message: 'Error updating referrer metadata' });
+      return new Response(JSON.stringify({ message: 'Error updating referrer metadata' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
   } catch (error) {
     console.error('Error in update-referrer-metadata API:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    return new Response(JSON.stringify({ message: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

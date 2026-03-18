@@ -1,6 +1,4 @@
 import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
 
 import { getTodaysSponsors } from '@/data';
 
@@ -64,7 +62,7 @@ export default function TodaysSponsors() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.03 }}
       >
-        <Link
+        <a
           href={sponsor.url}
           target="_blank"
           rel="noopener noreferrer"
@@ -75,12 +73,10 @@ export default function TodaysSponsors() {
             {/* Logo - Large and centered on mobile */}
             <div className="flex-shrink-0">
               <div className={`relative ${tierStyles.logoSize} group-hover:scale-105 transition-transform duration-200`}>
-                <Image
+                <img
                   src={sponsor.logo}
                   alt={`${sponsor.name} logo`}
-                  fill
-                  className="object-contain"
-                  sizes={tierStyles.mobileLogoSize}
+                  className="object-contain w-full h-full absolute inset-0"
                 />
               </div>
             </div>
@@ -118,12 +114,10 @@ export default function TodaysSponsors() {
             {/* Logo */}
             <div className="flex-shrink-0">
               <div className={`relative ${tierStyles.logoSize} group-hover:scale-105 transition-transform duration-200`}>
-                <Image
+                <img
                   src={sponsor.logo}
                   alt={`${sponsor.name} logo`}
-                  fill
-                  className="object-contain"
-                  sizes={tierStyles.mobileLogoSize}
+                  className="object-contain w-full h-full absolute inset-0"
                 />
               </div>
             </div>
@@ -155,7 +149,7 @@ export default function TodaysSponsors() {
               )}
             </div>
           </div>
-        </Link>
+        </a>
       </motion.div>
     );
   };
@@ -173,12 +167,12 @@ export default function TodaysSponsors() {
         </div>
         
         {/* Compact CTA */}
-        <Link 
+        <a 
           href="/partnerships" 
           className="text-xs text-zurich hover:text-zurich/80 font-medium underline transition-colors duration-200 whitespace-nowrap"
         >
           Become a sponsor →
-        </Link>
+        </a>
       </div>
 
       {/* All sponsors in unified grid - sorted by tier, responsive columns */}

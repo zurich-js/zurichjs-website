@@ -1,7 +1,6 @@
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { Star, CheckCircle, ThumbsUp, MessageSquare, Box, ChevronDown, ChevronUp, ExternalLink, Beaker } from 'lucide-react';
-import Image from 'next/image';
 import { useState, useEffect, useCallback } from 'react';
 
 import { ProductDemo, ProductFeedbackData } from '@/types';
@@ -146,7 +145,7 @@ const ProductFeedback = ({
           <div className="flex items-center gap-3 mb-4">
             {productDemo?.logo && (
               <div className="h-12 w-12 relative flex-shrink-0">
-                <Image
+                <img
                   src={productDemo?.logo}
                   alt={`${productDemo?.name} logo`}
                   width={48}

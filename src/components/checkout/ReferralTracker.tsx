@@ -1,4 +1,4 @@
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/clerk-react';
 import { useEffect } from 'react';
 
 import { useReferrals } from '@/hooks/useReferrals';

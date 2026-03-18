@@ -1,0 +1,30 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Header from '../components/react/Header';
+import AnnouncementBanner from '../components/react/AnnouncementBanner';
+import Footer from '../components/astro/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  keywords?: string[];
+  ogImage?: string;
+  ogType?: 'website' | 'article' | 'profile';
+  canonical?: string;
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
+  geo?: { region?: string; placename?: string; position?: string };
+  noindex?: boolean;
+  twitter?: { cardType?: string; site?: string; handle?: string };
+}
+
+const props = Astro.props;
+---
+
+<BaseLayout {...props}>
+  <AnnouncementBanner client:load />
+  <Header client:load />
+  <main class="flex-grow pt-16 lg:pt-20">
+    <slot />
+  </main>
+  <Footer />
+</BaseLayout>

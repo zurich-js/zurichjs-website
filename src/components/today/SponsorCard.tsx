@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { Event } from '@/sanity/queries';
 
 interface SponsorCardProps {
@@ -13,7 +11,7 @@ export default function SponsorCard({ event }: SponsorCardProps) {
         Connect 🌟
       </h2>
       
-      <Link
+      <a
         href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg"
         target="_blank"
         rel="noopener noreferrer"
@@ -36,9 +34,9 @@ export default function SponsorCard({ event }: SponsorCardProps) {
         <div className="text-gray-400 group-hover:text-zurich group-hover:translate-x-1 transition-all duration-200 text-lg sm:text-base flex-shrink-0">
           →
         </div>
-      </Link>
+      </a>
       
-      <Link
+      <a
         href="https://linkedin.com/company/zurichjs"
         target="_blank"
         rel="noopener noreferrer"
@@ -54,7 +52,7 @@ export default function SponsorCard({ event }: SponsorCardProps) {
         <div className="text-gray-400 group-hover:text-zurich group-hover:translate-x-1 transition-all duration-200 text-lg sm:text-base flex-shrink-0">
           →
         </div>
-      </Link>
+      </a>
 
       {event.attendees > 0 && (
         <div className="bg-white rounded-2xl border border-gray-100 text-center p-5 sm:p-4 shadow-lg">

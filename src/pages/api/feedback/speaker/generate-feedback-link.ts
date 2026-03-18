@@ -1,39 +1,40 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
 
-
-import { getSpeakerById } from '@/sanity/queries';
+import { getSpeakerById } from '@/sanity/queries/speakers';
 import { generateSpeakerToken, generateSpeakerFeedbackUrl } from '@/utils/tokens';
 
+export const prerender = false;
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
+export async function POST(context: APIContext) {
   console.log('Generating feedback link');
 
   try {
-    const { speakerId } = req.body;
+    const { speakerId } = await context.request.json();
 
     if (!speakerId) {
-      return res.status(400).json({ message: 'Missing speaker ID' });
+      return new Response(JSON.stringify({ message: 'Missing speaker ID' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Verify that the speaker exists
-    const speaker = await getSpeakerById(speakerId)
+    const speaker = await getSpeakerById(speakerId);
 
     if (!speaker) {
-      return res.status(404).json({ message: 'Speaker not found' });
+      return new Response(JSON.stringify({ message: 'Speaker not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Generate a feedback URL
-    const host = req.headers.host || '';
-    const protocol = host.includes('localhost') ? 'http://' : 'https://';
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}${host}`;
+    const url = context.url;
+    const baseUrl = import.meta.env.PUBLIC_BASE_URL || `${url.protocol}//${url.host}`;
     const token = generateSpeakerToken(speakerId);
     const feedbackUrl = generateSpeakerFeedbackUrl(speakerId, baseUrl);
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       success: true,
       speaker: {
         name: speaker.name,
@@ -41,14 +42,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
       token,
       feedbackUrl
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('Error generating feedback link:', error);
-    return res.status(500).json({ 
+    return new Response(JSON.stringify({
       message: 'Error generating feedback link',
       error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

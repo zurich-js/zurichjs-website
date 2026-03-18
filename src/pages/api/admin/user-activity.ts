@@ -1,7 +1,7 @@
-import { clerkClient } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { APIContext } from 'astro';
+import { clerkClient } from '@clerk/astro/server';
 
-
+export const prerender = false;
 
 interface UserActivityData {
   userId: string;
@@ -18,14 +18,10 @@ interface UserActivityData {
   }[];
 }
 
-async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function GET(_context: APIContext) {
   try {
     const client = await clerkClient();
-    
+
     // Fetch all users
     const usersList = await client.users.getUserList({
       limit: 500,
@@ -59,7 +55,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       // Calculate activity score based on various factors
       let activityScore = 0;
-      
+
       // Base score for having an account
       activityScore += 10;
 
@@ -145,15 +141,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       recentActivity: recentActivity.slice(0, 20), // Last 20 activities
     };
 
-    return res.status(200).json({
+    return new Response(JSON.stringify({
       stats,
       users: userActivityData,
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error fetching user activity:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
-
-export default handler;

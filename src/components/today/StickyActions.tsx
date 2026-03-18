@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useState } from 'react';
 
 export default function StickyActions() {
@@ -74,7 +73,7 @@ export default function StickyActions() {
                   <span>Need Help?</span>
                 </span>
               </button>
-              <Link
+              <a
                 href="/events"
                 className="flex-1 min-h-[52px] bg-gray-600 text-white rounded-2xl font-bold text-sm flex items-center justify-center active:scale-[0.98] transition-transform duration-200 touch-manipulation shadow-lg"
               >
@@ -82,7 +81,7 @@ export default function StickyActions() {
                   <span className="text-base">📅</span>
                   <span>Upcoming Events</span>
                 </span>
-              </Link>
+              </a>
             </div>
           </div>
 
@@ -97,7 +96,7 @@ export default function StickyActions() {
                 Need Help?
               </span>
             </button>
-            <Link
+            <a
               href="/events"
               className="flex-1 min-h-[52px] bg-gray-600 text-white rounded-2xl font-bold text-base flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 shadow-lg"
             >
@@ -105,7 +104,7 @@ export default function StickyActions() {
                 <span className="text-lg">📅</span>
                 Upcoming Events
               </span>
-            </Link>
+            </a>
           </div>
         </div>
       </div>

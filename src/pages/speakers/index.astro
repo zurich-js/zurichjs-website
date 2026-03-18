@@ -1,0 +1,130 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+import Section from '../../components/astro/Section.astro';
+import SpeakerGrid from '../../components/react/SpeakerGrid';
+import { getSpeakers } from '../../sanity/queries/speakers';
+import { getPastEvents } from '../../sanity/queries/events';
+import { getStats } from '../../sanity/queries/stats';
+
+const speakers = await getSpeakers({ shouldFilterVisible: true });
+const pastEvents = await getPastEvents();
+const stats = await getStats();
+
+// Shuffle speakers for the second marquee row
+const shuffled = [...speakers].sort(() => Math.random() - 0.5);
+
+// Serialize speakers for the React island (only needed fields)
+const speakersForGrid = speakers.map((s) => ({
+  id: s.id,
+  name: s.name,
+  title: s.title,
+  company: s.company,
+  image: s.image,
+  talkCount: s.talkCount,
+  talks: s.talks.map((t) => ({
+    id: t.id,
+    title: t.title,
+    tags: t.tags,
+    type: t.type,
+  })),
+}));
+---
+
+<PageLayout
+  title="Speakers | ZurichJS"
+  description="Meet the speakers of ZurichJS meetups."
+  keywords={['ZurichJS speakers', 'JavaScript speakers Zurich', 'tech speakers Switzerland', 'meetup speakers']}
+>
+  <!-- Hero with Marquee -->
+  <Section variant="black" padding="lg" class="overflow-hidden">
+    <div class="text-center mb-10 animate-fade-in-up">
+      <h1 class="text-4xl md:text-6xl font-black mb-3">
+        <span class="text-[#f7df1e]">{speakers.length}</span> Speakers
+      </h1>
+      <p class="text-lg text-gray-400 max-w-xl mx-auto">
+        The brilliant developers and engineers who share their knowledge with the ZurichJS community.
+      </p>
+    </div>
+
+    <!-- Marquee Row 1 — scrolls left -->
+    <div class="marquee-row mb-4">
+      <div class="flex animate-marquee-left" style="width: max-content;">
+        {[...speakers, ...speakers].map((speaker, i) => (
+          <a href={`/speakers/${speaker.id}`} class="shrink-0 mx-2 w-[140px] bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center hover:bg-white/20 transition-colors group">
+            <img
+              src={speaker.image}
+              alt={speaker.name}
+              width="80"
+              height="80"
+              loading="lazy"
+              class="w-20 h-20 rounded-full mx-auto object-cover ring-2 ring-white/20 group-hover:ring-[#f7df1e] transition-all"
+            />
+            <p class="text-white text-xs font-semibold mt-2 truncate">{speaker.name}</p>
+            <p class="text-gray-500 text-[10px] truncate">{speaker.company || `${speaker.talkCount} talk${speaker.talkCount !== 1 ? 's' : ''}`}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- Marquee Row 2 — scrolls right -->
+    <div class="marquee-row mb-10">
+      <div class="flex animate-marquee-right" style="width: max-content;">
+        {[...shuffled, ...shuffled].map((speaker, i) => (
+          <a href={`/speakers/${speaker.id}`} class="shrink-0 mx-2 w-[140px] bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center hover:bg-white/20 transition-colors group">
+            <img
+              src={speaker.image}
+              alt={speaker.name}
+              width="80"
+              height="80"
+              loading="lazy"
+              class="w-20 h-20 rounded-full mx-auto object-cover ring-2 ring-white/20 group-hover:ring-[#f7df1e] transition-all"
+            />
+            <p class="text-white text-xs font-semibold mt-2 truncate">{speaker.name}</p>
+            <p class="text-gray-500 text-[10px] truncate">{speaker.company || `${speaker.talkCount} talk${speaker.talkCount !== 1 ? 's' : ''}`}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="flex flex-wrap justify-center gap-8 text-center animate-fade-in-up">
+      <div>
+        <p class="text-2xl md:text-3xl font-black text-[#f7df1e]">{speakers.length}</p>
+        <p class="text-xs text-gray-500 uppercase tracking-wider">Speakers</p>
+      </div>
+      <div>
+        <p class="text-2xl md:text-3xl font-black text-[#f7df1e]">{pastEvents.length}</p>
+        <p class="text-xs text-gray-500 uppercase tracking-wider">Events</p>
+      </div>
+      <div>
+        <p class="text-2xl md:text-3xl font-black text-[#f7df1e]">{stats.totalAttendees?.toLocaleString()}</p>
+        <p class="text-xs text-gray-500 uppercase tracking-wider">Attendees</p>
+      </div>
+    </div>
+  </Section>
+
+  <!-- Searchable Grid -->
+  <Section variant="gray" padding="lg">
+    <div class="animate-fade-in-up">
+      <h2 class="text-3xl font-bold mb-8 text-center">Explore Speakers</h2>
+      <SpeakerGrid client:load speakers={speakersForGrid} />
+    </div>
+  </Section>
+
+  <!-- CTA -->
+  <Section variant="gradient" padding="lg">
+    <div class="text-center animate-fade-in-up max-w-2xl mx-auto">
+      <h2 class="text-3xl font-bold mb-4">Want to Speak?</h2>
+      <p class="text-gray-800 mb-6">
+        We are always looking for speakers to share their knowledge with the community. Submit a talk proposal and join our lineup!
+      </p>
+      <a
+        href="/cfp"
+        class="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+      >
+        Submit a Talk
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+  </Section>
+</PageLayout>

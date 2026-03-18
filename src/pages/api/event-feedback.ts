@@ -1,11 +1,11 @@
+import type { APIContext } from 'astro';
 import crypto from 'crypto';
+import { createClient } from '@sanity/client';
 
-import { NextApiRequest, NextApiResponse } from 'next';
-import { createClient } from 'next-sanity';
+import { sendPlatformNotification } from '@/lib/notification';
+import { getEventById } from '@/sanity/queries/events';
 
-
-import { getEventById } from '@/sanity/queries';
-
+export const prerender = false;
 
 // Types
 interface ComprehensiveFeedbackData {
@@ -25,38 +25,27 @@ interface ComprehensiveFeedbackData {
   submittedAt: string;
 }
 
-type ResponseData = {
-  success: boolean;
-  message: string;
-  feedbackId?: string;
-  error?: string;
-};
-
 // Initialize Sanity client
 const sanityClient = createClient({
   projectId: "viqjrovw",
   dataset: "production",
   apiVersion: '2024-01-01',
-  token: process.env.SANITY_TOKEN,
+  token: import.meta.env.SANITY_TOKEN,
   useCdn: false,
 });
 
-async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false,
-      message: 'Method not allowed' 
-    });
-  }
-
+export async function POST(context: APIContext) {
   try {
-    const feedback: ComprehensiveFeedbackData = req.body;
+    const feedback: ComprehensiveFeedbackData = await context.request.json();
     const { selectedEventId, overallRating, foodOptions, drinks, talks, timing, execution, improvements, futureTopics, worthTime, wouldRecommend, dealOfDay, additionalComments, submittedAt } = feedback;
 
     if (!selectedEventId || !overallRating || !submittedAt) {
-      return res.status(400).json({ 
+      return new Response(JSON.stringify({
         success: false,
-        message: 'Missing required fields' 
+        message: 'Missing required fields'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -68,25 +57,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
       // Validate that the event exists in Sanity
       event = await getEventById(selectedEventId);
       if (!event) {
-        return res.status(404).json({ 
+        return new Response(JSON.stringify({
           success: false,
-          message: 'Event not found' 
+          message: 'Event not found'
+        }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
         });
       }
     }
 
     // Create a hash of the IP address to help prevent duplicate submissions
-    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const ipAddress = context.request.headers.get('x-forwarded-for') || '';
     const ipHash = crypto
       .createHash('sha256')
-      .update(typeof ipAddress === 'string' ? ipAddress : ipAddress[0] || '')
+      .update(ipAddress)
       .digest('hex');
 
     // Create a browser fingerprint from user agent and other headers
-    const userAgent = req.headers['user-agent'] || '';
-    const accept = req.headers['accept'] || '';
-    const acceptLanguage = req.headers['accept-language'] || '';
-    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const userAgent = context.request.headers.get('user-agent') || '';
+    const accept = context.request.headers.get('accept') || '';
+    const acceptLanguage = context.request.headers.get('accept-language') || '';
+    const acceptEncoding = context.request.headers.get('accept-encoding') || '';
 
     const browserFingerprint = crypto
       .createHash('sha256')
@@ -102,8 +94,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
 
     // Check for existing comprehensive feedback from this user for this event/workshop
     const existingFeedback = await sanityClient.fetch(
-      `*[_type == "comprehensiveFeedback" && 
-    eventId == $eventId && 
+      `*[_type == "comprehensiveFeedback" &&
+    eventId == $eventId &&
     (ipHash == $ipHash || browserFingerprint == $browserFingerprint)][0]`,
       {
         eventId: selectedEventId,
@@ -113,9 +105,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
     );
 
     if (existingFeedback) {
-      return res.status(409).json({
+      return new Response(JSON.stringify({
         success: false,
         message: `You have already submitted comprehensive feedback for this ${isWorkshop ? 'workshop' : 'event'}`
+      }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
@@ -190,40 +185,37 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
     // Send notification about new comprehensive feedback
     try {
       const itemTitle = isWorkshop ? selectedEventId.replace('workshop-', '').replace(/-/g, ' ') : (event?.title || 'Unknown Event');
-      const ratingStars = '⭐'.repeat(overallRating);
+      const ratingStars = '\u2B50'.repeat(overallRating);
       const avgRating = Math.round((foodOptions.rating + drinks.rating + talks.rating + timing.rating + execution.rating) / 5 * 10) / 10;
-      
-      await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: `New Comprehensive ${isWorkshop ? 'Workshop' : 'Event'} Feedback ${ratingStars}`,
-          message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\n${isWorkshop ? 'Workshop' : 'Event'}: ${itemTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + '...' : improvements}`,
-          type: 'other',
-          priority: overallRating <= 2 ? 'high' : 'normal',
-        }),
+
+      await sendPlatformNotification({
+        title: `New Comprehensive ${isWorkshop ? 'Workshop' : 'Event'} Feedback ${ratingStars}`,
+        message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\n${isWorkshop ? 'Workshop' : 'Event'}: ${itemTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + '...' : improvements}`,
+        priority: overallRating <= 2 ? 2 : 1,
       });
     } catch (notificationError) {
       console.error('Failed to send comprehensive feedback notification:', notificationError);
       // Don't fail the feedback submission if notification fails
     }
 
-    return res.status(201).json({ 
+    return new Response(JSON.stringify({
       success: true,
       message: 'Comprehensive feedback submitted successfully',
       feedbackId: createdFeedback._id
+    }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('Error processing event feedback:', error);
-    return res.status(500).json({
+    return new Response(JSON.stringify({
       success: false,
       message: 'Error processing feedback',
       error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 }
-
-export default handler;

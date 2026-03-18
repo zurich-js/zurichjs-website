@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
 import { useState, useEffect } from 'react';
 
 import Section from "@/components/Section";
@@ -42,7 +41,16 @@ export default function JoinCTA({
   newsletterTitle = "Stay in the JS Loop!",
   buttonUrl = "https://meetup.com/zurich-js"
 }: JoinCTAProps) {
-  const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
+  // Feature flag check moved client-side only to avoid SSR issues
+  const [showNewsletter, setShowNewsletter] = useState(false);
+  useEffect(() => {
+    try {
+      const posthog = (window as unknown as { posthog?: { isFeatureEnabled?: (flag: string) => boolean } }).posthog;
+      if (posthog?.isFeatureEnabled) {
+        setShowNewsletter(posthog.isFeatureEnabled(FeatureFlags.Newsletter) ?? false);
+      }
+    } catch { /* PostHog not loaded yet */ }
+  }, []);
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {

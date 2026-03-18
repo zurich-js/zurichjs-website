@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useState } from 'react';
 
 import { Event } from '@/sanity/queries';
@@ -107,7 +106,7 @@ export default function QuickActions({ event }: QuickActionsProps) {
 
       <div className="grid gap-3 sm:gap-2">
         {actions.map((action, index) => (
-          <Link
+          <a
             key={index}
             href={action.href}
             {...(action.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
@@ -124,7 +123,7 @@ export default function QuickActions({ event }: QuickActionsProps) {
             <div className="text-gray-400 group-hover:text-zurich group-hover:translate-x-1 transition-all duration-200 text-lg sm:text-base flex-shrink-0">
               →
             </div>
-          </Link>
+          </a>
         ))}
 
         {/* Panic Button */}

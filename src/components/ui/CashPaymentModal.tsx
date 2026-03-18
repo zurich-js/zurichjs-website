@@ -1,7 +1,7 @@
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useAuth } from '@clerk/astro/react';
+import { useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, DollarSign, CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
-import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -27,7 +27,6 @@ export default function CashPaymentModal({
   workshopId,
   ticketType,
 }: CashPaymentModalProps) {
-  const router = useRouter();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   
@@ -138,11 +137,11 @@ export default function CashPaymentModal({
         event_id: eventId,
         workshop_id: workshopId,
         // Add coupon if it exists in the URL
-        coupon: router.query.coupon as string || undefined
+        coupon: new URLSearchParams(window.location.search).get('coupon') || undefined
       };
-      
+
       const encodedData = encodePaymentData(paymentData);
-      router.push(`/success?data=${encodedData}`);
+      window.location.href = `/success?data=${encodedData}`;
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

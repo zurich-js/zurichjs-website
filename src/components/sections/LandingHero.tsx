@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
-import Link from 'next/link';
 import { useState, useEffect } from "react";
 
 import type { Workshop } from "@/components/sections/UpcomingWorkshops";
@@ -144,20 +143,20 @@ export default function LandingHero({
 
             {/* Secondary Actions - Desktop */}
             <div className="hidden lg:flex items-center gap-4 mt-6">
-              <Link
+              <a
                 href={nextEvent?.meetupUrl || '/events'}
                 className="inline-flex items-center justify-center px-6 py-3 bg-white text-black font-semibold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
                 onClick={handleJoinMeetupClick}
               >
                 Join Next Meetup
-              </Link>
-              <Link
+              </a>
+              <a
                 href="/events"
                 className="inline-flex items-center text-black font-medium hover:underline focus:outline-none focus:underline"
                 onClick={handleViewAllEventsClick}
               >
                 View All Events
-              </Link>
+              </a>
             </div>
           </motion.div>
 
@@ -197,13 +196,13 @@ export default function LandingHero({
 
             {/* Secondary Actions - Mobile */}
             <div className="flex justify-center mt-4 lg:hidden">
-              <Link
+              <a
                 href="/events"
                 className="inline-flex items-center justify-center text-black font-medium hover:underline focus:outline-none focus:underline py-3"
                 onClick={handleViewAllEventsClick}
               >
                 View All Events
-              </Link>
+              </a>
             </div>
           </motion.div>
 
@@ -297,14 +296,14 @@ function EventCard({
       </div>
 
       {/* View Event Details Button */}
-      <Link
+      <a
         href={`/events/${event.id}`}
         className="block w-full text-center px-5 py-3 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90 mb-3"
         style={{ backgroundColor: COLORS.darkNavy }}
         onClick={onViewDetailsClick}
       >
         View Event Details
-      </Link>
+      </a>
 
       {/* Reserve Button */}
       <a
@@ -317,13 +316,13 @@ function EventCard({
       </a>
 
       {/* Submit Talk Link */}
-      <Link
+      <a
         href="/cfp/form"
         className="block text-center text-sm text-gray-600 hover:text-black transition-colors focus:outline-none focus:underline"
         onClick={onSubmitTalkClick}
       >
         Want to speak? Submit a talk
-      </Link>
+      </a>
     </div>
   );
 }
@@ -361,7 +360,7 @@ function WorkshopCard({
       </div>
 
       {/* Learn More Button */}
-      <Link
+      <a
         href={`/workshops/${workshop.id}`}
         className="block w-full text-center px-5 py-3 font-semibold rounded-lg border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-gray-50"
         style={{
@@ -371,7 +370,7 @@ function WorkshopCard({
         onClick={() => onWorkshopClick(workshop.title)}
       >
         Learn More
-      </Link>
+      </a>
     </div>
   );
 }

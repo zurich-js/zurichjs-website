@@ -1,5 +1,5 @@
 import { Upload } from 'lucide-react';
-import { ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 
 import { FormState, ValidationErrors } from '../types';
 

@@ -1,5 +1,5 @@
 import { AlertCircle } from 'lucide-react';
-import { ChangeEvent } from 'react';
+import type { ChangeEvent } from 'react';
 
 interface FormInputProps {
   label: string;

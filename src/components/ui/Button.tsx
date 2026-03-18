@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { ReactNode, MouseEvent, ButtonHTMLAttributes, AnchorHTMLAttributes } from 'react';
+import type { ReactNode, MouseEvent, ButtonHTMLAttributes, AnchorHTMLAttributes } from 'react';
 
 // Define our variant and size types
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
@@ -71,14 +70,14 @@ export default function Button({
   // Return link or button based on href prop
   if (href) {
     return (
-      <Link
+      <a
         href={href}
         className={buttonStyles}
         target={external ? '_blank' : undefined}
         rel={external ? 'noopener noreferrer' : undefined}
       >
         {buttonContent}
-      </Link>
+      </a>
     );
   }
 

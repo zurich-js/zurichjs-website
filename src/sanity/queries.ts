@@ -175,7 +175,11 @@ interface SanityUTMEvent {
 }
 
 export const getUpcomingEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) {
+  // Use start of today so events remain visible until midnight of their event day
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) {
     ...,
     "image": {
       "asset": {
@@ -218,7 +222,7 @@ export const getUpcomingEvents = async () => {
         }
       }
     }
-  }`);
+  }`, { startOfToday: startOfToday.toISOString() });
 
   return events.map(mapEventData);
 };
@@ -271,7 +275,11 @@ export const getEventsForUTM = async (options: {
 };
 
 export const getPastEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime < now()] | order(datetime desc) {
+  // Use start of today so events only become "past" after midnight of their event day
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const events = await client.fetch(`*[_type == "events" && datetime < $startOfToday] | order(datetime desc) {
     ...,
     "image": {
       "asset": {
@@ -314,7 +322,7 @@ export const getPastEvents = async () => {
         }
       }
     }
-  }`);
+  }`, { startOfToday: startOfToday.toISOString() });
   return events.map(mapEventData);
 };
 
@@ -1086,7 +1094,10 @@ export const getRecentPastEventsForFeedback = async (testCurrentDate?: Date): Pr
  */
 export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
   try {
-    const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) [0..9] {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0..9] {
       ...,
       "image": {
         "asset": {
@@ -1129,7 +1140,7 @@ export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
           }
         }
       }
-    }`);
+    }`, { startOfToday: startOfToday.toISOString() });
 
     return events.map(mapEventData);
   } catch (error) {

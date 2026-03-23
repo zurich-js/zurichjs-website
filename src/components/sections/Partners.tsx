@@ -1,27 +1,16 @@
-import { motion } from 'framer-motion';
+import {motion} from 'framer-motion';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 
 import Section from "@/components/Section";
+import {Partner, SponsorshipTier} from "@/data";
 import useEvents from '@/hooks/useEvents';
 
 import Button from '../ui/Button';
 
-// Define TypeScript interfaces for partners data
-interface Partner {
-  id: string;
-  name: string;
-  logo: string;
-  url: string;
-  type?: string;
-  sponsorshipTier?: 'champion' | 'builder' | 'friend' | 'supporter' | 'other';
-  description?: string;
-  blurb?: string;
-}
-
 // Props interface with optional styling properties
 interface PartnersProps {
-  partners: Partner[];
+  partners: Omit<Partner, 'type'>[];
   titleClassName?: string;
 }
 
@@ -38,17 +27,17 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
   }
 
   // Separate partners by sponsorship tier
-  const championPartners = partners.filter(partner => partner.sponsorshipTier === 'champion');
-  const builderPartners = partners.filter(partner => partner.sponsorshipTier === 'builder');
-  const friendPartners = partners.filter(partner => partner.sponsorshipTier === 'friend');
-  const supporterPartners = partners.filter(partner => partner.sponsorshipTier === 'supporter');
+  const championPartners = partners.filter(partner => partner.sponsorshipTier === SponsorshipTier.Champion);
+  const builderPartners = partners.filter(partner => partner.sponsorshipTier === SponsorshipTier.Builder);
+  const friendPartners = partners.filter(partner => partner.sponsorshipTier === SponsorshipTier.Friend);
+  const supporterPartners = partners.filter(partner => partner.sponsorshipTier === SponsorshipTier.Supporter);
   const regularPartners = partners.filter(partner => !partner.sponsorshipTier);
 
   // Handle partner click tracking
-  const handlePartnerClick = (partner: Partner, section: string) => {
+  const handlePartnerClick = (partner: Omit<Partner, 'type'>, section: string) => {
     track('partner_click_homepage', {
       partnerName: partner.name,
-      partnerTier: partner.sponsorshipTier || 'regular',
+      partnerTier: (partner.sponsorshipTier || SponsorshipTier.Other) as string,
       section: section,
       partnerUrl: partner.url
     });

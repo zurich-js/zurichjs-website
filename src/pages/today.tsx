@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Link from "next/link";
 import { useState, useEffect } from 'react';
 
 import Header from '@/components/layout/Header';
@@ -138,7 +139,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                   initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.15 }}
-                  className=""
+                  className="flex-1"
                   data-section="schedule"
                 >
                   <TodayCard className="h-full">
@@ -160,7 +161,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
             </TodayCard>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-6 md:flex-row">
             <motion.div
               initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
               animate={{ opacity: 1, y: 0 }}
@@ -168,7 +169,34 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               data-section="raffle"
             >
               <TodayCard className="h-full">
-                <SentryRaffle />
+                  <div className="flex flex-col gap-4 h-full md:min-w-96">
+                      <h2 className="text-xl font-bold text-gray-900">
+                          Give us feedback, get some swag!
+                      </h2>
+
+                      <p className="text-sm text-gray-600">
+                          Fill out the form below to get a unique Vercel cap.
+                      </p>
+
+                      <div className="flex-1 grid place-items-center my-6">
+                          <Image
+                              src="/images/partners/vercel-black.png"
+                              alt="Sentry logo"
+                              width={320}
+                              height={320}
+                              className="object-contain"
+                          />
+                      </div>
+
+                      <Link
+                          href="https://docs.google.com/forms/d/e/1FAIpQLSf2ovmu0kJZrVhKCpopW2C36cie4mUP1Cq4CanFRGpatsPJwA/viewform"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full bg-brand-black text-white font-bold py-4 px-8 rounded-2xl text-center hover:bg-brand-gray-dark transition-colors duration-200"
+                      >
+                          Get your Vercel swag
+                      </Link>
+                  </div>
               </TodayCard>
             </motion.div>
 
@@ -177,6 +205,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               data-section="verein"
+              className="flex-1"
             >
               <TodayCard className="h-full">
                 <VereinInquiry />
@@ -194,7 +223,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const upcomingEvent = await getEventById('feb-2026');
+    const upcomingEvent = await getEventById('march-2026');
 
     return {
       props: {

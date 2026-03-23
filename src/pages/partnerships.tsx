@@ -1,16 +1,22 @@
-import { motion } from 'framer-motion';
-import { Users, CheckCircle, Home, Calendar, Wrench } from 'lucide-react';
+import {motion} from 'framer-motion';
+import {Calendar, CheckCircle, Home, Users, Wrench} from 'lucide-react';
 import Image from 'next/image';
-import { useState, ChangeEvent, FormEvent } from 'react';
+import {ChangeEvent, FormEvent, useState} from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
-import { getPartnersByType, getPartnersBySponsorshipTier, getRegularPartners } from '@/data';
+import {
+    getPartnersBySponsorshipTier,
+    getPartnersByType,
+    getRegularPartners,
+    PartnerType,
+    SponsorshipTier
+} from '@/data';
 import useEvents from '@/hooks/useEvents';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
-import { getUpcomingEvents, getStats } from '@/sanity/queries';
+import {getStats, getUpcomingEvents} from '@/sanity/queries';
 
 // Define our TypeScript interfaces
 interface PricingOption {
@@ -154,16 +160,16 @@ export default function Partnerships() {
   ];
 
   // Get partners by type (for regular partners section)
-  const venuePartners = getPartnersByType('venue');
-  const conferencePartners = getPartnersByType('conference');
-  const communityPartners = getPartnersByType('community');
-  const supportingPartners = getPartnersByType('supporting');
+  const venuePartners = getPartnersByType(PartnerType.Venue);
+  const conferencePartners = getPartnersByType(PartnerType.Conference);
+  const communityPartners = getPartnersByType(PartnerType.Community);
+  const supportingPartners = getPartnersByType(PartnerType.Supporting);
 
   // Get partners by sponsorship tier
-  const championPartners = getPartnersBySponsorshipTier('champion');
-  const builderPartners = getPartnersBySponsorshipTier('builder');
-  const friendPartners = getPartnersBySponsorshipTier('friend');
-  const supporterPartners = getPartnersBySponsorshipTier('supporter');
+  const championPartners = getPartnersBySponsorshipTier(SponsorshipTier.Champion);
+  const builderPartners = getPartnersBySponsorshipTier(SponsorshipTier.Builder);
+  const friendPartners = getPartnersBySponsorshipTier(SponsorshipTier.Friend);
+  const supporterPartners = getPartnersBySponsorshipTier(SponsorshipTier.Supporter);
   const regularPartners = getRegularPartners();
 
   // Handle form input changes

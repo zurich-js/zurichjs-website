@@ -38,7 +38,7 @@ export default function TodayHero({ event }: HeroProps) {
 
           <Link
               href={`/events/${event.id}`}
-              className="mt-4 block border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
+              className="mt-4 text-sm block border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
           >
               Event details
           </Link>
@@ -51,31 +51,31 @@ export default function TodayHero({ event }: HeroProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Link
                         href="/feedback"
-                        className="flex-1 bg-black text-white hover:bg-black/90 font-bold py-4 px-8 rounded-2xl transition-all duration-200"
+                        className="flex-1 text-sm bg-black text-white hover:bg-black/90 font-bold py-4 px-8 rounded-2xl transition-all duration-200"
                     >
                         Rate Event
                     </Link>
                     <Link
                         href={`/events/${event.id}?feedback=true`}
-                        className="flex-1 bg-js hover:bg-js-dark text-black font-bold py-4 px-8 rounded-2xl transition-all duration-200"
+                        className="flex-1 text-sm bg-js hover:bg-js-dark text-black font-bold py-4 px-8 rounded-2xl transition-all duration-200"
                     >
                         Rate Talks
                     </Link>
                     <Link
                         href="/buy-us-a-coffee"
-                        className="block border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
+                        className="flex items-center justify-center text-sm border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
                     >
                         Buy us a coffee
                     </Link>
                     <Link
                         href="/donate"
-                        className="block border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
+                        className="flex items-center justify-center text-sm border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
                     >
                         Donate with Twint
                     </Link>
                     <Link
                         href="/tshirt"
-                        className="block border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
+                        className="flex items-center justify-center text-sm border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
                     >
                         Buy a T-shirt
                     </Link>
@@ -83,7 +83,7 @@ export default function TodayHero({ event }: HeroProps) {
                         href={`https://www.linkedin.com/feed/?linkOrigin=LI_BADGE&shareActive=true&shareUrl=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : 'https://zurichjs.com/events')}&text=${encodeURIComponent(`I had a great time at ZurichJS! Just attended "${event.title}" - what an amazing JavaScript community event! Thanks to all the speakers and organizers. 🚀 #ZurichJS #JavaScript #Community`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
+                        className="flex items-center justify-center text-sm border-2 border-black font-bold py-4 px-8 rounded-2xl hover:bg-black hover:text-white transition-all duration-200"
                     >
                         Post on LinkedIn
                     </Link>

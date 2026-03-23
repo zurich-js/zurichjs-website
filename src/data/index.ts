@@ -1,5 +1,17 @@
-export type PartnerType = 'venue' | 'conference' | 'community' | 'supporting';
-export type SponsorshipTier = 'champion' | 'builder' | 'friend' | 'supporter' | 'other';
+export enum PartnerType {
+    Venue = 'venue',
+    Conference = 'conference',
+    Community = 'community',
+    Supporting = 'supporting'
+}
+
+export enum SponsorshipTier {
+    Champion = 'champion',
+    Builder = 'builder',
+    Friend = 'friend',
+    Supporter = 'supporter',
+    Other = 'other'
+}
 
 export interface Partner {
     id: string;
@@ -20,15 +32,15 @@ export const getPartners = () => {
             name: 'Ginetta',
             logo: '/images/partners/ginetta.png',
             url: 'https://ginetta.net',
-            type: 'venue',
+            type: PartnerType.Venue,
             description: 'Hosting venue for ZurichJS meetups'
         },
         {
             id: '2',
-            name: 'Novu AG',
+            name: 'novu AG',
             logo: '/images/partners/novu.png',
             url: 'https://novu.ch/',
-            type: 'venue',
+            type: PartnerType.Venue,
             description: 'Hosting venue for ZurichJS meetups'
         },
         {
@@ -36,7 +48,7 @@ export const getPartners = () => {
             name: 'Get Your Guide',
             logo: '/images/partners/get-your-guide.png',
             url: 'https://qrco.de/bgTBWh',
-            type: 'venue',
+            type: PartnerType.Venue,
             description: 'Software company hosting us for Vue Zurich/ZurichJS meetups'
         },
         {
@@ -44,7 +56,7 @@ export const getPartners = () => {
             name: 'Smallpdf',
             logo: '/images/partners/smallpdf.png',
             url: 'https://smallpdf.com',
-            type: 'venue',
+            type: PartnerType.Venue,
             description: 'Hosting venue for ZurichJS meetups'
         },
         {
@@ -52,7 +64,7 @@ export const getPartners = () => {
             name: 'Orbiz Josef Zurich',
             logo: '/images/partners/orbiz.png',
             url: 'https://orbiz-flex.ch/standort/josef',
-            type: 'venue',
+            type: PartnerType.Venue,
             description: 'Hosting venue for ZurichJS meetups'
         },
 
@@ -62,7 +74,7 @@ export const getPartners = () => {
             name: 'WhatTheStack',
             logo: '/images/partners/wts.png',
             url: 'https://wts.sh',
-            type: 'conference',
+            type: PartnerType.Conference,
             description: 'Exclusive perks for ZurichJS members'
         },
         {
@@ -70,7 +82,7 @@ export const getPartners = () => {
             name: 'CityJS',
             logo: '/images/partners/city-js.png',
             url: 'https://cityjsconf.org/',
-            type: 'conference',
+            type: PartnerType.Conference,
             description: 'Exclusive perks for ZurichJS members'
         },
         {
@@ -78,7 +90,7 @@ export const getPartners = () => {
             name: 'iJS Munich',
             logo: '/images/partners/ijs-munich.jpg',
             url: 'https://javascript-conference.com/munich/',
-            type: 'conference',
+            type: PartnerType.Conference,
             description: 'The Conference for Fullstack JS Development',
             blurb: 'iJS gathers like-minded professionals to learn, share, and grow. Join us in Munich where industry leaders and innovators will come together to exchange insights, share experiences, and chart the course for the future of Javascript'
         },
@@ -89,7 +101,7 @@ export const getPartners = () => {
             name: 'Code Blossom',
             logo: '/images/partners/code-blossom.png',
             url: 'https://www.code-blossom.com/',
-            type: 'community',
+            type: PartnerType.Community,
             description: 'Regional JavaScript community partner'
         },
         {
@@ -97,7 +109,7 @@ export const getPartners = () => {
             name: 'Grusp',
             logo: '/images/partners/grusp.png',
             url: 'https://www.grusp.org/',
-            type: 'conference',
+            type: PartnerType.Conference,
             description: 'Regional JavaScript community partner'
         },
         {
@@ -105,7 +117,7 @@ export const getPartners = () => {
             name: 'Web Zurich',
             logo: '/images/partners/webzurich.png',
             url: 'https://webzurich.ch/',
-            type: 'community',
+            type: PartnerType.Community,
             description: 'Regional web development community partner'
         },
 
@@ -115,7 +127,7 @@ export const getPartners = () => {
             name: 'Swiss Dev Jobs',
             logo: '/images/partners/sdj-rectangle.png',
             url: 'https://swissdevjobs.ch/jobs/JavaScript/all',
-            type: 'supporting',
+            type: PartnerType.Supporting,
             description: 'Job board access for ZurichJS members'
         },
         {
@@ -123,7 +135,7 @@ export const getPartners = () => {
             name: 'JetBrains',
             logo: '/images/partners/jetbrains.png',
             url: 'https://www.jetbrains.com/',
-            type: 'supporting',
+            type: PartnerType.Supporting,
             description: 'Software licenses and tools for ZurichJS'
         },
         {
@@ -131,8 +143,8 @@ export const getPartners = () => {
             name: 'GYFF',
             logo: '/images/partners/gyff.png',
             url: 'https://www.getyourfreefast.ch',
-            type: 'supporting',
-            sponsorshipTier: 'supporter',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Supporter,
             description: 'Swiss platform connecting IT experts with businesses',
             blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
         },
@@ -141,8 +153,8 @@ export const getPartners = () => {
             name: 'Sentry',
             logo: '/images/partners/sentry.png',
             url: 'https://sentry.io/welcome',
-            type: 'supporting',
-            sponsorshipTier: 'friend',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Friend,
             description: 'Application monitoring and error tracking platform',
             blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
         },
@@ -151,8 +163,8 @@ export const getPartners = () => {
             name: 'Stripe',
             logo: '/images/partners/stripe.png',
             url: 'https://stripe.com',
-            type: 'supporting',
-            sponsorshipTier: 'builder',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Builder,
             description: 'Financial infrastructure for the internet',
             blurb: 'Stripe is a financial infrastructure platform for businesses. Millions of companies use Stripe to accept payments, grow revenue, and accelerate new business opportunities.'
         },
@@ -161,8 +173,8 @@ export const getPartners = () => {
             name: 'Supabase',
             logo: '/images/partners/supabase.png',
             url: 'https://supabase.com',
-            type: 'supporting',
-            sponsorshipTier: 'builder',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Builder,
             description: 'The open source Firebase alternative',
             blurb: 'Supabase is an open source Firebase alternative. Start your project with a Postgres database, Authentication, instant APIs, Edge Functions, Realtime subscriptions, Storage, and Vector embeddings.'
         },
@@ -171,11 +183,21 @@ export const getPartners = () => {
             name: 'Remotion',
             logo: '/images/partners/remotion.png',
             url: 'https://remotion.dev',
-            type: 'supporting',
-            sponsorshipTier: 'friend',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Friend,
             description: 'Make videos programmatically with React',
             blurb: 'Remotion is a framework for creating videos programmatically using React. Write video templates in React, render them using Node.js or in the cloud.'
         },
+        {
+            id: '22',
+            name: 'Vercel',
+            logo: '/images/partners/vercel-black.png',
+            url: 'https://vercel.com',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Champion,
+            description: 'The AI Cloud for building and deploying modern web applications',
+            blurb: 'Vercel is a unified platform to build, deploy, and scale web applications, from static sites and full-stack apps to AI-powered experiences.'
+        }
     ];
 
     return partners;
@@ -201,70 +223,51 @@ export const getRegularPartners = () => {
     return getPartners().filter(partner => !partner.sponsorshipTier);
 };
 
-// Today's Event Sponsors - easily configurable array
-export interface TodaySponsor {
-    id: string;
-    name: string;
-    logo: string;
-    url: string;
-    tier?: 'champion' | 'builder' | 'friend' | 'supporter';
-    description?: string;
-}
+export type TodaySponsor = Omit<Partner, 'type'>;
 
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
-    const supabase = allPartners.find(p => p.name === 'Supabase');
-    const remotion = allPartners.find(p => p.name === 'Remotion');
-    const gyff = allPartners.find(p => p.name === 'GYFF');
-    const sentry = allPartners.find(p => p.name === 'Sentry');
+    const vercel = allPartners.find(p => p.name.toLowerCase() === 'vercel');
+    const gyff = allPartners.find(p => p.name.toLowerCase() === 'gyff');
+    const smallpdf = allPartners.find(p => p.name.toLowerCase() === 'smallpdf');
 
     const sponsors: TodaySponsor[] = [
-        // Community Builder tier (Gold sponsor)
-        ...(supabase ? [{
-            id: supabase.id,
-            name: supabase.name,
-            logo: supabase.logo,
-            url: supabase.url,
-            tier: 'builder' as const,
-            description: supabase.description
+        // Community Builder sponsorshipTier (Gold sponsor)
+        ...(vercel ? [{
+            id: vercel.id,
+            name: vercel.name,
+            logo: vercel.logo,
+            url: vercel.url,
+            sponsorshipTier: SponsorshipTier.Builder,
+            description: vercel.description
         }] : []),
 
-        // Community Friend tier
-        ...(remotion ? [{
-            id: remotion.id,
-            name: remotion.name,
-            logo: remotion.logo,
-            url: remotion.url,
-            tier: 'friend' as const,
-            description: remotion.description
+        ...(smallpdf ? [{
+            id: smallpdf.id,
+            name: smallpdf.name,
+            logo: smallpdf.logo,
+            url: smallpdf.url,
+            sponsorshipTier: SponsorshipTier.Champion,
+            description: smallpdf.description
         }] : []),
 
-        ...(sentry ? [{
-            id: sentry.id,
-            name: sentry.name,
-            logo: sentry.logo,
-            url: sentry.url,
-            tier: 'friend' as const,
-            description: sentry.description
-        }] : []),
-
-        // Community Supporter tier
+        // Community Supporter sponsorshipTier
         ...(gyff ? [{
             id: gyff.id,
             name: gyff.name,
             logo: gyff.logo,
             url: gyff.url,
-            tier: 'supporter' as const,
+            sponsorshipTier: SponsorshipTier.Supporter,
             description: gyff.description
         }] : [])
     ];
 
-    // Sort by tier (champion first, then builder, friend, supporter)
+    // Sort by sponsorshipTier (champion first, then builder, friend, supporter)
     return sponsors.sort((a, b) => {
-        const tierOrder = { champion: 0, builder: 1, friend: 2, supporter: 3 };
-        const tierA = tierOrder[a.tier as keyof typeof tierOrder] ?? 4;
-        const tierB = tierOrder[b.tier as keyof typeof tierOrder] ?? 4;
-        return tierA - tierB;
+        const sponsorshipTierOrder = { champion: 0, builder: 1, friend: 2, supporter: 3 };
+        const sponsorshipTierA = sponsorshipTierOrder[a.sponsorshipTier as keyof typeof sponsorshipTierOrder] ?? 4;
+        const sponsorshipTierB = sponsorshipTierOrder[b.sponsorshipTier as keyof typeof sponsorshipTierOrder] ?? 4;
+        return sponsorshipTierA - sponsorshipTierB;
     });
 };

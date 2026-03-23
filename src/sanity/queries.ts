@@ -4,11 +4,12 @@ import { Speaker, Talk } from "@/types";
 
 import { client } from "./client";
 
-/** Returns start of today (midnight) as ISO string for Sanity GROQ date comparisons */
+/** Returns start of today (midnight Zurich time) as ISO string for Sanity GROQ date comparisons */
 const getStartOfTodayISO = (): string => {
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  return startOfToday.toISOString();
+  // Get current date parts in Zurich timezone so events stay visible until midnight local time
+  const now = new Date();
+  const zurichDate = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' }); // YYYY-MM-DD
+  return `${zurichDate}T00:00:00.000Z`;
 };
 
 // Define types for Sanity data structures

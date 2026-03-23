@@ -4,6 +4,13 @@ import { Speaker, Talk } from "@/types";
 
 import { client } from "./client";
 
+/** Returns start of today (midnight) as ISO string for Sanity GROQ date comparisons */
+const getStartOfTodayISO = (): string => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return startOfToday.toISOString();
+};
+
 // Define types for Sanity data structures
 interface SanityImage {
   asset: {
@@ -175,10 +182,6 @@ interface SanityUTMEvent {
 }
 
 export const getUpcomingEvents = async () => {
-  // Use start of today so events remain visible until midnight of their event day
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
   const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) {
     ...,
     "image": {
@@ -222,7 +225,7 @@ export const getUpcomingEvents = async () => {
         }
       }
     }
-  }`, { startOfToday: startOfToday.toISOString() });
+  }`, { startOfToday: getStartOfTodayISO() });
 
   return events.map(mapEventData);
 };
@@ -275,10 +278,6 @@ export const getEventsForUTM = async (options: {
 };
 
 export const getPastEvents = async () => {
-  // Use start of today so events only become "past" after midnight of their event day
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-
   const events = await client.fetch(`*[_type == "events" && datetime < $startOfToday] | order(datetime desc) {
     ...,
     "image": {
@@ -322,7 +321,7 @@ export const getPastEvents = async () => {
         }
       }
     }
-  }`, { startOfToday: startOfToday.toISOString() });
+  }`, { startOfToday: getStartOfTodayISO() });
   return events.map(mapEventData);
 };
 
@@ -1094,9 +1093,6 @@ export const getRecentPastEventsForFeedback = async (testCurrentDate?: Date): Pr
  */
 export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
   try {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-
     const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0..9] {
       ...,
       "image": {
@@ -1140,7 +1136,7 @@ export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
           }
         }
       }
-    }`, { startOfToday: startOfToday.toISOString() });
+    }`, { startOfToday: getStartOfTodayISO() });
 
     return events.map(mapEventData);
   } catch (error) {

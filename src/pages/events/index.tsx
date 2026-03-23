@@ -533,7 +533,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   );
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
   const upcomingEvents = await getUpcomingEvents();
   const pastEvents = await getPastEvents();
 

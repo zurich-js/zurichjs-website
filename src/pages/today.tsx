@@ -169,7 +169,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               data-section="raffle"
             >
               <TodayCard className="h-full">
-                  <div className="flex flex-col gap-4 h-full min-w-96">
+                  <div className="flex flex-col gap-4 h-full md:min-w-96">
                       <h2 className="text-xl font-bold text-gray-900">
                           Give us feedback, get some swag!
                       </h2>
@@ -178,7 +178,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                           Fill out the form below to get a unique Vercel cap.
                       </p>
 
-                      <div className="flex-1 grid place-items-center">
+                      <div className="flex-1 grid place-items-center my-6">
                           <Image
                               src="/images/partners/vercel-black.png"
                               alt="Sentry logo"

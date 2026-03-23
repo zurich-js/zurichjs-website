@@ -4,6 +4,13 @@ import { Speaker, Talk } from "@/types";
 
 import { client } from "./client";
 
+/** Returns start of today (midnight) as ISO string for Sanity GROQ date comparisons */
+const getStartOfTodayISO = (): string => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return startOfToday.toISOString();
+};
+
 // Define types for Sanity data structures
 interface SanityImage {
   asset: {
@@ -175,7 +182,7 @@ interface SanityUTMEvent {
 }
 
 export const getUpcomingEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) {
+  const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) {
     ...,
     "image": {
       "asset": {
@@ -218,7 +225,7 @@ export const getUpcomingEvents = async () => {
         }
       }
     }
-  }`);
+  }`, { startOfToday: getStartOfTodayISO() });
 
   return events.map(mapEventData);
 };
@@ -271,7 +278,7 @@ export const getEventsForUTM = async (options: {
 };
 
 export const getPastEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime < now()] | order(datetime desc) {
+  const events = await client.fetch(`*[_type == "events" && datetime < $startOfToday] | order(datetime desc) {
     ...,
     "image": {
       "asset": {
@@ -314,7 +321,7 @@ export const getPastEvents = async () => {
         }
       }
     }
-  }`);
+  }`, { startOfToday: getStartOfTodayISO() });
   return events.map(mapEventData);
 };
 
@@ -1086,7 +1093,7 @@ export const getRecentPastEventsForFeedback = async (testCurrentDate?: Date): Pr
  */
 export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
   try {
-    const events = await client.fetch(`*[_type == "events" && datetime > now()] | order(datetime asc) [0..9] {
+    const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0..9] {
       ...,
       "image": {
         "asset": {
@@ -1129,7 +1136,7 @@ export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
           }
         }
       }
-    }`);
+    }`, { startOfToday: getStartOfTodayISO() });
 
     return events.map(mapEventData);
   } catch (error) {

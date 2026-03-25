@@ -94,6 +94,7 @@ export default function Header() {
 
   // Secondary items in "More" dropdown
   const moreItems: NavSubItem[] = [
+    { name: 'Membership', path: '/membership' },
     { name: 'Media', path: '/media' },
     { name: 'Partnerships', path: '/partnerships' },
     { name: 'Volunteers', path: '/cfv' },

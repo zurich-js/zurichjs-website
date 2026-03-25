@@ -16,7 +16,7 @@ async function handler(
   }
 
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message, tier, billingCycle } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({
@@ -25,9 +25,17 @@ async function handler(
       });
     }
 
+    const parts = [
+      `Name: ${name}`,
+      `Email: ${email}`,
+      ...(tier ? [`Tier: ${tier}`] : []),
+      ...(billingCycle ? [`Billing: ${billingCycle}`] : []),
+      `Message: ${message || 'No message provided'}`,
+    ];
+
     await sendPlatformNotification({
-      title: `New Verein Membership Inquiry`,
-      message: `Name: ${name}\nEmail: ${email}\nMessage: ${message || 'No message provided'}`,
+      title: `New Verein Membership Inquiry${tier ? ` (${tier})` : ''}`,
+      message: parts.join('\n'),
       priority: 0
     });
 

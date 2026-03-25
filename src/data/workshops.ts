@@ -4,6 +4,20 @@ export type { WorkshopState };
 
 export const getWorkshops = (): Workshop[] => {
   const workshops: Workshop[] = [
+    {
+      id: 'reliable-ai-agents',
+      title: 'How to Build Reliable AI Agents',
+      subtitle: 'From Simple LLM Interactions to Production-Ready AI Workflows',
+      description: 'AI agents are easy to demo, but much harder to make reliable in real-world applications. Learn the core building blocks behind modern AI agent systems and how to design them in a more robust, predictable, and production-minded way.',
+      dateInfo: 'April 21, 2026',
+      timeInfo: '17:00 - 18:30',
+      locationInfo: 'Smallpdf AG, Zürich',
+      maxAttendees: 20,
+      iconColor: '#7c3aed', // violet-600
+      tag: '🤖 AI Agents',
+      speakerId: 'speaker-69b5455a-0057-44df-8be5-f7c33b00cf4e',
+      state: 'confirmed' as WorkshopState
+    },
     // {
     //   id: 'astro-zero-to-hero',
     //   title: 'Astro: Zero to Hero',

@@ -315,7 +315,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
             />
 
             {/* Sticky Info Banner */}
-            <div className="sticky top-0 z-30 bg-zurich text-white shadow-lg">
+            <div className="sticky top-16 lg:top-20 z-30 bg-zurich text-white shadow-lg">
                 <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left w-full sm:w-auto">

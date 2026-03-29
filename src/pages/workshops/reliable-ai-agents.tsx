@@ -23,11 +23,9 @@ interface WorkshopPageProps {
 }
 
 export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageProps) {
-    const [isClient, setIsClient] = useState(false);
-
     const { track } = useEvents();
     const router = useRouter();
-    const { canceled, coupon } = router.query;
+    const { canceled } = router.query;
 
     const { startCheckout } = useAuthenticatedCheckout({
         onError: (error) => {
@@ -232,16 +230,11 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
             workshop_title: workshopTitle,
         });
 
-        const paymentButtons = document.querySelector('.payment-buttons') || document.getElementById('registrationContainer');
-        if (paymentButtons) {
-            const elementPosition = paymentButtons.getBoundingClientRect().top + window.pageYOffset;
-            window.scrollTo({
-                top: elementPosition - 100,
-                behavior: 'smooth',
-            });
-        } else {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
+        const registrationSection = document.getElementById('registrationContainer');
+        registrationSection?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        });
     }, [track, workshopId, workshopTitle]);
 
     const scrollToDetails = useCallback(() => {
@@ -258,8 +251,6 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
     }, [track, workshopId, workshopTitle]);
 
     useEffect(() => {
-        setIsClient(true);
-
         track('workshop_page_viewed', {
             workshop_id: workshopId,
             workshop_title: workshopTitle,
@@ -273,11 +264,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
             `;
             document.head.appendChild(style);
         }
-
-        if (coupon && router.isReady) {
-            setTimeout(() => { scrollToRegistration(); }, 500);
-        }
-    }, [track, coupon, router.isReady, scrollToRegistration]);
+    }, [track]);
 
     const shareWorkshop = async () => {
         const shareUrl = `${window.location.origin}/workshops/${workshopId}`;
@@ -665,7 +652,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                         </p>
                     </motion.div>
 
-                    {isClient && canceled && (
+                    {router.isReady && canceled && (
                         <div className="max-w-2xl mx-auto mb-8">
                             <CancelledCheckout workshopId={workshopId} workshopTitle={workshopTitle} />
                         </div>

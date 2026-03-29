@@ -14,9 +14,10 @@ export const getWorkshops = (): Workshop[] => {
       locationInfo: 'Smallpdf AG, Zürich',
       maxAttendees: 20,
       iconColor: '#7c3aed', // violet-600
-      tag: '🤖 AI Agents',
+      tag: 'AI Agents',
       speakerId: 'speaker-69b5455a-0057-44df-8be5-f7c33b00cf4e',
-      state: 'confirmed' as WorkshopState
+      state: 'confirmed' as WorkshopState,
+      image: '/images/workshops/reliable-ai-agents.png',
     },
     // {
     //   id: 'astro-zero-to-hero',

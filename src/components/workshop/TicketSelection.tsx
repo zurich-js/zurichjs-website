@@ -56,6 +56,7 @@ export default function TicketSelection({
   // Ref for payment buttons section
   const paymentButtonsRef = useRef<HTMLDivElement>(null);
   const [highlightButtons, setHighlightButtons] = useState(false);
+  const hasUserSelectedTicketRef = useRef(false);
   
   const { startCheckout, isLoading, isSignedIn } = useAuthenticatedCheckout({
     onError: (error) => {
@@ -70,6 +71,10 @@ export default function TicketSelection({
 
   // Scroll to payment buttons and highlight when ticket is selected
   useEffect(() => {
+    if (!hasUserSelectedTicketRef.current || !selectedTicket || !paymentButtonsRef.current) {
+      return;
+    }
+
     if (selectedTicket && paymentButtonsRef.current) {
       // Scroll to payment buttons with center alignment
       paymentButtonsRef.current.scrollIntoView({
@@ -207,7 +212,10 @@ export default function TicketSelection({
           }`}
         >
           <button
-            onClick={() => setSelectedTicket(getPriceId(ticket))}
+            onClick={() => {
+              hasUserSelectedTicketRef.current = true;
+              setSelectedTicket(getPriceId(ticket));
+            }}
             className="w-full text-left"
           >
             <div className="flex flex-col space-y-4">

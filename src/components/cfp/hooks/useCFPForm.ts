@@ -221,7 +221,7 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
     if (formState.topics.length > 0) completedFields.push(`Topics: ${formState.topics.join(', ')}`);
     else missingFields.push('Talk Topics');
 
-    if (!formState.speakerImage) missingFields.push('Profile Image');
+    if (!formState.speakerImage && !formState.existingSpeakerImageUrl) missingFields.push('Profile Image');
 
     const emailBody = `Subject: CFP Submission - ${formState.title || 'Talk Proposal'} - ${formState.firstName} ${formState.lastName}
 
@@ -235,7 +235,7 @@ ${completedFields.join('\n')}
 === STILL NEED TO PROVIDE ===
 ${missingFields.join('\n')}
 
-${formState.speakerImage ? '\n(Profile image attached separately)' : ''}
+${formState.speakerImage ? '\n(Profile image attached separately)' : formState.existingSpeakerImageUrl ? '\n(Using existing speaker profile image on file)' : ''}
 
 Looking forward to potentially speaking at ZurichJS!
 

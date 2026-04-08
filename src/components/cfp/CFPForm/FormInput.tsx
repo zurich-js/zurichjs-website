@@ -13,6 +13,8 @@ interface FormInputProps {
   helpText?: string;
   isTextarea?: boolean;
   rows?: number;
+  readOnly?: boolean;
+  disabled?: boolean;
 }
 
 export default function FormInput({
@@ -27,6 +29,8 @@ export default function FormInput({
   helpText,
   isTextarea,
   rows = 5,
+  readOnly,
+  disabled,
 }: FormInputProps) {
   const inputClasses = `
     w-full px-4 py-3 border rounded-lg
@@ -54,6 +58,8 @@ export default function FormInput({
           rows={rows}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
+          readOnly={readOnly}
+          disabled={disabled}
         />
       ) : (
         <input
@@ -66,6 +72,8 @@ export default function FormInput({
           placeholder={placeholder}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
+          readOnly={readOnly}
+          disabled={disabled}
         />
       )}
       {error && (

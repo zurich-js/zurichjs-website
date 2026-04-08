@@ -10,8 +10,13 @@ interface PurchaseSuccessBody {
   workshopId?: string;
   eventId?: string;
   ticketType?: string;
-  email: string;
+  email?: string;
   coupon?: string;
+}
+
+function getValidEmail(email?: string | null) {
+  const trimmedEmail = email?.trim();
+  return trimmedEmail ? trimmedEmail : undefined;
 }
 
 async function handler(
@@ -50,10 +55,27 @@ async function handler(
     // Try to get price and coupon information from Stripe session
     let couponInfo = 'No discount applied';
     let priceInfo = '';
+    let customerEmail = getValidEmail(email);
     try {
       const session = await stripe.checkout.sessions.retrieve(sessionId as string, {
-        expand: ['line_items']
+        expand: ['line_items', 'customer']
       });
+
+      customerEmail =
+        getValidEmail(session.customer_details?.email) ??
+        getValidEmail(session.customer_email) ??
+        customerEmail;
+
+      if (!customerEmail && session.customer) {
+        if (typeof session.customer === 'string') {
+          const customer = await stripe.customers.retrieve(session.customer);
+          if (!customer.deleted) {
+            customerEmail = getValidEmail(customer.email) ?? customerEmail;
+          }
+        } else if (!session.customer.deleted) {
+          customerEmail = getValidEmail(session.customer.email) ?? customerEmail;
+        }
+      }
       
       // Get price information
       const lineItems = session.line_items?.data;
@@ -90,7 +112,7 @@ Type: ${isWorkshop ? 'Workshop' : 'Event'}
 ${isWorkshop ? 'Workshop' : 'Event'} ID: ${itemId}
 ${isWorkshop ? 'Workshop' : 'Event'}: ${itemName}
 ${priceInfo}
-Customer Email: ${email}
+Customer Email: ${customerEmail || 'Not provided'}
 ${couponInfo}`,
       priority: 1,
     };

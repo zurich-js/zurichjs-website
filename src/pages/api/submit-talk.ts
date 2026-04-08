@@ -1,12 +1,14 @@
 import { createReadStream } from 'fs';
 import path from 'path';
 
+import { clerkClient, getAuth } from '@clerk/nextjs/server';
 import formidable from 'formidable';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from 'next-sanity';
 import { v4 as uuidv4 } from 'uuid';
 
 
+import { getSpeakerByEmail } from '@/lib/cfp/speakerProfile';
 import { sendPlatformNotification } from '@/lib/notification';
 
 
@@ -54,6 +56,8 @@ async function handler(
   });
 
   try {
+    const { userId } = getAuth(req);
+
     // Send notification that submission process has started
     await sendPlatformNotification({
       title: 'CFP Submission Started',
@@ -70,12 +74,12 @@ async function handler(
     });
 
     // Extract values from form fields
-    const firstName = Array.isArray(fields.firstName) ? fields.firstName[0] : fields.firstName || '';
-    const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || '';
-    const name = `${firstName} ${lastName}`;
+    const submissionMode = Array.isArray(fields.submissionMode) ? fields.submissionMode[0] : fields.submissionMode || 'guest';
+    let firstName = Array.isArray(fields.firstName) ? fields.firstName[0] : fields.firstName || '';
+    let lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || '';
     const jobTitle = Array.isArray(fields.jobTitle) ? fields.jobTitle[0] : fields.jobTitle || '';
     const biography = Array.isArray(fields.biography) ? fields.biography[0] : fields.biography || '';
-    const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || '';
+    let email = Array.isArray(fields.email) ? fields.email[0] : fields.email || '';
     const linkedinProfile = Array.isArray(fields.linkedinProfile) ? fields.linkedinProfile[0] : fields.linkedinProfile || '';
     const githubProfile = Array.isArray(fields.githubProfile) ? fields.githubProfile[0] : fields.githubProfile || '';
     const twitterHandle = Array.isArray(fields.twitterHandle) ? fields.twitterHandle[0] : fields.twitterHandle || '';
@@ -84,6 +88,17 @@ async function handler(
     const talkLength = Array.isArray(fields.talkLength) ? fields.talkLength[0] : fields.talkLength || '';
     const talkLevel = Array.isArray(fields.talkLevel) ? fields.talkLevel[0] : fields.talkLevel || '';
     const topics = fields.topics ? JSON.parse((Array.isArray(fields.topics) ? fields.topics[0] : fields.topics).toString()) : [];
+    let name = `${firstName} ${lastName}`;
+
+    if (userId && submissionMode === 'authenticated') {
+      const clerk = await clerkClient();
+      const user = await clerk.users.getUser(userId);
+
+      firstName = user.firstName || firstName;
+      lastName = user.lastName || lastName;
+      email = user.primaryEmailAddress?.emailAddress || email;
+      name = `${firstName} ${lastName}`;
+    }
 
     // Send notification with submission details
     await sendPlatformNotification({
@@ -109,10 +124,8 @@ async function handler(
     const talkId = `talk-${uuidv4()}`;
 
     // Check if speaker already exists by email
-    const existingSpeakers = await sanityClient.fetch(
-      `*[_type == "speaker" && email == $email][0]`,
-      { email }
-    );
+    const existingSpeakers = await getSpeakerByEmail(email);
+    const shouldPatchExistingSpeaker = !(userId && submissionMode === 'authenticated' && existingSpeakers);
 
     let speakerRef;
     let speakerDoc;
@@ -209,7 +222,7 @@ async function handler(
       }
       
       // Only update if there are fields to update
-      if (Object.keys(updateFields).length > 0) {
+      if (shouldPatchExistingSpeaker && Object.keys(updateFields).length > 0) {
         await sanityClient.patch(existingSpeakers._id)
           .set(updateFields)
           .commit();

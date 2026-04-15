@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 import { reliableAiAgentsTickets } from '@/components/workshop/reliableAiAgentsTickets';
 import TicketSelection from '@/components/workshop/TicketSelection';
+import WorkshopWaitlist from '@/components/workshop/WorkshopWaitlist';
 import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
 import useEvents from '@/hooks/useEvents';
@@ -659,18 +660,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                     )}
 
                     {isSoldOut ? (
-                        <div className="max-w-md mx-auto text-center">
-                            <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
-                                <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
-                                <p className="text-gray-300 text-sm mb-6">Join the waitlist and we&apos;ll notify you if a spot opens up.</p>
-                                <Button
-                                    onClick={() => track('waitlist_clicked', { workshop_id: workshopId })}
-                                    className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
-                                >
-                                    Join Waitlist
-                                </Button>
-                            </div>
-                        </div>
+                        <WorkshopWaitlist workshopId={workshopId} workshopTitle={workshopTitle} />
                     ) : (
                         <div className="max-w-2xl mx-auto">
                             <TicketSelection

@@ -45,17 +45,23 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
     const workshopLocation = 'Smallpdf AG, Zürich';
     const totalSeats = 20;
     const paidOrReservedSeats = 20;
-    const smallOverbookingLimit = 25;
+    const physicalCapacity = 25;
+    // Bump this manually after each waitlist signup that is told to show up and pay in person.
+    const currentWalkInWaitlistCount = 0;
     const seatsRemaining = Math.max(totalSeats - paidOrReservedSeats, 0);
     const isSoldOut = seatsRemaining <= 0;
-    const shouldPayInPersonFromWaitlist = paidOrReservedSeats < smallOverbookingLimit;
+    const overbookingSeatsAvailable = Math.max(
+        0,
+        physicalCapacity - paidOrReservedSeats - currentWalkInWaitlistCount
+    );
+    const shouldPayInPersonFromWaitlist = overbookingSeatsAvailable > 0;
     const seatAvailabilityLabel = isSoldOut
         ? 'Workshop sold out'
         : `Only ${seatsRemaining} ${seatsRemaining === 1 ? 'seat' : 'seats'} available`;
     const registrationHeading = isSoldOut ? 'Join the Waitlist' : 'Reserve Your Seat';
     const registrationDetails = isSoldOut
         ? shouldPayInPersonFromWaitlist
-            ? `Sold out at ${totalSeats} seats, but we can overbook up to ${smallOverbookingLimit}. Join the waitlist and pay in person · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`
+            ? `Sold out at ${totalSeats} seats, but we can overbook up to ${physicalCapacity}. Join the waitlist and pay in person · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`
             : `Sold out at ${totalSeats} seats. Join the waitlist and we will reach out by email if a spot opens up · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`
         : `${seatsRemaining} of ${totalSeats} seats remaining · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`;
     const primaryCtaLabel = isSoldOut ? 'Join Waitlist' : 'Reserve Your Seat — CHF 35';
@@ -678,8 +684,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                         <WorkshopWaitlist
                             workshopId={workshopId}
                             workshopTitle={workshopTitle}
-                            shouldPayInPerson={shouldPayInPersonFromWaitlist}
-                            overbookingLimit={smallOverbookingLimit}
+                            overbookingSeatsAvailable={overbookingSeatsAvailable}
                         />
                     ) : (
                         <div className="max-w-2xl mx-auto">

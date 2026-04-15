@@ -1,4 +1,4 @@
-import { useUser } from '@clerk/nextjs';
+import { SignInButton, useAuth, useUser } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -10,18 +10,19 @@ import useEvents from '@/hooks/useEvents';
 interface WorkshopWaitlistProps {
   workshopId: string;
   workshopTitle: string;
-  shouldPayInPerson: boolean;
-  overbookingLimit: number;
+  overbookingSeatsAvailable: number;
 }
+
+type WaitlistOutcome = 'walk-in' | 'email-when-available';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function WorkshopWaitlist({
   workshopId,
   workshopTitle,
-  shouldPayInPerson,
-  overbookingLimit,
+  overbookingSeatsAvailable,
 }: WorkshopWaitlistProps) {
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const { track } = useEvents();
 
@@ -30,9 +31,11 @@ export default function WorkshopWaitlist({
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isJoined, setIsJoined] = useState(false);
+  const [joinedOutcome, setJoinedOutcome] = useState<WaitlistOutcome | null>(null);
 
-  // Prefill form with Clerk user data when available
+  const nextOutcome: WaitlistOutcome =
+    overbookingSeatsAvailable > 0 ? 'walk-in' : 'email-when-available';
+
   useEffect(() => {
     if (user) {
       if (!email && user.primaryEmailAddress) {
@@ -45,7 +48,6 @@ export default function WorkshopWaitlist({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Close on escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsOpen(false);
@@ -55,7 +57,10 @@ export default function WorkshopWaitlist({
   }, [isOpen]);
 
   const openModal = () => {
-    track('waitlist_clicked', { workshop_id: workshopId });
+    track('waitlist_clicked', {
+      workshop_id: workshopId,
+      next_outcome: nextOutcome,
+    });
     setError(null);
     setIsOpen(true);
   };
@@ -64,15 +69,18 @@ export default function WorkshopWaitlist({
     setIsOpen(false);
   };
 
+  const shouldPayInPerson = nextOutcome === 'walk-in';
   const waitlistIntro = shouldPayInPerson
-    ? `This workshop is sold out, but we can make room for a few extra people up to ${overbookingLimit} attendees. Join the waitlist and show up on the day. You can pay in person.`
+    ? 'This workshop is sold out, but we can make room for a few extra people. Join the waitlist and show up on the day. You can pay in person.'
     : 'This workshop is sold out. Join the waitlist and we will reach out by email if a spot opens up.';
-  const waitlistSuccess = shouldPayInPerson
-    ? `You are on the waitlist for "${workshopTitle}". Please show up on the day and you can pay in person.`
-    : `We will email ${email} if a seat opens up for "${workshopTitle}".`;
-  const waitlistSummary = shouldPayInPerson
-    ? "You're on the waitlist. Please show up on the day and pay in person."
-    : "You're on the waitlist. We'll be in touch if a spot opens up.";
+  const joinedMessage =
+    joinedOutcome === 'walk-in'
+      ? `You are on the waitlist for "${workshopTitle}". Please show up on the day and you can pay in person.`
+      : `We will email ${email} if a seat opens up for "${workshopTitle}".`;
+  const joinedSummary =
+    joinedOutcome === 'walk-in'
+      ? "You're on the waitlist. Please show up on the day and pay in person."
+      : "You're on the waitlist. We'll be in touch if a spot opens up.";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +98,7 @@ export default function WorkshopWaitlist({
       track('waitlist_submit_attempt', {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
-        user_email: trimmedEmail,
+        outcome: nextOutcome,
       });
 
       const response = await fetch('/api/workshops/waitlist', {
@@ -101,6 +109,7 @@ export default function WorkshopWaitlist({
           workshopTitle,
           email: trimmedEmail,
           name: name.trim() || undefined,
+          outcome: nextOutcome,
         }),
       });
 
@@ -110,11 +119,11 @@ export default function WorkshopWaitlist({
         throw new Error(data.error || 'Failed to join the waitlist');
       }
 
-      setIsJoined(true);
+      setJoinedOutcome(data.outcome || nextOutcome);
       track('waitlist_joined', {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
-        user_email: data.email,
+        outcome: data.outcome || nextOutcome,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to join the waitlist';
@@ -154,40 +163,50 @@ export default function WorkshopWaitlist({
             className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative mx-4 sm:mx-0"
             style={{ zIndex: 9999999 }}
           >
-            {/* Header */}
-            <div className="px-5 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-bold  flex items-center gap-2">
+            <div className="px-5 py-4 flex justify-between items-center border-b border-gray-100">
+              <h2 className="text-lg font-bold text-black flex items-center gap-2">
                 <Mail size={18} />
                 Join the Waitlist
               </h2>
-              <Button
-                  variant="ghost"
-                onClick={closeModal}
-                aria-label="Close"
-              >
+              <Button variant="ghost" size="sm" onClick={closeModal} aria-label="Close">
                 <X size={20} />
               </Button>
             </div>
 
-            {/* Body */}
             <div className="p-5">
-              {isJoined ? (
+              {joinedOutcome ? (
                 <div className="text-center py-4">
                   <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   </div>
                   <h3 className="text-lg font-bold text-black mb-2">You&apos;re on the list!</h3>
-                  <p className="text-sm  mb-5">{waitlistSuccess}</p>
-                  <Button
-                    onClick={closeModal}
-                    className="bg-black text-white px-5 py-2 rounded-lg font-semibold text-sm w-full"
-                  >
+                  <p className="text-sm text-gray-700 mb-5">{joinedMessage}</p>
+                  <Button onClick={closeModal} className="w-full">
                     Close
                   </Button>
                 </div>
               ) : (
                 <>
-                  <p className="text-sm  mb-4">{waitlistIntro}</p>
+                  <p className="text-sm text-gray-700 mb-4">{waitlistIntro}</p>
+
+                  {isLoaded && !isSignedIn && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4 flex items-center justify-between gap-3">
+                      <span className="text-xs text-gray-700">
+                        Have an account? Sign in to use your saved email.
+                      </span>
+                      <SignInButton mode="modal">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            track('waitlist_signin_clicked', { workshop_id: workshopId })
+                          }
+                          className="text-xs font-semibold text-black hover:underline whitespace-nowrap"
+                        >
+                          Sign in
+                        </button>
+                      </SignInButton>
+                    </div>
+                  )}
 
                   {error && (
                     <div className="bg-red-50 text-red-700 p-2 rounded-lg border border-red-200 text-xs mb-3 flex items-start">
@@ -206,11 +225,17 @@ export default function WorkshopWaitlist({
                         id="waitlist-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black"
                         placeholder="you@example.com"
                         required
                         autoFocus
+                        disabled={!!isSignedIn && !!user?.primaryEmailAddress}
                       />
+                      {isSignedIn && user?.primaryEmailAddress && (
+                        <p className="mt-1 text-[11px] text-gray-500">
+                          Using the email from your account.
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -222,20 +247,16 @@ export default function WorkshopWaitlist({
                         id="waitlist-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black"
                         placeholder="Your name"
                       />
                     </div>
 
-                    <Button
-                        variant="primary"
-                      type="submit"
-                      disabled={isSubmitting}
-                    >
+                    <Button type="submit" disabled={isSubmitting} className="w-full">
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 "
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -255,7 +276,7 @@ export default function WorkshopWaitlist({
                     </Button>
 
                     <p className="text-[11px] text-center text-gray-500">
-                      We&apos;ll only use your email to notify you about this workshop.
+                      We&apos;ll only use your email to contact you about this workshop.
                     </p>
                   </form>
                 </>
@@ -271,21 +292,19 @@ export default function WorkshopWaitlist({
     <>
       <div className="max-w-md mx-auto text-center">
         <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
-          <h3 className="text-xl font-bold  mb-3">Workshop Sold Out</h3>
-          <p className="text-sm mb-6">
-            {isJoined
-              ? waitlistSummary
-              : waitlistIntro}
+          <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
+          <p className="text-gray-300 text-sm mb-6">
+            {joinedOutcome ? joinedSummary : waitlistIntro}
           </p>
-          {isJoined ? (
-            <div className="bg-green-500/20 text-green-800 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
+          {joinedOutcome ? (
+            <div className="bg-green-500/20 text-green-200 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
               <CheckCircle size={16} />
               You&apos;re on the list
             </div>
           ) : (
             <Button
-              variant="primary"
               onClick={openModal}
+              className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
             >
               Join Waitlist
             </Button>

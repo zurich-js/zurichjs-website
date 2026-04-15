@@ -5,19 +5,39 @@ import { sendPlatformNotification } from '@/lib/notification';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+type WaitlistOutcome = 'walk-in' | 'email-when-available';
+
+interface WaitlistRequestBody {
+  workshopId?: string;
+  workshopTitle?: string;
+  email?: string;
+  name?: string;
+  outcome?: WaitlistOutcome;
+}
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { workshopId, workshopTitle, email: bodyEmail, name: bodyName } = req.body || {};
+  const {
+    workshopId,
+    workshopTitle,
+    email: bodyEmail,
+    name: bodyName,
+    outcome,
+  } = (req.body || {}) as WaitlistRequestBody;
 
   if (!workshopId || !workshopTitle) {
     return res.status(400).json({ error: 'Workshop ID and title are required' });
   }
 
+  if (outcome !== 'walk-in' && outcome !== 'email-when-available') {
+    return res.status(400).json({ error: 'Invalid waitlist outcome' });
+  }
+
   try {
-    // Try to resolve email/name from Clerk if the user is signed in
+    // If signed in via Clerk, prefer that email/name (more trustworthy)
     const { userId } = getAuth(req);
 
     let email: string | undefined;
@@ -34,7 +54,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       source = 'authenticated';
     }
 
-    // Fall back to body-provided email/name (for guests)
     if (!email && typeof bodyEmail === 'string') {
       email = bodyEmail.trim();
     }
@@ -51,15 +70,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     await sendPlatformNotification({
       title: 'New Workshop Waitlist Signup',
-      message: `${displayName} (${email}) joined the waitlist for "${workshopTitle}" (Workshop ID: ${workshopId}). Source: ${source}.`,
+      message: [
+        `*Workshop:* ${workshopTitle} (${workshopId})`,
+        `*Name:* ${displayName}`,
+        `*Email:* ${email}`,
+        `*Source:* ${source}`,
+      ].join('\n'),
       priority: 1,
     });
 
     return res.status(200).json({
       success: true,
-      message: "You're on the waitlist! We'll email you if a spot opens up.",
       email,
       name: displayName,
+      outcome,
     });
   } catch (error) {
     console.error('Workshop waitlist signup error:', error);

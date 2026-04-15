@@ -43,7 +43,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
     const workshopTime = '17:00 - 18:30 (1.5 hours)';
     const workshopLocation = 'Smallpdf AG, Zürich';
     const totalSeats = 20;
-    const seatsRemaining = totalSeats;
+    const seatsRemaining = 2;
     const isSoldOut = seatsRemaining <= 0;
 
     const topics = [

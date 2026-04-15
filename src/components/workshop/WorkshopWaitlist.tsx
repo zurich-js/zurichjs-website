@@ -10,11 +10,18 @@ import useEvents from '@/hooks/useEvents';
 interface WorkshopWaitlistProps {
   workshopId: string;
   workshopTitle: string;
+  shouldPayInPerson: boolean;
+  overbookingLimit: number;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function WorkshopWaitlist({ workshopId, workshopTitle }: WorkshopWaitlistProps) {
+export default function WorkshopWaitlist({
+  workshopId,
+  workshopTitle,
+  shouldPayInPerson,
+  overbookingLimit,
+}: WorkshopWaitlistProps) {
   const { user } = useUser();
   const { track } = useEvents();
 
@@ -56,6 +63,16 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
   const closeModal = () => {
     setIsOpen(false);
   };
+
+  const waitlistIntro = shouldPayInPerson
+    ? `This workshop is sold out, but we can make room for a few extra people up to ${overbookingLimit} attendees. Join the waitlist and show up on the day. You can pay in person.`
+    : 'This workshop is sold out. Join the waitlist and we will reach out by email if a spot opens up.';
+  const waitlistSuccess = shouldPayInPerson
+    ? `You are on the waitlist for "${workshopTitle}". Please show up on the day and you can pay in person.`
+    : `We will email ${email} if a seat opens up for "${workshopTitle}".`;
+  const waitlistSummary = shouldPayInPerson
+    ? "You're on the waitlist. Please show up on the day and pay in person."
+    : "You're on the waitlist. We'll be in touch if a spot opens up.";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,18 +155,18 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
             style={{ zIndex: 9999999 }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <div className="px-5 py-4 flex justify-between items-center">
+              <h2 className="text-lg font-bold  flex items-center gap-2">
                 <Mail size={18} />
                 Join the Waitlist
               </h2>
-              <button
+              <Button
+                  variant="ghost"
                 onClick={closeModal}
-                className="text-white hover:text-gray-200 focus:outline-none"
                 aria-label="Close"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             {/* Body */}
@@ -160,9 +177,7 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
                     <CheckCircle className="h-6 w-6 text-green-600" />
                   </div>
                   <h3 className="text-lg font-bold text-black mb-2">You&apos;re on the list!</h3>
-                  <p className="text-sm text-gray-600 mb-5">
-                    We&apos;ll email <span className="font-medium">{email}</span> if a seat opens up for &quot;{workshopTitle}&quot;.
-                  </p>
+                  <p className="text-sm  mb-5">{waitlistSuccess}</p>
                   <Button
                     onClick={closeModal}
                     className="bg-black text-white px-5 py-2 rounded-lg font-semibold text-sm w-full"
@@ -172,10 +187,7 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-gray-600 mb-4">
-                    This workshop is sold out. Drop your email and we&apos;ll let you know if a spot opens up for{' '}
-                    <span className="font-semibold text-black">&quot;{workshopTitle}&quot;</span>.
-                  </p>
+                  <p className="text-sm  mb-4">{waitlistIntro}</p>
 
                   {error && (
                     <div className="bg-red-50 text-red-700 p-2 rounded-lg border border-red-200 text-xs mb-3 flex items-start">
@@ -216,14 +228,14 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
                     </div>
 
                     <Button
+                        variant="primary"
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full bg-violet-600 text-white hover:bg-violet-700 disabled:bg-gray-300 disabled:text-gray-500 py-2.5 rounded-lg font-semibold text-sm"
                     >
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 "
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -259,21 +271,21 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
     <>
       <div className="max-w-md mx-auto text-center">
         <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
-          <p className="text-gray-300 text-sm mb-6">
+          <h3 className="text-xl font-bold  mb-3">Workshop Sold Out</h3>
+          <p className="text-sm mb-6">
             {isJoined
-              ? "You're on the waitlist — we'll be in touch if a spot opens up."
-              : "Join the waitlist and we'll notify you if a spot opens up."}
+              ? waitlistSummary
+              : waitlistIntro}
           </p>
           {isJoined ? (
-            <div className="bg-green-500/20 text-green-200 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
+            <div className="bg-green-500/20 text-green-800 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
               <CheckCircle size={16} />
               You&apos;re on the list
             </div>
           ) : (
             <Button
+              variant="primary"
               onClick={openModal}
-              className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
             >
               Join Waitlist
             </Button>

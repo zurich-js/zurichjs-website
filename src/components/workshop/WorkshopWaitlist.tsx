@@ -133,6 +133,13 @@ export default function WorkshopWaitlist({
     }
   };
 
+  // Reusable class strings that match the workshop page's brand identity
+  // (`bg-black text-js ... rounded-xl` for the hero CTA pattern).
+  const primaryButtonClass =
+    'w-full bg-black text-js font-bold px-6 py-3 rounded-xl hover:bg-gray-900 disabled:bg-gray-300 disabled:text-gray-500 transition-colors';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border-2 border-black/10 rounded-lg bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black focus:ring-0 disabled:bg-gray-50 disabled:text-gray-500';
+
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
@@ -145,7 +152,7 @@ export default function WorkshopWaitlist({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             style={{ zIndex: 9999998 }}
             onClick={closeModal}
           />
@@ -155,18 +162,19 @@ export default function WorkshopWaitlist({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 400, duration: 0.3 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative mx-4 sm:mx-0"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative mx-4 sm:mx-0 border-2 border-black"
             style={{ zIndex: 9999999 }}
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 flex justify-between items-center">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            {/* Header — matches the workshop hero (bg-js + black) */}
+            <div className="bg-js px-5 py-4 flex justify-between items-center border-b-2 border-black">
+              <h2 className="text-lg font-black text-black flex items-center gap-2">
                 <Mail size={18} />
                 Join the Waitlist
               </h2>
               <button
+                type="button"
                 onClick={closeModal}
-                className="text-white hover:text-gray-200 focus:outline-none"
+                className="text-black hover:text-gray-700 focus:outline-none"
                 aria-label="Close"
               >
                 <X size={20} />
@@ -177,10 +185,12 @@ export default function WorkshopWaitlist({
             <div className="p-5">
               {joinedOutcome === 'walk-in' ? (
                 <div className="text-center py-2">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                    <DoorOpen className="h-6 w-6 text-green-600" />
+                  <div className="mx-auto w-12 h-12 rounded-full bg-js flex items-center justify-center mb-3 border-2 border-black">
+                    <DoorOpen className="h-6 w-6 text-black" />
                   </div>
-                  <h3 className="text-lg font-bold text-black mb-2">You&apos;re in — show up at the door!</h3>
+                  <h3 className="text-lg font-black text-black mb-2">
+                    You&apos;re in — show up at the door!
+                  </h3>
                   <p className="text-sm text-gray-700 mb-3">
                     We have a small overbooking buffer and you fit in it. Just{' '}
                     <span className="font-semibold">come to the workshop</span> and pay{' '}
@@ -190,54 +200,48 @@ export default function WorkshopWaitlist({
                     We&apos;ve also sent ourselves a note with your email{' '}
                     (<span className="font-medium">{email}</span>) in case anything changes.
                   </p>
-                  <Button
-                    onClick={closeModal}
-                    className="bg-black text-white px-5 py-2 rounded-lg font-semibold text-sm w-full"
-                  >
+                  <Button onClick={closeModal} className={primaryButtonClass}>
                     Got it
                   </Button>
                 </div>
               ) : joinedOutcome === 'email-when-available' ? (
                 <div className="text-center py-2">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                    <Clock className="h-6 w-6 text-blue-600" />
+                  <div className="mx-auto w-12 h-12 rounded-full bg-zurich flex items-center justify-center mb-3">
+                    <Clock className="h-6 w-6 text-white" />
                   </div>
-                  <h3 className="text-lg font-bold text-black mb-2">You&apos;re on the waitlist</h3>
+                  <h3 className="text-lg font-black text-black mb-2">You&apos;re on the waitlist</h3>
                   <p className="text-sm text-gray-700 mb-5">
                     The room is full. We&apos;ll email{' '}
                     <span className="font-medium">{email}</span> if a seat opens up — usually
                     a day or two before the workshop.
                   </p>
-                  <Button
-                    onClick={closeModal}
-                    className="bg-black text-white px-5 py-2 rounded-lg font-semibold text-sm w-full"
-                  >
+                  <Button onClick={closeModal} className={primaryButtonClass}>
                     Close
                   </Button>
                 </div>
               ) : (
                 <>
                   {nextOutcome === 'walk-in' ? (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-xs text-green-900 flex items-start gap-2">
-                      <DoorOpen className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+                    <div className="bg-js/40 border-2 border-black rounded-xl p-3 mb-4 text-xs text-black flex items-start gap-2">
+                      <DoorOpen className="h-4 w-4 mt-0.5 flex-shrink-0 text-black" />
                       <span>
                         Tickets are sold out, but we have room for a few more. If you sign up now,
-                        you can <span className="font-semibold">show up at the door and pay CHF 35 in cash</span>.
+                        you can <span className="font-bold">show up at the door and pay CHF 35 in cash</span>.
                       </span>
                     </div>
                   ) : (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-xs text-blue-900 flex items-start gap-2">
-                      <Clock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                    <div className="bg-zurich/10 border-2 border-zurich rounded-xl p-3 mb-4 text-xs text-zurich flex items-start gap-2">
+                      <Clock className="h-4 w-4 mt-0.5 flex-shrink-0 text-zurich" />
                       <span>
                         The room is full. Drop your email and{' '}
-                        <span className="font-semibold">we&apos;ll reach out</span> if a seat opens up.
+                        <span className="font-bold">we&apos;ll reach out</span> if a seat opens up.
                       </span>
                     </div>
                   )}
 
                   {/* Sign-in option for guests */}
                   {isLoaded && !isSignedIn && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4 flex items-center justify-between gap-3">
+                    <div className="bg-gray-50 border border-black/10 rounded-xl p-3 mb-4 flex items-center justify-between gap-3">
                       <span className="text-xs text-gray-700">
                         Have an account? Sign in to use your saved email.
                       </span>
@@ -247,7 +251,7 @@ export default function WorkshopWaitlist({
                           onClick={() =>
                             track('waitlist_signin_clicked', { workshop_id: workshopId })
                           }
-                          className="text-xs font-semibold text-violet-700 hover:text-violet-900 whitespace-nowrap"
+                          className="text-xs font-bold text-zurich hover:underline whitespace-nowrap"
                         >
                           Sign in
                         </button>
@@ -264,7 +268,7 @@ export default function WorkshopWaitlist({
 
                   <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
-                      <label htmlFor="waitlist-email" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label htmlFor="waitlist-email" className="block text-xs font-bold text-black mb-1">
                         Email address <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -272,7 +276,7 @@ export default function WorkshopWaitlist({
                         id="waitlist-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                        className={inputClass}
                         placeholder="you@example.com"
                         required
                         autoFocus
@@ -286,28 +290,24 @@ export default function WorkshopWaitlist({
                     </div>
 
                     <div>
-                      <label htmlFor="waitlist-name" className="block text-xs font-medium text-gray-700 mb-1">
-                        Name <span className="text-gray-400">(optional)</span>
+                      <label htmlFor="waitlist-name" className="block text-xs font-bold text-black mb-1">
+                        Name <span className="font-normal text-gray-500">(optional)</span>
                       </label>
                       <input
                         type="text"
                         id="waitlist-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-violet-500 focus:border-violet-500"
+                        className={inputClass}
                         placeholder="Your name"
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full bg-violet-600 text-white hover:bg-violet-700 disabled:bg-gray-300 disabled:text-gray-500 py-2.5 rounded-lg font-semibold text-sm"
-                    >
+                    <Button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-js"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -345,7 +345,7 @@ export default function WorkshopWaitlist({
     <>
       <div className="max-w-md mx-auto text-center">
         <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
+          <h3 className="text-xl font-black text-white mb-3">Workshop Sold Out</h3>
 
           {joinedOutcome ? (
             <>
@@ -354,7 +354,7 @@ export default function WorkshopWaitlist({
                   ? "You're in — show up at the door and pay in cash."
                   : "You're on the waitlist. We'll email you if a seat opens up."}
               </p>
-              <div className="bg-green-500/20 text-green-200 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
+              <div className="bg-js/20 text-js border border-js/40 rounded-xl px-6 py-3 font-bold text-sm flex items-center justify-center gap-2">
                 <CheckCircle size={16} />
                 You&apos;re on the list
               </div>
@@ -368,7 +368,7 @@ export default function WorkshopWaitlist({
               </p>
               <Button
                 onClick={openModal}
-                className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
+                className="w-full bg-js text-black font-bold px-6 py-3 rounded-xl border-2 border-black hover:bg-js-dark transition-colors"
               >
                 Join Waitlist
               </Button>

@@ -1,6 +1,6 @@
-import { useUser } from '@clerk/nextjs';
+import { useAuth, useUser, SignInButton } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertCircle, CheckCircle, Mail } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Mail, DoorOpen, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -10,11 +10,25 @@ import useEvents from '@/hooks/useEvents';
 interface WorkshopWaitlistProps {
   workshopId: string;
   workshopTitle: string;
+  /**
+   * Number of seats still available in the room beyond the official cap.
+   * E.g. if the workshop sells 20 tickets but the room fits 25, and 0 people
+   * are already on the waitlist, this is 5. When > 0, the next signup is
+   * told they can show up at the door and pay in person.
+   */
+  overbookingSeatsAvailable: number;
 }
+
+type WaitlistOutcome = 'walk-in' | 'email-when-available';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function WorkshopWaitlist({ workshopId, workshopTitle }: WorkshopWaitlistProps) {
+export default function WorkshopWaitlist({
+  workshopId,
+  workshopTitle,
+  overbookingSeatsAvailable,
+}: WorkshopWaitlistProps) {
+  const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
   const { track } = useEvents();
 
@@ -23,9 +37,14 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isJoined, setIsJoined] = useState(false);
+  const [joinedOutcome, setJoinedOutcome] = useState<WaitlistOutcome | null>(null);
 
-  // Prefill form with Clerk user data when available
+  // The outcome the next signup will see, computed from the page-level
+  // overbookingSeatsAvailable count (manually maintained — see page config).
+  const nextOutcome: WaitlistOutcome =
+    overbookingSeatsAvailable > 0 ? 'walk-in' : 'email-when-available';
+
+  // Prefill from Clerk when user becomes available
   useEffect(() => {
     if (user) {
       if (!email && user.primaryEmailAddress) {
@@ -38,7 +57,7 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Close on escape
+  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsOpen(false);
@@ -48,14 +67,15 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
   }, [isOpen]);
 
   const openModal = () => {
-    track('waitlist_clicked', { workshop_id: workshopId });
+    track('waitlist_clicked', {
+      workshop_id: workshopId,
+      next_outcome: nextOutcome,
+    });
     setError(null);
     setIsOpen(true);
   };
 
-  const closeModal = () => {
-    setIsOpen(false);
-  };
+  const closeModal = () => setIsOpen(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +93,7 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
       track('waitlist_submit_attempt', {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
-        user_email: trimmedEmail,
+        outcome: nextOutcome,
       });
 
       const response = await fetch('/api/workshops/waitlist', {
@@ -84,6 +104,7 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
           workshopTitle,
           email: trimmedEmail,
           name: name.trim() || undefined,
+          outcome: nextOutcome,
         }),
       });
 
@@ -93,11 +114,11 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
         throw new Error(data.error || 'Failed to join the waitlist');
       }
 
-      setIsJoined(true);
+      setJoinedOutcome(nextOutcome);
       track('waitlist_joined', {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
-        user_email: data.email,
+        outcome: nextOutcome,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to join the waitlist';
@@ -154,14 +175,38 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
 
             {/* Body */}
             <div className="p-5">
-              {isJoined ? (
-                <div className="text-center py-4">
+              {joinedOutcome === 'walk-in' ? (
+                <div className="text-center py-2">
                   <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <DoorOpen className="h-6 w-6 text-green-600" />
                   </div>
-                  <h3 className="text-lg font-bold text-black mb-2">You&apos;re on the list!</h3>
-                  <p className="text-sm text-gray-600 mb-5">
-                    We&apos;ll email <span className="font-medium">{email}</span> if a seat opens up for &quot;{workshopTitle}&quot;.
+                  <h3 className="text-lg font-bold text-black mb-2">You&apos;re in — show up at the door!</h3>
+                  <p className="text-sm text-gray-700 mb-3">
+                    We have a small overbooking buffer and you fit in it. Just{' '}
+                    <span className="font-semibold">come to the workshop</span> and pay{' '}
+                    <span className="font-semibold">CHF 35 in cash on site</span>.
+                  </p>
+                  <p className="text-xs text-gray-500 mb-5">
+                    We&apos;ve also sent ourselves a note with your email{' '}
+                    (<span className="font-medium">{email}</span>) in case anything changes.
+                  </p>
+                  <Button
+                    onClick={closeModal}
+                    className="bg-black text-white px-5 py-2 rounded-lg font-semibold text-sm w-full"
+                  >
+                    Got it
+                  </Button>
+                </div>
+              ) : joinedOutcome === 'email-when-available' ? (
+                <div className="text-center py-2">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                    <Clock className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-black mb-2">You&apos;re on the waitlist</h3>
+                  <p className="text-sm text-gray-700 mb-5">
+                    The room is full. We&apos;ll email{' '}
+                    <span className="font-medium">{email}</span> if a seat opens up — usually
+                    a day or two before the workshop.
                   </p>
                   <Button
                     onClick={closeModal}
@@ -172,10 +217,43 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-gray-600 mb-4">
-                    This workshop is sold out. Drop your email and we&apos;ll let you know if a spot opens up for{' '}
-                    <span className="font-semibold text-black">&quot;{workshopTitle}&quot;</span>.
-                  </p>
+                  {nextOutcome === 'walk-in' ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-xs text-green-900 flex items-start gap-2">
+                      <DoorOpen className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-600" />
+                      <span>
+                        Tickets are sold out, but we have room for a few more. If you sign up now,
+                        you can <span className="font-semibold">show up at the door and pay CHF 35 in cash</span>.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-xs text-blue-900 flex items-start gap-2">
+                      <Clock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600" />
+                      <span>
+                        The room is full. Drop your email and{' '}
+                        <span className="font-semibold">we&apos;ll reach out</span> if a seat opens up.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Sign-in option for guests */}
+                  {isLoaded && !isSignedIn && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4 flex items-center justify-between gap-3">
+                      <span className="text-xs text-gray-700">
+                        Have an account? Sign in to use your saved email.
+                      </span>
+                      <SignInButton mode="modal">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            track('waitlist_signin_clicked', { workshop_id: workshopId })
+                          }
+                          className="text-xs font-semibold text-violet-700 hover:text-violet-900 whitespace-nowrap"
+                        >
+                          Sign in
+                        </button>
+                      </SignInButton>
+                    </div>
+                  )}
 
                   {error && (
                     <div className="bg-red-50 text-red-700 p-2 rounded-lg border border-red-200 text-xs mb-3 flex items-start">
@@ -198,7 +276,13 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
                         placeholder="you@example.com"
                         required
                         autoFocus
+                        disabled={!!isSignedIn && !!user?.primaryEmailAddress}
                       />
+                      {isSignedIn && user?.primaryEmailAddress && (
+                        <p className="mt-1 text-[11px] text-gray-500">
+                          Using the email from your account.
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -237,13 +321,15 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
                           </svg>
                           Joining...
                         </span>
+                      ) : nextOutcome === 'walk-in' ? (
+                        'Reserve my walk-in spot'
                       ) : (
-                        'Join the Waitlist'
+                        'Join the waitlist'
                       )}
                     </Button>
 
                     <p className="text-[11px] text-center text-gray-500">
-                      We&apos;ll only use your email to notify you about this workshop.
+                      We&apos;ll only use your email to contact you about this workshop.
                     </p>
                   </form>
                 </>
@@ -260,23 +346,33 @@ export default function WorkshopWaitlist({ workshopId, workshopTitle }: Workshop
       <div className="max-w-md mx-auto text-center">
         <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
           <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
-          <p className="text-gray-300 text-sm mb-6">
-            {isJoined
-              ? "You're on the waitlist — we'll be in touch if a spot opens up."
-              : "Join the waitlist and we'll notify you if a spot opens up."}
-          </p>
-          {isJoined ? (
-            <div className="bg-green-500/20 text-green-200 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
-              <CheckCircle size={16} />
-              You&apos;re on the list
-            </div>
+
+          {joinedOutcome ? (
+            <>
+              <p className="text-gray-300 text-sm mb-6">
+                {joinedOutcome === 'walk-in'
+                  ? "You're in — show up at the door and pay in cash."
+                  : "You're on the waitlist. We'll email you if a seat opens up."}
+              </p>
+              <div className="bg-green-500/20 text-green-200 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
+                <CheckCircle size={16} />
+                You&apos;re on the list
+              </div>
+            </>
           ) : (
-            <Button
-              onClick={openModal}
-              className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
-            >
-              Join Waitlist
-            </Button>
+            <>
+              <p className="text-gray-300 text-sm mb-6">
+                {nextOutcome === 'walk-in'
+                  ? 'Tickets are sold out, but we have room for a few more — sign up to walk in and pay on site.'
+                  : "The room is full. Join the waitlist and we'll email you if a seat opens up."}
+              </p>
+              <Button
+                onClick={openModal}
+                className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
+              >
+                Join Waitlist
+              </Button>
+            </>
           )}
         </div>
       </div>

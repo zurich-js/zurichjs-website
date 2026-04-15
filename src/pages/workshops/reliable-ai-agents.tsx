@@ -47,6 +47,20 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
     const seatsRemaining = 2;
     const isSoldOut = seatsRemaining <= 0;
 
+    // Waitlist / overbooking config
+    // - `physicalCapacity` is the absolute number of bodies the room can fit.
+    // - `currentWaitlistCount` is bumped manually after each Pushover signup
+    //   ping (same pattern we use for `seatsRemaining`).
+    // While `overbookingSeatsAvailable > 0`, the next waitlist signup is
+    // told to show up at the door and pay CHF 35 in cash. Once that buffer
+    // is exhausted, signups are told we'll email them if a seat opens up.
+    const physicalCapacity = 25;
+    const currentWaitlistCount = 0;
+    const overbookingSeatsAvailable = Math.max(
+        0,
+        physicalCapacity - totalSeats - currentWaitlistCount
+    );
+
     const topics = [
         {
             title: 'What AI Agents Are',
@@ -660,7 +674,11 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                     )}
 
                     {isSoldOut ? (
-                        <WorkshopWaitlist workshopId={workshopId} workshopTitle={workshopTitle} />
+                        <WorkshopWaitlist
+                            workshopId={workshopId}
+                            workshopTitle={workshopTitle}
+                            overbookingSeatsAvailable={overbookingSeatsAvailable}
+                        />
                     ) : (
                         <div className="max-w-2xl mx-auto">
                             <TicketSelection

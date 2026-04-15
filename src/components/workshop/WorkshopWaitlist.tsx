@@ -82,6 +82,11 @@ export default function WorkshopWaitlist({
       ? "You're on the waitlist. Please show up on the day and pay in person."
       : "You're on the waitlist. We'll be in touch if a spot opens up.";
 
+  const primaryButtonClass =
+    'w-full bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 disabled:bg-gray-300 disabled:text-gray-500 transition-colors';
+  const inputClass =
+    'w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black disabled:bg-gray-50 disabled:text-gray-500';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -150,7 +155,7 @@ export default function WorkshopWaitlist({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             style={{ zIndex: 9999998 }}
             onClick={closeModal}
           />
@@ -225,7 +230,7 @@ export default function WorkshopWaitlist({
                         id="waitlist-email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                        className={inputClass}
                         placeholder="you@example.com"
                         required
                         autoFocus
@@ -247,16 +252,16 @@ export default function WorkshopWaitlist({
                         id="waitlist-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black"
+                        className={inputClass}
                         placeholder="Your name"
                       />
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting} className="w-full">
+                    <Button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-black"
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
                             viewBox="0 0 24 24"
@@ -302,10 +307,7 @@ export default function WorkshopWaitlist({
               You&apos;re on the list
             </div>
           ) : (
-            <Button
-              onClick={openModal}
-              className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
-            >
+            <Button onClick={openModal} className={primaryButtonClass}>
               Join Waitlist
             </Button>
           )}

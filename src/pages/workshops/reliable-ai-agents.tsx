@@ -44,7 +44,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
     const workshopTime = '17:00 - 18:30 (1.5 hours)';
     const workshopLocation = 'Smallpdf AG, Zürich';
     const totalSeats = 20;
-    const paidOrReservedSeats = 20;
+    const paidOrReservedSeats = 17;
     const physicalCapacity = 25;
     // Bump this manually after each waitlist signup that is told to show up and pay in person.
     const currentWalkInWaitlistCount = 0;

@@ -82,8 +82,6 @@ export default function WorkshopWaitlist({
       ? "You're on the waitlist. Please show up on the day and pay in person."
       : "You're on the waitlist. We'll be in touch if a spot opens up.";
 
-  const primaryButtonClass =
-    'w-full bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 disabled:bg-gray-300 disabled:text-gray-500 transition-colors';
   const inputClass =
     'w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black disabled:bg-gray-50 disabled:text-gray-500';
 
@@ -257,7 +255,7 @@ export default function WorkshopWaitlist({
                       />
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
+                    <Button variant="primary" type="submit" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <span className="flex items-center justify-center">
                           <svg
@@ -280,7 +278,7 @@ export default function WorkshopWaitlist({
                       )}
                     </Button>
 
-                    <p className="text-[11px] text-center text-gray-500">
+                    <p className="text-xs text-center text-gray-500">
                       We&apos;ll only use your email to contact you about this workshop.
                     </p>
                   </form>
@@ -298,7 +296,7 @@ export default function WorkshopWaitlist({
       <div className="max-w-md mx-auto text-center">
         <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
           <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
-          <p className="text-gray-300 text-sm mb-6">
+          <p className="text-sm mb-6">
             {joinedOutcome ? joinedSummary : waitlistIntro}
           </p>
           {joinedOutcome ? (
@@ -307,7 +305,7 @@ export default function WorkshopWaitlist({
               You&apos;re on the list
             </div>
           ) : (
-            <Button onClick={openModal} className={primaryButtonClass}>
+            <Button variant="primary" onClick={openModal}>
               Join Waitlist
             </Button>
           )}

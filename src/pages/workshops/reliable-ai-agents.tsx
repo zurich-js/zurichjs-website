@@ -666,7 +666,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                         viewport={{ once: true }}
-                        className="text-center mb-10"
+                        className="text-center"
                     >
                         <h2 className="text-3xl font-black  mb-4">{registrationHeading}</h2>
                         <p className="max-w-xl mx-auto">
@@ -675,7 +675,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                     </motion.div>
 
                     {router.isReady && canceled && (
-                        <div className="max-w-2xl mx-auto mb-8">
+                        <div className="max-w-2xl mx-auto mt-10 mb-8">
                             <CancelledCheckout workshopId={workshopId} workshopTitle={workshopTitle} />
                         </div>
                     )}
@@ -687,7 +687,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                             overbookingSeatsAvailable={overbookingSeatsAvailable}
                         />
                     ) : (
-                        <div className="max-w-2xl mx-auto">
+                        <div className="max-w-2xl mx-auto mt-10">
                             <TicketSelection
                                 options={reliableAiAgentsTickets}
                                 onCheckout={handleCheckout}

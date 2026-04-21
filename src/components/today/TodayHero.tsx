@@ -96,7 +96,9 @@ export default function TodayHero({ event }: HeroProps) {
                 <h2 className="text-left font-semibold text-sm uppercase tracking-tight">Let&#39;s connect</h2>
                 <div className="flex gap-4 flex-wrap">
                     <Link
-                        href="/feedback"
+                        href="https://join.slack.com/t/zurichjs/shared_invite/zt-35xc7fswg-NswAFDUErn1XoUF8ixH6fg"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block p-2"
                         aria-label="Join our Slack"
                     >
@@ -108,7 +110,9 @@ export default function TodayHero({ event }: HeroProps) {
                         </svg>
                     </Link>
                     <Link
-                        href={`/events/${event.id}?feedback=true`}
+                        href="https://linkedin.com/company/zurichjs"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block p-2"
                         aria-label="Follow us on LinkedIn"
                     >
@@ -117,7 +121,9 @@ export default function TodayHero({ event }: HeroProps) {
                         </svg>
                     </Link>
                     <Link
-                        href="/buy-us-a-coffee"
+                        href="https://www.x.com/zurichjs"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block p-2"
                         aria-label="Follow us on X.com"
                     >
@@ -127,7 +133,9 @@ export default function TodayHero({ event }: HeroProps) {
                         </svg>
                     </Link>
                     <Link
-                        href="/donate"
+                        href="https://bsky.app/profile/zurichjs.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block p-2"
                         aria-label="Follow us on Bluesky"
                     >
@@ -136,7 +144,9 @@ export default function TodayHero({ event }: HeroProps) {
                                   d="M13.873 3.805C21.21 9.332 29.103 20.537 32 26.55v15.882c0-.338-.13.044-.41.867-1.512 4.456-7.418 21.847-20.923 7.944-7.111-7.32-3.819-14.64 9.125-16.85-7.405 1.264-15.73-.825-18.014-9.015C1.12 23.022 0 8.51 0 6.55 0-3.268 8.579-.182 13.873 3.805ZM50.127 3.805C42.79 9.332 34.897 20.537 32 26.55v15.882c0-.338.13.044.41.867 1.512 4.456 7.418 21.847 20.923 7.944 7.111-7.32 3.819-14.64-9.125-16.85 7.405 1.264 15.73-.825 18.014-9.015C62.88 23.022 64 8.51 64 6.55c0-9.818-8.578-6.732-13.873-2.745Z"></path></svg>
                     </Link>
                     <Link
-                        href="/tshirt"
+                        href="https://www.instagram.com/zurich.js/"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block p-2"
                         aria-label="Follow us on Instagram"
                     >

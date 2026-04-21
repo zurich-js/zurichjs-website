@@ -228,19 +228,19 @@ export type TodaySponsor = Omit<Partner, 'type'>;
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
-    const vercel = allPartners.find(p => p.name.toLowerCase() === 'vercel');
+    const stripe = allPartners.find(p => p.name.toLowerCase() === 'stripe');
     const gyff = allPartners.find(p => p.name.toLowerCase() === 'gyff');
     const smallpdf = allPartners.find(p => p.name.toLowerCase() === 'smallpdf');
 
     const sponsors: TodaySponsor[] = [
         // Community Builder sponsorshipTier (Gold sponsor)
-        ...(vercel ? [{
-            id: vercel.id,
-            name: vercel.name,
-            logo: vercel.logo,
-            url: vercel.url,
+        ...(stripe ? [{
+            id: stripe.id,
+            name: stripe.name,
+            logo: stripe.logo,
+            url: stripe.url,
             sponsorshipTier: SponsorshipTier.Builder,
-            description: vercel.description
+            description: stripe.description
         }] : []),
 
         ...(smallpdf ? [{

@@ -45,7 +45,8 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   useEffect(() => {
     if (user && !isValid && router.pathname !== '/profile/survey') {
-      router.push('/profile/survey')
+      const returnTo = encodeURIComponent(router.asPath);
+      router.push(`/profile/survey?returnTo=${returnTo}`)
     }
   }, [user, isValid, router])
 

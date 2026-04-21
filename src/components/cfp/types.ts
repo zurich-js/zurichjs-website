@@ -17,6 +17,9 @@ export interface FormState {
   isSubmitting: boolean;
   error: string;
   imagePreview: string | null;
+  existingSpeakerImageUrl: string | null;
+  isExistingSpeaker: boolean;
+  missingSpeakerFields: string[];
 }
 
 export interface ValidationErrors {
@@ -56,4 +59,7 @@ export const initialFormState: FormState = {
   isSubmitting: false,
   error: '',
   imagePreview: null,
+  existingSpeakerImageUrl: null,
+  isExistingSpeaker: false,
+  missingSpeakerFields: [],
 };

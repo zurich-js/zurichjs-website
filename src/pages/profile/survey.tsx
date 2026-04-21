@@ -272,8 +272,11 @@ export default function Survey() {
                 }
             });
 
-            // Redirect to profile or dashboard
-            router.push('/profile');
+            const returnTo = Array.isArray(router.query.returnTo)
+                ? router.query.returnTo[0]
+                : router.query.returnTo;
+
+            router.push(returnTo || '/profile');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {

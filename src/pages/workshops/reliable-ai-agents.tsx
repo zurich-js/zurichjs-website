@@ -12,6 +12,7 @@ import Button from '@/components/ui/Button';
 import CancelledCheckout from '@/components/workshop/CancelledCheckout';
 import { reliableAiAgentsTickets } from '@/components/workshop/reliableAiAgentsTickets';
 import TicketSelection from '@/components/workshop/TicketSelection';
+import WorkshopWaitlist from '@/components/workshop/WorkshopWaitlist';
 import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
 import { useCoupon } from '@/hooks/useCoupon';
 import useEvents from '@/hooks/useEvents';
@@ -43,8 +44,27 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
     const workshopTime = '17:00 - 18:30 (1.5 hours)';
     const workshopLocation = 'Smallpdf AG, Zürich';
     const totalSeats = 20;
-    const seatsRemaining = totalSeats;
+    const paidOrReservedSeats = 20;
+    const physicalCapacity = 25;
+    // Bump this manually after each waitlist signup that is told to show up and pay in person.
+    const currentWalkInWaitlistCount = 0;
+    const seatsRemaining = Math.max(totalSeats - paidOrReservedSeats, 0);
     const isSoldOut = seatsRemaining <= 0;
+    const overbookingSeatsAvailable = Math.max(
+        0,
+        physicalCapacity - paidOrReservedSeats - currentWalkInWaitlistCount
+    );
+    const shouldPayInPersonFromWaitlist = overbookingSeatsAvailable > 0;
+    const seatAvailabilityLabel = isSoldOut
+        ? 'Workshop sold out'
+        : `Only ${seatsRemaining} ${seatsRemaining === 1 ? 'seat' : 'seats'} available`;
+    const registrationHeading = isSoldOut ? 'Join the Waitlist' : 'Reserve Your Seat';
+    const registrationDetails = isSoldOut
+        ? shouldPayInPersonFromWaitlist
+            ? `Sold out at ${totalSeats} seats, but we can overbook up to ${physicalCapacity}. Join the waitlist and pay in person · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`
+            : `Sold out at ${totalSeats} seats. Join the waitlist and we will reach out by email if a spot opens up · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`
+        : `${seatsRemaining} of ${totalSeats} seats remaining · April 21, 2026 · 17:00–18:30 · ${workshopLocation}`;
+    const primaryCtaLabel = isSoldOut ? 'Join Waitlist' : 'Reserve Your Seat — CHF 35';
 
     const topics = [
         {
@@ -308,7 +328,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left w-full sm:w-auto">
                             <div className="flex items-center gap-2">
                                 <Users size={18} className="text-white" />
-                                <span className="font-bold text-xs sm:text-sm">Only {seatsRemaining} seats available!</span>
+                                <span className="font-bold text-xs sm:text-sm">{seatAvailabilityLabel}</span>
                             </div>
                             <div className="hidden sm:block h-6 w-px bg-white/30"></div>
                             <div className="flex items-center gap-2">
@@ -374,8 +394,10 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
                                         <Users size={20} className="text-zurich mb-1" />
-                                        <div className="text-xs font-bold text-black">{totalSeats} seats</div>
-                                        <div className="text-xs text-gray-600">Limited</div>
+                                        <div className="text-xs font-bold text-black">
+                                            {isSoldOut ? 'Sold out' : `${seatsRemaining} left`}
+                                        </div>
+                                        <div className="text-xs text-gray-600">{totalSeats} seats</div>
                                     </div>
                                     <div className="bg-white rounded-xl p-4 shadow-sm border border-black/10 flex flex-col justify-center items-center text-center min-h-[80px]">
                                         <div className="text-2xl font-black text-black mb-1">35</div>
@@ -385,24 +407,24 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
 
                                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                                     <Button
+                                        variant="primary"
                                         onClick={scrollToRegistration}
-                                        className="bg-black text-js font-bold px-6 py-3 rounded-xl hover:bg-gray-900 transition-colors text-sm sm:text-base"
                                     >
-                                        {isSoldOut ? 'Join Waitlist' : 'Reserve Your Seat — CHF 35'}
+                                        {primaryCtaLabel}
                                     </Button>
-                                    <button
+                                    <Button
+                                        variant="outline"
                                         onClick={scrollToDetails}
-                                        className="bg-white text-black font-bold px-6 py-3 rounded-xl border-2 border-black hover:bg-gray-50 transition-colors text-sm sm:text-base"
                                     >
                                         Learn More
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                        variant="outline"
                                         onClick={shareWorkshop}
-                                        className="flex items-center justify-center gap-2 bg-white/80 text-black px-4 py-3 rounded-xl border-2 border-black/20 hover:bg-white transition-colors"
                                         aria-label="Share this workshop"
                                     >
                                         <Share2 size={18} />
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
 
@@ -637,42 +659,35 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
             </Section>
 
             {/* Ticket / Registration Section */}
-            <Section className="bg-black text-white" id="registrationContainer">
+            <Section className="bg-black" id="registrationContainer">
                 <div className="container mx-auto px-4 py-12 lg:py-16">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                         viewport={{ once: true }}
-                        className="text-center mb-10"
+                        className="text-center"
                     >
-                        <h2 className="text-3xl font-black text-white mb-4">Reserve Your Seat</h2>
-                        <p className="text-black max-w-xl mx-auto">
-                            {totalSeats} spots available · April 21, 2026 · 17:00–18:30 · {workshopLocation}
+                        <h2 className="text-3xl font-black  mb-4">{registrationHeading}</h2>
+                        <p className="max-w-xl mx-auto">
+                            {registrationDetails}
                         </p>
                     </motion.div>
 
                     {router.isReady && canceled && (
-                        <div className="max-w-2xl mx-auto mb-8">
+                        <div className="max-w-2xl mx-auto mt-10 mb-8">
                             <CancelledCheckout workshopId={workshopId} workshopTitle={workshopTitle} />
                         </div>
                     )}
 
                     {isSoldOut ? (
-                        <div className="max-w-md mx-auto text-center">
-                            <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
-                                <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
-                                <p className="text-gray-300 text-sm mb-6">Join the waitlist and we&apos;ll notify you if a spot opens up.</p>
-                                <Button
-                                    onClick={() => track('waitlist_clicked', { workshop_id: workshopId })}
-                                    className="bg-js text-black font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition-colors w-full"
-                                >
-                                    Join Waitlist
-                                </Button>
-                            </div>
-                        </div>
+                        <WorkshopWaitlist
+                            workshopId={workshopId}
+                            workshopTitle={workshopTitle}
+                            overbookingSeatsAvailable={overbookingSeatsAvailable}
+                        />
                     ) : (
-                        <div className="max-w-2xl mx-auto">
+                        <div className="max-w-2xl mx-auto mt-10">
                             <TicketSelection
                                 options={reliableAiAgentsTickets}
                                 onCheckout={handleCheckout}
@@ -735,10 +750,10 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                         Join Davy on April 21st and leave with a clear mental model for building reliable, production-ready AI agents.
                     </p>
                     <Button
+                        variant="primary"
                         onClick={scrollToRegistration}
-                        className="bg-black text-js font-bold px-8 py-3 rounded-xl hover:bg-gray-900 transition-colors"
                     >
-                        Reserve Your Seat — CHF 35
+                        {primaryCtaLabel}
                     </Button>
                 </div>
             </Section>

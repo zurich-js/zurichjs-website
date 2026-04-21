@@ -1,7 +1,8 @@
+import { SignInButton, useUser } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
-import { Save, MessageCircle } from 'lucide-react';
+import { LogIn, MessageCircle } from 'lucide-react';
 import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { FormEvent } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import Button from '@/components/ui/Button';
 import { FeatureFlags } from '@/constants';
@@ -17,9 +18,25 @@ import SuccessState from './SuccessState';
 import TalkSection from './TalkSection';
 import TopicSelector from './TopicSelector';
 
+interface CFPPrefillData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  jobTitle: string;
+  biography: string;
+  linkedinProfile: string;
+  githubProfile: string;
+  twitterHandle: string;
+  existingSpeakerImageUrl: string | null;
+  isExistingSpeaker: boolean;
+  missingSpeakerFields: string[];
+}
+
 export default function CFPForm() {
+  const { user, isLoaded: userLoaded } = useUser();
   const { track } = useEvents();
   const showDeepDiveOption = useFeatureFlagEnabled(FeatureFlags.CfpDeepDiveOption);
+  const [isPrefillLoading, setIsPrefillLoading] = useState(false);
 
   const {
     formState,
@@ -38,10 +55,103 @@ export default function CFPForm() {
 
   const { validateForm, hasErrors } = useFormValidation();
 
+  const editProfileHref = useMemo(() => '/profile/speaker?returnTo=%2Fcfp%2Fform', []);
+
+  const loadPrefill = async (): Promise<CFPPrefillData> => {
+    const response = await fetch('/api/cfp/prefill');
+
+    if (!response.ok) {
+      throw new Error('Failed to load CFP prefill');
+    }
+
+    return response.json() as Promise<CFPPrefillData>;
+  };
+
+  useEffect(() => {
+    if (!userLoaded || !user) return;
+
+    let isCancelled = false;
+
+    const prefillForm = async () => {
+      setIsPrefillLoading(true);
+
+      try {
+        const prefill = await loadPrefill();
+
+        if (isCancelled) return;
+
+        setFormState(prev => ({
+          ...prev,
+          firstName: prefill.firstName,
+          lastName: prefill.lastName,
+          email: prefill.email,
+          jobTitle: prefill.jobTitle,
+          biography: prefill.biography,
+          linkedinProfile: prefill.linkedinProfile,
+          githubProfile: prefill.githubProfile,
+          twitterHandle: prefill.twitterHandle,
+          existingSpeakerImageUrl: prefill.existingSpeakerImageUrl,
+          isExistingSpeaker: !!prefill.isExistingSpeaker,
+          missingSpeakerFields: prefill.missingSpeakerFields,
+          speakerImage: null,
+          imagePreview: null,
+        }));
+      } catch (error) {
+        console.error('Failed to prefill CFP form:', error);
+      } finally {
+        if (!isCancelled) {
+          setIsPrefillLoading(false);
+        }
+      }
+    };
+
+    void prefillForm();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [userLoaded, user, setFormState]);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const errors = validateForm(formState);
+    let nextFormState = formState;
+
+    if (user) {
+      setIsPrefillLoading(true);
+
+      try {
+        const prefill = await loadPrefill();
+
+        nextFormState = {
+          ...formState,
+          firstName: prefill.firstName,
+          lastName: prefill.lastName,
+          email: prefill.email,
+          jobTitle: prefill.jobTitle,
+          biography: prefill.biography,
+          linkedinProfile: prefill.linkedinProfile,
+          githubProfile: prefill.githubProfile,
+          twitterHandle: prefill.twitterHandle,
+          existingSpeakerImageUrl: prefill.existingSpeakerImageUrl,
+          isExistingSpeaker: !!prefill.isExistingSpeaker,
+          missingSpeakerFields: prefill.missingSpeakerFields,
+          speakerImage: null,
+          imagePreview: null,
+        };
+
+        setFormState(prev => ({
+          ...prev,
+          ...nextFormState,
+        }));
+      } catch (error) {
+        console.error('Failed to refresh CFP prefill before submit:', error);
+      } finally {
+        setIsPrefillLoading(false);
+      }
+    }
+
+    const errors = validateForm(nextFormState);
     setValidationErrors(errors);
 
     if (hasErrors(errors)) {
@@ -57,31 +167,33 @@ export default function CFPForm() {
 
     try {
       const formData = new FormData();
-      const fullName = `${formState.firstName} ${formState.lastName}`;
+      const fullName = `${nextFormState.firstName} ${nextFormState.lastName}`;
 
       formData.append('name', fullName);
-      formData.append('firstName', formState.firstName);
-      formData.append('lastName', formState.lastName);
-      formData.append('jobTitle', formState.jobTitle);
-      formData.append('biography', formState.biography);
-      formData.append('email', formState.email);
-      formData.append('linkedinProfile', formState.linkedinProfile);
-      formData.append('githubProfile', formState.githubProfile || '');
-      formData.append('twitterHandle', formState.twitterHandle || '');
-      formData.append('title', formState.title);
-      formData.append('description', formState.description);
-      formData.append('talkLength', formState.talkLength);
-      formData.append('talkLevel', formState.talkLevel);
-      formData.append('topics', JSON.stringify(formState.topics));
+      formData.append('firstName', nextFormState.firstName);
+      formData.append('lastName', nextFormState.lastName);
+      formData.append('jobTitle', nextFormState.jobTitle);
+      formData.append('biography', nextFormState.biography);
+      formData.append('email', nextFormState.email);
+      formData.append('linkedinProfile', nextFormState.linkedinProfile);
+      formData.append('githubProfile', nextFormState.githubProfile || '');
+      formData.append('twitterHandle', nextFormState.twitterHandle || '');
+      formData.append('title', nextFormState.title);
+      formData.append('description', nextFormState.description);
+      formData.append('talkLength', nextFormState.talkLength);
+      formData.append('talkLevel', nextFormState.talkLevel);
+      formData.append('topics', JSON.stringify(nextFormState.topics));
+      formData.append('submissionMode', user ? 'authenticated' : 'guest');
 
-      if (formState.speakerImage) {
-        formData.append('speakerImage', formState.speakerImage);
+      if (nextFormState.speakerImage) {
+        formData.append('speakerImage', nextFormState.speakerImage);
       }
 
       track('form_submit', {
-        talkLength: formState.talkLength,
-        talkLevel: formState.talkLevel,
-        topicsCount: formState.topics.length,
+        talkLength: nextFormState.talkLength,
+        talkLevel: nextFormState.talkLevel,
+        topicsCount: nextFormState.topics.length,
+        isLoggedIn: !!user,
       });
 
       const response = await fetch('/api/submit-talk', {
@@ -95,7 +207,7 @@ export default function CFPForm() {
         throw new Error(data.error || 'An error occurred while submitting your talk');
       }
 
-      track('form_submit_success', { talkTitle: formState.title });
+      track('form_submit_success', { talkTitle: nextFormState.title });
 
       clearStorage();
       setFormState(prev => ({
@@ -134,20 +246,9 @@ export default function CFPForm() {
         />
       </div>
 
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="flex items-start gap-2 text-sm text-blue-800">
-          <Save size={16} className="mt-0.5 text-blue-600 flex-shrink-0" />
-          <span>
-            <strong>Don&apos;t worry about finishing in one go!</strong> Your progress is
-            automatically saved to your browser as you type. You can close this page and return
-            later to continue where you left off.
-          </span>
-        </div>
-      </div>
-
-      <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-start gap-2 text-sm text-green-800">
-          <MessageCircle size={16} className="mt-0.5 text-green-600 flex-shrink-0" />
+      <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+        <div className="flex items-start gap-2 text-sm text-gray-700">
+          <MessageCircle size={16} className="mt-0.5 text-gray-500 flex-shrink-0" />
           <span>
             <strong>Having trouble?</strong> You can always email your talk proposal directly to{' '}
             <a href="mailto:hello@zurichjs.com" className="underline font-semibold">
@@ -181,6 +282,19 @@ export default function CFPForm() {
           validationErrors={validationErrors}
           onInputChange={handleInputChange}
           onImageChange={handleImageChange}
+          isSignedIn={!!user}
+          editProfileHref={editProfileHref}
+          signInCta={
+            <SignInButton mode="modal" forceRedirectUrl="/cfp/form">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+              >
+                <LogIn size={16} />
+                Sign In
+              </button>
+            </SignInButton>
+          }
         />
 
         <TalkSection
@@ -201,10 +315,10 @@ export default function CFPForm() {
             type="submit"
             variant="primary"
             size="lg"
-            disabled={formState.isSubmitting}
+            disabled={formState.isSubmitting || isPrefillLoading}
             className="w-full sm:w-auto"
           >
-            {formState.isSubmitting ? (
+            {formState.isSubmitting || isPrefillLoading ? (
               <>
                 <svg
                   className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -226,7 +340,7 @@ export default function CFPForm() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                Submitting...
+                {isPrefillLoading ? 'Refreshing profile...' : 'Submitting...'}
               </>
             ) : (
               'Submit Your Talk'

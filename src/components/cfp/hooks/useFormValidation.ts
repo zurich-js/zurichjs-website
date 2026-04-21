@@ -48,7 +48,9 @@ export function useFormValidation(): UseFormValidationReturn {
           return undefined;
 
         case 'speakerImage':
-          if (!formState?.speakerImage) return 'Profile image is required';
+          if (!formState?.speakerImage && !formState?.existingSpeakerImageUrl) {
+            return 'Profile image is required';
+          }
           return undefined;
 
         case 'topics':

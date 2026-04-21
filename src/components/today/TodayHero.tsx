@@ -25,7 +25,7 @@ export default function TodayHero({ event }: HeroProps) {
           </div>
 
           {/* Event Title - Minimalistic */}
-          <h1 className="text-3xl md:text-2xl lg:text-3xl mb-4 font-black text-gray-900">
+          <h1 className="text-3xl md:text-2xl lg:text-3xl mb-4 font-black text-gray-900 max-w-[25ch]">
               {event.title}
           </h1>
 

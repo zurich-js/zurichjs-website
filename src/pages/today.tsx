@@ -7,7 +7,6 @@ import Header from '@/components/layout/Header';
 import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import ScheduleCard from '@/components/today/ScheduleCard';
-import SentryRaffle from '@/components/today/SentryRaffle';
 import StickyActions from '@/components/today/StickyActions';
 import TodayCard from '@/components/today/TodayCard';
 import TodayHero from '@/components/today/TodayHero';
@@ -175,13 +174,13 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                       </h2>
 
                       <p className="text-sm text-gray-600">
-                          Fill out the form below to get a unique Vercel cap.
+                          Fill out the form below for a chance to win a Stripe book.
                       </p>
 
                       <div className="flex-1 grid place-items-center my-6">
                           <Image
-                              src="/images/partners/vercel-black.png"
-                              alt="Sentry logo"
+                              src="/images/partners/stripe.png"
+                              alt="Stripe logo"
                               width={320}
                               height={320}
                               className="object-contain"
@@ -189,12 +188,12 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                       </div>
 
                       <Link
-                          href="https://docs.google.com/forms/d/e/1FAIpQLSf2ovmu0kJZrVhKCpopW2C36cie4mUP1Cq4CanFRGpatsPJwA/viewform"
+                          href="https://forms.gle/EBop98LxwBnYNkoH9"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block w-full bg-brand-black text-white font-bold py-4 px-8 rounded-2xl text-center hover:bg-brand-gray-dark transition-colors duration-200"
                       >
-                          Get your Vercel swag
+                          Enter the Stripe book raffle
                       </Link>
                   </div>
               </TodayCard>
@@ -223,11 +222,16 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const upcomingEvent = await getEventById('march-2026');
+    const upcomingEvent = await getEventById('april-2026');
 
     return {
       props: {
-        upcomingEvent,
+        upcomingEvent: upcomingEvent
+          ? {
+              ...upcomingEvent,
+              attendees: Math.max(upcomingEvent.attendees, 80),
+            }
+          : null,
       },
       // Revalidate every 5 minutes to keep event data fresh
       revalidate: 300,

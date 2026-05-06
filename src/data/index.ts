@@ -164,16 +164,6 @@ export const getPartners = () => {
             allowReferrer: true
         },
         {
-            id: '18',
-            name: 'Sentry',
-            logo: '/images/partners/sentry.png',
-            url: 'https://sentry.io/welcome',
-            type: PartnerType.Supporting,
-            sponsorshipTier: SponsorshipTier.Friend,
-            description: 'Application monitoring and error tracking platform',
-            blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
-        },
-        {
             id: '19',
             name: 'Stripe',
             logo: '/images/partners/stripe.png',
@@ -182,26 +172,6 @@ export const getPartners = () => {
             sponsorshipTier: SponsorshipTier.Builder,
             description: 'Financial infrastructure for the internet',
             blurb: 'Stripe is a financial infrastructure platform for businesses. Millions of companies use Stripe to accept payments, grow revenue, and accelerate new business opportunities.'
-        },
-        {
-            id: '20',
-            name: 'Supabase',
-            logo: '/images/partners/supabase.png',
-            url: 'https://supabase.com',
-            type: PartnerType.Supporting,
-            sponsorshipTier: SponsorshipTier.Builder,
-            description: 'The open source Firebase alternative',
-            blurb: 'Supabase is an open source Firebase alternative. Start your project with a Postgres database, Authentication, instant APIs, Edge Functions, Realtime subscriptions, Storage, and Vector embeddings.'
-        },
-        {
-            id: '21',
-            name: 'Remotion',
-            logo: '/images/partners/remotion.png',
-            url: 'https://remotion.dev',
-            type: PartnerType.Supporting,
-            sponsorshipTier: SponsorshipTier.Friend,
-            description: 'Make videos programmatically with React',
-            blurb: 'Remotion is a framework for creating videos programmatically using React. Write video templates in React, render them using Node.js or in the cloud.'
         },
         {
             id: '22',

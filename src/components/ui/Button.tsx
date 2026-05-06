@@ -70,12 +70,18 @@ export default function Button({
 
   // Return link or button based on href prop
   if (href) {
+    const { target: targetProp, rel: relProp, href: _ignoredHref, ...anchorRest } = props as AnchorElementProps;
+    void _ignoredHref;
+    const linkTarget = targetProp ?? (external ? '_blank' : undefined);
+    const linkRel = relProp ?? (external ? 'noopener noreferrer' : undefined);
     return (
       <Link
         href={href}
         className={buttonStyles}
-        target={external ? '_blank' : undefined}
-        rel={external ? 'noopener noreferrer' : undefined}
+        target={linkTarget}
+        rel={linkRel}
+        onClick={onClick as AnchorElementProps['onClick']}
+        {...anchorRest}
       >
         {buttonContent}
       </Link>

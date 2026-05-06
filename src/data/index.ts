@@ -13,6 +13,12 @@ export enum SponsorshipTier {
     Other = 'other'
 }
 
+export interface PartnerBrandColors {
+    primary: string;
+    primaryDark: string;
+    primaryLight?: string;
+}
+
 export interface Partner {
     id: string;
     name: string;
@@ -22,6 +28,9 @@ export interface Partner {
     sponsorshipTier?: SponsorshipTier;
     description?: string;
     blurb?: string;
+    brandColors?: PartnerBrandColors;
+    // When true, the partner link omits `noreferrer` so they can see referral traffic in analytics.
+    allowReferrer?: boolean;
 }
 
 export const getPartners = () => {
@@ -141,12 +150,18 @@ export const getPartners = () => {
         {
             id: '15',
             name: 'GYFF',
-            logo: '/images/partners/gyff.png',
-            url: 'https://www.getyourfreefast.ch',
+            logo: '/images/partners/gyff-logo-square.png',
+            url: 'https://www.gyffted.com',
             type: PartnerType.Supporting,
             sponsorshipTier: SponsorshipTier.Supporter,
-            description: 'Swiss platform connecting IT experts with businesses',
-            blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
+            description: 'IT recruitment in Switzerland',
+            blurb: 'GYFF — IT recruitment in Switzerland. Staff augmentation (LSE), umbrella employment, freelance and direct hires (executive search & try-and-hire). JS, Cloud, Data, AI/ML, DevOps, Cybersecurity. Geneva · Lausanne · Vaud · Zurich · Basel.',
+            brandColors: {
+                primary: '#4A7BC0',
+                primaryDark: '#2B4C7E',
+                primaryLight: '#6B9BD6'
+            },
+            allowReferrer: true
         },
         {
             id: '18',

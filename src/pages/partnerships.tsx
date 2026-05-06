@@ -1,7 +1,7 @@
 import {motion} from 'framer-motion';
 import {Calendar, CheckCircle, Home, Users, Wrench} from 'lucide-react';
 import Image from 'next/image';
-import {ChangeEvent, FormEvent, useState} from 'react';
+import {ChangeEvent, FormEvent, MouseEvent, useState} from 'react';
 
 import Layout from '@/components/layout/Layout';
 import Section from '@/components/Section';
@@ -1340,7 +1340,13 @@ export default function Partnerships() {
                 </motion.div>
 
                 <div className="space-y-12">
-                  {supporterPartners.map((partner, index) => (
+                  {supporterPartners.map((partner, index) => {
+                    const linkRel = partner.allowReferrer ? 'noopener' : 'noopener noreferrer';
+                    const brand = partner.brandColors;
+                    const cardStyle = brand
+                      ? { borderLeftColor: brand.primary, borderLeftWidth: '4px' }
+                      : undefined;
+                    return (
                     <motion.div
                       key={partner.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -1348,13 +1354,14 @@ export default function Partnerships() {
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border-2 border-gray-200"
+                      style={cardStyle}
                     >
                       <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left">
                         <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-6">
                           <motion.a
                             href={partner.url}
                             target="_blank"
-                            rel="noopener noreferrer"
+                            rel={linkRel}
                             className="block"
                             whileHover={{ scale: 1.05 }}
                             transition={{ duration: 0.2 }}
@@ -1389,28 +1396,58 @@ export default function Partnerships() {
                              </div>
                            )}
                           <div className="mt-4">
-                                                         <Button
-                               href={partner.url}
-                               target="_blank"
-                               rel="noopener noreferrer"
-                               variant="outline"
-                               className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white w-full sm:w-auto"
-                               onClick={() => {
-                                 handlePartnerClick(partner.name, 'silver');
-                                 track('sponsor_visit', {
-                                   sponsorName: partner.name,
-                                   sponsorTier: 'silver',
-                                   sponsorUrl: partner.url
-                                 });
-                               }}
-                             >
-                               Discover {partner.name} →
-                             </Button>
+                            {brand ? (
+                              <Button
+                                href={partner.url}
+                                target="_blank"
+                                rel={linkRel}
+                                variant="primary"
+                                className="border-2 transition-colors w-full sm:w-auto"
+                                style={{ backgroundColor: brand.primary, borderColor: brand.primary, color: '#ffffff' }}
+                                onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+                                  e.currentTarget.style.backgroundColor = brand.primaryDark;
+                                  e.currentTarget.style.borderColor = brand.primaryDark;
+                                }}
+                                onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
+                                  e.currentTarget.style.backgroundColor = brand.primary;
+                                  e.currentTarget.style.borderColor = brand.primary;
+                                }}
+                                onClick={() => {
+                                  handlePartnerClick(partner.name, 'silver');
+                                  track('sponsor_visit', {
+                                    sponsorName: partner.name,
+                                    sponsorTier: 'silver',
+                                    sponsorUrl: partner.url
+                                  });
+                                }}
+                              >
+                                Discover {partner.name} →
+                              </Button>
+                            ) : (
+                              <Button
+                                href={partner.url}
+                                target="_blank"
+                                rel={linkRel}
+                                variant="outline"
+                                className="border-gray-400 text-gray-700 hover:bg-gray-700 hover:text-white w-full sm:w-auto"
+                                onClick={() => {
+                                  handlePartnerClick(partner.name, 'silver');
+                                  track('sponsor_visit', {
+                                    sponsorName: partner.name,
+                                    sponsorTier: 'silver',
+                                    sponsorUrl: partner.url
+                                  });
+                                }}
+                              >
+                                Discover {partner.name} →
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

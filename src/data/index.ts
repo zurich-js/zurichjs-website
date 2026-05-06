@@ -13,6 +13,12 @@ export enum SponsorshipTier {
     Other = 'other'
 }
 
+export interface PartnerBrandColors {
+    primary: string;
+    primaryDark: string;
+    primaryLight?: string;
+}
+
 export interface Partner {
     id: string;
     name: string;
@@ -22,6 +28,9 @@ export interface Partner {
     sponsorshipTier?: SponsorshipTier;
     description?: string;
     blurb?: string;
+    brandColors?: PartnerBrandColors;
+    // When true, the partner link omits `noreferrer` so they can see referral traffic in analytics.
+    allowReferrer?: boolean;
 }
 
 export const getPartners = () => {
@@ -141,22 +150,18 @@ export const getPartners = () => {
         {
             id: '15',
             name: 'GYFF',
-            logo: '/images/partners/gyff.png',
-            url: 'https://www.getyourfreefast.ch',
+            logo: '/images/partners/gyff-logo-square.png',
+            url: 'https://www.gyffted.com',
             type: PartnerType.Supporting,
             sponsorshipTier: SponsorshipTier.Supporter,
-            description: 'Swiss platform connecting IT experts with businesses',
-            blurb: 'GetYourFreeFast.ch (GYFF) is the Swiss platform that facilitates connections between IT experts and businesses.\n\n👉 IT professionals can find tailor-made assignments tailored to their skills and availability.\n\n👉 Businesses can access a selection of qualified and available IT experts, capable of quickly responding to their projects.\n\nOur goal: to simplify and accelerate networking in the Swiss IT world, while guaranteeing responsiveness and quality.'
-        },
-        {
-            id: '18',
-            name: 'Sentry',
-            logo: '/images/partners/sentry.png',
-            url: 'https://sentry.io/welcome',
-            type: PartnerType.Supporting,
-            sponsorshipTier: SponsorshipTier.Friend,
-            description: 'Application monitoring and error tracking platform',
-            blurb: 'Sentry helps every developer detect, understand, and fix broken code, fast. Using Sentry\'s debugging platform–that favors action over dashboards–decreases resolution time from days to minutes, resulting in freed up dev cycles and happier customers. Founded in 2008 by David Cramer and Chris Jennings as an Open Source side project, Sentry is used by over 4 million developers and 100,000 organizations, including Disney, Cloudflare, GitHub, Slack, Instacart, Atlassian, and Riot Games.'
+            description: 'IT recruitment in Switzerland',
+            blurb: 'GYFF — IT recruitment in Switzerland. Staff augmentation (LSE), umbrella employment, freelance and direct hires (executive search & try-and-hire). JS, Cloud, Data, AI/ML, DevOps, Cybersecurity. Geneva · Lausanne · Vaud · Zurich · Basel.',
+            brandColors: {
+                primary: '#4A7BC0',
+                primaryDark: '#2B4C7E',
+                primaryLight: '#6B9BD6'
+            },
+            allowReferrer: true
         },
         {
             id: '19',
@@ -167,26 +172,6 @@ export const getPartners = () => {
             sponsorshipTier: SponsorshipTier.Builder,
             description: 'Financial infrastructure for the internet',
             blurb: 'Stripe is a financial infrastructure platform for businesses. Millions of companies use Stripe to accept payments, grow revenue, and accelerate new business opportunities.'
-        },
-        {
-            id: '20',
-            name: 'Supabase',
-            logo: '/images/partners/supabase.png',
-            url: 'https://supabase.com',
-            type: PartnerType.Supporting,
-            sponsorshipTier: SponsorshipTier.Builder,
-            description: 'The open source Firebase alternative',
-            blurb: 'Supabase is an open source Firebase alternative. Start your project with a Postgres database, Authentication, instant APIs, Edge Functions, Realtime subscriptions, Storage, and Vector embeddings.'
-        },
-        {
-            id: '21',
-            name: 'Remotion',
-            logo: '/images/partners/remotion.png',
-            url: 'https://remotion.dev',
-            type: PartnerType.Supporting,
-            sponsorshipTier: SponsorshipTier.Friend,
-            description: 'Make videos programmatically with React',
-            blurb: 'Remotion is a framework for creating videos programmatically using React. Write video templates in React, render them using Node.js or in the cloud.'
         },
         {
             id: '22',

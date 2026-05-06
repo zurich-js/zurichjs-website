@@ -1,6 +1,6 @@
 import {motion} from 'framer-motion';
 import Image from 'next/image';
-import {useEffect, useState} from 'react';
+import {MouseEvent, useEffect, useState} from 'react';
 
 import Section from "@/components/Section";
 import {Partner, SponsorshipTier} from "@/data";
@@ -340,7 +340,16 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
           </motion.div>
 
           <div className="space-y-8">
-            {supporterPartners.map((partner, index) => (
+            {supporterPartners.map((partner, index) => {
+              const linkRel = partner.allowReferrer ? 'noopener' : 'noopener noreferrer';
+              const brand = partner.brandColors;
+              const cardStyle = brand
+                ? {
+                    backgroundImage: `linear-gradient(to right, ${brand.primary}1A, ${brand.primary}0D)`,
+                    borderColor: brand.primary,
+                  }
+                : undefined;
+              return (
               <motion.div
                 key={partner.id}
                 initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
@@ -348,13 +357,14 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="bg-gradient-to-r from-purple-50 to-violet-50 p-6 rounded-xl border-2 border-purple-200 shadow-md"
+                style={cardStyle}
               >
                 <div className="flex flex-col md:flex-row items-center md:items-start text-center md:text-left">
                   <div className="flex-shrink-0 mb-6 md:mb-0 md:mr-6">
                     <motion.a
                       href={partner.url}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel={linkRel}
                       className="block"
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.2 }}
@@ -382,16 +392,38 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                       </div>
                     )}
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <Button
-                        href={partner.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        variant="outline"
-                        className="border-purple-400 text-purple-700 hover:bg-purple-700 hover:text-white w-full sm:w-auto"
-                        onClick={() => handlePartnerClick(partner, 'supporter_cta')}
-                      >
-                        Visit {partner.name} →
-                      </Button>
+                      {brand ? (
+                        <Button
+                          href={partner.url}
+                          target="_blank"
+                          rel={linkRel}
+                          variant="primary"
+                          className="border-2 transition-colors w-full sm:w-auto"
+                          style={{ backgroundColor: brand.primary, borderColor: brand.primary, color: '#ffffff' }}
+                          onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+                            e.currentTarget.style.backgroundColor = brand.primaryDark;
+                            e.currentTarget.style.borderColor = brand.primaryDark;
+                          }}
+                          onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
+                            e.currentTarget.style.backgroundColor = brand.primary;
+                            e.currentTarget.style.borderColor = brand.primary;
+                          }}
+                          onClick={() => handlePartnerClick(partner, 'supporter_cta')}
+                        >
+                          Visit {partner.name} →
+                        </Button>
+                      ) : (
+                        <Button
+                          href={partner.url}
+                          target="_blank"
+                          rel={linkRel}
+                          variant="outline"
+                          className="border-purple-400 text-purple-700 hover:bg-purple-700 hover:text-white w-full sm:w-auto"
+                          onClick={() => handlePartnerClick(partner, 'supporter_cta')}
+                        >
+                          Visit {partner.name} →
+                        </Button>
+                      )}
                       <Button
                         href="/partnerships"
                         variant="outline"
@@ -404,7 +436,8 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -344,7 +344,10 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
               const linkRel = partner.allowReferrer ? 'noopener' : 'noopener noreferrer';
               const brand = partner.brandColors;
               const cardStyle = brand
-                ? { borderLeftColor: brand.primary, borderLeftWidth: '4px' }
+                ? {
+                    backgroundImage: `linear-gradient(to right, ${brand.primary}1A, ${brand.primary}0D)`,
+                    borderColor: brand.primary,
+                  }
                 : undefined;
               return (
               <motion.div

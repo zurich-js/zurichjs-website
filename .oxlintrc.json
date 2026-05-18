@@ -6,5 +6,8 @@
     "node": true,
     "es2024": true
   },
+  "rules": {
+    "nextjs/no-img-element": "off"
+  },
   "ignorePatterns": [".next/**", ".vercel/**"]
 }

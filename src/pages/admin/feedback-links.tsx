@@ -84,21 +84,6 @@ export default function AdminFeedbackLinks({ speakers }: AdminFeedbackLinksProps
         }
     }, [searchTerm, speakers]);
 
-    // Generate all event feedback links after component mounts
-    useEffect(() => {
-        if (isMounted) {
-            const links: Record<string, string> = {};
-            
-            // Get all unique events
-            allEvents.forEach(event => {
-                const baseUrl = window.location.origin;
-                links[event.id] = `${baseUrl}/events/${event.id}?feedback=true`;
-            });
-            
-            setEventLinks(links);
-        }
-    }, [isMounted]);
-
     const generateLink = async (speakerId: string) => {
         setGeneratingLink(speakerId);
 
@@ -170,6 +155,21 @@ export default function AdminFeedbackLinks({ speakers }: AdminFeedbackLinksProps
     ).filter((value, index, self) => 
         self.findIndex(v => v.id === value.id) === index
     );
+
+    // Generate all event feedback links after component mounts
+    useEffect(() => {
+        if (isMounted) {
+            const links: Record<string, string> = {};
+
+            // Get all unique events
+            allEvents.forEach(event => {
+                const baseUrl = window.location.origin;
+                links[event.id] = `${baseUrl}/events/${event.id}?feedback=true`;
+            });
+
+            setEventLinks(links);
+        }
+    }, [allEvents, isMounted]);
 
     return (
         <Layout>

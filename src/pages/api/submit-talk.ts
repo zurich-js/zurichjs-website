@@ -195,7 +195,6 @@ async function handler(
       };
       
       // Update the existing speaker with new information if provided
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateFields = {} as any;
       
       if (jobTitle) updateFields.title = jobTitle;

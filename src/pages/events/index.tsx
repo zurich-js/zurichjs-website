@@ -10,7 +10,7 @@ import Section from '@/components/Section';
 import SEO from '@/components/SEO';
 import Button from '@/components/ui/Button';
 import { FeatureFlags } from '@/constants';
-import { getPastEvents, getUpcomingEvents, Event } from '@/sanity/queries';
+import { getEventListingEvents, Event } from '@/sanity/queries';
 
 const getEventHref = (event: Event): string => {
   if (event.isProMeetup) {
@@ -21,15 +21,17 @@ const getEventHref = (event: Event): string => {
 
 interface EventsPageProps {
   upcomingEvents: Event[];
-  pastEvents: Event[];
 }
 
-export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) {
+export default function Events({ upcomingEvents }: EventsPageProps) {
 
   // State for filtering and searching
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
   const [searchQuery, setSearchQuery] = useState('');
+  const [pastEvents, setPastEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(upcomingEvents);
+  const [isPastEventsLoading, setIsPastEventsLoading] = useState(false);
+  const [pastEventsError, setPastEventsError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
 
@@ -82,6 +84,34 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
       trackEventView('events_page');
     }
   }, [isClient]);
+
+  useEffect(() => {
+    if (activeTab !== 'past' || pastEvents.length > 0 || isPastEventsLoading || pastEventsError) {
+      return;
+    }
+
+    const fetchPastEvents = async () => {
+      try {
+        setIsPastEventsLoading(true);
+        setPastEventsError(null);
+
+        const response = await fetch('/api/events/past');
+        if (!response.ok) {
+          throw new Error('Failed to fetch past events');
+        }
+
+        const data = await response.json();
+        setPastEvents(data.events || []);
+      } catch (error) {
+        console.error('Error loading past events:', error);
+        setPastEventsError('Past events could not be loaded. Please try again.');
+      } finally {
+        setIsPastEventsLoading(false);
+      }
+    };
+
+    fetchPastEvents();
+  }, [activeTab, isPastEventsLoading, pastEvents.length, pastEventsError]);
 
   // Handle tab change
   const handleTabChange = (tab: 'upcoming' | 'past') => {
@@ -175,7 +205,25 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
             </div>
 
             {/* Events grid */}
-            {filteredEvents.length > 0 ? (
+            {activeTab === 'past' && isPastEventsLoading ? (
+              <div className="text-center py-16">
+                <p className="text-gray-700">Loading past events...</p>
+              </div>
+            ) : activeTab === 'past' && pastEventsError ? (
+              <div className="text-center py-16">
+                <h3 className="text-xl font-bold mb-2 text-gray-900">Past events unavailable</h3>
+                <p className="text-gray-700 mb-6">{pastEventsError}</p>
+                <Button
+                  onClick={() => {
+                    setPastEventsError(null);
+                    setPastEvents([]);
+                  }}
+                  variant="secondary"
+                >
+                  Try Again
+                </Button>
+              </div>
+            ) : filteredEvents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredEvents.map((event, index) => (
                   <motion.div
@@ -533,15 +581,14 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   );
 }
 
-export async function getServerSideProps() {
-  const upcomingEvents = await getUpcomingEvents();
-  const pastEvents = await getPastEvents();
+export async function getStaticProps() {
+  const upcomingEvents = await getEventListingEvents({ type: 'upcoming' });
 
   return {
     props: {
       upcomingEvents,
-      pastEvents
     },
+    revalidate: 300,
   };
 }
 

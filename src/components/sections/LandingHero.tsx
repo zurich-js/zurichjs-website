@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import type { Workshop } from "@/components/sections/UpcomingWorkshops";
 import useEvents from "@/hooks/useEvents";
 import { Event } from "@/sanity/queries";
-import { Speaker } from "@/types";
 
 // Design tokens from spec
 const COLORS = {
@@ -21,18 +20,9 @@ const COLORS = {
 const CONF_URL = 'https://conf.zurichjs.com';
 const UTM_PARAMS = '?utm_source=zurichjs&utm_medium=website&utm_campaign=conf2026&utm_content=hero';
 
-interface StatsData {
-  members: number;
-  eventsHosted: number;
-  speakersToDate: number;
-  totalAttendees: number;
-}
-
 interface LandingHeroProps {
   upcomingEvents: Event[];
-  stats: StatsData;
   upcomingWorkshops: Workshop[];
-  speakers: Speaker[];
 }
 
 export default function LandingHero({

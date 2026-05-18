@@ -132,7 +132,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             `;
             document.head.appendChild(style);
         }
-    }, []);
+    }, [track, workshop.id, workshop.title]);
 
     // Share event function
     const shareWorkshop = async () => {
@@ -806,4 +806,4 @@ export async function getStaticProps() {
         },
         revalidate: 60, // Revalidate the page every 60 seconds
     };
-} 
+}

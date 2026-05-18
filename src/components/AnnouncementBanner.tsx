@@ -101,7 +101,7 @@ export default function AnnouncementBanner() {
         });
       }
     }
-  }, [currentAnnouncement, state.isLoggedIn]);
+  }, [currentAnnouncement, state.isLoggedIn, track]);
 
   useEffect(() => {
     // Save state to localStorage whenever it changes
@@ -239,4 +239,4 @@ export default function AnnouncementBanner() {
       </motion.div>
     </AnimatePresence>
   );
-} 
+}

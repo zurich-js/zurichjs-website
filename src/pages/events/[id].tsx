@@ -1,5 +1,4 @@
 import { Disclosure, DisclosurePanel, DisclosureButton } from '@headlessui/react';
-import { atcb_action } from 'add-to-calendar-button-react';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, ChevronRight, Building, Ticket, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
@@ -19,7 +18,7 @@ import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
 import useEvents from '@/hooks/useEvents';
 import { useStripePrice } from '@/hooks/useStripePrice';
-import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
+import { getEventById, getEventIds, Event } from '@/sanity/queries';
 import { ProductDemo } from '@/types';
 import { getRelatedWorkshops } from '@/utils/workshopEventMatcher';
 
@@ -116,89 +115,54 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       is_pro_meetup: event.isProMeetup
     });
 
-    // Create date objects using the event datetime
-    const dateObj = new Date(event.datetime);
-
-    // Duration in minutes (default: 3 hours = 180 minutes)
-    const durationMinutes = event.duration || 180;
-
-    // Format dates for calendar - ensure we use YYYY-MM-DD format
-    const formatDate = (date: Date): string => {
-      return date.toLocaleDateString('en-CA', {
-        timeZone: 'Europe/Zurich'
-      }); // en-CA uses YYYY-MM-DD format
-    };
-
-    // Format time with hours and minutes in 24-hour format (HH:MM)
-    const formatTime = (date: Date): string => {
-      return date.toLocaleTimeString('en-GB', {
+    const startsAt = new Date(event.datetime);
+    const endsAt = new Date(startsAt.getTime() + (event.duration || 180) * 60 * 1000);
+    const timeZone = 'Europe/Zurich';
+    const formatCalendarDate = (date: Date): string => {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
+        second: '2-digit',
         hour12: false,
-        timeZone: 'Europe/Zurich'
-      });
+      }).formatToParts(date);
+      const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find(part => part.type === type)?.value || '';
+
+      return `${getPart('year')}${getPart('month')}${getPart('day')}T${getPart('hour')}${getPart('minute')}${getPart('second')}`;
     };
-
-    // Get start time components in Zurich timezone
-    const startDate = formatDate(dateObj);
-    const startTime = formatTime(dateObj);
-
-    // Calculate end time
-    // Create a date object using the formatted date and time strings to ensure timezone consistency
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
-    let endDate = startDate; // Usually same day for most events
-
-    // Calculate end hours and minutes
-    let endHours = startHours + Math.floor(durationMinutes / 60);
-    let endMinutes = startMinutes + (durationMinutes % 60);
-
-    // Adjust for minute overflow
-    if (endMinutes >= 60) {
-      endHours += 1;
-      endMinutes -= 60;
-    }
-
-    // Handle next day overflow (if event runs past midnight)
-    if (endHours >= 24) {
-      // Create a new date object for the end date by adding one day
-      const nextDay = new Date(dateObj);
-      nextDay.setDate(nextDay.getDate() + Math.floor(endHours / 24));
-      endDate = formatDate(nextDay);
-      endHours = endHours % 24;
-    }
-
-    // Format end time properly with leading zeros
-    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-
-    // Debug logging to help troubleshoot timezone issues
-    console.log('Calendar event details:', {
-      original: {
-        datetime: event.datetime,
-        dateObj: dateObj.toString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      },
-      formatted: {
-        startDate,
-        startTime,
-        endDate,
-        endTime,
-        targetTimezone: 'Europe/Zurich'
-      }
-    });
-
-    atcb_action({
-      name: event.title,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      location: event.location || 'TBD',
-      description: event.description || `ZurichJS event: ${event.title}`,
-      options: ['Apple', 'Google', 'iCal', 'Microsoft365', 'Outlook.com', 'Yahoo'],
-      timeZone: 'Europe/Zurich',
-      iCalFileName: `zurichjs-event-${event.id}`,
-      buttonStyle: 'date'
-    });
+    const escapeCalendarText = (value: string): string =>
+      value
+        .replace(/\\/g, '\\\\')
+        .replace(/\n/g, '\\n')
+        .replace(/,/g, '\\,')
+        .replace(/;/g, '\\;');
+    const filename = `zurichjs-event-${event.id}.ics`;
+    const description = event.description || `ZurichJS event: ${event.title}`;
+    const calendar = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//ZurichJS//Events//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `UID:${event.id}@zurichjs.com`,
+      `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
+      `DTSTART;TZID=${timeZone}:${formatCalendarDate(startsAt)}`,
+      `DTEND;TZID=${timeZone}:${formatCalendarDate(endsAt)}`,
+      `SUMMARY:${escapeCalendarText(event.title)}`,
+      `DESCRIPTION:${escapeCalendarText(description)}`,
+      `LOCATION:${escapeCalendarText(event.location || event.address || 'TBD')}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob([calendar], { type: 'text/calendar;charset=utf-8' }));
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(link.href);
   };
 
   // Share event function
@@ -1383,18 +1347,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 }
 
 export async function getStaticPaths() {
-  // This would be replaced with actual CMS fetching
-  const upcomingEvents = await getUpcomingEvents();
-  const pastEvents = await getPastEvents();
-
-  const paths = [
-    ...upcomingEvents.map((event: Event) => ({
-      params: {id: event.id},
-    })),
-    ...pastEvents.map((event: Event) => ({
-      params: {id: event.id},
-    })),
-  ];
+  const eventIds = await getEventIds();
+  const paths = eventIds.map((id: string) => ({
+    params: {id},
+  }));
 
   return {
     paths,
@@ -1403,11 +1359,18 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({params}: { params: { id: string } }) {
-  // This would be replaced with actual CMS fetching based on the id
   const {id} = params;
   const event = await getEventById(id);
 
+  if (!event) {
+    return {
+      notFound: true,
+      revalidate: 300,
+    };
+  }
+
   return {
     props: {event},
+    revalidate: 300,
   };
 }

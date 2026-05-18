@@ -5,7 +5,7 @@ export const config = {
   runtime: 'edge',
 };
 
-const emojis = ['👩‍💻', '👨‍💻', '🤓', '🧠', '💭', '📝', '🎤', '📸', , '🔍', '📊', '🚀', '✨', '🎯', '📱', '💻', '⚙️', '🔧', '🌐', '📈', '🧩'];
+const emojis = ['👩‍💻', '👨‍💻', '🤓', '🧠', '💭', '📝', '🎤', '📸', '🔍', '📊', '🚀', '✨', '🎯', '📱', '💻', '⚙️', '🔧', '🌐', '📈', '🧩'];
 
 export default async function handler(req: NextRequest) {
   try {

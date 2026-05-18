@@ -1,7 +1,17 @@
-packages: []
-onlyBuiltDependencies:
-  - '@clerk/shared'
-  - core-js
-  - esbuild
-  - sharp
-  - unrs-resolver
+packages:
+  - .
+
+allowBuilds:
+  '@clerk/shared': true
+  core-js: true
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAge: 1440
+
+overrides:
+  '@next/env': npm:@varlock/nextjs-integration
+  js-yaml@<3.14.2: 3.14.2
+  postcss@<8.5.10: 8.5.14

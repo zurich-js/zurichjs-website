@@ -1,38 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ZurichJS Website
 
-## Getting Started
+Next.js Pages Router site for ZurichJS events, workshops, speakers, partners, and community pages.
 
-First, run the development server:
+## Local Setup
+
+Use the Node version pinned in `.nvmrc` and the package manager pinned in `package.json`.
 
 ```bash
-npm run dev
-# or
-pnpm dev
-# or
-bun dev
+nvm use
+corepack enable
+corepack prepare pnpm@11.1.1 --activate
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The project expects Node `>=22 <23` and pnpm `11.x`.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Environment loading and validation are handled by Varlock with 1Password integration.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+Local development expects:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- 1Password desktop app installed and unlocked
+- 1Password CLI available as `op`
+- 1Password CLI integration enabled in the desktop app
+- `.env.local` containing the local Varlock/1Password references
 
-## Learn More
+See [docs/environment.md](docs/environment.md) for the full environment setup, vault structure, and CI/deployment notes.
 
-To learn more about Next.js, take a look at the following resources:
+## Development
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000).
 
-## Deploy on Vercel
+## Checks
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Run these locally before pushing larger changes:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```bash
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm build
+```
+
+`pnpm build` requires a working local environment because static generation reads Sanity and Varlock validates configured secrets.
+
+## Project Notes
+
+- Routing lives under `src/pages`.
+- API routes live under `src/pages/api`.
+- Shared Sanity queries live in `src/sanity/queries.ts`.
+- Public read-only Sanity queries can use the CDN-backed `publicReadClient`.
+- Admin/write/fresh-data paths should keep using the non-CDN `client`.
+- Static/local data such as partners and workshop definitions lives under `src/data`.

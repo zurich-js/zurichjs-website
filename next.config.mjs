@@ -1,6 +1,6 @@
+import { varlockNextConfigPlugin } from "@varlock/nextjs-integration/plugin";
+
 /** @type {import('next').NextConfig} */
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
 const nextConfig = {
   reactStrictMode: true,
   env: {
@@ -9,46 +9,46 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'ik.imagekit.io',
-        port: '',
-        pathname: '**',
+        protocol: "https",
+        hostname: "ik.imagekit.io",
+        port: "",
+        pathname: "**",
       },
       {
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-        port: '',
-        pathname: '**',
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+        port: "",
+        pathname: "**",
       },
       {
-        protocol: 'https',
-        hostname: 'maps.googleapis.com',
-        port: '',
-        pathname: '**',
+        protocol: "https",
+        hostname: "maps.googleapis.com",
+        port: "",
+        pathname: "**",
       },
       {
-        protocol: 'https',
-        hostname: 'api.qrserver.com',
-        port: '',
-        pathname: '**',
+        protocol: "https",
+        hostname: "api.qrserver.com",
+        port: "",
+        pathname: "**",
       },
       {
-        protocol: 'https',
-        hostname: 'svkbzhlrjujeteqjrckv.supabase.co',
-        port: '',
-        pathname: '**',
+        protocol: "https",
+        hostname: "svkbzhlrjujeteqjrckv.supabase.co",
+        port: "",
+        pathname: "**",
       },
     ],
   },
   async redirects() {
     return [
       {
-        source: '/support',
-        destination: '/buy-us-a-coffee',
+        source: "/support",
+        destination: "/buy-us-a-coffee",
         permanent: true,
       },
     ];
   },
 };
 
-export default nextConfig;
+export default varlockNextConfigPlugin()(nextConfig);

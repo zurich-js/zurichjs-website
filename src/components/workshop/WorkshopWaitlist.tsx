@@ -45,8 +45,7 @@ export default function WorkshopWaitlist({
         setName(`${user.firstName} ${user.lastName}`);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [email, name, user]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

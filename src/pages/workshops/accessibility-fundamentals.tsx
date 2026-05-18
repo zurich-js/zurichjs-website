@@ -165,7 +165,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
           `;
             document.head.appendChild(style);
         }
-    }, []);
+    }, [track, workshop.id, workshop.title]);
 
     const scrollToWaitlist = () => {
         track('workshop_waitlist_button_clicked', {

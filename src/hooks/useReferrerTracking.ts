@@ -1,6 +1,6 @@
 // useReferrerTracking.js
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import useEvents from './useEvents';
 
@@ -41,15 +41,14 @@ export default function useReferrerTracking({
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const { track } = useEvents();
   
-  // Store the referrer information
-  const referrerInfo: ReferrerInfo = {
+  const referrerInfo = useRef<ReferrerInfo>({
     referrer: '',
     isExternal: false,
     currentPath: ''
-  };
+  });
   
   // Function to check if a domain should be ignored
-  const shouldIgnoreDomain = (url: string): boolean => {
+  const shouldIgnoreDomain = useCallback((url: string): boolean => {
     if (!url) return false;
     
     return ignoreDomains.some(domain => {
@@ -59,10 +58,10 @@ export default function useReferrerTracking({
         return url.includes(domain);
       }
     });
-  };
+  }, [ignoreDomains]);
   
   // Function to track the referrer
-  const trackReferrer = (): void => {
+  const trackReferrer = useCallback((): void => {
     if (typeof window === 'undefined') return;
     
     const referrer = document.referrer;
@@ -78,9 +77,9 @@ export default function useReferrerTracking({
     if (isExternal && shouldIgnoreDomain(referrer)) return;
     
     // Update referrer info
-    referrerInfo.referrer = referrer;
-    referrerInfo.isExternal = !!isExternal;
-    referrerInfo.currentPath = currentPath;
+    referrerInfo.current.referrer = referrer;
+    referrerInfo.current.isExternal = !!isExternal;
+    referrerInfo.current.currentPath = currentPath;
     
     // Send event using useEvents hook
     track(eventName, {
@@ -92,15 +91,14 @@ export default function useReferrerTracking({
     
     // Call callback if provided
     if (onTrack && typeof onTrack === 'function') {
-      onTrack(referrerInfo);
+      onTrack(referrerInfo.current);
     }
-  };
+  }, [eventName, hostname, onTrack, shouldIgnoreDomain, track, trackOnlyExternal]);
   
   // Track on initial page load
-  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     trackReferrer();
-  }, []);
+  }, [trackReferrer]);
   
   // Track on path changes if enabled
   useEffect(() => {
@@ -115,7 +113,7 @@ export default function useReferrerTracking({
     return () => {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
-  }, [router.events, trackPathChange]);
+  }, [router.events, trackPathChange, trackReferrer]);
   
-  return referrerInfo;
+  return referrerInfo.current;
 }

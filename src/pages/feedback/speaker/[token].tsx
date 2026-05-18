@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import { GetServerSideProps } from 'next';
 import Image from 'next/image';
@@ -1550,7 +1549,13 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const host = context.req.headers.host || 'localhost:3000';
     const apiUrl = `${protocol}://${host}/api/speaker-feedback/${token}`;
     
-    const { data } = await axios.get(apiUrl);
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      throw new Error(`Feedback API returned ${response.status}`);
+    }
+
+    const data = await response.json();
 
     return {
       props: {

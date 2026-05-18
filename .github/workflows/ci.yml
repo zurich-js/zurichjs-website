@@ -15,7 +15,7 @@ jobs:
     env:
       APP_ENV: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Load 1Password secrets
         uses: 1password/load-secrets-action@v4

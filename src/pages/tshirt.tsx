@@ -46,10 +46,9 @@ export default function TshirtPage() {
   const [step, setStep] = useState(0); // 0: product config, 1: payment method, 2: address (cash only), 3: review, 4: confirmation
   const router = useRouter();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { couponCode, couponData, error: couponError, applyDiscount } = useCoupon();
+  const { couponCode, couponData, error: _couponError, applyDiscount } = useCoupon();
   const { isSignedIn, userEmail } = useAuthenticatedCheckout();
-  const { track, captureError } = useEvents();
+  const { track } = useEvents();
 
   // Track if component is mounted to avoid hydration mismatches
   const [isMounted, setIsMounted] = useState(false);
@@ -420,8 +419,7 @@ Delivery Method: Meetup Pickup`,
 
   // Coupon input state
   const [couponInput, setCouponInput] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [couponApplied, setCouponApplied] = useState(false);
+  const [_couponApplied, setCouponApplied] = useState(false);
   const handleApplyCoupon = () => {
     if (couponInput) {
       router.replace({
@@ -1347,4 +1345,4 @@ Delivery Method: Meetup Pickup`,
       </div >
     </PageLayout >
   );
-} 
+}

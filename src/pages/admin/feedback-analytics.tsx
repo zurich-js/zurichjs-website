@@ -1,6 +1,3 @@
- 
-/* eslint-disable  @typescript-eslint/no-explicit-any */
-
 import { ArrowDown, ArrowUp, Calendar, Download, Star, Filter } from 'lucide-react';
 import { GetServerSideProps } from 'next';
 import Image from 'next/image';

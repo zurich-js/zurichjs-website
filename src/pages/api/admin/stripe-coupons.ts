@@ -22,7 +22,6 @@ async function handler(
         totalRedemptions: coupons.data.reduce((sum, c) => sum + c.times_redeemed, 0),
         mostUsedCoupon: coupons.data.reduce((most, current) => 
           current.times_redeemed > (most?.times_redeemed || 0) ? current : most
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         , null as any)
       };
 
@@ -65,7 +64,6 @@ async function handler(
       }
 
       // Build coupon parameters
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const couponParams: Record<string, any> = {
         id,
         duration,
@@ -105,7 +103,6 @@ async function handler(
         message: 'Coupon created successfully',
         coupon
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error creating coupon:', error);
       

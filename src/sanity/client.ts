@@ -7,3 +7,11 @@ export const client = createClient({
   useCdn: false,
   perspective: 'published',
 });
+
+export const publicReadClient = createClient({
+  projectId: "viqjrovw",
+  dataset: "production",
+  apiVersion: "2024-01-01",
+  useCdn: true,
+  perspective: 'published',
+});

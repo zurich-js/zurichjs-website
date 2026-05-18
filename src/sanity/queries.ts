@@ -2,7 +2,7 @@ import { format } from "date-fns";
 
 import { Speaker, Talk } from "@/types";
 
-import { client } from "./client";
+import { client, publicReadClient } from "./client";
 
 /** Returns start of today (midnight Zurich time) as ISO string for Sanity GROQ date comparisons */
 const getStartOfTodayISO = (): string => {
@@ -152,6 +152,94 @@ const mapEventData = (event: SanityEvent) => {
 };
 
 export type Event = ReturnType<typeof mapEventData>;
+
+export const getHomepageUpcomingEvents = async (limit = 3): Promise<Event[]> => {
+  const events = await publicReadClient.fetch(`
+    *[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0...$limit] {
+      _id,
+      "id": id,
+      title,
+      datetime,
+      location,
+      address,
+      attendees,
+      meetupUrl,
+      isProMeetup,
+      stripePriceId,
+      description,
+      excludeFromStats,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      }
+    }`, {
+      startOfToday: getStartOfTodayISO(),
+      limit,
+    });
+
+  return events.map(mapEventData);
+};
+
+export const getEventIds = async (): Promise<string[]> => {
+  const eventIds = await publicReadClient.fetch<string[]>(`
+    *[_type == "events" && defined(id.current)] {
+      "id": id.current
+    }.id
+  `);
+
+  return eventIds.filter(Boolean);
+};
+
+export const getEventListingEvents = async ({
+  type,
+  limit,
+}: {
+  type: 'upcoming' | 'past';
+  limit?: number;
+}): Promise<Event[]> => {
+  const isUpcoming = type === 'upcoming';
+  const range = typeof limit === 'number' ? `[0...$limit]` : '';
+  const events = await publicReadClient.fetch(`
+    *[_type == "events" && datetime ${isUpcoming ? '>=' : '<'} $startOfToday] | order(datetime ${isUpcoming ? 'asc' : 'desc'}) ${range} {
+      _id,
+      "id": id,
+      title,
+      datetime,
+      location,
+      address,
+      attendees,
+      meetupUrl,
+      isProMeetup,
+      stripePriceId,
+      description,
+      excludeFromStats,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      talks[]-> {
+        "id": id,
+        title,
+        speakers[]-> {
+          "id": id,
+          name,
+          title,
+          "image": {
+            "asset": {
+              "url": image.asset->url
+            }
+          }
+        }
+      }
+    }`, {
+      startOfToday: getStartOfTodayISO(),
+      limit,
+    });
+
+  return events.map(mapEventData);
+};
 
 // Lightweight event data for UTM tracking
 export interface UTMEvent {
@@ -1145,9 +1233,6 @@ export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
     throw error;
   }
 };
-
-
-
 
 
 

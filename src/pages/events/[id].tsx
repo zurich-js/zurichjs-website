@@ -18,7 +18,7 @@ import TicketSelection from '@/components/workshop/TicketSelection';
 import { FeatureFlags } from '@/constants';
 import useEvents from '@/hooks/useEvents';
 import { useStripePrice } from '@/hooks/useStripePrice';
-import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
+import { getEventById, getEventIds, Event } from '@/sanity/queries';
 import { ProductDemo } from '@/types';
 import { getRelatedWorkshops } from '@/utils/workshopEventMatcher';
 
@@ -1347,18 +1347,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 }
 
 export async function getStaticPaths() {
-  // This would be replaced with actual CMS fetching
-  const upcomingEvents = await getUpcomingEvents();
-  const pastEvents = await getPastEvents();
-
-  const paths = [
-    ...upcomingEvents.map((event: Event) => ({
-      params: {id: event.id},
-    })),
-    ...pastEvents.map((event: Event) => ({
-      params: {id: event.id},
-    })),
-  ];
+  const eventIds = await getEventIds();
+  const paths = eventIds.map((id: string) => ({
+    params: {id},
+  }));
 
   return {
     paths,
@@ -1367,11 +1359,18 @@ export async function getStaticPaths() {
 }
 
 export async function getStaticProps({params}: { params: { id: string } }) {
-  // This would be replaced with actual CMS fetching based on the id
   const {id} = params;
   const event = await getEventById(id);
 
+  if (!event) {
+    return {
+      notFound: true,
+      revalidate: 300,
+    };
+  }
+
   return {
     props: {event},
+    revalidate: 300,
   };
 }

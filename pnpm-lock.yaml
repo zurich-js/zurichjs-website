@@ -34,6 +34,9 @@ importers:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
+      '@varlock/1password-plugin':
+        specifier: 1.1.0
+        version: 1.1.0(varlock@1.2.0)
       '@varlock/nextjs-integration':
         specifier: ^1.1.0
         version: 1.1.0(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(varlock@1.2.0))(varlock@1.2.0)
@@ -2973,6 +2976,12 @@ packages:
 
   '@types/uuid@8.3.4':
     resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
+
+  '@varlock/1password-plugin@1.1.0':
+    resolution: {integrity: sha512-78olHIxWqRy4CAsVHdu4KHkKuqTmuG9w3IrpDZy+9ZjQvKkbA9I5zk9xvnxWTYxCfe0a4CcyiS0yd4WIlWmydA==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      varlock: ^1.1.0
 
   '@varlock/nextjs-integration@1.1.0':
     resolution: {integrity: sha512-ZqgJakxmyO48i1wWrvISGUERKSWibbxq6zR5uKuC1FoW85Bci/ac6SiasdzQMslkqR052rF2bHaIrQ5+JgAMPg==}
@@ -8786,6 +8795,10 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/uuid@8.3.4': {}
+
+  '@varlock/1password-plugin@1.1.0(varlock@1.2.0)':
+    dependencies:
+      varlock: 1.2.0
 
   '@varlock/nextjs-integration@1.1.0(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(varlock@1.2.0))(varlock@1.2.0)':
     dependencies:

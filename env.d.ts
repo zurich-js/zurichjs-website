@@ -27,6 +27,17 @@ export type CoercedEnvSchema = {
   APP_ENV?: "development" | "preview" | "production" | "test";
   
   /**
+   * **OP_SERVICE_ACCOUNT_TOKEN** 🔐 _sensitive_  
+   * 1Password service account token for CI/deployed environments.  
+   * Local development can use the 1Password desktop app + CLI integration instead.  
+   * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M12%200c6.627%200%2012%205.373%2012%2012c0%206.628-5.373%2012-12%2012S0%2018.628%200%2012C0%205.373%205.373%200%2012%200m-.893%204.86c-.485%200-.727.001-.913.095a.87.87%200%200%200-.378.379c-.094.185-.095.428-.095.912v2.747c0%20.12%200%20.182.016.238q.02.075.065.138a1%201%200%200%200%20.175.162l.695.564c.113.092.17.139.19.194a.22.22%200%200%201%200%20.15c-.02.056-.077.102-.19.194l-.695.564a1%201%200%200%200-.175.162a.4.4%200%200%200-.065.138a1%201%200%200%200-.016.238v6.019c0%20.485%200%20.728.095.913a.87.87%200%200%200%20.378.378c.186.094.428.094.913.094h1.786c.485%200%20.727%200%20.913-.094a.87.87%200%200%200%20.378-.378c.095-.185.095-.428.095-.913v-2.747c0-.12%200-.182-.016-.238a.4.4%200%200%200-.065-.138a1%201%200%200%200-.175-.162l-.695-.564c-.113-.092-.17-.138-.191-.193a.22.22%200%200%201%200-.152c.02-.055.078-.1.19-.193l.696-.564a1%201%200%200%200%20.175-.162a.4.4%200%200%200%20.065-.138a1%201%200%200%200%20.016-.238V6.246c0-.484%200-.727-.095-.912a.87.87%200%200%200-.378-.379c-.186-.094-.428-.094-.913-.094Z%22%2F%3E%3C%2Fsvg%3E)   
+   *   
+   * 📚 {@link https://developer.1password.com/docs/service-accounts/ | 1Password service accounts}  
+   * 📚 {@link https://example.com}  
+   */
+  OP_SERVICE_ACCOUNT_TOKEN?: string;
+  
+  /**
    * **NEXT_PUBLIC_BASE_URL**  
    * Core  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M24%2021V9h-2v14h8v-2zm-4-6v-4c0-1.103-.897-2-2-2h-6v14h2v-6h1.48l2.335%206h2.145l-2.333-6H18c1.103%200%202-.897%202-2m-6-4h4v4h-4zM8%2023H4c-1.103%200-2-.897-2-2V9h2v12h4V9h2v12c0%201.103-.897%202-2%202%22%2F%3E%3C%2Fsvg%3E)   
@@ -69,9 +80,10 @@ export type CoercedEnvSchema = {
   
   /**
    * **CLERK_SECRET_KEY** 🔐 _sensitive_  
+   * Server-side Clerk API secret used for admin user metadata updates.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
-  CLERK_SECRET_KEY?: string;
+  CLERK_SECRET_KEY: string;
   
   /**
    * **SANITY_TOKEN** 🔐 _sensitive_  
@@ -117,36 +129,42 @@ export type CoercedEnvSchema = {
   /**
    * **PUSHOVER_TOKEN** 🔐 _sensitive_  
    * Notifications  
+   * Pushover application API token used to send notifications.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
   PUSHOVER_TOKEN?: string;
   
   /**
    * **PUSHOVER_USER** 🔐 _sensitive_  
+   * Pushover user or group key that receives notifications.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
   PUSHOVER_USER?: string;
   
   /**
    * **SLACK_BOT_TOKEN** 🔐 _sensitive_  
+   * Slack bot token used to post operational notifications.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
   SLACK_BOT_TOKEN?: string;
   
   /**
    * **SLACK_DEFAULT_CHANNEL**  
+   * Slack channel ID or name used when no per-message channel is provided.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
   SLACK_DEFAULT_CHANNEL?: string;
   
   /**
    * **EMAIL_OCTOPUS_API_KEY** 🔐 _sensitive_  
+   * EmailOctopus API key used by the newsletter subscription endpoint.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
   EMAIL_OCTOPUS_API_KEY?: string;
   
   /**
    * **EMAIL_OCTOPUS_LIST_ID**  
+   * EmailOctopus mailing list identifier for newsletter subscriptions.  
    * ![icon](data:image/svg+xml;utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20fill%3D%22%23808080%22%20d%3D%22M29%2022h-5a2.003%202.003%200%200%201-2-2v-6a2%202%200%200%201%202-2h5v2h-5v6h5ZM18%2012h-4V8h-2v14h6a2.003%202.003%200%200%200%202-2v-6a2%202%200%200%200-2-2m-4%208v-6h4v6Zm-6-8H3v2h5v2H4a2%202%200%200%200-2%202v2a2%202%200%200%200%202%202h6v-8a2%202%200%200%200-2-2m0%208H4v-2h4Z%22%2F%3E%3C%2Fsvg%3E)   
    */
   EMAIL_OCTOPUS_LIST_ID?: string;
@@ -160,11 +178,11 @@ export type CoercedEnvSchema = {
   
 };
 
-type _CoercedEnvSchema_308b0ec8 = CoercedEnvSchema;
+type _CoercedEnvSchema_d3d55595 = CoercedEnvSchema;
 
 declare module 'varlock/env' {
-  export interface TypedEnvSchema extends Readonly<_CoercedEnvSchema_308b0ec8> {}
-  export interface PublicTypedEnvSchema extends Readonly<Pick<_CoercedEnvSchema_308b0ec8, 'VERCEL_ENV' | 'NODE_ENV' | 'APP_ENV' | 'NEXT_PUBLIC_BASE_URL' | 'NEXTAUTH_URL' | 'ZURICHJS_ADMIN_ORG_ID' | 'NEXT_PUBLIC_ZURICHJS_ADMIN_ORG_ID' | 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY' | 'NEXT_PUBLIC_POSTHOG_KEY' | 'NEXT_PUBLIC_POSTHOG_HOST' | 'SLACK_DEFAULT_CHANNEL' | 'EMAIL_OCTOPUS_LIST_ID' | 'NEXT_PUBLIC_TEST_CURRENT_DATE'>> {}
+  export interface TypedEnvSchema extends Readonly<_CoercedEnvSchema_d3d55595> {}
+  export interface PublicTypedEnvSchema extends Readonly<Pick<_CoercedEnvSchema_d3d55595, 'VERCEL_ENV' | 'NODE_ENV' | 'APP_ENV' | 'NEXT_PUBLIC_BASE_URL' | 'NEXTAUTH_URL' | 'ZURICHJS_ADMIN_ORG_ID' | 'NEXT_PUBLIC_ZURICHJS_ADMIN_ORG_ID' | 'NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY' | 'NEXT_PUBLIC_POSTHOG_KEY' | 'NEXT_PUBLIC_POSTHOG_HOST' | 'SLACK_DEFAULT_CHANNEL' | 'EMAIL_OCTOPUS_LIST_ID' | 'NEXT_PUBLIC_TEST_CURRENT_DATE'>> {}
 }
 
 
@@ -174,17 +192,17 @@ export type EnvSchemaAsStrings = {
       : (CoercedEnvSchema[Property] extends boolean ? ('true' | 'false') : string)
 };
 
-type _EnvSchemaAsStrings_308b0ec8 = EnvSchemaAsStrings;
+type _EnvSchemaAsStrings_d3d55595 = EnvSchemaAsStrings;
 declare global {
 
   // add types for global import.meta.env
-  interface ImportMetaEnv extends _EnvSchemaAsStrings_308b0ec8 {}
+  interface ImportMetaEnv extends _EnvSchemaAsStrings_d3d55595 {}
   interface ImportMeta {
     readonly env: ImportMetaEnv;
   }
 
   // add types for global process.env
   namespace NodeJS {
-    interface ProcessEnv extends _EnvSchemaAsStrings_308b0ec8 {}
+    interface ProcessEnv extends _EnvSchemaAsStrings_d3d55595 {}
   }
 }

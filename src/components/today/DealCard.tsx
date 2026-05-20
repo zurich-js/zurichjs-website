@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
 interface Deal {
   title: string;
@@ -40,7 +40,7 @@ export default function DealCard({ deal }: DealCardProps) {
         const hours = Math.floor(difference / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        
+
         return { hours, minutes, seconds, expired: false };
       } else {
         return { hours: 0, minutes: 0, seconds: 0, expired: true };
@@ -71,23 +71,17 @@ export default function DealCard({ deal }: DealCardProps) {
   return (
     <div className="bg-gradient-to-br from-zurich to-blue-600 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden border-4 border-js">
       {!timeLeft.expired && (
-        <div className="absolute top-4 right-4 text-2xl animate-bounce">
-          🔥
-        </div>
+        <div className="absolute top-4 right-4 text-2xl animate-bounce">🔥</div>
       )}
-      
+
       <div className="text-center space-y-4">
         <div className="text-2xl font-black">
-          {timeLeft.expired ? '😭 DEAL ENDED' : '🎁 DEAL OF THE DAY'}
+          {timeLeft.expired ? "😭 DEAL ENDED" : "🎁 DEAL OF THE DAY"}
         </div>
-        
-        <div className="text-xl font-bold">
-          {deal.title}
-        </div>
-        
-        <div className="text-sm opacity-90">
-          {deal.description}
-        </div>
+
+        <div className="text-xl font-bold">{deal.title}</div>
+
+        <div className="text-sm opacity-90">{deal.description}</div>
 
         {deal.couponCode && (
           <div className="bg-black/20 rounded-xl p-3">
@@ -95,7 +89,9 @@ export default function DealCard({ deal }: DealCardProps) {
             <div className="bg-white text-black rounded-lg px-3 py-2 font-black text-sm">
               {deal.couponCode}
             </div>
-            <div className="text-xs opacity-80 mt-1">Applied automatically when you click the link</div>
+            <div className="text-xs opacity-80 mt-1">
+              Applied automatically when you click the link
+            </div>
           </div>
         )}
 
@@ -118,7 +114,7 @@ export default function DealCard({ deal }: DealCardProps) {
                 </div>
               </div>
             </div>
-            
+
             <Link
               href={deal.workshopHref}
               className="block bg-js hover:bg-js-dark text-black font-black py-4 px-6 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg"
@@ -133,7 +129,9 @@ export default function DealCard({ deal }: DealCardProps) {
         )}
 
         <div className="text-xs opacity-75">
-          {deal.couponCode ? 'Limited time offer • Use coupon code above' : 'Valid 24hrs after meetup • Attendees only'}
+          {deal.couponCode
+            ? "Limited time offer • Use coupon code above"
+            : "Valid 24hrs after meetup • Attendees only"}
         </div>
       </div>
     </div>

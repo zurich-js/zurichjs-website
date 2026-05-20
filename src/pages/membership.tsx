@@ -1,47 +1,40 @@
-import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
-import Head from 'next/head';
-import { useState, useRef, FormEvent } from 'react';
+import { motion } from "framer-motion";
+import { Check } from "lucide-react";
+import Head from "next/head";
+import { useState, useRef, FormEvent } from "react";
 
-import Layout from '@/components/layout/Layout';
+import Layout from "@/components/layout/Layout";
 
-type Tier = 'basic' | 'supporter';
-type BillingCycle = 'quarterly' | 'yearly';
+type Tier = "basic" | "supporter";
+type BillingCycle = "quarterly" | "yearly";
 
 const tiers = {
   basic: {
-    name: 'Basic Member',
-    tagline: 'For curious Zurchers who want in.',
+    name: "Basic Member",
+    tagline: "For curious Zurchers who want in.",
     quarterly: 50,
     yearly: 175,
     monthly: 14.5,
-    benefits: [
-      'Cancel anytime',
-      'Stay informed and vote on small decisions',
-    ],
+    benefits: ["Cancel anytime", "Stay informed and vote on small decisions"],
     comparisons: [
-      'simple bouquet of tulips',
-      '250g coffee refill from MAME',
-      'less than an AI tool subscription',
-      'less than 3 Halb-tax trips in Zurich',
+      "simple bouquet of tulips",
+      "250g coffee refill from MAME",
+      "less than an AI tool subscription",
+      "less than 3 Halb-tax trips in Zurich",
     ],
   },
   supporter: {
-    name: 'Supporter',
-    tagline: 'For tech-scene shapers',
+    name: "Supporter",
+    tagline: "For tech-scene shapers",
     quarterly: 75,
     yearly: 250,
     monthly: 21,
-    benefits: [
-      'Exclusive events access',
-      'Free or discounted workshops',
-      'Voting rights',
-    ],
-    benefitsLabel: 'You also get',
+    benefits: ["Exclusive events access", "Free or discounted workshops", "Voting rights"],
+    benefitsLabel: "You also get",
     comparisons: [
-      'still cheaper than Netflix 4k',
-      'one takeaway lunch',
-      '30% less than what we pay for meetup.com',
+      "still cheaper than Netflix 4k",
+      "one takeaway lunch",
+      "30% less than what we pay for meetup.com",
     ],
   },
 } as const;
@@ -72,7 +65,7 @@ function PricingCard({
           </div>
         </div>
 
-        {'benefitsLabel' in tier && (
+        {"benefitsLabel" in tier && (
           <p className="text-sm text-gray-400 mb-2">{tier.benefitsLabel}</p>
         )}
 
@@ -120,33 +113,33 @@ function Comparisons({
 }
 
 export default function MembershipPage() {
-  const [selectedTier, setSelectedTier] = useState<Tier>('basic');
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>('quarterly');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [selectedTier, setSelectedTier] = useState<Tier>("basic");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>("quarterly");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
 
   const selectTier = (tier: Tier) => {
     setSelectedTier(tier);
-    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+    formRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const currentTier = tiers[selectedTier];
-  const price = billingCycle === 'quarterly' ? currentTier.quarterly : currentTier.yearly;
+  const price = billingCycle === "quarterly" ? currentTier.quarterly : currentTier.yearly;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
-      const res = await fetch('/api/verein-inquiry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/verein-inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           email,
@@ -157,12 +150,12 @@ export default function MembershipPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to submit');
+        throw new Error("Failed to submit");
       }
 
       setSubmitted(true);
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -187,12 +180,10 @@ export default function MembershipPage() {
             transition={{ duration: 0.5 }}
             className="text-center mb-12"
           >
-            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
-              Become a Member
-            </h1>
+            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4">Become a Member</h1>
             <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              ZurichJS is officially registered as a Swiss Verein (association).
-              Join us and help shape the Zurich JavaScript community.
+              ZurichJS is officially registered as a Swiss Verein (association). Join us and help
+              shape the Zurich JavaScript community.
             </p>
           </motion.div>
 
@@ -203,14 +194,8 @@ export default function MembershipPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="grid md:grid-cols-2 gap-6 mb-8"
           >
-            <PricingCard
-              tier={tiers.basic}
-              onSelect={() => selectTier('basic')}
-            />
-            <PricingCard
-              tier={tiers.supporter}
-              onSelect={() => selectTier('supporter')}
-            />
+            <PricingCard tier={tiers.basic} onSelect={() => selectTier("basic")} />
+            <PricingCard tier={tiers.supporter} onSelect={() => selectTier("supporter")} />
           </motion.div>
 
           {/* Comparisons */}
@@ -220,10 +205,7 @@ export default function MembershipPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="grid md:grid-cols-2 gap-6 mb-16"
           >
-            <Comparisons
-              monthly={tiers.basic.monthly}
-              comparisons={tiers.basic.comparisons}
-            />
+            <Comparisons monthly={tiers.basic.monthly} comparisons={tiers.basic.comparisons} />
             <Comparisons
               monthly={tiers.supporter.monthly}
               comparisons={tiers.supporter.comparisons}
@@ -238,24 +220,20 @@ export default function MembershipPage() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-8"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Sign up for membership
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Sign up for membership</h2>
 
             {submitted ? (
               <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
-                <p className="text-green-800 font-semibold text-lg">
-                  Inquiry sent!
-                </p>
+                <p className="text-green-800 font-semibold text-lg">Inquiry sent!</p>
                 <p className="text-green-600 text-sm mt-1">
                   We&apos;ll get back to you soon with next steps.
                 </p>
                 <button
                   onClick={() => {
                     setSubmitted(false);
-                    setName('');
-                    setEmail('');
-                    setMessage('');
+                    setName("");
+                    setEmail("");
+                    setMessage("");
                   }}
                   className="mt-4 text-sm text-green-700 underline"
                 >
@@ -270,15 +248,15 @@ export default function MembershipPage() {
                     Membership tier
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    {(['basic', 'supporter'] as const).map((tier) => (
+                    {(["basic", "supporter"] as const).map((tier) => (
                       <button
                         key={tier}
                         type="button"
                         onClick={() => setSelectedTier(tier)}
                         className={`py-3 px-4 rounded-xl border-2 font-semibold text-sm transition-colors ${
                           selectedTier === tier
-                            ? 'border-black bg-black text-white'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'
+                            ? "border-black bg-black text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                         }`}
                       >
                         {tiers[tier].name}
@@ -295,11 +273,11 @@ export default function MembershipPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setBillingCycle('quarterly')}
+                      onClick={() => setBillingCycle("quarterly")}
                       className={`py-3 px-4 rounded-xl border-2 text-sm transition-colors ${
-                        billingCycle === 'quarterly'
-                          ? 'border-black bg-black text-white'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'
+                        billingCycle === "quarterly"
+                          ? "border-black bg-black text-white"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
                       <span className="font-semibold">Quarterly</span>
@@ -309,11 +287,11 @@ export default function MembershipPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setBillingCycle('yearly')}
+                      onClick={() => setBillingCycle("yearly")}
                       className={`py-3 px-4 rounded-xl border-2 text-sm transition-colors ${
-                        billingCycle === 'yearly'
-                          ? 'border-black bg-black text-white'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'
+                        billingCycle === "yearly"
+                          ? "border-black bg-black text-white"
+                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
                       }`}
                     >
                       <span className="font-semibold">Yearly</span>
@@ -327,9 +305,11 @@ export default function MembershipPage() {
                 {/* Summary */}
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-sm text-gray-600">
-                    Selected: <span className="font-semibold text-gray-900">{currentTier.name}</span>
-                    {' '}&middot;{' '}
-                    <span className="font-semibold text-gray-900">CHF {price}/{billingCycle === 'quarterly' ? 'quarter' : 'year'}</span>
+                    Selected:{" "}
+                    <span className="font-semibold text-gray-900">{currentTier.name}</span> &middot;{" "}
+                    <span className="font-semibold text-gray-900">
+                      CHF {price}/{billingCycle === "quarterly" ? "quarter" : "year"}
+                    </span>
                   </p>
                 </div>
 
@@ -396,7 +376,9 @@ export default function MembershipPage() {
                   disabled={submitting}
                   className="w-full bg-black text-white font-bold py-4 px-8 rounded-2xl hover:bg-black/90 transition-colors duration-200 disabled:opacity-50"
                 >
-                  {submitting ? 'Sending...' : `Join as ${currentTier.name} — CHF ${price}/${billingCycle === 'quarterly' ? 'quarter' : 'year'}`}
+                  {submitting
+                    ? "Sending..."
+                    : `Join as ${currentTier.name} — CHF ${price}/${billingCycle === "quarterly" ? "quarter" : "year"}`}
                 </button>
               </form>
             )}

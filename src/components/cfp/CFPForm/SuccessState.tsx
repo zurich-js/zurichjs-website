@@ -1,7 +1,7 @@
-import { motion } from 'framer-motion';
-import { CheckCircle } from 'lucide-react';
+import { motion } from "framer-motion";
+import { CheckCircle } from "lucide-react";
 
-import Button from '@/components/ui/Button';
+import Button from "@/components/ui/Button";
 
 export default function SuccessState() {
   return (

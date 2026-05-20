@@ -1,21 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from "next";
 
+import { stripe } from "@/lib/stripe";
 
-import { stripe } from '@/lib/stripe';
-
-
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { code } = req.query;
 
-  if (!code || typeof code !== 'string') {
-    return res.status(400).json({ error: 'Coupon code is required' });
+  if (!code || typeof code !== "string") {
+    return res.status(400).json({ error: "Coupon code is required" });
   }
 
   try {
@@ -23,7 +18,7 @@ async function handler(
     const coupon = await stripe.coupons.retrieve(code);
 
     if (!coupon || !coupon.valid) {
-      return res.status(400).json({ error: 'Invalid coupon code' });
+      return res.status(400).json({ error: "Invalid coupon code" });
     }
 
     // Format the coupon data for the client
@@ -39,15 +34,13 @@ async function handler(
 
     return res.status(200).json(couponData);
   } catch (err: unknown) {
-    console.error('Error validating coupon:', err);
-    
+    console.error("Error validating coupon:", err);
+
     const error = err as { statusCode?: number; message: string };
     const statusCode = error.statusCode || 500;
-    
+
     return res.status(statusCode).json({
-      error: statusCode === 404 
-        ? 'Coupon not found' 
-        : error.message || 'Error validating coupon',
+      error: statusCode === 404 ? "Coupon not found" : error.message || "Error validating coupon",
     });
   }
 }

@@ -1,21 +1,21 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import type { NextApiRequest, NextApiResponse } from "next";
+import Stripe from "stripe";
 
-
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-08-27.basil',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2025-08-27.basil",
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { priceId, quantity, customerEmail, couponCode } = req.body;
 
   if (!priceId || !quantity || !customerEmail) {
-    return res.status(400).json({ error: 'Missing required fields: priceId, quantity, customerEmail' });
+    return res
+      .status(400)
+      .json({ error: "Missing required fields: priceId, quantity, customerEmail" });
   }
 
   try {
@@ -36,7 +36,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           if (coupon.percent_off) {
             calculatedAmount = Math.round(calculatedAmount * (1 - coupon.percent_off / 100));
           } else if (coupon.amount_off) {
-            calculatedAmount = Math.max(0, calculatedAmount - (coupon.amount_off * quantity));
+            calculatedAmount = Math.max(0, calculatedAmount - coupon.amount_off * quantity);
           }
         }
       } catch (err) {
@@ -48,20 +48,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: calculatedAmount,
       currency: price.currency,
-      payment_method_types: ['card_present'],
-      capture_method: 'manual', // Manual capture for better control
+      payment_method_types: ["card_present"],
+      capture_method: "manual", // Manual capture for better control
       receipt_email: customerEmail,
       metadata: {
         priceId,
         productId: product.id,
         productName: product.name,
         quantity: quantity.toString(),
-        couponCode: couponCode || '',
+        couponCode: couponCode || "",
         originalAmount: ((price.unit_amount || 0) * quantity).toString(),
-        discountAmount: (((price.unit_amount || 0) * quantity) - calculatedAmount).toString(),
-        adminTapToPay: 'true',
+        discountAmount: ((price.unit_amount || 0) * quantity - calculatedAmount).toString(),
+        adminTapToPay: "true",
       },
-      description: `${product.name} (Qty: ${quantity})${couponCode ? ` - Coupon: ${couponCode}` : ''}`,
+      description: `${product.name} (Qty: ${quantity})${couponCode ? ` - Coupon: ${couponCode}` : ""}`,
     });
 
     return res.status(200).json({
@@ -77,17 +77,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         name: product.name,
         description: product.description,
       },
-      coupon: couponDetails ? {
-        id: couponDetails.id,
-        name: couponDetails.name,
-        percent_off: couponDetails.percent_off,
-        amount_off: couponDetails.amount_off,
-      } : null,
+      coupon: couponDetails
+        ? {
+            id: couponDetails.id,
+            name: couponDetails.name,
+            percent_off: couponDetails.percent_off,
+            amount_off: couponDetails.amount_off,
+          }
+        : null,
     });
   } catch (err: unknown) {
-    console.error('Error creating payment intent:', err);
-    let message = 'Unknown error';
-    if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+    console.error("Error creating payment intent:", err);
+    let message = "Unknown error";
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "message" in err &&
+      typeof (err as { message?: unknown }).message === "string"
+    ) {
       message = (err as { message: string }).message;
     }
     return res.status(500).json({ error: message });

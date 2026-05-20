@@ -1,6 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from "next";
 
-import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
+import { getUpcomingEvents, getPastEvents } from "@/sanity/queries";
 
 /**
  * Generate XML sitemap dynamically
@@ -8,7 +8,7 @@ import { getUpcomingEvents, getPastEvents } from '@/sanity/queries';
  */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const baseUrl = 'https://zurichjs.com';
+    const baseUrl = "https://zurichjs.com";
 
     // Fetch dynamic content
     const upcomingEvents = await getUpcomingEvents();
@@ -16,26 +16,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Static pages with priorities and update frequencies
     const staticPages = [
-      { url: '', priority: '1.0', changefreq: 'daily' }, // Homepage
-      { url: '/events', priority: '0.9', changefreq: 'daily' },
-      { url: '/speakers', priority: '0.8', changefreq: 'weekly' },
-      { url: '/partnerships', priority: '0.7', changefreq: 'monthly' },
-      { url: '/cfp', priority: '0.8', changefreq: 'weekly' },
-      { url: '/contact', priority: '0.6', changefreq: 'monthly' },
-      { url: '/about', priority: '0.7', changefreq: 'monthly' },
-      { url: '/media', priority: '0.6', changefreq: 'weekly' },
-      { url: '/donate', priority: '0.5', changefreq: 'monthly' },
-      { url: '/buy-us-a-coffee', priority: '0.5', changefreq: 'monthly' },
+      { url: "", priority: "1.0", changefreq: "daily" }, // Homepage
+      { url: "/events", priority: "0.9", changefreq: "daily" },
+      { url: "/speakers", priority: "0.8", changefreq: "weekly" },
+      { url: "/partnerships", priority: "0.7", changefreq: "monthly" },
+      { url: "/cfp", priority: "0.8", changefreq: "weekly" },
+      { url: "/contact", priority: "0.6", changefreq: "monthly" },
+      { url: "/about", priority: "0.7", changefreq: "monthly" },
+      { url: "/media", priority: "0.6", changefreq: "weekly" },
+      { url: "/donate", priority: "0.5", changefreq: "monthly" },
+      { url: "/buy-us-a-coffee", priority: "0.5", changefreq: "monthly" },
 
       // Workshop pages
-      { url: '/workshops/accessibility-fundamentals', priority: '0.7', changefreq: 'monthly' },
-      { url: '/workshops/astro-zero-to-hero', priority: '0.7', changefreq: 'monthly' },
+      { url: "/workshops/accessibility-fundamentals", priority: "0.7", changefreq: "monthly" },
+      { url: "/workshops/astro-zero-to-hero", priority: "0.7", changefreq: "monthly" },
 
       // Policy pages
-      { url: '/policies/code-of-conduct', priority: '0.5', changefreq: 'yearly' },
-      { url: '/policies/privacy-policy', priority: '0.5', changefreq: 'yearly' },
-      { url: '/policies/terms-and-conditions', priority: '0.5', changefreq: 'yearly' },
-      { url: '/policies/refund-policy', priority: '0.5', changefreq: 'yearly' },
+      { url: "/policies/code-of-conduct", priority: "0.5", changefreq: "yearly" },
+      { url: "/policies/privacy-policy", priority: "0.5", changefreq: "yearly" },
+      { url: "/policies/terms-and-conditions", priority: "0.5", changefreq: "yearly" },
+      { url: "/policies/refund-policy", priority: "0.5", changefreq: "yearly" },
     ];
 
     // Build sitemap XML
@@ -54,9 +54,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
     <lastmod>${new Date().toISOString()}</lastmod>
-  </url>`
+  </url>`,
     )
-    .join('')}
+    .join("")}
   ${[...upcomingEvents, ...pastEvents]
     .map(
       (event) => `
@@ -65,16 +65,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <lastmod>${new Date(event.datetime).toISOString()}</lastmod>
-  </url>`
+  </url>`,
     )
-    .join('')}
+    .join("")}
 </urlset>`;
 
-    res.setHeader('Content-Type', 'text/xml');
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate');
+    res.setHeader("Content-Type", "text/xml");
+    res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate");
     res.status(200).send(sitemap);
   } catch (error) {
-    console.error('Error generating sitemap:', error);
-    res.status(500).json({ error: 'Failed to generate sitemap' });
+    console.error("Error generating sitemap:", error);
+    res.status(500).json({ error: "Failed to generate sitemap" });
   }
 }

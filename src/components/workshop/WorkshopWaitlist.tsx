@@ -1,11 +1,11 @@
-import { SignInButton, useAuth, useUser } from '@clerk/nextjs';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, AlertCircle, CheckCircle, Mail } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { SignInButton, useAuth, useUser } from "@clerk/nextjs";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, AlertCircle, CheckCircle, Mail } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
-import Button from '@/components/ui/Button';
-import useEvents from '@/hooks/useEvents';
+import Button from "@/components/ui/Button";
+import useEvents from "@/hooks/useEvents";
 
 interface WorkshopWaitlistProps {
   workshopId: string;
@@ -13,7 +13,7 @@ interface WorkshopWaitlistProps {
   overbookingSeatsAvailable: number;
 }
 
-type WaitlistOutcome = 'walk-in' | 'email-when-available';
+type WaitlistOutcome = "walk-in" | "email-when-available";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,14 +27,14 @@ export default function WorkshopWaitlist({
   const { track } = useEvents();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [joinedOutcome, setJoinedOutcome] = useState<WaitlistOutcome | null>(null);
 
   const nextOutcome: WaitlistOutcome =
-    overbookingSeatsAvailable > 0 ? 'walk-in' : 'email-when-available';
+    overbookingSeatsAvailable > 0 ? "walk-in" : "email-when-available";
 
   useEffect(() => {
     if (user) {
@@ -45,19 +45,18 @@ export default function WorkshopWaitlist({
         setName(`${user.firstName} ${user.lastName}`);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === "Escape") setIsOpen(false);
     };
-    if (isOpen) document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    if (isOpen) document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [isOpen]);
 
   const openModal = () => {
-    track('waitlist_clicked', {
+    track("waitlist_clicked", {
       workshop_id: workshopId,
       next_outcome: nextOutcome,
     });
@@ -69,28 +68,28 @@ export default function WorkshopWaitlist({
     setIsOpen(false);
   };
 
-  const shouldPayInPerson = nextOutcome === 'walk-in';
+  const shouldPayInPerson = nextOutcome === "walk-in";
   const waitlistIntro = shouldPayInPerson
-    ? 'This workshop is sold out, but we can make room for a few extra people. Join the waitlist and show up on the day. You can pay in person.'
-    : 'This workshop is sold out. Join the waitlist and we will reach out by email if a spot opens up.';
+    ? "This workshop is sold out, but we can make room for a few extra people. Join the waitlist and show up on the day. You can pay in person."
+    : "This workshop is sold out. Join the waitlist and we will reach out by email if a spot opens up.";
   const joinedMessage =
-    joinedOutcome === 'walk-in'
+    joinedOutcome === "walk-in"
       ? `You are on the waitlist for "${workshopTitle}". Please show up on the day and you can pay in person.`
       : `We will email ${email} if a seat opens up for "${workshopTitle}".`;
   const joinedSummary =
-    joinedOutcome === 'walk-in'
+    joinedOutcome === "walk-in"
       ? "You're on the waitlist. Please show up on the day and pay in person."
       : "You're on the waitlist. We'll be in touch if a spot opens up.";
 
   const inputClass =
-    'w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black disabled:bg-gray-50 disabled:text-gray-500';
+    "w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-black focus:border-black disabled:bg-gray-50 disabled:text-gray-500";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const trimmedEmail = email.trim();
     if (!EMAIL_REGEX.test(trimmedEmail)) {
-      setError('Please enter a valid email address.');
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -98,15 +97,15 @@ export default function WorkshopWaitlist({
     setError(null);
 
     try {
-      track('waitlist_submit_attempt', {
+      track("waitlist_submit_attempt", {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
         outcome: nextOutcome,
       });
 
-      const response = await fetch('/api/workshops/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/workshops/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           workshopId,
           workshopTitle,
@@ -119,19 +118,19 @@ export default function WorkshopWaitlist({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to join the waitlist');
+        throw new Error(data.error || "Failed to join the waitlist");
       }
 
       setJoinedOutcome(data.outcome || nextOutcome);
-      track('waitlist_joined', {
+      track("waitlist_joined", {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
         outcome: data.outcome || nextOutcome,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to join the waitlist';
+      const message = err instanceof Error ? err.message : "Failed to join the waitlist";
       setError(message);
-      track('waitlist_join_error', {
+      track("waitlist_join_error", {
         workshop_id: workshopId,
         workshop_title: workshopTitle,
         error: message,
@@ -144,10 +143,7 @@ export default function WorkshopWaitlist({
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div
-          className="fixed inset-0 flex items-center justify-center"
-          style={{ zIndex: 9999999 }}
-        >
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999999 }}>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -162,7 +158,7 @@ export default function WorkshopWaitlist({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 400, duration: 0.3 }}
+            transition={{ type: "spring", damping: 25, stiffness: 400, duration: 0.3 }}
             className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative mx-4 sm:mx-0"
             style={{ zIndex: 9999999 }}
           >
@@ -201,7 +197,7 @@ export default function WorkshopWaitlist({
                         <button
                           type="button"
                           onClick={() =>
-                            track('waitlist_signin_clicked', { workshop_id: workshopId })
+                            track("waitlist_signin_clicked", { workshop_id: workshopId })
                           }
                           className="text-xs font-semibold text-black hover:underline whitespace-nowrap"
                         >
@@ -220,7 +216,10 @@ export default function WorkshopWaitlist({
 
                   <form onSubmit={handleSubmit} className="space-y-3">
                     <div>
-                      <label htmlFor="waitlist-email" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="waitlist-email"
+                        className="block text-xs font-medium text-gray-700 mb-1"
+                      >
                         Email address <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -242,7 +241,10 @@ export default function WorkshopWaitlist({
                     </div>
 
                     <div>
-                      <label htmlFor="waitlist-name" className="block text-xs font-medium text-gray-700 mb-1">
+                      <label
+                        htmlFor="waitlist-name"
+                        className="block text-xs font-medium text-gray-700 mb-1"
+                      >
                         Name <span className="text-gray-400">(optional)</span>
                       </label>
                       <input
@@ -264,7 +266,14 @@ export default function WorkshopWaitlist({
                             fill="none"
                             viewBox="0 0 24 24"
                           >
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
                             <path
                               className="opacity-75"
                               fill="currentColor"
@@ -274,7 +283,7 @@ export default function WorkshopWaitlist({
                           Joining...
                         </span>
                       ) : (
-                        'Join the Waitlist'
+                        "Join the Waitlist"
                       )}
                     </Button>
 
@@ -296,9 +305,7 @@ export default function WorkshopWaitlist({
       <div className="max-w-md mx-auto text-center">
         <div className="bg-white/10 rounded-2xl p-8 border border-white/20">
           <h3 className="text-xl font-bold text-white mb-3">Workshop Sold Out</h3>
-          <p className="text-sm mb-6">
-            {joinedOutcome ? joinedSummary : waitlistIntro}
-          </p>
+          <p className="text-sm mb-6">{joinedOutcome ? joinedSummary : waitlistIntro}</p>
           {joinedOutcome ? (
             <div className="bg-green-500/20 text-green-200 border border-green-500/40 rounded-xl px-6 py-3 font-semibold text-sm flex items-center justify-center gap-2">
               <CheckCircle size={16} />
@@ -312,7 +319,7 @@ export default function WorkshopWaitlist({
         </div>
       </div>
 
-      {typeof window !== 'undefined' && createPortal(modalContent, document.body)}
+      {typeof window !== "undefined" && createPortal(modalContent, document.body)}
     </>
   );
 }

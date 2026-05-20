@@ -1,16 +1,16 @@
-import { SignedIn, SignedOut, SignInButton, UserButton, useSignIn, useAuth } from '@clerk/nextjs';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronDown, Settings, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useState, useEffect, useRef } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton, useSignIn, useAuth } from "@clerk/nextjs";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, ChevronDown, Settings, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useState, useEffect, useRef } from "react";
 
 import Logo from "@/components/ui/Logo";
 
 // Design tokens matching hero
 const COLORS = {
-  primaryBlue: '#1D4ED8',
-  heroYellow: '#F0DC62',
+  primaryBlue: "#1D4ED8",
+  heroYellow: "#F0DC62",
 };
 
 interface NavSubItem {
@@ -43,7 +43,7 @@ export default function Header() {
   // Handle query parameter to open signup modal
   useEffect(() => {
     const { signup } = router.query;
-    if (signup === 'true' && signIn && signInButtonRef.current) {
+    if (signup === "true" && signIn && signInButtonRef.current) {
       signInButtonRef.current.click();
     }
   }, [router.query, signIn]);
@@ -54,8 +54,8 @@ export default function Header() {
       setScrolled(window.scrollY > 30);
     };
     handleScroll();
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Close mobile menu on route change
@@ -65,8 +65,8 @@ export default function Header() {
       setMoreDropdownOpen(false);
       setAdminDropdownOpen(false);
     };
-    router.events.on('routeChangeComplete', handleRouteChange);
-    return () => router.events.off('routeChangeComplete', handleRouteChange);
+    router.events.on("routeChangeComplete", handleRouteChange);
+    return () => router.events.off("routeChangeComplete", handleRouteChange);
   }, [router]);
 
   // Close dropdowns when clicking outside
@@ -79,36 +79,36 @@ export default function Header() {
         setAdminDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Primary nav items - flat, direct links
   const primaryNavItems: NavItem[] = [
-    { name: 'Home', path: '/' },
-    { name: 'Events', path: '/events' },
-    { name: 'Workshops', path: '/workshops' },
-    { name: 'Speakers', path: '/speakers' },
-    { name: 'About', path: '/about' },
+    { name: "Home", path: "/" },
+    { name: "Events", path: "/events" },
+    { name: "Workshops", path: "/workshops" },
+    { name: "Speakers", path: "/speakers" },
+    { name: "About", path: "/about" },
   ];
 
   // Secondary items in "More" dropdown
   const moreItems: NavSubItem[] = [
-    { name: 'Membership', path: '/membership' },
-    { name: 'Media', path: '/media' },
-    { name: 'Partnerships', path: '/partnerships' },
-    { name: 'Volunteers', path: '/cfv' },
-    { name: 'Contact', path: '/contact' },
-    { name: 'T-shirts', path: '/tshirt' },
-    { name: 'Donate', path: '/buy-us-a-coffee' },
+    { name: "Membership", path: "/membership" },
+    { name: "Media", path: "/media" },
+    { name: "Partnerships", path: "/partnerships" },
+    { name: "Volunteers", path: "/cfv" },
+    { name: "Contact", path: "/contact" },
+    { name: "T-shirts", path: "/tshirt" },
+    { name: "Donate", path: "/buy-us-a-coffee" },
   ];
 
   // Admin items
   const adminItems: NavSubItem[] = [
-    { name: 'Dashboard', path: '/admin' },
-    { name: 'Users', path: '/admin/users' },
-    { name: 'Feedback', path: '/admin/feedback-analytics' },
-    { name: 'Coupons', path: '/admin/coupons' },
+    { name: "Dashboard", path: "/admin" },
+    { name: "Users", path: "/admin/users" },
+    { name: "Feedback", path: "/admin/feedback-analytics" },
+    { name: "Coupons", path: "/admin/coupons" },
   ];
 
   const isActivePath = (path: string) => router.pathname === path;
@@ -116,24 +116,16 @@ export default function Header() {
   return (
     <header
       className={`w-full fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${
-        scrolled
-          ? 'bg-white shadow-md py-2'
-          : 'bg-transparent py-3 lg:py-4'
+        scrolled ? "bg-white shadow-md py-2" : "bg-transparent py-3 lg:py-4"
       }`}
     >
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-              <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-              >
-                  <Logo
-                      variant="black"
-                      className="h-5 w-auto"
-                  />
-              </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <Logo variant="black" className="h-5 w-auto" />
+            </motion.div>
           </Link>
 
           {/* Desktop Navigation */}
@@ -142,13 +134,13 @@ export default function Header() {
             {primaryNavItems.map((item) => (
               <Link
                 key={item.name}
-                href={item.path || '/'}
+                href={item.path || "/"}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActivePath(item.path || '/')
-                    ? 'text-blue-600 bg-blue-50'
+                  isActivePath(item.path || "/")
+                    ? "text-blue-600 bg-blue-50"
                     : scrolled
-                    ? 'text-gray-700 hover:text-black hover:bg-gray-100'
-                    : 'text-black/80 hover:text-black hover:bg-black/5'
+                      ? "text-gray-700 hover:text-black hover:bg-gray-100"
+                      : "text-black/80 hover:text-black hover:bg-black/5"
                 }`}
               >
                 {item.name}
@@ -165,13 +157,16 @@ export default function Header() {
               <button
                 className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   scrolled
-                    ? 'text-gray-700 hover:text-black hover:bg-gray-100'
-                    : 'text-black/80 hover:text-black hover:bg-black/5'
+                    ? "text-gray-700 hover:text-black hover:bg-gray-100"
+                    : "text-black/80 hover:text-black hover:bg-black/5"
                 }`}
                 onClick={() => setMoreDropdownOpen(!moreDropdownOpen)}
               >
                 More
-                <ChevronDown size={16} className={`transition-transform ${moreDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${moreDropdownOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               <AnimatePresence>
@@ -191,8 +186,8 @@ export default function Header() {
                         href={item.path}
                         className={`block px-4 py-2.5 text-sm transition-colors ${
                           isActivePath(item.path)
-                            ? 'text-blue-600 bg-blue-50'
-                            : 'text-gray-700 hover:text-black hover:bg-gray-50'
+                            ? "text-blue-600 bg-blue-50"
+                            : "text-gray-700 hover:text-black hover:bg-gray-50"
                         }`}
                       >
                         {item.name}
@@ -217,7 +212,10 @@ export default function Header() {
                 >
                   <Settings size={16} />
                   Admin
-                  <ChevronDown size={16} className={`transition-transform ${adminDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform ${adminDropdownOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -236,8 +234,8 @@ export default function Header() {
                           href={item.path}
                           className={`block px-4 py-2.5 text-sm transition-colors ${
                             isActivePath(item.path)
-                              ? 'text-red-600 bg-red-50'
-                              : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                              ? "text-red-600 bg-red-50"
+                              : "text-gray-700 hover:text-red-600 hover:bg-red-50"
                           }`}
                         >
                           {item.name}
@@ -250,18 +248,18 @@ export default function Header() {
             )}
 
             {/* Divider */}
-            <div className={`w-px h-6 mx-2 ${scrolled ? 'bg-gray-200' : 'bg-black/10'}`} />
+            <div className={`w-px h-6 mx-2 ${scrolled ? "bg-gray-200" : "bg-black/10"}`} />
 
             {/* Auth section */}
             <SignedIn>
               <Link
                 href="/profile"
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  router.pathname.startsWith('/profile')
-                    ? 'text-blue-600 bg-blue-50'
+                  router.pathname.startsWith("/profile")
+                    ? "text-blue-600 bg-blue-50"
                     : scrolled
-                    ? 'text-gray-700 hover:text-black hover:bg-gray-100'
-                    : 'text-black/80 hover:text-black hover:bg-black/5'
+                      ? "text-gray-700 hover:text-black hover:bg-gray-100"
+                      : "text-black/80 hover:text-black hover:bg-black/5"
                 }`}
               >
                 Profile
@@ -269,8 +267,8 @@ export default function Header() {
               <UserButton
                 appearance={{
                   elements: {
-                    userButtonAvatarBox: 'w-8 h-8'
-                  }
+                    userButtonAvatarBox: "w-8 h-8",
+                  },
                 }}
                 afterSignOutUrl="/"
               />
@@ -281,8 +279,8 @@ export default function Header() {
                   ref={signInButtonRef}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     scrolled
-                      ? 'text-gray-700 hover:text-black hover:bg-gray-100'
-                      : 'text-black/80 hover:text-black hover:bg-black/5'
+                      ? "text-gray-700 hover:text-black hover:bg-gray-100"
+                      : "text-black/80 hover:text-black hover:bg-black/5"
                   }`}
                 >
                   Sign In
@@ -314,7 +312,7 @@ export default function Header() {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={`p-2 rounded-lg transition-colors ${
-                scrolled ? 'text-black hover:bg-gray-100' : 'text-black hover:bg-black/5'
+                scrolled ? "text-black hover:bg-gray-100" : "text-black hover:bg-black/5"
               }`}
               aria-label="Toggle menu"
             >
@@ -329,7 +327,7 @@ export default function Header() {
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
             className="lg:hidden bg-white border-t border-gray-100 overflow-hidden"
@@ -348,8 +346,8 @@ export default function Header() {
                     <UserButton
                       appearance={{
                         elements: {
-                          userButtonAvatarBox: 'w-8 h-8'
-                        }
+                          userButtonAvatarBox: "w-8 h-8",
+                        },
                       }}
                       afterSignOutUrl="/"
                     />
@@ -382,11 +380,11 @@ export default function Header() {
                 {primaryNavItems.map((item) => (
                   <Link
                     key={item.name}
-                    href={item.path || '/'}
+                    href={item.path || "/"}
                     className={`block py-3 px-3 rounded-lg font-medium transition-colors ${
-                      isActivePath(item.path || '/')
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-black hover:bg-gray-50'
+                      isActivePath(item.path || "/")
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                     }`}
                   >
                     {item.name}
@@ -408,8 +406,8 @@ export default function Header() {
                     href={item.path}
                     className={`block py-3 px-3 rounded-lg font-medium transition-colors ${
                       isActivePath(item.path)
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-black hover:bg-gray-50'
+                        ? "text-blue-600 bg-blue-50"
+                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                     }`}
                   >
                     {item.name}
@@ -432,8 +430,8 @@ export default function Header() {
                         href={item.path}
                         className={`block py-3 px-3 rounded-lg font-medium transition-colors ${
                           isActivePath(item.path)
-                            ? 'text-red-600 bg-red-50'
-                            : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                            ? "text-red-600 bg-red-50"
+                            : "text-gray-700 hover:text-red-600 hover:bg-red-50"
                         }`}
                       >
                         {item.name}

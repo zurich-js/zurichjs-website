@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 interface TodayCardProps {
   children: ReactNode;
@@ -6,9 +6,9 @@ interface TodayCardProps {
   noPadding?: boolean;
 }
 
-export default function TodayCard({ children, className = '', noPadding = false }: TodayCardProps) {
+export default function TodayCard({ children, className = "", noPadding = false }: TodayCardProps) {
   return (
-    <div className={`bg-white rounded-3xl ${noPadding ? '' : 'p-6 sm:p-5'} ${className}`}>
+    <div className={`bg-white rounded-3xl ${noPadding ? "" : "p-6 sm:p-5"} ${className}`}>
       {children}
     </div>
   );

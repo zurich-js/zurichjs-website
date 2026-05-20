@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import { TrendingUp, Clock, Users } from 'lucide-react';
+import { motion } from "framer-motion";
+import { TrendingUp, Clock, Users } from "lucide-react";
 
-import Section from '@/components/Section';
+import Section from "@/components/Section";
 
-import { TalkSubmissionStats } from './types';
+import { TalkSubmissionStats } from "./types";
 
 interface CommunityStatsProps {
   submissionStats: TalkSubmissionStats;

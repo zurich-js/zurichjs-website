@@ -1,18 +1,24 @@
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 
-type LogoSize = 'sm' | 'md' | 'lg' | 'xl';
+type LogoSize = "sm" | "md" | "lg" | "xl";
 
-export default function AnimatedLogo({ size = 'md', className = '' }: { size?: LogoSize, className?: string }) {
+export default function AnimatedLogo({
+  size = "md",
+  className = "",
+}: {
+  size?: LogoSize;
+  className?: string;
+}) {
   // Logo styling based on size
   const sizeStyles = {
-    sm: 'w-10 h-10',
-    md: 'w-16 h-16',
-    lg: 'w-24 h-24',
-    xl: 'w-32 h-32',
+    sm: "w-10 h-10",
+    md: "w-16 h-16",
+    lg: "w-24 h-24",
+    xl: "w-32 h-32",
   };
 
   return (
-    <motion.div 
+    <motion.div
       className={`${sizeStyles[size]} ${className}`}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}

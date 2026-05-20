@@ -1,21 +1,21 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import type { NextApiRequest, NextApiResponse } from "next";
+import Stripe from "stripe";
 
-
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-08-27.basil',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2025-08-27.basil",
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { cartItems, couponCode } = req.body;
 
   if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-    return res.status(400).json({ error: 'Missing required field: cartItems (must be non-empty array)' });
+    return res
+      .status(400)
+      .json({ error: "Missing required field: cartItems (must be non-empty array)" });
   }
 
   try {
@@ -25,7 +25,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     for (const item of cartItems) {
       if (!item.priceId || !item.quantity || !item.productId) {
-        return res.status(400).json({ error: 'Each cart item must have priceId, quantity, and productId' });
+        return res
+          .status(400)
+          .json({ error: "Each cart item must have priceId, quantity, and productId" });
       }
 
       // Validate the price and product exist
@@ -63,34 +65,35 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       line_items: lineItems,
       metadata: {
         products: JSON.stringify(productDetails),
-        couponCode: couponCode || '',
-        adminTapToPay: 'true',
-        createdBy: 'admin-tap-to-pay',
+        couponCode: couponCode || "",
+        adminTapToPay: "true",
+        createdBy: "admin-tap-to-pay",
         cartItemCount: cartItems.length.toString(),
       },
       after_completion: {
-        type: 'redirect',
+        type: "redirect",
         redirect: {
           url: `${req.headers.origin}/admin/tap-to-pay?payment=success`,
         },
       },
       allow_promotion_codes: true,
-      billing_address_collection: 'auto',
+      billing_address_collection: "auto",
       phone_number_collection: {
         enabled: false,
       },
     };
 
     // Add shipping address collection for physical products
-    const requiresShipping = productDetails.some(product => 
-      product.name.toLowerCase().includes('shirt') ||
-      product.name.toLowerCase().includes('hoodie') ||
-      product.name.toLowerCase().includes('merch')
+    const requiresShipping = productDetails.some(
+      (product) =>
+        product.name.toLowerCase().includes("shirt") ||
+        product.name.toLowerCase().includes("hoodie") ||
+        product.name.toLowerCase().includes("merch"),
     );
-    
+
     if (requiresShipping) {
       paymentLinkParams.shipping_address_collection = {
-        allowed_countries: ['US', 'CA', 'GB', 'AU', 'DE', 'FR', 'IT', 'ES', 'NL', 'CH'],
+        allowed_countries: ["US", "CA", "GB", "AU", "DE", "FR", "IT", "ES", "NL", "CH"],
       };
     }
 
@@ -111,9 +114,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       products: productDetails,
     });
   } catch (err: unknown) {
-    console.error('Error creating payment link:', err);
-    let message = 'Unknown error';
-    if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+    console.error("Error creating payment link:", err);
+    let message = "Unknown error";
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "message" in err &&
+      typeof (err as { message?: unknown }).message === "string"
+    ) {
       message = (err as { message: string }).message;
     }
     return res.status(500).json({ error: message });

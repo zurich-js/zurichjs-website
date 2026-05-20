@@ -1,7 +1,8 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 
-const RAFFLE_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfagfGCT9WqKSuUhepz3akRjRi0MH6RNq_ZTTenwBXi-flYYA/viewform?usp=header';
+const RAFFLE_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSfagfGCT9WqKSuUhepz3akRjRi0MH6RNq_ZTTenwBXi-flYYA/viewform?usp=header";
 
 export default function SentryRaffle() {
   return (
@@ -14,13 +15,12 @@ export default function SentryRaffle() {
           height={32}
           className="object-contain"
         />
-        <h2 className="text-lg font-bold text-gray-900">
-          Sentry Raffle
-        </h2>
+        <h2 className="text-lg font-bold text-gray-900">Sentry Raffle</h2>
       </div>
 
       <p className="text-sm text-gray-600">
-        Enter the raffle for a chance to win prizes from Sentry! Fill out the form below to participate.
+        Enter the raffle for a chance to win prizes from Sentry! Fill out the form below to
+        participate.
       </p>
 
       <Link

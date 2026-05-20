@@ -17,7 +17,7 @@ export type CashPaymentDetails = {
   email: string;
 };
 
-export type PaymentMethod = 'online' | 'cash';
+export type PaymentMethod = "online" | "cash";
 
 export interface TshirtContextType {
   // Stock
@@ -74,6 +74,6 @@ export interface TshirtContextType {
   isStepValid: (stepNum: number) => boolean;
 }
 
-export const SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
+export const SIZES = ["S", "M", "L", "XL", "XXL"];
 export const BASE_PRICE = 25;
 export const DELIVERY_ADDON = 10;

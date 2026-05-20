@@ -34,7 +34,7 @@ export default function Document() {
           }}
         />
         {/* End Inspectlet Asynchronous Code */}
-        
+
         {/* Begin LinkedIn Insight Tag */}
         <script
           type="text/javascript"
@@ -62,7 +62,13 @@ export default function Document() {
           }}
         />
         <noscript>
-          <img height="1" width="1" style={{display: "none"}} alt="" src="https://px.ads.linkedin.com/collect/?pid=7172098&fmt=gif" />
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            alt=""
+            src="https://px.ads.linkedin.com/collect/?pid=7172098&fmt=gif"
+          />
         </noscript>
         {/* End LinkedIn Insight Tag */}
       </Head>

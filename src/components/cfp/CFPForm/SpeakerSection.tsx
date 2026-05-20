@@ -1,13 +1,13 @@
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
-import { AlertTriangle, ArrowRight, Upload } from 'lucide-react';
-import Image from 'next/image';
-import { ChangeEvent, ReactNode } from 'react';
+import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
+import { AlertTriangle, ArrowRight, Upload } from "lucide-react";
+import Image from "next/image";
+import { ChangeEvent, ReactNode } from "react";
 
-import Button from '@/components/ui/Button';
+import Button from "@/components/ui/Button";
 
-import { FormState, ValidationErrors } from '../types';
+import { FormState, ValidationErrors } from "../types";
 
-import FormInput from './FormInput';
+import FormInput from "./FormInput";
 
 interface SpeakerSectionProps {
   formState: FormState;
@@ -23,7 +23,7 @@ function SpeakerOverviewRow({ label, value }: { label: string; value: string }) 
   return (
     <div className="py-3 border-b border-gray-100 last:border-b-0">
       <div className="text-sm font-medium text-gray-500 mb-1">{label}</div>
-      <div className="text-gray-900 whitespace-pre-line break-words">{value || 'Not set yet'}</div>
+      <div className="text-gray-900 whitespace-pre-line break-words">{value || "Not set yet"}</div>
     </div>
   );
 }
@@ -50,8 +50,8 @@ export default function SpeakerSection({
 
       <p className="text-gray-600 mb-6">
         {isSignedIn
-          ? 'We will use your saved speaker profile details for this submission.'
-          : 'Tell us about yourself so we can introduce you properly.'}
+          ? "We will use your saved speaker profile details for this submission."
+          : "Tell us about yourself so we can introduce you properly."}
       </p>
 
       {!isSignedIn && (
@@ -78,7 +78,7 @@ export default function SpeakerSection({
                     {(formState.imagePreview || formState.existingSpeakerImageUrl) && (
                       <div className="relative w-16 h-16 flex-shrink-0 overflow-hidden rounded-full border border-gray-200 bg-gray-50">
                         <Image
-                          src={formState.imagePreview || formState.existingSpeakerImageUrl || ''}
+                          src={formState.imagePreview || formState.existingSpeakerImageUrl || ""}
                           alt="Speaker profile"
                           fill
                           unoptimized
@@ -87,15 +87,18 @@ export default function SpeakerSection({
                       </div>
                     )}
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">{fullName || 'Your speaker profile'}</h4>
+                      <h4 className="text-lg font-semibold text-gray-900">
+                        {fullName || "Your speaker profile"}
+                      </h4>
                       <p className="text-sm text-gray-500 mt-2">
-                        {formState.jobTitle || 'Job title not set'} {formState.email ? `• ${formState.email}` : ''}
+                        {formState.jobTitle || "Job title not set"}{" "}
+                        {formState.email ? `• ${formState.email}` : ""}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-sm font-medium text-gray-700">
-                    {open ? 'Collapse' : 'Expand'}
+                    {open ? "Collapse" : "Expand"}
                   </div>
                 </div>
               </DisclosureButton>
@@ -106,7 +109,12 @@ export default function SpeakerSection({
                     Update your speaker profile if anything needs to change before you submit.
                   </p>
 
-                  <Button href={editProfileHref} variant="outline" size="sm" className="w-full sm:w-auto">
+                  <Button
+                    href={editProfileHref}
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                  >
                     Edit&nbsp;Profile&nbsp;Information
                     <ArrowRight size={16} className="ml-2" />
                   </Button>
@@ -117,7 +125,9 @@ export default function SpeakerSection({
                     <div className="flex items-start gap-2">
                       <AlertTriangle size={16} className="mt-0.5 flex-shrink-0" />
                       <span>
-                        Missing required speaker details: {formState.missingSpeakerFields.join(', ')}. Update your speaker profile before submitting.
+                        Missing required speaker details:{" "}
+                        {formState.missingSpeakerFields.join(", ")}. Update your speaker profile
+                        before submitting.
                       </span>
                     </div>
                   </div>
@@ -223,12 +233,12 @@ export default function SpeakerSection({
                 <label
                   htmlFor="speakerImage"
                   className={`flex items-center gap-2 w-full px-4 py-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors ${
-                    validationErrors.speakerImage ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    validationErrors.speakerImage ? "border-red-500 bg-red-50" : "border-gray-300"
                   }`}
                 >
                   <Upload size={18} />
                   <span className="truncate">
-                    {formState.speakerImage ? formState.speakerImage.name : 'Choose an image'}
+                    {formState.speakerImage ? formState.speakerImage.name : "Choose an image"}
                   </span>
                   <input
                     type="file"
@@ -244,7 +254,7 @@ export default function SpeakerSection({
               {(formState.imagePreview || formState.existingSpeakerImageUrl) && (
                 <div className="ml-4 w-16 h-16 relative flex-shrink-0">
                   <Image
-                    src={formState.imagePreview || formState.existingSpeakerImageUrl || ''}
+                    src={formState.imagePreview || formState.existingSpeakerImageUrl || ""}
                     alt="Profile preview"
                     fill
                     unoptimized
@@ -256,7 +266,9 @@ export default function SpeakerSection({
             {validationErrors.speakerImage && (
               <p className="mt-1 text-sm text-red-600">{validationErrors.speakerImage}</p>
             )}
-            <p className="text-xs text-gray-500 mt-1">Recommended: Square image, at least 400x400px</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Recommended: Square image, at least 400x400px
+            </p>
           </div>
         </>
       )}

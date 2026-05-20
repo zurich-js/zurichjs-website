@@ -1,11 +1,11 @@
-import { motion } from 'framer-motion';
-import { Mic, Users, TrendingUp } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Mic, Users, TrendingUp } from "lucide-react";
 
-import Section from '@/components/Section';
-import Button from '@/components/ui/Button';
-import useEvents from '@/hooks/useEvents';
+import Section from "@/components/Section";
+import Button from "@/components/ui/Button";
+import useEvents from "@/hooks/useEvents";
 
-import { TalkSubmissionStats } from './types';
+import { TalkSubmissionStats } from "./types";
 
 interface CFPHeroProps {
   submissionStats?: TalkSubmissionStats | null;
@@ -23,15 +23,13 @@ export default function CFPHero({ submissionStats }: CFPHeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Call for Papers
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Call for Papers</h1>
             <p className="text-lg md:text-xl mb-4 font-medium">
               Share your passion with Zurich&apos;s most vibrant developer community!
             </p>
             <p className="text-base md:text-lg mb-6">
-              We&apos;re constantly looking for speakers for our upcoming meetups. Whether you&apos;re a
-              seasoned presenter or a first-timer, we&apos;d love to hear from you!
+              We&apos;re constantly looking for speakers for our upcoming meetups. Whether
+              you&apos;re a seasoned presenter or a first-timer, we&apos;d love to hear from you!
             </p>
 
             {submissionStats && (
@@ -39,7 +37,7 @@ export default function CFPHero({ submissionStats }: CFPHeroProps) {
                 <p className="text-sm md:text-base font-medium text-black">
                   {submissionStats.recentSubmissions > 0 ? (
                     <>
-                      <strong>Join our amazing speaker community!</strong> We&apos;ve had{' '}
+                      <strong>Join our amazing speaker community!</strong> We&apos;ve had{" "}
                       {submissionStats.recentSubmissions} submissions in the last 90 days and our
                       events are packed with incredible talent. Submit now to get in the queue!
                     </>
@@ -59,8 +57,8 @@ export default function CFPHero({ submissionStats }: CFPHeroProps) {
               size="lg"
               className="bg-black hover:bg-gray-800 text-white font-bold w-full sm:w-auto"
               onClick={() => {
-                document.getElementById('form')?.scrollIntoView({ behavior: 'smooth' });
-                track('skip_to_form_hero', {});
+                document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+                track("skip_to_form_hero", {});
               }}
             >
               Submit Now

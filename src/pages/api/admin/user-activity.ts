@@ -1,7 +1,5 @@
-import { clerkClient } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
-
-
+import { clerkClient } from "@clerk/nextjs/server";
+import { NextApiRequest, NextApiResponse } from "next";
 
 interface UserActivityData {
   userId: string;
@@ -19,17 +17,17 @@ interface UserActivityData {
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const client = await clerkClient();
-    
+
     // Fetch all users
     const usersList = await client.users.getUserList({
       limit: 500,
-      orderBy: '-created_at',
+      orderBy: "-created_at",
     });
     const users = usersList.data;
 
@@ -51,21 +49,23 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Process each user
     for (const user of users) {
-      const name = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Unknown';
-      const email = user.primaryEmailAddress?.emailAddress || 'No email';
+      const name =
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username || "Unknown";
+      const email = user.primaryEmailAddress?.emailAddress || "No email";
       const joinDate = new Date(user.createdAt).toISOString();
       const lastActiveAt = user.lastActiveAt ? new Date(user.lastActiveAt).toISOString() : null;
       const lastSignInAt = user.lastSignInAt ? new Date(user.lastSignInAt).toISOString() : null;
 
       // Calculate activity score based on various factors
       let activityScore = 0;
-      
+
       // Base score for having an account
       activityScore += 10;
 
       // Score for recent activity
       if (lastActiveAt) {
-        const daysSinceActive = (now.getTime() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24);
+        const daysSinceActive =
+          (now.getTime() - new Date(lastActiveAt).getTime()) / (1000 * 60 * 60 * 24);
         if (daysSinceActive <= 7) activityScore += 30;
         else if (daysSinceActive <= 30) activityScore += 20;
         else if (daysSinceActive <= 90) activityScore += 10;
@@ -73,7 +73,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       // Score for recent sign-in
       if (lastSignInAt) {
-        const daysSinceSignIn = (now.getTime() - new Date(lastSignInAt).getTime()) / (1000 * 60 * 60 * 24);
+        const daysSinceSignIn =
+          (now.getTime() - new Date(lastSignInAt).getTime()) / (1000 * 60 * 60 * 24);
         if (daysSinceSignIn <= 7) activityScore += 25;
         else if (daysSinceSignIn <= 30) activityScore += 15;
         else if (daysSinceSignIn <= 90) activityScore += 5;
@@ -81,7 +82,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       // Score for metadata (credits, referrals, etc.)
       const metadata = user.unsafeMetadata || {};
-      if (metadata.credits && typeof metadata.credits === 'number') {
+      if (metadata.credits && typeof metadata.credits === "number") {
         activityScore += Math.min(metadata.credits * 0.1, 20);
       }
       if (metadata.referrals && Array.isArray(metadata.referrals)) {
@@ -89,7 +90,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       // Consider user as active if they have some activity in the last 30 days
-      if (lastActiveAt && (now.getTime() - new Date(lastActiveAt).getTime()) <= 30 * 24 * 60 * 60 * 1000) {
+      if (
+        lastActiveAt &&
+        now.getTime() - new Date(lastActiveAt).getTime() <= 30 * 24 * 60 * 60 * 1000
+      ) {
         activeUsers++;
       }
 
@@ -115,11 +119,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       userActivityData.push(userActivity);
 
       // Add to recent activity if user was active recently
-      if (lastActiveAt && (now.getTime() - new Date(lastActiveAt).getTime()) <= 7 * 24 * 60 * 60 * 1000) {
+      if (
+        lastActiveAt &&
+        now.getTime() - new Date(lastActiveAt).getTime() <= 7 * 24 * 60 * 60 * 1000
+      ) {
         recentActivity.push({
           userId: user.id,
           userName: name,
-          activity: 'Recent login',
+          activity: "Recent login",
           timestamp: lastActiveAt,
         });
       }
@@ -129,7 +136,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const avgActivityScore = totalUsers > 0 ? Math.round(totalActivityScore / totalUsers) : 0;
 
     // Sort recent activity by timestamp
-    recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    recentActivity.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
 
     // Get top active users
     const topActiveUsers = [...userActivityData]
@@ -149,10 +158,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       stats,
       users: userActivityData,
     });
-
   } catch (error) {
-    console.error('Error fetching user activity:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching user activity:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
 

@@ -1,22 +1,37 @@
-import { useUser } from '@clerk/nextjs';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { Star, CheckCircle, Calendar, Send, Sparkles, TrendingUp, Heart, Settings, LogIn, Gift } from 'lucide-react';
-import { GetServerSidePropsContext } from 'next';
-import Link from 'next/link';
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useUser } from "@clerk/nextjs";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
+import {
+  Star,
+  CheckCircle,
+  Calendar,
+  Send,
+  Sparkles,
+  TrendingUp,
+  Heart,
+  Settings,
+  LogIn,
+  Gift,
+} from "lucide-react";
+import { GetServerSidePropsContext } from "next";
+import Link from "next/link";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 
-import Layout from '@/components/layout/Layout';
-import Section from '@/components/Section';
-import { Workshop } from '@/components/sections/UpcomingWorkshops';
-import SEO from '@/components/SEO';
-import Button from '@/components/ui/Button';
-import { getWorkshops } from '@/data/workshops';
-import useEvents from '@/hooks/useEvents';
-import { useReferrals } from '@/hooks/useReferrals';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import { getTestModeConfig, getCurrentDate, formatTestDate, TEST_SCENARIOS } from '@/lib/testMode';
-import { getRecentPastEventsForFeedback, getUpcomingEventsForTestScenarios, Event } from '@/sanity/queries';
+import Layout from "@/components/layout/Layout";
+import Section from "@/components/Section";
+import { Workshop } from "@/components/sections/UpcomingWorkshops";
+import SEO from "@/components/SEO";
+import Button from "@/components/ui/Button";
+import { getWorkshops } from "@/data/workshops";
+import useEvents from "@/hooks/useEvents";
+import { useReferrals } from "@/hooks/useReferrals";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
+import { getTestModeConfig, getCurrentDate, formatTestDate, TEST_SCENARIOS } from "@/lib/testMode";
+import {
+  getRecentPastEventsForFeedback,
+  getUpcomingEventsForTestScenarios,
+  Event,
+} from "@/sanity/queries";
 
 interface FeedbackFormState {
   selectedEventId: string;
@@ -43,8 +58,8 @@ interface FeedbackFormState {
   };
   improvements: string;
   futureTopics: string;
-  worthTime: 'definitely' | 'mostly' | 'somewhat' | 'not_really' | '';
-  wouldRecommend: 'definitely' | 'probably' | 'maybe' | 'unlikely' | '';
+  worthTime: "definitely" | "mostly" | "somewhat" | "not_really" | "";
+  wouldRecommend: "definitely" | "probably" | "maybe" | "unlikely" | "";
   dealOfDay: {
     rating: number;
     comments: string;
@@ -69,22 +84,26 @@ interface FeedbackProps {
 }
 
 // Helper function to get recent workshops within the 30-day window
-function getRecentWorkshops(testDate?: string): (Workshop & { type: 'workshop' })[] {
+function getRecentWorkshops(testDate?: string): (Workshop & { type: "workshop" })[] {
   const currentDate = testDate ? new Date(testDate) : new Date();
   const thirtyDaysAgo = new Date(currentDate);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
   return getWorkshops()
-    .filter(workshop => {
+    .filter((workshop) => {
       // Parse dateInfo (e.g., "September 9th, 2025" or "July 23, 2025")
       try {
         const workshopDate = new Date(workshop.dateInfo);
-        return workshopDate >= thirtyDaysAgo && workshopDate <= currentDate && workshop.state === 'confirmed';
+        return (
+          workshopDate >= thirtyDaysAgo &&
+          workshopDate <= currentDate &&
+          workshop.state === "confirmed"
+        );
       } catch {
         return false; // Skip workshops with unparseable dates
       }
     })
-    .map(workshop => ({ ...workshop, type: 'workshop' as const }));
+    .map((workshop) => ({ ...workshop, type: "workshop" as const }));
 }
 
 export default function EventFeedback({ recentEvents, upcomingEvents, testDate }: FeedbackProps) {
@@ -96,37 +115,37 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
   // Combine events and workshops for selection
   const recentWorkshops = getRecentWorkshops(testDate);
   const allSelectableEvents = [
-    ...recentEvents.map(event => ({ ...event, type: 'event' as const })),
-    ...recentWorkshops
+    ...recentEvents.map((event) => ({ ...event, type: "event" as const })),
+    ...recentWorkshops,
   ].sort((a, b) => {
-    const aDate = a.type === 'event' ? new Date(a.datetime) : new Date(a.dateInfo);
-    const bDate = b.type === 'event' ? new Date(b.datetime) : new Date(b.dateInfo);
+    const aDate = a.type === "event" ? new Date(a.datetime) : new Date(a.dateInfo);
+    const bDate = b.type === "event" ? new Date(b.datetime) : new Date(b.dateInfo);
     return bDate.getTime() - aDate.getTime();
   });
 
   const [formState, setFormState] = useState<FeedbackFormState>({
-    selectedEventId: '',
+    selectedEventId: "",
     overallRating: 0,
-    foodOptions: { rating: 0, comments: '' },
-    drinks: { rating: 0, comments: '' },
-    talks: { rating: 0, comments: '' },
-    timing: { rating: 0, comments: '' },
-    execution: { rating: 0, comments: '' },
-    improvements: '',
-    futureTopics: '',
-    worthTime: '',
-    wouldRecommend: '',
-    dealOfDay: { rating: 0, comments: '' },
-    additionalComments: '',
+    foodOptions: { rating: 0, comments: "" },
+    drinks: { rating: 0, comments: "" },
+    talks: { rating: 0, comments: "" },
+    timing: { rating: 0, comments: "" },
+    execution: { rating: 0, comments: "" },
+    improvements: "",
+    futureTopics: "",
+    worthTime: "",
+    wouldRecommend: "",
+    dealOfDay: { rating: 0, comments: "" },
+    additionalComments: "",
     submitted: false,
     isSubmitting: false,
-    error: '',
+    error: "",
   });
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [hoveredStar, setHoveredStar] = useState<number>(0);
   const [testModeOpen, setTestModeOpen] = useState(false);
-  const [testCurrentDate, setTestCurrentDate] = useState<string>(testDate || '');
+  const [testCurrentDate, setTestCurrentDate] = useState<string>(testDate || "");
   const [isApplying, setIsApplying] = useState(false);
   const [creditsAwarded, setCreditsAwarded] = useState(false);
   const testModeConfig = getTestModeConfig(testDate);
@@ -135,98 +154,113 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
   useEffect(() => {
     if (allSelectableEvents.length > 0 && !formState.selectedEventId) {
       const mostRecent = allSelectableEvents[0];
-      setFormState(prev => ({ ...prev, selectedEventId: mostRecent.id }));
-      track('feedback_auto_event_selected', {
+      setFormState((prev) => ({ ...prev, selectedEventId: mostRecent.id }));
+      track("feedback_auto_event_selected", {
         eventId: mostRecent.id,
         eventTitle: mostRecent.title,
-        eventType: mostRecent.type
+        eventType: mostRecent.type,
       });
     }
   }, [allSelectableEvents, formState.selectedEventId, track]);
 
-  const selectedEvent = allSelectableEvents.find(item => item.id === formState.selectedEventId);
+  const selectedEvent = allSelectableEvents.find((item) => item.id === formState.selectedEventId);
 
   const handleEventChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const itemId = e.target.value;
-    setFormState(prev => ({ ...prev, selectedEventId: itemId }));
-    
+    setFormState((prev) => ({ ...prev, selectedEventId: itemId }));
+
     if (itemId) {
-      const item = allSelectableEvents.find(e => e.id === itemId);
-      track('feedback_event_selected', {
+      const item = allSelectableEvents.find((e) => e.id === itemId);
+      track("feedback_event_selected", {
         eventId: itemId,
-        eventTitle: item?.title || 'Unknown',
-        eventType: item?.type || 'unknown'
+        eventTitle: item?.title || "Unknown",
+        eventType: item?.type || "unknown",
       });
     }
 
     if (validationErrors.selectedEvent) {
-      setValidationErrors(prev => ({ ...prev, selectedEvent: undefined }));
+      setValidationErrors((prev) => ({ ...prev, selectedEvent: undefined }));
     }
   };
 
   const handleOverallRatingClick = (rating: number) => {
-    setFormState(prev => ({ ...prev, overallRating: rating }));
-    track('feedback_overall_rating_selected', {
+    setFormState((prev) => ({ ...prev, overallRating: rating }));
+    track("feedback_overall_rating_selected", {
       rating: rating,
-      eventId: formState.selectedEventId
+      eventId: formState.selectedEventId,
     });
 
     if (validationErrors.overallRating) {
-      setValidationErrors(prev => ({ ...prev, overallRating: undefined }));
+      setValidationErrors((prev) => ({ ...prev, overallRating: undefined }));
     }
   };
 
-  const handleAspectRatingClick = (aspect: keyof Pick<FeedbackFormState, 'foodOptions' | 'drinks' | 'talks' | 'timing' | 'execution'>, rating: number) => {
-    setFormState(prev => ({
+  const handleAspectRatingClick = (
+    aspect: keyof Pick<
+      FeedbackFormState,
+      "foodOptions" | "drinks" | "talks" | "timing" | "execution"
+    >,
+    rating: number,
+  ) => {
+    setFormState((prev) => ({
       ...prev,
-      [aspect]: { ...prev[aspect], rating: rating }
+      [aspect]: { ...prev[aspect], rating: rating },
     }));
-    
-    track('feedback_aspect_rating_selected', {
+
+    track("feedback_aspect_rating_selected", {
       aspect: aspect,
       rating: rating,
-      eventId: formState.selectedEventId
+      eventId: formState.selectedEventId,
     });
   };
 
-  const handleAspectCommentChange = (aspect: keyof Pick<FeedbackFormState, 'foodOptions' | 'drinks' | 'talks' | 'timing' | 'execution'>, comments: string) => {
-    setFormState(prev => ({
+  const handleAspectCommentChange = (
+    aspect: keyof Pick<
+      FeedbackFormState,
+      "foodOptions" | "drinks" | "talks" | "timing" | "execution"
+    >,
+    comments: string,
+  ) => {
+    setFormState((prev) => ({
       ...prev,
-      [aspect]: { ...prev[aspect], comments: comments }
+      [aspect]: { ...prev[aspect], comments: comments },
     }));
   };
 
-  const handleSelectChange = (field: 'worthTime' | 'wouldRecommend', value: string) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
-    
+  const handleSelectChange = (field: "worthTime" | "wouldRecommend", value: string) => {
+    setFormState((prev) => ({ ...prev, [field]: value }));
+
     if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: undefined }));
+      setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const handleTextChange = (field: 'improvements' | 'futureTopics' | 'additionalComments', value: string) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+  const handleTextChange = (
+    field: "improvements" | "futureTopics" | "additionalComments",
+    value: string,
+  ) => {
+    setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
-    
+
     if (!formState.selectedEventId) {
-      errors.selectedEvent = 'Please select an event';
+      errors.selectedEvent = "Please select an event";
     }
-    
+
     if (!formState.overallRating || formState.overallRating < 1) {
-      errors.overallRating = 'Please provide an overall rating';
+      errors.overallRating = "Please provide an overall rating";
     }
-    
+
     if (!formState.worthTime) {
-      errors.worthTime = 'Please let us know if the event was worth your time';
+      errors.worthTime = "Please let us know if the event was worth your time";
     }
-    
+
     if (!formState.wouldRecommend) {
-      errors.wouldRecommend = 'Please let us know if you would recommend this event';
+      errors.wouldRecommend = "Please let us know if you would recommend this event";
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -236,20 +270,21 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
     // 1. At least 3 aspect ratings
     // 2. Some meaningful text feedback (improvements or future topics)
     // 3. Rating of at least 2 stars overall
-    
+
     const aspectRatings = [
       formState.foodOptions.rating,
       formState.drinks.rating,
       formState.talks.rating,
       formState.timing.rating,
-      formState.execution.rating
+      formState.execution.rating,
     ];
-    
-    const ratedAspects = aspectRatings.filter(rating => rating > 0).length;
-    const hasMeaningfulText = formState.improvements.trim().length > 10 || 
-                              formState.futureTopics.trim().length > 10 ||
-                              formState.additionalComments.trim().length > 20;
-    
+
+    const ratedAspects = aspectRatings.filter((rating) => rating > 0).length;
+    const hasMeaningfulText =
+      formState.improvements.trim().length > 10 ||
+      formState.futureTopics.trim().length > 10 ||
+      formState.additionalComments.trim().length > 20;
+
     return ratedAspects >= 3 && hasMeaningfulText && formState.overallRating >= 2;
   };
 
@@ -257,20 +292,20 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
     e.preventDefault();
 
     if (!validateForm()) {
-      track('feedback_validation_failed', {
-        errors: Object.keys(validationErrors).join(', ')
+      track("feedback_validation_failed", {
+        errors: Object.keys(validationErrors).join(", "),
       });
-      setFormState(prev => ({ ...prev, error: 'Please fix the highlighted errors below' }));
+      setFormState((prev) => ({ ...prev, error: "Please fix the highlighted errors below" }));
       return;
     }
 
-    setFormState(prev => ({ ...prev, isSubmitting: true, error: '' }));
+    setFormState((prev) => ({ ...prev, isSubmitting: true, error: "" }));
 
     try {
-      const response = await fetch('/api/event-feedback', {
-        method: 'POST',
+      const response = await fetch("/api/event-feedback", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           eventId: formState.selectedEventId,
@@ -293,14 +328,14 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'An error occurred while submitting your feedback');
+        throw new Error(data.message || "An error occurred while submitting your feedback");
       }
 
-      track('event_feedback_submitted_successfully', {
+      track("event_feedback_submitted_successfully", {
         eventId: formState.selectedEventId,
         overallRating: formState.overallRating,
         worthTime: formState.worthTime,
-        wouldRecommend: formState.wouldRecommend
+        wouldRecommend: formState.wouldRecommend,
       });
 
       // Award credits for helpful feedback if user is logged in
@@ -308,47 +343,49 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
         try {
           await addCredits(20);
           setCreditsAwarded(true);
-          track('feedback_credits_awarded', {
+          track("feedback_credits_awarded", {
             eventId: formState.selectedEventId,
-            creditsAwarded: 20
+            creditsAwarded: 20,
           });
         } catch (error) {
-          console.error('Error awarding credits:', error);
+          console.error("Error awarding credits:", error);
         }
       }
 
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         submitted: true,
         isSubmitting: false,
-        error: ''
+        error: "",
       }));
-
     } catch (error: unknown) {
-      console.error('Feedback submission error:', error);
+      console.error("Feedback submission error:", error);
 
-      track('event_feedback_submission_error', {
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      track("event_feedback_submission_error", {
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         isSubmitting: false,
-        error: error instanceof Error ? error.message : 'An error occurred while submitting your feedback'
+        error:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while submitting your feedback",
       }));
     }
   };
 
-  const RatingStars = ({ 
-    rating, 
-    onRatingClick, 
-    hoveredRating, 
-    onHover, 
+  const RatingStars = ({
+    rating,
+    onRatingClick,
+    hoveredRating,
+    onHover,
     onLeave,
-    size = 32 
-  }: { 
-    rating: number; 
-    onRatingClick: (rating: number) => void; 
+    size = 32,
+  }: {
+    rating: number;
+    onRatingClick: (rating: number) => void;
     hoveredRating?: number;
     onHover?: (rating: number) => void;
     onLeave?: () => void;
@@ -368,8 +405,8 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
             size={size}
             className={`${
               star <= (hoveredRating || rating)
-                ? 'fill-yellow-400 text-yellow-400'
-                : 'text-gray-300'
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
             } transition-colors`}
           />
         </button>
@@ -380,10 +417,10 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
   const getRatingText = (rating: number) => {
     const ratings = {
       1: "Poor",
-      2: "Fair", 
+      2: "Fair",
       3: "Good",
       4: "Very Good",
-      5: "Excellent"
+      5: "Excellent",
     };
     return ratings[rating as keyof typeof ratings] || "";
   };
@@ -395,9 +432,10 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
         description="Help us improve by sharing your thoughts on our recent workshops and meetups. Your feedback makes our community better!"
         openGraph={{
           title: "Share Your Event Feedback | ZurichJS",
-          description: "Help us improve by sharing your thoughts on our recent workshops and meetups. Your feedback makes our community better!",
+          description:
+            "Help us improve by sharing your thoughts on our recent workshops and meetups. Your feedback makes our community better!",
           image: "/api/og/contact",
-          type: "website"
+          type: "website",
         }}
       />
 
@@ -417,15 +455,16 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                 Help us make ZurichJS events even better for our amazing community!
               </p>
               <p className="text-base md:text-lg mb-4 md:mb-6">
-                Your comprehensive feedback helps us improve everything from talks and timing 
-                to food and drinks. Whether it&apos;s suggestions for future topics or improvements 
-                to event execution - we want to hear from you!
+                Your comprehensive feedback helps us improve everything from talks and timing to
+                food and drinks. Whether it&apos;s suggestions for future topics or improvements to
+                event execution - we want to hear from you!
               </p>
 
               <div className="bg-js/20 backdrop-blur rounded-lg p-4 mb-6 md:mb-8 border border-js/30">
                 <p className="text-sm md:text-base font-medium text-black">
-                  ✨ <strong>Your voice shapes our events!</strong> We use this feedback to plan better 
-                  venues, improve catering, adjust timing, and curate content that matters to you.
+                  ✨ <strong>Your voice shapes our events!</strong> We use this feedback to plan
+                  better venues, improve catering, adjust timing, and curate content that matters to
+                  you.
                 </p>
               </div>
 
@@ -437,8 +476,9 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                     <h3 className="font-bold text-gray-900">Earn Rewards for Your Feedback!</h3>
                   </div>
                   <p className="text-sm text-gray-700 mb-3">
-                    Login with your account and get rewarded <strong>20 credits</strong> for providing helpful feedback. 
-                    Use credits for workshop discounts, free event tickets, ZurichJS merch, and more!
+                    Login with your account and get rewarded <strong>20 credits</strong> for
+                    providing helpful feedback. Use credits for workshop discounts, free event
+                    tickets, ZurichJS merch, and more!
                   </p>
                   <Button
                     href="/profile"
@@ -455,11 +495,14 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                 <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-4 mb-6 md:mb-8 border border-green-200">
                   <div className="flex items-center mb-2">
                     <Gift className="w-5 h-5 text-green-600 mr-2" />
-                    <h3 className="font-bold text-gray-900">Welcome back, {user.firstName || user.username}!</h3>
+                    <h3 className="font-bold text-gray-900">
+                      Welcome back, {user.firstName || user.username}!
+                    </h3>
                   </div>
                   <p className="text-sm text-gray-700">
-                    Provide helpful feedback and earn <strong>20 credits</strong> that you can redeem for workshop discounts, 
-                    free event tickets, and exclusive ZurichJS merchandise.
+                    Provide helpful feedback and earn <strong>20 credits</strong> that you can
+                    redeem for workshop discounts, free event tickets, and exclusive ZurichJS
+                    merchandise.
                   </p>
                 </div>
               )}
@@ -471,8 +514,8 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                   size="lg"
                   className="bg-black hover:bg-gray-800 text-white font-bold cursor-pointer transition-all duration-200"
                   onClick={() => {
-                    document.getElementById('form')?.scrollIntoView({ behavior: 'smooth' });
-                    track('skip_to_form_hero', {});
+                    document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+                    track("skip_to_form_hero", {});
                   }}
                 >
                   Share Feedback 🌟
@@ -492,21 +535,27 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                   <Heart className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Shape Future Events</h3>
-                    <p className="text-gray-600 text-sm">Your feedback directly influences our venue choices, catering, and content</p>
+                    <p className="text-gray-600 text-sm">
+                      Your feedback directly influences our venue choices, catering, and content
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <TrendingUp className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Continuous Improvement</h3>
-                    <p className="text-gray-600 text-sm">Help us understand what works and what could be better</p>
+                    <p className="text-gray-600 text-sm">
+                      Help us understand what works and what could be better
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Sparkles className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Community-Driven</h3>
-                    <p className="text-gray-600 text-sm">Be part of making ZurichJS the best developer community in Zurich</p>
+                    <p className="text-gray-600 text-sm">
+                      Be part of making ZurichJS the best developer community in Zurich
+                    </p>
                   </div>
                 </div>
               </div>
@@ -529,25 +578,29 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                   onClick={() => setTestModeOpen(!testModeOpen)}
                   className="text-sm text-yellow-700 hover:text-yellow-800 underline"
                 >
-                  {testModeOpen ? 'Hide Controls' : 'Show Controls'}
+                  {testModeOpen ? "Hide Controls" : "Show Controls"}
                 </button>
               </div>
-              
+
               {testModeOpen && (
                 <div className="space-y-4">
                   <div className="text-sm text-yellow-700">
                     <div className="mb-3 p-3 bg-yellow-100 rounded-md border border-yellow-300">
                       <p className="font-semibold mb-1">
-                        📅 Current Test Date: {formatTestDate(getCurrentDate())} 
-                        {testModeConfig.currentDate ? ' (Simulated)' : ' (Real/Live)'}
+                        📅 Current Test Date: {formatTestDate(getCurrentDate())}
+                        {testModeConfig.currentDate ? " (Simulated)" : " (Real/Live)"}
                       </p>
                       <div className="text-xs space-y-1">
-                        <p>• <strong>Events shown for feedback:</strong> {recentEvents.length}</p>
-                        <p>• <strong>Available upcoming events:</strong> {upcomingEvents.length}</p>
+                        <p>
+                          • <strong>Events shown for feedback:</strong> {recentEvents.length}
+                        </p>
+                        <p>
+                          • <strong>Available upcoming events:</strong> {upcomingEvents.length}
+                        </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-yellow-800 mb-2">
@@ -565,18 +618,18 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                             if (testCurrentDate) {
                               setIsApplying(true);
                               const url = new URL(window.location.href);
-                              url.searchParams.set('testDate', testCurrentDate);
+                              url.searchParams.set("testDate", testCurrentDate);
                               window.location.href = url.toString();
                             }
                           }}
                           disabled={!testCurrentDate || isApplying}
                           className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm transition-colors"
                         >
-                          {isApplying ? 'Applying...' : 'Apply'}
+                          {isApplying ? "Applying..." : "Apply"}
                         </button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-yellow-800 mb-2">
                         Quick Scenarios:
@@ -588,14 +641,14 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                               const nearestEvent = upcomingEvents[0];
                               const eventDate = new Date(nearestEvent.datetime);
                               const testDate = scenario.getDaysOffset(eventDate);
-                              
+
                               return (
                                 <button
                                   key={key}
                                   onClick={async () => {
                                     setIsApplying(true);
                                     const url = new URL(window.location.href);
-                                    url.searchParams.set('testDate', formatTestDate(testDate));
+                                    url.searchParams.set("testDate", formatTestDate(testDate));
                                     window.location.href = url.toString();
                                   }}
                                   disabled={isApplying}
@@ -633,10 +686,9 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4">Your Event Experience Matters</h2>
             <p className="text-gray-600">
-              {allSelectableEvents.length > 0 
-                ? `We found ${allSelectableEvents.length} recent event${allSelectableEvents.length === 1 ? '' : 's'} and workshop${allSelectableEvents.filter(e => e.type === 'workshop').length !== 1 ? 's' : ''} you can provide feedback on!`
-                : "We'll help you find a recent event or workshop to provide feedback on."
-              }
+              {allSelectableEvents.length > 0
+                ? `We found ${allSelectableEvents.length} recent event${allSelectableEvents.length === 1 ? "" : "s"} and workshop${allSelectableEvents.filter((e) => e.type === "workshop").length !== 1 ? "s" : ""} you can provide feedback on!`
+                : "We'll help you find a recent event or workshop to provide feedback on."}
             </p>
           </div>
 
@@ -649,10 +701,12 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               <Calendar size={48} className="mx-auto mb-4 text-yellow-500" />
               <h3 className="text-xl font-bold mb-2">No Recent Events or Workshops Found</h3>
               <p className="mb-4">
-                It looks like there haven&apos;t been any events or workshops in the last 30 days that you can provide feedback on.
+                It looks like there haven&apos;t been any events or workshops in the last 30 days
+                that you can provide feedback on.
               </p>
               <p className="text-sm mb-6">
-                Check back after our next meetup or workshop, or contact us directly if you&apos;d like to share feedback about an older event.
+                Check back after our next meetup or workshop, or contact us directly if you&apos;d
+                like to share feedback about an older event.
               </p>
               <Button href="/contact" variant="secondary">
                 Contact Us Directly
@@ -665,12 +719,15 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               className="bg-green-50 border border-green-200 text-green-700 p-8 rounded-lg text-center"
             >
               <CheckCircle size={64} className="mx-auto mb-4 text-green-500" />
-              <h3 className="text-2xl font-bold mb-2">Thank You for Your Comprehensive Feedback!</h3>
+              <h3 className="text-2xl font-bold mb-2">
+                Thank You for Your Comprehensive Feedback!
+              </h3>
               <p className="mb-4">
-                Your detailed feedback has been submitted successfully and will help us improve future events.
-                We really appreciate you taking the time to share your thoughts on all aspects of our event!
+                Your detailed feedback has been submitted successfully and will help us improve
+                future events. We really appreciate you taking the time to share your thoughts on
+                all aspects of our event!
               </p>
-              
+
               {/* Credits Reward Message */}
               {user && creditsAwarded && (
                 <div className="bg-gradient-to-r from-yellow-100 to-amber-100 rounded-lg p-4 mb-6 border border-yellow-200">
@@ -679,8 +736,16 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                     <h4 className="font-bold text-gray-900">🎉 Credits Earned!</h4>
                   </div>
                   <p className="text-sm text-gray-700">
-                    You&apos;ve earned <strong>20 credits</strong> for providing helpful feedback! 
-                    Visit your <Link href="/profile/rewards" className="text-yellow-700 underline hover:text-yellow-800">rewards page</Link> to redeem them for workshop discounts, free event tickets, and ZurichJS merchandise.
+                    You&apos;ve earned <strong>20 credits</strong> for providing helpful feedback!
+                    Visit your{" "}
+                    <Link
+                      href="/profile/rewards"
+                      className="text-yellow-700 underline hover:text-yellow-800"
+                    >
+                      rewards page
+                    </Link>{" "}
+                    to redeem them for workshop discounts, free event tickets, and ZurichJS
+                    merchandise.
                   </p>
                 </div>
               )}
@@ -688,8 +753,9 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               {user && !creditsAwarded && (
                 <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
                   <p className="text-sm text-blue-700">
-                    <strong>Tip:</strong> Provide more detailed ratings and feedback next time to earn 20 credits!
-                    Credits can be redeemed for workshop discounts and exclusive merchandise.
+                    <strong>Tip:</strong> Provide more detailed ratings and feedback next time to
+                    earn 20 credits! Credits can be redeemed for workshop discounts and exclusive
+                    merchandise.
                   </p>
                 </div>
               )}
@@ -701,25 +767,25 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                   variant="outline"
                   onClick={() => {
                     setFormState({
-                      selectedEventId: '',
+                      selectedEventId: "",
                       overallRating: 0,
-                      foodOptions: { rating: 0, comments: '' },
-                      drinks: { rating: 0, comments: '' },
-                      talks: { rating: 0, comments: '' },
-                      timing: { rating: 0, comments: '' },
-                      execution: { rating: 0, comments: '' },
-                      improvements: '',
-                      futureTopics: '',
-                      worthTime: '',
-                      wouldRecommend: '',
-                      dealOfDay: { rating: 0, comments: '' },
-                      additionalComments: '',
+                      foodOptions: { rating: 0, comments: "" },
+                      drinks: { rating: 0, comments: "" },
+                      talks: { rating: 0, comments: "" },
+                      timing: { rating: 0, comments: "" },
+                      execution: { rating: 0, comments: "" },
+                      improvements: "",
+                      futureTopics: "",
+                      worthTime: "",
+                      wouldRecommend: "",
+                      dealOfDay: { rating: 0, comments: "" },
+                      additionalComments: "",
                       submitted: false,
                       isSubmitting: false,
-                      error: '',
+                      error: "",
                     });
                     setValidationErrors({});
-                    track('event_feedback_form_reset', {});
+                    track("event_feedback_form_reset", {});
                   }}
                 >
                   Submit More Feedback
@@ -751,20 +817,20 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                   value={formState.selectedEventId}
                   onChange={handleEventChange}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                    validationErrors.selectedEvent 
-                      ? 'border-red-500 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-js'
+                    validationErrors.selectedEvent
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-js"
                   }`}
                   required
                 >
                   <option value="">Select an event or workshop...</option>
                   {allSelectableEvents.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.type === 'workshop' ? '🎓 ' : '🎯 '}{item.title} - {
-                        item.type === 'event' 
-                          ? format(new Date(item.datetime), 'MMM d, yyyy')
-                          : format(new Date(item.dateInfo), 'MMM d, yyyy')
-                      }
+                      {item.type === "workshop" ? "🎓 " : "🎯 "}
+                      {item.title} -{" "}
+                      {item.type === "event"
+                        ? format(new Date(item.datetime), "MMM d, yyyy")
+                        : format(new Date(item.dateInfo), "MMM d, yyyy")}
                     </option>
                   ))}
                 </select>
@@ -777,11 +843,15 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               {selectedEvent && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      1
+                    </span>
                     Overall Event Rating *
                   </h3>
-                  <p className="text-gray-600 mb-4">How would you rate your overall experience at this event?</p>
-                  
+                  <p className="text-gray-600 mb-4">
+                    How would you rate your overall experience at this event?
+                  </p>
+
                   <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                     <RatingStars
                       rating={formState.overallRating}
@@ -806,20 +876,28 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               {selectedEvent && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      2
+                    </span>
                     Event Aspects
                   </h3>
-                  <p className="text-gray-600 mb-6">Please rate different aspects of the event (optional comments welcome!)</p>
-                  
+                  <p className="text-gray-600 mb-6">
+                    Please rate different aspects of the event (optional comments welcome!)
+                  </p>
+
                   <div className="space-y-6">
                     {/* Food Options */}
                     <div className="p-4 bg-gray-50 rounded-lg">
-                      <label className="block text-gray-700 mb-3 font-semibold">🍕 Food Options</label>
+                      <label className="block text-gray-700 mb-3 font-semibold">
+                        🍕 Food Options
+                      </label>
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                         <div className="flex flex-col items-start gap-2">
                           <RatingStars
                             rating={formState.foodOptions.rating}
-                            onRatingClick={(rating) => handleAspectRatingClick('foodOptions', rating)}
+                            onRatingClick={(rating) =>
+                              handleAspectRatingClick("foodOptions", rating)
+                            }
                             size={24}
                           />
                           {formState.foodOptions.rating > 0 && (
@@ -831,7 +909,7 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         <textarea
                           placeholder="Any comments about the food options? (optional)"
                           value={formState.foodOptions.comments}
-                          onChange={(e) => handleAspectCommentChange('foodOptions', e.target.value)}
+                          onChange={(e) => handleAspectCommentChange("foodOptions", e.target.value)}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js text-sm"
                           rows={2}
                         />
@@ -845,7 +923,7 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         <div className="flex flex-col items-start gap-2">
                           <RatingStars
                             rating={formState.drinks.rating}
-                            onRatingClick={(rating) => handleAspectRatingClick('drinks', rating)}
+                            onRatingClick={(rating) => handleAspectRatingClick("drinks", rating)}
                             size={24}
                           />
                           {formState.drinks.rating > 0 && (
@@ -857,7 +935,7 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         <textarea
                           placeholder="Any comments about the drink selection? (optional)"
                           value={formState.drinks.comments}
-                          onChange={(e) => handleAspectCommentChange('drinks', e.target.value)}
+                          onChange={(e) => handleAspectCommentChange("drinks", e.target.value)}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js text-sm"
                           rows={2}
                         />
@@ -866,12 +944,14 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
 
                     {/* Talks */}
                     <div className="p-4 bg-gray-50 rounded-lg">
-                      <label className="block text-gray-700 mb-3 font-semibold">🎤 Talks & Content</label>
+                      <label className="block text-gray-700 mb-3 font-semibold">
+                        🎤 Talks & Content
+                      </label>
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                         <div className="flex flex-col items-start gap-2">
                           <RatingStars
                             rating={formState.talks.rating}
-                            onRatingClick={(rating) => handleAspectRatingClick('talks', rating)}
+                            onRatingClick={(rating) => handleAspectRatingClick("talks", rating)}
                             size={24}
                           />
                           {formState.talks.rating > 0 && (
@@ -883,7 +963,7 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         <textarea
                           placeholder="How were the talks? Quality, relevance, speakers... (optional)"
                           value={formState.talks.comments}
-                          onChange={(e) => handleAspectCommentChange('talks', e.target.value)}
+                          onChange={(e) => handleAspectCommentChange("talks", e.target.value)}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js text-sm"
                           rows={2}
                         />
@@ -892,12 +972,14 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
 
                     {/* Timing */}
                     <div className="p-4 bg-gray-50 rounded-lg">
-                      <label className="block text-gray-700 mb-3 font-semibold">⏰ Timing & Schedule</label>
+                      <label className="block text-gray-700 mb-3 font-semibold">
+                        ⏰ Timing & Schedule
+                      </label>
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                         <div className="flex flex-col items-start gap-2">
                           <RatingStars
                             rating={formState.timing.rating}
-                            onRatingClick={(rating) => handleAspectRatingClick('timing', rating)}
+                            onRatingClick={(rating) => handleAspectRatingClick("timing", rating)}
                             size={24}
                           />
                           {formState.timing.rating > 0 && (
@@ -909,7 +991,7 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         <textarea
                           placeholder="How was the event timing? Duration, breaks, schedule... (optional)"
                           value={formState.timing.comments}
-                          onChange={(e) => handleAspectCommentChange('timing', e.target.value)}
+                          onChange={(e) => handleAspectCommentChange("timing", e.target.value)}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js text-sm"
                           rows={2}
                         />
@@ -918,12 +1000,14 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
 
                     {/* Execution */}
                     <div className="p-4 bg-gray-50 rounded-lg">
-                      <label className="block text-gray-700 mb-3 font-semibold">🎯 Overall Execution</label>
+                      <label className="block text-gray-700 mb-3 font-semibold">
+                        🎯 Overall Execution
+                      </label>
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                         <div className="flex flex-col items-start gap-2">
                           <RatingStars
                             rating={formState.execution.rating}
-                            onRatingClick={(rating) => handleAspectRatingClick('execution', rating)}
+                            onRatingClick={(rating) => handleAspectRatingClick("execution", rating)}
                             size={24}
                           />
                           {formState.execution.rating > 0 && (
@@ -935,7 +1019,7 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         <textarea
                           placeholder="How was the event organization? Venue, flow, logistics... (optional)"
                           value={formState.execution.comments}
-                          onChange={(e) => handleAspectCommentChange('execution', e.target.value)}
+                          onChange={(e) => handleAspectCommentChange("execution", e.target.value)}
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js text-sm"
                           rows={2}
                         />
@@ -949,10 +1033,12 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               {selectedEvent && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      3
+                    </span>
                     Value & Recommendation
                   </h3>
-                  
+
                   <div className="space-y-6">
                     <div>
                       <label className="block text-gray-700 mb-2 font-semibold">
@@ -960,11 +1046,11 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                       </label>
                       <select
                         value={formState.worthTime}
-                        onChange={(e) => handleSelectChange('worthTime', e.target.value)}
+                        onChange={(e) => handleSelectChange("worthTime", e.target.value)}
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                          validationErrors.worthTime 
-                            ? 'border-red-500 focus:ring-red-500' 
-                            : 'border-gray-300 focus:ring-js'
+                          validationErrors.worthTime
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-300 focus:ring-js"
                         }`}
                         required
                       >
@@ -985,22 +1071,28 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                       </label>
                       <select
                         value={formState.wouldRecommend}
-                        onChange={(e) => handleSelectChange('wouldRecommend', e.target.value)}
+                        onChange={(e) => handleSelectChange("wouldRecommend", e.target.value)}
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                          validationErrors.wouldRecommend 
-                            ? 'border-red-500 focus:ring-red-500' 
-                            : 'border-gray-300 focus:ring-js'
+                          validationErrors.wouldRecommend
+                            ? "border-red-500 focus:ring-red-500"
+                            : "border-gray-300 focus:ring-js"
                         }`}
                         required
                       >
                         <option value="">Select an option...</option>
-                        <option value="definitely">Definitely - I&apos;d actively recommend it</option>
-                        <option value="probably">Probably - If they&apos;re interested in the topic</option>
+                        <option value="definitely">
+                          Definitely - I&apos;d actively recommend it
+                        </option>
+                        <option value="probably">
+                          Probably - If they&apos;re interested in the topic
+                        </option>
                         <option value="maybe">Maybe - It depends on their interests</option>
                         <option value="unlikely">Unlikely - It wasn&apos;t for me</option>
                       </select>
                       {validationErrors.wouldRecommend && (
-                        <p className="mt-1 text-sm text-red-600">{validationErrors.wouldRecommend}</p>
+                        <p className="mt-1 text-sm text-red-600">
+                          {validationErrors.wouldRecommend}
+                        </p>
                       )}
                     </div>
 
@@ -1010,9 +1102,10 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                         💰 Deal of the Day Feedback
                       </h4>
                       <p className="text-sm text-gray-600 mb-4">
-                        We often provide discount codes for upcoming paid events. How satisfied were you with our promotional offers?
+                        We often provide discount codes for upcoming paid events. How satisfied were
+                        you with our promotional offers?
                       </p>
-                      
+
                       <div className="space-y-4">
                         <div>
                           <label className="block text-gray-700 mb-2 font-semibold">
@@ -1023,39 +1116,48 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                               <button
                                 key={rating}
                                 type="button"
-                                onClick={() => setFormState(prev => ({
-                                  ...prev,
-                                  dealOfDay: { ...prev.dealOfDay, rating }
-                                }))}
+                                onClick={() =>
+                                  setFormState((prev) => ({
+                                    ...prev,
+                                    dealOfDay: { ...prev.dealOfDay, rating },
+                                  }))
+                                }
                                 className="focus:outline-none transition-colors duration-150"
                               >
                                 <Star
                                   size={32}
                                   className={`${
                                     rating <= formState.dealOfDay.rating
-                                      ? 'text-yellow-400 fill-current'
-                                      : 'text-gray-300'
+                                      ? "text-yellow-400 fill-current"
+                                      : "text-gray-300"
                                   } hover:text-yellow-400`}
                                 />
                               </button>
                             ))}
                             <span className="ml-2 text-gray-600 text-sm">
-                              {formState.dealOfDay.rating > 0 ? `${formState.dealOfDay.rating}/5` : '0/5'}
+                              {formState.dealOfDay.rating > 0
+                                ? `${formState.dealOfDay.rating}/5`
+                                : "0/5"}
                             </span>
                           </div>
                         </div>
 
                         <div>
-                          <label htmlFor="dealOfDayComments" className="block text-gray-700 mb-2 font-semibold">
+                          <label
+                            htmlFor="dealOfDayComments"
+                            className="block text-gray-700 mb-2 font-semibold"
+                          >
                             Comments about our deals/discounts (optional):
                           </label>
                           <textarea
                             id="dealOfDayComments"
                             value={formState.dealOfDay.comments}
-                            onChange={(e) => setFormState(prev => ({
-                              ...prev,
-                              dealOfDay: { ...prev.dealOfDay, comments: e.target.value }
-                            }))}
+                            onChange={(e) =>
+                              setFormState((prev) => ({
+                                ...prev,
+                                dealOfDay: { ...prev.dealOfDay, comments: e.target.value },
+                              }))
+                            }
                             rows={3}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                             placeholder="Tell us about our discount offers, promotion timing, value for money, etc."
@@ -1071,19 +1173,24 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
               {selectedEvent && formState.worthTime && formState.wouldRecommend && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">4</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      4
+                    </span>
                     Help Us Improve
                   </h3>
-                  
+
                   <div className="space-y-6">
                     <div>
-                      <label htmlFor="improvements" className="block text-gray-700 mb-2 font-semibold">
+                      <label
+                        htmlFor="improvements"
+                        className="block text-gray-700 mb-2 font-semibold"
+                      >
                         What could we improve for future events?
                       </label>
                       <textarea
                         id="improvements"
                         value={formState.improvements}
-                        onChange={(e) => handleTextChange('improvements', e.target.value)}
+                        onChange={(e) => handleTextChange("improvements", e.target.value)}
                         rows={4}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="Share your suggestions for improvements - venue, catering, format, content, networking opportunities, etc."
@@ -1091,13 +1198,16 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                     </div>
 
                     <div>
-                      <label htmlFor="futureTopics" className="block text-gray-700 mb-2 font-semibold">
+                      <label
+                        htmlFor="futureTopics"
+                        className="block text-gray-700 mb-2 font-semibold"
+                      >
                         What topics would you like to see in future events?
                       </label>
                       <textarea
                         id="futureTopics"
                         value={formState.futureTopics}
-                        onChange={(e) => handleTextChange('futureTopics', e.target.value)}
+                        onChange={(e) => handleTextChange("futureTopics", e.target.value)}
                         rows={4}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="What technologies, frameworks, practices, or industry topics would you like to hear about? Any specific speakers you'd love to see?"
@@ -1105,13 +1215,16 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                     </div>
 
                     <div>
-                      <label htmlFor="additionalComments" className="block text-gray-700 mb-2 font-semibold">
+                      <label
+                        htmlFor="additionalComments"
+                        className="block text-gray-700 mb-2 font-semibold"
+                      >
                         Additional Comments
                       </label>
                       <textarea
                         id="additionalComments"
                         value={formState.additionalComments}
-                        onChange={(e) => handleTextChange('additionalComments', e.target.value)}
+                        onChange={(e) => handleTextChange("additionalComments", e.target.value)}
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="Anything else you'd like to share about your experience?"
@@ -1133,9 +1246,25 @@ export default function EventFeedback({ recentEvents, upcomingEvents, testDate }
                   >
                     {formState.isSubmitting ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Submitting...
                       </>
@@ -1162,24 +1291,26 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     let testCurrentDate: Date | undefined;
     const testDateParam = context.query.testDate;
     const testDateString = Array.isArray(testDateParam) ? testDateParam[0] : testDateParam;
-    
-    if (process.env.NODE_ENV === 'development' && testDateString) {
+
+    if (process.env.NODE_ENV === "development" && testDateString) {
       try {
         testCurrentDate = new Date(testDateString);
         if (isNaN(testCurrentDate.getTime())) {
-          console.warn('Invalid test date provided in URL, falling back to current date');
+          console.warn("Invalid test date provided in URL, falling back to current date");
           testCurrentDate = undefined;
         }
       } catch (error) {
-        console.warn('Failed to parse test date from URL, falling back to current date:', error);
+        console.warn("Failed to parse test date from URL, falling back to current date:", error);
         testCurrentDate = undefined;
       }
     }
-    
+
     // Fetch both recent events (for feedback) and upcoming events (for test scenarios)
     const [recentEvents, upcomingEvents] = await Promise.all([
       getRecentPastEventsForFeedback(testCurrentDate),
-      process.env.NODE_ENV === 'development' ? getUpcomingEventsForTestScenarios() : Promise.resolve([])
+      process.env.NODE_ENV === "development"
+        ? getUpcomingEventsForTestScenarios()
+        : Promise.resolve([]),
     ]);
 
     return {
@@ -1190,8 +1321,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       },
     };
   } catch (error) {
-    console.error('Error fetching events:', error);
-    
+    console.error("Error fetching events:", error);
+
     return {
       props: {
         recentEvents: [],

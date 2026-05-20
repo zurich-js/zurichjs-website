@@ -1,9 +1,7 @@
-import formidable from 'formidable';
-import { NextApiRequest, NextApiResponse } from 'next';
+import formidable from "formidable";
+import { NextApiRequest, NextApiResponse } from "next";
 
-
-import { sendPlatformNotification } from '@/lib/notification';
-
+import { sendPlatformNotification } from "@/lib/notification";
 
 // Disable the default body parser to handle form-data
 export const config = {
@@ -12,12 +10,9 @@ export const config = {
   },
 };
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   // Parse the multipart form data
@@ -29,8 +24,8 @@ async function handler(
   try {
     // Send notification that submission process has started
     await sendPlatformNotification({
-      title: 'Volunteer Application Started',
-      message: 'A new volunteer application process has started.',
+      title: "Volunteer Application Started",
+      message: "A new volunteer application process has started.",
       priority: 0,
     });
 
@@ -43,39 +38,51 @@ async function handler(
     });
 
     // Extract values from form fields
-    const firstName = Array.isArray(fields.firstName) ? fields.firstName[0] : fields.firstName || '';
-    const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || '';
+    const firstName = Array.isArray(fields.firstName)
+      ? fields.firstName[0]
+      : fields.firstName || "";
+    const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || "";
     const name = `${firstName} ${lastName}`;
-    const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || '';
-    const linkedinProfile = Array.isArray(fields.linkedinProfile) ? fields.linkedinProfile[0] : fields.linkedinProfile || '';
-    const githubProfile = Array.isArray(fields.githubProfile) ? fields.githubProfile[0] : fields.githubProfile || '';
-    const message = Array.isArray(fields.message) ? fields.message[0] : fields.message || '';
-    const availability = Array.isArray(fields.availability) ? fields.availability[0] : fields.availability || '';
-    const interests = fields.interests ? JSON.parse((Array.isArray(fields.interests) ? fields.interests[0] : fields.interests).toString()) : [];
+    const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || "";
+    const linkedinProfile = Array.isArray(fields.linkedinProfile)
+      ? fields.linkedinProfile[0]
+      : fields.linkedinProfile || "";
+    const githubProfile = Array.isArray(fields.githubProfile)
+      ? fields.githubProfile[0]
+      : fields.githubProfile || "";
+    const message = Array.isArray(fields.message) ? fields.message[0] : fields.message || "";
+    const availability = Array.isArray(fields.availability)
+      ? fields.availability[0]
+      : fields.availability || "";
+    const interests = fields.interests
+      ? JSON.parse(
+          (Array.isArray(fields.interests) ? fields.interests[0] : fields.interests).toString(),
+        )
+      : [];
 
     // Validate required fields
     if (!firstName || !lastName || !email || !linkedinProfile || !message) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     if (!interests || interests.length === 0) {
-      return res.status(400).json({ error: 'Please select at least one area of interest' });
+      return res.status(400).json({ error: "Please select at least one area of interest" });
     }
 
     // Format the availability text for better readability
-    let availabilityText = 'Unknown';
+    let availabilityText = "Unknown";
     switch (availability) {
-      case 'weekly':
-        availabilityText = 'A few hours weekly';
+      case "weekly":
+        availabilityText = "A few hours weekly";
         break;
-      case 'monthly':
-        availabilityText = 'A few hours monthly';
+      case "monthly":
+        availabilityText = "A few hours monthly";
         break;
-      case 'events':
-        availabilityText = 'Only during events';
+      case "events":
+        availabilityText = "Only during events";
         break;
-      case 'other':
-        availabilityText = 'Other (see message)';
+      case "other":
+        availabilityText = "Other (see message)";
         break;
     }
 
@@ -84,9 +91,9 @@ async function handler(
 Volunteer Application from: ${name}
 Email: ${email}
 LinkedIn: ${linkedinProfile}
-${githubProfile ? `GitHub: ${githubProfile}` : ''}
+${githubProfile ? `GitHub: ${githubProfile}` : ""}
 Availability: ${availabilityText}
-Interests: ${interests.join(', ')}
+Interests: ${interests.join(", ")}
 
 Message:
 ${message}
@@ -94,28 +101,28 @@ ${message}
 
     // Send notification with submission details
     await sendPlatformNotification({
-      title: 'New Volunteer Application',
+      title: "New Volunteer Application",
       message: detailedMessage,
       priority: 1,
       url: `mailto:${email}?subject=ZurichJS%20Volunteer%20Application`,
-      url_title: 'Reply via Email',
+      url_title: "Reply via Email",
     });
 
     // Here you would typically store the volunteer in your database
     // For now, we're just sending the notification
 
-    return res.status(200).json({ success: true, message: 'Application submitted successfully' });
+    return res.status(200).json({ success: true, message: "Application submitted successfully" });
   } catch (error) {
-    console.error('Error submitting volunteer application:', error);
-    
+    console.error("Error submitting volunteer application:", error);
+
     // Send failure notification
     await sendPlatformNotification({
-      title: 'Volunteer Application Failed',
-      message: `Error processing volunteer application: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      title: "Volunteer Application Failed",
+      message: `Error processing volunteer application: ${error instanceof Error ? error.message : "Unknown error"}`,
       priority: 2,
     });
-    
-    return res.status(500).json({ error: 'Failed to submit application' });
+
+    return res.status(500).json({ error: "Failed to submit application" });
   }
 }
 

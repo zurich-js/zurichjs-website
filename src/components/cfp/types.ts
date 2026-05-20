@@ -11,7 +11,7 @@ export interface FormState {
   title: string;
   description: string;
   talkLength: string;
-  talkLevel: 'beginner' | 'intermediate' | 'advanced';
+  talkLevel: "beginner" | "intermediate" | "advanced";
   topics: string[];
   submitted: boolean;
   isSubmitting: boolean;
@@ -41,23 +41,23 @@ export interface TalkSubmissionStats {
 }
 
 export const initialFormState: FormState = {
-  firstName: '',
-  lastName: '',
-  jobTitle: '',
-  biography: '',
-  email: '',
-  linkedinProfile: '',
-  githubProfile: '',
-  twitterHandle: '',
+  firstName: "",
+  lastName: "",
+  jobTitle: "",
+  biography: "",
+  email: "",
+  linkedinProfile: "",
+  githubProfile: "",
+  twitterHandle: "",
   speakerImage: null,
-  title: '',
-  description: '',
-  talkLength: '25',
-  talkLevel: 'intermediate',
+  title: "",
+  description: "",
+  talkLength: "25",
+  talkLevel: "intermediate",
   topics: [],
   submitted: false,
   isSubmitting: false,
-  error: '',
+  error: "",
   imagePreview: null,
   existingSpeakerImageUrl: null,
   isExistingSpeaker: false,

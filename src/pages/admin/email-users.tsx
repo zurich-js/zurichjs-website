@@ -1,11 +1,11 @@
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Mail, ArrowLeft, Users, Copy, ExternalLink, Filter, Download } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { useRef } from 'react';
+import { OrganizationSwitcher } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { Mail, ArrowLeft, Users, Copy, ExternalLink, Filter, Download } from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRef } from "react";
 
-import Layout from '@/components/layout/Layout';
+import Layout from "@/components/layout/Layout";
 
 interface UserEmail {
   id: string;
@@ -26,38 +26,38 @@ export default function EmailAllUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [filterBy, setFilterBy] = useState<'all' | 'active' | 'new' | 'inactive'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filterBy, setFilterBy] = useState<"all" | "active" | "new" | "inactive">("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [copySuccess, setCopySuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
   // List of common JavaScript interests (from survey)
   const interestOptions = [
-    'React',
-    'Vue',
-    'Angular',
-    'Node.js',
-    'Deno',
-    'TypeScript',
-    'Next.js',
-    'Remix',
-    'GraphQL',
-    'Testing',
-    'Performance',
-    'Accessibility',
-    'WebAssembly',
-    'Web3',
-    'Svelte',
-    'Astro',
-    'Qwik',
-    'Tailwind CSS',
-    'SolidJS',
-    'Bun',
-    'Serverless',
-    'DevOps',
-    'AI Integration',
-    'Progressive Web Apps',
-    'Other',
+    "React",
+    "Vue",
+    "Angular",
+    "Node.js",
+    "Deno",
+    "TypeScript",
+    "Next.js",
+    "Remix",
+    "GraphQL",
+    "Testing",
+    "Performance",
+    "Accessibility",
+    "WebAssembly",
+    "Web3",
+    "Svelte",
+    "Astro",
+    "Qwik",
+    "Tailwind CSS",
+    "SolidJS",
+    "Bun",
+    "Serverless",
+    "DevOps",
+    "AI Integration",
+    "Progressive Web Apps",
+    "Other",
   ];
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [interestDropdownOpen, setInterestDropdownOpen] = useState(false);
@@ -74,12 +74,12 @@ export default function EmailAllUsers() {
       }
     }
     if (interestDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     } else {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     }
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [interestDropdownOpen]);
 
@@ -87,17 +87,17 @@ export default function EmailAllUsers() {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/admin/user-emails');
+        const response = await fetch("/api/admin/user-emails");
         if (!response.ok) {
-          throw new Error('Failed to fetch user emails');
+          throw new Error("Failed to fetch user emails");
         }
         const data = await response.json();
         setUsers(data.users);
         // Select all users by default
         setSelectedUsers(data.users.map((user: UserEmail) => user.id));
       } catch (err) {
-        console.error('Error fetching user emails:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        console.error("Error fetching user emails:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -112,30 +112,35 @@ export default function EmailAllUsers() {
   }, [searchTerm, filterBy]);
 
   // Filter users based on criteria
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     // Text search filter
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
     if (!matchesSearch) return false;
 
     // Interest filter
     if (selectedInterests.length > 0) {
       const userInterests = user.surveyData?.interests || [];
-      const hasInterest = selectedInterests.some(interest => userInterests.includes(interest));
+      const hasInterest = selectedInterests.some((interest) => userInterests.includes(interest));
       if (!hasInterest) return false;
     }
 
     // Status filter
     switch (filterBy) {
-      case 'active':
-        return user.lastActiveAt && 
-               (new Date().getTime() - new Date(user.lastActiveAt).getTime()) <= 30 * 24 * 60 * 60 * 1000;
-      case 'new':
-        return (new Date().getTime() - new Date(user.joinDate).getTime()) <= 30 * 24 * 60 * 60 * 1000;
-      case 'inactive':
-        return !user.lastActiveAt || 
-               (new Date().getTime() - new Date(user.lastActiveAt).getTime()) > 90 * 24 * 60 * 60 * 1000;
+      case "active":
+        return (
+          user.lastActiveAt &&
+          new Date().getTime() - new Date(user.lastActiveAt).getTime() <= 30 * 24 * 60 * 60 * 1000
+        );
+      case "new":
+        return new Date().getTime() - new Date(user.joinDate).getTime() <= 30 * 24 * 60 * 60 * 1000;
+      case "inactive":
+        return (
+          !user.lastActiveAt ||
+          new Date().getTime() - new Date(user.lastActiveAt).getTime() > 90 * 24 * 60 * 60 * 1000
+        );
       default:
         return true;
     }
@@ -149,70 +154,72 @@ export default function EmailAllUsers() {
 
   // Get selected user emails (from all pages)
   const selectedUserEmails = filteredUsers
-    .filter(user => selectedUsers.includes(user.id))
-    .map(user => user.email);
+    .filter((user) => selectedUsers.includes(user.id))
+    .map((user) => user.email);
 
   const handleSelectAll = () => {
     if (selectedUsers.length === filteredUsers.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(filteredUsers.map(user => user.id));
+      setSelectedUsers(filteredUsers.map((user) => user.id));
     }
   };
 
   const handleSelectCurrentPage = () => {
-    const currentPageUserIds = currentUsers.map(user => user.id);
-    const allCurrentPageSelected = currentPageUserIds.every(id => selectedUsers.includes(id));
-    
+    const currentPageUserIds = currentUsers.map((user) => user.id);
+    const allCurrentPageSelected = currentPageUserIds.every((id) => selectedUsers.includes(id));
+
     if (allCurrentPageSelected) {
       // Deselect all users on current page
-      setSelectedUsers(prev => prev.filter(id => !currentPageUserIds.includes(id)));
+      setSelectedUsers((prev) => prev.filter((id) => !currentPageUserIds.includes(id)));
     } else {
       // Select all users on current page
-      setSelectedUsers(prev => {
-        const newSelections = currentPageUserIds.filter(id => !prev.includes(id));
+      setSelectedUsers((prev) => {
+        const newSelections = currentPageUserIds.filter((id) => !prev.includes(id));
         return [...prev, ...newSelections];
       });
     }
   };
 
   const handleUserToggle = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+    setSelectedUsers((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId],
     );
   };
 
   const copyEmailsToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(selectedUserEmails.join(', '));
+      await navigator.clipboard.writeText(selectedUserEmails.join(", "));
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      console.error('Failed to copy emails:', err);
+      console.error("Failed to copy emails:", err);
     }
   };
 
   const openGmail = () => {
-    const emailList = selectedUserEmails.join(',');
+    const emailList = selectedUserEmails.join(",");
     // Use BCC for all emails
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(emailList)}`;
-    window.open(gmailUrl, '_blank');
+    window.open(gmailUrl, "_blank");
   };
 
   const downloadEmailList = () => {
-    const csvContent = 'Name,Email,Join Date,Last Active\n' + 
+    const csvContent =
+      "Name,Email,Join Date,Last Active\n" +
       filteredUsers
-        .filter(user => selectedUsers.includes(user.id))
-        .map(user => `"${user.name}","${user.email}","${user.joinDate}","${user.lastActiveAt || 'Never'}"`)
-        .join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+        .filter((user) => selectedUsers.includes(user.id))
+        .map(
+          (user) =>
+            `"${user.name}","${user.email}","${user.joinDate}","${user.lastActiveAt || "Never"}"`,
+        )
+        .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `zurichjs-users-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `zurichjs-users-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -336,7 +343,7 @@ export default function EmailAllUsers() {
                 >
                   <span>Filter by Interest</span>
                   <div className="flex flex-wrap gap-1 ml-2">
-                    {selectedInterests.map(interest => (
+                    {selectedInterests.map((interest) => (
                       <span
                         key={interest}
                         className="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
@@ -345,9 +352,9 @@ export default function EmailAllUsers() {
                         <button
                           type="button"
                           className="ml-1 text-yellow-700 hover:text-yellow-900 focus:outline-none"
-                          onClick={e => {
+                          onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedInterests(prev => prev.filter(i => i !== interest));
+                            setSelectedInterests((prev) => prev.filter((i) => i !== interest));
                           }}
                         >
                           ×
@@ -355,21 +362,23 @@ export default function EmailAllUsers() {
                       </span>
                     ))}
                   </div>
-                  <span className="text-xs text-gray-500">{selectedInterests.length > 0 ? `(${selectedInterests.length})` : ''}</span>
+                  <span className="text-xs text-gray-500">
+                    {selectedInterests.length > 0 ? `(${selectedInterests.length})` : ""}
+                  </span>
                 </button>
                 {interestDropdownOpen && (
                   <div className="absolute z-10 mt-2 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-h-64 overflow-y-auto">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {interestOptions.map(interest => (
+                      {interestOptions.map((interest) => (
                         <label key={interest} className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
                             checked={selectedInterests.includes(interest)}
                             onChange={() => {
-                              setSelectedInterests(prev =>
+                              setSelectedInterests((prev) =>
                                 prev.includes(interest)
-                                  ? prev.filter(i => i !== interest)
-                                  : [...prev, interest]
+                                  ? prev.filter((i) => i !== interest)
+                                  : [...prev, interest],
                               );
                             }}
                             className="h-4 w-4 text-yellow-500 focus:ring-yellow-400 border-gray-300 rounded"
@@ -396,13 +405,15 @@ export default function EmailAllUsers() {
                 onClick={handleSelectAll}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                {selectedUsers.length === filteredUsers.length ? 'Deselect All' : 'Select All'}
+                {selectedUsers.length === filteredUsers.length ? "Deselect All" : "Select All"}
               </button>
               <button
                 onClick={handleSelectCurrentPage}
                 className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
               >
-                {currentUsers.every(user => selectedUsers.includes(user.id)) ? 'Deselect Page' : 'Select Page'}
+                {currentUsers.every((user) => selectedUsers.includes(user.id))
+                  ? "Deselect Page"
+                  : "Select Page"}
               </button>
             </div>
           </div>
@@ -423,7 +434,7 @@ export default function EmailAllUsers() {
               className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
               <Copy className="w-5 h-5" />
-              {copySuccess ? 'Copied!' : 'Copy Emails'}
+              {copySuccess ? "Copied!" : "Copy Emails"}
             </button>
             <button
               onClick={downloadEmailList}
@@ -445,7 +456,10 @@ export default function EmailAllUsers() {
                   <th className="text-left py-3 px-4 font-semibold">
                     <input
                       type="checkbox"
-                      checked={currentUsers.length > 0 && currentUsers.every(user => selectedUsers.includes(user.id))}
+                      checked={
+                        currentUsers.length > 0 &&
+                        currentUsers.every((user) => selectedUsers.includes(user.id))
+                      }
                       onChange={handleSelectCurrentPage}
                       className="rounded"
                     />
@@ -481,30 +495,29 @@ export default function EmailAllUsers() {
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">
-                        {user.lastActiveAt ? new Date(user.lastActiveAt).toLocaleDateString() : 'Never'}
+                        {user.lastActiveAt
+                          ? new Date(user.lastActiveAt).toLocaleDateString()
+                          : "Never"}
                       </p>
                     </td>
                     <td className="py-3 px-4">
-                      <p className="text-sm text-gray-600">
-                        {user.surveyData?.role || 'N/A'}
-                      </p>
+                      <p className="text-sm text-gray-600">{user.surveyData?.role || "N/A"}</p>
                     </td>
                     <td className="py-3 px-4">
-                      <p className="text-sm text-gray-600">
-                        {user.surveyData?.company || 'N/A'}
-                      </p>
+                      <p className="text-sm text-gray-600">{user.surveyData?.company || "N/A"}</p>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          
+
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} users
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of{" "}
+                {filteredUsers.length} users
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -514,7 +527,7 @@ export default function EmailAllUsers() {
                 >
                   Previous
                 </button>
-                
+
                 {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
                   let pageNum;
                   if (totalPages <= 7) {
@@ -526,22 +539,22 @@ export default function EmailAllUsers() {
                   } else {
                     pageNum = currentPage - 3 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`px-3 py-1 rounded-lg ${
                         currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                          ? "bg-blue-600 text-white"
+                          : "border border-gray-300 hover:bg-gray-50"
                       }`}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
-                
+
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
@@ -559,13 +572,11 @@ export default function EmailAllUsers() {
           <div className="mt-8 bg-gray-50 rounded-lg p-6">
             <h3 className="text-lg font-semibold mb-4">Selected Emails Preview</h3>
             <div className="bg-white rounded p-4 max-h-40 overflow-y-auto">
-              <p className="text-sm text-gray-600 break-all">
-                {selectedUserEmails.join(', ')}
-              </p>
+              <p className="text-sm text-gray-600 break-all">{selectedUserEmails.join(", ")}</p>
             </div>
           </div>
         )}
       </div>
     </Layout>
   );
-} 
+}

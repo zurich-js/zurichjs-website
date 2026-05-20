@@ -35,7 +35,7 @@ export const processProductFeedback = (feedback: ProductFeedbackData): void => {
     rating: feedback.rating,
     interestsCount: feedback.interests.length,
     hasQuestions: feedback.questions.length > 0,
-    learningPrefsCount: feedback.learningPreferences.length
+    learningPrefsCount: feedback.learningPreferences.length,
   });
 };
 
@@ -43,19 +43,19 @@ export const processProductFeedback = (feedback: ProductFeedbackData): void => {
  * Format product feedback data for a sponsor report
  */
 export const formatSponsorReport = (
-  productId: string, 
-  feedbackItems: ProductFeedbackData[]
+  productId: string,
+  feedbackItems: ProductFeedbackData[],
 ): string => {
   if (feedbackItems.length === 0) {
     return `No feedback available for ${productId}`;
   }
 
   // Get the product info
-  const productInfo = mockProductDemos.find(demo => demo.id === productId);
-  
+  const productInfo = mockProductDemos.find((demo) => demo.id === productId);
+
   // Calculate summary stats
   const summary = summarizeFeedback(feedbackItems);
-  
+
   // Format the report
   return `
 ## Product Feedback Report: ${productInfo?.name || productId}
@@ -66,15 +66,15 @@ export const formatSponsorReport = (
 - Feedback with questions: ${summary.hasQuestions} (${Math.round((summary.hasQuestions / summary.totalFeedback) * 100)}%)
 
 ### Top Interests
-${summary.topInterests.map(item => `- ${item.interest}: ${item.count} (${Math.round((item.count / summary.totalFeedback) * 100)}%)`).join('\n')}
+${summary.topInterests.map((item) => `- ${item.interest}: ${item.count} (${Math.round((item.count / summary.totalFeedback) * 100)}%)`).join("\n")}
 
 ### Preferred Learning Methods
-${summary.topLearningPreferences.map(item => `- ${item.preference}: ${item.count} (${Math.round((item.count / summary.totalFeedback) * 100)}%)`).join('\n')}
+${summary.topLearningPreferences.map((item) => `- ${item.preference}: ${item.count} (${Math.round((item.count / summary.totalFeedback) * 100)}%)`).join("\n")}
 
 ### Follow-up Opportunities
 - Attendees with questions: ${summary.hasQuestions}
-- Interested in demo: ${summary.topInterests.find(i => i.interest.includes('demo'))?.count || 0}
-- Interested in pricing: ${summary.topInterests.find(i => i.interest.includes('pricing'))?.count || 0}
+- Interested in demo: ${summary.topInterests.find((i) => i.interest.includes("demo"))?.count || 0}
+- Interested in pricing: ${summary.topInterests.find((i) => i.interest.includes("pricing"))?.count || 0}
   `;
 };
 
@@ -83,56 +83,56 @@ ${summary.topLearningPreferences.map(item => `- ${item.preference}: ${item.count
  */
 export const summarizeFeedback = (feedbackItems: ProductFeedbackData[]): FeedbackSummary => {
   const totalFeedback = feedbackItems.length;
-  
+
   if (totalFeedback === 0) {
     return {
       totalFeedback: 0,
       averageRating: 0,
       topInterests: [],
       topLearningPreferences: [],
-      hasQuestions: 0
+      hasQuestions: 0,
     };
   }
-  
+
   // Calculate average rating
   const totalRating = feedbackItems.reduce((sum, item) => sum + item.rating, 0);
   const averageRating = totalRating / totalFeedback;
-  
+
   // Count feedback with questions
-  const hasQuestions = feedbackItems.filter(item => item.questions.trim().length > 0).length;
-  
+  const hasQuestions = feedbackItems.filter((item) => item.questions.trim().length > 0).length;
+
   // Count interests
   const interestCounts: Record<string, number> = {};
-  feedbackItems.forEach(item => {
-    item.interests.forEach(interest => {
+  feedbackItems.forEach((item) => {
+    item.interests.forEach((interest) => {
       interestCounts[interest] = (interestCounts[interest] || 0) + 1;
     });
   });
-  
+
   // Count learning preferences
   const learningPreferenceCounts: Record<string, number> = {};
-  feedbackItems.forEach(item => {
-    item.learningPreferences.forEach(pref => {
+  feedbackItems.forEach((item) => {
+    item.learningPreferences.forEach((pref) => {
       learningPreferenceCounts[pref] = (learningPreferenceCounts[pref] || 0) + 1;
     });
   });
-  
+
   // Sort interests by count
   const topInterests = Object.entries(interestCounts)
     .map(([interest, count]) => ({ interest, count }))
     .sort((a, b) => b.count - a.count);
-  
+
   // Sort learning preferences by count
   const topLearningPreferences = Object.entries(learningPreferenceCounts)
     .map(([preference, count]) => ({ preference, count }))
     .sort((a, b) => b.count - a.count);
-  
+
   return {
     totalFeedback,
     averageRating,
     topInterests,
     topLearningPreferences,
-    hasQuestions
+    hasQuestions,
   };
 };
 
@@ -156,4 +156,4 @@ export const getProductDemoFromTalk = (talk: Talk): ProductDemo | undefined | nu
 export const shouldShowProductFeedback = (talk: Talk): boolean => {
   // In a real implementation, this might check user session or other conditions
   return hasTalkProductDemo(talk);
-}; 
+};

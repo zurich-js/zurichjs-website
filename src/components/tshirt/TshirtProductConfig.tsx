@@ -1,6 +1,6 @@
-import { Shirt } from 'lucide-react';
+import { Shirt } from "lucide-react";
 
-import { BASE_PRICE, SIZES, SizeQuantity } from './types';
+import { BASE_PRICE, SIZES, SizeQuantity } from "./types";
 
 interface TshirtProductConfigProps {
   stock: Record<string, number>;
@@ -17,7 +17,7 @@ export default function TshirtProductConfig({
   stockError,
   sizeQuantities,
   setSizeQuantities,
-  totalQuantity
+  totalQuantity,
 }: TshirtProductConfigProps) {
   return (
     <div className="space-y-6">
@@ -29,7 +29,9 @@ export default function TshirtProductConfig({
           </div>
           <div className="min-w-0">
             <h3 className="font-bold text-lg sm:text-xl text-gray-900">Choose Your Fit</h3>
-            <p className="text-xs sm:text-sm text-gray-600">Unisex comfort for everyone - Perfect for meetups - Max 10 items total</p>
+            <p className="text-xs sm:text-sm text-gray-600">
+              Unisex comfort for everyone - Perfect for meetups - Max 10 items total
+            </p>
           </div>
         </div>
 
@@ -50,35 +52,40 @@ export default function TshirtProductConfig({
               const isStockUnknown = stockError;
 
               return (
-                <div key={sz} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${currentQty > 0
-                  ? 'bg-js/10 border-js shadow-md'
-                  : isOutOfStock && !isStockUnknown
-                    ? 'bg-gray-50 border-gray-200 opacity-75'
-                    : 'bg-white border-gray-200 hover:border-gray-300'
-                  }`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${currentQty > 0
-                      ? 'bg-black text-js'
+                <div
+                  key={sz}
+                  className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+                    currentQty > 0
+                      ? "bg-js/10 border-js shadow-md"
                       : isOutOfStock && !isStockUnknown
-                        ? 'bg-gray-200 text-gray-500'
-                        : 'bg-gray-100 text-gray-700'
-                      }`}>
+                        ? "bg-gray-50 border-gray-200 opacity-75"
+                        : "bg-white border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${
+                        currentQty > 0
+                          ? "bg-black text-js"
+                          : isOutOfStock && !isStockUnknown
+                            ? "bg-gray-200 text-gray-500"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
                       {sz}
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">Size {sz}</div>
                       <div className="text-sm text-gray-600">
                         {!isStockUnknown && stockCount > 0 && (
-                          <span className={isLowStock ? 'text-orange-600' : 'text-green-600'}>
+                          <span className={isLowStock ? "text-orange-600" : "text-green-600"}>
                             {stockCount} in stock
                           </span>
                         )}
                         {!isStockUnknown && isOutOfStock && (
                           <span className="text-red-600">Sold out</span>
                         )}
-                        {isStockUnknown && (
-                          <span className="text-yellow-600">Stock unknown</span>
-                        )}
+                        {isStockUnknown && <span className="text-yellow-600">Stock unknown</span>}
                       </div>
                     </div>
                   </div>
@@ -86,7 +93,12 @@ export default function TshirtProductConfig({
                   <div className="flex items-center gap-3">
                     <button
                       className="w-8 h-8 rounded-lg border border-gray-300 bg-white font-bold text-lg hover:border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-black"
-                      onClick={() => setSizeQuantities(prev => ({ ...prev, [sz]: Math.max(0, (prev[sz] || 0) - 1) }))}
+                      onClick={() =>
+                        setSizeQuantities((prev) => ({
+                          ...prev,
+                          [sz]: Math.max(0, (prev[sz] || 0) - 1),
+                        }))
+                      }
                       disabled={currentQty <= 0 || (isOutOfStock && !isStockUnknown)}
                       aria-label={`Decrease quantity for size ${sz}`}
                     >
@@ -99,8 +111,20 @@ export default function TshirtProductConfig({
 
                     <button
                       className="w-8 h-8 rounded-lg border border-gray-300 bg-white font-bold text-lg hover:border-black hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-black"
-                      onClick={() => setSizeQuantities(prev => ({ ...prev, [sz]: Math.min(stockCount, totalQuantity < 10 ? (prev[sz] || 0) + 1 : (prev[sz] || 0)) }))}
-                      disabled={(isOutOfStock && !isStockUnknown) || currentQty >= stockCount || totalQuantity >= 10}
+                      onClick={() =>
+                        setSizeQuantities((prev) => ({
+                          ...prev,
+                          [sz]: Math.min(
+                            stockCount,
+                            totalQuantity < 10 ? (prev[sz] || 0) + 1 : prev[sz] || 0,
+                          ),
+                        }))
+                      }
+                      disabled={
+                        (isOutOfStock && !isStockUnknown) ||
+                        currentQty >= stockCount ||
+                        totalQuantity >= 10
+                      }
                       aria-label={`Increase quantity for size ${sz}`}
                     >
                       +
@@ -119,17 +143,22 @@ export default function TshirtProductConfig({
               {Object.entries(sizeQuantities)
                 .filter(([, qty]) => qty > 0)
                 .map(([size, qty]) => (
-                  <div key={size} className="flex justify-between items-center text-sm text-gray-600">
+                  <div
+                    key={size}
+                    className="flex justify-between items-center text-sm text-gray-600"
+                  >
                     <span>Size {size}:</span>
-                    <span>{qty} x CHF {BASE_PRICE} = CHF {qty * BASE_PRICE}</span>
+                    <span>
+                      {qty} x CHF {BASE_PRICE} = CHF {qty * BASE_PRICE}
+                    </span>
                   </div>
-                ))
-              }
+                ))}
             </div>
 
             {!stockLoading && stockError && (
               <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm">
-                Unable to check stock at the moment. Please reach out to support at hello@zurichjs.com for assistance.
+                Unable to check stock at the moment. Please reach out to support at
+                hello@zurichjs.com for assistance.
               </div>
             )}
 

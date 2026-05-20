@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion';
-import { Calendar, Plane, MapPin } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Calendar, Plane, MapPin } from "lucide-react";
 
-import Section from '@/components/Section';
-import Button from '@/components/ui/Button';
+import Section from "@/components/Section";
+import Button from "@/components/ui/Button";
 
-import { CONFERENCE_CFP_URL } from './constants';
+import { CONFERENCE_CFP_URL } from "./constants";
 
 export default function CFPNotice() {
   return (
@@ -23,12 +23,10 @@ export default function CFPNotice() {
               <MapPin className="text-black" size={24} />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-black mb-2">
-                This is for ZurichJS Meetups
-              </h2>
+              <h2 className="text-xl font-bold text-black mb-2">This is for ZurichJS Meetups</h2>
               <p className="text-gray-700 mb-4">
-                Submit your talk proposal here for our regular monthly meetups in Zurich.
-                We host events with 2-3 speakers, great food, and an amazing community of developers.
+                Submit your talk proposal here for our regular monthly meetups in Zurich. We host
+                events with 2-3 speakers, great food, and an amazing community of developers.
               </p>
             </div>
           </div>
@@ -41,12 +39,10 @@ export default function CFPNotice() {
               <Calendar className="text-black" size={24} />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-bold text-white mb-2">
-                Looking for ZurichJS Conf 2026?
-              </h2>
+              <h2 className="text-lg font-bold text-white mb-2">Looking for ZurichJS Conf 2026?</h2>
               <p className="text-gray-300 text-sm mb-4">
-                If you want to speak at our annual conference instead, head over to our conference CFP.
-                The conference offers a bigger stage, travel support for speakers, and more.
+                If you want to speak at our annual conference instead, head over to our conference
+                CFP. The conference offers a bigger stage, travel support for speakers, and more.
               </p>
               <Button
                 href={CONFERENCE_CFP_URL}
@@ -67,14 +63,12 @@ export default function CFPNotice() {
               <Plane className="text-blue-600" size={20} />
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">
-                International Speakers Welcome!
-              </h3>
+              <h3 className="font-semibold text-blue-900 mb-1">International Speakers Welcome!</h3>
               <p className="text-blue-800 text-sm">
-                While we can&apos;t cover travel expenses for meetup speakers, we&apos;d love to have you
-                if you&apos;re planning to visit Zurich or already live here. Need help with travel tips,
-                accommodation suggestions, or local recommendations? Just mention it in your submission
-                and we&apos;ll be happy to help make your trip amazing!
+                While we can&apos;t cover travel expenses for meetup speakers, we&apos;d love to
+                have you if you&apos;re planning to visit Zurich or already live here. Need help
+                with travel tips, accommodation suggestions, or local recommendations? Just mention
+                it in your submission and we&apos;ll be happy to help make your trip amazing!
               </p>
             </div>
           </div>

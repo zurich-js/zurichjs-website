@@ -1,32 +1,32 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent } from "react";
 
 export default function VereinInquiry() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
-      const res = await fetch('/api/verein-inquiry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/verein-inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message }),
       });
 
       if (!res.ok) {
-        throw new Error('Failed to submit');
+        throw new Error("Failed to submit");
       }
 
       setSubmitted(true);
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError("Something went wrong. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -37,27 +37,24 @@ export default function VereinInquiry() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <span className="text-2xl">🇨🇭</span>
-          <h2 className="text-lg font-bold text-gray-900">
-            ZurichJS is now a Verein!
-          </h2>
+          <h2 className="text-lg font-bold text-gray-900">ZurichJS is now a Verein!</h2>
         </div>
         <p className="text-sm text-gray-600">
-          We are officially registered as a Swiss Verein (association). Interested in becoming a member or learning more? Send us an inquiry!
+          We are officially registered as a Swiss Verein (association). Interested in becoming a
+          member or learning more? Send us an inquiry!
         </p>
       </div>
 
       {submitted ? (
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
           <p className="text-green-800 font-semibold">Inquiry sent!</p>
-          <p className="text-green-600 text-sm mt-1">
-            We&apos;ll get back to you soon.
-          </p>
+          <p className="text-green-600 text-sm mt-1">We&apos;ll get back to you soon.</p>
           <button
             onClick={() => {
               setSubmitted(false);
-              setName('');
-              setEmail('');
-              setMessage('');
+              setName("");
+              setEmail("");
+              setMessage("");
             }}
             className="mt-3 text-sm text-green-700 underline"
           >
@@ -97,7 +94,10 @@ export default function VereinInquiry() {
           </div>
 
           <div>
-            <label htmlFor="verein-message" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="verein-message"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Message <span className="text-gray-400">(optional)</span>
             </label>
             <textarea
@@ -110,16 +110,14 @@ export default function VereinInquiry() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-600 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={submitting}
             className="w-full bg-black text-white font-bold py-4 px-8 rounded-2xl hover:bg-black/90 transition-colors duration-200 disabled:opacity-50"
           >
-            {submitting ? 'Sending...' : 'Send Inquiry'}
+            {submitting ? "Sending..." : "Send Inquiry"}
           </button>
         </form>
       )}

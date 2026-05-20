@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion';
-import { Calendar, Users, Star, Gift, MapPin, Clock, Sparkles, ExternalLink } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Calendar, Users, Star, Gift, MapPin, Clock, Sparkles, ExternalLink } from "lucide-react";
 
-import Layout from '@/components/layout/Layout';
-import Section from '@/components/Section';
-import SEO from '@/components/SEO';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
+import Layout from "@/components/layout/Layout";
+import Section from "@/components/Section";
+import SEO from "@/components/SEO";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
 
 export default function ConferenceWaitlist() {
   useReferrerTracking();
@@ -16,8 +16,9 @@ export default function ConferenceWaitlist() {
         description="Be the first to know about ZurichJS Conference 2026! Join our waitlist for exclusive early access, discounted tickets, and help shape the future of JavaScript in Zurich."
         openGraph={{
           title: "ZurichJS Conference 2026 - Join the Waitlist",
-          description: "Be the first to know about ZurichJS Conference 2026! Join our waitlist for exclusive early access and discounted tickets.",
-          image: '/api/og/home',
+          description:
+            "Be the first to know about ZurichJS Conference 2026! Join our waitlist for exclusive early access and discounted tickets.",
+          image: "/api/og/home",
         }}
       />
 
@@ -114,7 +115,8 @@ export default function ConferenceWaitlist() {
               Why Join the Waitlist?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get exclusive access and help us create a great JavaScript conference experience in Zurich.
+              Get exclusive access and help us create a great JavaScript conference experience in
+              Zurich.
             </p>
           </motion.div>
 
@@ -131,7 +133,8 @@ export default function ConferenceWaitlist() {
               </div>
               <h3 className="text-2xl font-bold text-black mb-4">Be First to Know</h3>
               <p className="text-gray-600 leading-relaxed">
-                Get exclusive early access to speaker announcements, schedule reveals, and ticket releases before anyone else.
+                Get exclusive early access to speaker announcements, schedule reveals, and ticket
+                releases before anyone else.
               </p>
             </motion.div>
 
@@ -147,7 +150,8 @@ export default function ConferenceWaitlist() {
               </div>
               <h3 className="text-2xl font-bold text-black mb-4">Exclusive Discounts</h3>
               <p className="text-gray-600 leading-relaxed">
-                Waitlist members get access to special early-bird pricing and exclusive discount codes not available to the general public.
+                Waitlist members get access to special early-bird pricing and exclusive discount
+                codes not available to the general public.
               </p>
             </motion.div>
 
@@ -163,7 +167,8 @@ export default function ConferenceWaitlist() {
               </div>
               <h3 className="text-2xl font-bold text-black mb-4">Shape the Journey</h3>
               <p className="text-gray-600 leading-relaxed">
-                Your feedback helps us curate the perfect lineup of speakers, topics, and experiences that matter most to the JS community.
+                Your feedback helps us curate the perfect lineup of speakers, topics, and
+                experiences that matter most to the JS community.
               </p>
             </motion.div>
           </div>
@@ -179,9 +184,7 @@ export default function ConferenceWaitlist() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl lg:text-5xl font-bold text-black mb-6">
-              Join the Waitlist
-            </h2>
+            <h2 className="text-4xl lg:text-5xl font-bold text-black mb-6">Join the Waitlist</h2>
             <p className="text-xl text-black/80 mb-12">
               Be part of something extraordinary. Your journey starts here.
             </p>
@@ -204,7 +207,8 @@ export default function ConferenceWaitlist() {
                 <ExternalLink className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
               <p className="text-gray-600 mt-4 text-sm">
-                Click to join our waitlist and be the first to know about tickets, speakers, and updates!
+                Click to join our waitlist and be the first to know about tickets, speakers, and
+                updates!
               </p>
             </motion.div>
           </motion.div>
@@ -221,9 +225,7 @@ export default function ConferenceWaitlist() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              What to Expect
-            </h2>
+            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">What to Expect</h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               A quality conference experience designed for the JavaScript community in Switzerland.
             </p>
@@ -310,7 +312,8 @@ export default function ConferenceWaitlist() {
             Join the ZurichJS Conference 2026
           </h2>
           <p className="text-lg text-black/80 mb-8">
-            Connect with fellow JavaScript developers and learn from great speakers in a focused, community-driven event.
+            Connect with fellow JavaScript developers and learn from great speakers in a focused,
+            community-driven event.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center text-black/70">
             <div className="flex items-center gap-2">

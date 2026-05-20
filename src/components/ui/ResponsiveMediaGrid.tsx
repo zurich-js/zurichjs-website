@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { ImageIcon } from 'lucide-react';
+import { motion } from "framer-motion";
+import { ImageIcon } from "lucide-react";
 
 interface FeaturedImage {
   url: string;
@@ -19,15 +19,14 @@ interface ResponsiveMediaGridProps {
   loading?: boolean;
 }
 
-export default function ResponsiveMediaGrid({ 
-  images, 
-  onImageClick, 
+export default function ResponsiveMediaGrid({
+  images,
+  onImageClick,
   className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6",
   itemClassName = "group cursor-pointer touch-manipulation",
   forceSquare = false,
-  loading = false
+  loading = false,
 }: ResponsiveMediaGridProps) {
-  
   const SafeImage: React.FC<{
     src: string;
     alt: string;
@@ -50,11 +49,15 @@ export default function ResponsiveMediaGrid({
         className={className}
         sizes={sizes}
         onError={handleError}
-        style={fill ? undefined : { 
-          width: '100%', 
-          height: 'auto',
-          aspectRatio: aspectRatio ? aspectRatio.toString() : undefined
-        }}
+        style={
+          fill
+            ? undefined
+            : {
+                width: "100%",
+                height: "auto",
+                aspectRatio: aspectRatio ? aspectRatio.toString() : undefined,
+              }
+        }
       />
     );
   };
@@ -90,14 +93,16 @@ export default function ResponsiveMediaGrid({
           className={itemClassName}
           onClick={() => onImageClick?.(image)}
         >
-          <div className={`relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 ${
-            forceSquare ? 'aspect-square' : ''
-          }`}>
+          <div
+            className={`relative overflow-hidden rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 ${
+              forceSquare ? "aspect-square" : ""
+            }`}
+          >
             <SafeImage
               src={image.thumbnailUrl}
               alt={`Photo from ${image.eventName}`}
               fill={forceSquare}
-              className={`${forceSquare ? 'w-full h-full' : 'w-full h-auto'} object-cover group-hover:scale-105 transition-transform duration-500`}
+              className={`${forceSquare ? "w-full h-full" : "w-full h-auto"} object-cover group-hover:scale-105 transition-transform duration-500`}
               sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
               fallbackSrc={image.url}
               aspectRatio={image.aspectRatio}
@@ -111,4 +116,4 @@ export default function ResponsiveMediaGrid({
       ))}
     </div>
   );
-} 
+}

@@ -1,6 +1,6 @@
-import { sendGTMEvent } from '@next/third-parties/google';
-import posthog from 'posthog-js';
-import { useCallback } from 'react';
+import { sendGTMEvent } from "@next/third-parties/google";
+import posthog from "posthog-js";
+import { useCallback } from "react";
 
 type EventProperties = {
   [key: string]: string | number | boolean | undefined;
@@ -20,14 +20,14 @@ export default function useEvents() {
     // Send to Google Tag Manager
     sendGTMEvent({
       event: eventName,
-      ...properties
+      ...properties,
     });
 
     // Send to PostHog
     try {
       posthog.capture(eventName, properties);
     } catch (error) {
-      console.error('PostHog tracking error:', error);
+      console.error("PostHog tracking error:", error);
     }
   }, []);
 
@@ -36,18 +36,21 @@ export default function useEvents() {
    * @param error - The error object
    * @param context - Additional context about where the error occurred
    */
-  const captureError = useCallback((error: Error, context: Record<string, string | number | boolean> = {}) => {
-    try {
-      posthog.capture('$exception', {
-        $exception_message: error.message,
-        $exception_type: error.name,
-        $exception_stack_trace_raw: error.stack,
-        ...context
-      });
-    } catch (err) {
-      console.error('PostHog error capture failed:', err);
-    }
-  }, []);
+  const captureError = useCallback(
+    (error: Error, context: Record<string, string | number | boolean> = {}) => {
+      try {
+        posthog.capture("$exception", {
+          $exception_message: error.message,
+          $exception_type: error.name,
+          $exception_stack_trace_raw: error.stack,
+          ...context,
+        });
+      } catch (err) {
+        console.error("PostHog error capture failed:", err);
+      }
+    },
+    [],
+  );
 
   return { track, captureError };
-} 
+}

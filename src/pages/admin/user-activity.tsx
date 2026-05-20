@@ -1,10 +1,10 @@
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Users, ArrowLeft, Activity, TrendingUp, Clock, UserPlus, Search } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { OrganizationSwitcher } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { Users, ArrowLeft, Activity, TrendingUp, Clock, UserPlus, Search } from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
-import Layout from '@/components/layout/Layout';
+import Layout from "@/components/layout/Layout";
 
 interface UserActivityData {
   userId: string;
@@ -40,9 +40,11 @@ export default function UserActivityMonitor() {
   const [users, setUsers] = useState<UserActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'joinDate' | 'activityScore' | 'lastActive'>('activityScore');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "joinDate" | "activityScore" | "lastActive">(
+    "activityScore",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
 
@@ -50,16 +52,16 @@ export default function UserActivityMonitor() {
     const fetchUserActivity = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/admin/user-activity');
+        const response = await fetch("/api/admin/user-activity");
         if (!response.ok) {
-          throw new Error('Failed to fetch user activity data');
+          throw new Error("Failed to fetch user activity data");
         }
         const data = await response.json();
         setStats(data.stats);
         setUsers(data.users);
       } catch (err) {
-        console.error('Error fetching user activity:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        console.error("Error fetching user activity:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -70,28 +72,29 @@ export default function UserActivityMonitor() {
 
   // Filter and sort users
   const filteredAndSortedUsers = users
-    .filter(user => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => {
       let aValue: string | number;
       let bValue: string | number;
-      
+
       switch (sortBy) {
-        case 'name':
+        case "name":
           aValue = a.name;
           bValue = b.name;
           break;
-        case 'joinDate':
+        case "joinDate":
           aValue = new Date(a.joinDate).getTime();
           bValue = new Date(b.joinDate).getTime();
           break;
-        case 'activityScore':
+        case "activityScore":
           aValue = a.activityScore;
           bValue = b.activityScore;
           break;
-        case 'lastActive':
+        case "lastActive":
           aValue = a.lastActiveAt ? new Date(a.lastActiveAt).getTime() : 0;
           bValue = b.lastActiveAt ? new Date(b.lastActiveAt).getTime() : 0;
           break;
@@ -99,8 +102,8 @@ export default function UserActivityMonitor() {
           aValue = a.activityScore;
           bValue = b.activityScore;
       }
-      
-      if (sortOrder === 'asc') {
+
+      if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
@@ -224,7 +227,9 @@ export default function UserActivityMonitor() {
 
         {/* Activity Score Explanation */}
         <div className="bg-blue-50 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-3 text-blue-800">How Activity Score is Calculated</h2>
+          <h2 className="text-lg font-semibold mb-3 text-blue-800">
+            How Activity Score is Calculated
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
             <div>
               <h3 className="font-semibold mb-2">Base Score Components:</h3>
@@ -314,8 +319,8 @@ export default function UserActivityMonitor() {
                     <td className="py-3 px-4">
                       <div className="flex items-center">
                         <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
                             style={{ width: `${Math.min(user.activityScore, 100)}%` }}
                           ></div>
                         </div>
@@ -329,12 +334,16 @@ export default function UserActivityMonitor() {
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">
-                        {user.lastActiveAt ? new Date(user.lastActiveAt).toLocaleDateString() : 'Never'}
+                        {user.lastActiveAt
+                          ? new Date(user.lastActiveAt).toLocaleDateString()
+                          : "Never"}
                       </p>
                     </td>
                     <td className="py-3 px-4">
                       <p className="text-sm text-gray-600">
-                        {user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleDateString() : 'Never'}
+                        {user.lastSignInAt
+                          ? new Date(user.lastSignInAt).toLocaleDateString()
+                          : "Never"}
                       </p>
                     </td>
                   </tr>
@@ -342,12 +351,13 @@ export default function UserActivityMonitor() {
               </tbody>
             </table>
           </div>
-          
+
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedUsers.length)} of {filteredAndSortedUsers.length} users
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredAndSortedUsers.length)} of{" "}
+                {filteredAndSortedUsers.length} users
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -357,7 +367,7 @@ export default function UserActivityMonitor() {
                 >
                   Previous
                 </button>
-                
+
                 {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
                   let pageNum;
                   if (totalPages <= 7) {
@@ -369,22 +379,22 @@ export default function UserActivityMonitor() {
                   } else {
                     pageNum = currentPage - 3 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`px-3 py-1 rounded-lg ${
                         currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                          ? "bg-blue-600 text-white"
+                          : "border border-gray-300 hover:bg-gray-50"
                       }`}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
-                
+
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
@@ -405,7 +415,10 @@ export default function UserActivityMonitor() {
           </h2>
           <div className="space-y-3">
             {stats?.recentActivity?.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
                 <div>
                   <p className="font-semibold">{activity.userName}</p>
                   <p className="text-sm text-gray-600">{activity.activity}</p>
@@ -420,4 +433,4 @@ export default function UserActivityMonitor() {
       </div>
     </Layout>
   );
-} 
+}

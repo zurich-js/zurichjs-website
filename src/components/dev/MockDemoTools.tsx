@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 // Define types
 interface ProductDemo {
@@ -26,33 +26,33 @@ interface Event {
 // Mock product demos without relying on external types
 const mockDemos: ProductDemo[] = [
   {
-    id: 'sonarqube',
-    name: 'SonarQube',
-    description: 'Static code analysis tool that helps developers write cleaner and safer code.',
-    logoUrl: 'https://avatars.githubusercontent.com/u/545988?s=280&v=4',
-    websiteUrl: 'https://www.sonarqube.org/'
+    id: "sonarqube",
+    name: "SonarQube",
+    description: "Static code analysis tool that helps developers write cleaner and safer code.",
+    logoUrl: "https://avatars.githubusercontent.com/u/545988?s=280&v=4",
+    websiteUrl: "https://www.sonarqube.org/",
   },
   {
-    id: 'stripe',
-    name: 'Stripe',
-    description: 'Payment processing platform for internet businesses.',
-    logoUrl: 'https://avatars.githubusercontent.com/u/856813?s=280&v=4',
-    websiteUrl: 'https://stripe.com/'
+    id: "stripe",
+    name: "Stripe",
+    description: "Payment processing platform for internet businesses.",
+    logoUrl: "https://avatars.githubusercontent.com/u/856813?s=280&v=4",
+    websiteUrl: "https://stripe.com/",
   },
   {
-    id: 'sentry',
-    name: 'Sentry',
-    description: 'Application monitoring and error tracking software.',
-    logoUrl: 'https://avatars.githubusercontent.com/u/1396951?s=280&v=4',
-    websiteUrl: 'https://sentry.io/'
+    id: "sentry",
+    name: "Sentry",
+    description: "Application monitoring and error tracking software.",
+    logoUrl: "https://avatars.githubusercontent.com/u/1396951?s=280&v=4",
+    websiteUrl: "https://sentry.io/",
   },
   {
-    id: 'auth0',
-    name: 'Auth0',
-    description: 'Authentication and authorization platform.',
-    logoUrl: 'https://cdn.auth0.com/website/bob/press/logo-light.png',
-    websiteUrl: 'https://auth0.com/'
-  }
+    id: "auth0",
+    name: "Auth0",
+    description: "Authentication and authorization platform.",
+    logoUrl: "https://cdn.auth0.com/website/bob/press/logo-light.png",
+    websiteUrl: "https://auth0.com/",
+  },
 ];
 
 interface MockDemoToolsProps {
@@ -62,63 +62,63 @@ interface MockDemoToolsProps {
 
 const MockDemoTools: React.FC<MockDemoToolsProps> = ({ event, onUpdateEvent }) => {
   // Only show in development
-  if (process.env.NODE_ENV === 'production') return null;
-  
+  if (process.env.NODE_ENV === "production") return null;
+
   const addMockDemos = () => {
     // Clone the event and talks
     const updatedEvent = {
       ...event,
-      talks: [...event.talks]
+      talks: [...event.talks],
     };
-    
+
     // Add demos to the first 3 talks, or as many as are available
     for (let i = 0; i < Math.min(updatedEvent.talks.length, mockDemos.length); i++) {
       updatedEvent.talks[i] = {
         ...updatedEvent.talks[i],
-        productDemo: mockDemos[i]
+        productDemo: mockDemos[i],
       };
     }
-    
+
     // Update the event
     onUpdateEvent(updatedEvent);
   };
-  
+
   const clearMockDemos = () => {
     // Remove all product demos
     const updatedEvent = {
       ...event,
-      talks: event.talks.map(talk => ({
+      talks: event.talks.map((talk) => ({
         ...talk,
-        productDemo: null
-      }))
+        productDemo: null,
+      })),
     };
-    
+
     // Update the event
     onUpdateEvent(updatedEvent);
   };
-  
+
   return (
     <div className="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-50 text-sm">
       <h3 className="text-yellow-400 font-bold mb-2">Product Demo Tools</h3>
       <div className="space-y-2">
-        <button 
-          onClick={addMockDemos} 
+        <button
+          onClick={addMockDemos}
           className="block w-full bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-1 rounded"
         >
           Add Mock Product Demos
         </button>
-        <button 
-          onClick={clearMockDemos} 
+        <button
+          onClick={clearMockDemos}
           className="block w-full bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded"
         >
           Clear Product Demos
         </button>
       </div>
       <div className="mt-2 text-xs text-gray-400">
-        {event.talks.filter(talk => talk.productDemo).length} talks have product demos
+        {event.talks.filter((talk) => talk.productDemo).length} talks have product demos
       </div>
     </div>
   );
 };
 
-export default MockDemoTools; 
+export default MockDemoTools;

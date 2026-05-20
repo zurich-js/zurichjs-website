@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, ChangeEvent } from "react";
 
-import { STORAGE_KEY } from '../constants';
-import { FormState, ValidationErrors, initialFormState } from '../types';
+import { STORAGE_KEY } from "../constants";
+import { FormState, ValidationErrors, initialFormState } from "../types";
 
 interface UseCFPFormReturn {
   formState: FormState;
@@ -11,7 +11,9 @@ interface UseCFPFormReturn {
   isAutoSaving: boolean;
   lastSaved: Date | null;
   hasLoadedFromStorage: boolean;
-  handleInputChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  handleInputChange: (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
   handleTopicChange: (topic: string) => void;
   handleImageChange: (e: ChangeEvent<HTMLInputElement>) => void;
   clearStorage: () => void;
@@ -36,13 +38,13 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
         const parsedData = JSON.parse(savedData);
         const { lastSaved: savedTime, ...restoreableData } = parsedData;
 
-        setFormState(prev => ({
+        setFormState((prev) => ({
           ...prev,
           ...restoreableData,
           // Don't restore these states
           submitted: false,
           isSubmitting: false,
-          error: '',
+          error: "",
           speakerImage: null,
           imagePreview: null,
         }));
@@ -52,7 +54,7 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
         }
       }
     } catch (error) {
-      console.warn('Failed to restore form data:', error);
+      console.warn("Failed to restore form data:", error);
       localStorage.removeItem(STORAGE_KEY);
     }
     setHasLoadedFromStorage(true);
@@ -71,8 +73,8 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
       formState.twitterHandle.trim() ||
       formState.title.trim() ||
       formState.description.trim() ||
-      formState.talkLength !== '25' ||
-      formState.talkLevel !== 'intermediate' ||
+      formState.talkLength !== "25" ||
+      formState.talkLevel !== "intermediate" ||
       formState.topics.length > 0
     );
   }, [formState]);
@@ -90,7 +92,11 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
 
       saveTimeoutRef.current = setTimeout(() => {
         try {
-          const { speakerImage: _speakerImage, imagePreview: _imagePreview, ...dataToSave } = formState;
+          const {
+            speakerImage: _speakerImage,
+            imagePreview: _imagePreview,
+            ...dataToSave
+          } = formState;
           void _speakerImage;
           void _imagePreview;
           const dataWithTimestamp = {
@@ -101,7 +107,7 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(dataWithTimestamp));
           setLastSaved(new Date());
         } catch (error) {
-          console.error('Failed to save form data:', error);
+          console.error("Failed to save form data:", error);
         } finally {
           setIsAutoSaving(false);
         }
@@ -122,35 +128,35 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
   const handleInputChange = useCallback(
     (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-      setFormState(prev => ({ ...prev, [name]: value }));
+      setFormState((prev) => ({ ...prev, [name]: value }));
 
       // Clear validation error for this field when user starts typing
       if (validationErrors[name as keyof ValidationErrors]) {
-        setValidationErrors(prev => ({ ...prev, [name]: undefined }));
+        setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
       }
     },
-    [validationErrors]
+    [validationErrors],
   );
 
   const handleTopicChange = useCallback(
     (topic: string) => {
       const newTopics = formState.topics.includes(topic)
-        ? formState.topics.filter(t => t !== topic)
+        ? formState.topics.filter((t) => t !== topic)
         : [...formState.topics, topic];
 
-      track('topic_selection', {
-        action: formState.topics.includes(topic) ? 'deselect' : 'select',
+      track("topic_selection", {
+        action: formState.topics.includes(topic) ? "deselect" : "select",
         topic: topic,
       });
 
-      setFormState(prev => ({ ...prev, topics: newTopics }));
+      setFormState((prev) => ({ ...prev, topics: newTopics }));
 
       // Clear topics validation error if user selects at least one
       if (newTopics.length > 0 && validationErrors.topics) {
-        setValidationErrors(prev => ({ ...prev, topics: undefined }));
+        setValidationErrors((prev) => ({ ...prev, topics: undefined }));
       }
     },
-    [formState.topics, track, validationErrors.topics]
+    [formState.topics, track, validationErrors.topics],
   );
 
   const handleImageChange = useCallback(
@@ -159,12 +165,12 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
         const file = e.target.files[0];
         const previewUrl = URL.createObjectURL(file);
 
-        track('image_upload', {
+        track("image_upload", {
           fileSize: file.size,
           fileType: file.type,
         });
 
-        setFormState(prev => ({
+        setFormState((prev) => ({
           ...prev,
           speakerImage: file,
           imagePreview: previewUrl,
@@ -172,11 +178,11 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
 
         // Clear image validation error
         if (validationErrors.speakerImage) {
-          setValidationErrors(prev => ({ ...prev, speakerImage: undefined }));
+          setValidationErrors((prev) => ({ ...prev, speakerImage: undefined }));
         }
       }
     },
-    [track, validationErrors.speakerImage]
+    [track, validationErrors.speakerImage],
   );
 
   const clearStorage = useCallback(() => {
@@ -189,53 +195,56 @@ export function useCFPForm(track: TrackFn): UseCFPFormReturn {
     const missingFields = [];
 
     if (formState.firstName.trim()) completedFields.push(`First Name: ${formState.firstName}`);
-    else missingFields.push('First Name');
+    else missingFields.push("First Name");
 
     if (formState.lastName.trim()) completedFields.push(`Last Name: ${formState.lastName}`);
-    else missingFields.push('Last Name');
+    else missingFields.push("Last Name");
 
     if (formState.jobTitle.trim()) completedFields.push(`Job Title: ${formState.jobTitle}`);
-    else missingFields.push('Job Title');
+    else missingFields.push("Job Title");
 
     if (formState.biography.trim()) completedFields.push(`Biography: ${formState.biography}`);
-    else missingFields.push('Biography');
+    else missingFields.push("Biography");
 
     if (formState.email.trim()) completedFields.push(`Email: ${formState.email}`);
-    else missingFields.push('Email');
+    else missingFields.push("Email");
 
-    if (formState.linkedinProfile.trim()) completedFields.push(`LinkedIn: ${formState.linkedinProfile}`);
-    else missingFields.push('LinkedIn Profile');
+    if (formState.linkedinProfile.trim())
+      completedFields.push(`LinkedIn: ${formState.linkedinProfile}`);
+    else missingFields.push("LinkedIn Profile");
 
     if (formState.githubProfile.trim()) completedFields.push(`GitHub: ${formState.githubProfile}`);
     if (formState.twitterHandle.trim()) completedFields.push(`Twitter: ${formState.twitterHandle}`);
 
     if (formState.title.trim()) completedFields.push(`Talk Title: ${formState.title}`);
-    else missingFields.push('Talk Title');
+    else missingFields.push("Talk Title");
 
-    if (formState.description.trim()) completedFields.push(`Talk Description: ${formState.description}`);
-    else missingFields.push('Talk Description');
+    if (formState.description.trim())
+      completedFields.push(`Talk Description: ${formState.description}`);
+    else missingFields.push("Talk Description");
 
     completedFields.push(`Talk Length: ${formState.talkLength} minutes`);
     completedFields.push(`Talk Level: ${formState.talkLevel}`);
 
-    if (formState.topics.length > 0) completedFields.push(`Topics: ${formState.topics.join(', ')}`);
-    else missingFields.push('Talk Topics');
+    if (formState.topics.length > 0) completedFields.push(`Topics: ${formState.topics.join(", ")}`);
+    else missingFields.push("Talk Topics");
 
-    if (!formState.speakerImage && !formState.existingSpeakerImageUrl) missingFields.push('Profile Image');
+    if (!formState.speakerImage && !formState.existingSpeakerImageUrl)
+      missingFields.push("Profile Image");
 
-    const emailBody = `Subject: CFP Submission - ${formState.title || 'Talk Proposal'} - ${formState.firstName} ${formState.lastName}
+    const emailBody = `Subject: CFP Submission - ${formState.title || "Talk Proposal"} - ${formState.firstName} ${formState.lastName}
 
 Hi ZurichJS Team,
 
 I'd like to submit my talk proposal for an upcoming meetup. I encountered some issues with the online form, so I'm sending my information via email as suggested.
 
 === COMPLETED INFORMATION ===
-${completedFields.join('\n')}
+${completedFields.join("\n")}
 
 === STILL NEED TO PROVIDE ===
-${missingFields.join('\n')}
+${missingFields.join("\n")}
 
-${formState.speakerImage ? '\n(Profile image attached separately)' : formState.existingSpeakerImageUrl ? '\n(Using existing speaker profile image on file)' : ''}
+${formState.speakerImage ? "\n(Profile image attached separately)" : formState.existingSpeakerImageUrl ? "\n(Using existing speaker profile image on file)" : ""}
 
 Looking forward to potentially speaking at ZurichJS!
 

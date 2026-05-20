@@ -1,21 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from "next";
 
-
-import { sendPlatformNotification } from '@/lib/notification';
-import { stripe } from '@/lib/stripe';
-
+import { sendPlatformNotification } from "@/lib/notification";
+import { stripe } from "@/lib/stripe";
 
 interface TshirtPurchaseSuccessBody {
   sessionId: string;
   userEmail: string;
 }
 
-async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -23,30 +18,33 @@ async function handler(
 
     // Retrieve session details from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items', 'payment_intent']
+      expand: ["line_items", "payment_intent"],
     });
 
     // Get order details from session metadata
-    const sizeQuantities = session.metadata?.sizeQuantities ? JSON.parse(session.metadata.sizeQuantities) : {};
-    const delivery = session.metadata?.delivery === 'true';
-    const totalQuantity = parseInt(session.metadata?.totalQuantity || '0');
-    const sessionEmail = session.metadata?.userEmail || '';
-    const couponCode = session.metadata?.couponCode || '';
-    
+    const sizeQuantities = session.metadata?.sizeQuantities
+      ? JSON.parse(session.metadata.sizeQuantities)
+      : {};
+    const delivery = session.metadata?.delivery === "true";
+    const totalQuantity = parseInt(session.metadata?.totalQuantity || "0");
+    const sessionEmail = session.metadata?.userEmail || "";
+    const couponCode = session.metadata?.couponCode || "";
+
     // Get payment information
     const paymentIntent = session.payment_intent;
-    const paymentIntentId = typeof paymentIntent === 'string' ? paymentIntent : paymentIntent?.id || 'Unknown';
-    
-    const totalAmount = session.amount_total ? (session.amount_total / 100) : 0;
-    
+    const paymentIntentId =
+      typeof paymentIntent === "string" ? paymentIntent : paymentIntent?.id || "Unknown";
+
+    const totalAmount = session.amount_total ? session.amount_total / 100 : 0;
+
     // Format sizes for display
     const sizesDisplay = Object.entries(sizeQuantities)
       .filter(([, qty]) => (qty as number) > 0)
       .map(([size, qty]) => `${size} (${qty})`)
-      .join(', ');
-    
+      .join(", ");
+
     // Get coupon information
-    let couponInfo = '';
+    let couponInfo = "";
     if (couponCode) {
       couponInfo = `\nCoupon Used: ${couponCode}`;
     }
@@ -56,11 +54,11 @@ async function handler(
     }
 
     // Use the best available email
-    const customerEmail = userEmail || sessionEmail || 'Unknown';
+    const customerEmail = userEmail || sessionEmail || "Unknown";
 
     // Send platform notification
     await sendPlatformNotification({
-      title: '💳 Card T-shirt Order',
+      title: "💳 Card T-shirt Order",
       message: `New online payment t-shirt order
 
 Payment Intent ID: ${paymentIntentId}
@@ -68,18 +66,18 @@ Customer Email: ${customerEmail}
 Sizes Ordered: ${sizesDisplay}
 Total Quantity: ${totalQuantity}
 Total Amount: CHF ${totalAmount}
-Delivery Method: ${delivery ? 'Home Delivery' : 'Meetup Pickup'}${couponInfo}
+Delivery Method: ${delivery ? "Home Delivery" : "Meetup Pickup"}${couponInfo}
 Session ID: ${sessionId}`,
       priority: 1,
     });
 
     return res.status(200).json({ success: true });
   } catch (err: unknown) {
-    console.error('Failed to send tshirt purchase notification:', err);
+    console.error("Failed to send tshirt purchase notification:", err);
     const error = err as { message: string };
-    
+
     return res.status(500).json({
-      error: error.message || 'An unknown error occurred',
+      error: error.message || "An unknown error occurred",
     });
   }
 }

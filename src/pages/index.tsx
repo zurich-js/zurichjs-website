@@ -1,20 +1,20 @@
-import type { GetStaticProps } from 'next';
+import type { GetStaticProps } from "next";
 
-import Layout from '@/components/layout/Layout';
-import CommunityValues from '@/components/sections/CommunityValues';
-import JoinCTA from '@/components/sections/JoinCTA';
+import Layout from "@/components/layout/Layout";
+import CommunityValues from "@/components/sections/CommunityValues";
+import JoinCTA from "@/components/sections/JoinCTA";
 import LandingHero from "@/components/sections/LandingHero";
-import Partners from '@/components/sections/Partners';
-import UpcomingEvents from '@/components/sections/UpcomingEvents';
-import UpcomingWorkshops from '@/components/sections/UpcomingWorkshops';
-import type { Workshop } from '@/components/sections/UpcomingWorkshops';
-import SEO from '@/components/SEO';
-import { getPartners } from '@/data';
-import { getUpcomingWorkshops } from '@/data/workshops';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import type { Event } from '@/sanity/queries';
-import { getHomepageUpcomingEvents } from '@/sanity/queries';
-import { generateHomePageStructuredData } from '@/utils/structuredData';
+import Partners from "@/components/sections/Partners";
+import UpcomingEvents from "@/components/sections/UpcomingEvents";
+import UpcomingWorkshops from "@/components/sections/UpcomingWorkshops";
+import type { Workshop } from "@/components/sections/UpcomingWorkshops";
+import SEO from "@/components/SEO";
+import { getPartners } from "@/data";
+import { getUpcomingWorkshops } from "@/data/workshops";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
+import type { Event } from "@/sanity/queries";
+import { getHomepageUpcomingEvents } from "@/sanity/queries";
+import { generateHomePageStructuredData } from "@/utils/structuredData";
 
 interface Partner {
   id: string;
@@ -40,48 +40,48 @@ export default function Home({ upcomingEvents, partners, upcomingWorkshops }: Ho
         title="ZurichJS | JavaScript & TypeScript Meetup Community in Zurich, Switzerland"
         description="Join ZurichJS, the premier JavaScript and TypeScript community in Zurich. Free meetups, expert speakers, workshops on React, Node.js, Vue, Angular, AI, and modern web development. Networking events for developers in Zurich, Switzerland, and nearby German cities."
         keywords={[
-          'JavaScript Zurich',
-          'TypeScript Zurich',
-          'Web Development Zurich',
-          'React Meetup Zurich',
-          'Node.js Zurich',
-          'Frontend Development Zurich',
-          'Tech Meetup Zurich',
-          'Programming Events Zurich',
-          'Software Engineering Zurich',
-          'Developer Community Switzerland',
-          'Vue.js Zurich',
-          'Angular Zurich',
-          'AI Zurich',
-          'Machine Learning Zurich',
-          'Winterthur JavaScript',
-          'Basel JavaScript',
-          'Konstanz JavaScript',
-          'St. Gallen JavaScript',
-          'Tech Events Switzerland',
+          "JavaScript Zurich",
+          "TypeScript Zurich",
+          "Web Development Zurich",
+          "React Meetup Zurich",
+          "Node.js Zurich",
+          "Frontend Development Zurich",
+          "Tech Meetup Zurich",
+          "Programming Events Zurich",
+          "Software Engineering Zurich",
+          "Developer Community Switzerland",
+          "Vue.js Zurich",
+          "Angular Zurich",
+          "AI Zurich",
+          "Machine Learning Zurich",
+          "Winterthur JavaScript",
+          "Basel JavaScript",
+          "Konstanz JavaScript",
+          "St. Gallen JavaScript",
+          "Tech Events Switzerland",
         ]}
         geo={{
-          region: 'CH-ZH',
-          placename: 'Zurich',
-          position: '47.3769;8.5417',
+          region: "CH-ZH",
+          placename: "Zurich",
+          position: "47.3769;8.5417",
         }}
         structuredData={structuredData}
         openGraph={{
           title: "ZurichJS | Premier JavaScript & TypeScript Community in Zurich",
-          description: "Join Zurich's vibrant JavaScript and TypeScript community. Free meetups, expert speakers, workshops, and networking events for web developers in Switzerland and nearby German cities.",
-          image: 'https://zurichjs.com/api/og/home',
-          type: 'website',
-          url: 'https://zurichjs.com',
+          description:
+            "Join Zurich's vibrant JavaScript and TypeScript community. Free meetups, expert speakers, workshops, and networking events for web developers in Switzerland and nearby German cities.",
+          image: "https://zurichjs.com/api/og/home",
+          type: "website",
+          url: "https://zurichjs.com",
         }}
         twitter={{
-          cardType: 'summary_large_image',
-          site: '@zurichjs',
+          cardType: "summary_large_image",
+          site: "@zurichjs",
         }}
       />
 
       {/* Hero Section */}
       <LandingHero upcomingEvents={upcomingEvents} upcomingWorkshops={upcomingWorkshops} />
-
 
       {/* Upcoming Events Section */}
       <UpcomingEvents events={upcomingEvents} />
@@ -91,7 +91,6 @@ export default function Home({ upcomingEvents, partners, upcomingWorkshops }: Ho
 
       {/* Community Values Section */}
       <CommunityValues />
-
 
       {/* Partners Section */}
       <Partners partners={partners} />

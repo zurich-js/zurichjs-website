@@ -1,5 +1,5 @@
-import Head from 'next/head';
-import { useRouter } from 'next/router';
+import Head from "next/head";
+import { useRouter } from "next/router";
 
 interface OpenGraphProfile {
   firstName?: string;
@@ -10,7 +10,7 @@ interface OpenGraphProfile {
 interface OpenGraphData {
   title: string;
   description: string;
-  type?: 'website' | 'article' | 'profile' | 'book';
+  type?: "website" | "article" | "profile" | "book";
   url?: string;
   image?: string;
   article?: {
@@ -23,7 +23,7 @@ interface OpenGraphData {
 }
 
 interface TwitterData {
-  cardType?: 'summary' | 'summary_large_image' | 'app' | 'player';
+  cardType?: "summary" | "summary_large_image" | "app" | "player";
   handle?: string;
   site?: string;
 }
@@ -71,17 +71,17 @@ const SEO = ({
   const defaultOpenGraph: OpenGraphData = {
     title,
     description,
-    type: 'website',
+    type: "website",
     url,
-    image: 'https://zurichjs.com/logo-square.png',
+    image: "https://zurichjs.com/logo-square.png",
   };
 
   const og = { ...defaultOpenGraph, ...openGraph };
 
   // Default Twitter config
   const defaultTwitter: TwitterData = {
-    cardType: 'summary_large_image',
-    site: '@zurichjs',
+    cardType: "summary_large_image",
+    site: "@zurichjs",
   };
 
   const tw = { ...defaultTwitter, ...twitter };
@@ -102,13 +102,14 @@ const SEO = ({
       {noindex ? (
         <meta name="robots" content="noindex,nofollow" />
       ) : (
-        <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+        <meta
+          name="robots"
+          content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+        />
       )}
 
       {/* Keywords */}
-      {keywords.length > 0 && (
-        <meta name="keywords" content={keywords.join(', ')} />
-      )}
+      {keywords.length > 0 && <meta name="keywords" content={keywords.join(", ")} />}
 
       {/* Geographic targeting */}
       {geo && (
@@ -116,7 +117,7 @@ const SEO = ({
           {geo.region && <meta name="geo.region" content={geo.region} />}
           {geo.placename && <meta name="geo.placename" content={geo.placename} />}
           {geo.position && <meta name="geo.position" content={geo.position} />}
-          <meta name="ICBM" content={geo.position || '47.3769,8.5417'} />
+          <meta name="ICBM" content={geo.position || "47.3769,8.5417"} />
         </>
       )}
 
@@ -124,7 +125,7 @@ const SEO = ({
       <meta property="og:site_name" content="ZurichJS" />
       <meta property="og:title" content={og.title} />
       <meta property="og:description" content={og.description} />
-      <meta property="og:type" content={og.type || 'website'} />
+      <meta property="og:type" content={og.type || "website"} />
       <meta property="og:url" content={og.url || url} />
       {og.image && (
         <>
@@ -136,7 +137,7 @@ const SEO = ({
       )}
 
       {/* Open Graph Article */}
-      {og.type === 'article' && og.article && (
+      {og.type === "article" && og.article && (
         <>
           {og.article.publishedTime && (
             <meta property="article:published_time" content={og.article.publishedTime} />
@@ -154,7 +155,7 @@ const SEO = ({
       )}
 
       {/* Open Graph Profile */}
-      {og.type === 'profile' && og.profile && (
+      {og.type === "profile" && og.profile && (
         <>
           {og.profile.firstName && (
             <meta property="profile:first_name" content={og.profile.firstName} />
@@ -169,8 +170,8 @@ const SEO = ({
       )}
 
       {/* Twitter */}
-      <meta name="twitter:card" content={tw.cardType || 'summary_large_image'} />
-      <meta name="twitter:site" content={tw.site || '@zurichjs'} />
+      <meta name="twitter:card" content={tw.cardType || "summary_large_image"} />
+      <meta name="twitter:site" content={tw.site || "@zurichjs"} />
       {tw.handle && <meta name="twitter:creator" content={tw.handle} />}
       <meta name="twitter:title" content={og.title} />
       <meta name="twitter:description" content={og.description} />
@@ -186,9 +187,7 @@ const SEO = ({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(
-              Array.isArray(structuredData) ? structuredData : structuredData
-            ),
+            __html: JSON.stringify(Array.isArray(structuredData) ? structuredData : structuredData),
           }}
         />
       )}
@@ -196,4 +195,4 @@ const SEO = ({
   );
 };
 
-export default SEO; 
+export default SEO;

@@ -1,15 +1,15 @@
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
-import CFPForm from '@/components/cfp/CFPForm';
-import CommunityStats from '@/components/cfp/CommunityStats';
-import SubmissionGuidelines from '@/components/cfp/SubmissionGuidelines';
-import { TalkSubmissionStats } from '@/components/cfp/types';
-import Layout from '@/components/layout/Layout';
-import Section from '@/components/Section';
-import SEO from '@/components/SEO';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import { getTalkSubmissionStats } from '@/sanity/queries';
+import CFPForm from "@/components/cfp/CFPForm";
+import CommunityStats from "@/components/cfp/CommunityStats";
+import SubmissionGuidelines from "@/components/cfp/SubmissionGuidelines";
+import { TalkSubmissionStats } from "@/components/cfp/types";
+import Layout from "@/components/layout/Layout";
+import Section from "@/components/Section";
+import SEO from "@/components/SEO";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
+import { getTalkSubmissionStats } from "@/sanity/queries";
 
 interface CFPFormPageProps {
   submissionStats?: TalkSubmissionStats | null;
@@ -24,11 +24,11 @@ export default function CFPFormPage({ submissionStats }: CFPFormPageProps) {
         title="Submit a Meetup Talk | ZurichJS"
         description="Submit your talk proposal for an upcoming ZurichJS meetup. Share your JavaScript knowledge with the community!"
         openGraph={{
-          title: 'Submit a Meetup Talk | ZurichJS',
+          title: "Submit a Meetup Talk | ZurichJS",
           description:
-            'Share your JavaScript knowledge with the ZurichJS community by submitting a talk proposal for our monthly meetups.',
-          image: '/api/og/cfp',
-          type: 'website',
+            "Share your JavaScript knowledge with the ZurichJS community by submitting a talk proposal for our monthly meetups.",
+          image: "/api/og/cfp",
+          type: "website",
         }}
       />
 
@@ -50,8 +50,8 @@ export default function CFPFormPage({ submissionStats }: CFPFormPageProps) {
             Submit a <span className="bg-js px-2 rounded">Meetup Talk</span>
           </h1>
           <p className="text-xl text-gray-600">
-            Share your JavaScript knowledge at one of our monthly meetups. We welcome speakers of all
-            experience levels!
+            Share your JavaScript knowledge at one of our monthly meetups. We welcome speakers of
+            all experience levels!
           </p>
         </div>
       </Section>
@@ -83,7 +83,7 @@ export async function getStaticProps() {
       revalidate: 3600,
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
 
     return {
       props: {

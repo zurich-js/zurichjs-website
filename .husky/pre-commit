@@ -1,2 +1,2 @@
-npm run lint -- --fix
-npx tsc --noEmit
+pnpm lint-staged
+pnpm exec tsc --noEmit

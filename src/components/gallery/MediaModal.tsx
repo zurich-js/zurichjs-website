@@ -1,14 +1,14 @@
-import { X, ChevronLeft, ChevronRight, Download, Share2, Camera, Video, Clock } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { X, ChevronLeft, ChevronRight, Download, Share2, Camera, Video, Clock } from "lucide-react";
+import { useState, useEffect } from "react";
 
-import { MediaItem, MediaType } from '../../types/gallery';
-import { formatEventDate } from '../../utils/galleryFormatters';
+import { MediaItem, MediaType } from "../../types/gallery";
+import { formatEventDate } from "../../utils/galleryFormatters";
 
 interface MediaModalProps {
   media: MediaItem | null;
   allMedia: MediaItem[];
   onClose: () => void;
-  onNavigate: (direction: 'prev' | 'next') => void;
+  onNavigate: (direction: "prev" | "next") => void;
 }
 
 export default function MediaModal({ media, allMedia, onClose, onNavigate }: MediaModalProps) {
@@ -21,34 +21,34 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (!media) return;
-      
+
       switch (event.key) {
-        case 'Escape':
+        case "Escape":
           onClose();
           break;
-        case 'ArrowLeft':
-          onNavigate('prev');
+        case "ArrowLeft":
+          onNavigate("prev");
           break;
-        case 'ArrowRight':
-          onNavigate('next');
+        case "ArrowRight":
+          onNavigate("next");
           break;
       }
     };
 
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, [media, onClose, onNavigate]);
 
   if (!media) return null;
 
-  const currentIndex = allMedia.findIndex(item => item.id === media.id);
+  const currentIndex = allMedia.findIndex((item) => item.id === media.id);
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === allMedia.length - 1;
   const isVideo = media.type === MediaType.VIDEO;
   const eventDate = new Date(media.eventDate);
 
   const handleDownload = () => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = media.url;
     link.download = `${media.eventName}-${media.id}`;
     link.click();
@@ -60,10 +60,10 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
         await navigator.share({
           title: media.eventName,
           text: media.description,
-          url: window.location.href
+          url: window.location.href,
         });
       } catch (err) {
-        console.log('Error sharing:', err);
+        console.log("Error sharing:", err);
       }
     } else {
       // Fallback to copying URL
@@ -74,7 +74,7 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -92,7 +92,7 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
         {/* Navigation buttons */}
         {!isFirst && (
           <button
-            onClick={() => onNavigate('prev')}
+            onClick={() => onNavigate("prev")}
             className="modal-nav-button absolute left-4 top-1/2 transform -translate-y-1/2 z-20"
             aria-label="Previous image"
           >
@@ -102,7 +102,7 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
 
         {!isLast && (
           <button
-            onClick={() => onNavigate('next')}
+            onClick={() => onNavigate("next")}
             className="modal-nav-button absolute right-4 top-1/2 transform -translate-y-1/2 z-20 lg:right-[25rem]"
             aria-label="Next image"
           >
@@ -110,30 +110,30 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
           </button>
         )}
 
-          {/* Media display */}
+        {/* Media display */}
         <div className="flex-1 flex items-center justify-center relative min-h-0 p-4">
-            {isVideo ? (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <video
-                  src={media.url}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-full object-contain"
-                  style={{
-                    aspectRatio: `${media.width}/${media.height}`,
-                    minHeight: media.height > media.width ? '60vh' : 'auto',
-                    minWidth: media.height > media.width ? 'auto' : '40vw'
-                  }}
-                  onLoadStart={() => setImageLoaded(true)}
-                />
-              </div>
-            ) : (
+          {isVideo ? (
+            <div className="relative w-full h-full flex items-center justify-center">
+              <video
+                src={media.url}
+                controls
+                autoPlay
+                className="max-w-full max-h-full object-contain"
+                style={{
+                  aspectRatio: `${media.width}/${media.height}`,
+                  minHeight: media.height > media.width ? "60vh" : "auto",
+                  minWidth: media.height > media.width ? "auto" : "40vw",
+                }}
+                onLoadStart={() => setImageLoaded(true)}
+              />
+            </div>
+          ) : (
             <div className="relative max-w-full max-h-full">
               <img
                 src={media.url}
                 alt={media.description}
                 className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                  imageLoaded ? "opacity-100" : "opacity-0"
                 }`}
                 onLoad={() => setImageLoaded(true)}
               />
@@ -143,40 +143,30 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
                 </div>
               )}
             </div>
-            )}
+          )}
         </div>
 
-          {/* Media info sidebar */}
+        {/* Media info sidebar */}
         <div className="w-full lg:w-96 bg-white p-4 sm:p-6 overflow-y-auto max-h-96 lg:max-h-full">
-            {/* Media type and actions */}
+          {/* Media type and actions */}
           <div className="flex justify-between items-center mb-4">
             <div className="filter-chip filter-chip-active">
               {isVideo ? <Video size={16} /> : <Camera size={16} />}
-              <span>{isVideo ? 'Video' : 'Photo'}</span>
+              <span>{isVideo ? "Video" : "Photo"}</span>
             </div>
             <div className="flex gap-3">
-              <button 
-                onClick={handleDownload}
-                className="icon-button"
-                aria-label="Download media"
-              >
+              <button onClick={handleDownload} className="icon-button" aria-label="Download media">
                 <Download size={20} />
               </button>
-              <button 
-                onClick={handleShare}
-                className="icon-button"
-                aria-label="Share media"
-              >
+              <button onClick={handleShare} className="icon-button" aria-label="Share media">
                 <Share2 size={20} />
               </button>
             </div>
           </div>
 
-            {/* Event info */}
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">
-              {media.eventName}
-          </h2>
-            
+          {/* Event info */}
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{media.eventName}</h2>
+
           <div className="space-y-2 mb-4 text-sm text-gray-600">
             <div>
               <span className="font-medium">Date:</span> {formatEventDate(eventDate)}
@@ -198,27 +188,29 @@ export default function MediaModal({ media, allMedia, onClose, onNavigate }: Med
             </p>
           </div>
 
-            {/* Tags */}
-            {media.tags.length > 0 && (
+          {/* Tags */}
+          {media.tags.length > 0 && (
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Tags:</h3>
               <div className="flex flex-wrap gap-3">
-                  {media.tags.map((tag) => (
+                {media.tags.map((tag) => (
                   <span
-                      key={tag}
+                    key={tag}
                     className="inline-block bg-gray-100 text-gray-900 px-2 py-1 rounded text-sm font-medium"
                   >
                     {tag}
                   </span>
-                  ))}
+                ))}
               </div>
             </div>
-            )}
+          )}
 
-            {/* Navigation info */}
+          {/* Navigation info */}
           <div className="border-t pt-4">
             <div className="flex justify-between items-center text-sm text-gray-500">
-              <span>{currentIndex + 1} of {allMedia.length} items</span>
+              <span>
+                {currentIndex + 1} of {allMedia.length} items
+              </span>
               <span className="text-xs">Use ← → keys to navigate</span>
             </div>
           </div>

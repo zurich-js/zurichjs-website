@@ -1,33 +1,33 @@
 // Event types for filtering gallery content
 export enum EventType {
-  ALL = 'all',
-  MEETUP = 'meetup',
-  WORKSHOP = 'workshop',
-  SOCIAL = 'social',
-  CONFERENCE = 'conference'
+  ALL = "all",
+  MEETUP = "meetup",
+  WORKSHOP = "workshop",
+  SOCIAL = "social",
+  CONFERENCE = "conference",
 }
 
 // Media types for gallery filtering
 export enum MediaType {
-  ALL = 'all',
-  PHOTO = 'photo',
-  VIDEO = 'video'
+  ALL = "all",
+  PHOTO = "photo",
+  VIDEO = "video",
 }
 
 // Sort options for gallery
 export enum SortOption {
-  DATE_DESC = 'date_desc',
-  DATE_ASC = 'date_asc',
-  EVENT_NAME = 'event_name',
-  POPULARITY = 'popularity'
+  DATE_DESC = "date_desc",
+  DATE_ASC = "date_asc",
+  EVENT_NAME = "event_name",
+  POPULARITY = "popularity",
 }
 
 // Time period filters
 export enum TimePeriod {
-  ALL = 'all',
-  RECENT = 'recent',
-  THIS_YEAR = 'this_year',
-  LAST_YEAR = 'last_year'
+  ALL = "all",
+  RECENT = "recent",
+  THIS_YEAR = "this_year",
+  LAST_YEAR = "last_year",
 }
 
 // ImageKit file object type

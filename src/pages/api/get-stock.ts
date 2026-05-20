@@ -1,15 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import Stripe from 'stripe';
+import type { NextApiRequest, NextApiResponse } from "next";
+import Stripe from "stripe";
 
-
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-08-27.basil',
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+  apiVersion: "2025-08-27.basil",
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
@@ -19,9 +17,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Extract stock data from metadata
     const stock: Record<string, number> = {};
-    const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-    
-    sizes.forEach(size => {
+    const sizes = ["S", "M", "L", "XL", "XXL"];
+
+    sizes.forEach((size) => {
       const sizeKey = `${size.toLowerCase()}-stock`;
       const stockValue = product.metadata[sizeKey];
       stock[size] = stockValue ? parseInt(stockValue, 10) : 0;
@@ -29,9 +27,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     return res.status(200).json(stock);
   } catch (err: unknown) {
-    console.error('Error fetching stock from Stripe:', err);
-    let message = 'Unknown error';
-    if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+    console.error("Error fetching stock from Stripe:", err);
+    let message = "Unknown error";
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "message" in err &&
+      typeof (err as { message?: unknown }).message === "string"
+    ) {
       message = (err as { message: string }).message;
     }
     return res.status(500).json({ error: message });

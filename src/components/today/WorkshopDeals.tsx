@@ -1,7 +1,7 @@
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
 interface WorkshopInstructor {
   id: string;
@@ -60,7 +60,7 @@ function DealCountdown({ expiresAt }: { expiresAt?: Date }) {
         const hours = Math.floor(difference / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        
+
         return { hours, minutes, seconds, expired: false };
       } else {
         return { hours: 0, minutes: 0, seconds: 0, expired: true };
@@ -126,32 +126,29 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
         🔥 {deal.discount} OFF
       </div>
 
-      <Link href={`${deal.workshopHref}?coupon=${deal.couponCode}`} className="flex flex-col h-full">
+      <Link
+        href={`${deal.workshopHref}?coupon=${deal.couponCode}`}
+        className="flex flex-col h-full"
+      >
         {/* Workshop Image/Icon */}
         <div className="relative h-32 sm:h-48 overflow-hidden">
           <div
             className={`w-full h-full transition-transform duration-500 ${
-              isHovered ? 'scale-110' : 'scale-100'
+              isHovered ? "scale-110" : "scale-100"
             }`}
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-[1]"></div>
             {deal.image ? (
-              <Image 
-                src={deal.image}
-                alt={deal.title}
-                fill
-                className="object-cover"
-                priority
-              />
+              <Image src={deal.image} alt={deal.title} fill className="object-cover" priority />
             ) : (
-              <div 
+              <div
                 className="w-full h-full flex items-center justify-center"
                 style={{ backgroundColor: deal.iconColor }}
               >
                 <div className="text-center text-white p-4">
-                  <div className="text-3xl mb-2">{deal.tag.split(' ')[0]}</div>
+                  <div className="text-3xl mb-2">{deal.tag.split(" ")[0]}</div>
                   <div className="text-sm font-semibold opacity-90">
-                    {deal.tag.substring(deal.tag.indexOf(' ') + 1)}
+                    {deal.tag.substring(deal.tag.indexOf(" ") + 1)}
                   </div>
                 </div>
               </div>
@@ -163,8 +160,12 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
         <div className="p-3 sm:p-4 flex flex-col flex-grow">
           {/* Title & Subtitle */}
           <div className="mb-2">
-            <h3 className="text-base sm:text-lg font-bold mb-1 text-gray-900 line-clamp-2">{deal.title}</h3>
-            <p className="text-xs sm:text-sm text-gray-600 font-medium line-clamp-1">{deal.subtitle}</p>
+            <h3 className="text-base sm:text-lg font-bold mb-1 text-gray-900 line-clamp-2">
+              {deal.title}
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 font-medium line-clamp-1">
+              {deal.subtitle}
+            </p>
           </div>
 
           {/* Workshop Meta */}
@@ -208,7 +209,9 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                         />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-bold text-xs text-gray-900">{deal.instructors[0].name}</span>
+                        <span className="font-bold text-xs text-gray-900">
+                          {deal.instructors[0].name}
+                        </span>
                         <span className="text-[10px] text-gray-500">Instructor</span>
                       </div>
                     </>
@@ -216,7 +219,10 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                     <>
                       <div className="flex -space-x-1 mr-2">
                         {deal.instructors.slice(0, 2).map((instructor) => (
-                          <div key={instructor.id} className="relative w-6 h-6 overflow-hidden rounded-full border border-gray-200 bg-white">
+                          <div
+                            key={instructor.id}
+                            className="relative w-6 h-6 overflow-hidden rounded-full border border-gray-200 bg-white"
+                          >
                             <Image
                               src={`${instructor.image}?h=50`}
                               alt={instructor.name}
@@ -227,13 +233,15 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                         ))}
                         {deal.instructors.length > 2 && (
                           <div className="relative w-6 h-6 overflow-hidden rounded-full border border-gray-200 bg-gray-100 flex items-center justify-center">
-                            <span className="text-[8px] font-bold text-gray-600">+{deal.instructors.length - 2}</span>
+                            <span className="text-[8px] font-bold text-gray-600">
+                              +{deal.instructors.length - 2}
+                            </span>
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-bold text-xs text-gray-900">
-                          {deal.instructors.map((i) => i.name.split(' ')[0]).join(', ')}
+                          {deal.instructors.map((i) => i.name.split(" ")[0]).join(", ")}
                         </span>
                         <span className="text-[10px] text-gray-500">Instructors</span>
                       </div>
@@ -260,9 +268,11 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
 
           {/* CTA Button */}
           <div className="mt-auto">
-            <div className={`w-full bg-zurich hover:bg-zurich/90 text-white py-2.5 px-4 rounded-lg font-bold text-sm text-center transition-all duration-200 shadow-lg hover:shadow-xl ${
-              isHovered ? 'transform scale-105' : ''
-            }`}>
+            <div
+              className={`w-full bg-zurich hover:bg-zurich/90 text-white py-2.5 px-4 rounded-lg font-bold text-sm text-center transition-all duration-200 shadow-lg hover:shadow-xl ${
+                isHovered ? "transform scale-105" : ""
+              }`}
+            >
               💎 GET {deal.discount} OFF NOW!
             </div>
           </div>

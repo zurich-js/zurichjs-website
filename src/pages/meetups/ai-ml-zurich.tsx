@@ -1,12 +1,12 @@
-import Link from 'next/link';
+import Link from "next/link";
 
-import Layout from '@/components/layout/Layout';
-import JoinCTA from '@/components/sections/JoinCTA';
-import UpcomingEvents from '@/components/sections/UpcomingEvents';
-import SEO from '@/components/SEO';
-import { getUpcomingEvents } from '@/sanity/queries';
-import type { Event } from '@/sanity/queries';
-import { generateOrganizationSchema, generateFAQSchema } from '@/utils/structuredData';
+import Layout from "@/components/layout/Layout";
+import JoinCTA from "@/components/sections/JoinCTA";
+import UpcomingEvents from "@/components/sections/UpcomingEvents";
+import SEO from "@/components/SEO";
+import { getUpcomingEvents } from "@/sanity/queries";
+import type { Event } from "@/sanity/queries";
+import { generateOrganizationSchema, generateFAQSchema } from "@/utils/structuredData";
 
 interface Props {
   upcomingEvents: Event[];
@@ -15,24 +15,24 @@ interface Props {
 export default function AIMLZurich({ upcomingEvents }: Props) {
   const faqs = [
     {
-      question: 'Are there AI and Machine Learning meetups in Zurich?',
+      question: "Are there AI and Machine Learning meetups in Zurich?",
       answer:
-        'Yes! ZurichJS regularly features AI and Machine Learning talks focusing on practical JavaScript/TypeScript implementations. We cover topics like OpenAI API integration, LangChain, vector databases, RAG systems, AI-powered applications, and machine learning in the browser with TensorFlow.js. Our meetups welcome both AI enthusiasts and web developers looking to integrate AI into their applications.',
+        "Yes! ZurichJS regularly features AI and Machine Learning talks focusing on practical JavaScript/TypeScript implementations. We cover topics like OpenAI API integration, LangChain, vector databases, RAG systems, AI-powered applications, and machine learning in the browser with TensorFlow.js. Our meetups welcome both AI enthusiasts and web developers looking to integrate AI into their applications.",
     },
     {
-      question: 'What AI topics does ZurichJS cover?',
+      question: "What AI topics does ZurichJS cover?",
       answer:
-        'ZurichJS covers practical AI implementation in JavaScript including: OpenAI & Anthropic API integration, LangChain.js, vector databases (Pinecone, Weaviate), RAG (Retrieval Augmented Generation), AI agents, ChatGPT plugins, prompt engineering, LLM fine-tuning, TensorFlow.js, ONNX.js, AI-powered web applications, and Edge AI.',
+        "ZurichJS covers practical AI implementation in JavaScript including: OpenAI & Anthropic API integration, LangChain.js, vector databases (Pinecone, Weaviate), RAG (Retrieval Augmented Generation), AI agents, ChatGPT plugins, prompt engineering, LLM fine-tuning, TensorFlow.js, ONNX.js, AI-powered web applications, and Edge AI.",
     },
     {
-      question: 'Do I need AI experience to attend AI talks at ZurichJS?',
+      question: "Do I need AI experience to attend AI talks at ZurichJS?",
       answer:
-        'No! Our AI talks cater to all levels. We feature beginner-friendly introductions to AI concepts, practical tutorials for integrating AI APIs, and advanced topics for experienced practitioners. Many talks focus on how web developers can leverage AI without deep ML knowledge.',
+        "No! Our AI talks cater to all levels. We feature beginner-friendly introductions to AI concepts, practical tutorials for integrating AI APIs, and advanced topics for experienced practitioners. Many talks focus on how web developers can leverage AI without deep ML knowledge.",
     },
     {
-      question: 'How can I learn about AI development with JavaScript in Zurich?',
+      question: "How can I learn about AI development with JavaScript in Zurich?",
       answer:
-        'Join ZurichJS meetups to learn from practitioners building real AI applications with JavaScript and TypeScript. Our speakers share practical experience with OpenAI, Anthropic Claude, LangChain, vector databases, and modern AI frameworks. We also host workshops on AI integration and best practices.',
+        "Join ZurichJS meetups to learn from practitioners building real AI applications with JavaScript and TypeScript. Our speakers share practical experience with OpenAI, Anthropic Claude, LangChain, vector databases, and modern AI frameworks. We also host workshops on AI integration and best practices.",
     },
   ];
 
@@ -44,39 +44,39 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
         title="AI & Machine Learning Meetups in Zurich | ZurichJS - JavaScript AI Development"
         description="Join AI and Machine Learning meetups in Zurich with ZurichJS. Learn practical AI implementation in JavaScript & TypeScript: OpenAI API, LangChain, RAG systems, vector databases, AI agents, and modern AI frameworks. Free monthly meetups for developers interested in AI, ML, and LLM integration."
         keywords={[
-          'AI Zurich',
-          'Machine Learning Zurich',
-          'AI meetup Zurich',
-          'AI development Zurich',
-          'OpenAI Zurich',
-          'LangChain meetup',
-          'AI JavaScript Zurich',
-          'ML TypeScript Zurich',
-          'ChatGPT development Zurich',
-          'LLM Zurich',
-          'Artificial Intelligence Zurich',
-          'TensorFlow.js Zurich',
-          'AI engineering Zurich',
-          'AI events Switzerland',
-          'Machine Learning events Zurich',
-          'AI community Zurich',
-          'RAG systems Zurich',
-          'Vector databases Zurich',
-          'AI agents Zurich',
+          "AI Zurich",
+          "Machine Learning Zurich",
+          "AI meetup Zurich",
+          "AI development Zurich",
+          "OpenAI Zurich",
+          "LangChain meetup",
+          "AI JavaScript Zurich",
+          "ML TypeScript Zurich",
+          "ChatGPT development Zurich",
+          "LLM Zurich",
+          "Artificial Intelligence Zurich",
+          "TensorFlow.js Zurich",
+          "AI engineering Zurich",
+          "AI events Switzerland",
+          "Machine Learning events Zurich",
+          "AI community Zurich",
+          "RAG systems Zurich",
+          "Vector databases Zurich",
+          "AI agents Zurich",
         ]}
         geo={{
-          region: 'CH-ZH',
-          placename: 'Zurich',
-          position: '47.3769;8.5417',
+          region: "CH-ZH",
+          placename: "Zurich",
+          position: "47.3769;8.5417",
         }}
         structuredData={structuredData}
         openGraph={{
-          title: 'AI & Machine Learning Meetups in Zurich | ZurichJS',
+          title: "AI & Machine Learning Meetups in Zurich | ZurichJS",
           description:
-            'Learn practical AI development with JavaScript & TypeScript. Monthly meetups covering OpenAI, LangChain, RAG, and AI integration.',
-          image: 'https://zurichjs.com/api/og/home',
-          type: 'website',
-          url: 'https://zurichjs.com/meetups/ai-ml-zurich',
+            "Learn practical AI development with JavaScript & TypeScript. Monthly meetups covering OpenAI, LangChain, RAG, and AI integration.",
+          image: "https://zurichjs.com/api/og/home",
+          type: "website",
+          url: "https://zurichjs.com/meetups/ai-ml-zurich",
         }}
       />
 
@@ -88,26 +88,28 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
               AI Development Meetups in Zurich
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-800 max-w-4xl">
-              When we started ZurichJS in late 2024, we noticed something: most AI meetups in Zurich focused on
-              Python and data science. But web developers needed practical answers for integrating AI into
-              real applications. So we started hosting talks on OpenAI APIs, LangChain, RAG systems—the stuff
-              you actually use in production JavaScript.
+              When we started ZurichJS in late 2024, we noticed something: most AI meetups in Zurich
+              focused on Python and data science. But web developers needed practical answers for
+              integrating AI into real applications. So we started hosting talks on OpenAI APIs,
+              LangChain, RAG systems—the stuff you actually use in production JavaScript.
             </p>
 
             <div className="bg-white p-8 rounded-lg shadow-lg mb-12">
               <h2 className="text-2xl font-bold mb-4">Why AI at a JavaScript Meetup?</h2>
               <p className="text-gray-700 mb-4">
-                Because that&apos;s where the real integration happens. Most companies aren&apos;t training their own
-                models. They&apos;re using APIs. They&apos;re building interfaces. They&apos;re connecting LLMs to existing
-                systems. And all of that lives in the web stack.
+                Because that&apos;s where the real integration happens. Most companies aren&apos;t
+                training their own models. They&apos;re using APIs. They&apos;re building
+                interfaces. They&apos;re connecting LLMs to existing systems. And all of that lives
+                in the web stack.
               </p>
               <p className="text-gray-700 mb-4">
-                Our AI talks come from people building this in production: ChatGPT-style interfaces, RAG
-                systems for documentation, AI agents for workflow automation. Not theoretical—practical.
+                Our AI talks come from people building this in production: ChatGPT-style interfaces,
+                RAG systems for documentation, AI agents for workflow automation. Not
+                theoretical—practical.
               </p>
               <p className="text-gray-700">
-                Plus, Zurich has Google&apos;s AI labs, ETH research, and AI startups. The knowledge is here. We&apos;re
-                just creating the space for web developers to access it.
+                Plus, Zurich has Google&apos;s AI labs, ETH research, and AI startups. The knowledge
+                is here. We&apos;re just creating the space for web developers to access it.
               </p>
             </div>
 
@@ -116,24 +118,24 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
                 <div className="text-3xl mb-3">🤖</div>
                 <h3 className="font-bold text-xl mb-2">Production-Ready</h3>
                 <p className="text-gray-700">
-                  Talks from people shipping AI features in real products. Not demos—actual implementation
-                  stories with lessons learned.
+                  Talks from people shipping AI features in real products. Not demos—actual
+                  implementation stories with lessons learned.
                 </p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="text-3xl mb-3">🧠</div>
                 <h3 className="font-bold text-xl mb-2">Web-First Approach</h3>
                 <p className="text-gray-700">
-                  OpenAI/Claude APIs, LangChain.js, vector databases, streaming responses—the stack web
-                  developers actually use.
+                  OpenAI/Claude APIs, LangChain.js, vector databases, streaming responses—the stack
+                  web developers actually use.
                 </p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="text-3xl mb-3">⚡</div>
                 <h3 className="font-bold text-xl mb-2">Free Events</h3>
                 <p className="text-gray-700">
-                  All AI talks are free. Same non-profit model, same community funding. No barriers to learning
-                  this tech.
+                  All AI talks are free. Same non-profit model, same community funding. No barriers
+                  to learning this tech.
                 </p>
               </div>
             </div>
@@ -143,14 +145,15 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
 
               <div className="prose prose-lg max-w-none">
                 <p className="mb-4">
-                  We&apos;re not training models. We&apos;re integrating them. The practical reality of AI for most web
-                  developers is: call an API, manage prompts, handle streaming, deal with rate limits, build
-                  interfaces that users actually understand.
+                  We&apos;re not training models. We&apos;re integrating them. The practical reality
+                  of AI for most web developers is: call an API, manage prompts, handle streaming,
+                  deal with rate limits, build interfaces that users actually understand.
                 </p>
                 <p className="mb-4">
-                  Our AI talks reflect that. They come from people who&apos;ve debugged token limits at 2am. Who&apos;ve
-                  figured out how to do RAG without blowing their budget. Who&apos;ve built chat interfaces that
-                  don&apos;t feel clunky. This is implementation knowledge, not hype.
+                  Our AI talks reflect that. They come from people who&apos;ve debugged token limits
+                  at 2am. Who&apos;ve figured out how to do RAG without blowing their budget.
+                  Who&apos;ve built chat interfaces that don&apos;t feel clunky. This is
+                  implementation knowledge, not hype.
                 </p>
 
                 <h3 className="text-2xl font-bold mt-6 mb-4">What You&apos;ll Learn</h3>
@@ -220,23 +223,24 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
                     context-aware AI
                   </li>
                   <li>
-                    ✓ <strong>AI-Powered Code Assistants</strong> - Build developer tools with OpenAI Codex
-                    and GPT-4
+                    ✓ <strong>AI-Powered Code Assistants</strong> - Build developer tools with
+                    OpenAI Codex and GPT-4
                   </li>
                   <li>
                     ✓ <strong>Semantic Search</strong> - Vector embeddings and similarity search
                     implementations
                   </li>
                   <li>
-                    ✓ <strong>AI Content Generation</strong> - Automated content creation and summarization
+                    ✓ <strong>AI Content Generation</strong> - Automated content creation and
+                    summarization
                   </li>
                   <li>
                     ✓ <strong>Computer Vision in the Browser</strong> - Object detection and image
                     classification with TensorFlow.js
                   </li>
                   <li>
-                    ✓ <strong>Natural Language Processing</strong> - Sentiment analysis, named entity
-                    recognition, text classification
+                    ✓ <strong>Natural Language Processing</strong> - Sentiment analysis, named
+                    entity recognition, text classification
                   </li>
                   <li>
                     ✓ <strong>AI Ethics & Best Practices</strong> - Responsible AI development, bias
@@ -283,33 +287,39 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
                 <h3 className="text-2xl font-bold mt-8 mb-4">Who Should Attend?</h3>
                 <ul className="space-y-2 mb-6">
                   <li>
-                    • <strong>Web Developers</strong> - Learn to add AI capabilities to your applications
+                    • <strong>Web Developers</strong> - Learn to add AI capabilities to your
+                    applications
                   </li>
                   <li>
                     • <strong>Full-Stack Engineers</strong> - Build end-to-end AI-powered features
                   </li>
                   <li>
-                    • <strong>Frontend Developers</strong> - Implement browser-based ML and AI interfaces
+                    • <strong>Frontend Developers</strong> - Implement browser-based ML and AI
+                    interfaces
                   </li>
                   <li>
-                    • <strong>Backend Developers</strong> - Integrate LLM APIs and manage AI workflows
+                    • <strong>Backend Developers</strong> - Integrate LLM APIs and manage AI
+                    workflows
                   </li>
                   <li>
                     • <strong>Product Managers</strong> - Understand AI capabilities and limitations
                   </li>
                   <li>
-                    • <strong>Data Scientists</strong> - Bridge ML models and production web applications
+                    • <strong>Data Scientists</strong> - Bridge ML models and production web
+                    applications
                   </li>
                   <li>
-                    • <strong>AI Enthusiasts</strong> - Explore practical AI implementations with JavaScript
+                    • <strong>AI Enthusiasts</strong> - Explore practical AI implementations with
+                    JavaScript
                   </li>
                 </ul>
 
                 <h3 className="text-2xl font-bold mt-8 mb-4">Zurich&apos;s AI Ecosystem</h3>
                 <p className="mb-4">
-                  Zurich is emerging as a major AI hub in Europe. ZurichJS connects with the broader AI
-                  community including ETH Zurich AI research, Google Zurich&apos;s AI teams, and numerous AI
-                  startups. Our meetups bridge academic AI research with practical industry applications.
+                  Zurich is emerging as a major AI hub in Europe. ZurichJS connects with the broader
+                  AI community including ETH Zurich AI research, Google Zurich&apos;s AI teams, and
+                  numerous AI startups. Our meetups bridge academic AI research with practical
+                  industry applications.
                 </p>
               </div>
             </div>
@@ -339,8 +349,8 @@ export default function AIMLZurich({ upcomingEvents }: Props) {
           <div className="container mx-auto max-w-4xl text-center">
             <h2 className="text-3xl font-bold mb-6">Join Zurich&apos;s AI Developer Community</h2>
             <p className="text-xl mb-8">
-              Learn practical AI development with JavaScript & TypeScript. Connect with developers building
-              real AI applications.
+              Learn practical AI development with JavaScript & TypeScript. Connect with developers
+              building real AI applications.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

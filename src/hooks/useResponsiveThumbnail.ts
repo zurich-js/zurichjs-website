@@ -1,6 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from "react";
 
-import { generateThumbnail, generateSrcSet, generateSizes, ThumbnailSize } from '../utils/thumbnailGenerator';
+import {
+  generateThumbnail,
+  generateSrcSet,
+  generateSizes,
+  ThumbnailSize,
+} from "../utils/thumbnailGenerator";
 
 interface UseResponsiveThumbnailProps {
   originalUrl: string;
@@ -16,19 +21,19 @@ interface ThumbnailBreakpoints {
 
 // Optimized breakpoints for different thumbnail sizes (in pixels)
 const BREAKPOINTS: ThumbnailBreakpoints = {
-  small: 640,   // Mobile
+  small: 640, // Mobile
   medium: 1024, // Tablet
-  large: 1920   // Desktop
+  large: 1920, // Desktop
 };
 
 /**
  * Custom hook for responsive thumbnail loading
  * Automatically selects the appropriate thumbnail size based on viewport and device pixel ratio
  */
-export function useResponsiveThumbnail({ 
-  originalUrl, 
-  isVideo, 
-  fallbackUrl 
+export function useResponsiveThumbnail({
+  originalUrl,
+  isVideo,
+  fallbackUrl,
 }: UseResponsiveThumbnailProps) {
   const [windowWidth, setWindowWidth] = useState<number>(0);
   const [devicePixelRatio, setDevicePixelRatio] = useState<number>(1);
@@ -52,33 +57,33 @@ export function useResponsiveThumbnail({
       timeoutId = setTimeout(updateDimensions, 100);
     };
 
-    window.addEventListener('resize', handleResize);
-    
+    window.addEventListener("resize", handleResize);
+
     // Listen for pixel ratio changes
-    const mediaQuery = window.matchMedia('(resolution: 2dppx)');
-    mediaQuery.addEventListener('change', updateDimensions);
+    const mediaQuery = window.matchMedia("(resolution: 2dppx)");
+    mediaQuery.addEventListener("change", updateDimensions);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      mediaQuery.removeEventListener('change', updateDimensions);
+      window.removeEventListener("resize", handleResize);
+      mediaQuery.removeEventListener("change", updateDimensions);
       clearTimeout(timeoutId);
     };
   }, []);
 
   // Determine the optimal thumbnail size based on viewport and device pixel ratio
   const optimalThumbnailSize = useMemo((): ThumbnailSize => {
-    if (windowWidth === 0) return 'medium'; // Default during SSR
+    if (windowWidth === 0) return "medium"; // Default during SSR
 
     const effectiveWidth = windowWidth * devicePixelRatio;
 
     if (effectiveWidth <= BREAKPOINTS.small) {
-      return 'small';
+      return "small";
     } else if (effectiveWidth <= BREAKPOINTS.medium) {
-      return 'medium';
+      return "medium";
     } else if (effectiveWidth <= BREAKPOINTS.large) {
-      return 'large';
+      return "large";
     } else {
-      return 'xl';
+      return "xl";
     }
   }, [windowWidth, devicePixelRatio]);
 
@@ -90,10 +95,10 @@ export function useResponsiveThumbnail({
   // Generate all thumbnail sizes for responsive loading
   const thumbnailSizes = useMemo(() => {
     return {
-      small: generateThumbnail(originalUrl, isVideo, 'small'),
-      medium: generateThumbnail(originalUrl, isVideo, 'medium'),
-      large: generateThumbnail(originalUrl, isVideo, 'large'),
-      xl: generateThumbnail(originalUrl, isVideo, 'xl')
+      small: generateThumbnail(originalUrl, isVideo, "small"),
+      medium: generateThumbnail(originalUrl, isVideo, "medium"),
+      large: generateThumbnail(originalUrl, isVideo, "large"),
+      xl: generateThumbnail(originalUrl, isVideo, "xl"),
     };
   }, [originalUrl, isVideo]);
 
@@ -136,14 +141,18 @@ export function useResponsiveThumbnail({
     imageError,
     handleImageLoad,
     handleImageError,
-    fallbackUrl: fallbackUrl || originalUrl
+    fallbackUrl: fallbackUrl || originalUrl,
   };
 }
 
 /**
  * Hook for getting thumbnail URL with specific size (without responsiveness)
  */
-export function useThumbnail(originalUrl: string, isVideo: boolean, size: ThumbnailSize = 'medium') {
+export function useThumbnail(
+  originalUrl: string,
+  isVideo: boolean,
+  size: ThumbnailSize = "medium",
+) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -173,6 +182,6 @@ export function useThumbnail(originalUrl: string, isVideo: boolean, size: Thumbn
     imageLoaded,
     imageError,
     handleImageLoad,
-    handleImageError
+    handleImageError,
   };
-} 
+}

@@ -1,6 +1,6 @@
-import { Tag } from 'lucide-react';
+import { Tag } from "lucide-react";
 
-import { TALK_TOPICS } from '../constants';
+import { TALK_TOPICS } from "../constants";
 
 interface TopicSelectorProps {
   selectedTopics: string[];
@@ -8,7 +8,11 @@ interface TopicSelectorProps {
   error?: string;
 }
 
-export default function TopicSelector({ selectedTopics, onTopicChange, error }: TopicSelectorProps) {
+export default function TopicSelector({
+  selectedTopics,
+  onTopicChange,
+  error,
+}: TopicSelectorProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center mb-4">
@@ -21,7 +25,7 @@ export default function TopicSelector({ selectedTopics, onTopicChange, error }: 
         Select the topics that best describe your meetup talk. Choose multiple if relevant.
       </p>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
-        {TALK_TOPICS.map(topic => (
+        {TALK_TOPICS.map((topic) => (
           <button
             key={topic}
             type="button"
@@ -33,8 +37,8 @@ export default function TopicSelector({ selectedTopics, onTopicChange, error }: 
               min-h-[52px] text-center
               ${
                 selectedTopics.includes(topic)
-                  ? 'bg-js text-black shadow-md ring-2 ring-js ring-offset-2'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? "bg-js text-black shadow-md ring-2 ring-js ring-offset-2"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }
             `}
           >

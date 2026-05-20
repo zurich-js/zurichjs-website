@@ -231,6 +231,31 @@ export const getUpcomingEvents = async () => {
   return events.map(mapEventData);
 };
 
+export const getHomepageUpcomingEvents = async (): Promise<Event[]> => {
+  const events = await client.withConfig({ useCdn: true }).fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0...3] {
+    _id,
+    id,
+    title,
+    datetime,
+    location,
+    address,
+    attendees,
+    isProMeetup,
+    stripePriceId,
+    description,
+    meetupUrl,
+    excludeFromStats,
+    "image": {
+      "asset": {
+        "url": image.asset->url
+      }
+    },
+    "talks": []
+  }`, { startOfToday: getStartOfTodayISO() });
+
+  return events.map(mapEventData);
+};
+
 // Lightweight version for UTM tracking - only fetch essential data
 export const getEventsForUTM = async (options: {
   limit?: number;
@@ -1145,7 +1170,6 @@ export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
     throw error;
   }
 };
-
 
 
 

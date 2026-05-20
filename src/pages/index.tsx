@@ -1,3 +1,5 @@
+import type { GetStaticProps } from 'next';
+
 import Layout from '@/components/layout/Layout';
 import CommunityValues from '@/components/sections/CommunityValues';
 import JoinCTA from '@/components/sections/JoinCTA';
@@ -11,16 +13,8 @@ import { getPartners } from '@/data';
 import { getUpcomingWorkshops } from '@/data/workshops';
 import useReferrerTracking from '@/hooks/useReferrerTracking';
 import type { Event } from '@/sanity/queries';
-import { getSpeakers, getSpeakerById, getStats, getUpcomingEvents } from '@/sanity/queries';
-import type { Speaker } from '@/types';
+import { getHomepageUpcomingEvents } from '@/sanity/queries';
 import { generateHomePageStructuredData } from '@/utils/structuredData';
-
-interface StatsData {
-  members: number;
-  eventsHosted: number;
-  speakersToDate: number;
-  totalAttendees: number;
-}
 
 interface Partner {
   id: string;
@@ -31,13 +25,11 @@ interface Partner {
 
 interface HomeProps {
   upcomingEvents: Event[];
-  speakers: Speaker[];
-  stats: StatsData;
   partners: Partner[];
   upcomingWorkshops: Workshop[];
 }
 
-export default function Home({ upcomingEvents, speakers, stats, partners, upcomingWorkshops }: HomeProps) {
+export default function Home({ upcomingEvents, partners, upcomingWorkshops }: HomeProps) {
   useReferrerTracking();
 
   const structuredData = generateHomePageStructuredData();
@@ -88,7 +80,7 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
       />
 
       {/* Hero Section */}
-      <LandingHero upcomingEvents={upcomingEvents} stats={stats} upcomingWorkshops={upcomingWorkshops} speakers={speakers} />
+      <LandingHero upcomingEvents={upcomingEvents} upcomingWorkshops={upcomingWorkshops} />
 
 
       {/* Upcoming Events Section */}
@@ -110,31 +102,19 @@ export default function Home({ upcomingEvents, speakers, stats, partners, upcomi
   );
 }
 
-export async function getServerSideProps() {
-  const stats = await getStats();
-  const upcomingEvents = await getUpcomingEvents();
-  const speakers = await getSpeakers({ shouldFilterVisible: true });
-  const partners = getPartners();
-  const upcomingWorkshops = getUpcomingWorkshops();
-
-  // Fetch speaker data for each workshop
-  const workshopsWithSpeakers = await Promise.all(
-    upcomingWorkshops.map(async (workshop) => {
-      const speaker = await getSpeakerById(workshop.speakerId);
-      return {
-        ...workshop,
-        speaker
-      };
-    })
-  );
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  const [upcomingEvents, partners, upcomingWorkshops] = await Promise.all([
+    getHomepageUpcomingEvents(),
+    Promise.resolve(getPartners()),
+    Promise.resolve(getUpcomingWorkshops()),
+  ]);
 
   return {
     props: {
       upcomingEvents,
-      speakers: speakers,
-      stats,
       partners,
-      upcomingWorkshops: workshopsWithSpeakers,
+      upcomingWorkshops,
     },
+    revalidate: 600,
   };
-}
+};

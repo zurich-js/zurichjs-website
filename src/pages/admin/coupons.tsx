@@ -2,7 +2,7 @@ import { OrganizationSwitcher } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
 import { Tag, ArrowLeft, Plus, Eye, Trash2, Percent, DollarSign, Users, TrendingUp, Copy, Link as LinkIcon, Code } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 
@@ -33,6 +33,8 @@ interface CouponStats {
   } | null;
 }
 
+const getUnixTimestamp = () => Math.floor(Date.now() / 1000);
+
 export default function CouponManagement() {
   const [coupons, setCoupons] = useState<StripeCoupon[]>([]);
   const [stats, setStats] = useState<CouponStats | null>(null);
@@ -49,7 +51,16 @@ export default function CouponManagement() {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
+  const [currentUnixTimestamp] = useState(getUnixTimestamp);
   
+  const closeAllModals = useCallback(() => {
+    setShowDetailsModal(false);
+    setShowDeleteModal(false);
+    setShowCreateModal(false);
+    setSelectedCoupon(null);
+    setShowCopyDropdown(null);
+  }, []);
+
   // Coupon creation form state
   const [newCoupon, setNewCoupon] = useState({
     id: '',
@@ -100,7 +111,7 @@ export default function CouponManagement() {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [showDetailsModal, showDeleteModal, showCreateModal, showCopyDropdown]);
+  }, [showDetailsModal, showDeleteModal, showCreateModal, showCopyDropdown, closeAllModals]);
 
   // Handle click outside to close copy dropdown
   useEffect(() => {
@@ -128,14 +139,13 @@ export default function CouponManagement() {
     if (!matchesSearch) return false;
 
     // Status filter
-    const now = Date.now() / 1000; // Convert to seconds
     switch (filterBy) {
       case 'active':
-        return coupon.valid && (!coupon.redeem_by || coupon.redeem_by > now);
+        return coupon.valid && (!coupon.redeem_by || coupon.redeem_by > currentUnixTimestamp);
       case 'inactive':
         return !coupon.valid;
       case 'expired':
-        return coupon.redeem_by && coupon.redeem_by <= now;
+        return coupon.redeem_by && coupon.redeem_by <= currentUnixTimestamp;
       default:
         return true;
     }
@@ -179,8 +189,7 @@ export default function CouponManagement() {
       return { status: 'Inactive', color: 'bg-gray-100 text-gray-800' };
     }
     
-    const now = Date.now() / 1000;
-    if (coupon.redeem_by && coupon.redeem_by <= now) {
+    if (coupon.redeem_by && coupon.redeem_by <= currentUnixTimestamp) {
       return { status: 'Expired', color: 'bg-red-100 text-red-800' };
     }
     
@@ -224,14 +233,6 @@ export default function CouponManagement() {
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const closeAllModals = () => {
-    setShowDetailsModal(false);
-    setShowDeleteModal(false);
-    setShowCreateModal(false);
-    setSelectedCoupon(null);
-    setShowCopyDropdown(null);
   };
 
   const handleCopyToClipboard = async (text: string, type: 'url' | 'code') => {

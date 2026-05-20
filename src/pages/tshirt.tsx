@@ -55,6 +55,43 @@ export default function TshirtPage() {
   const [isMounted, setIsMounted] = useState(false);
   const hasTrackedPageView = useRef(false);
 
+  // Cancellation recovery state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelEmail, setCancelEmail] = useState('');
+  const [cancelFeedbackSubmitted, setCancelFeedbackSubmitted] = useState(false);
+  const [cancelModalDismissed, setCancelModalDismissed] = useState(false);
+
+  // Cash payment state
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
+
+  // Delivery address state
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    name: '',
+    email: '',
+    address: '',
+    city: '',
+    zipCode: '',
+    country: 'Switzerland'
+  });
+
+  // Cash payment form state
+  const [cashPaymentDetails, setCashPaymentDetails] = useState({
+    firstName: '',
+    lastName: '',
+    email: ''
+  });
+
+  // Track notification state to prevent duplicates
+  const [cardNotificationSent, setCardNotificationSent] = useState(false);
+
+  // Merch survey state
+  const [showMerchSurvey, setShowMerchSurvey] = useState(false);
+  const [merchSuggestion, setMerchSuggestion] = useState('');
+  const [surveySubmitted, setSurveySubmitted] = useState(false);
+  const [surveySubmitting, setSurveySubmitting] = useState(false);
+
   // Community discount logic
   const hasCoupon = couponData && couponData.isValid;
   const communityCouponCode = isSignedIn && !hasCoupon ? 'zurichjs-community' : undefined;
@@ -176,43 +213,6 @@ export default function TshirtPage() {
       }));
     }
   }, [userLoaded, user]);
-
-  // Cancellation recovery state
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [cancelEmail, setCancelEmail] = useState('');
-  const [cancelFeedbackSubmitted, setCancelFeedbackSubmitted] = useState(false);
-  const [cancelModalDismissed, setCancelModalDismissed] = useState(false);
-
-  // Cash payment state
-  const [showCashModal, setShowCashModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
-
-  // Delivery address state
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    name: '',
-    email: '',
-    address: '',
-    city: '',
-    zipCode: '',
-    country: 'Switzerland'
-  });
-
-  // Cash payment form state
-  const [cashPaymentDetails, setCashPaymentDetails] = useState({
-    firstName: '',
-    lastName: '',
-    email: ''
-  });
-
-  // Track notification state to prevent duplicates
-  const [cardNotificationSent, setCardNotificationSent] = useState(false);
-
-  // Merch survey state
-  const [showMerchSurvey, setShowMerchSurvey] = useState(false);
-  const [merchSuggestion, setMerchSuggestion] = useState('');
-  const [surveySubmitted, setSurveySubmitted] = useState(false);
-  const [surveySubmitting, setSurveySubmitting] = useState(false);
 
   // Show cancel modal if canceled=true in URL
   useEffect(() => {

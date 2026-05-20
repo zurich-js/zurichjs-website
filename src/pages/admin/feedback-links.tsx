@@ -1,6 +1,6 @@
 import { Copy, Check, Search, RefreshCw, Mail, Calendar } from 'lucide-react';
 import { GetServerSideProps } from 'next';
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import SEO from '@/components/SEO';
@@ -84,6 +84,20 @@ export default function AdminFeedbackLinks({ speakers }: AdminFeedbackLinksProps
         }
     }, [searchTerm, speakers]);
 
+    // Get all unique events from all speakers' talks
+    const allEvents = useMemo(() => speakers.flatMap(speaker => 
+        speaker.talks.flatMap(talk => 
+            talk.events.map(event => ({
+                id: event.id,
+                title: event.title,
+                date: event.datetime,
+                location: event.location
+            }))
+        )
+    ).filter((value, index, self) => 
+        self.findIndex(v => v.id === value.id) === index
+    ), [speakers]);
+
     // Generate all event feedback links after component mounts
     useEffect(() => {
         if (isMounted) {
@@ -97,7 +111,7 @@ export default function AdminFeedbackLinks({ speakers }: AdminFeedbackLinksProps
             
             setEventLinks(links);
         }
-    }, [isMounted]);
+    }, [isMounted, allEvents]);
 
     const generateLink = async (speakerId: string) => {
         setGeneratingLink(speakerId);
@@ -156,20 +170,6 @@ export default function AdminFeedbackLinks({ speakers }: AdminFeedbackLinksProps
         // Open default email client
         window.open(mailtoLink, '_blank');
     };
-
-    // Get all unique events from all speakers' talks
-    const allEvents = speakers.flatMap(speaker => 
-        speaker.talks.flatMap(talk => 
-            talk.events.map(event => ({
-                id: event.id,
-                title: event.title,
-                date: event.datetime,
-                location: event.location
-            }))
-        )
-    ).filter((value, index, self) => 
-        self.findIndex(v => v.id === value.id) === index
-    );
 
     return (
         <Layout>

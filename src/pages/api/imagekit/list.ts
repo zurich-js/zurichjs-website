@@ -1,4 +1,4 @@
-import ImageKit from "imagekit";
+import { ImageKit } from "@imagekit/nodejs";
 import { NextApiRequest, NextApiResponse } from 'next';
 
 
@@ -14,13 +14,12 @@ async function handler(
 
     try {
         const imagekit = new ImageKit({
-            publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
             privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
-            urlEndpoint: process.env.IMAGEKIT_ENDPOINT || "",
         });
 
-        const list = await imagekit.listFiles({
+        const list = await imagekit.assets.list({
             limit: 1000,
+            type: 'file',
             sort: 'DESC_CREATED'
         });
         

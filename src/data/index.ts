@@ -31,6 +31,7 @@ export interface Partner {
     brandColors?: PartnerBrandColors;
     // When true, the partner link omits `noreferrer` so they can see referral traffic in analytics.
     allowReferrer?: boolean;
+    bookingUrl?: string;
 }
 
 export const getPartners = () => {
@@ -174,6 +175,23 @@ export const getPartners = () => {
             blurb: 'Stripe is a financial infrastructure platform for businesses. Millions of companies use Stripe to accept payments, grow revenue, and accelerate new business opportunities.'
         },
         {
+            id: '23',
+            name: 'FIN',
+            logo: '/images/partners/fin.png',
+            url: 'https://trust-fin.ch/tax-return-switzerland/',
+            bookingUrl: 'https://trust-fin.ch/book-a-call/',
+            type: PartnerType.Supporting,
+            sponsorshipTier: SponsorshipTier.Supporter,
+            description: 'Your Financial Clarity Starts Here',
+            blurb: 'Looking for tax clarity instead of complexity?\n\nFIN is your tax advisor in Switzerland — guiding you through all financial and tax matters. No jargon, no red tape — just real support, on your terms.',
+            brandColors: {
+                primary: '#2596be',
+                primaryDark: '#1c7a9e',
+                primaryLight: '#4ab3d6'
+            },
+            allowReferrer: true
+        },
+        {
             id: '22',
             name: 'Vercel',
             logo: '/images/partners/vercel-black.png',
@@ -213,21 +231,13 @@ export type TodaySponsor = Omit<Partner, 'type'>;
 export const getTodaysSponsors = (): TodaySponsor[] => {
     // Get existing partners for sponsors that are already in our system
     const allPartners = getPartners();
-    const stripe = allPartners.find(p => p.name.toLowerCase() === 'stripe');
     const gyff = allPartners.find(p => p.name.toLowerCase() === 'gyff');
+    const fin = allPartners.find(p => p.name.toLowerCase() === 'fin');
     const smallpdf = allPartners.find(p => p.name.toLowerCase() === 'smallpdf');
+    const vercel = allPartners.find(p => p.name.toLowerCase() === 'vercel');
 
     const sponsors: TodaySponsor[] = [
-        // Community Builder sponsorshipTier (Gold sponsor)
-        ...(stripe ? [{
-            id: stripe.id,
-            name: stripe.name,
-            logo: stripe.logo,
-            url: stripe.url,
-            sponsorshipTier: SponsorshipTier.Builder,
-            description: stripe.description
-        }] : []),
-
+        // Community Champion sponsorshipTier
         ...(smallpdf ? [{
             id: smallpdf.id,
             name: smallpdf.name,
@@ -235,6 +245,15 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
             url: smallpdf.url,
             sponsorshipTier: SponsorshipTier.Champion,
             description: smallpdf.description
+        }] : []),
+
+        ...(vercel ? [{
+            id: vercel.id,
+            name: vercel.name,
+            logo: vercel.logo,
+            url: vercel.url,
+            sponsorshipTier: SponsorshipTier.Champion,
+            description: vercel.description
         }] : []),
 
         // Community Supporter sponsorshipTier
@@ -245,6 +264,15 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
             url: gyff.url,
             sponsorshipTier: SponsorshipTier.Supporter,
             description: gyff.description
+        }] : []),
+
+        ...(fin ? [{
+            id: fin.id,
+            name: fin.name,
+            logo: fin.logo,
+            url: fin.url,
+            sponsorshipTier: SponsorshipTier.Supporter,
+            description: fin.description
         }] : [])
     ];
 

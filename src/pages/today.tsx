@@ -222,7 +222,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
 
 export async function getStaticProps() {
   try {
-    const upcomingEvent = await getEventById('april-2026');
+    const upcomingEvent = await getEventById('may-2026');
 
     return {
       props: {

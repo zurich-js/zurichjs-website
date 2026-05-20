@@ -424,14 +424,36 @@ export default function Partners({ partners, titleClassName = 'text-blue-700' }:
                           Visit {partner.name} →
                         </Button>
                       )}
-                      <Button
-                        href="/partnerships"
-                        variant="outline"
-                        className="border-purple-400 text-purple-600 hover:bg-purple-600 hover:text-white w-full sm:w-auto"
-                        onClick={() => track('partnership_cta_click', { source: 'supporter_partner_section' })}
-                      >
-                        Become a Sponsor
-                      </Button>
+                      {partner.bookingUrl ? (
+                        <Button
+                          href={partner.bookingUrl}
+                          target="_blank"
+                          rel={linkRel}
+                          variant="outline"
+                          className="border-2 transition-colors w-full sm:w-auto"
+                          style={brand ? { borderColor: brand.primary, color: brand.primary } : undefined}
+                          onMouseEnter={brand ? (e: MouseEvent<HTMLAnchorElement>) => {
+                            e.currentTarget.style.backgroundColor = brand.primary;
+                            e.currentTarget.style.color = '#ffffff';
+                          } : undefined}
+                          onMouseLeave={brand ? (e: MouseEvent<HTMLAnchorElement>) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = brand.primary;
+                          } : undefined}
+                          onClick={() => track('partner_booking_click', { partnerName: partner.name, source: 'supporter_partner_section' })}
+                        >
+                          Book a Call →
+                        </Button>
+                      ) : (
+                        <Button
+                          href="/partnerships"
+                          variant="outline"
+                          className="border-purple-400 text-purple-600 hover:bg-purple-600 hover:text-white w-full sm:w-auto"
+                          onClick={() => track('partnership_cta_click', { source: 'supporter_partner_section' })}
+                        >
+                          Become a Sponsor
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>

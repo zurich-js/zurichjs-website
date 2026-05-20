@@ -1,7 +1,8 @@
-packages: []
-onlyBuiltDependencies:
-  - '@clerk/shared'
-  - core-js
-  - esbuild
-  - sharp
-  - unrs-resolver
+minimumReleaseAge: 1440
+
+allowBuilds:
+  '@clerk/shared': true
+  core-js: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true

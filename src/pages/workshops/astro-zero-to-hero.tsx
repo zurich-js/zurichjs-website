@@ -132,7 +132,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
             `;
             document.head.appendChild(style);
         }
-    }, []);
+    }, [track, workshop.id, workshop.title]);
 
     // Share event function
     const shareWorkshop = async () => {

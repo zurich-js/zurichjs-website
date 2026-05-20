@@ -198,7 +198,28 @@ export default function SuccessPage() {
     };
 
     notifyPurchase();
-  }, [paymentData, isLoaded]);
+  }, [
+    city,
+    country,
+    coupon,
+    email,
+    event_id,
+    isLoaded,
+    isManualPayment,
+    itemType,
+    method,
+    name,
+    paymentData,
+    postcode,
+    price,
+    session_id,
+    streetAndNumber,
+    ticket,
+    ticket_type,
+    type,
+    user?.primaryEmailAddress?.emailAddress,
+    workshop_id,
+  ]);
 
   if (loading) {
     return (

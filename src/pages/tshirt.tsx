@@ -49,7 +49,7 @@ export default function TshirtPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { couponCode, couponData, error: couponError, applyDiscount } = useCoupon();
   const { isSignedIn, userEmail } = useAuthenticatedCheckout();
-  const { track, captureError } = useEvents();
+  const { track } = useEvents();
 
   // Track if component is mounted to avoid hydration mismatches
   const [isMounted, setIsMounted] = useState(false);

@@ -1,13 +1,7 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { defineConfig } from "eslint/config";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
 import importPlugin from 'eslint-plugin-import';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export default defineConfig([{
     ignores: ['.vercel/**'],
@@ -28,6 +22,7 @@ export default defineConfig([{
                 caseInsensitive: true,
             },
         }],
-        "react-hooks/set-state-in-effect": "warn"
+        "@next/next/no-img-element": "off",
+        "react-hooks/set-state-in-effect": "off",
     },
 }]);

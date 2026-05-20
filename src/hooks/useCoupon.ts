@@ -1,5 +1,5 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 export interface CouponData {
   id: string;
@@ -14,7 +14,7 @@ export interface CouponData {
 export function useCoupon() {
   const router = useRouter();
   const { coupon: couponCode } = router.query;
-  
+
   const [couponData, setCouponData] = useState<CouponData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,19 +29,19 @@ export function useCoupon() {
     const validateCoupon = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(`/api/stripe/validate-coupon?code=${couponCode}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to validate coupon');
+          throw new Error(errorData.error || "Failed to validate coupon");
         }
-        
+
         const data = await response.json();
         setCouponData(data);
       } catch (err) {
-        console.error('Error validating coupon:', err);
+        console.error("Error validating coupon:", err);
         setError((err as Error).message);
         setCouponData(null);
       } finally {
@@ -60,7 +60,7 @@ export function useCoupon() {
       return price * (1 - couponData.percentOff / 100);
     }
 
-    if (couponData.amountOff && couponData.currency === 'chf') {
+    if (couponData.amountOff && couponData.currency === "chf") {
       return Math.max(0, price - couponData.amountOff / 100);
     }
 
@@ -74,4 +74,4 @@ export function useCoupon() {
     error,
     applyDiscount,
   };
-} 
+}

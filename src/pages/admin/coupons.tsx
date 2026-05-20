@@ -1,10 +1,23 @@
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Tag, ArrowLeft, Plus, Eye, Trash2, Percent, DollarSign, Users, TrendingUp, Copy, Link as LinkIcon, Code } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { OrganizationSwitcher } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import {
+  Tag,
+  ArrowLeft,
+  Plus,
+  Eye,
+  Trash2,
+  Percent,
+  DollarSign,
+  Users,
+  TrendingUp,
+  Copy,
+  Link as LinkIcon,
+  Code,
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useState, useEffect } from "react";
 
-import Layout from '@/components/layout/Layout';
+import Layout from "@/components/layout/Layout";
 
 interface StripeCoupon {
   id: string;
@@ -33,13 +46,15 @@ interface CouponStats {
   } | null;
 }
 
+const getUnixTimestamp = () => Math.floor(Date.now() / 1000);
+
 export default function CouponManagement() {
   const [coupons, setCoupons] = useState<StripeCoupon[]>([]);
   const [stats, setStats] = useState<CouponStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterBy, setFilterBy] = useState<'all' | 'active' | 'inactive' | 'expired'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterBy, setFilterBy] = useState<"all" | "active" | "inactive" | "expired">("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<StripeCoupon | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -49,20 +64,29 @@ export default function CouponManagement() {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
-  
+  const [currentUnixTimestamp] = useState(getUnixTimestamp);
+
+  const closeAllModals = useCallback(() => {
+    setShowDetailsModal(false);
+    setShowDeleteModal(false);
+    setShowCreateModal(false);
+    setSelectedCoupon(null);
+    setShowCopyDropdown(null);
+  }, []);
+
   // Coupon creation form state
   const [newCoupon, setNewCoupon] = useState({
-    id: '',
-    name: '',
-    discountType: 'percent' as 'percent' | 'amount',
-    percentOff: '',
-    amountOff: '',
-    currency: 'usd',
-    duration: 'once' as 'once' | 'repeating' | 'forever',
-    durationInMonths: '',
-    maxRedemptions: '',
-    redeemBy: '',
-    metadata: {} as Record<string, string>
+    id: "",
+    name: "",
+    discountType: "percent" as "percent" | "amount",
+    percentOff: "",
+    amountOff: "",
+    currency: "usd",
+    duration: "once" as "once" | "repeating" | "forever",
+    durationInMonths: "",
+    maxRedemptions: "",
+    redeemBy: "",
+    metadata: {} as Record<string, string>,
   });
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -70,16 +94,16 @@ export default function CouponManagement() {
     const fetchCoupons = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/admin/stripe-coupons');
+        const response = await fetch("/api/admin/stripe-coupons");
         if (!response.ok) {
-          throw new Error('Failed to fetch coupons');
+          throw new Error("Failed to fetch coupons");
         }
         const data = await response.json();
         setCoupons(data.coupons);
         setStats(data.stats);
       } catch (err) {
-        console.error('Error fetching coupons:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        console.error("Error fetching coupons:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -91,51 +115,51 @@ export default function CouponManagement() {
   // Handle escape key to close modals and dropdowns
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         closeAllModals();
       }
     };
 
     if (showDetailsModal || showDeleteModal || showCreateModal || showCopyDropdown) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
+      document.addEventListener("keydown", handleEscape);
+      return () => document.removeEventListener("keydown", handleEscape);
     }
-  }, [showDetailsModal, showDeleteModal, showCreateModal, showCopyDropdown]);
+  }, [showDetailsModal, showDeleteModal, showCreateModal, showCopyDropdown, closeAllModals]);
 
   // Handle click outside to close copy dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (showCopyDropdown) {
         const target = e.target as Element;
-        if (!target.closest('.copy-dropdown')) {
+        if (!target.closest(".copy-dropdown")) {
           setShowCopyDropdown(null);
         }
       }
     };
 
     if (showCopyDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [showCopyDropdown]);
 
   // Filter coupons based on criteria
-  const filteredCoupons = coupons.filter(coupon => {
+  const filteredCoupons = coupons.filter((coupon) => {
     // Text search filter
-    const matchesSearch = coupon.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (coupon.name && coupon.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
+    const matchesSearch =
+      coupon.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (coupon.name && coupon.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
     if (!matchesSearch) return false;
 
     // Status filter
-    const now = Date.now() / 1000; // Convert to seconds
     switch (filterBy) {
-      case 'active':
-        return coupon.valid && (!coupon.redeem_by || coupon.redeem_by > now);
-      case 'inactive':
+      case "active":
+        return coupon.valid && (!coupon.redeem_by || coupon.redeem_by > currentUnixTimestamp);
+      case "inactive":
         return !coupon.valid;
-      case 'expired':
-        return coupon.redeem_by && coupon.redeem_by <= now;
+      case "expired":
+        return coupon.redeem_by && coupon.redeem_by <= currentUnixTimestamp;
       default:
         return true;
     }
@@ -158,17 +182,17 @@ export default function CouponManagement() {
     } else if (coupon.amount_off && coupon.currency) {
       return `${(coupon.amount_off / 100).toFixed(2)} ${coupon.currency.toUpperCase()} off`;
     }
-    return 'Unknown discount';
+    return "Unknown discount";
   };
 
   const formatDuration = (coupon: StripeCoupon) => {
     switch (coupon.duration) {
-      case 'once':
-        return 'One time use';
-      case 'repeating':
+      case "once":
+        return "One time use";
+      case "repeating":
         return `${coupon.duration_in_months} months`;
-      case 'forever':
-        return 'Forever';
+      case "forever":
+        return "Forever";
       default:
         return coupon.duration;
     }
@@ -176,19 +200,18 @@ export default function CouponManagement() {
 
   const getCouponStatus = (coupon: StripeCoupon) => {
     if (!coupon.valid) {
-      return { status: 'Inactive', color: 'bg-gray-100 text-gray-800' };
+      return { status: "Inactive", color: "bg-gray-100 text-gray-800" };
     }
-    
-    const now = Date.now() / 1000;
-    if (coupon.redeem_by && coupon.redeem_by <= now) {
-      return { status: 'Expired', color: 'bg-red-100 text-red-800' };
+
+    if (coupon.redeem_by && coupon.redeem_by <= currentUnixTimestamp) {
+      return { status: "Expired", color: "bg-red-100 text-red-800" };
     }
-    
+
     if (coupon.max_redemptions && coupon.times_redeemed >= coupon.max_redemptions) {
-      return { status: 'Limit Reached', color: 'bg-orange-100 text-orange-800' };
+      return { status: "Limit Reached", color: "bg-orange-100 text-orange-800" };
     }
-    
-    return { status: 'Active', color: 'bg-green-100 text-green-800' };
+
+    return { status: "Active", color: "bg-green-100 text-green-800" };
   };
 
   const handleViewDetails = (coupon: StripeCoupon) => {
@@ -203,104 +226,97 @@ export default function CouponManagement() {
 
   const confirmDeleteCoupon = async () => {
     if (!selectedCoupon) return;
-    
+
     try {
       setActionLoading(true);
       const response = await fetch(`/api/admin/stripe-coupons/${selectedCoupon.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to delete coupon');
+        throw new Error("Failed to delete coupon");
       }
-      
+
       // Remove coupon from local state
-      setCoupons(prev => prev.filter(c => c.id !== selectedCoupon.id));
+      setCoupons((prev) => prev.filter((c) => c.id !== selectedCoupon.id));
       setShowDeleteModal(false);
       setSelectedCoupon(null);
     } catch (err) {
-      console.error('Error deleting coupon:', err);
-      alert('Failed to delete coupon. Please try again.');
+      console.error("Error deleting coupon:", err);
+      alert("Failed to delete coupon. Please try again.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  const closeAllModals = () => {
-    setShowDetailsModal(false);
-    setShowDeleteModal(false);
-    setShowCreateModal(false);
-    setSelectedCoupon(null);
-    setShowCopyDropdown(null);
-  };
-
-  const handleCopyToClipboard = async (text: string, type: 'url' | 'code') => {
+  const handleCopyToClipboard = async (text: string, type: "url" | "code") => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopyFeedback(`${type === 'url' ? 'URL' : 'Code'} copied to clipboard!`);
+      setCopyFeedback(`${type === "url" ? "URL" : "Code"} copied to clipboard!`);
       setShowCopyDropdown(null);
       setTimeout(() => setCopyFeedback(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
-      setCopyFeedback('Failed to copy to clipboard');
+      console.error("Failed to copy:", err);
+      setCopyFeedback("Failed to copy to clipboard");
       setTimeout(() => setCopyFeedback(null), 2000);
     }
   };
 
   const handleCopyUrl = (couponCode: string) => {
     const url = `?coupon=${couponCode}`;
-    handleCopyToClipboard(url, 'url');
+    handleCopyToClipboard(url, "url");
   };
 
   const handleCopyCode = (couponCode: string) => {
-    handleCopyToClipboard(couponCode, 'code');
+    handleCopyToClipboard(couponCode, "code");
   };
 
   const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setCreateLoading(true);
-      const response = await fetch('/api/admin/stripe-coupons', {
-        method: 'POST',
+      const response = await fetch("/api/admin/stripe-coupons", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(newCoupon),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create coupon');
+        throw new Error(errorData.message || "Failed to create coupon");
       }
-      
+
       const data = await response.json();
-      
+
       // Add new coupon to the list
-      setCoupons(prev => [data.coupon, ...prev]);
-      
+      setCoupons((prev) => [data.coupon, ...prev]);
+
       // Reset form
       setNewCoupon({
-        id: '',
-        name: '',
-        discountType: 'percent',
-        percentOff: '',
-        amountOff: '',
-        currency: 'usd',
-        duration: 'once',
-        durationInMonths: '',
-        maxRedemptions: '',
-        redeemBy: '',
-        metadata: {}
+        id: "",
+        name: "",
+        discountType: "percent",
+        percentOff: "",
+        amountOff: "",
+        currency: "usd",
+        duration: "once",
+        durationInMonths: "",
+        maxRedemptions: "",
+        redeemBy: "",
+        metadata: {},
       });
-      
+
       setShowCreateModal(false);
-      setCopyFeedback('Coupon created successfully!');
+      setCopyFeedback("Coupon created successfully!");
       setTimeout(() => setCopyFeedback(null), 3000);
-      
     } catch (error) {
-      console.error('Error creating coupon:', error);
-      setCopyFeedback(`Error: ${error instanceof Error ? error.message : 'Failed to create coupon'}`);
+      console.error("Error creating coupon:", error);
+      setCopyFeedback(
+        `Error: ${error instanceof Error ? error.message : "Failed to create coupon"}`,
+      );
       setTimeout(() => setCopyFeedback(null), 5000);
     } finally {
       setCreateLoading(false);
@@ -414,8 +430,10 @@ export default function CouponManagement() {
               <DollarSign className="w-8 h-8 text-orange-600 mr-3" />
               <div>
                 <p className="text-sm text-gray-600">Most Used</p>
-                <p className="text-lg font-bold">{stats?.mostUsedCoupon?.id || 'None'}</p>
-                <p className="text-xs text-gray-500">{stats?.mostUsedCoupon?.times_redeemed || 0} uses</p>
+                <p className="text-lg font-bold">{stats?.mostUsedCoupon?.id || "None"}</p>
+                <p className="text-xs text-gray-500">
+                  {stats?.mostUsedCoupon?.times_redeemed || 0} uses
+                </p>
               </div>
             </div>
           </motion.div>
@@ -444,7 +462,8 @@ export default function CouponManagement() {
               </select>
             </div>
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredCoupons.length)} of {filteredCoupons.length} coupons
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredCoupons.length)} of{" "}
+              {filteredCoupons.length} coupons
             </div>
           </div>
         </div>
@@ -527,7 +546,11 @@ export default function CouponManagement() {
                           </button>
                           <div className="relative copy-dropdown">
                             <button
-                              onClick={() => setShowCopyDropdown(showCopyDropdown === coupon.id ? null : coupon.id)}
+                              onClick={() =>
+                                setShowCopyDropdown(
+                                  showCopyDropdown === coupon.id ? null : coupon.id,
+                                )
+                              }
                               title="Copy Coupon"
                               className="p-1 text-gray-600 hover:text-green-600 transition-colors"
                             >
@@ -569,12 +592,13 @@ export default function CouponManagement() {
               </tbody>
             </table>
           </div>
-          
+
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
               <div className="text-sm text-gray-600">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredCoupons.length)} of {filteredCoupons.length} coupons
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredCoupons.length)} of{" "}
+                {filteredCoupons.length} coupons
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -584,7 +608,7 @@ export default function CouponManagement() {
                 >
                   Previous
                 </button>
-                
+
                 {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
                   let pageNum;
                   if (totalPages <= 7) {
@@ -596,22 +620,22 @@ export default function CouponManagement() {
                   } else {
                     pageNum = currentPage - 3 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}
                       onClick={() => setCurrentPage(pageNum)}
                       className={`px-3 py-1 rounded-lg ${
                         currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50'
+                          ? "bg-blue-600 text-white"
+                          : "border border-gray-300 hover:bg-gray-50"
                       }`}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
-                
+
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
@@ -626,18 +650,26 @@ export default function CouponManagement() {
 
         {/* View Details Modal */}
         {showDetailsModal && selectedCoupon && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeAllModals}>
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={closeAllModals}
+          >
+            <div
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold mb-4">Coupon Details</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Coupon Code
+                    </label>
                     <p className="font-mono text-lg font-semibold">{selectedCoupon.id}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                    <p className="text-gray-900">{selectedCoupon.name || 'No name set'}</p>
+                    <p className="text-gray-900">{selectedCoupon.name || "No name set"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Discount</label>
@@ -648,27 +680,39 @@ export default function CouponManagement() {
                     <p className="text-gray-900">{formatDuration(selectedCoupon)}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Times Redeemed</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Times Redeemed
+                    </label>
                     <p className="text-gray-900">{selectedCoupon.times_redeemed}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Max Redemptions</label>
-                    <p className="text-gray-900">{selectedCoupon.max_redemptions || 'Unlimited'}</p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Max Redemptions
+                    </label>
+                    <p className="text-gray-900">{selectedCoupon.max_redemptions || "Unlimited"}</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCouponStatus(selectedCoupon).color}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${getCouponStatus(selectedCoupon).color}`}
+                    >
                       {getCouponStatus(selectedCoupon).status}
                     </span>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Created</label>
-                    <p className="text-gray-900">{new Date(selectedCoupon.created * 1000).toLocaleDateString()}</p>
+                    <p className="text-gray-900">
+                      {new Date(selectedCoupon.created * 1000).toLocaleDateString()}
+                    </p>
                   </div>
                   {selectedCoupon.redeem_by && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Expires</label>
-                      <p className="text-gray-900">{new Date(selectedCoupon.redeem_by * 1000).toLocaleDateString()}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Expires
+                      </label>
+                      <p className="text-gray-900">
+                        {new Date(selectedCoupon.redeem_by * 1000).toLocaleDateString()}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -698,19 +742,25 @@ export default function CouponManagement() {
           </div>
         )}
 
-
-
         {/* Delete Confirmation Modal */}
         {showDeleteModal && selectedCoupon && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeAllModals}>
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={closeAllModals}
+          >
+            <div
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold mb-4 text-red-600">Confirm Deletion</h3>
               <p className="text-gray-600 mb-4">
-                Are you sure you want to delete the coupon <span className="font-mono font-semibold">{selectedCoupon.id}</span>?
+                Are you sure you want to delete the coupon{" "}
+                <span className="font-mono font-semibold">{selectedCoupon.id}</span>?
               </p>
               <div className="bg-red-50 border border-red-200 rounded p-4 mb-4">
                 <p className="text-red-800 text-sm">
-                  <strong>Warning:</strong> This action cannot be undone. The coupon will be permanently deleted from Stripe.
+                  <strong>Warning:</strong> This action cannot be undone. The coupon will be
+                  permanently deleted from Stripe.
                 </p>
               </div>
               <div className="flex justify-end gap-2">
@@ -726,8 +776,10 @@ export default function CouponManagement() {
                   disabled={actionLoading}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
                 >
-                  {actionLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
-                  {actionLoading ? 'Deleting...' : 'Delete Coupon'}
+                  {actionLoading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  {actionLoading ? "Deleting..." : "Delete Coupon"}
                 </button>
               </div>
             </div>
@@ -736,8 +788,14 @@ export default function CouponManagement() {
 
         {/* Create Coupon Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeAllModals}>
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={closeAllModals}
+          >
+            <div
+              className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-lg font-semibold mb-4">Create New Coupon</h3>
               <form onSubmit={handleCreateCoupon} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -749,7 +807,7 @@ export default function CouponManagement() {
                     <input
                       type="text"
                       value={newCoupon.id}
-                      onChange={(e) => setNewCoupon(prev => ({ ...prev, id: e.target.value }))}
+                      onChange={(e) => setNewCoupon((prev) => ({ ...prev, id: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="SUMMER2024"
                       required
@@ -764,7 +822,7 @@ export default function CouponManagement() {
                     <input
                       type="text"
                       value={newCoupon.name}
-                      onChange={(e) => setNewCoupon(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => setNewCoupon((prev) => ({ ...prev, name: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Summer 2024 Discount"
                     />
@@ -777,7 +835,12 @@ export default function CouponManagement() {
                     </label>
                     <select
                       value={newCoupon.discountType}
-                      onChange={(e) => setNewCoupon(prev => ({ ...prev, discountType: e.target.value as 'percent' | 'amount' }))}
+                      onChange={(e) =>
+                        setNewCoupon((prev) => ({
+                          ...prev,
+                          discountType: e.target.value as "percent" | "amount",
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
@@ -789,14 +852,16 @@ export default function CouponManagement() {
                   {/* Discount Value */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {newCoupon.discountType === 'percent' ? 'Percentage Off (%)' : 'Amount Off'} *
+                      {newCoupon.discountType === "percent" ? "Percentage Off (%)" : "Amount Off"} *
                     </label>
                     <div className="flex">
-                      {newCoupon.discountType === 'percent' ? (
+                      {newCoupon.discountType === "percent" ? (
                         <input
                           type="number"
                           value={newCoupon.percentOff}
-                          onChange={(e) => setNewCoupon(prev => ({ ...prev, percentOff: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCoupon((prev) => ({ ...prev, percentOff: e.target.value }))
+                          }
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="10"
                           min="1"
@@ -808,7 +873,9 @@ export default function CouponManagement() {
                           <input
                             type="number"
                             value={newCoupon.amountOff}
-                            onChange={(e) => setNewCoupon(prev => ({ ...prev, amountOff: e.target.value }))}
+                            onChange={(e) =>
+                              setNewCoupon((prev) => ({ ...prev, amountOff: e.target.value }))
+                            }
                             className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="10.00"
                             min="0.01"
@@ -817,7 +884,9 @@ export default function CouponManagement() {
                           />
                           <select
                             value={newCoupon.currency}
-                            onChange={(e) => setNewCoupon(prev => ({ ...prev, currency: e.target.value }))}
+                            onChange={(e) =>
+                              setNewCoupon((prev) => ({ ...prev, currency: e.target.value }))
+                            }
                             className="px-3 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <option value="usd">USD</option>
@@ -836,7 +905,12 @@ export default function CouponManagement() {
                     </label>
                     <select
                       value={newCoupon.duration}
-                      onChange={(e) => setNewCoupon(prev => ({ ...prev, duration: e.target.value as 'once' | 'repeating' | 'forever' }))}
+                      onChange={(e) =>
+                        setNewCoupon((prev) => ({
+                          ...prev,
+                          duration: e.target.value as "once" | "repeating" | "forever",
+                        }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     >
@@ -847,7 +921,7 @@ export default function CouponManagement() {
                   </div>
 
                   {/* Duration in Months */}
-                  {newCoupon.duration === 'repeating' && (
+                  {newCoupon.duration === "repeating" && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Duration in Months *
@@ -855,7 +929,9 @@ export default function CouponManagement() {
                       <input
                         type="number"
                         value={newCoupon.durationInMonths}
-                        onChange={(e) => setNewCoupon(prev => ({ ...prev, durationInMonths: e.target.value }))}
+                        onChange={(e) =>
+                          setNewCoupon((prev) => ({ ...prev, durationInMonths: e.target.value }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="3"
                         min="1"
@@ -872,7 +948,9 @@ export default function CouponManagement() {
                     <input
                       type="number"
                       value={newCoupon.maxRedemptions}
-                      onChange={(e) => setNewCoupon(prev => ({ ...prev, maxRedemptions: e.target.value }))}
+                      onChange={(e) =>
+                        setNewCoupon((prev) => ({ ...prev, maxRedemptions: e.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Leave empty for unlimited"
                       min="1"
@@ -887,7 +965,9 @@ export default function CouponManagement() {
                     <input
                       type="datetime-local"
                       value={newCoupon.redeemBy}
-                      onChange={(e) => setNewCoupon(prev => ({ ...prev, redeemBy: e.target.value }))}
+                      onChange={(e) =>
+                        setNewCoupon((prev) => ({ ...prev, redeemBy: e.target.value }))
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -907,8 +987,10 @@ export default function CouponManagement() {
                     disabled={createLoading}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                   >
-                    {createLoading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>}
-                    {createLoading ? 'Creating...' : 'Create Coupon'}
+                    {createLoading && (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    )}
+                    {createLoading ? "Creating..." : "Create Coupon"}
                   </button>
                 </div>
               </form>
@@ -918,4 +1000,4 @@ export default function CouponManagement() {
       </div>
     </Layout>
   );
-} 
+}

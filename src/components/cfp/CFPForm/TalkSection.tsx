@@ -1,13 +1,15 @@
-import { ChangeEvent } from 'react';
+import { ChangeEvent } from "react";
 
-import { FormState, ValidationErrors } from '../types';
+import { FormState, ValidationErrors } from "../types";
 
-import FormInput from './FormInput';
+import FormInput from "./FormInput";
 
 interface TalkSectionProps {
   formState: FormState;
   validationErrors: ValidationErrors;
-  onInputChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onInputChange: (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
   showDeepDiveOption: boolean;
 }
 
@@ -25,7 +27,9 @@ export default function TalkSection({
         </div>
         <h3 className="text-xl font-bold">Meetup Talk Details</h3>
       </div>
-      <p className="text-gray-600 mb-6 ml-14">Share the details of your meetup talk proposal with us.</p>
+      <p className="text-gray-600 mb-6 ml-14">
+        Share the details of your meetup talk proposal with us.
+      </p>
 
       <FormInput
         label="Talk Title"

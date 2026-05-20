@@ -23,16 +23,16 @@ type PaymentData = {
 export function encodePaymentData(data: PaymentData): string {
   try {
     const jsonString = JSON.stringify(data);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Browser environment
       return btoa(jsonString);
     } else {
       // Node.js environment
-      return Buffer.from(jsonString).toString('base64');
+      return Buffer.from(jsonString).toString("base64");
     }
   } catch (error) {
-    console.error('Error encoding payment data:', error);
-    return '';
+    console.error("Error encoding payment data:", error);
+    return "";
   }
 }
 
@@ -42,18 +42,18 @@ export function encodePaymentData(data: PaymentData): string {
 export function decodePaymentData(encodedData: string): PaymentData {
   try {
     let jsonString: string;
-    
-    if (typeof window !== 'undefined') {
+
+    if (typeof window !== "undefined") {
       // Browser environment
       jsonString = atob(encodedData);
     } else {
       // Node.js environment
-      jsonString = Buffer.from(encodedData, 'base64').toString();
+      jsonString = Buffer.from(encodedData, "base64").toString();
     }
-    
+
     return JSON.parse(jsonString) as PaymentData;
   } catch (error) {
-    console.error('Error decoding payment data:', error);
+    console.error("Error decoding payment data:", error);
     return {};
   }
-} 
+}

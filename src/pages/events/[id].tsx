@@ -1,27 +1,39 @@
-import { Disclosure, DisclosurePanel, DisclosureButton } from '@headlessui/react';
-import { atcb_action } from 'add-to-calendar-button-react';
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Share2, ExternalLink, ChevronLeft, ChevronRight, Building, Ticket, ChevronDown } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import React, { Fragment, useState, useEffect } from 'react';
+import { Disclosure, DisclosurePanel, DisclosureButton } from "@headlessui/react";
+import { atcb_action } from "add-to-calendar-button-react";
+import { motion } from "framer-motion";
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
+  Share2,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
+  Building,
+  Ticket,
+  ChevronDown,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useFeatureFlagEnabled } from "posthog-js/react";
+import React, { Fragment, useState, useEffect } from "react";
 
-import Layout from '@/components/layout/Layout';
-import Section from '@/components/Section';
-import SEO from '@/components/SEO';
-import Button from '@/components/ui/Button';
-import EventFeedback from '@/components/ui/EventFeedback';
-import EventInterestButton from '@/components/ui/EventInterestButton';
-import ProductDemoHighlight from '@/components/ui/ProductDemoHighlight';
-import TicketSelection from '@/components/workshop/TicketSelection';
-import { FeatureFlags } from '@/constants';
-import useEvents from '@/hooks/useEvents';
-import { useStripePrice } from '@/hooks/useStripePrice';
-import { getEventById, getUpcomingEvents, getPastEvents, Event } from '@/sanity/queries';
-import { ProductDemo } from '@/types';
-import { getRelatedWorkshops } from '@/utils/workshopEventMatcher';
+import Layout from "@/components/layout/Layout";
+import Section from "@/components/Section";
+import SEO from "@/components/SEO";
+import Button from "@/components/ui/Button";
+import EventFeedback from "@/components/ui/EventFeedback";
+import EventInterestButton from "@/components/ui/EventInterestButton";
+import ProductDemoHighlight from "@/components/ui/ProductDemoHighlight";
+import TicketSelection from "@/components/workshop/TicketSelection";
+import { FeatureFlags } from "@/constants";
+import useEvents from "@/hooks/useEvents";
+import { useStripePrice } from "@/hooks/useStripePrice";
+import { getEventById, getUpcomingEvents, getPastEvents, Event } from "@/sanity/queries";
+import { ProductDemo } from "@/types";
+import { getRelatedWorkshops } from "@/utils/workshopEventMatcher";
 
 interface EventDetailPageProps {
   event: Event & { duration?: number };
@@ -31,13 +43,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const [mapUrl, setMapUrl] = useState('');
+  const [mapUrl, setMapUrl] = useState("");
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
   const { price: stripePrice } = useStripePrice(event.stripePriceId);
   const { track } = useEvents();
 
   // Check if we're in feedback mode
-  const isFeedbackMode = router.query.feedback === 'true';
+  const isFeedbackMode = router.query.feedback === "true";
 
   // Get related workshops that occur on the same day or up to 48h before the event
   const relatedWorkshops = event.datetime ? getRelatedWorkshops(event.datetime) : [];
@@ -46,16 +58,22 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   const isUpcoming = new Date(event.datetime) > new Date();
 
   // Calculate available talk slots based on duration
-  const regularTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes >= 10);
-  const lightningTalks = event.talks.filter(talk => talk.durationMinutes && talk.durationMinutes < 10);
+  const regularTalks = event.talks.filter(
+    (talk) => talk.durationMinutes && talk.durationMinutes >= 10,
+  );
+  const lightningTalks = event.talks.filter(
+    (talk) => talk.durationMinutes && talk.durationMinutes < 10,
+  );
 
   // point system. we want max 10 points. regular talk is 3 points, lightning is 1 point. Never 4 regular or 2+ lightning
   const REGULAR_MAX = 3;
   const LIGHTNING_MAX = 2;
   const POINTS_MAX = 10;
-  const currentPoints = (regularTalks.length * 3) + lightningTalks.length;
-  const hasRegularSlotAvailable = isUpcoming && regularTalks.length < REGULAR_MAX && (currentPoints + 3) <= POINTS_MAX; // can add one more regular
-  const hasLightningSlotAvailable = isUpcoming && lightningTalks.length < LIGHTNING_MAX && (currentPoints + 1) <= POINTS_MAX; // can add one more lightning
+  const currentPoints = regularTalks.length * 3 + lightningTalks.length;
+  const hasRegularSlotAvailable =
+    isUpcoming && regularTalks.length < REGULAR_MAX && currentPoints + 3 <= POINTS_MAX; // can add one more regular
+  const hasLightningSlotAvailable =
+    isUpcoming && lightningTalks.length < LIGHTNING_MAX && currentPoints + 1 <= POINTS_MAX; // can add one more lightning
   const hasSlotsAvailable = isUpcoming && (hasRegularSlotAvailable || hasLightningSlotAvailable); // at least one slot available
 
   // Set up client-side rendering flag to prevent hydration issues
@@ -69,15 +87,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     const dateObj = new Date(date);
 
     // Format the date in CEST timezone (Europe/Zurich)
-    return new Intl.DateTimeFormat('en-GB', {
+    return new Intl.DateTimeFormat("en-GB", {
       ...options,
-      timeZone: 'Europe/Zurich'
+      timeZone: "Europe/Zurich",
     }).format(dateObj);
   };
 
   useEffect(() => {
     (async () => {
-      const response = await fetch(`/api/google-maps?location=${encodeURIComponent(event.address || event.location)}`);
+      const response = await fetch(
+        `/api/google-maps?location=${encodeURIComponent(event.address || event.location)}`,
+      );
       const data = await response.json();
       setMapUrl(data.url);
     })();
@@ -86,21 +106,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
   // Add animation for ticket section when scrolled to
   useEffect(() => {
     const handleScroll = () => {
-      const ticketSection = document.getElementById('event-tickets-section');
+      const ticketSection = document.getElementById("event-tickets-section");
       if (ticketSection) {
         const rect = ticketSection.getBoundingClientRect();
         // Check if the ticket section is in the viewport
         if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
-          ticketSection.classList.add('highlight-ticket');
+          ticketSection.classList.add("highlight-ticket");
         } else {
-          ticketSection.classList.remove('highlight-ticket');
+          ticketSection.classList.remove("highlight-ticket");
         }
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -109,11 +129,11 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     if (!event.datetime) return;
 
     // Track the calendar add event
-    track('add_to_calendar', {
+    track("add_to_calendar", {
       event_id: event.id,
       event_title: event.title,
       event_date: event.datetime,
-      is_pro_meetup: event.isProMeetup
+      is_pro_meetup: event.isProMeetup,
     });
 
     // Create date objects using the event datetime
@@ -124,18 +144,18 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
     // Format dates for calendar - ensure we use YYYY-MM-DD format
     const formatDate = (date: Date): string => {
-      return date.toLocaleDateString('en-CA', {
-        timeZone: 'Europe/Zurich'
+      return date.toLocaleDateString("en-CA", {
+        timeZone: "Europe/Zurich",
       }); // en-CA uses YYYY-MM-DD format
     };
 
     // Format time with hours and minutes in 24-hour format (HH:MM)
     const formatTime = (date: Date): string => {
-      return date.toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
+      return date.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
         hour12: false,
-        timeZone: 'Europe/Zurich'
+        timeZone: "Europe/Zurich",
       });
     };
 
@@ -145,7 +165,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
     // Calculate end time
     // Create a date object using the formatted date and time strings to ensure timezone consistency
-    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
     let endDate = startDate; // Usually same day for most events
 
     // Calculate end hours and minutes
@@ -168,22 +188,22 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     }
 
     // Format end time properly with leading zeros
-    const endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    const endTime = `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
 
     // Debug logging to help troubleshoot timezone issues
-    console.log('Calendar event details:', {
+    console.log("Calendar event details:", {
       original: {
         datetime: event.datetime,
         dateObj: dateObj.toString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       formatted: {
         startDate,
         startTime,
         endDate,
         endTime,
-        targetTimezone: 'Europe/Zurich'
-      }
+        targetTimezone: "Europe/Zurich",
+      },
     });
 
     atcb_action({
@@ -192,51 +212,53 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       endDate,
       startTime,
       endTime,
-      location: event.location || 'TBD',
+      location: event.location || "TBD",
       description: event.description || `ZurichJS event: ${event.title}`,
-      options: ['Apple', 'Google', 'iCal', 'Microsoft365', 'Outlook.com', 'Yahoo'],
-      timeZone: 'Europe/Zurich',
+      options: ["Apple", "Google", "iCal", "Microsoft365", "Outlook.com", "Yahoo"],
+      timeZone: "Europe/Zurich",
       iCalFileName: `zurichjs-event-${event.id}`,
-      buttonStyle: 'date'
+      buttonStyle: "date",
     });
   };
 
   // Share event function
   const shareEvent = async () => {
     // Create base URL
-    const baseUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/events/${event.id}`;
+    const baseUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/events/${event.id}`;
 
     // Add UTM parameters for tracking
     const utmParams = new URLSearchParams({
-      utm_source: 'share_button',
-      utm_medium: 'social',
-      utm_campaign: 'event_share',
-      utm_content: event.id
+      utm_source: "share_button",
+      utm_medium: "social",
+      utm_campaign: "event_share",
+      utm_content: event.id,
     }).toString();
 
     // Complete share URL with UTM parameters
     const shareUrl = `${baseUrl}?${utmParams}`;
 
     // Format the date for sharing in CEST timezone
-    const formattedDate = isClient && event.datetime
-      ? formatDateCEST(event.datetime, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-      : 'TBD';
+    const formattedDate =
+      isClient && event.datetime
+        ? formatDateCEST(event.datetime, {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "TBD";
 
     const shareText = `Join me at ${event.title} on ${formattedDate} with ZurichJS!`;
 
     // Track share event
-    track('share_event', {
+    track("share_event", {
       event_id: event.id,
       event_title: event.title,
-      share_method: typeof navigator !== 'undefined' && 'share' in navigator ? 'web_share_api' : 'clipboard'
+      share_method:
+        typeof navigator !== "undefined" && "share" in navigator ? "web_share_api" : "clipboard",
     });
 
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
+    if (typeof navigator !== "undefined" && "share" in navigator) {
       try {
         await navigator.share({
           title: event.title,
@@ -244,12 +266,12 @@ export default function EventDetail({ event }: EventDetailPageProps) {
           url: shareUrl,
         });
         // Track successful share via Web Share API
-        track('share_completed', {
+        track("share_completed", {
           event_id: event.id,
-          method: 'web_share_api'
+          method: "web_share_api",
         });
       } catch (err) {
-        console.error('Error sharing:', err);
+        console.error("Error sharing:", err);
         copyToClipboard(shareUrl);
       }
     } else {
@@ -259,43 +281,44 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
   // Copy to clipboard function
   const copyToClipboard = (text: string) => {
-    if (typeof navigator === 'undefined' || !navigator.clipboard) {
-      console.error('Clipboard API not available');
+    if (typeof navigator === "undefined" || !navigator.clipboard) {
+      console.error("Clipboard API not available");
       return;
     }
 
-    navigator.clipboard.writeText(text)
+    navigator.clipboard
+      .writeText(text)
       .then(() => {
         setCopySuccess(true);
         // Track successful clipboard copy
-        track('share_completed', {
+        track("share_completed", {
           event_id: event.id,
-          method: 'clipboard'
+          method: "clipboard",
         });
         setTimeout(() => setCopySuccess(false), 2000);
       })
-      .catch(err => {
-        console.error('Failed to copy text: ', err);
+      .catch((err) => {
+        console.error("Failed to copy text: ", err);
         // Fallback for older browsers
-        const textarea = document.createElement('textarea');
+        const textarea = document.createElement("textarea");
         textarea.value = text;
-        textarea.style.position = 'fixed'; // Prevent scrolling to bottom
+        textarea.style.position = "fixed"; // Prevent scrolling to bottom
         document.body.appendChild(textarea);
         textarea.focus();
         textarea.select();
 
         try {
-          const successful = document.execCommand('copy');
+          const successful = document.execCommand("copy");
           if (successful) {
             setCopySuccess(true);
-            track('share_completed', {
+            track("share_completed", {
               event_id: event.id,
-              method: 'clipboard_fallback'
+              method: "clipboard_fallback",
             });
             setTimeout(() => setCopySuccess(false), 2000);
           }
         } catch (err) {
-          console.error('Fallback clipboard copy failed:', err);
+          console.error("Fallback clipboard copy failed:", err);
         }
 
         document.body.removeChild(textarea);
@@ -306,9 +329,15 @@ export default function EventDetail({ event }: EventDetailPageProps) {
     <Layout>
       <style jsx global>{`
         @keyframes pulseHighlight {
-          0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-          70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+          0% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+          }
+          70% {
+            box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+          }
         }
         .highlight-ticket {
           animation: pulseHighlight 2s ease-in-out 1;
@@ -317,18 +346,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
       <SEO
         title={`${event.title} | ZurichJS`}
-        description={`Join us for ${event.title} on ${new Date(event.datetime).toLocaleDateString('en-GB', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })} at ${event.location}. ${event.description.slice(0, 120)}...`}
+        description={`Join us for ${event.title} on ${new Date(event.datetime).toLocaleDateString(
+          "en-GB",
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          },
+        )} at ${event.location}. ${event.description.slice(0, 120)}...`}
         openGraph={{
           title: `${event.title} | ZurichJS`,
-          description: event.description.slice(0, 120) + '...',
-          type: 'website',
-          image: event.image ? `${event.image}?h=300` : '',
-          url: `/events/${event.id}`
+          description: event.description.slice(0, 120) + "...",
+          type: "website",
+          image: event.image ? `${event.image}?h=300` : "",
+          url: `/events/${event.id}`,
         }}
       />
 
@@ -364,58 +396,64 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </div>
               )}
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              {event.title}
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-4">{event.title}</h1>
 
             <div className="flex flex-wrap gap-3 mb-6">
               <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                 <Calendar size={16} className="mr-1.5" />
-                <span>{isClient && event.datetime
-                  ? formatDateCEST(event.datetime, {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })
-                  : 'Date TBD'}
-                    </span>
+                <span>
+                  {isClient && event.datetime
+                    ? formatDateCEST(event.datetime, {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "Date TBD"}
+                </span>
               </div>
               <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                 <Clock size={16} className="mr-1.5" />
-                <span>{isClient && event.datetime
-                  ? `${formatDateCEST(event.datetime, {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })} CEST`
-                  : 'Time TBD'}
-                  </span>
+                <span>
+                  {isClient && event.datetime
+                    ? `${formatDateCEST(event.datetime, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })} CEST`
+                    : "Time TBD"}
+                </span>
               </div>
               <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                 <MapPin size={16} className="mr-1.5" />
-                <span>{event.location || 'Location TBD'}</span>
+                <span>{event.location || "Location TBD"}</span>
               </div>
               {isUpcoming && (
                 <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full text-sm">
                   <Users size={16} className="mr-1.5" />
-                  {event.attendees > 0 ? <span>{event.attendees} attending</span> : <span>Be one of the first to sign up!</span>}
+                  {event.attendees > 0 ? (
+                    <span>{event.attendees} attending</span>
+                  ) : (
+                    <span>Be one of the first to sign up!</span>
+                  )}
                 </div>
               )}
             </div>
 
             {event.description ? (
-              <div className="text-lg mb-6 whitespace-pre-line">
-                {event.description}
-              </div>
+              <div className="text-lg mb-6 whitespace-pre-line">{event.description}</div>
             ) : (
               <div className="text-lg mb-6">
-                <p className="italic">We&apos;re working on bringing this event to life! Check back soon for more details on this exciting JavaScript gathering.</p>
+                <p className="italic">
+                  We&apos;re working on bringing this event to life! Check back soon for more
+                  details on this exciting JavaScript gathering.
+                </p>
                 <div className="mt-2 flex items-center text-black text-sm">
                   <span className="animate-pulse">⏳ Coming soon...</span>
                 </div>
                 <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg">
                   <p className="text-sm text-gray-700">
-                    <strong>Want to be the first to know?</strong> Register your interest below and we&apos;ll notify you as soon as {event.isProMeetup ? 'tickets' : 'RSVP'} opens!
+                    <strong>Want to be the first to know?</strong> Register your interest below and
+                    we&apos;ll notify you as soon as {event.isProMeetup ? "tickets" : "RSVP"} opens!
                   </p>
                 </div>
               </div>
@@ -426,9 +464,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 event.isProMeetup ? (
                   <Button
                     onClick={() => {
-                      const ticketSection = document.getElementById('event-tickets-section');
+                      const ticketSection = document.getElementById("event-tickets-section");
                       if (ticketSection) {
-                        ticketSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        ticketSection.scrollIntoView({ behavior: "smooth", block: "center" });
                       }
                     }}
                     variant="primary"
@@ -449,14 +487,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     RSVP on Meetup 🚀
                   </Button>
                 )
-              ) : isUpcoming && (
-                <EventInterestButton
-                  eventId={event.id}
-                  eventTitle={event.title}
-                  variant="primary"
-                  size="lg"
-                  className="bg-black text-js hover:bg-gray-800"
-                />
+              ) : (
+                isUpcoming && (
+                  <EventInterestButton
+                    eventId={event.id}
+                    eventTitle={event.title}
+                    variant="primary"
+                    size="lg"
+                    className="bg-black text-js hover:bg-gray-800"
+                  />
+                )
               )}
 
               {isClient && (
@@ -466,16 +506,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   className="border-black text-black hover:bg-black hover:text-js"
                 >
                   <Share2 size={16} className="mr-1.5" />
-                  {copySuccess ? 'Link copied! 👍' : 'Share event'}
+                  {copySuccess ? "Link copied! 👍" : "Share event"}
                 </Button>
               )}
 
               {isClient && event.datetime && (
                 <Button
                   onClick={() => {
-                    track('calendar_button_click', {
+                    track("calendar_button_click", {
                       event_id: event.id,
-                      source: 'hero_section'
+                      source: "hero_section",
                     });
                     addToCalendar();
                   }}
@@ -566,13 +606,13 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 id: event.id,
                 title: event.title,
                 datetime: event.datetime,
-                talks: event.talks.map(talk => ({
+                talks: event.talks.map((talk) => ({
                   id: talk.id,
                   title: talk.title,
                   productDemo: talk.productDemo as unknown as ProductDemo,
                   productDemos: talk.productDemos as unknown as ProductDemo[],
-                  speakers: talk.speakers
-                }))
+                  speakers: talk.speakers,
+                })),
               }}
               isFeedbackMode={isFeedbackMode}
             />
@@ -597,54 +637,64 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
             {/* Schedule */}
             {event.talks.length > 0 && (
-              <Section id="schedule" variant="white" className={`rounded-lg py-2 ${isFeedbackMode && 'mt-8'}`} padding="none">
+              <Section
+                id="schedule"
+                variant="white"
+                className={`rounded-lg py-2 ${isFeedbackMode && "mt-8"}`}
+                padding="none"
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5 }}
                 >
-                  <h2 className="text-2xl font-bold mb-3 py-2">
-                    Event Schedule
-                  </h2>
-                  <p className="text-sm text-gray-500 italic mb-6">Times are estimates and subject to change</p>
+                  <h2 className="text-2xl font-bold mb-3 py-2">Event Schedule</h2>
+                  <p className="text-sm text-gray-500 italic mb-6">
+                    Times are estimates and subject to change
+                  </p>
 
                   {(() => {
                     // Schedule generation logic
                     const getTypeColor = (type?: string, durationMins?: number) => {
                       if (durationMins && durationMins < 10) {
-                        return 'bg-gradient-to-r from-orange-100 to-red-100 text-orange-800';
+                        return "bg-gradient-to-r from-orange-100 to-red-100 text-orange-800";
                       }
                       switch (type?.toLowerCase()) {
-                        case 'talk':
-                        case 'presentation':
-                          return 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800';
-                        case 'break':
-                        case 'networking':
-                          return 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800';
-                        case 'welcome':
-                        case 'opening':
-                          return 'bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900';
-                        case 'closing':
-                        case 'wrap-up':
-                          return 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800';
+                        case "talk":
+                        case "presentation":
+                          return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800";
+                        case "break":
+                        case "networking":
+                          return "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800";
+                        case "welcome":
+                        case "opening":
+                          return "bg-gradient-to-r from-js/20 to-yellow-100 text-yellow-900";
+                        case "closing":
+                        case "wrap-up":
+                          return "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800";
                         default:
-                          return 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800';
+                          return "bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800";
                       }
                     };
 
                     const getTypeEmoji = (type?: string, durationMins?: number) => {
-                      if (durationMins && durationMins < 10) return '⚡';
+                      if (durationMins && durationMins < 10) return "⚡";
                       switch (type?.toLowerCase()) {
-                        case 'talk':
-                        case 'presentation': return '🎤';
-                        case 'break':
-                        case 'networking': return '🍕';
-                        case 'welcome':
-                        case 'opening': return '👋';
-                        case 'closing':
-                        case 'wrap-up': return '🎉';
-                        default: return '📋';
+                        case "talk":
+                        case "presentation":
+                          return "🎤";
+                        case "break":
+                        case "networking":
+                          return "🍕";
+                        case "welcome":
+                        case "opening":
+                          return "👋";
+                        case "closing":
+                        case "wrap-up":
+                          return "🎉";
+                        default:
+                          return "📋";
                       }
                     };
 
@@ -665,31 +715,31 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
                     const baseSchedule = [
                       {
-                        time: doorsOpenTime.toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
+                        time: doorsOpenTime.toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
                         }),
                         title: "Doors Open",
                         type: "welcome",
                         durationMins: 60,
                         speaker: undefined,
                         speakerIds: undefined,
-                        talkId: undefined
+                        talkId: undefined,
                       },
                       {
-                        time: welcomeTime.toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
+                        time: welcomeTime.toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
                         }),
                         title: "Welcome & Intro",
                         type: "opening",
                         durationMins: 15,
                         speaker: undefined,
                         speakerIds: undefined,
-                        talkId: undefined
-                      }
+                        talkId: undefined,
+                      },
                     ];
 
                     // Add talks from Sanity data with proper timing and break logic
@@ -709,17 +759,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       const duration = talk.durationMinutes || 20;
 
                       const scheduleItem = {
-                        time: talkTime.toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
+                        time: talkTime.toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
                         }),
                         title: talk.title,
-                        speaker: talk.speakers.map(s => s.name).join(', '),
-                        speakerIds: talk.speakers.map(s => s.id),
-                        type: talk.type || 'talk',
+                        speaker: talk.speakers.map((s) => s.name).join(", "),
+                        speakerIds: talk.speakers.map((s) => s.id),
+                        type: talk.type || "talk",
                         durationMins: duration,
-                        talkId: talk.id
+                        talkId: talk.id,
                       };
 
                       talksSchedule.push(scheduleItem);
@@ -729,17 +779,17 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       if (index === 1) {
                         const breakTime = new Date(currentTime);
                         talksSchedule.push({
-                          time: breakTime.toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
+                          time: breakTime.toLocaleTimeString("en-US", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            hour12: false,
                           }),
                           title: "Pizza Break",
                           type: "break",
                           durationMins: 15,
                           speaker: undefined,
                           speakerIds: undefined,
-                          talkId: undefined
+                          talkId: undefined,
                         });
                         currentTime += 15 * 60000; // Add break duration
                       } else if (index < event.talks.length - 1) {
@@ -754,21 +804,28 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                     networkingEndTime.setHours(21, 30, 0, 0);
 
                     // Calculate networking duration from start time to 21:30
-                    const networkingDuration = Math.max(30, Math.round((networkingEndTime.getTime() - networkingStartTime.getTime()) / 60000));
+                    const networkingDuration = Math.max(
+                      30,
+                      Math.round(
+                        (networkingEndTime.getTime() - networkingStartTime.getTime()) / 60000,
+                      ),
+                    );
 
-                    const endSchedule = [{
-                      time: networkingStartTime.toLocaleTimeString('en-US', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      }),
-                      title: "Networking & Drinks",
-                      type: "closing",
-                      durationMins: networkingDuration,
-                      speaker: undefined,
-                      speakerIds: undefined,
-                      talkId: undefined
-                    }];
+                    const endSchedule = [
+                      {
+                        time: networkingStartTime.toLocaleTimeString("en-US", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        }),
+                        title: "Networking & Drinks",
+                        type: "closing",
+                        durationMins: networkingDuration,
+                        speaker: undefined,
+                        speakerIds: undefined,
+                        talkId: undefined,
+                      },
+                    ];
 
                     const schedule = [...baseSchedule, ...talksSchedule, ...endSchedule];
 
@@ -776,15 +833,21 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <div className="">
                         {schedule.map((item, index) => {
                           const isTalk = item.talkId !== undefined;
-                          const talk = isTalk ? event.talks.find(t => t.id === item.talkId) : null;
+                          const talk = isTalk
+                            ? event.talks.find((t) => t.id === item.talkId)
+                            : null;
 
                           if (isTalk && talk) {
                             return (
                               <Disclosure key={index}>
                                 {({ open }) => (
-                                  <div className={`[&+&]:mt-2 bg-white rounded-lg overflow-hidden border transition-all duration-200 ${
-                                    open ? 'border-zurich shadow-lg' : 'border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300'
-                                  }`}>
+                                  <div
+                                    className={`[&+&]:mt-2 bg-white rounded-lg overflow-hidden border transition-all duration-200 ${
+                                      open
+                                        ? "border-zurich shadow-lg"
+                                        : "border-gray-200 shadow-sm hover:shadow-md hover:border-gray-300"
+                                    }`}
+                                  >
                                     <DisclosureButton className="w-full p-3 sm:p-4 text-left">
                                       <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -792,9 +855,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                             {item.time}
                                           </div>
 
-                                          <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
-                                            <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
-                                            <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
+                                          <div
+                                            className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}
+                                          >
+                                            <span className="sm:hidden">
+                                              {getTypeEmoji(item.type, item.durationMins)}
+                                            </span>
+                                            <span className="hidden sm:inline">
+                                              {getTypeEmoji(item.type, item.durationMins)}{" "}
+                                              {item.type || "Event"}
+                                            </span>
                                           </div>
                                         </div>
 
@@ -805,7 +875,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                             </div>
                                           )}
 
-                                          <ChevronDown className={`h-5 w-5 text-zurich transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+                                          <ChevronDown
+                                            className={`h-5 w-5 text-zurich transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+                                          />
                                         </div>
                                       </div>
 
@@ -818,17 +890,25 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                           <div className="text-xs sm:text-sm text-gray-600 mt-1">
                                             {item.speakerIds && item.speakerIds.length > 0 ? (
                                               <div className="flex flex-wrap gap-1">
-                                                {item.speakerIds.map((speakerId: string, speakerIndex: number) => {
-                                                  const speakerName = item.speaker!.split(', ')[speakerIndex];
-                                                  return (
-                                                    <span key={speakerId} className="text-zurich font-bold">
+                                                {item.speakerIds.map(
+                                                  (speakerId: string, speakerIndex: number) => {
+                                                    const speakerName =
+                                                      item.speaker!.split(", ")[speakerIndex];
+                                                    return (
+                                                      <span
+                                                        key={speakerId}
+                                                        className="text-zurich font-bold"
+                                                      >
                                                         {speakerName}
                                                       </span>
-                                                  );
-                                                })}
+                                                    );
+                                                  },
+                                                )}
                                               </div>
                                             ) : (
-                                              <span className="text-zurich font-bold">{item.speaker}</span>
+                                              <span className="text-zurich font-bold">
+                                                {item.speaker}
+                                              </span>
                                             )}
                                           </div>
                                         )}
@@ -839,17 +919,19 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                       {() => (
                                         <motion.div
                                           initial={{ opacity: 0, height: 0 }}
-                                          animate={{ opacity: 1, height: 'auto' }}
+                                          animate={{ opacity: 1, height: "auto" }}
                                           exit={{ opacity: 0, height: 0 }}
-                                          transition={{ duration: 0.2, ease: 'easeInOut' }}
+                                          transition={{ duration: 0.2, ease: "easeInOut" }}
                                           className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-gray-100"
                                         >
                                           {talk.description && (
                                             <p className="text-gray-700 mb-4 mt-3">
-                                              {talk.description.split('\n').map((line, i) => (
+                                              {talk.description.split("\n").map((line, i) => (
                                                 <Fragment key={i}>
                                                   {line}
-                                                  {i < talk.description!.split('\n').length - 1 && <br />}
+                                                  {i < talk.description!.split("\n").length - 1 && (
+                                                    <br />
+                                                  )}
                                                 </Fragment>
                                               ))}
                                             </p>
@@ -857,13 +939,22 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
                                           <div className="space-y-3 mb-4">
                                             <h4 className="font-semibold text-gray-700 text-sm">
-                                              {talk.speakers.length === 1 ? 'Speaker:' : 'Speakers:'}
+                                              {talk.speakers.length === 1
+                                                ? "Speaker:"
+                                                : "Speakers:"}
                                             </h4>
                                             {talk.speakers.map((speaker) => (
-                                              <div key={speaker.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                                              <div
+                                                key={speaker.id}
+                                                className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-gray-50 p-3 rounded-lg"
+                                              >
                                                 <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                                                   <Image
-                                                    src={speaker.image ? `${speaker.image}?h=150` : '/images/speakers/default.jpg'}
+                                                    src={
+                                                      speaker.image
+                                                        ? `${speaker.image}?h=150`
+                                                        : "/images/speakers/default.jpg"
+                                                    }
                                                     alt={speaker.name}
                                                     fill
                                                     className="object-cover"
@@ -871,7 +962,9 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                                 </div>
                                                 <div className="flex-grow">
                                                   <div className="font-bold">{speaker.name}</div>
-                                                  <div className="text-gray-600 text-sm">{speaker.title}</div>
+                                                  <div className="text-gray-600 text-sm">
+                                                    {speaker.title}
+                                                  </div>
                                                 </div>
                                                 <Link
                                                   href={`/speakers/${speaker.id}`}
@@ -884,7 +977,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                             ))}
                                           </div>
 
-                                          {(!isUpcoming && (talk.slides || talk.videoUrl)) && (
+                                          {!isUpcoming && (talk.slides || talk.videoUrl) && (
                                             <div className="flex flex-wrap gap-2 mb-4">
                                               {talk.slides && (
                                                 <a
@@ -915,9 +1008,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                           {(talk.productDemos?.length || talk.productDemo) && (
                                             <div className="pt-3 border-t border-gray-100">
                                               <ProductDemoHighlight
-                                                productDemos={talk.productDemos?.length
-                                                  ? talk.productDemos as unknown as ProductDemo[]
-                                                  : [talk.productDemo as unknown as ProductDemo]
+                                                productDemos={
+                                                  talk.productDemos?.length
+                                                    ? (talk.productDemos as unknown as ProductDemo[])
+                                                    : [talk.productDemo as unknown as ProductDemo]
                                                 }
                                                 isUpcoming={isUpcoming}
                                               />
@@ -934,19 +1028,23 @@ export default function EventDetail({ event }: EventDetailPageProps) {
 
                           // Non-talk items (doors open, breaks, networking)
                           return (
-                            <div
-                              key={index}
-                              className="bg-white rounded-lg p-3 sm:p-4"
-                            >
+                            <div key={index} className="bg-white rounded-lg p-3 sm:p-4">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <div className="bg-black text-js px-2 py-1 rounded-md text-xs font-bold min-w-[50px] text-center flex-shrink-0">
                                     {item.time}
                                   </div>
 
-                                  <div className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}>
-                                    <span className="sm:hidden">{getTypeEmoji(item.type, item.durationMins)}</span>
-                                    <span className="hidden sm:inline">{getTypeEmoji(item.type, item.durationMins)} {item.type || 'Event'}</span>
+                                  <div
+                                    className={`px-2 py-1 rounded-md text-xs font-semibold flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}
+                                  >
+                                    <span className="sm:hidden">
+                                      {getTypeEmoji(item.type, item.durationMins)}
+                                    </span>
+                                    <span className="hidden sm:inline">
+                                      {getTypeEmoji(item.type, item.durationMins)}{" "}
+                                      {item.type || "Event"}
+                                    </span>
                                   </div>
                                 </div>
 
@@ -970,7 +1068,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               </Section>
             )}
 
-
             {!isFeedbackMode && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -986,16 +1083,28 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         <h3 className="text-lg font-bold mb-2">Open Speaking Slots</h3>
                         <p className="text-sm mb-3">
                           {hasRegularSlotAvailable && hasLightningSlotAvailable && (
-                            <span>Regular talks (20-30 mins) and lightning talks (5-10 mins) available.</span>
+                            <span>
+                              Regular talks (20-30 mins) and lightning talks (5-10 mins) available.
+                            </span>
                           )}
                           {hasRegularSlotAvailable && !hasLightningSlotAvailable && (
-                            <span>{2 - regularTalks.length} regular talk slot{regularTalks.length === 1 ? '' : 's'} (20-30 mins) available.</span>
+                            <span>
+                              {2 - regularTalks.length} regular talk slot
+                              {regularTalks.length === 1 ? "" : "s"} (20-30 mins) available.
+                            </span>
                           )}
                           {!hasRegularSlotAvailable && hasLightningSlotAvailable && (
                             <span>1 lightning talk slot (5-10 mins) available.</span>
                           )}
                         </p>
-                        <Button href="/cfp" variant="primary" size="sm" className="bg-black text-js hover:bg-gray-800" target="_blank" rel="noopener noreferrer">
+                        <Button
+                          href="/cfp"
+                          variant="primary"
+                          size="sm"
+                          className="bg-black text-js hover:bg-gray-800"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           Submit Proposal
                         </Button>
                       </div>
@@ -1008,7 +1117,14 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         <p className="text-sm text-gray-700 mb-3">
                           This event is full. Submit a proposal for future events.
                         </p>
-                        <Button href="/cfp" variant="outline" size="sm" className="border-black text-black hover:bg-black hover:text-js" target="_blank" rel="noopener noreferrer">
+                        <Button
+                          href="/cfp"
+                          variant="outline"
+                          size="sm"
+                          className="border-black text-black hover:bg-black hover:text-js"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           Submit for Future Events
                         </Button>
                       </div>
@@ -1034,7 +1150,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 Venue Details
               </h3>
 
-              {event.location && !event.location.toLowerCase().includes('tbd') ? (
+              {event.location && !event.location.toLowerCase().includes("tbd") ? (
                 <>
                   <p className="font-bold mb-2">{event.location}</p>
                   {event.address && <p className="text-gray-600 mb-5">{event.address}</p>}
@@ -1075,14 +1191,22 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <p className="text-gray-500">Location to be announced</p>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-500 animate-pulse mb-4">⏳ We&apos;re finalizing the perfect spot...</p>
+                  <p className="text-sm text-gray-500 animate-pulse mb-4">
+                    ⏳ We&apos;re finalizing the perfect spot...
+                  </p>
 
                   <div className="mt-4 bg-blue-50 p-4 rounded-lg">
                     <h4 className="font-medium text-blue-700 mb-2">Want to host this event? 🏢</h4>
                     <p className="text-sm text-gray-700 mb-3">
-                      Have a cool office space? Hosting a ZurichJS meetup is a great way to showcase your company and connect with the JavaScript community!
+                      Have a cool office space? Hosting a ZurichJS meetup is a great way to showcase
+                      your company and connect with the JavaScript community!
                     </p>
-                    <Link href="/partnerships#sponsorship-tiers" className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors" target="_blank" rel="noopener noreferrer">
+                    <Link
+                      href="/partnerships#sponsorship-tiers"
+                      className="inline-flex items-center text-sm bg-blue-100 text-blue-700 px-3 py-2 rounded-md hover:bg-blue-200 transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <Building size={16} className="mr-2" />
                       Partner with us as a Venue Host
                     </Link>
@@ -1104,14 +1228,16 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <Calendar className="mr-2" size={20} />
                   Save the Date
                 </h3>
-                <p className="mb-4">Don&apos;t miss this event! Add it to your calendar to get notified.</p>
+                <p className="mb-4">
+                  Don&apos;t miss this event! Add it to your calendar to get notified.
+                </p>
 
                 {isClient && (
                   <button
                     onClick={() => {
-                      track('calendar_button_click', {
+                      track("calendar_button_click", {
                         event_id: event.id,
-                        source: 'save_the_date_section'
+                        source: "save_the_date_section",
                       });
                       addToCalendar();
                     }}
@@ -1139,24 +1265,29 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </h3>
                 <div className="text-gray-700">
                   <p className="mb-3">
-                    This is a premium ZurichJS Pro Meetup featuring world-class speakers and exclusive content.
+                    This is a premium ZurichJS Pro Meetup featuring world-class speakers and
+                    exclusive content.
                   </p>
                   <details className="mb-3">
-                    <summary className="font-medium text-zurich cursor-pointer">What is a Pro Meetup?</summary>
+                    <summary className="font-medium text-zurich cursor-pointer">
+                      What is a Pro Meetup?
+                    </summary>
                     <div className="mt-2 pl-4 text-sm">
                       <p className="mb-2">
-                        Pro Meetups are premium JavaScript events featuring world-class speakers who often travel from abroad to share their expertise with our community.
+                        Pro Meetups are premium JavaScript events featuring world-class speakers who
+                        often travel from abroad to share their expertise with our community.
                       </p>
-                      <p className="mb-2">
-                        These special events require:
-                      </p>
+                      <p className="mb-2">These special events require:</p>
                       <ul className="list-disc pl-5 mb-2 space-y-1">
-                        <li>Ticket purchase to secure your spot and support speaker travel costs</li>
+                        <li>
+                          Ticket purchase to secure your spot and support speaker travel costs
+                        </li>
                         <li>Higher commitment to attend to prevent no-shows</li>
                         <li>Additional venue and catering arrangements</li>
                       </ul>
                       <p>
-                        Your support helps us bring exceptional JavaScript talent to Zurich and create memorable learning experiences!
+                        Your support helps us bring exceptional JavaScript talent to Zurich and
+                        create memorable learning experiences!
                       </p>
                     </div>
                   </details>
@@ -1165,27 +1296,61 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   <details className="mt-4 bg-gradient-to-br from-blue-50 to-white rounded-lg border border-zurich/30 shadow-sm overflow-hidden">
                     <summary className="p-4 cursor-pointer flex items-center justify-between hover:bg-blue-50/50 transition-colors">
                       <h4 className="font-semibold text-blue-700 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                          <polyline points="22,6 12,13 2,6"/>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="mr-2"
+                        >
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
                         </svg>
                         Need Financial Support?
                       </h4>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-700">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-blue-700"
+                      >
                         <polyline points="6 9 12 15 18 9"></polyline>
                       </svg>
                     </summary>
                     <div className="px-4 pb-4">
                       <p className="text-sm text-gray-700 mb-3">
-                        Don&apos;t let cost be a barrier to learning. We offer scholarships, discounts, and special rates for underrepresented groups, career changers, and those with accessibility needs.
+                        Don&apos;t let cost be a barrier to learning. We offer scholarships,
+                        discounts, and special rates for underrepresented groups, career changers,
+                        and those with accessibility needs.
                       </p>
                       <a
                         href="mailto:hello@zurichjs.com"
                         className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                          <polyline points="22,6 12,13 2,6"/>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
                         </svg>
                         Get in Touch for Support Options
                       </a>
@@ -1193,7 +1358,10 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   </details>
 
                   {isUpcoming && event.stripePriceId && (
-                    <div id="event-tickets-section" className="mt-5 bg-white p-5 rounded-lg shadow-md border-t-4 border-zurich">
+                    <div
+                      id="event-tickets-section"
+                      className="mt-5 bg-white p-5 rounded-lg shadow-md border-t-4 border-zurich"
+                    >
                       <h4 className="text-xl font-bold mb-3 text-center flex items-center justify-center">
                         <Ticket className="mr-2 text-zurich" size={22} />
                         Secure Your Spot
@@ -1201,45 +1369,51 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       <div className="bg-blue-50 p-3 rounded-lg mb-4">
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-semibold text-gray-800">Date:</span>
-                          <span className="text-black">{isClient && event.datetime
-                            ? formatDateCEST(event.datetime, {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })
-                            : 'Date TBD'}</span>
+                          <span className="text-black">
+                            {isClient && event.datetime
+                              ? formatDateCEST(event.datetime, {
+                                  weekday: "long",
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })
+                              : "Date TBD"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-semibold text-gray-800">Time:</span>
-                          <span className="text-black">{isClient && event.datetime
-                            ? `${formatDateCEST(event.datetime, {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })} CEST`
-                            : 'Time TBD'}</span>
+                          <span className="text-black">
+                            {isClient && event.datetime
+                              ? `${formatDateCEST(event.datetime, {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })} CEST`
+                              : "Time TBD"}
+                          </span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="font-semibold text-gray-800">Location:</span>
-                          <span className="text-black">{event.location || 'Location TBD'}</span>
+                          <span className="text-black">{event.location || "Location TBD"}</span>
                         </div>
                       </div>
                       <TicketSelection
-                        options={[{
-                          id: event.stripePriceId,
-                          title: 'Pro Meetup Ticket',
-                          description: `Access to ${event.title}`,
-                          price: stripePrice ? stripePrice.unitAmount / 100 : 0,
-                          features: [
-                            'Full access to the pro meetup',
-                            'Networking opportunities',
-                            'Food and drinks included',
-                            'Q&A sessions with speakers'
-                          ],
-                          autoSelect: true,
-                          ticketType: 'event',
-                          eventId: event.id
-                        }]}
+                        options={[
+                          {
+                            id: event.stripePriceId,
+                            title: "Pro Meetup Ticket",
+                            description: `Access to ${event.title}`,
+                            price: stripePrice ? stripePrice.unitAmount / 100 : 0,
+                            features: [
+                              "Full access to the pro meetup",
+                              "Networking opportunities",
+                              "Food and drinks included",
+                              "Q&A sessions with speakers",
+                            ],
+                            autoSelect: true,
+                            ticketType: "event",
+                            eventId: event.id,
+                          },
+                        ]}
                         eventId={event.id}
                         ticketType="event"
                         buttonText="Complete Purchase"
@@ -1264,23 +1438,23 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 className={`bg-blue-100 p-5 rounded-lg shadow-md text-center`}
               >
                 <h3 className="text-lg font-bold mb-3">
-                  {event.datetime ? (
-                    event.isProMeetup ? (
-                      event.stripePriceId ? 'Secure Your Spot 🎟️' : "Registration Opening Soon"
-                    ) : (
-                      event.meetupUrl ? 'Reserve Your Spot 🚀' : "Details Coming Soon"
-                    )
-                  ) : (
-                    'Save the Date'
-                  )}
+                  {event.datetime
+                    ? event.isProMeetup
+                      ? event.stripePriceId
+                        ? "Secure Your Spot 🎟️"
+                        : "Registration Opening Soon"
+                      : event.meetupUrl
+                        ? "Reserve Your Spot 🚀"
+                        : "Details Coming Soon"
+                    : "Save the Date"}
                 </h3>
                 {event.isProMeetup ? (
                   event.stripePriceId ? (
                     <Button
                       onClick={() => {
-                        const ticketSection = document.getElementById('event-tickets-section');
+                        const ticketSection = document.getElementById("event-tickets-section");
                         if (ticketSection) {
-                          ticketSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          ticketSection.scrollIntoView({ behavior: "smooth", block: "center" });
                         }
                       }}
                       variant="primary"
@@ -1298,27 +1472,25 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                       className="w-full bg-zurich text-white hover:bg-blue-600"
                     />
                   )
+                ) : event.meetupUrl ? (
+                  <Button
+                    href={event.meetupUrl}
+                    variant="primary"
+                    size="lg"
+                    className="w-full bg-black text-js hover:bg-gray-800"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    RSVP on Meetup
+                  </Button>
                 ) : (
-                  event.meetupUrl ? (
-                    <Button
-                      href={event.meetupUrl}
-                      variant="primary"
-                      size="lg"
-                      className="w-full bg-black text-js hover:bg-gray-800"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      RSVP on Meetup
-                    </Button>
-                  ) : (
-                    <EventInterestButton
-                      eventId={event.id}
-                      eventTitle={event.title}
-                      variant="primary"
-                      size="lg"
-                      className="w-full bg-black text-js hover:bg-gray-800"
-                    />
-                  )
+                  <EventInterestButton
+                    eventId={event.id}
+                    eventTitle={event.title}
+                    variant="primary"
+                    size="lg"
+                    className="w-full bg-black text-js hover:bg-gray-800"
+                  />
                 )}
               </motion.div>
             )}
@@ -1334,10 +1506,12 @@ export default function EventDetail({ event }: EventDetailPageProps) {
               >
                 <h3 className="text-xl font-bold mb-3">Feedback Mode 📝</h3>
                 <p className="mb-4">
-                  You&apos;re currently in feedback mode. Please rate the talks to help us improve future events and provide valuable insights to our speakers.
+                  You&apos;re currently in feedback mode. Please rate the talks to help us improve
+                  future events and provide valuable insights to our speakers.
                 </p>
                 <p className="text-sm text-blue-600">
-                  Your feedback will remain anonymous to speakers and will only be used to improve our community events. You can submit feedback at any time.
+                  Your feedback will remain anonymous to speakers and will only be used to improve
+                  our community events. You can submit feedback at any time.
                 </p>
               </motion.div>
             )}
@@ -1349,17 +1523,20 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       {showNewsletter && !isFeedbackMode && (
         <Section variant="gradient">
           <motion.div
-            initial={{opacity: 0, y: 20}}
-            whileInView={{opacity: 1, y: 0}}
-            viewport={{once: true}}
-            transition={{duration: 0.5}}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
             className="bg-black text-white rounded-lg p-8 shadow-md"
           >
             <div className="md:flex items-center justify-between">
               <div className="md:w-3/5 mb-6 md:mb-0">
-                <h2 className="text-2xl font-bold mb-2 text-js">Never Miss a JavaScript Gathering! 📬</h2>
+                <h2 className="text-2xl font-bold mb-2 text-js">
+                  Never Miss a JavaScript Gathering! 📬
+                </h2>
                 <p className="text-lg">
-                  Subscribe to our newsletter and be the first to know about upcoming events, speaker announcements, and community news!
+                  Subscribe to our newsletter and be the first to know about upcoming events,
+                  speaker announcements, and community news!
                 </p>
               </div>
               <div className="md:w-2/5">
@@ -1389,25 +1566,25 @@ export async function getStaticPaths() {
 
   const paths = [
     ...upcomingEvents.map((event: Event) => ({
-      params: {id: event.id},
+      params: { id: event.id },
     })),
     ...pastEvents.map((event: Event) => ({
-      params: {id: event.id},
+      params: { id: event.id },
     })),
   ];
 
   return {
     paths,
-    fallback: 'blocking', // Show a loading state for events not generated at build time
+    fallback: "blocking", // Show a loading state for events not generated at build time
   };
 }
 
-export async function getStaticProps({params}: { params: { id: string } }) {
+export async function getStaticProps({ params }: { params: { id: string } }) {
   // This would be replaced with actual CMS fetching based on the id
-  const {id} = params;
+  const { id } = params;
   const event = await getEventById(id);
 
   return {
-    props: {event},
+    props: { event },
   };
 }

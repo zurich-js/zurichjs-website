@@ -1,14 +1,12 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-
-
+import { NextApiRequest, NextApiResponse } from "next";
 
 // Example API route to process referrals
 // In a real implementation, you would connect to a database
 // and store/update referral information
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
@@ -17,7 +15,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Validate required fields
     if (!referrerId || !userId) {
-      return res.status(400).json({ message: 'Missing required fields' });
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     // In a real implementation, you would:
@@ -27,13 +25,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // 4. Record the referral in your database
 
     // For this example, we'll simulate success
-    console.log(`Processing referral: User ${userId} was referred by ${referrerId} for ${purchaseType}`);
+    console.log(
+      `Processing referral: User ${userId} was referred by ${referrerId} for ${purchaseType}`,
+    );
 
     // Credit values based on purchase type
     const creditValues = {
       workshop: 200,
       event: 100,
-      other: 50
+      other: 50,
     };
 
     const creditAmount = creditValues[purchaseType as keyof typeof creditValues] || 50;
@@ -44,13 +44,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       success: true,
       referrer: {
         id: referrerId,
-        email: 'referrer@example.com', // This would come from your database
-        creditAmount
-      }
+        email: "referrer@example.com", // This would come from your database
+        creditAmount,
+      },
     });
   } catch (error) {
-    console.error('Error processing referral:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error("Error processing referral:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 }
 

@@ -1,18 +1,18 @@
-import { motion } from 'framer-motion';
-import Image from 'next/image';
+import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
-import Header from '@/components/layout/Header';
-import Section from '@/components/Section';
-import SEO from '@/components/SEO';
-import ScheduleCard from '@/components/today/ScheduleCard';
-import StickyActions from '@/components/today/StickyActions';
-import TodayCard from '@/components/today/TodayCard';
-import TodayHero from '@/components/today/TodayHero';
-import TodaysSponsors from '@/components/today/TodaysSponsors';
-import VereinInquiry from '@/components/today/VereinInquiry';
-import { Event, getEventById } from '@/sanity/queries';
+import Header from "@/components/layout/Header";
+import Section from "@/components/Section";
+import SEO from "@/components/SEO";
+import ScheduleCard from "@/components/today/ScheduleCard";
+import StickyActions from "@/components/today/StickyActions";
+import TodayCard from "@/components/today/TodayCard";
+import TodayHero from "@/components/today/TodayHero";
+import TodaysSponsors from "@/components/today/TodaysSponsors";
+import VereinInquiry from "@/components/today/VereinInquiry";
+import { Event, getEventById } from "@/sanity/queries";
 
 interface TodayPageProps {
   upcomingEvent: Event | null;
@@ -28,44 +28,54 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
   // ZurichJS Conf 2026 speakers data
   const confSpeakers = [
     {
-      name: 'Daniel Roe',
-      title: 'Nuxt Core Team Lead @ Vercel',
-      avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/88af311d-3b9b-40f0-a6c7-bf8e64e72fbb/profile.png'
+      name: "Daniel Roe",
+      title: "Nuxt Core Team Lead @ Vercel",
+      avatar:
+        "https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/88af311d-3b9b-40f0-a6c7-bf8e64e72fbb/profile.png",
     },
     {
-      name: 'Dominik Dorfmeister',
-      title: 'Maintainer of TanStack Query @ Sentry',
-      avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/52d2ca7b-9b1c-443e-868a-47e03ab0948b/profile.png'
+      name: "Dominik Dorfmeister",
+      title: "Maintainer of TanStack Query @ Sentry",
+      avatar:
+        "https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/52d2ca7b-9b1c-443e-868a-47e03ab0948b/profile.png",
     },
     {
-      name: 'Ramona Schwering',
-      title: 'GDE for Web Technologies @ Auth0',
-      avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/9f322e13-eb71-4cd6-9108-5c3cbc913378/profile.png'
+      name: "Ramona Schwering",
+      title: "GDE for Web Technologies @ Auth0",
+      avatar:
+        "https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/9f322e13-eb71-4cd6-9108-5c3cbc913378/profile.png",
     },
     {
-      name: 'Scott Tolinski',
-      title: 'Co-Host of Syntax.fm @ Sentry',
-      avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/1997857c-7093-44e6-88d6-87a4c33bb836/profile.png'
+      name: "Scott Tolinski",
+      title: "Co-Host of Syntax.fm @ Sentry",
+      avatar:
+        "https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/1997857c-7093-44e6-88d6-87a4c33bb836/profile.png",
     },
     {
-      name: 'Tejas Kumar',
-      title: 'ConTejas Host @ IBM',
-      avatar: 'https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/fc996038-c5cd-4029-bfd3-9c73fac48a75/profile.png'
-    }
+      name: "Tejas Kumar",
+      title: "ConTejas Host @ IBM",
+      avatar:
+        "https://svkbzhlrjujeteqjrckv.supabase.co/storage/v1/object/public/cfp-images/speakers/fc996038-c5cd-4029-bfd3-9c73fac48a75/profile.png",
+    },
   ];
 
-  const confTicketUrl = 'https://conf.zurichjs.com?utm_source=zurichjs&utm_medium=today_page&utm_campaign=conf_2026';
+  const confTicketUrl =
+    "https://conf.zurichjs.com?utm_source=zurichjs&utm_medium=today_page&utm_campaign=conf_2026";
 
   return (
     <>
       <Header />
-      <Section variant="gradient" padding="lg" className="min-h-screen pb-24 md:pb-8 pt-20 sm:pt-24 px-3 sm:px-4">
-      <SEO
-        title={`${upcomingEvent?.title || 'Today'} - Today - ZurichJS`}
-        description={upcomingEvent?.description || 'Your hub for today\'s ZurichJS event'}
-      />
+      <Section
+        variant="gradient"
+        padding="lg"
+        className="min-h-screen pb-24 md:pb-8 pt-20 sm:pt-24 px-3 sm:px-4"
+      >
+        <SEO
+          title={`${upcomingEvent?.title || "Today"} - Today - ZurichJS`}
+          description={upcomingEvent?.description || "Your hub for today's ZurichJS event"}
+        />
 
-      <div className="space-y-6 max-w-screen-xl mx-auto">
+        <div className="space-y-6 max-w-screen-xl mx-auto">
           {/* ZurichJS Conf 2026 - Top Priority - full width */}
           <motion.div
             initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
@@ -77,12 +87,8 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               <div className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                   <div className="flex-1">
-                    <p className="text-sm text-white mb-2">
-                    11 SEPT 2026
-                    </p>
-                    <h2 className="text-3xl font-black text-white mb-2">
-                      ZurichJS Conf 2026
-                    </h2>
+                    <p className="text-sm text-white mb-2">11 SEPT 2026</p>
+                    <h2 className="text-3xl font-black text-white mb-2">ZurichJS Conf 2026</h2>
                     <p className="text-white text-sm max-w-xl">
                       The first-ever ZurichJS Conference! 1 day, 1 track, world-renowned experts.
                     </p>
@@ -125,26 +131,26 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
 
           {upcomingEvent && (
             <div className="flex flex-col gap-6 md:flex-row">
-                <motion.div
-                  initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="contents"
-                >
-                  <TodayHero event={upcomingEvent} />
-                </motion.div>
+              <motion.div
+                initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="contents"
+              >
+                <TodayHero event={upcomingEvent} />
+              </motion.div>
 
-                <motion.div
-                  initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.15 }}
-                  className="flex-1"
-                  data-section="schedule"
-                >
-                  <TodayCard className="h-full">
-                    <ScheduleCard event={upcomingEvent} />
-                  </TodayCard>
-                </motion.div>
+              <motion.div
+                initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="flex-1"
+                data-section="schedule"
+              >
+                <TodayCard className="h-full">
+                  <ScheduleCard event={upcomingEvent} />
+                </TodayCard>
+              </motion.div>
             </div>
           )}
 
@@ -168,34 +174,34 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               data-section="raffle"
             >
               <TodayCard className="h-full">
-                  <div className="flex flex-col gap-4 h-full md:min-w-96">
-                      <h2 className="text-xl font-bold text-gray-900">
-                          Give us feedback, get some swag!
-                      </h2>
+                <div className="flex flex-col gap-4 h-full md:min-w-96">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Give us feedback, get some swag!
+                  </h2>
 
-                      <p className="text-sm text-gray-600">
-                          Fill out the form below for a chance to win a Stripe book.
-                      </p>
+                  <p className="text-sm text-gray-600">
+                    Fill out the form below for a chance to win a Stripe book.
+                  </p>
 
-                      <div className="flex-1 grid place-items-center my-6">
-                          <Image
-                              src="/images/partners/stripe.png"
-                              alt="Stripe logo"
-                              width={320}
-                              height={320}
-                              className="object-contain"
-                          />
-                      </div>
-
-                      <Link
-                          href="https://forms.gle/EBop98LxwBnYNkoH9"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block w-full bg-brand-black text-white font-bold py-4 px-8 rounded-2xl text-center hover:bg-brand-gray-dark transition-colors duration-200"
-                      >
-                          Enter the Stripe book raffle
-                      </Link>
+                  <div className="flex-1 grid place-items-center my-6">
+                    <Image
+                      src="/images/partners/stripe.png"
+                      alt="Stripe logo"
+                      width={320}
+                      height={320}
+                      className="object-contain"
+                    />
                   </div>
+
+                  <Link
+                    href="https://forms.gle/EBop98LxwBnYNkoH9"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-brand-black text-white font-bold py-4 px-8 rounded-2xl text-center hover:bg-brand-gray-dark transition-colors duration-200"
+                  >
+                    Enter the Stripe book raffle
+                  </Link>
+                </div>
               </TodayCard>
             </motion.div>
 
@@ -211,18 +217,18 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
               </TodayCard>
             </motion.div>
           </div>
-      </div>
+        </div>
 
-      {/* Sticky actions */}
-      <StickyActions />
-    </Section>
+        {/* Sticky actions */}
+        <StickyActions />
+      </Section>
     </>
   );
 }
 
 export async function getStaticProps() {
   try {
-    const upcomingEvent = await getEventById('may-2026');
+    const upcomingEvent = await getEventById("may-2026");
 
     return {
       props: {
@@ -237,11 +243,11 @@ export async function getStaticProps() {
       revalidate: 300,
     };
   } catch (error) {
-    console.error('Error fetching data:', error);
+    console.error("Error fetching data:", error);
 
     return {
       props: {
-        upcomingEvent: null
+        upcomingEvent: null,
       },
       revalidate: 60, // Retry more frequently on error
     };

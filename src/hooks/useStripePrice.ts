@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface StripePrice {
   id: string;
@@ -21,19 +21,19 @@ export function useStripePrice(priceId: string | undefined) {
     const fetchPrice = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(`/api/stripe/get-price?priceId=${priceId}`);
-        
+
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to fetch price');
+          throw new Error(errorData.error || "Failed to fetch price");
         }
-        
+
         const data = await response.json();
         setPrice(data);
       } catch (err) {
-        console.error('Error fetching price:', err);
+        console.error("Error fetching price:", err);
         setError((err as Error).message);
         setPrice(null);
       } finally {
@@ -49,4 +49,4 @@ export function useStripePrice(priceId: string | undefined) {
     isLoading,
     error,
   };
-} 
+}

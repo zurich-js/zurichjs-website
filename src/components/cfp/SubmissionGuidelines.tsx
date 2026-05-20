@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import { FileText, Clock, Calendar } from 'lucide-react';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
+import { motion } from "framer-motion";
+import { FileText, Clock, Calendar } from "lucide-react";
+import { useFeatureFlagEnabled } from "posthog-js/react";
 
-import Section from '@/components/Section';
-import { FeatureFlags } from '@/constants';
+import Section from "@/components/Section";
+import { FeatureFlags } from "@/constants";
 
 export default function SubmissionGuidelines() {
   const showDeepDiveOption = useFeatureFlagEnabled(FeatureFlags.CfpDeepDiveOption);
@@ -11,24 +11,24 @@ export default function SubmissionGuidelines() {
   const guidelines = [
     {
       icon: FileText,
-      title: 'Talk Content',
+      title: "Talk Content",
       description:
-        'Your talk should focus on JavaScript or related web technologies. We welcome topics from beginner to advanced levels.',
+        "Your talk should focus on JavaScript or related web technologies. We welcome topics from beginner to advanced levels.",
       delay: 0.1,
     },
     {
       icon: Clock,
-      title: 'Talk Length',
+      title: "Talk Length",
       description: showDeepDiveOption
-        ? 'We offer slots for lightning talks (5 min), standard talks (25 min), and deep dives (35 min).'
-        : 'We offer slots for lightning talks (5 min) and standard talks (25 min).',
+        ? "We offer slots for lightning talks (5 min), standard talks (25 min), and deep dives (35 min)."
+        : "We offer slots for lightning talks (5 min) and standard talks (25 min).",
       delay: 0.2,
     },
     {
       icon: Calendar,
-      title: 'Upcoming Events',
+      title: "Upcoming Events",
       description:
-        'We typically host meetups monthly. Your talk will be scheduled based on the theme and availability.',
+        "We typically host meetups monthly. Your talk will be scheduled based on the theme and availability.",
       delay: 0.3,
     },
   ];

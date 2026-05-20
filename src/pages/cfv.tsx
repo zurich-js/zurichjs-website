@@ -1,13 +1,22 @@
-import { motion } from 'framer-motion';
-import { Users, MessageCircle, Share2, Calendar, Code, BookOpen, HeartHandshake, Clock } from 'lucide-react';
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { motion } from "framer-motion";
+import {
+  Users,
+  MessageCircle,
+  Share2,
+  Calendar,
+  Code,
+  BookOpen,
+  HeartHandshake,
+  Clock,
+} from "lucide-react";
+import { useState, ChangeEvent, FormEvent } from "react";
 
-import Layout from '@/components/layout/Layout';
-import Section from '@/components/Section';
-import SEO from '@/components/SEO';
-import Button from '@/components/ui/Button';
-import useEvents from '@/hooks/useEvents';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
+import Layout from "@/components/layout/Layout";
+import Section from "@/components/Section";
+import SEO from "@/components/SEO";
+import Button from "@/components/ui/Button";
+import useEvents from "@/hooks/useEvents";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
 
 interface FormState {
   firstName: string;
@@ -28,31 +37,33 @@ export default function CFV() {
   const { track } = useEvents();
 
   const [formState, setFormState] = useState<FormState>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    linkedinProfile: '',
-    githubProfile: '',
-    message: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    linkedinProfile: "",
+    githubProfile: "",
+    message: "",
     interests: [],
-    availability: 'monthly',
+    availability: "monthly",
     submitted: false,
     isSubmitting: false,
-    error: '',
+    error: "",
   });
 
   const volunteerRoles = [
-    'Community Management',
-    'Social Media Marketing',
-    'Partnership & Speaker Outreach',
-    'Event Organization',
-    'Platform Development',
-    'Workshop Organization',
-    'Content Creation',
-    'Graphic Design',
+    "Community Management",
+    "Social Media Marketing",
+    "Partnership & Speaker Outreach",
+    "Event Organization",
+    "Platform Development",
+    "Workshop Organization",
+    "Content Creation",
+    "Graphic Design",
   ];
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
   };
@@ -63,9 +74,9 @@ export default function CFV() {
       : [...formState.interests, interest];
 
     // Track interest selection/deselection
-    track('interest_selection', {
-      action: formState.interests.includes(interest) ? 'deselect' : 'select',
-      interest: interest
+    track("interest_selection", {
+      action: formState.interests.includes(interest) ? "deselect" : "select",
+      interest: interest,
     });
 
     setFormState((prev) => ({ ...prev, interests: newInterests }));
@@ -75,30 +86,34 @@ export default function CFV() {
     e.preventDefault();
 
     // Form validation
-    if (!formState.firstName || !formState.lastName || !formState.email ||
-        !formState.linkedinProfile || !formState.message) {
-
+    if (
+      !formState.firstName ||
+      !formState.lastName ||
+      !formState.email ||
+      !formState.linkedinProfile ||
+      !formState.message
+    ) {
       // Track validation error
-      track('form_error', {
-        errorType: 'missing_required_fields'
+      track("form_error", {
+        errorType: "missing_required_fields",
       });
 
-      setFormState((prev) => ({ ...prev, error: 'Please fill out all required fields' }));
+      setFormState((prev) => ({ ...prev, error: "Please fill out all required fields" }));
       return;
     }
 
     if (formState.interests.length === 0) {
       // Track validation error
-      track('form_error', {
-        errorType: 'no_interests_selected'
+      track("form_error", {
+        errorType: "no_interests_selected",
       });
 
-      setFormState((prev) => ({ ...prev, error: 'Please select at least one area of interest' }));
+      setFormState((prev) => ({ ...prev, error: "Please select at least one area of interest" }));
       return;
     }
 
     // Set loading state
-    setFormState((prev) => ({ ...prev, isSubmitting: true, error: '' }));
+    setFormState((prev) => ({ ...prev, isSubmitting: true, error: "" }));
 
     try {
       // Create form data
@@ -108,57 +123,59 @@ export default function CFV() {
       const fullName = `${formState.firstName} ${formState.lastName}`;
 
       // Add all form fields to formData
-      formData.append('name', fullName);
-      formData.append('firstName', formState.firstName);
-      formData.append('lastName', formState.lastName);
-      formData.append('email', formState.email);
-      formData.append('linkedinProfile', formState.linkedinProfile);
-      formData.append('githubProfile', formState.githubProfile || '');
-      formData.append('message', formState.message);
-      formData.append('availability', formState.availability);
-      formData.append('interests', JSON.stringify(formState.interests));
+      formData.append("name", fullName);
+      formData.append("firstName", formState.firstName);
+      formData.append("lastName", formState.lastName);
+      formData.append("email", formState.email);
+      formData.append("linkedinProfile", formState.linkedinProfile);
+      formData.append("githubProfile", formState.githubProfile || "");
+      formData.append("message", formState.message);
+      formData.append("availability", formState.availability);
+      formData.append("interests", JSON.stringify(formState.interests));
 
       // Track form submission attempt
-      track('volunteer_form_submit', {
+      track("volunteer_form_submit", {
         interests: JSON.stringify(formState.interests),
-        availability: formState.availability
+        availability: formState.availability,
       });
 
       // Submit to our API endpoint
-      const response = await fetch('/api/submit-volunteer', {
-        method: 'POST',
+      const response = await fetch("/api/submit-volunteer", {
+        method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'An error occurred while submitting your application');
+        throw new Error(data.error || "An error occurred while submitting your application");
       }
 
       // Track successful submission
-      track('volunteer_form_submit_success');
+      track("volunteer_form_submit_success");
 
       // Show success state
       setFormState((prev) => ({
         ...prev,
         submitted: true,
         isSubmitting: false,
-        error: ''
+        error: "",
       }));
-
     } catch (error: unknown) {
-      console.error('Submission error:', error);
+      console.error("Submission error:", error);
 
       // Track submission error
-      track('volunteer_form_submit_error', {
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      track("volunteer_form_submit_error", {
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
       setFormState((prev) => ({
         ...prev,
         isSubmitting: false,
-        error: error instanceof Error ? error.message : 'An error occurred while submitting your application'
+        error:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while submitting your application",
       }));
     }
   };
@@ -170,9 +187,10 @@ export default function CFV() {
         description="Join the ZurichJS team as a volunteer. Help us build a thriving JavaScript community in Zurich!"
         openGraph={{
           title: "Volunteer With Us | ZurichJS",
-          description: "Help us build a thriving JavaScript community in Zurich by joining our volunteer team.",
+          description:
+            "Help us build a thriving JavaScript community in Zurich by joining our volunteer team.",
           image: "/api/og/cfv",
-          type: "website"
+          type: "website",
         }}
       />
 
@@ -185,17 +203,15 @@ export default function CFV() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h1 className="text-4xl md:text-5xl font-bold mb-3 md:mb-4">
-                Call for Volunteers
-              </h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-3 md:mb-4">Call for Volunteers</h1>
               <p className="text-lg md:text-xl mb-4 md:mb-6">
                 Help us build a thriving JavaScript community in Zurich!
               </p>
               <p className="text-base md:text-lg mb-6 md:mb-8">
-                ZurichJS is 100% community-driven, and we need passionate people like you
-                to help us grow and make an impact. While we cannot offer compensation,
-                you&apos;ll gain valuable experience, connections, and the satisfaction of
-                building something meaningful.
+                ZurichJS is 100% community-driven, and we need passionate people like you to help us
+                grow and make an impact. While we cannot offer compensation, you&apos;ll gain
+                valuable experience, connections, and the satisfaction of building something
+                meaningful.
               </p>
             </motion.div>
           </div>
@@ -238,8 +254,8 @@ export default function CFV() {
         >
           <h2 className="text-3xl font-bold mb-3">How You Can Help</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            We&apos;re looking for volunteers to support various aspects of our community.
-            Here are some of the key areas where we need help.
+            We&apos;re looking for volunteers to support various aspects of our community. Here are
+            some of the key areas where we need help.
           </p>
         </motion.div>
 
@@ -254,8 +270,8 @@ export default function CFV() {
             <MessageCircle className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Community Management</h3>
             <p className="text-gray-600">
-              Help moderate our online community platforms, engage with members, and ensure
-              we maintain a welcoming environment for everyone.
+              Help moderate our online community platforms, engage with members, and ensure we
+              maintain a welcoming environment for everyone.
             </p>
           </motion.div>
 
@@ -269,8 +285,8 @@ export default function CFV() {
             <Share2 className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Social Media Marketing</h3>
             <p className="text-gray-600">
-              Craft engaging content for our social media channels, help promote our events,
-              and grow our online presence.
+              Craft engaging content for our social media channels, help promote our events, and
+              grow our online presence.
             </p>
           </motion.div>
 
@@ -284,8 +300,8 @@ export default function CFV() {
             <HeartHandshake className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Partnership & Speaker Outreach</h3>
             <p className="text-gray-600">
-              Connect with potential partners, sponsors, and speakers to help us create
-              valuable and diverse content for our community.
+              Connect with potential partners, sponsors, and speakers to help us create valuable and
+              diverse content for our community.
             </p>
           </motion.div>
 
@@ -299,8 +315,8 @@ export default function CFV() {
             <Calendar className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Event Organization</h3>
             <p className="text-gray-600">
-              Assist with planning, organizing, and running our meetups and other events,
-              from logistics to attendee experience.
+              Assist with planning, organizing, and running our meetups and other events, from
+              logistics to attendee experience.
             </p>
           </motion.div>
 
@@ -314,8 +330,8 @@ export default function CFV() {
             <Code className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Platform Development</h3>
             <p className="text-gray-600">
-              Contribute to our website and other technical platforms, helping us improve
-              user experience and add new features.
+              Contribute to our website and other technical platforms, helping us improve user
+              experience and add new features.
             </p>
           </motion.div>
 
@@ -329,8 +345,8 @@ export default function CFV() {
             <BookOpen className="text-yellow-500 mb-4" size={32} />
             <h3 className="text-xl font-bold mb-2">Workshop Organization</h3>
             <p className="text-gray-600">
-              Help plan and run educational workshops, creating opportunities for hands-on
-              learning within our community.
+              Help plan and run educational workshops, creating opportunities for hands-on learning
+              within our community.
             </p>
           </motion.div>
         </div>
@@ -347,7 +363,8 @@ export default function CFV() {
         >
           <h2 className="text-3xl font-bold mb-3">Why Volunteer With Us?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            While we cannot offer financial compensation, volunteering with ZurichJS offers many valuable benefits.
+            While we cannot offer financial compensation, volunteering with ZurichJS offers many
+            valuable benefits.
           </p>
         </motion.div>
 
@@ -446,8 +463,9 @@ export default function CFV() {
               <Users size={64} className="mx-auto mb-4 text-green-500" />
               <h3 className="text-2xl font-bold mb-2">Thank You for Volunteering!</h3>
               <p className="mb-6">
-                We&apos;ve received your application and we&apos;re excited about the possibility of having you join our team.
-                Someone from our organizing committee will contact you within the next 7 days to discuss the next steps.
+                We&apos;ve received your application and we&apos;re excited about the possibility of
+                having you join our team. Someone from our organizing committee will contact you
+                within the next 7 days to discuss the next steps.
               </p>
               <Button href="/" variant="secondary">
                 Return to Homepage
@@ -463,9 +481,7 @@ export default function CFV() {
               className="bg-white p-8 rounded-lg shadow-md"
             >
               {formState.error && (
-                <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">
-                  {formState.error}
-                </div>
+                <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-md">{formState.error}</div>
               )}
 
               <div className="mb-6">
@@ -550,7 +566,7 @@ export default function CFV() {
 
               <div className="mb-6">
                 <h3 className="text-xl font-bold mb-4">Volunteer Details</h3>
-                
+
                 <div className="mb-4">
                   <label htmlFor="availability" className="block text-gray-700 mb-2">
                     Availability *
@@ -569,7 +585,7 @@ export default function CFV() {
                     <option value="other">Other (please specify in message)</option>
                   </select>
                 </div>
-                
+
                 <div className="mb-6">
                   <label className="block text-gray-700 mb-2">
                     Areas of Interest * (select at least one)
@@ -579,17 +595,18 @@ export default function CFV() {
                       <div
                         key={interest}
                         onClick={() => handleInterestChange(interest)}
-                        className={`cursor-pointer flex items-center px-3 py-1.5 rounded-full ${formState.interests.includes(interest)
-                            ? 'bg-js text-black'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
+                        className={`cursor-pointer flex items-center px-3 py-1.5 rounded-full ${
+                          formState.interests.includes(interest)
+                            ? "bg-js text-black"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                       >
                         {interest}
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="mb-4">
                   <label htmlFor="message" className="block text-gray-700 mb-2">
                     Why do you want to volunteer with ZurichJS? *
@@ -611,30 +628,42 @@ export default function CFV() {
                 <div className="flex items-start">
                   <Clock className="text-gray-400 mr-2 mt-0.5 flex-shrink-0" size={18} />
                   <p>
-                    ZurichJS is 100% community-driven and run by volunteers. While we cannot offer financial compensation, 
-                    we strive to create an enriching experience that helps you grow professionally and personally while making 
-                    a positive impact on the local tech ecosystem.
+                    ZurichJS is 100% community-driven and run by volunteers. While we cannot offer
+                    financial compensation, we strive to create an enriching experience that helps
+                    you grow professionally and personally while making a positive impact on the
+                    local tech ecosystem.
                   </p>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  disabled={formState.isSubmitting}
-                >
+                <Button type="submit" variant="primary" size="lg" disabled={formState.isSubmitting}>
                   {formState.isSubmitting ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Submitting...
                     </>
                   ) : (
-                    'Submit Application'
+                    "Submit Application"
                   )}
                 </Button>
               </div>

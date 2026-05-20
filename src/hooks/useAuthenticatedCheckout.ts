@@ -1,5 +1,5 @@
-import { useAuth, useUser } from '@clerk/nextjs';
-import { useState } from 'react';
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useState } from "react";
 
 interface UseAuthenticatedCheckoutProps {
   onError?: (error: Error) => void;
@@ -10,7 +10,7 @@ interface CheckoutOptions {
   quantity?: number;
   workshopId?: string;
   eventId?: string;
-  ticketType?: 'workshop' | 'event';
+  ticketType?: "workshop" | "event";
   couponCode?: string;
 }
 
@@ -19,27 +19,27 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
-  const startCheckout = async ({ 
-    priceId, 
-    quantity = 1, 
+  const startCheckout = async ({
+    priceId,
+    quantity = 1,
     workshopId,
     eventId,
-    ticketType = workshopId ? 'workshop' : 'event',
-    couponCode 
+    ticketType = workshopId ? "workshop" : "event",
+    couponCode,
   }: CheckoutOptions) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/stripe/checkout-sessions', {
-        method: 'POST',
+      const response = await fetch("/api/stripe/checkout-sessions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           priceId,
           email: user?.primaryEmailAddress?.emailAddress,
           quantity,
           // If a custom coupon is provided, use it instead of the community discount
-          couponCode: couponCode || (isSignedIn ? 'zurichjs-community' : undefined),
+          couponCode: couponCode || (isSignedIn ? "zurichjs-community" : undefined),
           workshopId,
           eventId,
           ticketType,
@@ -47,18 +47,18 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        throw new Error("Failed to create checkout session");
       }
 
       const { url } = await response.json();
       if (!url) {
-        throw new Error('No checkout URL received');
+        throw new Error("No checkout URL received");
       }
 
       // Redirect to Stripe Checkout
       window.location.href = url;
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error("Checkout error:", error);
       onError?.(error as Error);
       throw error;
     } finally {
@@ -72,4 +72,4 @@ export function useAuthenticatedCheckout({ onError }: UseAuthenticatedCheckoutPr
     isSignedIn,
     userEmail: user?.primaryEmailAddress?.emailAddress,
   };
-} 
+}

@@ -1,12 +1,26 @@
-import { SignInButton, useUser } from '@clerk/nextjs';
-import { Zap, Ticket, ChevronLeft, Loader2, Gift, Shield, Clock, Heart, Award, ArrowRight, AlertTriangle, CheckCircle, Users } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useState, useEffect, useRef } from 'react';
+import { SignInButton, useUser } from "@clerk/nextjs";
+import {
+  Zap,
+  Ticket,
+  ChevronLeft,
+  Loader2,
+  Gift,
+  Shield,
+  Clock,
+  Heart,
+  Award,
+  ArrowRight,
+  AlertTriangle,
+  CheckCircle,
+  Users,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useState, useEffect, useRef } from "react";
 
-import PageLayout from '@/components/layout/Layout';
-import SEO from '@/components/SEO';
+import PageLayout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
 import {
   TshirtProductConfig,
   TshirtPaymentMethod,
@@ -16,21 +30,23 @@ import {
   TshirtStepIndicator,
   BASE_PRICE,
   DELIVERY_ADDON,
-  SizeQuantity
-} from '@/components/tshirt';
-import Button from '@/components/ui/Button';
-import CashPaymentModal from '@/components/ui/CashPaymentModal';
-import ErrorBoundary from '@/components/ui/ErrorBoundary';
-import { useAuthenticatedCheckout } from '@/hooks/useAuthenticatedCheckout';
-import { useCoupon } from '@/hooks/useCoupon';
-import useEvents from '@/hooks/useEvents';
+  SizeQuantity,
+} from "@/components/tshirt";
+import Button from "@/components/ui/Button";
+import CashPaymentModal from "@/components/ui/CashPaymentModal";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+import { useAuthenticatedCheckout } from "@/hooks/useAuthenticatedCheckout";
+import { useCoupon } from "@/hooks/useCoupon";
+import useEvents from "@/hooks/useEvents";
 
-const TSHIRT_PRICE_ID = process.env.NODE_ENV === 'development'
-  ? 'price_1RneOpGxQziVA7FsQRe8QHGK' // Development/Test price ID
-  : 'price_1RneLaGxQziVA7Fs49QnVKbT'; // Production price ID
-const SHIPPING_RATE_ID = process.env.NODE_ENV === 'development'
-  ? 'shr_1RnePLGxQziVA7FsEWPBRYAA' // Development/Test shipping rate ID
-  : 'shr_1RneNbGxQziVA7FsmyQbFuTM'; // Production shipping rate ID
+const TSHIRT_PRICE_ID =
+  process.env.NODE_ENV === "development"
+    ? "price_1RneOpGxQziVA7FsQRe8QHGK" // Development/Test price ID
+    : "price_1RneLaGxQziVA7Fs49QnVKbT"; // Production price ID
+const SHIPPING_RATE_ID =
+  process.env.NODE_ENV === "development"
+    ? "shr_1RnePLGxQziVA7FsEWPBRYAA" // Development/Test shipping rate ID
+    : "shr_1RneNbGxQziVA7FsmyQbFuTM"; // Production shipping rate ID
 
 export default function TshirtPage() {
   const [stock, setStock] = useState<Record<string, number>>({});
@@ -39,25 +55,61 @@ export default function TshirtPage() {
   const [sizeQuantities, setSizeQuantities] = useState<SizeQuantity>({});
   const [delivery, setDelivery] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkoutError, setCheckoutError] = useState('');
+  const [checkoutError, setCheckoutError] = useState("");
 
   // User data for pre-filling forms
   const { user, isLoaded: userLoaded } = useUser();
   const [step, setStep] = useState(0); // 0: product config, 1: payment method, 2: address (cash only), 3: review, 4: confirmation
   const router = useRouter();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { couponCode, couponData, error: couponError, applyDiscount } = useCoupon();
+  const { couponCode, couponData, error: _couponError, applyDiscount } = useCoupon();
   const { isSignedIn, userEmail } = useAuthenticatedCheckout();
-  const { track, captureError } = useEvents();
+  const { track } = useEvents();
 
   // Track if component is mounted to avoid hydration mismatches
   const [isMounted, setIsMounted] = useState(false);
   const hasTrackedPageView = useRef(false);
 
+  // Cancellation recovery state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelEmail, setCancelEmail] = useState("");
+  const [cancelFeedbackSubmitted, setCancelFeedbackSubmitted] = useState(false);
+  const [cancelModalDismissed, setCancelModalDismissed] = useState(false);
+
+  // Cash payment state
+  const [showCashModal, setShowCashModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "cash">("online");
+
+  // Delivery address state
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    name: "",
+    email: "",
+    address: "",
+    city: "",
+    zipCode: "",
+    country: "Switzerland",
+  });
+
+  // Cash payment form state
+  const [cashPaymentDetails, setCashPaymentDetails] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+
+  // Track notification state to prevent duplicates
+  const [cardNotificationSent, setCardNotificationSent] = useState(false);
+
+  // Merch survey state
+  const [showMerchSurvey, setShowMerchSurvey] = useState(false);
+  const [merchSuggestion, setMerchSuggestion] = useState("");
+  const [surveySubmitted, setSurveySubmitted] = useState(false);
+  const [surveySubmitting, setSurveySubmitting] = useState(false);
+
   // Community discount logic
   const hasCoupon = couponData && couponData.isValid;
-  const communityCouponCode = isSignedIn && !hasCoupon ? 'zurichjs-community' : undefined;
+  const communityCouponCode = isSignedIn && !hasCoupon ? "zurichjs-community" : undefined;
   const communityDiscount = Boolean(communityCouponCode);
 
   // Handle merch survey submission
@@ -66,25 +118,25 @@ export default function TshirtPage() {
 
     setSurveySubmitting(true);
     try {
-      await fetch('/api/notifications/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: '💡 New Merch Suggestion',
-          message: `Someone suggested new merch: "${merchSuggestion.trim()}"\n\nFrom: ${userEmail || 'Anonymous user'}\nSource: T-shirt page survey`,
-          type: 'merch-suggestion',
-          priority: 'low',
-          email: userEmail || ''
-        })
+          title: "💡 New Merch Suggestion",
+          message: `Someone suggested new merch: "${merchSuggestion.trim()}"\n\nFrom: ${userEmail || "Anonymous user"}\nSource: T-shirt page survey`,
+          type: "merch-suggestion",
+          priority: "low",
+          email: userEmail || "",
+        }),
       });
 
       setSurveySubmitted(true);
-      track('merch_suggestion_submitted', {
+      track("merch_suggestion_submitted", {
         suggestion: merchSuggestion.trim(),
-        isLoggedIn: !!isSignedIn
+        isLoggedIn: !!isSignedIn,
       });
     } catch (error) {
-      console.error('Failed to submit merch suggestion:', error);
+      console.error("Failed to submit merch suggestion:", error);
       // Still mark as submitted to avoid user frustration
       setSurveySubmitted(true);
     } finally {
@@ -109,16 +161,16 @@ export default function TshirtPage() {
       ? `${couponData.percentOff}%`
       : couponData?.amountOff
         ? `CHF ${(couponData.amountOff / 100).toFixed(0)}`
-        : ''
+        : ""
     : communityDiscount
-      ? '20%'
-      : '';
+      ? "20%"
+      : "";
 
   // Fetch stock data from Stripe metadata
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        const response = await fetch('/api/get-stock?priceId=' + TSHIRT_PRICE_ID);
+        const response = await fetch("/api/get-stock?priceId=" + TSHIRT_PRICE_ID);
         if (response.ok) {
           const stockData = await response.json();
           setStock(stockData);
@@ -129,7 +181,7 @@ export default function TshirtPage() {
           setStock({});
         }
       } catch (error) {
-        console.error('Failed to fetch stock:', error);
+        console.error("Failed to fetch stock:", error);
         setStockError(true);
         // Set empty stock on API failure
         setStock({});
@@ -150,82 +202,45 @@ export default function TshirtPage() {
   useEffect(() => {
     if (!hasTrackedPageView.current) {
       hasTrackedPageView.current = true;
-      track('tshirt_page_viewed', {});
+      track("tshirt_page_viewed", {});
     }
   }, [track]);
 
   // Pre-fill form data from user account
   useEffect(() => {
     if (userLoaded && user) {
-      const firstName = user.firstName || '';
-      const lastName = user.lastName || '';
-      const email = user.primaryEmailAddress?.emailAddress || '';
+      const firstName = user.firstName || "";
+      const lastName = user.lastName || "";
+      const email = user.primaryEmailAddress?.emailAddress || "";
 
       // Pre-fill cash payment details
       setCashPaymentDetails({
         firstName,
         lastName,
-        email
+        email,
       });
 
       // Pre-fill delivery address name and email
-      setDeliveryAddress(prev => ({
+      setDeliveryAddress((prev) => ({
         ...prev,
         name: `${firstName} ${lastName}`.trim(),
-        email
+        email,
       }));
     }
   }, [userLoaded, user]);
 
-  // Cancellation recovery state
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
-  const [cancelEmail, setCancelEmail] = useState('');
-  const [cancelFeedbackSubmitted, setCancelFeedbackSubmitted] = useState(false);
-  const [cancelModalDismissed, setCancelModalDismissed] = useState(false);
-
-  // Cash payment state
-  const [showCashModal, setShowCashModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cash'>('online');
-
-  // Delivery address state
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    name: '',
-    email: '',
-    address: '',
-    city: '',
-    zipCode: '',
-    country: 'Switzerland'
-  });
-
-  // Cash payment form state
-  const [cashPaymentDetails, setCashPaymentDetails] = useState({
-    firstName: '',
-    lastName: '',
-    email: ''
-  });
-
-  // Track notification state to prevent duplicates
-  const [cardNotificationSent, setCardNotificationSent] = useState(false);
-
-  // Merch survey state
-  const [showMerchSurvey, setShowMerchSurvey] = useState(false);
-  const [merchSuggestion, setMerchSuggestion] = useState('');
-  const [surveySubmitted, setSurveySubmitted] = useState(false);
-  const [surveySubmitting, setSurveySubmitting] = useState(false);
-
   // Show cancel modal if canceled=true in URL
   useEffect(() => {
-    if (router.isReady && router.query.canceled === 'true' && !cancelModalDismissed) {
+    if (router.isReady && router.query.canceled === "true" && !cancelModalDismissed) {
       setShowCancelModal(true);
       setStep(0);
-      track('tshirt_checkout_abandoned', {});
+      track("tshirt_checkout_abandoned", {});
     }
   }, [router.isReady, router.query.canceled, track, cancelModalDismissed]);
 
   // Track purchase success
   useEffect(() => {
-    if (router.query.success === 'true' && router.query.session_id && router.isReady) {
+    if (router.query.success === "true" && router.query.session_id && router.isReady) {
       setStep(4);
 
       // Send platform notification for card payment with session data (only once)
@@ -234,34 +249,41 @@ export default function TshirtPage() {
           ? router.query.session_id[0]
           : router.query.session_id;
 
-        // Prevent duplicate notifications by setting this immediately  
+        // Prevent duplicate notifications by setting this immediately
         setCardNotificationSent(true);
 
         const sendCardPaymentNotification = async () => {
           try {
-            await fetch('/api/notify/tshirt-purchase-success', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+            await fetch("/api/notify/tshirt-purchase-success", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 sessionId,
-                userEmail: userEmail || 'Unknown',
-              })
+                userEmail: userEmail || "Unknown",
+              }),
             });
 
             // Track the success after notification is sent
-            track('tshirt_purchase_success', {
+            track("tshirt_purchase_success", {
               sessionId,
-              paymentMethod: 'online',
+              paymentMethod: "online",
             });
           } catch (error) {
-            console.error('Failed to send card payment notification:', error);
+            console.error("Failed to send card payment notification:", error);
           }
         };
 
         sendCardPaymentNotification();
       }
     }
-  }, [router.query.success, router.query.session_id, router.isReady, track, cardNotificationSent, userEmail]);
+  }, [
+    router.query.success,
+    router.query.session_id,
+    router.isReady,
+    track,
+    cardNotificationSent,
+    userEmail,
+  ]);
 
   // Validation functions
   const isStepValid = (stepNum: number) => {
@@ -269,28 +291,32 @@ export default function TshirtPage() {
       case 0:
         // Check if at least one size has quantity > 0 and all quantities are within stock limits
         const hasItems = totalQuantity > 0;
-        const allInStock = Object.entries(sizeQuantities).every(([size, qty]) =>
-          qty === 0 || (qty > 0 && qty <= (stock[size] || 0))
+        const allInStock = Object.entries(sizeQuantities).every(
+          ([size, qty]) => qty === 0 || (qty > 0 && qty <= (stock[size] || 0)),
         );
         return hasItems && !stockLoading && !stockError && allInStock;
       case 1:
         return paymentMethod !== null;
       case 2:
         // For cash payment, require personal details
-        if (paymentMethod === 'cash') {
-          return cashPaymentDetails.firstName.trim() &&
+        if (paymentMethod === "cash") {
+          return (
+            cashPaymentDetails.firstName.trim() &&
             cashPaymentDetails.lastName.trim() &&
             cashPaymentDetails.email.trim() &&
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cashPaymentDetails.email);
+            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cashPaymentDetails.email)
+          );
         }
         // For online payment with delivery, require delivery address
-        if (paymentMethod === 'online' && delivery) {
-          return deliveryAddress.name.trim() &&
+        if (paymentMethod === "online" && delivery) {
+          return (
+            deliveryAddress.name.trim() &&
             deliveryAddress.email.trim() &&
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryAddress.email) &&
             deliveryAddress.address.trim() &&
             deliveryAddress.city.trim() &&
-            deliveryAddress.zipCode.trim();
+            deliveryAddress.zipCode.trim()
+          );
         }
         return true; // Online payment without delivery is always valid
       case 3:
@@ -302,11 +328,13 @@ export default function TshirtPage() {
 
   // Final checkout handler (for review step)
   const handleFinalCheckout = async () => {
-    if (paymentMethod === 'cash') {
+    if (paymentMethod === "cash") {
       // Handle cash payment completion
       setStep(4); // Go to confirmation
-      track('tshirt_cash_order_placed', {
-        sizesOrdered: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
+      track("tshirt_cash_order_placed", {
+        sizesOrdered: Object.keys(sizeQuantities)
+          .filter((size) => sizeQuantities[size] > 0)
+          .join(","),
         totalQuantity,
         delivery: false,
       });
@@ -316,13 +344,13 @@ export default function TshirtPage() {
         const sizesDisplay = Object.entries(sizeQuantities)
           .filter(([, qty]) => qty > 0)
           .map(([size, qty]) => `${size} (${qty})`)
-          .join(', ');
+          .join(", ");
 
-        await fetch('/api/notifications/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        await fetch("/api/notifications/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            title: '💰 Cash T-shirt Order',
+            title: "💰 Cash T-shirt Order",
             message: `New cash payment t-shirt order
 
 Customer Name: ${cashPaymentDetails.firstName} ${cashPaymentDetails.lastName}
@@ -332,12 +360,12 @@ Total Quantity: ${totalQuantity}
 Total Amount: CHF ${discountedTotal}
 Payment Method: Cash at Meetup
 Delivery Method: Meetup Pickup`,
-            type: 'tshirt',
-            priority: 'normal',
-          })
+            type: "tshirt",
+            priority: "normal",
+          }),
         });
       } catch (error) {
-        console.error('Failed to send notification:', error);
+        console.error("Failed to send notification:", error);
       }
 
       return;
@@ -345,37 +373,41 @@ Delivery Method: Meetup Pickup`,
 
     // Handle online payment
     setLoading(true);
-    setCheckoutError('');
+    setCheckoutError("");
 
     // Validate delivery address if delivery is selected
     if (delivery) {
-      if (!deliveryAddress.name.trim() ||
+      if (
+        !deliveryAddress.name.trim() ||
         !deliveryAddress.email.trim() ||
         !deliveryAddress.address.trim() ||
         !deliveryAddress.city.trim() ||
-        !deliveryAddress.zipCode.trim()) {
-        setCheckoutError('Please fill in all required delivery address fields.');
+        !deliveryAddress.zipCode.trim()
+      ) {
+        setCheckoutError("Please fill in all required delivery address fields.");
         setLoading(false);
         return;
       }
 
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(deliveryAddress.email)) {
-        setCheckoutError('Please enter a valid email address.');
+        setCheckoutError("Please enter a valid email address.");
         setLoading(false);
         return;
       }
     }
 
-    track('tshirt_checkout_started', {
-      sizesOrdered: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
+    track("tshirt_checkout_started", {
+      sizesOrdered: Object.keys(sizeQuantities)
+        .filter((size) => sizeQuantities[size] > 0)
+        .join(","),
       totalQuantity,
       delivery,
-      paymentMethod: 'online',
-      coupon: couponCode || communityCouponCode || '',
+      paymentMethod: "online",
+      coupon: couponCode || communityCouponCode || "",
     });
     try {
       if (totalQuantity < 1 || totalQuantity > 10) {
-        setCheckoutError('Invalid total quantity (min 1, max 10).');
+        setCheckoutError("Invalid total quantity (min 1, max 10).");
         setLoading(false);
         return;
       }
@@ -386,13 +418,13 @@ Delivery Method: Meetup Pickup`,
         .map(([size]) => size);
 
       if (stockIssues.length > 0) {
-        setCheckoutError(`Not enough stock for sizes: ${stockIssues.join(', ')}`);
+        setCheckoutError(`Not enough stock for sizes: ${stockIssues.join(", ")}`);
         setLoading(false);
         return;
       }
-      const res = await fetch('/api/checkout-tshirt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/checkout-tshirt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sizeQuantities,
           delivery,
@@ -409,25 +441,28 @@ Delivery Method: Meetup Pickup`,
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setCheckoutError('Could not start checkout.');
+        setCheckoutError("Could not start checkout.");
       }
     } catch {
-      setCheckoutError('Checkout failed.');
+      setCheckoutError("Checkout failed.");
     } finally {
       setLoading(false);
     }
   };
 
   // Coupon input state
-  const [couponInput, setCouponInput] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [couponApplied, setCouponApplied] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [_couponApplied, setCouponApplied] = useState(false);
   const handleApplyCoupon = () => {
     if (couponInput) {
-      router.replace({
-        pathname: router.pathname,
-        query: { ...router.query, coupon: couponInput },
-      }, undefined, { shallow: true });
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: { ...router.query, coupon: couponInput },
+        },
+        undefined,
+        { shallow: true },
+      );
       setCouponApplied(true);
     }
   };
@@ -439,58 +474,64 @@ Delivery Method: Meetup Pickup`,
     setCancelModalDismissed(true);
 
     // Reset all cancellation-related state
-    setCancelReason('');
-    setCancelEmail('');
+    setCancelReason("");
+    setCancelEmail("");
     setCancelFeedbackSubmitted(false);
 
     // Reset checkout state
     setStep(0);
     setLoading(false);
-    setCheckoutError('');
+    setCheckoutError("");
 
     // Remove canceled parameter from URL
     const { pathname, query } = router;
     const newQuery = { ...query };
     delete newQuery.canceled;
 
-    router.replace({
-      pathname,
-      query: newQuery,
-    }, undefined, { shallow: true });
+    router.replace(
+      {
+        pathname,
+        query: newQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
   };
 
   const handleCancelFeedback = async () => {
     if (!cancelReason) return;
 
     try {
-      const response = await fetch('/api/notify/checkout-cancelled', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/notify/checkout-cancelled", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          eventId: 'zurichjs-tshirt',
-          ticketType: 'event',
-          itemTitle: 'ZurichJS T-Shirt',
+          eventId: "zurichjs-tshirt",
+          ticketType: "event",
+          itemTitle: "ZurichJS T-Shirt",
           reason: cancelReason,
-          email: cancelEmail || '',
+          email: cancelEmail || "",
         }),
       });
 
       if (response.ok) {
         setCancelFeedbackSubmitted(true);
-        track('tshirt_cancellation_feedback_submitted', {
+        track("tshirt_cancellation_feedback_submitted", {
           reason: cancelReason,
           hasEmail: Boolean(cancelEmail),
-          sizesOrdered: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
+          sizesOrdered: Object.keys(sizeQuantities)
+            .filter((size) => sizeQuantities[size] > 0)
+            .join(","),
           totalQuantity,
-          delivery
+          delivery,
         });
       } else {
-        console.error('Failed to submit feedback: Server error');
+        console.error("Failed to submit feedback: Server error");
         // Still allow the user to proceed even if API fails
         setCancelFeedbackSubmitted(true);
       }
     } catch (error) {
-      console.error('Failed to submit cancellation feedback:', error);
+      console.error("Failed to submit cancellation feedback:", error);
       // Still allow the user to proceed even if API fails
       setCancelFeedbackSubmitted(true);
     }
@@ -517,16 +558,18 @@ Delivery Method: Meetup Pickup`,
   };
 
   // Payment method selection handlers
-  const handlePaymentMethodSelect = (method: 'online' | 'cash') => {
+  const handlePaymentMethodSelect = (method: "online" | "cash") => {
     setPaymentMethod(method);
-    if (method === 'cash' && delivery) {
+    if (method === "cash" && delivery) {
       setDelivery(false); // Force pickup for cash payments
     }
-    track('tshirt_payment_method_selected', {
+    track("tshirt_payment_method_selected", {
       method,
-      sizesOrdered: Object.keys(sizeQuantities).filter(size => sizeQuantities[size] > 0).join(','),
+      sizesOrdered: Object.keys(sizeQuantities)
+        .filter((size) => sizeQuantities[size] > 0)
+        .join(","),
       totalQuantity,
-      delivery: method === 'cash' ? false : delivery
+      delivery: method === "cash" ? false : delivery,
     });
   };
 
@@ -537,17 +580,21 @@ Delivery Method: Meetup Pickup`,
         title="ZurichJS T-Shirt - Rep Zurich, Rep JavaScript"
         description="Premium ZurichJS t-shirt. Show your love for Zurich and JavaScript with style. Limited edition design, unisex fit."
         openGraph={{
-          title: 'ZurichJS T-Shirt - Rep Zurich, Rep JavaScript',
-          description: 'Premium ZurichJS t-shirt. Show your love for Zurich and JavaScript with style.',
-          type: 'website',
-          image: '/images/merch/shirt-mock.png',
-          url: '/tshirt',
+          title: "ZurichJS T-Shirt - Rep Zurich, Rep JavaScript",
+          description:
+            "Premium ZurichJS t-shirt. Show your love for Zurich and JavaScript with style.",
+          type: "website",
+          image: "/images/merch/shirt-mock.png",
+          url: "/tshirt",
         }}
       />
       <div className="min-h-screen bg-gradient-to-br from-js to-js-dark overflow-x-hidden w-full max-w-full">
         {/* Navigation */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full">
-          <Link href="/" className="inline-flex items-center text-black hover:text-gray-700 transition-colors group py-2 -ml-2 pl-2 rounded-lg">
+          <Link
+            href="/"
+            className="inline-flex items-center text-black hover:text-gray-700 transition-colors group py-2 -ml-2 pl-2 rounded-lg"
+          >
             <ChevronLeft className="w-5 h-5 mr-1 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium text-sm sm:text-base">Back to Home</span>
           </Link>
@@ -567,16 +614,20 @@ Delivery Method: Meetup Pickup`,
               {/* Headlines */}
               <div className="space-y-4">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
-                  Rep <span className="text-black relative inline-block">
+                  Rep{" "}
+                  <span className="text-black relative inline-block">
                     Zurich
                     <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-2 sm:h-3 bg-js/80 -skew-x-12 -z-10"></div>
-                  </span>, Rep <span className="text-black relative inline-block">
+                  </span>
+                  , Rep{" "}
+                  <span className="text-black relative inline-block">
                     JavaScript
                     <div className="absolute -bottom-1 sm:-bottom-2 left-0 w-full h-2 sm:h-3 bg-js/80 -skew-x-12 -z-10"></div>
                   </span>
                 </h1>
                 <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0 break-words">
-                  Where world-class JavaScript content meets Zurich&apos;s passionate tech community. Building something meaningful, one meetup at a time.
+                  Where world-class JavaScript content meets Zurich&apos;s passionate tech
+                  community. Building something meaningful, one meetup at a time.
                 </p>
               </div>
 
@@ -640,7 +691,6 @@ Delivery Method: Meetup Pickup`,
           </div>
         </section>
 
-
         {/* Product Configuration */}
         <section className="max-w-7xl mx-auto px-4 pb-20 overflow-x-hidden">
           <div className="grid lg:grid-cols-3 gap-8 lg:gap-12 w-full min-w-0">
@@ -651,124 +701,127 @@ Delivery Method: Meetup Pickup`,
                 fallbackMessage="Something went wrong during checkout. Please try again."
                 onReset={() => {
                   setStep(0);
-                  setCheckoutError('');
+                  setCheckoutError("");
                   setLoading(false);
                 }}
-                context={{ page: 'tshirt', step }}
+                context={{ page: "tshirt", step }}
               >
-              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 overflow-hidden">
-                {/* Progress Steps */}
-                <TshirtStepIndicator step={step} onStepClick={setStep} />
+                <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 p-4 sm:p-6 lg:p-10 space-y-6 sm:space-y-8 overflow-hidden">
+                  {/* Progress Steps */}
+                  <TshirtStepIndicator step={step} onStepClick={setStep} />
 
-                {/* Step Content */}
-                {step === 0 && (
-                  <TshirtProductConfig
-                    stock={stock}
-                    stockLoading={stockLoading}
-                    stockError={stockError}
-                    sizeQuantities={sizeQuantities}
-                    setSizeQuantities={setSizeQuantities}
-                    totalQuantity={totalQuantity}
-                  />
-                )}
+                  {/* Step Content */}
+                  {step === 0 && (
+                    <TshirtProductConfig
+                      stock={stock}
+                      stockLoading={stockLoading}
+                      stockError={stockError}
+                      sizeQuantities={sizeQuantities}
+                      setSizeQuantities={setSizeQuantities}
+                      totalQuantity={totalQuantity}
+                    />
+                  )}
 
-                {/* Step 1: Payment Method */}
-                {step === 1 && (
-                  <TshirtPaymentMethod
-                    paymentMethod={paymentMethod}
-                    onSelect={handlePaymentMethodSelect}
-                  />
-                )}
+                  {/* Step 1: Payment Method */}
+                  {step === 1 && (
+                    <TshirtPaymentMethod
+                      paymentMethod={paymentMethod}
+                      onSelect={handlePaymentMethodSelect}
+                    />
+                  )}
 
-                {/* Step 2: Delivery Options */}
-                {step === 2 && (
-                  <TshirtDeliveryOptions
-                    delivery={delivery}
-                    setDelivery={setDelivery}
-                    paymentMethod={paymentMethod}
-                    deliveryAddress={deliveryAddress}
-                    setDeliveryAddress={setDeliveryAddress}
-                    cashPaymentDetails={cashPaymentDetails}
-                    setCashPaymentDetails={setCashPaymentDetails}
-                    isUserLoggedIn={!!(userLoaded && user)}
-                    isMounted={isMounted}
-                  />
-                )}
+                  {/* Step 2: Delivery Options */}
+                  {step === 2 && (
+                    <TshirtDeliveryOptions
+                      delivery={delivery}
+                      setDelivery={setDelivery}
+                      paymentMethod={paymentMethod}
+                      deliveryAddress={deliveryAddress}
+                      setDeliveryAddress={setDeliveryAddress}
+                      cashPaymentDetails={cashPaymentDetails}
+                      setCashPaymentDetails={setCashPaymentDetails}
+                      isUserLoggedIn={!!(userLoaded && user)}
+                      isMounted={isMounted}
+                    />
+                  )}
 
-                {/* Step 3: Review */}
-                {step === 3 && (
-                  <TshirtOrderReview
-                    sizeQuantities={sizeQuantities}
-                    totalQuantity={totalQuantity}
-                    paymentMethod={paymentMethod}
-                    delivery={delivery}
-                    discountedTotal={discountedTotal}
-                    discountLabel={discountLabel}
-                    hasCoupon={hasCoupon}
-                    communityDiscount={communityDiscount}
-                    checkoutError={checkoutError}
-                  />
-                )}
+                  {/* Step 3: Review */}
+                  {step === 3 && (
+                    <TshirtOrderReview
+                      sizeQuantities={sizeQuantities}
+                      totalQuantity={totalQuantity}
+                      paymentMethod={paymentMethod}
+                      delivery={delivery}
+                      discountedTotal={discountedTotal}
+                      discountLabel={discountLabel}
+                      hasCoupon={hasCoupon}
+                      communityDiscount={communityDiscount}
+                      checkoutError={checkoutError}
+                    />
+                  )}
 
-                {/* Step 4: Confirmation */}
-                {step === 4 && (
-                  <TshirtConfirmation paymentMethod={paymentMethod} />
-                )}
+                  {/* Step 4: Confirmation */}
+                  {step === 4 && <TshirtConfirmation paymentMethod={paymentMethod} />}
 
-                {/* Navigation Buttons */}
-                {step < 4 && (
-                  < div className="flex justify-between pt-6 border-t border-gray-100">
-                    {step >= 1 && step != 4 && (
-                      <Button
-                        onClick={handlePrevStep}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
-                      >
-                        Back
-                      </Button>
-                    )}
-
-                    {step < 2 && step < 4 && <div></div>}
-
-                    <Button
-                      onClick={handleNextStep}
-                      disabled={!isStepValid(step) || loading || step === 4}
-                      className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${step === 4
-                        ? 'bg-green-500 text-white cursor-not-allowed'
-                        : 'bg-black hover:bg-gray-800 text-js disabled:bg-gray-300 disabled:text-gray-500'
-                        }`}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : step === 4 ? (
-                        <>
-                          <CheckCircle className="w-4 h-4" />
-                          Ordered
-                        </>
-                      ) : step === 3 ? (
-                        paymentMethod === 'cash' ? 'Confirm Order' : 'Pay Now'
-                      ) : step === 2 ? (
-                        <>
-                          Continue to Review
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      ) : step === 1 ? (
-                        <>
-                          Continue to Delivery
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      ) : (
-                        <>
-                          Continue to Payment
-                          <ArrowRight className="w-4 h-4" />
-                        </>
+                  {/* Navigation Buttons */}
+                  {step < 4 && (
+                    <div className="flex justify-between pt-6 border-t border-gray-100">
+                      {step >= 1 && step != 4 && (
+                        <Button
+                          onClick={handlePrevStep}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold"
+                        >
+                          Back
+                        </Button>
                       )}
-                    </Button>
-                  </div>
-                )}
-              </div>
+
+                      {step < 2 && <div></div>}
+
+                      <Button
+                        onClick={handleNextStep}
+                        disabled={!isStepValid(step) || loading || step === 4}
+                        className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
+                          step === 4
+                            ? "bg-green-500 text-white cursor-not-allowed"
+                            : "bg-black hover:bg-gray-800 text-js disabled:bg-gray-300 disabled:text-gray-500"
+                        }`}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : step === 4 ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            Ordered
+                          </>
+                        ) : step === 3 ? (
+                          paymentMethod === "cash" ? (
+                            "Confirm Order"
+                          ) : (
+                            "Pay Now"
+                          )
+                        ) : step === 2 ? (
+                          <>
+                            Continue to Review
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        ) : step === 1 ? (
+                          <>
+                            Continue to Delivery
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        ) : (
+                          <>
+                            Continue to Payment
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </ErrorBoundary>
             </div>
             {/* Order Summary */}
@@ -778,7 +831,7 @@ Delivery Method: Meetup Pickup`,
                   {/* Header */}
                   <div className="text-center pb-3 sm:pb-4 border-b border-gray-100">
                     <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                      {step === 4 ? 'Order Complete!' : 'Order Summary'}
+                      {step === 4 ? "Order Complete!" : "Order Summary"}
                     </h2>
                   </div>
 
@@ -792,10 +845,9 @@ Delivery Method: Meetup Pickup`,
                       <div>
                         <h3 className="font-bold text-lg text-gray-900 mb-2">Thank You!</h3>
                         <p className="text-sm text-gray-600 mb-4">
-                          {paymentMethod === 'cash'
-                            ? 'Your cash order is confirmed! We\'ll see you at the next meetup.'
-                            : 'Your payment was successful! You\'ll receive email confirmation shortly.'
-                          }
+                          {paymentMethod === "cash"
+                            ? "Your cash order is confirmed! We'll see you at the next meetup."
+                            : "Your payment was successful! You'll receive email confirmation shortly."}
                         </p>
                         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                           <p className="text-sm text-green-800 font-medium">
@@ -813,8 +865,12 @@ Delivery Method: Meetup Pickup`,
                             JS
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">ZurichJS T-Shirt</div>
-                            <div className="text-xs sm:text-sm text-gray-600">{totalQuantity} items • {delivery ? 'Home Delivery' : 'Meetup Pickup'}</div>
+                            <div className="font-bold text-sm sm:text-base lg:text-lg text-gray-900">
+                              ZurichJS T-Shirt
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-600">
+                              {totalQuantity} items • {delivery ? "Home Delivery" : "Meetup Pickup"}
+                            </div>
                           </div>
                         </div>
 
@@ -824,12 +880,16 @@ Delivery Method: Meetup Pickup`,
                           {Object.entries(sizeQuantities)
                             .filter(([, qty]) => qty > 0)
                             .map(([size, qty]) => (
-                              <div key={size} className="flex justify-between text-sm text-gray-600">
+                              <div
+                                key={size}
+                                className="flex justify-between text-sm text-gray-600"
+                              >
                                 <span>Size {size}</span>
-                                <span>{qty} × CHF {BASE_PRICE}</span>
+                                <span>
+                                  {qty} × CHF {BASE_PRICE}
+                                </span>
                               </div>
-                            ))
-                          }
+                            ))}
                         </div>
                       </div>
                     </div>
@@ -843,16 +903,23 @@ Delivery Method: Meetup Pickup`,
                           .filter(([, qty]) => qty > 0)
                           .map(([size, qty]) => (
                             <div key={size} className="flex justify-between items-center">
-                              <span className="text-gray-600 truncate pr-2">Size {size} ({qty}x)</span>
-                              <span className="font-semibold flex-shrink-0">CHF {BASE_PRICE * qty}</span>
+                              <span className="text-gray-600 truncate pr-2">
+                                Size {size} ({qty}x)
+                              </span>
+                              <span className="font-semibold flex-shrink-0">
+                                CHF {BASE_PRICE * qty}
+                              </span>
                             </div>
-                          ))
-                        }
+                          ))}
 
                         {delivery && (
                           <div className="flex justify-between items-center">
-                            <span className="text-gray-600 truncate pr-2">Delivery (tracked & insured)</span>
-                            <span className="font-semibold flex-shrink-0">CHF {DELIVERY_ADDON}</span>
+                            <span className="text-gray-600 truncate pr-2">
+                              Delivery (tracked & insured)
+                            </span>
+                            <span className="font-semibold flex-shrink-0">
+                              CHF {DELIVERY_ADDON}
+                            </span>
                           </div>
                         )}
 
@@ -862,18 +929,20 @@ Delivery Method: Meetup Pickup`,
                               <Zap className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                               <span className="truncate">Member Discount (20%)</span>
                             </span>
-                            <span className="font-bold flex-shrink-0">-CHF {Math.round(tshirtTotal * 0.2)}</span>
+                            <span className="font-bold flex-shrink-0">
+                              -CHF {Math.round(tshirtTotal * 0.2)}
+                            </span>
                           </div>
                         )}
 
-                        {hasCoupon && couponData &&(
+                        {hasCoupon && couponData && (
                           <div className="flex justify-between items-center text-amber-700">
                             <span className="flex items-center gap-1 sm:gap-2 truncate pr-2">
                               <Ticket className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                               <span className="truncate">Coupon Discount</span>
                             </span>
-                            {couponData && (
-                              couponData.amountOff ?? 0 ? (
+                            {couponData &&
+                              ((couponData.amountOff ?? 0) ? (
                                 <span className="font-bold flex-shrink-0">
                                   -CHF {Math.round(couponData.amountOff ?? 0)}
                                 </span>
@@ -881,8 +950,7 @@ Delivery Method: Meetup Pickup`,
                                 <span className="font-bold flex-shrink-0">
                                   -{Math.round(couponData.percentOff)}%
                                 </span>
-                              ) : null
-                            )}
+                              ) : null)}
                           </div>
                         )}
                       </div>
@@ -890,17 +958,17 @@ Delivery Method: Meetup Pickup`,
                       {/* Total */}
                       <div className="border-t-2 border-gray-200 pt-4">
                         <div className="flex justify-between items-center mb-4 sm:mb-6">
-                          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Total</span>
-                          <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">CHF {discountedTotal.toFixed(2)}</span>
+                          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                            Total
+                          </span>
+                          <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">
+                            CHF {discountedTotal.toFixed(2)}
+                          </span>
                         </div>
-
                         {/* Step Navigation */}
-
-
                         {/* Coupon Section */}
-
                         {/*div Wrapper */}
-                        <div className='flex content-center shrink '>
+                        <div className="flex content-center shrink ">
                           <div className="bg-white/95 backdrop-blur-sm pt-2 pb-2">
                             {/* <div className="flex items-center gap-3 mb-4">
                               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
@@ -916,7 +984,7 @@ Delivery Method: Meetup Pickup`,
                               <input
                                 type="text"
                                 value={couponInput}
-                                onChange={e => setCouponInput(e.target.value)}
+                                onChange={(e) => setCouponInput(e.target.value)}
                                 placeholder="Enter discount code"
                                 className="flex-1 rounded-lg sm:rounded-xl border border-gray-300 px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all bg-white"
                                 aria-label="Discount code input"
@@ -929,7 +997,6 @@ Delivery Method: Meetup Pickup`,
                               </Button>
                             </div>
 
-
                             {/* Login Incentive for Non-Members */}
                             {!isSignedIn && (
                               <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -937,34 +1004,34 @@ Delivery Method: Meetup Pickup`,
                                 <div className="flex-1 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
                                   <div className="flex items-center gap-3">
                                     <div className="flex-1">
-                                      <h4 className="font-bold text-green-900">🎉 Community Member Discount!</h4>
+                                      <h4 className="font-bold text-green-900">
+                                        🎉 Community Member Discount!
+                                      </h4>
                                       <p className="text-sm text-green-700 mt-1">
-                                        Sign in to unlock your <strong>20% community discount</strong> on all merch
+                                        Sign in to unlock your{" "}
+                                        <strong>20% community discount</strong> on all merch
                                       </p>
                                     </div>
                                   </div>
                                 </div>
                                 <SignInButton mode="modal">
-                                  <button
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors transform hover:scale-105 shadow-lg text-sm sm:text-base"
-                                  >
+                                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors transform hover:scale-105 shadow-lg text-sm sm:text-base">
                                     Sign In
                                   </button>
                                 </SignInButton>
                               </div>
                             )}
                           </div>
-
                         </div>
-
                         <div></div> {/* Empty div for spacing */}
                         <Button
                           onClick={handleNextStep}
                           disabled={!isStepValid(step) || loading || step === 4}
-                          className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${step === 4
-                            ? 'bg-green-500 text-white cursor-not-allowed'
-                            : 'bg-black hover:bg-gray-800 text-js disabled:bg-gray-300 disabled:text-gray-500'
-                            }`}
+                          className={`px-6 py-3 rounded-lg font-semibold flex items-center gap-2 ${
+                            step === 4
+                              ? "bg-green-500 text-white cursor-not-allowed"
+                              : "bg-black hover:bg-gray-800 text-js disabled:bg-gray-300 disabled:text-gray-500"
+                          }`}
                         >
                           {loading ? (
                             <>
@@ -977,7 +1044,11 @@ Delivery Method: Meetup Pickup`,
                               Ordered
                             </>
                           ) : step === 3 ? (
-                            paymentMethod === 'cash' ? 'Confirm Order' : 'Pay Now'
+                            paymentMethod === "cash" ? (
+                              "Confirm Order"
+                            ) : (
+                              "Pay Now"
+                            )
                           ) : step === 2 ? (
                             <>
                               Continue to Review
@@ -995,7 +1066,6 @@ Delivery Method: Meetup Pickup`,
                             </>
                           )}
                         </Button>
-
                       </div>
                     </>
                   )}
@@ -1012,13 +1082,27 @@ Delivery Method: Meetup Pickup`,
                         <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-sm sm:text-base text-purple-900">What merch next?</h3>
+                        <h3 className="font-bold text-sm sm:text-base text-purple-900">
+                          What merch next?
+                        </h3>
                         <p className="text-xs sm:text-sm text-purple-700">Help us decide</p>
                       </div>
                     </div>
-                    <div className={`transform transition-transform ${showMerchSurvey ? 'rotate-180' : ''}`}>
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    <div
+                      className={`transform transition-transform ${showMerchSurvey ? "rotate-180" : ""}`}
+                    >
+                      <svg
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
                       </svg>
                     </div>
                   </button>
@@ -1051,7 +1135,7 @@ Delivery Method: Meetup Pickup`,
                                   Sending...
                                 </>
                               ) : (
-                                'Submit'
+                                "Submit"
                               )}
                             </button>
                             <button
@@ -1081,18 +1165,29 @@ Delivery Method: Meetup Pickup`,
           </div>
         </section>
 
-
         {/* Support Section */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 overflow-x-hidden">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 border border-blue-100">
             <div className="text-center max-w-3xl mx-auto">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="w-8 h-8 sm:w-10 sm:h-10 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Questions? We&apos;re Here to Help</h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+                Questions? We&apos;re Here to Help
+              </h2>
               <p className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8">
                 Need help with sizing, have questions about delivery, or want to place a bulk order?
               </p>
@@ -1100,18 +1195,40 @@ Delivery Method: Meetup Pickup`,
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">Size Help</h3>
-                  <p className="text-sm text-gray-600">Need sizing advice or want to exchange sizes?</p>
+                  <p className="text-sm text-gray-600">
+                    Need sizing advice or want to exchange sizes?
+                  </p>
                 </div>
 
                 <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">Group Orders</h3>
@@ -1120,8 +1237,18 @@ Delivery Method: Meetup Pickup`,
 
                 <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">Billing</h3>
@@ -1130,8 +1257,18 @@ Delivery Method: Meetup Pickup`,
 
                 <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900 mb-2">Other Issues</h3>
@@ -1143,8 +1280,18 @@ Delivery Method: Meetup Pickup`,
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-js rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <svg
+                        className="w-6 h-6 text-black"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
                       </svg>
                     </div>
                     <div className="text-left">
@@ -1158,14 +1305,22 @@ Delivery Method: Meetup Pickup`,
                       href="mailto:hello@zurichjs.com?subject=T-shirt Order Support&body=Hi ZurichJS team,%0D%0A%0D%0AI need help with my t-shirt order:%0D%0A%0D%0A[Please describe your question or issue]%0D%0A%0D%0AThanks!"
                       className="bg-black hover:bg-gray-800 text-js px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2 shadow-lg hover:shadow-xl"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
                       </svg>
                       Contact Support
                     </a>
-                    <div className="text-sm text-gray-600 font-medium">
-                      hello@zurichjs.com
-                    </div>
+                    <div className="text-sm text-gray-600 font-medium">hello@zurichjs.com</div>
                   </div>
                 </div>
               </div>
@@ -1176,7 +1331,9 @@ Delivery Method: Meetup Pickup`,
         {/* Trust & Social Proof Section */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 overflow-x-hidden">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">Part of Something Meaningful</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
+              Part of Something Meaningful
+            </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
               Join our family of JavaScript lovers building something meaningful together
             </p>
@@ -1187,16 +1344,24 @@ Delivery Method: Meetup Pickup`,
               <div className="w-14 h-14 sm:w-16 sm:h-16 bg-black rounded-xl sm:rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center">
                 <Users className="w-7 h-7 sm:w-8 sm:h-8 text-js" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">500+ Community Members</h3>
-              <p className="text-sm sm:text-base text-gray-600">Passionate developers sharing knowledge and ideas</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                500+ Community Members
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Passionate developers sharing knowledge and ideas
+              </p>
             </div>
 
             <div className="text-center">
               <div className="w-14 h-14 sm:w-16 sm:h-16 bg-black rounded-xl sm:rounded-2xl mx-auto mb-3 sm:mb-4 flex items-center justify-center">
                 <Heart className="w-7 h-7 sm:w-8 sm:h-8 text-js" />
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">World-Class Content</h3>
-              <p className="text-sm sm:text-base text-gray-600">Bringing renowned speakers and valuable insights to Zurich</p>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                World-Class Content
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Bringing renowned speakers and valuable insights to Zurich
+              </p>
             </div>
 
             <div className="text-center">
@@ -1204,147 +1369,155 @@ Delivery Method: Meetup Pickup`,
                 <Award className="w-7 h-7 sm:w-8 sm:h-8 text-js" />
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Premium Quality</h3>
-              <p className="text-sm sm:text-base text-gray-600">Carefully selected materials for comfort and durability</p>
+              <p className="text-sm sm:text-base text-gray-600">
+                Carefully selected materials for comfort and durability
+              </p>
             </div>
           </div>
         </section>
 
         {/* Cancellation Recovery Modal */}
-        {
-          showCancelModal && (
+        {showCancelModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                handleTryAgain();
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                handleTryAgain();
+              }
+            }}
+            tabIndex={-1}
+          >
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  handleTryAgain();
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  handleTryAgain();
-                }
-              }}
-              tabIndex={-1}
+              className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
-                onClick={(e) => e.stopPropagation()}>
-                <div className="bg-amber-50 border-b border-amber-200 p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                        <AlertTriangle className="w-6 h-6 text-amber-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">Checkout Cancelled</h3>
-                        <p className="text-sm text-gray-600">Help us improve your experience</p>
-                      </div>
+              <div className="bg-amber-50 border-b border-amber-200 p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-amber-600" />
                     </div>
-                    <button
-                      onClick={handleTryAgain}
-                      className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
-                      aria-label="Close"
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Checkout Cancelled</h3>
+                      <p className="text-sm text-gray-600">Help us improve your experience</p>
+                    </div>
                   </div>
-                </div>
-
-                <div className="p-6">
-                  {!cancelFeedbackSubmitted ? (
-                    <div className="space-y-4">
-                      <p className="text-gray-700">
-                        We noticed you didn&apos;t complete your t-shirt purchase. Could you tell us why?
-                      </p>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Reason for not completing purchase
-                        </label>
-                        <select
-                          value={cancelReason}
-                          onChange={(e) => setCancelReason(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-js focus:border-transparent"
-                        >
-                          <option value="">Please select a reason</option>
-                          <option value="Price too high">Price too high</option>
-                          <option value="Size not available">Size not available</option>
-                          <option value="Delivery options didn't work">Delivery options didn&apos;t work</option>
-                          <option value="Payment issues">Payment issues</option>
-                          <option value="Changed my mind">Changed my mind</option>
-                          <option value="Other reason">Other reason</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Email (optional - for follow-up)
-                        </label>
-                        <input
-                          type="email"
-                          value={cancelEmail}
-                          onChange={(e) => setCancelEmail(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-js focus:border-transparent"
-                          placeholder="your.email@example.com"
-                        />
-                      </div>
-
-                      <div className="flex gap-3 pt-4">
-                        <Button
-                          onClick={handleTryAgain}
-                          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg"
-                        >
-                          Try Again
-                        </Button>
-                        <Button
-                          onClick={handleCancelFeedback}
-                          disabled={!cancelReason}
-                          className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Submit Feedback
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center space-y-4">
-                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                        <CheckCircle className="w-8 h-8 text-green-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">Thank You!</h4>
-                        <p className="text-gray-600 mb-4">
-                          Your feedback helps us improve the ZurichJS experience for everyone.
-                        </p>
-                        <Button
-                          onClick={handleTryAgain}
-                          className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg"
-                        >
-                          Continue Shopping
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  <button
+                    onClick={handleTryAgain}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+                    aria-label="Close"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
+
+              <div className="p-6">
+                {!cancelFeedbackSubmitted ? (
+                  <div className="space-y-4">
+                    <p className="text-gray-700">
+                      We noticed you didn&apos;t complete your t-shirt purchase. Could you tell us
+                      why?
+                    </p>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for not completing purchase
+                      </label>
+                      <select
+                        value={cancelReason}
+                        onChange={(e) => setCancelReason(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-js focus:border-transparent"
+                      >
+                        <option value="">Please select a reason</option>
+                        <option value="Price too high">Price too high</option>
+                        <option value="Size not available">Size not available</option>
+                        <option value="Delivery options didn't work">
+                          Delivery options didn&apos;t work
+                        </option>
+                        <option value="Payment issues">Payment issues</option>
+                        <option value="Changed my mind">Changed my mind</option>
+                        <option value="Other reason">Other reason</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email (optional - for follow-up)
+                      </label>
+                      <input
+                        type="email"
+                        value={cancelEmail}
+                        onChange={(e) => setCancelEmail(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-js focus:border-transparent"
+                        placeholder="your.email@example.com"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        onClick={handleTryAgain}
+                        className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg"
+                      >
+                        Try Again
+                      </Button>
+                      <Button
+                        onClick={handleCancelFeedback}
+                        disabled={!cancelReason}
+                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Submit Feedback
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                      <CheckCircle className="w-8 h-8 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-2">Thank You!</h4>
+                      <p className="text-gray-600 mb-4">
+                        Your feedback helps us improve the ZurichJS experience for everyone.
+                      </p>
+                      <Button
+                        onClick={handleTryAgain}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg"
+                      >
+                        Continue Shopping
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          )
-        }
+          </div>
+        )}
 
         {/* Cash Payment Modal */}
-        {
-          showCashModal && (
-            <CashPaymentModal
-              isOpen={showCashModal}
-              onClose={() => setShowCashModal(false)}
-              ticketTitle="ZurichJS T-Shirt"
-              price={discountedTotal}
-              ticketType="event"
-              eventId="zurichjs-tshirt"
-            />
-          )
-        }
-      </div >
-    </PageLayout >
+        {showCashModal && (
+          <CashPaymentModal
+            isOpen={showCashModal}
+            onClose={() => setShowCashModal(false)}
+            ticketTitle="ZurichJS T-Shirt"
+            price={discountedTotal}
+            ticketType="event"
+            eventId="zurichjs-tshirt"
+          />
+        )}
+      </div>
+    </PageLayout>
   );
-} 
+}

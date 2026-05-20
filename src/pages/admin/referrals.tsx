@@ -1,10 +1,19 @@
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Users, ArrowLeft, TrendingUp, Gift, Award, DollarSign, UserCheck, Calendar } from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { OrganizationSwitcher } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import {
+  Users,
+  ArrowLeft,
+  TrendingUp,
+  Gift,
+  Award,
+  DollarSign,
+  UserCheck,
+  Calendar,
+} from "lucide-react";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
-import Layout from '@/components/layout/Layout';
+import Layout from "@/components/layout/Layout";
 
 interface ReferralStats {
   totalReferrals: number;
@@ -50,17 +59,17 @@ export default function ReferralProgramAdmin() {
     const fetchReferralData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/admin/referral-stats');
+        const response = await fetch("/api/admin/referral-stats");
         if (!response.ok) {
-          throw new Error('Failed to fetch referral data');
+          throw new Error("Failed to fetch referral data");
         }
         const data = await response.json();
         setStats(data.stats);
         setTopReferrers(data.topReferrers);
         setRewardThresholds(data.rewardThresholds);
       } catch (err) {
-        console.error('Error fetching referral data:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        console.error("Error fetching referral data:", err);
+        setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
       }
@@ -193,7 +202,10 @@ export default function ReferralProgramAdmin() {
             </h2>
             <div className="space-y-4">
               {currentReferrers.map((referrer, index) => (
-                <div key={referrer.userId} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div
+                  key={referrer.userId}
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                >
                   <div className="flex items-center">
                     <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
                       {startIndex + index + 1}
@@ -210,12 +222,13 @@ export default function ReferralProgramAdmin() {
                 </div>
               ))}
             </div>
-            
+
             {/* Pagination Controls */}
             {totalPages > 1 && (
               <div className="mt-6 flex items-center justify-between">
                 <div className="text-sm text-gray-600">
-                  Showing {startIndex + 1}-{Math.min(endIndex, topReferrers.length)} of {topReferrers.length} referrers
+                  Showing {startIndex + 1}-{Math.min(endIndex, topReferrers.length)} of{" "}
+                  {topReferrers.length} referrers
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -225,7 +238,7 @@ export default function ReferralProgramAdmin() {
                   >
                     Previous
                   </button>
-                  
+
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
                     if (totalPages <= 5) {
@@ -237,22 +250,22 @@ export default function ReferralProgramAdmin() {
                     } else {
                       pageNum = currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-3 py-1 rounded-lg ${
                           currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                            ? "bg-blue-600 text-white"
+                            : "border border-gray-300 hover:bg-gray-50"
                         }`}
                       >
                         {pageNum}
                       </button>
                     );
                   })}
-                  
+
                   <button
                     onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
@@ -343,4 +356,4 @@ export default function ReferralProgramAdmin() {
       </div>
     </Layout>
   );
-} 
+}

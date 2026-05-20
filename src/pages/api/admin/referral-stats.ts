@@ -1,7 +1,5 @@
-import { clerkClient } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
-
-
+import { clerkClient } from "@clerk/nextjs/server";
+import { NextApiRequest, NextApiResponse } from "next";
 
 interface ReferralData {
   userId: string;
@@ -22,17 +20,17 @@ interface UserReferralMetadata {
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const client = await clerkClient();
-    
+
     // Fetch all users to analyze referral data
     const usersList = await client.users.getUserList({
       limit: 500, // Increase limit to get more users
-      orderBy: '-created_at',
+      orderBy: "-created_at",
     });
     const users = usersList.data;
 
@@ -65,7 +63,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (userReferrals.length > 0) {
         activeReferrers++;
         totalReferrals += userReferrals.length;
-        
+
         // Calculate credits earned by this user
         const creditsEarned = userReferrals.reduce((sum, ref) => sum + (ref.creditValue || 0), 0);
         totalCreditsEarned += creditsEarned;
@@ -73,18 +71,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         // Add to top referrers
         topReferrers.push({
           userId: user.id,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Unknown',
-          email: user.primaryEmailAddress?.emailAddress || 'No email',
+          name:
+            `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username || "Unknown",
+          email: user.primaryEmailAddress?.emailAddress || "No email",
           totalReferrals: userReferrals.length,
           creditsEarned,
           joinDate: new Date(user.createdAt).toISOString(),
         });
 
         // Add recent referrals
-        userReferrals.forEach(ref => {
+        userReferrals.forEach((ref) => {
           recentReferrals.push({
-            referrerName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username || 'Unknown',
-            referrerEmail: user.primaryEmailAddress?.emailAddress || 'No email',
+            referrerName:
+              `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username || "Unknown",
+            referrerEmail: user.primaryEmailAddress?.emailAddress || "No email",
             referredEmail: ref.email,
             creditsEarned: ref.creditValue || 0,
             date: ref.date,
@@ -109,21 +109,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Define reward thresholds (from useReferrals hook)
     const rewardThresholds = [
       {
-        name: 'Workshop Discount',
+        name: "Workshop Discount",
         creditsCost: 100,
-        description: 'Discount on workshop purchases',
+        description: "Discount on workshop purchases",
         redeemCount: 0, // Would need to track this separately
       },
       {
-        name: 'ZurichJS T-Shirt',
+        name: "ZurichJS T-Shirt",
         creditsCost: 500,
-        description: 'Exclusive ZurichJS branded t-shirt',
+        description: "Exclusive ZurichJS branded t-shirt",
         redeemCount: 0,
       },
       {
-        name: 'Free Workshop Entry',
+        name: "Free Workshop Entry",
         creditsCost: 1000,
-        description: 'Free entry to any workshop',
+        description: "Free entry to any workshop",
         redeemCount: 0,
       },
     ];
@@ -142,10 +142,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       topReferrers: topReferrers.slice(0, 10), // Top 10 referrers
       rewardThresholds,
     });
-
   } catch (error) {
-    console.error('Error fetching referral stats:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching referral stats:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
 

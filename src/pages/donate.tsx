@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import { Heart, Coins } from 'lucide-react';
-import Head from 'next/head';
-import Image from 'next/image';
+import { motion } from "framer-motion";
+import { Heart, Coins } from "lucide-react";
+import Head from "next/head";
+import Image from "next/image";
 
-import Layout from '@/components/layout/Layout';
+import Layout from "@/components/layout/Layout";
 
 export default function DonatePage() {
   return (
@@ -12,7 +12,7 @@ export default function DonatePage() {
         <title>Donate - ZurichJS</title>
         <meta name="description" content="Support ZurichJS with a donation" />
       </Head>
-      
+
       <Layout>
         <div className="min-h-screen bg-gradient-to-br from-js to-js-dark flex items-center justify-center p-4">
           <div className="w-full max-w-2xl">
@@ -22,25 +22,24 @@ export default function DonatePage() {
               className="bg-white rounded-2xl shadow-2xl p-8 text-center"
             >
               <motion.div
-                animate={{ 
-                  scale: [1, 1.1, 1]
+                animate={{
+                  scale: [1, 1.1, 1],
                 }}
-                transition={{ 
+                transition={{
                   duration: 2,
                   repeat: Infinity,
-                  repeatDelay: 3
+                  repeatDelay: 3,
                 }}
                 className="inline-block text-6xl mb-4"
               >
                 💛
               </motion.div>
-              
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Support ZurichJS
-              </h1>
-              
+
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Support ZurichJS</h1>
+
               <p className="text-lg text-gray-600 mb-8">
-                Thank you for considering a donation! Your support helps us keep the community thriving.
+                Thank you for considering a donation! Your support helps us keep the community
+                thriving.
               </p>
 
               {/* TWINT QR Code */}

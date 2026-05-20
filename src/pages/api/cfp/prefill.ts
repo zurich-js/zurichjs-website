@@ -1,18 +1,18 @@
-import { getAuth, clerkClient } from '@clerk/nextjs/server';
-import { NextApiRequest, NextApiResponse } from 'next';
+import { getAuth, clerkClient } from "@clerk/nextjs/server";
+import { NextApiRequest, NextApiResponse } from "next";
 
-import { resolveSpeakerProfile } from '@/lib/cfp/speakerProfile';
+import { resolveSpeakerProfile } from "@/lib/cfp/speakerProfile";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
     const { userId } = getAuth(req);
 
     if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
     const clerk = await clerkClient();
@@ -21,10 +21,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     return res.status(200).json(profile);
   } catch (error: unknown) {
-    console.error('Error fetching CFP prefill:', error);
+    console.error("Error fetching CFP prefill:", error);
 
     return res.status(500).json({
-      error: 'Failed to fetch CFP prefill',
+      error: "Failed to fetch CFP prefill",
       message: error instanceof Error ? error.message : String(error),
     });
   }

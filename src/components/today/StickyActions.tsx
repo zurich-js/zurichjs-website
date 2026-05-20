@@ -1,9 +1,9 @@
-import Link from 'next/link';
-import { useState } from 'react';
+import Link from "next/link";
+import { useState } from "react";
 
 export default function StickyActions() {
   const [showPanicModal, setShowPanicModal] = useState(false);
-  const [codePhrase, setCodePhrase] = useState('');
+  const [codePhrase, setCodePhrase] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -16,7 +16,7 @@ export default function StickyActions() {
       "Is there a quiet room available?",
       "Do you have any vegan snacks?",
       "Can I get some sparkling water?",
-      "Is there a coat check area?"
+      "Is there a coat check area?",
     ];
 
     return phrases[Math.floor(Math.random() * phrases.length)];
@@ -31,28 +31,28 @@ export default function StickyActions() {
   const handleConfirmPanic = async () => {
     setIsSending(true);
     try {
-      const response = await fetch('/api/notifications/send', {
-        method: 'POST',
+      const response = await fetch("/api/notifications/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          title: 'Safety Alert',
+          title: "Safety Alert",
           message: `*ANONYMOUS SAFETY ALERT TRIGGERED*\n\nAn attendee needs immediate assistance.\n\n*Code Phrase:* *"${codePhrase}"*\n\nPlease look for someone who approaches you with this code phrase and handle the situation discreetly.`,
-          type: 'other',
-          priority: 'high',
-          slackChannel: '#zurichjs-safety',
+          type: "other",
+          priority: "high",
+          slackChannel: "#zurichjs-safety",
         }),
       });
 
       if (response.ok) {
         setIsSuccess(true);
       } else {
-        alert('Failed to send alert. Please approach an organizer directly.');
+        alert("Failed to send alert. Please approach an organizer directly.");
       }
     } catch (error) {
-      console.error('Error sending panic alert:', error);
-      alert('Failed to send alert. Please approach an organizer directly.');
+      console.error("Error sending panic alert:", error);
+      alert("Failed to send alert. Please approach an organizer directly.");
     } finally {
       setIsSending(false);
     }
@@ -112,8 +112,14 @@ export default function StickyActions() {
 
       {/* Panic Modal */}
       {showPanicModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={() => !isSending && !isSuccess && setShowPanicModal(false)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => !isSending && !isSuccess && setShowPanicModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             {!isSuccess ? (
               <>
                 <div className="flex items-start gap-3 mb-4">
@@ -137,7 +143,8 @@ export default function StickyActions() {
                     🔒 Your privacy is protected
                   </p>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    An anonymous alert will be sent to organizers. You&apos;ll receive a unique code phrase to identify yourself privately to an organizer.
+                    An anonymous alert will be sent to organizers. You&apos;ll receive a unique code
+                    phrase to identify yourself privately to an organizer.
                   </p>
                 </div>
 
@@ -145,13 +152,12 @@ export default function StickyActions() {
                   <p className="text-sm text-red-800 font-bold mb-1">
                     Look for organizers wearing yellow ZurichJS t-shirts:
                   </p>
-                  <p className="text-sm text-red-700">
-                    Faris, Nadja, or Bogdan
-                  </p>
+                  <p className="text-sm text-red-700">Faris, Nadja, or Bogdan</p>
                 </div>
 
                 <p className="text-xs text-gray-500 italic mb-6">
-                  ⚠️ Abuse of this feature will not be tolerated and may result in removal from the event.
+                  ⚠️ Abuse of this feature will not be tolerated and may result in removal from the
+                  event.
                 </p>
 
                 <div className="flex gap-3">
@@ -167,7 +173,7 @@ export default function StickyActions() {
                     disabled={isSending}
                     className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSending ? 'Sending...' : 'Confirm & Send Alert'}
+                    {isSending ? "Sending..." : "Confirm & Send Alert"}
                   </button>
                 </div>
               </>
@@ -176,9 +182,7 @@ export default function StickyActions() {
                 <div className="text-center mb-6">
                   <div className="text-5xl mb-4">✅</div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">Alert Sent</h3>
-                  <p className="text-sm text-gray-600">
-                    Organizers have been notified
-                  </p>
+                  <p className="text-sm text-gray-600">Organizers have been notified</p>
                 </div>
 
                 <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 mb-4">
@@ -193,12 +197,12 @@ export default function StickyActions() {
                 </div>
 
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-gray-800 font-bold mb-2">
-                    📍 Next Steps:
-                  </p>
+                  <p className="text-sm text-gray-800 font-bold mb-2">📍 Next Steps:</p>
                   <ol className="text-sm text-gray-700 space-y-1 ml-4">
                     <li>1. Look for an organizer in a yellow ZurichJS t-shirt</li>
-                    <li>2. Approach them and say: <strong>&ldquo;{codePhrase}&rdquo;</strong></li>
+                    <li>
+                      2. Approach them and say: <strong>&ldquo;{codePhrase}&rdquo;</strong>
+                    </li>
                     <li>3. They will know to have a private conversation with you</li>
                   </ol>
                 </div>

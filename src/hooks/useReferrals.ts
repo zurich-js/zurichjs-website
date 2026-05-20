@@ -1,8 +1,8 @@
-import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/router';
-import { useState, useEffect } from 'react';
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 
-import { sendPlatformNotification } from '@/lib/notification';
+import { sendPlatformNotification } from "@/lib/notification";
 
 interface ReferralData {
   credits: number;
@@ -10,7 +10,7 @@ interface ReferralData {
     userId: string;
     email: string;
     date: string;
-    type: 'workshop' | 'event' | 'other';
+    type: "workshop" | "event" | "other";
     creditValue: number;
   }[];
   // Reward credit costs
@@ -34,33 +34,33 @@ interface ReferredBy {
 export const useReferrals = () => {
   const { user } = useUser();
   const router = useRouter();
-  const [referralData, setReferralData] = useState<ReferralData>({ 
-    credits: 0, 
-    referrals: [], 
-    workshopDiscount: 100, 
-    tshirt: 500, 
-    workshopEntry: 1000 
+  const [referralData, setReferralData] = useState<ReferralData>({
+    credits: 0,
+    referrals: [],
+    workshopDiscount: 100,
+    tshirt: 500,
+    workshopEntry: 1000,
   });
   const [referredBy, setReferredBy] = useState<ReferredBy | null>(null);
-  const [referralLink, setReferralLink] = useState<string>('');
+  const [referralLink, setReferralLink] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
   // Generate a secure referral token based on user ID
   const generateReferralToken = (userId: string): string => {
     // In a real implementation, you might want to use JWT or a more secure approach
     // For simplicity, we'll use base64 encoding with a salt
-    const salt = 'ZurichJS_2024';
+    const salt = "ZurichJS_2024";
     return btoa(`${salt}_${userId}`);
   };
 
   // Get the current base URL (works in browser environments)
   const getBaseUrl = (): string => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const protocol = window.location.protocol;
       const host = window.location.host;
       return `${protocol}//${host}`;
     }
-    return '';
+    return "";
   };
 
   // Check if there's a referral in the URL or localStorage
@@ -68,13 +68,13 @@ export const useReferrals = () => {
     const checkForReferral = () => {
       // Check URL for referral token
       const { ref } = router.query;
-      
-      if (ref && typeof ref === 'string') {
+
+      if (ref && typeof ref === "string") {
         // Store referral in localStorage
-        localStorage.setItem('zurichjs_referral', ref);
+        localStorage.setItem("zurichjs_referral", ref);
       }
     };
-    
+
     checkForReferral();
   }, [router.query]);
 
@@ -89,9 +89,9 @@ export const useReferrals = () => {
       try {
         // Get data directly from Clerk user metadata
         const credits = (user.unsafeMetadata?.credits as number) || 0;
-        const referrals = (user.unsafeMetadata?.referrals as ReferralData['referrals']) || [];
+        const referrals = (user.unsafeMetadata?.referrals as ReferralData["referrals"]) || [];
         const referredByData = user.unsafeMetadata?.referredBy as ReferredBy;
-        
+
         // Set referral data from Clerk metadata
         const clerkData: ReferralData = {
           credits,
@@ -99,11 +99,11 @@ export const useReferrals = () => {
           workshopDiscount: 100,
           tshirt: 500,
           workshopEntry: 1000,
-          referredBy: referredByData || undefined
+          referredBy: referredByData || undefined,
         };
-        
+
         setReferralData(clerkData);
-        
+
         if (referredByData) {
           setReferredBy(referredByData);
         }
@@ -115,7 +115,7 @@ export const useReferrals = () => {
           setReferralLink(`${baseUrl}/invite/${token}`);
         }
       } catch (error) {
-        console.error('Error loading referral data:', error);
+        console.error("Error loading referral data:", error);
       } finally {
         setLoading(false);
       }
@@ -127,127 +127,127 @@ export const useReferrals = () => {
   // Add credits to the user's account
   const addCredits = async (amount: number) => {
     if (!user) return;
-    
+
     try {
       const currentCredits = (user.unsafeMetadata?.credits as number) || 0;
       const newCredits = currentCredits + amount;
-      
+
       // Update Clerk metadata
       await user.update({
         unsafeMetadata: {
           ...user.unsafeMetadata,
-          credits: newCredits
-        }
+          credits: newCredits,
+        },
       });
-      
+
       // Update local state
       const updatedData = {
         ...referralData,
-        credits: newCredits
+        credits: newCredits,
       };
       setReferralData(updatedData);
     } catch (error) {
-      console.error('Error adding credits:', error);
+      console.error("Error adding credits:", error);
     }
   };
 
   // Record a new referral
   const recordReferral = async (
-    referredUserId: string, 
-    referredEmail: string, 
-    type: 'workshop' | 'event' | 'other' = 'other',
-    creditValue: number = 100
+    referredUserId: string,
+    referredEmail: string,
+    type: "workshop" | "event" | "other" = "other",
+    creditValue: number = 100,
   ) => {
     if (!user) return;
-    
+
     try {
       const newReferral = {
         userId: referredUserId,
         email: referredEmail,
         date: new Date().toISOString(),
         type,
-        creditValue
+        creditValue,
       };
-      
-      const currentReferrals = (user.unsafeMetadata?.referrals as ReferralData['referrals']) || [];
+
+      const currentReferrals = (user.unsafeMetadata?.referrals as ReferralData["referrals"]) || [];
       const currentCredits = (user.unsafeMetadata?.credits as number) || 0;
-      
+
       // Update Clerk metadata
       await user.update({
         unsafeMetadata: {
           ...user.unsafeMetadata,
           referrals: [...currentReferrals, newReferral],
-          credits: currentCredits + creditValue
-        }
+          credits: currentCredits + creditValue,
+        },
       });
-      
+
       // Update local state
       const updatedData = {
         ...referralData,
         referrals: [...currentReferrals, newReferral],
-        credits: currentCredits + creditValue
+        credits: currentCredits + creditValue,
       };
       setReferralData(updatedData);
     } catch (error) {
-      console.error('Error recording referral:', error);
+      console.error("Error recording referral:", error);
     }
   };
 
   // Get the current user's referrer (if any)
   const getCurrentReferrer = (): string | null => {
-    const storedReferral = localStorage.getItem('zurichjs_referral');
-    
+    const storedReferral = localStorage.getItem("zurichjs_referral");
+
     if (storedReferral) {
       try {
         // Decode the referral token to get the referrer's user ID
         const decoded = atob(storedReferral);
-        const salt = 'ZurichJS_2024';
-        const userId = decoded.replace(`${salt}_`, '');
+        const salt = "ZurichJS_2024";
+        const userId = decoded.replace(`${salt}_`, "");
         return userId;
       } catch (e) {
-        console.error('Error decoding referral:', e);
+        console.error("Error decoding referral:", e);
         return null;
       }
     }
-    
+
     return null;
   };
 
   // Record the referral relationship in Clerk metadata
   const saveReferralToMetadata = async (referrerId: string, referrerName: string) => {
     if (!user) return false;
-    
+
     try {
       // Get current metadata to ensure we don't overwrite other values
       const currentMetadata = user.unsafeMetadata || {};
-      
+
       // Check if there's already a referrer to avoid overwriting
       if (currentMetadata.referredBy) {
-        console.log('User already has a referrer in metadata:', currentMetadata.referredBy);
+        console.log("User already has a referrer in metadata:", currentMetadata.referredBy);
         return true; // Already set up, consider it a success
       }
-      
+
       // Create the referredBy data
       const referredByData = {
         userId: referrerId,
         name: referrerName,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
       };
-      
+
       // Save referrer to the current user's metadata
       await user.update({
         unsafeMetadata: {
           ...currentMetadata,
-          referredBy: referredByData
-        }
+          referredBy: referredByData,
+        },
       });
-      
+
       // Update local state
       setReferredBy(referredByData);
-      
+
       return true;
     } catch (error) {
-      console.error('Error saving referral metadata:', error);
+      console.error("Error saving referral metadata:", error);
       return false;
     }
   };
@@ -255,72 +255,72 @@ export const useReferrals = () => {
   // Process a new user signup with referral
   const processReferralSignup = async (referrerId: string, referrerName: string) => {
     if (!user) return false;
-    
+
     try {
       // 1. Save referrer to user metadata
       const metadataSaved = await saveReferralToMetadata(referrerId, referrerName);
-      
+
       if (!metadataSaved) {
-        throw new Error('Failed to save referral metadata');
+        throw new Error("Failed to save referral metadata");
       }
-      
+
       // 2. Add initial signup credits (5 credits)
       await addCredits(5);
-      
+
       // 3. Update local referralData state with referredBy information
       const updatedReferralData = {
         ...referralData,
         referredBy: {
           userId: referrerId,
           name: referrerName,
-          date: new Date().toISOString()
-        }
+          date: new Date().toISOString(),
+        },
       };
       setReferralData(updatedReferralData);
-      
+
       // 4. Update referrer's metadata to include this user as a referral
       try {
         // Make an API call to update the referrer's metadata
-        const response = await fetch('/api/referrals/update-referrer-metadata', {
-          method: 'POST',
+        const response = await fetch("/api/referrals/update-referrer-metadata", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             referrerId: referrerId,
             refereeId: user.id,
-            refereeName: user.fullName || user.username || 'New User',
-            refereeEmail: user.primaryEmailAddress?.emailAddress || '',
+            refereeName: user.fullName || user.username || "New User",
+            refereeEmail: user.primaryEmailAddress?.emailAddress || "",
             date: new Date().toISOString(),
-            type: 'signup',
-            creditValue: 5
+            type: "signup",
+            creditValue: 5,
           }),
         });
-        
+
         if (!response.ok) {
-          console.error('Failed to update referrer metadata:', await response.text());
+          console.error("Failed to update referrer metadata:", await response.text());
         }
       } catch (error) {
-        console.error('Error updating referrer metadata:', error);
+        console.error("Error updating referrer metadata:", error);
         // Continue even if this fails, as we've already updated the current user's metadata
       }
-      
+
       // 5. Send platform notification
       try {
         await sendPlatformNotification({
-          title: 'New Referral Signup',
-          message: `${referrerName} successfully referred ${user.fullName || user.username || 'New User'} to ZurichJS!`,
+          title: "New Referral Signup",
+          message: `${referrerName} successfully referred ${user.fullName || user.username || "New User"} to ZurichJS!`,
           priority: 0,
-          sound: 'success',
+          sound: "success",
         });
       } catch (error) {
-        console.error('Error sending platform notification:', error);
+        console.error("Error sending platform notification:", error);
         // Continue even if notification fails
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Error processing referral signup:', error);
+      console.error("Error processing referral signup:", error);
       return false;
     }
   };
@@ -334,6 +334,6 @@ export const useReferrals = () => {
     recordReferral,
     getCurrentReferrer,
     saveReferralToMetadata,
-    processReferralSignup
+    processReferralSignup,
   };
-}; 
+};

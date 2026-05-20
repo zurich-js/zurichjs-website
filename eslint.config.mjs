@@ -1,33 +1,36 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { defineConfig } from "eslint/config";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from "eslint-plugin-import";
+import oxlint from "eslint-plugin-oxlint";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export default defineConfig([{
-    ignores: ['.vercel/**'],
-}, {
+export default defineConfig([
+  {
+    ignores: [".vercel/**"],
+  },
+  {
     extends: [...nextCoreWebVitals, ...nextTypescript],
 
     plugins: {
-        'import' : importPlugin,
+      import: importPlugin,
     },
 
     rules: {
-        "import/order": ["error", {
-            groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
-            "newlines-between": "always",
+      "import/order": [
+        "error",
+        {
+          groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
+          "newlines-between": "always",
 
-            alphabetize: {
-                order: "asc",
-                caseInsensitive: true,
-            },
-        }],
-        "react-hooks/set-state-in-effect": "warn"
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
+        },
+      ],
+      "@next/next/no-img-element": "off",
+      "react-hooks/set-state-in-effect": "off",
     },
-}]);
+  },
+  ...oxlint.configs["flat/recommended"],
+]);

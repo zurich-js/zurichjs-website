@@ -1,8 +1,8 @@
-import { useAuth } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { Gift, ArrowRight, Users, Calendar, TicketCheck } from 'lucide-react';
+import { useAuth } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { Gift, ArrowRight, Users, Calendar, TicketCheck } from "lucide-react";
 
-import Button from '@/components/ui/Button';
+import Button from "@/components/ui/Button";
 
 export default function AccountCreationIncentive() {
   const { isSignedIn } = useAuth();
@@ -25,36 +25,26 @@ export default function AccountCreationIncentive() {
           </div>
         </div>
         <div className="flex-1 text-center sm:text-left">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Join the ZurichJS Community
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Create an account and unlock exclusive benefits:
-          </p>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Join the ZurichJS Community</h3>
+          <p className="text-gray-600 mb-4">Create an account and unlock exclusive benefits:</p>
           <div className="grid grid-cols-1 gap-3 mb-6">
             <div className="bg-white bg-opacity-60 p-3 rounded-lg flex items-center">
               <div className="bg-purple-100 p-2 rounded-full mr-3">
                 <TicketCheck className="text-purple-600 h-4 w-4" />
               </div>
-              <span className="text-gray-700">
-                Automatic community discount on future tickets
-              </span>
+              <span className="text-gray-700">Automatic community discount on future tickets</span>
             </div>
             <div className="bg-white bg-opacity-60 p-3 rounded-lg flex items-center">
               <div className="bg-purple-100 p-2 rounded-full mr-3">
                 <Calendar className="text-purple-600 h-4 w-4" />
               </div>
-              <span className="text-gray-700">
-                Early access to workshop registrations
-              </span>
+              <span className="text-gray-700">Early access to workshop registrations</span>
             </div>
             <div className="bg-white bg-opacity-60 p-3 rounded-lg flex items-center">
               <div className="bg-purple-100 p-2 rounded-full mr-3">
                 <Users className="text-purple-600 h-4 w-4" />
               </div>
-              <span className="text-gray-700">
-                Connect with other JavaScript developers
-              </span>
+              <span className="text-gray-700">Connect with other JavaScript developers</span>
             </div>
           </div>
           <div className="flex justify-center sm:justify-start">
@@ -71,4 +61,4 @@ export default function AccountCreationIncentive() {
       </div>
     </motion.div>
   );
-} 
+}

@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion';
-import { Camera, Video, Clock } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Camera, Video, Clock } from "lucide-react";
 
-import { useResponsiveThumbnail } from '../../hooks/useResponsiveThumbnail';
-import { MediaItem as MediaItemType, MediaType } from '../../types/gallery';
-import { formatEventDate } from '../../utils/galleryFormatters';
-import VideoPlayer from '../ui/VideoPlayer';
+import { useResponsiveThumbnail } from "../../hooks/useResponsiveThumbnail";
+import { MediaItem as MediaItemType, MediaType } from "../../types/gallery";
+import { formatEventDate } from "../../utils/galleryFormatters";
+import VideoPlayer from "../ui/VideoPlayer";
 
 interface MediaItemProps {
   media: MediaItemType;
@@ -27,7 +27,7 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
   } = useResponsiveThumbnail({
     originalUrl: media.url,
     isVideo,
-    fallbackUrl: media.thumbnailUrl
+    fallbackUrl: media.thumbnailUrl,
   });
 
   const handleClick = () => {
@@ -37,7 +37,7 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -46,7 +46,7 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
       transition={{ duration: 0.2 }}
       className="break-inside-avoid mb-4"
     >
-      <div 
+      <div
         className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group"
         onClick={handleClick}
       >
@@ -81,13 +81,13 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
                 onLoad={handleImageLoad}
                 onError={handleImageError}
                 className={`w-full h-auto object-cover transition-opacity duration-300 ${
-                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                  imageLoaded ? "opacity-100" : "opacity-0"
                 }`}
                 style={{
                   aspectRatio: `${media.width}/${media.height}`,
                 }}
               />
-              
+
               {/* Loading placeholder for images */}
               {!imageLoaded && !imageError && (
                 <div
@@ -123,7 +123,7 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
           {/* Media type indicator */}
           <div className="absolute top-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
             {isVideo ? <Video size={12} /> : <Camera size={12} />}
-            <span className="hidden sm:inline">{isVideo ? 'Video' : 'Photo'}</span>
+            <span className="hidden sm:inline">{isVideo ? "Video" : "Photo"}</span>
           </div>
         </div>
 
@@ -135,10 +135,8 @@ export default function MediaItem({ media, onClick }: MediaItemProps) {
           <p className="text-xs text-gray-500 mb-2">
             {formatEventDate(eventDate)} &nbsp;•&nbsp; {media.photographer}
           </p>
-          <p className="text-sm text-gray-800 line-clamp-2 leading-tight">
-            {media.description}
-          </p>
-          
+          <p className="text-sm text-gray-800 line-clamp-2 leading-tight">{media.description}</p>
+
           {/* Tags */}
           {media.tags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">

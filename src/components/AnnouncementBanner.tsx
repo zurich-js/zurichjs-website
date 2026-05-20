@@ -1,12 +1,12 @@
-import { useAuth } from '@clerk/nextjs';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useAuth } from "@clerk/nextjs";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 
-import useEvents from '@/hooks/useEvents';
-import { Announcement } from '@/sanity/queries';
+import useEvents from "@/hooks/useEvents";
+import { Announcement } from "@/sanity/queries";
 
-const ANNOUNCEMENT_STORAGE_KEY = 'zurichjs_announcements';
-const DISMISSED_ANNOUNCEMENTS_KEY = 'zurichjs_dismissed_announcements';
+const ANNOUNCEMENT_STORAGE_KEY = "zurichjs_announcements";
+const DISMISSED_ANNOUNCEMENTS_KEY = "zurichjs_dismissed_announcements";
 
 type AnnouncementState = {
   isVisible: boolean;
@@ -34,37 +34,39 @@ export default function AnnouncementBanner() {
     // Load announcement state from localStorage
     const storedState = localStorage.getItem(ANNOUNCEMENT_STORAGE_KEY);
     if (storedState) {
-      setState(prev => ({ ...prev, ...JSON.parse(storedState) }));
+      setState((prev) => ({ ...prev, ...JSON.parse(storedState) }));
     }
 
     // Update login status based on Clerk
-    setState(prev => ({ ...prev, isLoggedIn: isSignedIn ?? false }));
+    setState((prev) => ({ ...prev, isLoggedIn: isSignedIn ?? false }));
 
     // Fetch current announcement from API
     const fetchCurrentAnnouncement = async () => {
       try {
-        setState(prev => ({ ...prev, isLoading: true, error: null }));
-        const response = await fetch(`/api/announcements/current?isLoggedIn=${isSignedIn ?? false}`);
-        
+        setState((prev) => ({ ...prev, isLoading: true, error: null }));
+        const response = await fetch(
+          `/api/announcements/current?isLoggedIn=${isSignedIn ?? false}`,
+        );
+
         if (!response.ok) {
-          throw new Error('Failed to fetch announcement');
+          throw new Error("Failed to fetch announcement");
         }
 
         const announcement = await response.json();
 
         // Check if this announcement has been dismissed
         const dismissedAnnouncements = JSON.parse(
-          localStorage.getItem(DISMISSED_ANNOUNCEMENTS_KEY) || '[]'
+          localStorage.getItem(DISMISSED_ANNOUNCEMENTS_KEY) || "[]",
         ) as string[];
 
         if (announcement && !dismissedAnnouncements.includes(announcement.id)) {
           setCurrentAnnouncement(announcement);
         }
       } catch (error) {
-        console.error('Error fetching announcement:', error);
-        setState(prev => ({ ...prev, error: 'Failed to load announcement' }));
+        console.error("Error fetching announcement:", error);
+        setState((prev) => ({ ...prev, error: "Failed to load announcement" }));
       } finally {
-        setState(prev => ({ ...prev, isLoading: false, hasInitialized: true }));
+        setState((prev) => ({ ...prev, isLoading: false, hasInitialized: true }));
       }
     };
 
@@ -76,32 +78,32 @@ export default function AnnouncementBanner() {
       const now = new Date();
       const { startDate, endDate, requiresLogin } = currentAnnouncement.conditions || {};
 
-      const isWithinDateRange = (!startDate || now >= new Date(startDate)) && 
-                               (!endDate || now <= new Date(endDate));
+      const isWithinDateRange =
+        (!startDate || now >= new Date(startDate)) && (!endDate || now <= new Date(endDate));
       const meetsLoginRequirement = !requiresLogin || (requiresLogin && state.isLoggedIn);
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isVisible: isWithinDateRange && meetsLoginRequirement,
       }));
 
       // Increment view count when announcement becomes visible
       if (isWithinDateRange && meetsLoginRequirement) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           viewCount: prev.viewCount + 1,
         }));
-        
+
         // Track announcement view
-        track('announcement_viewed', {
+        track("announcement_viewed", {
           announcementId: currentAnnouncement.id,
           announcementType: currentAnnouncement.type,
           title: currentAnnouncement.title,
-          isLoggedIn: state.isLoggedIn
+          isLoggedIn: state.isLoggedIn,
         });
       }
     }
-  }, [currentAnnouncement, state.isLoggedIn]);
+  }, [currentAnnouncement, state.isLoggedIn, track]);
 
   useEffect(() => {
     // Save state to localStorage whenever it changes
@@ -112,29 +114,26 @@ export default function AnnouncementBanner() {
     if (currentAnnouncement) {
       // Add the announcement ID to the dismissed list
       const dismissedAnnouncements = JSON.parse(
-        localStorage.getItem(DISMISSED_ANNOUNCEMENTS_KEY) || '[]'
+        localStorage.getItem(DISMISSED_ANNOUNCEMENTS_KEY) || "[]",
       ) as string[];
-      
+
       if (!dismissedAnnouncements.includes(currentAnnouncement.id)) {
         dismissedAnnouncements.push(currentAnnouncement.id);
-        localStorage.setItem(
-          DISMISSED_ANNOUNCEMENTS_KEY,
-          JSON.stringify(dismissedAnnouncements)
-        );
+        localStorage.setItem(DISMISSED_ANNOUNCEMENTS_KEY, JSON.stringify(dismissedAnnouncements));
       }
 
       // Track announcement dismissal
-      track('announcement_dismissed', {
+      track("announcement_dismissed", {
         announcementId: currentAnnouncement.id,
         announcementType: currentAnnouncement.type,
         title: currentAnnouncement.title,
         isLoggedIn: state.isLoggedIn,
         viewCount: state.viewCount,
-        wasPreviouslyDismissed: dismissedAnnouncements.includes(currentAnnouncement.id)
+        wasPreviouslyDismissed: dismissedAnnouncements.includes(currentAnnouncement.id),
       });
 
       // Hide the announcement
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isVisible: false,
       }));
@@ -144,14 +143,14 @@ export default function AnnouncementBanner() {
   const handleCTAClick = () => {
     if (currentAnnouncement && currentAnnouncement.cta) {
       // Track CTA click
-      track('announcement_cta_clicked', {
+      track("announcement_cta_clicked", {
         announcementId: currentAnnouncement.id,
         announcementType: currentAnnouncement.type,
         title: currentAnnouncement.title,
         ctaText: currentAnnouncement.cta.text,
         ctaUrl: currentAnnouncement.cta.href,
         isLoggedIn: state.isLoggedIn,
-        viewCount: state.viewCount
+        viewCount: state.viewCount,
       });
 
       // Dismiss the announcement
@@ -181,22 +180,22 @@ export default function AnnouncementBanner() {
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start sm:items-center gap-3">
-              <motion.div 
+              <motion.div
                 className="flex-shrink-0 text-2xl"
-                animate={{ 
+                animate={{
                   scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
+                  rotate: [0, 5, -5, 0],
                 }}
-                transition={{ 
+                transition={{
                   duration: 2,
                   repeat: Infinity,
-                  repeatDelay: 5
+                  repeatDelay: 5,
                 }}
               >
-                {currentAnnouncement.type === 'event' && '🎉'}
-                {currentAnnouncement.type === 'promotion' && '🎁'}
-                {currentAnnouncement.type === 'workshop' && '🎓'}
-                {currentAnnouncement.type === 'general' && '📢'}
+                {currentAnnouncement.type === "event" && "🎉"}
+                {currentAnnouncement.type === "promotion" && "🎁"}
+                {currentAnnouncement.type === "workshop" && "🎓"}
+                {currentAnnouncement.type === "general" && "📢"}
               </motion.div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-base sm:text-lg leading-tight text-js">
@@ -218,7 +217,12 @@ export default function AnnouncementBanner() {
                 >
                   {currentAnnouncement.cta.text}
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </motion.a>
               )}
@@ -230,7 +234,12 @@ export default function AnnouncementBanner() {
                 aria-label="Dismiss announcement"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </motion.button>
             </div>
@@ -239,4 +248,4 @@ export default function AnnouncementBanner() {
       </motion.div>
     </AnimatePresence>
   );
-} 
+}

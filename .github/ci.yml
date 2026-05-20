@@ -28,4 +28,3 @@ jobs:
 
       # - name: Test  Minimal tests with playwright to be added later
       #   run: pnpm test
-

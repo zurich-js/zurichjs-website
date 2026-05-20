@@ -1,23 +1,23 @@
-import { useAuth, useUser, SignInButton } from '@clerk/nextjs';
-import { useState } from 'react';
+import { useAuth, useUser, SignInButton } from "@clerk/nextjs";
+import { useState } from "react";
 
-import Button from '@/components/ui/Button';
-import useEvents from '@/hooks/useEvents';
+import Button from "@/components/ui/Button";
+import useEvents from "@/hooks/useEvents";
 
 interface EventInterestButtonProps {
   eventId: string;
   eventTitle: string;
-  variant?: 'primary' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "outline";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-export default function EventInterestButton({ 
-  eventId, 
-  eventTitle, 
-  variant = 'primary', 
-  size = 'lg',
-  className = ''
+export default function EventInterestButton({
+  eventId,
+  eventTitle,
+  variant = "primary",
+  size = "lg",
+  className = "",
 }: EventInterestButtonProps) {
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
@@ -34,16 +34,16 @@ export default function EventInterestButton({
 
     try {
       // Track the interest registration attempt
-      track('event_interest_register_attempt', {
+      track("event_interest_register_attempt", {
         event_id: eventId,
         event_title: eventTitle,
-        user_email: user?.primaryEmailAddress?.emailAddress || 'email not found'
+        user_email: user?.primaryEmailAddress?.emailAddress || "email not found",
       });
 
-      const response = await fetch('/api/events/register-interest', {
-        method: 'POST',
+      const response = await fetch("/api/events/register-interest", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           eventId,
@@ -54,28 +54,27 @@ export default function EventInterestButton({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to register interest');
+        throw new Error(data.error || "Failed to register interest");
       }
 
       setIsRegistered(true);
-      
+
       // Track successful registration
-      track('event_interest_registered', {
+      track("event_interest_registered", {
         event_id: eventId,
         event_title: eventTitle,
         user_email: data.userEmail,
-        user_name: data.userName
+        user_name: data.userName,
       });
-
     } catch (err) {
-      console.error('Interest registration error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to register interest');
-      
+      console.error("Interest registration error:", err);
+      setError(err instanceof Error ? err.message : "Failed to register interest");
+
       // Track the error
-      track('event_interest_register_error', {
+      track("event_interest_register_error", {
         event_id: eventId,
         event_title: eventTitle,
-        error: err instanceof Error ? err.message : 'Unknown error'
+        error: err instanceof Error ? err.message : "Unknown error",
       });
     } finally {
       setIsRegistering(false);
@@ -105,9 +104,9 @@ export default function EventInterestButton({
           size={size}
           className={className}
           onClick={() => {
-            track('event_interest_signin_clicked', {
+            track("event_interest_signin_clicked", {
               event_id: eventId,
-              event_title: eventTitle
+              event_title: eventTitle,
             });
           }}
         >
@@ -140,9 +139,9 @@ export default function EventInterestButton({
         className={`${className} bg-red-600 text-white hover:bg-red-700 min-w-max`}
         onClick={handleRegisterInterest}
         disabled={isRegistering}
-        style={{ minWidth: '280px' }}
+        style={{ minWidth: "280px" }}
       >
-        {isRegistering ? 'Registering Interest...' : 'Try Again'}
+        {isRegistering ? "Registering Interest..." : "Try Again"}
       </Button>
     );
   }
@@ -155,9 +154,9 @@ export default function EventInterestButton({
       className={`${className} min-w-max`}
       onClick={handleRegisterInterest}
       disabled={isRegistering}
-      style={{ minWidth: '280px' }}
+      style={{ minWidth: "280px" }}
     >
-      {isRegistering ? 'Registering Interest...' : 'Register Interest & Get Notified 🔔'}
+      {isRegistering ? "Registering Interest..." : "Register Interest & Get Notified 🔔"}
     </Button>
   );
 }

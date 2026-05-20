@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
-import { Send, Sparkles } from 'lucide-react';
-import { useState, FormEvent, ChangeEvent } from 'react';
+import { motion } from "framer-motion";
+import { Send, Sparkles } from "lucide-react";
+import { useState, FormEvent, ChangeEvent } from "react";
 
 interface NewsletterProps {
   title?: string;
@@ -17,15 +17,13 @@ export default function Newsletter({
   buttonText = "Join the JS Community",
   successMessage = "🎉 Woohoo! You're in! Get ready for some JavaScript awesomeness in your inbox!",
   buttonColor = "bg-blue-700 hover:bg-blue-600 text-white",
-  focusRingColor = "focus:ring-blue-400"
+  focusRingColor = "focus:ring-blue-400",
 }: NewsletterProps) {
-
-
-  const [email, setEmail] = useState<string>('');
-  const [firstName, setFirstName] = useState<string>('');
-  const [lastName, setLastName] = useState<string>('');
+  const [email, setEmail] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const [submitted, setSubmitted] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -33,13 +31,13 @@ export default function Newsletter({
 
     // Basic email validation
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      setError('Please enter a valid email address so we can send you the JS goodness!');
+      setError("Please enter a valid email address so we can send you the JS goodness!");
       return;
     }
 
     // First name validation
     if (!firstName.trim()) {
-      setError('Please enter your first name.');
+      setError("Please enter your first name.");
       return;
     }
 
@@ -47,10 +45,10 @@ export default function Newsletter({
 
     try {
       // Connect to EmailOctopus API
-      const response = await fetch('/api/subscribe', {
-        method: 'POST',
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, firstName, lastName }),
       });
@@ -58,13 +56,13 @@ export default function Newsletter({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to subscribe');
+        throw new Error(data.error || "Failed to subscribe");
       }
 
       setSubmitted(true);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -72,26 +70,23 @@ export default function Newsletter({
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleFirstNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFirstName(e.target.value);
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleLastNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setLastName(e.target.value);
-    if (error) setError('');
+    if (error) setError("");
   };
-
 
   return (
     <div className="bg-gray-50 rounded-lg p-6 shadow-inner border border-gray-200">
       <h3 className="text-xl font-bold mb-3 text-gray-900">{title}</h3>
-      <p className="text-gray-700 mb-4">
-        {description}
-      </p>
+      <p className="text-gray-700 mb-4">{description}</p>
 
       {submitted ? (
         <motion.div
@@ -175,7 +170,8 @@ export default function Newsletter({
       )}
 
       <p className="text-xs text-gray-500 mt-4">
-        We promise to only send you the coolest JavaScript content! No spam, just pure coding goodness. You can unsubscribe anytime. 💛
+        We promise to only send you the coolest JavaScript content! No spam, just pure coding
+        goodness. You can unsubscribe anytime. 💛
       </p>
     </div>
   );

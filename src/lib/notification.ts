@@ -13,8 +13,5 @@ export interface PlatformNotification {
 }
 
 export async function sendPlatformNotification(notification: PlatformNotification): Promise<void> {
-  await Promise.all([
-    sendPushoverNotification(notification),
-    sendSlackNotification(notification)
-  ]);
+  await Promise.all([sendPushoverNotification(notification), sendSlackNotification(notification)]);
 }

@@ -1,5 +1,5 @@
-import { Workshop } from '@/components/sections/UpcomingWorkshops';
-import { getConfirmedWorkshops } from '@/data/workshops';
+import { Workshop } from "@/components/sections/UpcomingWorkshops";
+import { getConfirmedWorkshops } from "@/data/workshops";
 
 /**
  * Parse workshop date string (e.g., "October 28, 2025") to a Date object
@@ -63,7 +63,7 @@ export function getRelatedWorkshops(eventDatetime: string): Workshop[] {
   const eventDate = new Date(eventDatetime);
 
   if (isNaN(eventDate.getTime())) {
-    console.warn('Invalid event datetime:', eventDatetime);
+    console.warn("Invalid event datetime:", eventDatetime);
     return [];
   }
 

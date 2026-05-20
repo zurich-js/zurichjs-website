@@ -1,19 +1,27 @@
-import { OrganizationSwitcher } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Copy, ExternalLink, Calendar, BookOpen, Link as LinkIcon, Download } from 'lucide-react';
-import { GetServerSideProps } from 'next';
-import Link from 'next/link';
-import { useState } from 'react';
+import { OrganizationSwitcher } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Copy,
+  ExternalLink,
+  Calendar,
+  BookOpen,
+  Link as LinkIcon,
+  Download,
+} from "lucide-react";
+import { GetServerSideProps } from "next";
+import Link from "next/link";
+import { useState } from "react";
 
-import Layout from '@/components/layout/Layout';
-import SEO from '@/components/SEO';
-import { getWorkshops } from '@/data/workshops';
-import { getEventsForUTM, UTMEvent } from '@/sanity/queries';
+import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
+import { getWorkshops } from "@/data/workshops";
+import { getEventsForUTM, UTMEvent } from "@/sanity/queries";
 
 interface UTMLink {
   id: string;
   title: string;
-  type: 'event' | 'workshop';
+  type: "event" | "workshop";
   url: string;
   utmLinks: Array<{
     platform: string;
@@ -28,7 +36,7 @@ interface UTMLink {
   metadata: {
     datetime?: string;
     location?: string;
-    speakers?: Array<{ name: string; }>;
+    speakers?: Array<{ name: string }>;
     dateInfo?: string;
     locationInfo?: string;
     speakerId?: string;
@@ -47,86 +55,86 @@ interface UTMPreset {
 
 const UTM_PRESETS: UTMPreset[] = [
   {
-    platform: 'Twitter',
-    source: 'twitter',
-    medium: 'social',
-    campaign: 'organic_social',
-    content: 'twitter_post',
-    icon: '🐦',
-    color: 'bg-blue-100 text-blue-800'
+    platform: "Twitter",
+    source: "twitter",
+    medium: "social",
+    campaign: "organic_social",
+    content: "twitter_post",
+    icon: "🐦",
+    color: "bg-blue-100 text-blue-800",
   },
   {
-    platform: 'LinkedIn',
-    source: 'linkedin',
-    medium: 'social',
-    campaign: 'organic_social',
-    content: 'linkedin_post',
-    icon: '💼',
-    color: 'bg-blue-100 text-blue-800'
+    platform: "LinkedIn",
+    source: "linkedin",
+    medium: "social",
+    campaign: "organic_social",
+    content: "linkedin_post",
+    icon: "💼",
+    color: "bg-blue-100 text-blue-800",
   },
   {
-    platform: 'Instagram',
-    source: 'instagram',
-    medium: 'social',
-    campaign: 'organic_social',
-    content: 'instagram_story',
-    icon: '📸',
-    color: 'bg-pink-100 text-pink-800'
+    platform: "Instagram",
+    source: "instagram",
+    medium: "social",
+    campaign: "organic_social",
+    content: "instagram_story",
+    icon: "📸",
+    color: "bg-pink-100 text-pink-800",
   },
   {
-    platform: 'Facebook',
-    source: 'facebook',
-    medium: 'social',
-    campaign: 'organic_social',
-    content: 'facebook_post',
-    icon: '📘',
-    color: 'bg-blue-100 text-blue-800'
+    platform: "Facebook",
+    source: "facebook",
+    medium: "social",
+    campaign: "organic_social",
+    content: "facebook_post",
+    icon: "📘",
+    color: "bg-blue-100 text-blue-800",
   },
   {
-    platform: 'Newsletter',
-    source: 'newsletter',
-    medium: 'email',
-    campaign: 'email_newsletter',
-    content: 'monthly_newsletter',
-    icon: '📧',
-    color: 'bg-green-100 text-green-800'
+    platform: "Newsletter",
+    source: "newsletter",
+    medium: "email",
+    campaign: "email_newsletter",
+    content: "monthly_newsletter",
+    icon: "📧",
+    color: "bg-green-100 text-green-800",
   },
   {
-    platform: 'YouTube',
-    source: 'youtube',
-    medium: 'video',
-    campaign: 'organic_social',
-    content: 'youtube_description',
-    icon: '📺',
-    color: 'bg-red-100 text-red-800'
+    platform: "YouTube",
+    source: "youtube",
+    medium: "video",
+    campaign: "organic_social",
+    content: "youtube_description",
+    icon: "📺",
+    color: "bg-red-100 text-red-800",
   },
   {
-    platform: 'Discord',
-    source: 'discord',
-    medium: 'social',
-    campaign: 'community',
-    content: 'discord_announcement',
-    icon: '🎮',
-    color: 'bg-purple-100 text-purple-800'
+    platform: "Discord",
+    source: "discord",
+    medium: "social",
+    campaign: "community",
+    content: "discord_announcement",
+    icon: "🎮",
+    color: "bg-purple-100 text-purple-800",
   },
   {
-    platform: 'Reddit',
-    source: 'reddit',
-    medium: 'social',
-    campaign: 'organic_social',
-    content: 'reddit_post',
-    icon: '🔶',
-    color: 'bg-orange-100 text-orange-800'
+    platform: "Reddit",
+    source: "reddit",
+    medium: "social",
+    campaign: "organic_social",
+    content: "reddit_post",
+    icon: "🔶",
+    color: "bg-orange-100 text-orange-800",
   },
   {
-    platform: 'Telegram',
-    source: 'telegram',
-    medium: 'social',
-    campaign: 'community',
-    content: 'telegram_channel',
-    icon: '✈️',
-    color: 'bg-blue-100 text-blue-800'
-  }
+    platform: "Telegram",
+    source: "telegram",
+    medium: "social",
+    campaign: "community",
+    content: "telegram_channel",
+    icon: "✈️",
+    color: "bg-blue-100 text-blue-800",
+  },
 ];
 
 interface UTMTrackingProps {
@@ -142,21 +150,34 @@ interface UTMTrackingProps {
   error?: string;
 }
 
-export default function UTMTracking({ events, workshops, baseUrl, error: serverError }: UTMTrackingProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<'all' | 'event' | 'workshop'>('all');
+export default function UTMTracking({
+  events,
+  workshops,
+  baseUrl,
+  error: serverError,
+}: UTMTrackingProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "event" | "workshop">("all");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [selectedPlatforms, setSelectedPlatforms] = useState<Set<string>>(new Set());
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [showGenerated, setShowGenerated] = useState(false);
 
-  const generateUTMUrl = (baseUrl: string, preset: UTMPreset, title: string, type: 'event' | 'workshop'): string => {
+  const generateUTMUrl = (
+    baseUrl: string,
+    preset: UTMPreset,
+    title: string,
+    type: "event" | "workshop",
+  ): string => {
     const params = new URLSearchParams({
       utm_source: preset.source,
       utm_medium: preset.medium,
       utm_campaign: preset.campaign,
       utm_content: preset.content || `${type}_${preset.source}`,
-      utm_term: title.toLowerCase().replace(/\s+/g, '_').replace(/[^\w-]/g, '')
+      utm_term: title
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+        .replace(/[^\w-]/g, ""),
     });
 
     return `${baseUrl}?${params.toString()}`;
@@ -166,46 +187,46 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
   const processedLinks: UTMLink[] = [];
 
   // Process workshops
-  workshops.forEach(workshop => {
+  workshops.forEach((workshop) => {
     const workshopUrl = `${baseUrl}/workshops/${workshop.id}`;
-    const utmLinks = UTM_PRESETS.map(preset => ({
+    const utmLinks = UTM_PRESETS.map((preset) => ({
       ...preset,
-      utmUrl: generateUTMUrl(workshopUrl, preset, workshop.title, 'workshop')
+      utmUrl: generateUTMUrl(workshopUrl, preset, workshop.title, "workshop"),
     }));
 
     processedLinks.push({
       id: workshop.id,
       title: workshop.title,
-      type: 'workshop',
+      type: "workshop",
       url: workshopUrl,
       utmLinks,
       metadata: {
         dateInfo: workshop.dateInfo,
         locationInfo: workshop.locationInfo,
-        speakerId: workshop.speakerId
-      }
+        speakerId: workshop.speakerId,
+      },
     });
   });
 
   // Process events
-  events.forEach(event => {
+  events.forEach((event) => {
     const eventUrl = `${baseUrl}/events/${event.id}`;
-    const utmLinks = UTM_PRESETS.map(preset => ({
+    const utmLinks = UTM_PRESETS.map((preset) => ({
       ...preset,
-      utmUrl: generateUTMUrl(eventUrl, preset, event.title, 'event')
+      utmUrl: generateUTMUrl(eventUrl, preset, event.title, "event"),
     }));
 
     processedLinks.push({
       id: event.id,
       title: event.title,
-      type: 'event',
+      type: "event",
       url: eventUrl,
       utmLinks,
       metadata: {
         datetime: event.datetime,
         location: event.location,
-        speakers: event.talks?.flatMap((talk) => talk.speakers || []) || []
-      }
+        speakers: event.talks?.flatMap((talk) => talk.speakers || []) || [],
+      },
     });
   });
 
@@ -217,8 +238,8 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
       setCopyFeedback(`${platform} link copied!`);
       setTimeout(() => setCopyFeedback(null), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
-      setCopyFeedback('Failed to copy');
+      console.error("Failed to copy:", err);
+      setCopyFeedback("Failed to copy");
       setTimeout(() => setCopyFeedback(null), 2000);
     }
   };
@@ -244,7 +265,7 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
   };
 
   const selectAllPlatforms = () => {
-    setSelectedPlatforms(new Set(UTM_PRESETS.map(p => p.platform)));
+    setSelectedPlatforms(new Set(UTM_PRESETS.map((p) => p.platform)));
   };
 
   const clearAllPlatforms = () => {
@@ -253,9 +274,9 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
 
   const selectAllItems = () => {
     const filteredItemIds = utmLinks
-      .filter(link => filterType === 'all' || link.type === filterType)
-      .filter(link => link.title.toLowerCase().includes(searchTerm.toLowerCase()))
-      .map(link => link.id);
+      .filter((link) => filterType === "all" || link.type === filterType)
+      .filter((link) => link.title.toLowerCase().includes(searchTerm.toLowerCase()))
+      .map((link) => link.id);
     setSelectedItems(new Set(filteredItemIds));
   };
 
@@ -275,70 +296,75 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
 
   const exportToCSV = () => {
     const filteredData = utmLinks
-      .filter(item => selectedItems.has(item.id))
-      .flatMap(item => 
+      .filter((item) => selectedItems.has(item.id))
+      .flatMap((item) =>
         item.utmLinks
-          .filter(link => selectedPlatforms.has(link.platform))
-          .map(link => ({
+          .filter((link) => selectedPlatforms.has(link.platform))
+          .map((link) => ({
             Title: item.title,
             Type: item.type,
             Platform: link.platform,
             Source: link.source,
             Medium: link.medium,
             Campaign: link.campaign,
-            Content: link.content || '',
+            Content: link.content || "",
             UTM_URL: link.utmUrl,
             Original_URL: item.url,
-            Datetime: item.metadata.datetime || item.metadata.dateInfo || '',
-            Location: item.metadata.location || item.metadata.locationInfo || '',
-            Speakers: item.metadata.speakers?.map(s => s.name).join(', ') || ''
-          }))
+            Datetime: item.metadata.datetime || item.metadata.dateInfo || "",
+            Location: item.metadata.location || item.metadata.locationInfo || "",
+            Speakers: item.metadata.speakers?.map((s) => s.name).join(", ") || "",
+          })),
       );
 
     if (filteredData.length === 0) {
-      setCopyFeedback('No data to export');
+      setCopyFeedback("No data to export");
       setTimeout(() => setCopyFeedback(null), 2000);
       return;
     }
 
     const csvHeaders = Object.keys(filteredData[0] || {});
     const csvContent = [
-      csvHeaders.join(','),
-      ...filteredData.map(row => csvHeaders.map(header => {
-        const value = row[header as keyof typeof row] || '';
-        return `"${value.toString().replace(/"/g, '""')}"`;
-      }).join(','))
-    ].join('\n');
+      csvHeaders.join(","),
+      ...filteredData.map((row) =>
+        csvHeaders
+          .map((header) => {
+            const value = row[header as keyof typeof row] || "";
+            return `"${value.toString().replace(/"/g, '""')}"`;
+          })
+          .join(","),
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `utm-tracking-links-${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `utm-tracking-links-${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
   };
 
-  const filteredLinks = utmLinks.filter(link => {
-    const matchesSearch = link.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         link.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || link.type === filterType;
+  const filteredLinks = utmLinks.filter((link) => {
+    const matchesSearch =
+      link.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      link.type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === "all" || link.type === filterType;
     return matchesSearch && matchesType;
   });
 
   const generatedLinks = utmLinks
-    .filter(item => selectedItems.has(item.id))
-    .map(item => ({
+    .filter((item) => selectedItems.has(item.id))
+    .map((item) => ({
       ...item,
-      utmLinks: item.utmLinks.filter(link => selectedPlatforms.has(link.platform))
+      utmLinks: item.utmLinks.filter((link) => selectedPlatforms.has(link.platform)),
     }))
-    .filter(item => item.utmLinks.length > 0);
+    .filter((item) => item.utmLinks.length > 0);
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     } catch {
       return dateString;
@@ -360,8 +386,11 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
 
   return (
     <Layout>
-      <SEO title="UTM Tracking Links Admin | ZurichJS" description="Generate UTM tracking links for events and workshops for social media sharing" />
-      
+      <SEO
+        title="UTM Tracking Links Admin | ZurichJS"
+        description="Generate UTM tracking links for events and workshops for social media sharing"
+      />
+
       <div className="container mx-auto px-6 py-20">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -372,10 +401,9 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
             <div>
               <h1 className="text-3xl font-bold">UTM Tracking Links</h1>
               <p className="text-gray-600 mt-2">
-                {showGenerated 
+                {showGenerated
                   ? "Your generated UTM tracking links are ready!"
-                  : "Generate UTM tracking links for events and workshops for social media sharing"
-                }
+                  : "Generate UTM tracking links for events and workshops for social media sharing"}
               </p>
             </div>
           </div>
@@ -469,8 +497,8 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                     key={preset.platform}
                     className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedPlatforms.has(preset.platform)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
                     <input
@@ -492,7 +520,7 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
             {/* Step 2: Content Selection */}
             <div className="bg-white rounded-lg shadow-md p-6 mb-8">
               <h2 className="text-xl font-semibold mb-4">Step 2: Select Events & Workshops</h2>
-              
+
               {/* Filters */}
               <div className="flex flex-col md:flex-row gap-4 mb-6">
                 <div className="flex-1">
@@ -506,10 +534,12 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Type</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Type
+                  </label>
                   <select
                     value={filterType}
-                    onChange={(e) => setFilterType(e.target.value as 'all' | 'event' | 'workshop')}
+                    onChange={(e) => setFilterType(e.target.value as "all" | "event" | "workshop")}
                     className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Types</option>
@@ -542,8 +572,8 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                     key={item.id}
                     className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedItems.has(item.id)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-300 hover:border-gray-400"
                     }`}
                   >
                     <input
@@ -554,30 +584,30 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          item.type === 'event' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {item.type === 'event' ? '📅 Event' : '🎓 Workshop'}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            item.type === "event"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {item.type === "event" ? "📅 Event" : "🎓 Workshop"}
                         </span>
                         <span className="font-medium">{item.title}</span>
                       </div>
                       <div className="text-sm text-gray-600 mt-1">
-                        {item.metadata.datetime && formatDate(item.metadata.datetime)}
-                        {item.metadata.dateInfo && item.metadata.dateInfo}
-                        {(item.metadata.location || item.metadata.locationInfo) && 
-                          ` • ${item.metadata.location || item.metadata.locationInfo}`
-                        }
+                        {item.metadata.datetime
+                          ? formatDate(item.metadata.datetime)
+                          : item.metadata.dateInfo}
+                        {(item.metadata.location || item.metadata.locationInfo) &&
+                          ` • ${item.metadata.location || item.metadata.locationInfo}`}
                       </div>
                     </div>
                   </label>
                 ))}
               </div>
-              
-              <p className="text-sm text-gray-600 mt-4">
-                Selected: {selectedItems.size} items
-              </p>
+
+              <p className="text-sm text-gray-600 mt-4">Selected: {selectedItems.size} items</p>
             </div>
 
             {/* Generate Button */}
@@ -587,7 +617,8 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                 disabled={selectedPlatforms.size === 0 || selectedItems.size === 0}
                 className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
               >
-                Generate UTM Links ({selectedPlatforms.size} platforms × {selectedItems.size} items = {selectedPlatforms.size * selectedItems.size} links)
+                Generate UTM Links ({selectedPlatforms.size} platforms × {selectedItems.size} items
+                = {selectedPlatforms.size * selectedItems.size} links)
               </button>
             </div>
           </>
@@ -613,7 +644,7 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                   </button>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600">Platforms Selected</p>
@@ -625,7 +656,9 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600">Total Links</p>
-                  <p className="text-lg font-semibold">{generatedLinks.reduce((acc, item) => acc + item.utmLinks.length, 0)}</p>
+                  <p className="text-lg font-semibold">
+                    {generatedLinks.reduce((acc, item) => acc + item.utmLinks.length, 0)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -668,36 +701,35 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          item.type === 'event' 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-purple-100 text-purple-800'
-                        }`}>
-                          {item.type === 'event' ? '📅 Event' : '🎓 Workshop'}
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            item.type === "event"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-purple-100 text-purple-800"
+                          }`}
+                        >
+                          {item.type === "event" ? "📅 Event" : "🎓 Workshop"}
                         </span>
                         <h3 className="text-xl font-semibold text-gray-800">{item.title}</h3>
                       </div>
                       <div className="text-sm text-gray-600 space-y-1">
                         <p className="flex items-center gap-2">
                           <ExternalLink className="w-4 h-4" />
-                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">
+                          <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-blue-600"
+                          >
                             {item.url}
                           </a>
                         </p>
-                        {item.metadata.datetime && (
-                          <p>📅 {formatDate(item.metadata.datetime)}</p>
-                        )}
-                        {item.metadata.dateInfo && (
-                          <p>📅 {item.metadata.dateInfo}</p>
-                        )}
-                        {item.metadata.location && (
-                          <p>📍 {item.metadata.location}</p>
-                        )}
-                        {item.metadata.locationInfo && (
-                          <p>📍 {item.metadata.locationInfo}</p>
-                        )}
+                        {item.metadata.datetime && <p>📅 {formatDate(item.metadata.datetime)}</p>}
+                        {item.metadata.dateInfo && <p>📅 {item.metadata.dateInfo}</p>}
+                        {item.metadata.location && <p>📍 {item.metadata.location}</p>}
+                        {item.metadata.locationInfo && <p>📍 {item.metadata.locationInfo}</p>}
                         {item.metadata.speakers && item.metadata.speakers.length > 0 && (
-                          <p>👥 {item.metadata.speakers.map(s => s.name).join(', ')}</p>
+                          <p>👥 {item.metadata.speakers.map((s) => s.name).join(", ")}</p>
                         )}
                       </div>
                     </div>
@@ -715,13 +747,21 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
                             {link.medium}
                           </span>
                         </div>
-                        
+
                         <div className="text-sm text-gray-600 mb-3 space-y-1">
-                          <p><strong>Source:</strong> {link.source}</p>
-                          <p><strong>Campaign:</strong> {link.campaign}</p>
-                          {link.content && <p><strong>Content:</strong> {link.content}</p>}
+                          <p>
+                            <strong>Source:</strong> {link.source}
+                          </p>
+                          <p>
+                            <strong>Campaign:</strong> {link.campaign}
+                          </p>
+                          {link.content && (
+                            <p>
+                              <strong>Content:</strong> {link.content}
+                            </p>
+                          )}
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
@@ -746,7 +786,9 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
 
             {generatedLinks.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-gray-600">No links generated. Please go back and make your selections.</p>
+                <p className="text-gray-600">
+                  No links generated. Please go back and make your selections.
+                </p>
               </div>
             )}
           </>
@@ -758,53 +800,53 @@ export default function UTMTracking({ events, workshops, baseUrl, error: serverE
 
 export const getServerSideProps: GetServerSideProps<UTMTrackingProps> = async ({ req }) => {
   // Get the base URL from the request
-  const protocol = req.headers['x-forwarded-proto'] || 'http';
-  const host = req.headers.host || 'localhost:3000';
+  const protocol = req.headers["x-forwarded-proto"] || "http";
+  const host = req.headers.host || "localhost:3000";
   const baseUrl = `${protocol}://${host}`;
-  
+
   try {
     // Fetch events with limited data for UTM tracking
     const events = await getEventsForUTM({
       limit: 30,
       monthsBack: 6,
-      monthsAhead: 12
+      monthsAhead: 12,
     });
-    
+
     // Get workshops data
     const workshops = getWorkshops();
-    
+
     return {
       props: {
         events,
-        workshops: workshops.map(workshop => ({
+        workshops: workshops.map((workshop) => ({
           id: workshop.id,
           title: workshop.title,
           dateInfo: workshop.dateInfo,
           locationInfo: workshop.locationInfo,
-          speakerId: workshop.speakerId
+          speakerId: workshop.speakerId,
         })),
-        baseUrl
-      }
+        baseUrl,
+      },
     };
   } catch (error) {
-    console.error('Error fetching UTM tracking data:', error);
-    
+    console.error("Error fetching UTM tracking data:", error);
+
     // Return with only workshops if events fail
     const workshops = getWorkshops();
-    
+
     return {
       props: {
         events: [],
-        workshops: workshops.map(workshop => ({
+        workshops: workshops.map((workshop) => ({
           id: workshop.id,
           title: workshop.title,
           dateInfo: workshop.dateInfo,
           locationInfo: workshop.locationInfo,
-          speakerId: workshop.speakerId
+          speakerId: workshop.speakerId,
         })),
         baseUrl,
-        error: 'Events could not be loaded from Sanity CMS. Showing workshops only.'
-      }
+        error: "Events could not be loaded from Sanity CMS. Showing workshops only.",
+      },
     };
   }
-}; 
+};

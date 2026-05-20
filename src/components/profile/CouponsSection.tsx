@@ -1,7 +1,7 @@
-import { useUser } from '@clerk/nextjs';
-import { Tag, Check, ArrowRight, Loader2 } from 'lucide-react';
+import { useUser } from "@clerk/nextjs";
+import { Tag, Check, ArrowRight, Loader2 } from "lucide-react";
 
-import Button from '@/components/ui/Button';
+import Button from "@/components/ui/Button";
 
 interface Coupon {
   code: string;
@@ -13,7 +13,7 @@ interface Coupon {
 export default function CouponsSection() {
   const { user, isLoaded } = useUser();
   const allCoupons = user?.unsafeMetadata?.coupons as Coupon[] | undefined;
-  const activeCoupons = allCoupons?.filter(coupon => coupon.isActive);
+  const activeCoupons = allCoupons?.filter((coupon) => coupon.isActive);
 
   if (!isLoaded) {
     return (
@@ -40,15 +40,13 @@ export default function CouponsSection() {
 
       <div className="space-y-4">
         <p className="text-gray-700 mb-6">
-          Thank you for being part of our community! Here are your active ZurichJS coupons that you can use for our events and workshops.
+          Thank you for being part of our community! Here are your active ZurichJS coupons that you
+          can use for our events and workshops.
         </p>
 
         <div className="grid gap-4">
           {activeCoupons.map((coupon) => (
-            <div 
-              key={coupon.code}
-              className="p-4 rounded-lg border bg-green-50 border-green-200"
-            >
+            <div key={coupon.code} className="p-4 rounded-lg border bg-green-50 border-green-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-full bg-green-100">
@@ -82,4 +80,4 @@ export default function CouponsSection() {
       </div>
     </div>
   );
-} 
+}

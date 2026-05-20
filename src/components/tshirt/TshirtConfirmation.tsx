@@ -1,6 +1,6 @@
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle } from "lucide-react";
 
-import { PaymentMethod } from './types';
+import { PaymentMethod } from "./types";
 
 interface TshirtConfirmationProps {
   paymentMethod: PaymentMethod;
@@ -15,10 +15,9 @@ export default function TshirtConfirmation({ paymentMethod }: TshirtConfirmation
       <div>
         <h3 className="text-2xl font-bold text-gray-900 mb-4">Order Confirmed!</h3>
         <p className="text-gray-600 mb-6">
-          {paymentMethod === 'cash'
+          {paymentMethod === "cash"
             ? "Amazing! We'll see you at the next meetup. Can't wait to welcome you to the community!"
-            : "Welcome to the family! Your shirt is on its way. We'll keep you updated every step of the journey."
-          }
+            : "Welcome to the family! Your shirt is on its way. We'll keep you updated every step of the journey."}
         </p>
       </div>
     </div>

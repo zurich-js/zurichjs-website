@@ -8,7 +8,7 @@ import { client } from "./client";
 const getStartOfTodayISO = (): string => {
   // Get current date parts in Zurich timezone so events stay visible until midnight local time
   const now = new Date();
-  const zurichDate = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' }); // YYYY-MM-DD
+  const zurichDate = now.toLocaleDateString("en-CA", { timeZone: "Europe/Zurich" }); // YYYY-MM-DD
   return `${zurichDate}T00:00:00.000Z`;
 };
 
@@ -124,30 +124,34 @@ const mapEventData = (event: SanityEvent) => {
     meetupUrl: event.meetupUrl || "",
     stripePriceId: event.stripePriceId || "",
     excludeFromStats: event.excludeFromStats || false,
-    talks: event.talks?.map((talk: SanityTalk) => ({
-      id: talk.id?.current || "",
-      title: talk.title || "",
-      description: talk.description || "",
-      type: talk.type || "",
-      tags: talk.tags || [],
-      durationMinutes: talk.durationMinutes as number || 0,
-      slides: talk.slides || "",
-      videoUrl: talk.videoUrl || "",
-      productDemo: talk.productDemo ? {
-        id: talk.productDemo.id?.current || "",
-        name: talk.productDemo.name || "",
-        description: talk.productDemo.description || "",
-        logo: talk.productDemo.logo?.asset?.url || null,
-        websiteUrl: talk.productDemo.websiteUrl || ""
-      } : null,
-      productDemos: talk.productDemos ? talk.productDemos : [],
-      speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
-        id: speaker.id?.current || "",
-        name: speaker.name || "",
-        title: speaker.title || "",
-        image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    talks:
+      event.talks?.map((talk: SanityTalk) => ({
+        id: talk.id?.current || "",
+        title: talk.title || "",
+        description: talk.description || "",
+        type: talk.type || "",
+        tags: talk.tags || [],
+        durationMinutes: (talk.durationMinutes as number) || 0,
+        slides: talk.slides || "",
+        videoUrl: talk.videoUrl || "",
+        productDemo: talk.productDemo
+          ? {
+              id: talk.productDemo.id?.current || "",
+              name: talk.productDemo.name || "",
+              description: talk.productDemo.description || "",
+              logo: talk.productDemo.logo?.asset?.url || null,
+              websiteUrl: talk.productDemo.websiteUrl || "",
+            }
+          : null,
+        productDemos: talk.productDemos ? talk.productDemos : [],
+        speakers:
+          talk.speakers?.map((speaker: SanitySpeaker) => ({
+            id: speaker.id?.current || "",
+            name: speaker.name || "",
+            title: speaker.title || "",
+            image: speaker.image?.asset?.url ?? "/images/speakers/default.png",
+          })) || [],
       })) || [],
-    })) || [],
   };
 };
 
@@ -183,7 +187,8 @@ interface SanityUTMEvent {
 }
 
 export const getUpcomingEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) {
+  const events = await client.fetch(
+    `*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) {
     ...,
     "image": {
       "asset": {
@@ -226,26 +231,59 @@ export const getUpcomingEvents = async () => {
         }
       }
     }
-  }`, { startOfToday: getStartOfTodayISO() });
+  }`,
+    { startOfToday: getStartOfTodayISO() },
+  );
+
+  return events.map(mapEventData);
+};
+
+export const getHomepageUpcomingEvents = async (): Promise<Event[]> => {
+  const events = await client.withConfig({ useCdn: true }).fetch(
+    `*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0...3] {
+    _id,
+    id,
+    title,
+    datetime,
+    location,
+    address,
+    attendees,
+    isProMeetup,
+    stripePriceId,
+    description,
+    meetupUrl,
+    excludeFromStats,
+    "image": {
+      "asset": {
+        "url": image.asset->url
+      }
+    },
+    "talks": []
+  }`,
+    { startOfToday: getStartOfTodayISO() },
+  );
 
   return events.map(mapEventData);
 };
 
 // Lightweight version for UTM tracking - only fetch essential data
-export const getEventsForUTM = async (options: {
-  limit?: number;
-  monthsBack?: number;
-  monthsAhead?: number;
-} = {}): Promise<UTMEvent[]> => {
+export const getEventsForUTM = async (
+  options: {
+    limit?: number;
+    monthsBack?: number;
+    monthsAhead?: number;
+  } = {},
+): Promise<UTMEvent[]> => {
   const { limit = 50, monthsBack = 6, monthsAhead = 12 } = options;
-  
+
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - monthsBack);
-  
+
   const endDate = new Date();
   endDate.setMonth(endDate.getMonth() + monthsAhead);
-  
-  const events = await client.fetch(`*[_type == "events" && datetime >= $startDate && datetime <= $endDate] | order(datetime desc) [0...$limit] {
+
+  const events = await client.fetch(
+    `*[_type == "events" && datetime >= $startDate && datetime <= $endDate] | order(datetime desc) [0...$limit] {
     _id,
     "id": id.current,
     title,
@@ -257,11 +295,13 @@ export const getEventsForUTM = async (options: {
         name
       }
     }
-  }`, {
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
-    limit: limit - 1
-  });
+  }`,
+    {
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
+      limit: limit - 1,
+    },
+  );
 
   return events.map((event: SanityUTMEvent) => ({
     _id: event._id,
@@ -269,17 +309,20 @@ export const getEventsForUTM = async (options: {
     title: event.title,
     datetime: event.datetime,
     location: event.location,
-    talks: event.talks?.map((talk) => ({
-      speakers: talk.speakers?.map((speaker) => ({
-        id: speaker.id,
-        name: speaker.name
-      })) || []
-    })) || []
+    talks:
+      event.talks?.map((talk) => ({
+        speakers:
+          talk.speakers?.map((speaker) => ({
+            id: speaker.id,
+            name: speaker.name,
+          })) || [],
+      })) || [],
   }));
 };
 
 export const getPastEvents = async () => {
-  const events = await client.fetch(`*[_type == "events" && datetime < $startOfToday] | order(datetime desc) {
+  const events = await client.fetch(
+    `*[_type == "events" && datetime < $startOfToday] | order(datetime desc) {
     ...,
     "image": {
       "asset": {
@@ -322,12 +365,15 @@ export const getPastEvents = async () => {
         }
       }
     }
-  }`, { startOfToday: getStartOfTodayISO() });
+  }`,
+    { startOfToday: getStartOfTodayISO() },
+  );
   return events.map(mapEventData);
 };
 
 export const getEventById = async (eventId: string) => {
-  const [event] = await client.fetch(`*[_type == "events" && id.current == $eventId] {
+  const [event] = await client.fetch(
+    `*[_type == "events" && id.current == $eventId] {
     ...,
     "image": {
       "asset": {
@@ -366,22 +412,23 @@ export const getEventById = async (eventId: string) => {
         }
       }
     }
-  }`, { eventId });
+  }`,
+    { eventId },
+  );
 
   return event ? mapEventData(event) : null;
 };
 
 // Add additional interfaces for the return types
 
-
 export const getSpeakers = async ({
-  shouldFilterVisible = true
+  shouldFilterVisible = true,
 }: {
-  shouldFilterVisible?: boolean
+  shouldFilterVisible?: boolean;
 }): Promise<Speaker[]> => {
   // First fetch all speakers with their talks
   const speakers = await client.fetch(`
-    *[_type == "speaker" ${shouldFilterVisible ? '&& isVisible == true' : ''}] {
+    *[_type == "speaker" ${shouldFilterVisible ? "&& isVisible == true" : ""}] {
       ...,
       "id": id.current,
       "image": {
@@ -407,12 +454,14 @@ export const getSpeakers = async ({
     }`);
 
   // Map the data and add talk count
-  const speakersWithTalkCount = speakers.map((speaker: SanitySpeaker & { talks: SanityTalk[] }) => ({
-    ...speaker,
-    image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
-    talks: speaker.talks || [],
-    talkCount: (speaker.talks || []).length
-  }));
+  const speakersWithTalkCount = speakers.map(
+    (speaker: SanitySpeaker & { talks: SanityTalk[] }) => ({
+      ...speaker,
+      image: speaker.image?.asset?.url ?? "/images/speakers/default.png",
+      talks: speaker.talks || [],
+      talkCount: (speaker.talks || []).length,
+    }),
+  );
 
   // Sort by talk count in descending order
   return speakersWithTalkCount.sort((a: Speaker, b: Speaker) => b.talkCount - a.talkCount);
@@ -442,27 +491,34 @@ export const getTalks = async (): Promise<Talk[]> => {
     }`);
 
   // Map the data to a consistent format
-  return talks.map((talk: SanityTalk & { events: Array<{ id: string; title: string; datetime: string; location: string }> }) => ({
-    _id: talk._id || "",
-    id: talk.id || "",
-    title: talk.title || "",
-    description: talk.description || "",
-    type: talk.type || "",
-    tags: talk.tags || [],
-    durationMinutes: talk.durationMinutes || 0,
-    events: (talk.events || []).map(event => ({
-      id: event.id || "",
-      title: event.title || "",
-      date: event.datetime ? format(new Date(event.datetime), "MMMM d, yyyy") : "",
-      location: event.location || ""
-    })),
-    speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
-      id: speaker.id?.current || "",
-      name: speaker.name || "",
-      title: speaker.title || "",
-      image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
-    })) || [],
-  }));
+  return talks.map(
+    (
+      talk: SanityTalk & {
+        events: Array<{ id: string; title: string; datetime: string; location: string }>;
+      },
+    ) => ({
+      _id: talk._id || "",
+      id: talk.id || "",
+      title: talk.title || "",
+      description: talk.description || "",
+      type: talk.type || "",
+      tags: talk.tags || [],
+      durationMinutes: talk.durationMinutes || 0,
+      events: (talk.events || []).map((event) => ({
+        id: event.id || "",
+        title: event.title || "",
+        date: event.datetime ? format(new Date(event.datetime), "MMMM d, yyyy") : "",
+        location: event.location || "",
+      })),
+      speakers:
+        talk.speakers?.map((speaker: SanitySpeaker) => ({
+          id: speaker.id?.current || "",
+          name: speaker.name || "",
+          title: speaker.title || "",
+          image: speaker.image?.asset?.url ?? "/images/speakers/default.png",
+        })) || [],
+    }),
+  );
 };
 
 export const getStats = async () => {
@@ -477,12 +533,13 @@ export const getStats = async () => {
     members: stats.members,
     totalAttendees: stats.totalAttendees,
     eventsHosted: stats.eventCount || 0,
-    speakersToDate: stats.speakerCount || 0
+    speakersToDate: stats.speakerCount || 0,
   };
 };
 
 export const getSpeakerById = async (speakerId: string): Promise<Speaker | null> => {
-  const [speaker] = await client.fetch(`
+  const [speaker] = await client.fetch(
+    `
     *[_type == "speaker" && id.current == $speakerId] {
       ...,
       "id": id.current,
@@ -506,21 +563,24 @@ export const getSpeakerById = async (speakerId: string): Promise<Speaker | null>
           location
         }
       }
-    }`, { speakerId });
+    }`,
+    { speakerId },
+  );
 
   if (!speaker) return null;
 
   return {
     _id: speaker._id,
     ...speaker,
-    image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    image: speaker.image?.asset?.url ?? "/images/speakers/default.png",
     talks: speaker.talks || [],
-    talkCount: (speaker.talks || []).length
+    talkCount: (speaker.talks || []).length,
   };
 };
 
 export const getSpeakersByIds = async (speakerIds: string[]): Promise<Speaker[]> => {
-  const speakers = await client.fetch(`
+  const speakers = await client.fetch(
+    `
     *[_type == "speaker" && id.current in $speakerIds] {
       ...,
       "id": id.current,
@@ -544,18 +604,21 @@ export const getSpeakersByIds = async (speakerIds: string[]): Promise<Speaker[]>
           location
         }
       }
-    }`, { speakerIds });
+    }`,
+    { speakerIds },
+  );
 
   return speakers.map((speaker: SanitySpeakerWithTalks) => ({
     ...speaker,
-    image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
+    image: speaker.image?.asset?.url ?? "/images/speakers/default.png",
     talks: speaker.talks || [],
-    talkCount: (speaker.talks || []).length
+    talkCount: (speaker.talks || []).length,
   }));
 };
 
 export const getTalkById = async (talkId: string): Promise<Talk | null> => {
-  const [talk] = await client.fetch(`
+  const [talk] = await client.fetch(
+    `
     *[_type == "talk" && id.current == $talkId] {
       ...,
       "id": id.current,
@@ -574,7 +637,9 @@ export const getTalkById = async (talkId: string): Promise<Talk | null> => {
           }
         }
       }
-    }`, { talkId });
+    }`,
+    { talkId },
+  );
 
   if (!talk) return null;
 
@@ -590,14 +655,15 @@ export const getTalkById = async (talkId: string): Promise<Talk | null> => {
       id: event.id || "",
       title: event.title || "",
       date: event.datetime ? format(new Date(event.datetime), "MMMM d, yyyy") : "",
-      location: event.location || ""
+      location: event.location || "",
     })),
-    speakers: talk.speakers?.map((speaker: SanitySpeaker) => ({
-      id: speaker.id || "",
-      name: speaker.name || "",
-      title: speaker.title || "",
-      image: speaker.image?.asset?.url ?? '/images/speakers/default.png',
-    })) || [],
+    speakers:
+      talk.speakers?.map((speaker: SanitySpeaker) => ({
+        id: speaker.id || "",
+        name: speaker.name || "",
+        title: speaker.title || "",
+        image: speaker.image?.asset?.url ?? "/images/speakers/default.png",
+      })) || [],
   };
 };
 
@@ -688,7 +754,7 @@ export interface TalkFeedbackStats {
 
 /**
  * Get all feedback items
- * 
+ *
  * @returns Promise with array of feedback items
  */
 export const getFeedback = async (): Promise<FeedbackItem[]> => {
@@ -738,7 +804,7 @@ export const getFeedback = async (): Promise<FeedbackItem[]> => {
 
 /**
  * Get event feedback statistics for all events with feedback
- * 
+ *
  * @returns Promise with array of event feedback statistics
  */
 export const getEventFeedbackStats = async (): Promise<EventFeedbackStats[]> => {
@@ -752,20 +818,20 @@ export const getEventFeedbackStats = async (): Promise<EventFeedbackStats[]> => 
       "talkCount": count(*[_type == "talk" && references(^._id)])
     } | order(datetime desc)
   `);
-  
+
   return eventStats.map((event: SanityEventStats) => ({
     _id: event._id,
     title: event.title || "",
     date: event.datetime || "",
     feedbackCount: event.feedbackCount || 0,
     averageRating: event.averageRating || 0,
-    talkCount: event.talkCount || 0
+    talkCount: event.talkCount || 0,
   }));
 };
 
 /**
  * Get speaker feedback statistics for all speakers with feedback
- * 
+ *
  * @returns Promise with array of speaker feedback statistics
  */
 export const getSpeakerFeedbackStats = async (): Promise<SpeakerFeedbackStats[]> => {
@@ -782,7 +848,7 @@ export const getSpeakerFeedbackStats = async (): Promise<SpeakerFeedbackStats[]>
 
 /**
  * Get talk feedback statistics for all talks with feedback
- * 
+ *
  * @returns Promise with array of talk feedback statistics
  */
 export const getTalkFeedbackStats = async (): Promise<TalkFeedbackStats[]> => {
@@ -803,12 +869,13 @@ export const getTalkFeedbackStats = async (): Promise<TalkFeedbackStats[]> => {
 
 /**
  * Get feedback statistics for a specific event
- * 
+ *
  * @param eventId - ID of the event
  * @returns Promise with event feedback statistics or null if not found
  */
 export const getEventFeedbackById = async (eventId: string): Promise<EventFeedbackStats | null> => {
-  const [eventStats] = await client.fetch(`
+  const [eventStats] = await client.fetch(
+    `
     *[_type == "events" && _id == $eventId] {
       _id,
       title,
@@ -817,10 +884,12 @@ export const getEventFeedbackById = async (eventId: string): Promise<EventFeedba
       "averageRating": round(array::avg(*[_type == "feedback" && references(^._id)].rating), 2),
       "talkCount": count(*[_type == "talk" && references(^._id)])
     }
-  `, { eventId });
-  
+  `,
+    { eventId },
+  );
+
   if (!eventStats) return null;
-  
+
   return {
     _id: eventStats._id,
     id: eventStats.id.current,
@@ -828,18 +897,19 @@ export const getEventFeedbackById = async (eventId: string): Promise<EventFeedba
     date: eventStats.datetime || "",
     feedbackCount: eventStats.feedbackCount || 0,
     averageRating: eventStats.averageRating || 0,
-    talkCount: eventStats.talkCount || 0
+    talkCount: eventStats.talkCount || 0,
   };
 };
 
 /**
  * Get all feedback items for a specific event
- * 
+ *
  * @param eventId - ID of the event
  * @returns Promise with array of feedback items
  */
 export const getFeedbackByEventId = async (eventId: string): Promise<FeedbackItem[]> => {
-  return client.fetch(`
+  return client.fetch(
+    `
     *[_type == "feedback" && event._ref == $eventId] {
       _id,
       rating,
@@ -860,17 +930,20 @@ export const getFeedbackByEventId = async (eventId: string): Promise<FeedbackIte
         "image": image.asset->url
       }
     } | order(submittedAt desc)
-  `, { eventId });
+  `,
+    { eventId },
+  );
 };
 
 /**
  * Get all feedback items for a specific speaker
- * 
+ *
  * @param speakerId - ID of the speaker
  * @returns Promise with array of feedback items
  */
 export const getFeedbackBySpeakerId = async (speakerId: string): Promise<FeedbackItem[]> => {
-  return client.fetch(`    *[_type == "feedback" && speaker->id.current == $speakerId] {
+  return client.fetch(
+    `    *[_type == "feedback" && speaker->id.current == $speakerId] {
       _id,
       rating,
       comment,
@@ -909,12 +982,14 @@ export const getFeedbackBySpeakerId = async (speakerId: string): Promise<Feedbac
         detailedFeedback
       }
     } | order(submittedAt desc)
-  `, { speakerId });
+  `,
+    { speakerId },
+  );
 };
 
 export interface Announcement {
   id: string;
-  type: 'event' | 'promotion' | 'workshop' | 'general';
+  type: "event" | "promotion" | "workshop" | "general";
   title: string;
   message: string;
   cta?: {
@@ -941,7 +1016,7 @@ export const getCurrentAnnouncement = async (): Promise<Announcement[]> => {
       } | order(conditions.startDate desc)
     `);
   } catch (error) {
-    console.error('Error fetching announcements:', error);
+    console.error("Error fetching announcements:", error);
     return [];
   }
 };
@@ -955,7 +1030,7 @@ export interface TalkSubmissionStats {
 
 /**
  * Get statistics about talk submissions for the CFP page
- * 
+ *
  * @returns Promise with talk submission statistics
  */
 export const getTalkSubmissionStats = async (): Promise<TalkSubmissionStats> => {
@@ -963,33 +1038,38 @@ export const getTalkSubmissionStats = async (): Promise<TalkSubmissionStats> => 
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const stats = await client.fetch(`{
+    const stats = await client.fetch(
+      `{
       "pendingSubmissions": count(*[_type == "talkSubmission" && (status == "pending" || status == "under_review")]),
       "totalSubmissions": count(*[_type == "talkSubmission"]),
       "recentSubmissions": count(*[_type == "talkSubmission" && _createdAt >= $ninetyDaysAgo])
-    }`, {
-      ninetyDaysAgo: ninetyDaysAgo.toISOString()
-    });
+    }`,
+      {
+        ninetyDaysAgo: ninetyDaysAgo.toISOString(),
+      },
+    );
 
     return {
       pendingSubmissions: stats.pendingSubmissions || 0,
       totalSubmissions: stats.totalSubmissions || 0,
       recentSubmissions: stats.recentSubmissions || 0,
       // Next position in queue would be pending submissions + 1
-      queuePosition: (stats.pendingSubmissions || 0) + 1
+      queuePosition: (stats.pendingSubmissions || 0) + 1,
     };
   } catch (error) {
-    console.error('Error fetching talk submission stats:', error);
+    console.error("Error fetching talk submission stats:", error);
     throw error; // Let the caller handle the error
   }
 };
 
 /**
  * Get recent talk examples with titles and abstracts
- * 
+ *
  * @returns Promise with array of recent talk examples
  */
-export const getRecentTalkExamples = async (): Promise<Array<{title: string; abstract: string}>> => {
+export const getRecentTalkExamples = async (): Promise<
+  Array<{ title: string; abstract: string }>
+> => {
   try {
     const talks = await client.fetch(`
       *[_type == "talk" && defined(description) && defined(title)] | order(_createdAt desc) [0..6] {
@@ -999,40 +1079,45 @@ export const getRecentTalkExamples = async (): Promise<Array<{title: string; abs
     `);
 
     // Filter out talks without proper descriptions and return up to 5
-    const validTalks = talks.filter((talk: {title: string; description: string}) => 
-      talk.description && talk.description.trim().length > 20
-    ).slice(0, 5);
+    const validTalks = talks
+      .filter(
+        (talk: { title: string; description: string }) =>
+          talk.description && talk.description.trim().length > 20,
+      )
+      .slice(0, 5);
 
-    return validTalks.map((talk: {title: string; description: string}) => ({
+    return validTalks.map((talk: { title: string; description: string }) => ({
       title: talk.title,
-      abstract: talk.description.length > 100 ? 
-        talk.description.substring(0, 100) + '...' : 
-        talk.description
+      abstract:
+        talk.description.length > 100
+          ? talk.description.substring(0, 100) + "..."
+          : talk.description,
     }));
   } catch (error) {
-    console.error('Error fetching talk examples:', error);
+    console.error("Error fetching talk examples:", error);
     throw error; // Let the caller handle the error
   }
 };
 
 /**
  * Get recent past events for feedback (within last 30 days)
- * 
+ *
  * @param testCurrentDate - Optional test date override for testing scenarios
  * @returns Promise with array of recent events
  */
 export const getRecentPastEventsForFeedback = async (testCurrentDate?: Date): Promise<Event[]> => {
   try {
     const currentDate = testCurrentDate || new Date();
-    
+
     // Set to end of current day to include events happening today
     const endOfToday = new Date(currentDate);
     endOfToday.setHours(23, 59, 59, 999);
-    
+
     const thirtyDaysAgo = new Date(currentDate);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const events = await client.fetch(`*[_type == "events" && datetime <= $endOfToday && datetime >= $thirtyDaysAgo] | order(datetime desc) {
+
+    const events = await client.fetch(
+      `*[_type == "events" && datetime <= $endOfToday && datetime >= $thirtyDaysAgo] | order(datetime desc) {
       ...,
       "image": {
         "asset": {
@@ -1075,26 +1160,29 @@ export const getRecentPastEventsForFeedback = async (testCurrentDate?: Date): Pr
           }
         }
       }
-    }`, { 
-      endOfToday: endOfToday.toISOString(),
-      thirtyDaysAgo: thirtyDaysAgo.toISOString() 
-    });
+    }`,
+      {
+        endOfToday: endOfToday.toISOString(),
+        thirtyDaysAgo: thirtyDaysAgo.toISOString(),
+      },
+    );
 
     return events.map(mapEventData);
   } catch (error) {
-    console.error('Error fetching recent past events:', error);
+    console.error("Error fetching recent past events:", error);
     throw error;
   }
 };
 
 /**
  * Get upcoming events for test scenario generation
- * 
+ *
  * @returns Promise with array of upcoming events (limited to next 10)
  */
 export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
   try {
-    const events = await client.fetch(`*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0..9] {
+    const events = await client.fetch(
+      `*[_type == "events" && datetime >= $startOfToday] | order(datetime asc) [0..9] {
       ...,
       "image": {
         "asset": {
@@ -1137,19 +1225,13 @@ export const getUpcomingEventsForTestScenarios = async (): Promise<Event[]> => {
           }
         }
       }
-    }`, { startOfToday: getStartOfTodayISO() });
+    }`,
+      { startOfToday: getStartOfTodayISO() },
+    );
 
     return events.map(mapEventData);
   } catch (error) {
-    console.error('Error fetching upcoming events for test scenarios:', error);
+    console.error("Error fetching upcoming events for test scenarios:", error);
     throw error;
   }
 };
-
-
-
-
-
-
-
-

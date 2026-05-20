@@ -1,19 +1,33 @@
-import { useUser, SignInButton } from '@clerk/nextjs';
-import { format } from 'date-fns';
-import { motion } from 'framer-motion';
-import { Star, CheckCircle, Calendar, Send, Sparkles, TrendingUp, Heart, Settings, Gift } from 'lucide-react';
-import { GetServerSidePropsContext } from 'next';
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useUser, SignInButton } from "@clerk/nextjs";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
+import {
+  Star,
+  CheckCircle,
+  Calendar,
+  Send,
+  Sparkles,
+  TrendingUp,
+  Heart,
+  Settings,
+  Gift,
+} from "lucide-react";
+import { GetServerSidePropsContext } from "next";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 
-import Layout from '@/components/layout/Layout';
-import Section from '@/components/Section';
-import SEO from '@/components/SEO';
-import Button from '@/components/ui/Button';
-import useEvents from '@/hooks/useEvents';
-import { useReferrals } from '@/hooks/useReferrals';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
-import { getTestModeConfig, getCurrentDate, formatTestDate, TEST_SCENARIOS } from '@/lib/testMode';
-import { getRecentPastEventsForFeedback, getUpcomingEventsForTestScenarios, Event } from '@/sanity/queries';
+import Layout from "@/components/layout/Layout";
+import Section from "@/components/Section";
+import SEO from "@/components/SEO";
+import Button from "@/components/ui/Button";
+import useEvents from "@/hooks/useEvents";
+import { useReferrals } from "@/hooks/useReferrals";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
+import { getTestModeConfig, getCurrentDate, formatTestDate, TEST_SCENARIOS } from "@/lib/testMode";
+import {
+  getRecentPastEventsForFeedback,
+  getUpcomingEventsForTestScenarios,
+  Event,
+} from "@/sanity/queries";
 
 interface FeedbackFormState {
   selectedEventId: string;
@@ -40,9 +54,9 @@ interface FeedbackFormState {
   };
   improvements: string;
   futureTopics: string;
-  worthTime: 'definitely' | 'mostly' | 'somewhat' | 'not_really' | '';
-  wouldRecommend: 'definitely' | 'probably' | 'maybe' | 'unlikely' | '';
-  dealOfDay: { rating: number; comments: string; };
+  worthTime: "definitely" | "mostly" | "somewhat" | "not_really" | "";
+  wouldRecommend: "definitely" | "probably" | "maybe" | "unlikely" | "";
+  dealOfDay: { rating: number; comments: string };
   additionalComments: string;
   name: string;
   email: string;
@@ -71,39 +85,39 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
   const { addCredits } = useReferrals();
 
   const [formState, setFormState] = useState<FeedbackFormState>({
-    selectedEventId: '',
+    selectedEventId: "",
     overallRating: 0,
     foodOptions: {
       rating: 0,
-      comments: ''
+      comments: "",
     },
     drinks: {
       rating: 0,
-      comments: ''
+      comments: "",
     },
     talks: {
       rating: 0,
-      comments: ''
+      comments: "",
     },
     timing: {
       rating: 0,
-      comments: ''
+      comments: "",
     },
     execution: {
       rating: 0,
-      comments: ''
+      comments: "",
     },
-    improvements: '',
-    futureTopics: '',
-    worthTime: '',
-    wouldRecommend: '',
-    dealOfDay: { rating: 0, comments: '' },
-    additionalComments: '',
-    name: '',
-    email: '',
+    improvements: "",
+    futureTopics: "",
+    worthTime: "",
+    wouldRecommend: "",
+    dealOfDay: { rating: 0, comments: "" },
+    additionalComments: "",
+    name: "",
+    email: "",
     submitted: false,
     isSubmitting: false,
-    error: '',
+    error: "",
   });
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
@@ -111,7 +125,7 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
 
   // Test mode state
   const [testModeOpen, setTestModeOpen] = useState(false);
-  const [testCurrentDate, setTestCurrentDate] = useState<string>(testDate || '');
+  const [testCurrentDate, setTestCurrentDate] = useState<string>(testDate || "");
   const [isApplying, setIsApplying] = useState(false);
   const testModeConfig = getTestModeConfig(testDate);
 
@@ -119,110 +133,113 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
   useEffect(() => {
     if (recentEvents.length > 0 && !formState.selectedEventId) {
       const mostRecentEvent = recentEvents[0];
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         selectedEventId: mostRecentEvent.id,
       }));
-      
-      track('feedback_auto_event_selected', {
+
+      track("feedback_auto_event_selected", {
         eventId: mostRecentEvent.id,
-        eventTitle: mostRecentEvent.title
+        eventTitle: mostRecentEvent.title,
       });
     }
   }, [recentEvents, formState.selectedEventId, track]);
 
-
   const handleEventChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const eventId = e.target.value;
-    setFormState(prev => ({
+    setFormState((prev) => ({
       ...prev,
       selectedEventId: eventId,
     }));
-    
+
     if (eventId) {
-      const event = recentEvents.find(e => e.id === eventId);
-      track('feedback_event_selected', {
+      const event = recentEvents.find((e) => e.id === eventId);
+      track("feedback_event_selected", {
         eventId: eventId,
-        eventTitle: event?.title || 'Unknown'
+        eventTitle: event?.title || "Unknown",
       });
     }
 
     if (validationErrors.selectedEvent) {
-      setValidationErrors(prev => ({ ...prev, selectedEvent: undefined }));
+      setValidationErrors((prev) => ({ ...prev, selectedEvent: undefined }));
     }
   };
 
   const handleRatingClick = (rating: number) => {
-    setFormState(prev => ({ ...prev, overallRating: rating }));
-    
-    track('feedback_rating_selected', {
+    setFormState((prev) => ({ ...prev, overallRating: rating }));
+
+    track("feedback_rating_selected", {
       rating: rating,
-      eventId: formState.selectedEventId
+      eventId: formState.selectedEventId,
     });
 
     if (validationErrors.overallRating) {
-      setValidationErrors(prev => ({ ...prev, overallRating: undefined }));
+      setValidationErrors((prev) => ({ ...prev, overallRating: undefined }));
     }
   };
 
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
-    
+
     if (!formState.selectedEventId) {
-      errors.selectedEvent = 'Please select an event';
+      errors.selectedEvent = "Please select an event";
     }
-    
+
     if (!formState.overallRating || formState.overallRating < 1) {
-      errors.overallRating = 'Please provide an overall rating';
+      errors.overallRating = "Please provide an overall rating";
     }
-    
+
     if (!formState.worthTime) {
-      errors.worthTime = 'Please let us know if the event was worth your time';
+      errors.worthTime = "Please let us know if the event was worth your time";
     }
-    
+
     if (!formState.wouldRecommend) {
-      errors.wouldRecommend = 'Please let us know if you would recommend this event';
+      errors.wouldRecommend = "Please let us know if you would recommend this event";
     }
-    
+
     setValidationErrors(errors);
-    
+
     // If there are errors, scroll to the first error after a short delay to allow state update
     if (Object.keys(errors).length > 0) {
       setTimeout(() => {
         // Determine scroll target based on error priority
-        const errorOrder = ['selectedEvent', 'overallRating', 'worthTime', 'wouldRecommend'];
-        
+        const errorOrder = ["selectedEvent", "overallRating", "worthTime", "wouldRecommend"];
+
         for (const errorKey of errorOrder) {
           if (errors[errorKey as keyof ValidationErrors]) {
             let targetElement: HTMLElement | null = null;
-            
+
             switch (errorKey) {
-              case 'selectedEvent':
+              case "selectedEvent":
                 targetElement = document.querySelector('select[id="event"]') as HTMLElement;
                 break;
-              case 'overallRating':
-                targetElement = document.querySelector('[data-section="overall-rating"]') as HTMLElement;
+              case "overallRating":
+                targetElement = document.querySelector(
+                  '[data-section="overall-rating"]',
+                ) as HTMLElement;
                 break;
-              case 'worthTime':
+              case "worthTime":
                 targetElement = document.querySelector('input[name="worthTime"]') as HTMLElement;
                 break;
-              case 'wouldRecommend':
-                targetElement = document.querySelector('input[name="wouldRecommend"]') as HTMLElement;
+              case "wouldRecommend":
+                targetElement = document.querySelector(
+                  'input[name="wouldRecommend"]',
+                ) as HTMLElement;
                 break;
             }
-            
+
             if (targetElement) {
               // Scroll to the element with some offset for better visibility
               const elementTop = targetElement.getBoundingClientRect().top + window.pageYOffset;
               const offset = 100; // Account for header/padding
-              
+
               window.scrollTo({
                 top: elementTop - offset,
-                behavior: 'smooth'
+                behavior: "smooth",
               });
-              
+
               // Focus the element if it's focusable
-              if (targetElement.tagName === 'SELECT' || targetElement.tagName === 'INPUT') {
+              if (targetElement.tagName === "SELECT" || targetElement.tagName === "INPUT") {
                 targetElement.focus();
               }
               break;
@@ -231,7 +248,7 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
         }
       }, 100);
     }
-    
+
     return Object.keys(errors).length === 0;
   };
 
@@ -239,62 +256,65 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
     e.preventDefault();
 
     if (!validateForm()) {
-      track('feedback_validation_failed', {
-        errors: Object.keys(validationErrors).join(', ')
+      track("feedback_validation_failed", {
+        errors: Object.keys(validationErrors).join(", "),
       });
-      setFormState(prev => ({ ...prev, error: 'Please fix the highlighted errors below' }));
+      setFormState((prev) => ({ ...prev, error: "Please fix the highlighted errors below" }));
       return;
     }
 
-    setFormState(prev => ({ ...prev, isSubmitting: true, error: '' }));
+    setFormState((prev) => ({ ...prev, isSubmitting: true, error: "" }));
 
     try {
       // Find the selected event to get its title
-      const selectedEvent = recentEvents.find(event => event.id === formState.selectedEventId);
-      const eventTitle = selectedEvent?.title || 'Unknown Event';
-      
+      const selectedEvent = recentEvents.find((event) => event.id === formState.selectedEventId);
+      const eventTitle = selectedEvent?.title || "Unknown Event";
+
       // Get user information
-      const userEmail = user?.primaryEmailAddress?.emailAddress || formState.email || 'Not provided';
-      const userName = user?.fullName || formState.name || 'Not provided';
-      const userId = user?.id || 'Anonymous';
-      
+      const userEmail =
+        user?.primaryEmailAddress?.emailAddress || formState.email || "Not provided";
+      const userName = user?.fullName || formState.name || "Not provided";
+      const userId = user?.id || "Anonymous";
+
       // Format the comprehensive feedback into a readable notification message
-      const overallRating = '⭐'.repeat(formState.overallRating);
-      
+      const overallRating = "⭐".repeat(formState.overallRating);
+
       // Build detailed message with all information
       let message = `📊 NEW FEEDBACK SUBMISSION\n\n`;
       message += `👤 USER INFO:\n`;
       message += `Name: ${userName}\n`;
       message += `Email: ${userEmail}\n`;
       message += `User ID: ${userId}\n`;
-      message += `Logged In: ${user ? 'Yes' : 'No'}\n\n`;
-      
+      message += `Logged In: ${user ? "Yes" : "No"}\n\n`;
+
       message += `🎯 EVENT:\n`;
       message += `Event: ${eventTitle}\n`;
       message += `Event ID: ${formState.selectedEventId}\n\n`;
-      
+
       message += `⭐ OVERALL RATING: ${formState.overallRating}/5 ${overallRating}\n\n`;
-      
+
       // Detailed ratings section
       const ratings = [
-        formState.foodOptions.rating > 0 ? `🍕 Food & Drinks: ${formState.foodOptions.rating}/5` : '',
-        formState.talks.rating > 0 ? `🎤 Talks/Content: ${formState.talks.rating}/5` : '',
-        formState.timing.rating > 0 ? `⏰ Timing: ${formState.timing.rating}/5` : '',
-        formState.execution.rating > 0 ? `🎯 Execution: ${formState.execution.rating}/5` : '',
-        formState.dealOfDay.rating > 0 ? `💰 Deal of Day: ${formState.dealOfDay.rating}/5` : ''
+        formState.foodOptions.rating > 0
+          ? `🍕 Food & Drinks: ${formState.foodOptions.rating}/5`
+          : "",
+        formState.talks.rating > 0 ? `🎤 Talks/Content: ${formState.talks.rating}/5` : "",
+        formState.timing.rating > 0 ? `⏰ Timing: ${formState.timing.rating}/5` : "",
+        formState.execution.rating > 0 ? `🎯 Execution: ${formState.execution.rating}/5` : "",
+        formState.dealOfDay.rating > 0 ? `💰 Deal of Day: ${formState.dealOfDay.rating}/5` : "",
       ].filter(Boolean);
-      
+
       if (ratings.length > 0) {
-        message += `📈 DETAILED RATINGS:\n${ratings.join('\n')}\n\n`;
+        message += `📈 DETAILED RATINGS:\n${ratings.join("\n")}\n\n`;
       }
-      
+
       // Value assessment
       if (formState.worthTime) {
         message += `💎 VALUE ASSESSMENT:\n`;
         message += `Worth time: ${formState.worthTime}\n`;
         message += `Would recommend: ${formState.wouldRecommend}\n\n`;
       }
-      
+
       // Comments sections
       const comments = [];
       if (formState.foodOptions.comments.trim()) {
@@ -324,32 +344,32 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
       if (formState.additionalComments.trim()) {
         comments.push(`💬 Additional: ${formState.additionalComments.trim()}`);
       }
-      
+
       if (comments.length > 0) {
-        message += `💬 DETAILED FEEDBACK:\n${comments.join('\n\n')}\n\n`;
+        message += `💬 DETAILED FEEDBACK:\n${comments.join("\n\n")}\n\n`;
       }
-      
+
       message += `📅 Submitted: ${new Date().toLocaleString()}`;
 
-      const response = await fetch('/api/notifications/send', {
-        method: 'POST',
+      const response = await fetch("/api/notifications/send", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title: `New Event Feedback ${overallRating} - ${userName}`,
           message: message,
-          type: 'event',
-          priority: formState.overallRating <= 2 ? 'high' : 'normal',
+          type: "event",
+          priority: formState.overallRating <= 2 ? "high" : "normal",
           userData: {
             name: userName,
             email: userEmail,
             userId: userId,
-            isLoggedIn: !!user
+            isLoggedIn: !!user,
           },
           eventData: {
             eventId: formState.selectedEventId,
-            eventTitle: eventTitle
+            eventTitle: eventTitle,
           },
           feedbackData: {
             overallRating: formState.overallRating,
@@ -361,7 +381,7 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               talks: formState.talks.rating,
               timing: formState.timing.rating,
               execution: formState.execution.rating,
-              dealOfDay: formState.dealOfDay.rating
+              dealOfDay: formState.dealOfDay.rating,
             },
             comments: {
               food: formState.foodOptions.comments,
@@ -372,56 +392,58 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               dealOfDay: formState.dealOfDay.comments,
               improvements: formState.improvements,
               futureTopics: formState.futureTopics,
-              additional: formState.additionalComments
-            }
-          }
+              additional: formState.additionalComments,
+            },
+          },
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'An error occurred while submitting your feedback');
+        throw new Error(data.message || "An error occurred while submitting your feedback");
       }
 
       // Award 20 credits to logged-in users
       if (user) {
         try {
           await addCredits(20);
-          console.log('Awarded 20 credits for feedback submission');
+          console.log("Awarded 20 credits for feedback submission");
         } catch (creditError) {
-          console.error('Error awarding credits:', creditError);
+          console.error("Error awarding credits:", creditError);
           // Don't fail the submission if credit awarding fails
         }
       }
 
-      track('feedback_submitted_successfully', {
+      track("feedback_submitted_successfully", {
         eventId: formState.selectedEventId,
         overallRating: formState.overallRating,
         worthTime: formState.worthTime,
         wouldRecommend: formState.wouldRecommend,
         userLoggedIn: !!user,
-        creditsAwarded: !!user
+        creditsAwarded: !!user,
       });
 
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         submitted: true,
         isSubmitting: false,
-        error: ''
+        error: "",
       }));
-
     } catch (error: unknown) {
-      console.error('Feedback submission error:', error);
+      console.error("Feedback submission error:", error);
 
-      track('feedback_submission_error', {
-        errorMessage: error instanceof Error ? error.message : 'Unknown error'
+      track("feedback_submission_error", {
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         isSubmitting: false,
-        error: error instanceof Error ? error.message : 'An error occurred while submitting your feedback'
+        error:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while submitting your feedback",
       }));
     }
   };
@@ -429,10 +451,10 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
   const getRatingText = (rating: number) => {
     const ratings = {
       1: "Not great",
-      2: "Could be better", 
+      2: "Could be better",
       3: "It was okay",
       4: "Pretty good!",
-      5: "Absolutely amazing!"
+      5: "Absolutely amazing!",
     };
     return ratings[rating as keyof typeof ratings] || "";
   };
@@ -444,9 +466,10 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
         description="Help us improve by sharing your thoughts on our recent workshops and meetups. Your feedback makes our community better!"
         openGraph={{
           title: "Share Your Feedback | ZurichJS",
-          description: "Help us improve by sharing your thoughts on our recent workshops and meetups. Your feedback makes our community better!",
+          description:
+            "Help us improve by sharing your thoughts on our recent workshops and meetups. Your feedback makes our community better!",
           image: "/api/og/contact",
-          type: "website"
+          type: "website",
         }}
       />
 
@@ -466,14 +489,16 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                 Help us make ZurichJS even better for our amazing community!
               </p>
               <p className="text-base md:text-lg mb-4 md:mb-6">
-                Your thoughts and suggestions help us improve our workshops, events, and overall experience.
-                Whether it&apos;s during an event, right after, or about a recent experience - we want to hear from you!
+                Your thoughts and suggestions help us improve our workshops, events, and overall
+                experience. Whether it&apos;s during an event, right after, or about a recent
+                experience - we want to hear from you!
               </p>
 
               <div className="bg-js/20 backdrop-blur rounded-lg p-4 mb-6 md:mb-8 border border-js/30">
                 <p className="text-sm md:text-base font-medium text-black">
-                  ✨ <strong>Your voice matters!</strong> We read every piece of feedback and use it to shape future events. 
-                  Your insights help us create better experiences for the entire community!
+                  ✨ <strong>Your voice matters!</strong> We read every piece of feedback and use it
+                  to shape future events. Your insights help us create better experiences for the
+                  entire community!
                 </p>
               </div>
 
@@ -484,8 +509,8 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   size="lg"
                   className="bg-black hover:bg-gray-800 text-white font-bold cursor-pointer transition-all duration-200"
                   onClick={() => {
-                    document.getElementById('form')?.scrollIntoView({ behavior: 'smooth' });
-                    track('skip_to_form_hero', {});
+                    document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+                    track("skip_to_form_hero", {});
                   }}
                 >
                   Share Feedback 🌟
@@ -513,21 +538,27 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   <Heart className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Make an Impact</h3>
-                    <p className="text-gray-600 text-sm">Your feedback directly influences future events and helps speakers grow</p>
+                    <p className="text-gray-600 text-sm">
+                      Your feedback directly influences future events and helps speakers grow
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <TrendingUp className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Improve Together</h3>
-                    <p className="text-gray-600 text-sm">Help us understand what works best for our community</p>
+                    <p className="text-gray-600 text-sm">
+                      Help us understand what works best for our community
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Sparkles className="text-yellow-500 mr-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold">Shape the Future</h3>
-                    <p className="text-gray-600 text-sm">Be part of making ZurichJS the best developer community in Zurich</p>
+                    <p className="text-gray-600 text-sm">
+                      Be part of making ZurichJS the best developer community in Zurich
+                    </p>
                   </div>
                 </div>
               </div>
@@ -550,31 +581,43 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   onClick={() => setTestModeOpen(!testModeOpen)}
                   className="text-sm text-yellow-700 hover:text-yellow-800 underline"
                 >
-                  {testModeOpen ? 'Hide Controls' : 'Show Controls'}
+                  {testModeOpen ? "Hide Controls" : "Show Controls"}
                 </button>
               </div>
-              
+
               {testModeOpen && (
                 <div className="space-y-4">
                   <div className="text-sm text-yellow-700">
                     <div className="mb-3 p-3 bg-yellow-100 rounded-md border border-yellow-300">
                       <p className="font-semibold mb-1">
-                        📅 Current Test Date: {formatTestDate(getCurrentDate())} 
-                        {testModeConfig.currentDate ? ' (Simulated)' : ' (Real/Live)'}
+                        📅 Current Test Date: {formatTestDate(getCurrentDate())}
+                        {testModeConfig.currentDate ? " (Simulated)" : " (Real/Live)"}
                       </p>
                       <div className="text-xs space-y-1">
-                        <p>• <strong>Events shown for feedback:</strong> {recentEvents.length}</p>
-                        <p>• <strong>Available upcoming events:</strong> {upcomingEvents.length}</p>
+                        <p>
+                          • <strong>Events shown for feedback:</strong> {recentEvents.length}
+                        </p>
+                        <p>
+                          • <strong>Available upcoming events:</strong> {upcomingEvents.length}
+                        </p>
                         {testModeConfig.currentDate && (
-                          <p>• <strong>Test window:</strong> Shows events from {format(new Date(getCurrentDate().getTime() - 30 * 24 * 60 * 60 * 1000), 'MMM d')} to {format(getCurrentDate(), 'MMM d, yyyy')}</p>
+                          <p>
+                            • <strong>Test window:</strong> Shows events from{" "}
+                            {format(
+                              new Date(getCurrentDate().getTime() - 30 * 24 * 60 * 60 * 1000),
+                              "MMM d",
+                            )}{" "}
+                            to {format(getCurrentDate(), "MMM d, yyyy")}
+                          </p>
                         )}
                       </div>
                     </div>
                     <p className="mb-4 text-xs">
-                      Use this to simulate different scenarios and see how users will experience the feedback form at different times relative to events.
+                      Use this to simulate different scenarios and see how users will experience the
+                      feedback form at different times relative to events.
                     </p>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-yellow-800 mb-2">
@@ -592,14 +635,14 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                             if (testCurrentDate) {
                               setIsApplying(true);
                               const url = new URL(window.location.href);
-                              url.searchParams.set('testDate', testCurrentDate);
+                              url.searchParams.set("testDate", testCurrentDate);
                               window.location.href = url.toString();
                             }
                           }}
                           disabled={!testCurrentDate || isApplying}
                           className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm transition-colors"
                         >
-                          {isApplying ? 'Applying...' : 'Apply'}
+                          {isApplying ? "Applying..." : "Apply"}
                         </button>
                       </div>
                       {testCurrentDate && testCurrentDate !== testDate && (
@@ -608,7 +651,7 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                         </p>
                       )}
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-yellow-800 mb-2">
                         Quick Scenarios:
@@ -620,26 +663,27 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                               const nearestEvent = upcomingEvents[0]; // Use the nearest upcoming event
                               const eventDate = new Date(nearestEvent.datetime);
                               const testDate = scenario.getDaysOffset(eventDate);
-                              const eventTitle = nearestEvent.title.length > 25 
-                                ? nearestEvent.title.substring(0, 25) + '...' 
-                                : nearestEvent.title;
-                              
+                              const eventTitle =
+                                nearestEvent.title.length > 25
+                                  ? nearestEvent.title.substring(0, 25) + "..."
+                                  : nearestEvent.title;
+
                               return (
                                 <button
                                   key={key}
                                   onClick={async () => {
                                     setIsApplying(true);
                                     const url = new URL(window.location.href);
-                                    url.searchParams.set('testDate', formatTestDate(testDate));
+                                    url.searchParams.set("testDate", formatTestDate(testDate));
                                     window.location.href = url.toString();
                                   }}
                                   disabled={isApplying}
                                   className="block w-full text-left px-3 py-2 text-sm bg-white border border-yellow-300 rounded hover:bg-yellow-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  title={`${scenario.description} (using "${nearestEvent.title}" on ${format(eventDate, 'MMM d, yyyy')})`}
+                                  title={`${scenario.description} (using "${nearestEvent.title}" on ${format(eventDate, "MMM d, yyyy")})`}
                                 >
                                   <div className="font-medium">{scenario.name}</div>
                                   <div className="text-xs text-gray-600 truncate">
-                                    vs &quot;{eventTitle}&quot; → {format(testDate, 'MMM d, yyyy')}
+                                    vs &quot;{eventTitle}&quot; → {format(testDate, "MMM d, yyyy")}
                                   </div>
                                 </button>
                               );
@@ -649,13 +693,13 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                                 onClick={async () => {
                                   setIsApplying(true);
                                   const url = new URL(window.location.href);
-                                  url.searchParams.delete('testDate');
+                                  url.searchParams.delete("testDate");
                                   window.location.href = url.toString();
                                 }}
                                 disabled={isApplying}
                                 className="block w-full text-left px-3 py-2 text-sm bg-gray-100 border border-gray-300 rounded hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                🔄 {isApplying ? 'Resetting...' : 'Reset to Real Date'}
+                                🔄 {isApplying ? "Resetting..." : "Reset to Real Date"}
                               </button>
                             </div>
                           </>
@@ -663,15 +707,20 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                           <div className="px-3 py-2 text-sm text-gray-500 bg-gray-50 rounded border border-gray-200">
                             No upcoming events found to generate scenarios from.
                             <br />
-                            <small>Add some future events in your CMS to enable scenario testing.</small>
+                            <small>
+                              Add some future events in your CMS to enable scenario testing.
+                            </small>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-xs text-yellow-600">
-                    <p><strong>Note:</strong> This panel only appears in development mode to help you test different date scenarios.</p>
+                    <p>
+                      <strong>Note:</strong> This panel only appears in development mode to help you
+                      test different date scenarios.
+                    </p>
                   </div>
                 </div>
               )}
@@ -692,10 +741,9 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-4">Your Feedback Matters</h2>
             <p className="text-gray-600">
-              {recentEvents.length > 0 
-                ? `We found ${recentEvents.length} event${recentEvents.length === 1 ? '' : 's'} you can provide feedback on! (Including today's events)`
-                : "We'll help you find an event to provide feedback on."
-              }
+              {recentEvents.length > 0
+                ? `We found ${recentEvents.length} event${recentEvents.length === 1 ? "" : "s"} you can provide feedback on! (Including today's events)`
+                : "We'll help you find an event to provide feedback on."}
             </p>
           </div>
 
@@ -708,10 +756,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               <Calendar size={48} className="mx-auto mb-4 text-yellow-500" />
               <h3 className="text-xl font-bold mb-2">No Recent Events Found</h3>
               <p className="mb-4">
-                It looks like there haven&apos;t been any events in the last 30 days that you can provide feedback on.
+                It looks like there haven&apos;t been any events in the last 30 days that you can
+                provide feedback on.
               </p>
               <p className="text-sm mb-6">
-                Check back after our next meetup or workshop, or contact us directly if you&apos;d like to share feedback about an older event.
+                Check back after our next meetup or workshop, or contact us directly if you&apos;d
+                like to share feedback about an older event.
               </p>
               <Button href="/contact" variant="secondary">
                 Contact Us Directly
@@ -726,8 +776,8 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               <CheckCircle size={64} className="mx-auto mb-4 text-green-500" />
               <h3 className="text-2xl font-bold mb-2">Thank You for Your Feedback!</h3>
               <p className="mb-4">
-                Your feedback has been submitted successfully and will help us improve future events.
-                We really appreciate you taking the time to share your thoughts!
+                Your feedback has been submitted successfully and will help us improve future
+                events. We really appreciate you taking the time to share your thoughts!
               </p>
               {user && (
                 <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
@@ -745,27 +795,27 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   variant="outline"
                   onClick={() => {
                     setFormState({
-                      selectedEventId: '',
+                      selectedEventId: "",
                       overallRating: 0,
-                      foodOptions: { rating: 0, comments: '' },
-                      drinks: { rating: 0, comments: '' },
-                      talks: { rating: 0, comments: '' },
-                      timing: { rating: 0, comments: '' },
-                      execution: { rating: 0, comments: '' },
-                      improvements: '',
-                      futureTopics: '',
-                      worthTime: '',
-                      wouldRecommend: '',
-                      dealOfDay: { rating: 0, comments: '' },
-                      additionalComments: '',
-                      name: '',
-                      email: '',
+                      foodOptions: { rating: 0, comments: "" },
+                      drinks: { rating: 0, comments: "" },
+                      talks: { rating: 0, comments: "" },
+                      timing: { rating: 0, comments: "" },
+                      execution: { rating: 0, comments: "" },
+                      improvements: "",
+                      futureTopics: "",
+                      worthTime: "",
+                      wouldRecommend: "",
+                      dealOfDay: { rating: 0, comments: "" },
+                      additionalComments: "",
+                      name: "",
+                      email: "",
                       submitted: false,
                       isSubmitting: false,
-                      error: '',
+                      error: "",
                     });
                     setValidationErrors({});
-                    track('feedback_form_reset', {});
+                    track("feedback_form_reset", {});
                   }}
                 >
                   Submit More Feedback
@@ -793,9 +843,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   <div className="flex items-start space-x-3">
                     <Gift className="text-purple-600 mt-0.5" size={20} />
                     <div>
-                      <h4 className="font-semibold text-purple-900 mb-1">Earn 20 Credits for Your Feedback!</h4>
+                      <h4 className="font-semibold text-purple-900 mb-1">
+                        Earn 20 Credits for Your Feedback!
+                      </h4>
                       <p className="text-purple-700 text-sm mb-3">
-                        Log in to earn 20 profile credits that you can use towards workshops, merchandise, and exclusive perks.
+                        Log in to earn 20 profile credits that you can use towards workshops,
+                        merchandise, and exclusive perks.
                       </p>
                       <SignInButton mode="modal">
                         <button
@@ -814,7 +867,9 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                     <div className="flex items-center space-x-3">
                       <CheckCircle className="text-green-600" size={20} />
                       <div>
-                        <h4 className="font-semibold text-green-900">Welcome, {user.fullName || 'Member'}!</h4>
+                        <h4 className="font-semibold text-green-900">
+                          Welcome, {user.fullName || "Member"}!
+                        </h4>
                         <p className="text-green-700 text-sm">
                           You&apos;ll earn 20 credits for submitting this feedback.
                         </p>
@@ -828,33 +883,45 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {/* Contact Information */}
               {!user && (
                 <div className="mb-6 p-5 bg-gray-50 rounded-lg border border-gray-200">
-                  <h4 className="font-semibold text-gray-900 mb-4">Contact Information (Optional)</h4>
+                  <h4 className="font-semibold text-gray-900 mb-4">
+                    Contact Information (Optional)
+                  </h4>
                   <p className="text-sm text-gray-600 mb-4">
                     Help us follow up on your feedback or notify you about improvements.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="name" className="block text-gray-700 mb-2 text-sm font-medium">
+                      <label
+                        htmlFor="name"
+                        className="block text-gray-700 mb-2 text-sm font-medium"
+                      >
                         Name
                       </label>
                       <input
                         type="text"
                         id="name"
                         value={formState.name}
-                        onChange={(e) => setFormState(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, name: e.target.value }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="Your name"
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-gray-700 mb-2 text-sm font-medium">
+                      <label
+                        htmlFor="email"
+                        className="block text-gray-700 mb-2 text-sm font-medium"
+                      >
                         Email
                       </label>
                       <input
                         type="email"
                         id="email"
                         value={formState.email}
-                        onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, email: e.target.value }))
+                        }
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="your.email@example.com"
                       />
@@ -873,16 +940,16 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   value={formState.selectedEventId}
                   onChange={handleEventChange}
                   className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 ${
-                    validationErrors.selectedEvent 
-                      ? 'border-red-500 focus:ring-red-500' 
-                      : 'border-gray-300 focus:ring-js'
+                    validationErrors.selectedEvent
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-js"
                   }`}
                   required
                 >
                   <option value="">Select an event...</option>
                   {recentEvents.map((event) => (
                     <option key={event.id} value={event.id}>
-                      {event.title} - {format(new Date(event.datetime), 'MMM d, yyyy')}
+                      {event.title} - {format(new Date(event.datetime), "MMM d, yyyy")}
                     </option>
                   ))}
                 </select>
@@ -890,7 +957,6 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   <p className="mt-1 text-sm text-red-600">{validationErrors.selectedEvent}</p>
                 )}
               </div>
-
 
               {/* Rating */}
               {formState.selectedEventId && (
@@ -912,8 +978,8 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                           size={32}
                           className={`${
                             star <= (hoveredStar || formState.overallRating)
-                              ? 'fill-yellow-400 text-yellow-400'
-                              : 'text-gray-300'
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
                           } transition-colors`}
                         />
                       </button>
@@ -934,26 +1000,28 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {formState.selectedEventId && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      2
+                    </span>
                     Food & Catering
                   </h3>
-                  
+
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <div className="flex items-start">
-                      <div className="mr-3 text-blue-600">
-                        💙
-                      </div>
+                      <div className="mr-3 text-blue-600">💙</div>
                       <div className="text-sm text-blue-800">
                         <p className="font-semibold mb-1">A note from the ZurichJS team:</p>
                         <p>
-                          As a <strong>non-profit community</strong>, we&apos;re mostly self-funded and still building our sponsorship base. 
-                          We provide the maximum we can with our current budget, and we&apos;re always grateful for your input on how 
-                          we can improve within our means. Your feedback helps us prioritize and plan better! 🙏
+                          As a <strong>non-profit community</strong>, we&apos;re mostly self-funded
+                          and still building our sponsorship base. We provide the maximum we can
+                          with our current budget, and we&apos;re always grateful for your input on
+                          how we can improve within our means. Your feedback helps us prioritize and
+                          plan better! 🙏
                         </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-gray-700 mb-2 font-semibold">
                       How was the food and catering?
@@ -963,33 +1031,39 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                         <button
                           key={rating}
                           type="button"
-                          onClick={() => setFormState(prev => ({
-                            ...prev,
-                            foodOptions: { ...prev.foodOptions, rating }
-                          }))}
+                          onClick={() =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              foodOptions: { ...prev.foodOptions, rating },
+                            }))
+                          }
                           className="focus:outline-none transition-colors duration-150"
                         >
                           <Star
                             size={28}
                             className={`${
                               rating <= formState.foodOptions.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
                             } hover:text-yellow-400`}
                           />
                         </button>
                       ))}
                       <span className="ml-2 text-gray-600 text-sm">
-                        {formState.foodOptions.rating > 0 ? `${formState.foodOptions.rating}/5` : '0/5'}
+                        {formState.foodOptions.rating > 0
+                          ? `${formState.foodOptions.rating}/5`
+                          : "0/5"}
                       </span>
                     </div>
-                    
+
                     <textarea
                       value={formState.foodOptions.comments}
-                      onChange={(e) => setFormState(prev => ({
-                        ...prev,
-                        foodOptions: { ...prev.foodOptions, comments: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          foodOptions: { ...prev.foodOptions, comments: e.target.value },
+                        }))
+                      }
                       rows={2}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                       placeholder="Any thoughts on the food, drinks, or catering? Suggestions for budget-friendly improvements are especially welcome! (optional)"
@@ -1002,10 +1076,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {formState.selectedEventId && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      3
+                    </span>
                     Talks & Content
                   </h3>
-                  
+
                   <div>
                     <label className="block text-gray-700 mb-2 font-semibold">
                       How were the talks and content?
@@ -1015,33 +1091,37 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                         <button
                           key={rating}
                           type="button"
-                          onClick={() => setFormState(prev => ({
-                            ...prev,
-                            talks: { ...prev.talks, rating }
-                          }))}
+                          onClick={() =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              talks: { ...prev.talks, rating },
+                            }))
+                          }
                           className="focus:outline-none transition-colors duration-150"
                         >
                           <Star
                             size={28}
                             className={`${
                               rating <= formState.talks.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
                             } hover:text-yellow-400`}
                           />
                         </button>
                       ))}
                       <span className="ml-2 text-gray-600 text-sm">
-                        {formState.talks.rating > 0 ? `${formState.talks.rating}/5` : '0/5'}
+                        {formState.talks.rating > 0 ? `${formState.talks.rating}/5` : "0/5"}
                       </span>
                     </div>
-                    
+
                     <textarea
                       value={formState.talks.comments}
-                      onChange={(e) => setFormState(prev => ({
-                        ...prev,
-                        talks: { ...prev.talks, comments: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          talks: { ...prev.talks, comments: e.target.value },
+                        }))
+                      }
                       rows={2}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                       placeholder="What did you think of the presentations and speakers? (optional)"
@@ -1054,10 +1134,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {formState.selectedEventId && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">4</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      4
+                    </span>
                     Timing & Organization
                   </h3>
-                  
+
                   <div>
                     <label className="block text-gray-700 mb-2 font-semibold">
                       How was the event timing and organization?
@@ -1067,33 +1149,37 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                         <button
                           key={rating}
                           type="button"
-                          onClick={() => setFormState(prev => ({
-                            ...prev,
-                            timing: { ...prev.timing, rating }
-                          }))}
+                          onClick={() =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              timing: { ...prev.timing, rating },
+                            }))
+                          }
                           className="focus:outline-none transition-colors duration-150"
                         >
                           <Star
                             size={28}
                             className={`${
                               rating <= formState.timing.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
                             } hover:text-yellow-400`}
                           />
                         </button>
                       ))}
                       <span className="ml-2 text-gray-600 text-sm">
-                        {formState.timing.rating > 0 ? `${formState.timing.rating}/5` : '0/5'}
+                        {formState.timing.rating > 0 ? `${formState.timing.rating}/5` : "0/5"}
                       </span>
                     </div>
-                    
+
                     <textarea
                       value={formState.timing.comments}
-                      onChange={(e) => setFormState(prev => ({
-                        ...prev,
-                        timing: { ...prev.timing, comments: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          timing: { ...prev.timing, comments: e.target.value },
+                        }))
+                      }
                       rows={2}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                       placeholder="Thoughts on start time, duration, breaks, or event flow? (optional)"
@@ -1106,10 +1192,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {formState.selectedEventId && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">5</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      5
+                    </span>
                     Event Execution
                   </h3>
-                  
+
                   <div>
                     <label className="block text-gray-700 mb-2 font-semibold">
                       How was the overall event execution?
@@ -1119,33 +1207,37 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                         <button
                           key={rating}
                           type="button"
-                          onClick={() => setFormState(prev => ({
-                            ...prev,
-                            execution: { ...prev.execution, rating }
-                          }))}
+                          onClick={() =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              execution: { ...prev.execution, rating },
+                            }))
+                          }
                           className="focus:outline-none transition-colors duration-150"
                         >
                           <Star
                             size={28}
                             className={`${
                               rating <= formState.execution.rating
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
+                                ? "text-yellow-400 fill-current"
+                                : "text-gray-300"
                             } hover:text-yellow-400`}
                           />
                         </button>
                       ))}
                       <span className="ml-2 text-gray-600 text-sm">
-                        {formState.execution.rating > 0 ? `${formState.execution.rating}/5` : '0/5'}
+                        {formState.execution.rating > 0 ? `${formState.execution.rating}/5` : "0/5"}
                       </span>
                     </div>
-                    
+
                     <textarea
                       value={formState.execution.comments}
-                      onChange={(e) => setFormState(prev => ({
-                        ...prev,
-                        execution: { ...prev.execution, comments: e.target.value }
-                      }))}
+                      onChange={(e) =>
+                        setFormState((prev) => ({
+                          ...prev,
+                          execution: { ...prev.execution, comments: e.target.value },
+                        }))
+                      }
                       rows={2}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                       placeholder="Venue, setup, logistics, networking opportunities? (optional)"
@@ -1158,10 +1250,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {formState.selectedEventId && formState.overallRating > 0 && (
                 <div className="mb-8">
                   <h3 className="text-xl font-bold mb-4 flex items-center">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">6</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      6
+                    </span>
                     Help Us Improve
                   </h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-gray-700 mb-2 font-semibold">
@@ -1169,7 +1263,9 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                       </label>
                       <textarea
                         value={formState.improvements}
-                        onChange={(e) => setFormState(prev => ({ ...prev, improvements: e.target.value }))}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, improvements: e.target.value }))
+                        }
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="Share your suggestions for improvements - venue, catering, format, content, networking opportunities, etc."
@@ -1182,7 +1278,9 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                       </label>
                       <textarea
                         value={formState.futureTopics}
-                        onChange={(e) => setFormState(prev => ({ ...prev, futureTopics: e.target.value }))}
+                        onChange={(e) =>
+                          setFormState((prev) => ({ ...prev, futureTopics: e.target.value }))
+                        }
                         rows={3}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js"
                         placeholder="Technologies, frameworks, tools, or specific topics you'd like to learn about..."
@@ -1200,9 +1298,10 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                       💰 Deal of the Day Feedback
                     </h4>
                     <p className="text-sm text-gray-600 mb-4">
-                      We often provide discount codes for upcoming paid events. How satisfied were you with our promotional offers?
+                      We often provide discount codes for upcoming paid events. How satisfied were
+                      you with our promotional offers?
                     </p>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <label className="block text-gray-700 mb-2 font-semibold">
@@ -1213,24 +1312,28 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                             <button
                               key={rating}
                               type="button"
-                              onClick={() => setFormState(prev => ({
-                                ...prev,
-                                dealOfDay: { ...prev.dealOfDay, rating }
-                              }))}
+                              onClick={() =>
+                                setFormState((prev) => ({
+                                  ...prev,
+                                  dealOfDay: { ...prev.dealOfDay, rating },
+                                }))
+                              }
                               className="focus:outline-none transition-colors duration-150"
                             >
                               <Star
                                 size={28}
                                 className={`${
                                   rating <= formState.dealOfDay.rating
-                                    ? 'text-yellow-400 fill-current'
-                                    : 'text-gray-300'
+                                    ? "text-yellow-400 fill-current"
+                                    : "text-gray-300"
                                 } hover:text-yellow-400`}
                               />
                             </button>
                           ))}
                           <span className="ml-2 text-gray-600 text-sm">
-                            {formState.dealOfDay.rating > 0 ? `${formState.dealOfDay.rating}/5` : '0/5'}
+                            {formState.dealOfDay.rating > 0
+                              ? `${formState.dealOfDay.rating}/5`
+                              : "0/5"}
                           </span>
                         </div>
                       </div>
@@ -1241,10 +1344,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                         </label>
                         <textarea
                           value={formState.dealOfDay.comments}
-                          onChange={(e) => setFormState(prev => ({
-                            ...prev,
-                            dealOfDay: { ...prev.dealOfDay, comments: e.target.value }
-                          }))}
+                          onChange={(e) =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              dealOfDay: { ...prev.dealOfDay, comments: e.target.value },
+                            }))
+                          }
                           rows={2}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-js"
                           placeholder="Tell us about our discount offers, promotion timing, value for money, etc."
@@ -1259,10 +1364,12 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
               {formState.selectedEventId && formState.overallRating > 0 && (
                 <div className="mb-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
                   <h3 className="text-xl font-bold mb-6 flex items-center text-gray-900">
-                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">7</span>
+                    <span className="bg-js text-black rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">
+                      7
+                    </span>
                     Overall Value Assessment
                   </h3>
-                  
+
                   <div className="space-y-8">
                     <div className="bg-white rounded-lg p-5 border border-gray-100 shadow-sm">
                       <label className="block text-gray-800 mb-4 font-semibold text-base">
@@ -1270,26 +1377,58 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                       </label>
                       <div className="space-y-3">
                         {[
-                          { value: 'definitely', label: '✨ Definitely - Great value!', color: 'text-emerald-700' },
-                          { value: 'mostly', label: '👍 Mostly - Good overall', color: 'text-emerald-600' },
-                          { value: 'somewhat', label: '👌 Somewhat - Mixed feelings', color: 'text-amber-600' },
-                          { value: 'not_really', label: '😐 Not really - Could be better', color: 'text-slate-600' }
+                          {
+                            value: "definitely",
+                            label: "✨ Definitely - Great value!",
+                            color: "text-emerald-700",
+                          },
+                          {
+                            value: "mostly",
+                            label: "👍 Mostly - Good overall",
+                            color: "text-emerald-600",
+                          },
+                          {
+                            value: "somewhat",
+                            label: "👌 Somewhat - Mixed feelings",
+                            color: "text-amber-600",
+                          },
+                          {
+                            value: "not_really",
+                            label: "😐 Not really - Could be better",
+                            color: "text-slate-600",
+                          },
                         ].map((option) => (
-                          <label key={option.value} className="flex items-center cursor-pointer p-3 rounded-md hover:bg-gray-50 transition-colors">
+                          <label
+                            key={option.value}
+                            className="flex items-center cursor-pointer p-3 rounded-md hover:bg-gray-50 transition-colors"
+                          >
                             <input
                               type="radio"
                               name="worthTime"
                               value={option.value}
                               checked={formState.worthTime === option.value}
-                              onChange={(e) => setFormState(prev => ({ ...prev, worthTime: e.target.value as 'definitely' | 'mostly' | 'somewhat' | 'not_really' }))}
+                              onChange={(e) =>
+                                setFormState((prev) => ({
+                                  ...prev,
+                                  worthTime: e.target.value as
+                                    | "definitely"
+                                    | "mostly"
+                                    | "somewhat"
+                                    | "not_really",
+                                }))
+                              }
                               className="mr-4 w-4 h-4 text-js border-gray-300 focus:ring-js focus:ring-2"
                             />
-                            <span className={`${option.color} font-medium text-sm`}>{option.label}</span>
+                            <span className={`${option.color} font-medium text-sm`}>
+                              {option.label}
+                            </span>
                           </label>
                         ))}
                       </div>
                       {validationErrors.worthTime && (
-                        <p className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">{validationErrors.worthTime}</p>
+                        <p className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                          {validationErrors.worthTime}
+                        </p>
                       )}
                     </div>
 
@@ -1299,26 +1438,58 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                       </label>
                       <div className="space-y-3">
                         {[
-                          { value: 'definitely', label: '🔥 Definitely - I\'d actively promote it!', color: 'text-emerald-700' },
-                          { value: 'probably', label: '✅ Probably - If asked, I\'d recommend it', color: 'text-emerald-600' },
-                          { value: 'maybe', label: '🤷‍♂️ Maybe - Depends on the person', color: 'text-amber-600' },
-                          { value: 'unlikely', label: '❌ Unlikely - Needs improvement first', color: 'text-slate-600' }
+                          {
+                            value: "definitely",
+                            label: "🔥 Definitely - I'd actively promote it!",
+                            color: "text-emerald-700",
+                          },
+                          {
+                            value: "probably",
+                            label: "✅ Probably - If asked, I'd recommend it",
+                            color: "text-emerald-600",
+                          },
+                          {
+                            value: "maybe",
+                            label: "🤷‍♂️ Maybe - Depends on the person",
+                            color: "text-amber-600",
+                          },
+                          {
+                            value: "unlikely",
+                            label: "❌ Unlikely - Needs improvement first",
+                            color: "text-slate-600",
+                          },
                         ].map((option) => (
-                          <label key={option.value} className="flex items-center cursor-pointer p-3 rounded-md hover:bg-gray-50 transition-colors">
+                          <label
+                            key={option.value}
+                            className="flex items-center cursor-pointer p-3 rounded-md hover:bg-gray-50 transition-colors"
+                          >
                             <input
                               type="radio"
                               name="wouldRecommend"
                               value={option.value}
                               checked={formState.wouldRecommend === option.value}
-                              onChange={(e) => setFormState(prev => ({ ...prev, wouldRecommend: e.target.value as 'definitely' | 'probably' | 'maybe' | 'unlikely' }))}
+                              onChange={(e) =>
+                                setFormState((prev) => ({
+                                  ...prev,
+                                  wouldRecommend: e.target.value as
+                                    | "definitely"
+                                    | "probably"
+                                    | "maybe"
+                                    | "unlikely",
+                                }))
+                              }
                               className="mr-4 w-4 h-4 text-js border-gray-300 focus:ring-js focus:ring-2"
                             />
-                            <span className={`${option.color} font-medium text-sm`}>{option.label}</span>
+                            <span className={`${option.color} font-medium text-sm`}>
+                              {option.label}
+                            </span>
                           </label>
                         ))}
                       </div>
                       {validationErrors.wouldRecommend && (
-                        <p className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">{validationErrors.wouldRecommend}</p>
+                        <p className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                          {validationErrors.wouldRecommend}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -1334,13 +1505,16 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   <textarea
                     id="comment"
                     value={formState.additionalComments}
-                    onChange={(e) => setFormState(prev => ({ ...prev, additionalComments: e.target.value }))}
+                    onChange={(e) =>
+                      setFormState((prev) => ({ ...prev, additionalComments: e.target.value }))
+                    }
                     rows={5}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js"
                     placeholder="What did you think of the event? What was great? What could be improved? Any suggestions for future events?"
                   />
                   <p className="text-xs text-gray-500 mt-2">
-                    💡 Your feedback helps us improve future events and create better experiences for everyone!
+                    💡 Your feedback helps us improve future events and create better experiences
+                    for everyone!
                   </p>
                 </div>
               )}
@@ -1357,9 +1531,25 @@ export default function Feedback({ recentEvents, upcomingEvents, testDate }: Fee
                   >
                     {formState.isSubmitting ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Submitting...
                       </>
@@ -1386,25 +1576,27 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     let testCurrentDate: Date | undefined;
     const testDateParam = context.query.testDate;
     const testDateString = Array.isArray(testDateParam) ? testDateParam[0] : testDateParam;
-    
-    if (process.env.NODE_ENV === 'development' && testDateString) {
+
+    if (process.env.NODE_ENV === "development" && testDateString) {
       try {
         testCurrentDate = new Date(testDateString);
         // Validate the date
         if (isNaN(testCurrentDate.getTime())) {
-          console.warn('Invalid test date provided in URL, falling back to current date');
+          console.warn("Invalid test date provided in URL, falling back to current date");
           testCurrentDate = undefined;
         }
       } catch (error) {
-        console.warn('Failed to parse test date from URL, falling back to current date:', error);
+        console.warn("Failed to parse test date from URL, falling back to current date:", error);
         testCurrentDate = undefined;
       }
     }
-    
+
     // Fetch both recent events (for feedback) and upcoming events (for test scenarios)
     const [recentEvents, upcomingEvents] = await Promise.all([
       getRecentPastEventsForFeedback(testCurrentDate),
-      process.env.NODE_ENV === 'development' ? getUpcomingEventsForTestScenarios() : Promise.resolve([])
+      process.env.NODE_ENV === "development"
+        ? getUpcomingEventsForTestScenarios()
+        : Promise.resolve([]),
     ]);
 
     return {
@@ -1415,8 +1607,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       },
     };
   } catch (error) {
-    console.error('Error fetching events:', error);
-    
+    console.error("Error fetching events:", error);
+
     return {
       props: {
         recentEvents: [],

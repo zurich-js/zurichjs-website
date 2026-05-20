@@ -1,6 +1,6 @@
-import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
-import Image from 'next/image';
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Play, Pause, Volume2, VolumeX, Maximize } from "lucide-react";
+import Image from "next/image";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 
 interface VideoPlayerProps {
   src: string;
@@ -11,13 +11,13 @@ interface VideoPlayerProps {
   muted?: boolean;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ 
-  src, 
-  thumbnail, 
-  title = "Video", 
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  src,
+  thumbnail,
+  title = "Video",
   className = "",
   autoplay = false,
-  muted = false
+  muted = false,
 }) => {
   const [isPlaying, setIsPlaying] = useState(autoplay);
   const [currentTime, setCurrentTime] = useState(0);
@@ -29,14 +29,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showThumbnail, setShowThumbnail] = useState(true);
   const [thumbnailError, setThumbnailError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
-    
+
     if (isPlaying) {
       videoRef.current.pause();
     } else {
@@ -60,11 +60,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!videoRef.current || !progressRef.current) return;
-    
+
     const rect = progressRef.current.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const newTime = (clickX / rect.width) * duration;
-    
+
     videoRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   };
@@ -87,7 +87,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
-    
+
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else {
@@ -98,7 +98,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const handleLoadStart = () => {
@@ -125,16 +125,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('loadstart', handleLoadStart);
-    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("loadstart", handleLoadStart);
+    video.addEventListener("canplay", handleCanPlay);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      video.removeEventListener('loadstart', handleLoadStart);
-      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("loadstart", handleLoadStart);
+      video.removeEventListener("canplay", handleCanPlay);
     };
   }, []);
 
@@ -147,11 +147,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Detect mobile device
   useEffect(() => {
     const checkMobile = () => {
-      const userAgent = navigator.userAgent || navigator.vendor || '';
-      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const userAgent = navigator.userAgent || navigator.vendor || "";
+      const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        userAgent.toLowerCase(),
+      );
       setIsMobile(isMobileDevice);
     };
-    
+
     checkMobile();
   }, []);
 
@@ -160,13 +162,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoRef.current) {
       // Enable autoplay on mobile, use original autoplay setting for desktop
       const shouldAutoplay = isMobile || autoplay;
-      
+
       if (shouldAutoplay) {
         videoRef.current.muted = true; // Must be muted for autoplay to work on mobile
         setShowThumbnail(false); // Hide thumbnail when autoplay starts
         setIsPlaying(true);
         videoRef.current.play().catch((error) => {
-          console.log('Autoplay failed:', error);
+          console.log("Autoplay failed:", error);
           setIsPlaying(false);
           setShowThumbnail(true);
         });
@@ -176,16 +178,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   }, [autoplay, muted, isMobile, thumbnail]);
 
-
-
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`relative bg-black rounded-lg overflow-hidden group ${className}`}
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
-            {/* Thumbnail overlay */}
+      {/* Thumbnail overlay */}
       {showThumbnail && thumbnail && !thumbnailError && (
         <div className="absolute inset-0 cursor-pointer" onClick={handlePlayClick}>
           <Image
@@ -206,7 +206,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* Video placeholder when no thumbnail */}
       {(showThumbnail && !thumbnail) || (showThumbnail && thumbnailError) ? (
-        <div className="absolute inset-0 cursor-pointer bg-gray-900 flex items-center justify-center touch-manipulation" onClick={handlePlayClick}>
+        <div
+          className="absolute inset-0 cursor-pointer bg-gray-900 flex items-center justify-center touch-manipulation"
+          onClick={handlePlayClick}
+        >
           <div className="flex flex-col items-center justify-center text-white">
             <Play size={40} className="sm:w-12 sm:h-12 mb-2 sm:mb-3" />
             <span className="text-base sm:text-lg font-medium">Play Video</span>
@@ -234,23 +237,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-
-
       {/* Controls */}
-      <div 
+      <div
         className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 z-20"
         style={{
           opacity: showControls || isPlaying ? 1 : 0.3,
-          pointerEvents: 'auto'
+          pointerEvents: "auto",
         }}
       >
         {/* Progress bar */}
-        <div 
+        <div
           ref={progressRef}
           className="w-full h-1 bg-white/30 rounded-full cursor-pointer mb-3"
           onClick={handleProgressClick}
         >
-          <div 
+          <div
             className="h-full bg-white rounded-full transition-all duration-150"
             style={{ width: `${(currentTime / duration) * 100}%` }}
           />
@@ -263,16 +264,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               onClick={togglePlay}
               className="text-white hover:text-gray-300 transition-colors p-1 touch-manipulation"
             >
-              {isPlaying ? <Pause size={18} className="sm:w-5 sm:h-5" /> : <Play size={18} className="sm:w-5 sm:h-5" />}
+              {isPlaying ? (
+                <Pause size={18} className="sm:w-5 sm:h-5" />
+              ) : (
+                <Play size={18} className="sm:w-5 sm:h-5" />
+              )}
             </button>
-            
+
             <button
               onClick={toggleMute}
               className="text-white hover:text-gray-300 transition-colors p-1 touch-manipulation"
             >
-              {isMuted ? <VolumeX size={18} className="sm:w-5 sm:h-5" /> : <Volume2 size={18} className="sm:w-5 sm:h-5" />}
+              {isMuted ? (
+                <VolumeX size={18} className="sm:w-5 sm:h-5" />
+              ) : (
+                <Volume2 size={18} className="sm:w-5 sm:h-5" />
+              )}
             </button>
-            
+
             <input
               type="range"
               min="0"
@@ -282,7 +291,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               onChange={handleVolumeChange}
               className="w-12 sm:w-16 h-1 bg-white/30 rounded-full appearance-none cursor-pointer touch-manipulation"
             />
-            
+
             <span className="text-white text-xs sm:text-sm">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
@@ -300,4 +309,4 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   );
 };
 
-export default VideoPlayer; 
+export default VideoPlayer;

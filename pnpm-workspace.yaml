@@ -1,7 +1,13 @@
-packages: []
-onlyBuiltDependencies:
-  - '@clerk/shared'
-  - core-js
-  - esbuild
-  - sharp
-  - unrs-resolver
+minimumReleaseAge: 1440
+
+overrides:
+  "@vercel/frameworks@3.21.1>js-yaml": 3.14.2
+  "next@16.2.6>postcss": 8.5.15
+
+allowBuilds:
+  "@clerk/shared": true
+  core-js: true
+  esbuild: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true

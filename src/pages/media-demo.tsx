@@ -1,12 +1,12 @@
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export default function MediaDemo() {
   const router = useRouter();
 
   useEffect(() => {
     // Redirect to media page with AI fun mode enabled
-    router.replace('/media?ai=true');
+    router.replace("/media?ai=true");
   }, [router]);
 
   return (
@@ -17,4 +17,4 @@ export default function MediaDemo() {
       </div>
     </div>
   );
-} 
+}

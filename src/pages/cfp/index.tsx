@@ -1,10 +1,10 @@
-import { Calendar, ExternalLink, Mic, Users } from 'lucide-react';
-import Link from 'next/link';
+import { Calendar, ExternalLink, Mic, Users } from "lucide-react";
+import Link from "next/link";
 
-import { CONFERENCE_CFP_URL } from '@/components/cfp/constants';
-import Layout from '@/components/layout/Layout';
-import SEO from '@/components/SEO';
-import useReferrerTracking from '@/hooks/useReferrerTracking';
+import { CONFERENCE_CFP_URL } from "@/components/cfp/constants";
+import Layout from "@/components/layout/Layout";
+import SEO from "@/components/SEO";
+import useReferrerTracking from "@/hooks/useReferrerTracking";
 
 export default function CFP() {
   useReferrerTracking();
@@ -15,11 +15,11 @@ export default function CFP() {
         title="Call for Papers | ZurichJS"
         description="Submit a talk for ZurichJS Conference or our monthly meetups. Share your JavaScript expertise with the community!"
         openGraph={{
-          title: 'Call for Papers | ZurichJS',
+          title: "Call for Papers | ZurichJS",
           description:
-            'Share your JavaScript knowledge with the ZurichJS community. Submit a talk for our conference or monthly meetups.',
-          image: '/api/og/cfp',
-          type: 'website',
+            "Share your JavaScript knowledge with the ZurichJS community. Submit a talk for our conference or monthly meetups.",
+          image: "/api/og/cfp",
+          type: "website",
         }}
       />
 
@@ -55,11 +55,15 @@ export default function CFP() {
 
             <h2 className="text-2xl font-bold mb-3 flex items-center">
               Conference Talk
-              <ExternalLink size={18} className="ml-2 text-gray-400 group-hover:text-black transition-colors" />
+              <ExternalLink
+                size={18}
+                className="ml-2 text-gray-400 group-hover:text-black transition-colors"
+              />
             </h2>
 
             <p className="text-gray-600 mb-6 flex-grow">
-              Present at ZurichJS Conf, our annual full-day JavaScript conference with 300+ attendees.
+              Present at ZurichJS Conf, our annual full-day JavaScript conference with 300+
+              attendees.
             </p>
 
             <ul className="space-y-2 text-sm text-gray-500">
@@ -125,8 +129,8 @@ export default function CFP() {
 
         {/* Footer note */}
         <p className="mt-12 text-gray-500 text-center max-w-lg">
-          Not sure which to choose? Meetups are great for testing ideas before the conference, and we
-          welcome speakers of all experience levels.
+          Not sure which to choose? Meetups are great for testing ideas before the conference, and
+          we welcome speakers of all experience levels.
         </p>
       </div>
     </Layout>

@@ -1,12 +1,12 @@
 // useReferrerTracking.js
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useRouter } from "next/router";
+import { useCallback, useEffect } from "react";
 
-import useEvents from './useEvents';
+import useEvents from "./useEvents";
 
 /**
  * A custom hook to track referrer information using Google Tag Manager
- * 
+ *
  * @param {Object} options - Configuration options
  * @param {string} options.eventName - The GTM event name (default: 'referral_visit')
  * @param {boolean} options.trackOnlyExternal - Track only external referrers (default: true)
@@ -31,91 +31,85 @@ interface ReferrerInfo {
 }
 
 export default function useReferrerTracking({
-  eventName = 'referral_visit',
+  eventName = "referral_visit",
   trackOnlyExternal = true,
   trackPathChange = true,
   ignoreDomains = [],
   onTrack = null,
 }: ReferrerOptions = {}) {
   const router = useRouter();
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
   const { track } = useEvents();
-  
-  // Store the referrer information
-  const referrerInfo: ReferrerInfo = {
-    referrer: '',
-    isExternal: false,
-    currentPath: ''
-  };
-  
+
   // Function to check if a domain should be ignored
-  const shouldIgnoreDomain = (url: string): boolean => {
-    if (!url) return false;
-    
-    return ignoreDomains.some(domain => {
-      try {
-        return new URL(url).hostname.includes(domain);
-      } catch {
-        return url.includes(domain);
-      }
-    });
-  };
-  
+  const shouldIgnoreDomain = useCallback(
+    (url: string): boolean => {
+      if (!url) return false;
+
+      return ignoreDomains.some((domain) => {
+        try {
+          return new URL(url).hostname.includes(domain);
+        } catch {
+          return url.includes(domain);
+        }
+      });
+    },
+    [ignoreDomains],
+  );
+
   // Function to track the referrer
-  const trackReferrer = (): void => {
-    if (typeof window === 'undefined') return;
-    
+  const trackReferrer = useCallback((): void => {
+    if (typeof window === "undefined") return;
+
     const referrer = document.referrer;
     const currentPath = window.location.pathname;
-    
+
     // Check if referrer is from the same site
     const isExternal = referrer && !referrer.includes(hostname);
-    
+
     // Skip if tracking only external and this is internal
     if (trackOnlyExternal && !isExternal) return;
-    
+
     // Skip if domain is in ignore list
     if (isExternal && shouldIgnoreDomain(referrer)) return;
-    
-    // Update referrer info
-    referrerInfo.referrer = referrer;
-    referrerInfo.isExternal = !!isExternal;
-    referrerInfo.currentPath = currentPath;
-    
+
+    const referrerInfo: ReferrerInfo = {
+      referrer,
+      isExternal: !!isExternal,
+      currentPath,
+    };
+
     // Send event using useEvents hook
     track(eventName, {
-      referrer: referrer || '(direct)',
+      referrer: referrer || "(direct)",
       isExternal: isExternal,
       page: currentPath,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     // Call callback if provided
-    if (onTrack && typeof onTrack === 'function') {
+    if (onTrack && typeof onTrack === "function") {
       onTrack(referrerInfo);
     }
-  };
-  
+  }, [eventName, hostname, onTrack, shouldIgnoreDomain, track, trackOnlyExternal]);
+
   // Track on initial page load
-  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => {
     trackReferrer();
-  }, []);
-  
+  }, [trackReferrer]);
+
   // Track on path changes if enabled
   useEffect(() => {
     if (!trackPathChange) return;
-    
+
     const handleRouteChange = () => {
       trackReferrer();
     };
-    
-    router.events.on('routeChangeComplete', handleRouteChange);
-    
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+
     return () => {
-      router.events.off('routeChangeComplete', handleRouteChange);
+      router.events.off("routeChangeComplete", handleRouteChange);
     };
-  }, [router.events, trackPathChange]);
-  
-  return referrerInfo;
+  }, [router.events, trackPathChange, trackReferrer]);
 }

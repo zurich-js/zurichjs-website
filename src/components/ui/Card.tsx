@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import { Calendar, MapPin, Users, Sparkles } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import { motion } from "framer-motion";
+import { Calendar, MapPin, Users, Sparkles } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import type { Event } from '@/sanity/queries';
+import type { Event } from "@/sanity/queries";
 
 interface Speaker {
   id: string;
@@ -15,16 +15,12 @@ interface Speaker {
 }
 
 interface CardProps {
-  type: 'event' | 'speaker';
+  type: "event" | "speaker";
   item: Event | Speaker;
 }
 
-export default function Card({
-  type = 'event',
-  item,
-  ...props
-}: CardProps) {
-  if (type === 'event') {
+export default function Card({ type = "event", item, ...props }: CardProps) {
+  if (type === "event") {
     const eventItem = item as Event;
     return (
       <motion.div
@@ -36,12 +32,12 @@ export default function Card({
           <div className="relative h-64 w-full">
             {eventItem.image ? (
               <div className="overflow-hidden size-full">
-                  <Image
-                      src={eventItem.image as string}
-                      alt={`${eventItem.title} - ZurichJS event`}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
-                  />
+                <Image
+                  src={eventItem.image as string}
+                  alt={`${eventItem.title} - ZurichJS event`}
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                />
               </div>
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
@@ -63,14 +59,18 @@ export default function Card({
             <div className="flex items-center text-blue-700 mb-2 font-medium">
               <Calendar size={16} className="mr-1" />
               <span className="text-sm">
-                {eventItem.datetime ? new Date(eventItem.datetime).toLocaleDateString('en-GB', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                }) + ' at ' + new Date(eventItem.datetime).toLocaleTimeString('en-GB', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }) : 'Date TBA'}
+                {eventItem.datetime
+                  ? new Date(eventItem.datetime).toLocaleDateString("en-GB", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    }) +
+                    " at " +
+                    new Date(eventItem.datetime).toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "Date TBA"}
               </span>
             </div>
             <div className="flex items-center text-gray-700 mb-2">
@@ -88,9 +88,7 @@ export default function Card({
             {eventItem.attendees === 0 && (
               <div className="flex items-center text-blue-700">
                 <Sparkles size={16} className="mr-1" />
-                <span className="text-sm">
-                  Be among the first to RSVP! ⚡
-                </span>
+                <span className="text-sm">Be among the first to RSVP! ⚡</span>
               </div>
             )}
           </div>
@@ -99,11 +97,11 @@ export default function Card({
     );
   }
 
-  if (type === 'speaker') {
+  if (type === "speaker") {
     const speakerItem = item as Speaker;
     return (
       <motion.div
-        whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+        whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
         transition={{ duration: 0.2 }}
         className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl"
         {...props}
@@ -111,7 +109,7 @@ export default function Card({
         <Link href={`/speakers/${speakerItem.id}`} className="block">
           <div className="relative h-64 w-full">
             <Image
-              src={speakerItem.image || '/images/speakers/default.jpg'}
+              src={speakerItem.image || "/images/speakers/default.jpg"}
               alt={`${speakerItem.name} - ZurichJS speaker`}
               fill
               className="object-cover object-center"
@@ -121,9 +119,9 @@ export default function Card({
               <div className="inline-block bg-blue-700 text-white text-xs px-2 py-1 rounded-full mb-2">
                 JS Wizard 🧙‍♂️
               </div>
-              {(speakerItem.talkCount !== undefined && speakerItem.talkCount > 0) && (
+              {speakerItem.talkCount !== undefined && speakerItem.talkCount > 0 && (
                 <div className="inline-block ml-2 bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                  {speakerItem.talkCount} {speakerItem.talkCount === 1 ? 'talk' : 'talks'} 🎤
+                  {speakerItem.talkCount} {speakerItem.talkCount === 1 ? "talk" : "talks"} 🎤
                 </div>
               )}
             </div>
@@ -133,7 +131,7 @@ export default function Card({
             <p className="text-sm mb-2 text-gray-700 line-clamp-1">{speakerItem.title}</p>
             {speakerItem.talks > 0 && (
               <div className="mt-2 inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">
-                {speakerItem.talks} amazing {speakerItem.talks === 1 ? 'talk' : 'talks'} 🎤
+                {speakerItem.talks} amazing {speakerItem.talks === 1 ? "talk" : "talks"} 🎤
               </div>
             )}
           </div>

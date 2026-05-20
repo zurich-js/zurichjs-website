@@ -56,16 +56,16 @@ import { useCoupon } from '@/hooks/useCoupon';
 
 function MyComponent() {
   const { couponCode, couponData, error, applyDiscount } = useCoupon();
-  
+
   // Calculate discounted price
   const originalPrice = 100;
   const discountedPrice = applyDiscount(originalPrice);
-  
+
   // Display coupon badge if valid
   if (couponData && couponData.isValid) {
     // Show coupon badge
   }
-  
+
   // Pass coupon to checkout
   const handleCheckout = () => {
     startCheckout({
@@ -73,7 +73,7 @@ function MyComponent() {
       couponCode: couponCode,
     });
   };
-  
+
   return (
     // Component JSX
   );
@@ -96,4 +96,4 @@ If coupons aren't working as expected:
 3. Hook calls `/api/stripe/validate-coupon` to verify the coupon
 4. If valid, coupon data is displayed and calculated into pricing
 5. During checkout, coupon is passed to Stripe for final application
-6. Coupon ID is preserved in success/cancel URLs and notifications 
+6. Coupon ID is preserved in success/cancel URLs and notifications

@@ -1,22 +1,22 @@
-import { SignInButton, useUser } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
-import { LogIn, MessageCircle } from 'lucide-react';
-import { useFeatureFlagEnabled } from 'posthog-js/react';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { SignInButton, useUser } from "@clerk/nextjs";
+import { motion } from "framer-motion";
+import { LogIn, MessageCircle } from "lucide-react";
+import { useFeatureFlagEnabled } from "posthog-js/react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
-import Button from '@/components/ui/Button';
-import { FeatureFlags } from '@/constants';
-import useEvents from '@/hooks/useEvents';
+import Button from "@/components/ui/Button";
+import { FeatureFlags } from "@/constants";
+import useEvents from "@/hooks/useEvents";
 
-import { useCFPForm } from '../hooks/useCFPForm';
-import { useFormValidation } from '../hooks/useFormValidation';
+import { useCFPForm } from "../hooks/useCFPForm";
+import { useFormValidation } from "../hooks/useFormValidation";
 
-import AutoSaveIndicator from './AutoSaveIndicator';
-import ErrorBanner from './ErrorBanner';
-import SpeakerSection from './SpeakerSection';
-import SuccessState from './SuccessState';
-import TalkSection from './TalkSection';
-import TopicSelector from './TopicSelector';
+import AutoSaveIndicator from "./AutoSaveIndicator";
+import ErrorBanner from "./ErrorBanner";
+import SpeakerSection from "./SpeakerSection";
+import SuccessState from "./SuccessState";
+import TalkSection from "./TalkSection";
+import TopicSelector from "./TopicSelector";
 
 interface CFPPrefillData {
   firstName: string;
@@ -55,13 +55,13 @@ export default function CFPForm() {
 
   const { validateForm, hasErrors } = useFormValidation();
 
-  const editProfileHref = useMemo(() => '/profile/speaker?returnTo=%2Fcfp%2Fform', []);
+  const editProfileHref = useMemo(() => "/profile/speaker?returnTo=%2Fcfp%2Fform", []);
 
   const loadPrefill = async (): Promise<CFPPrefillData> => {
-    const response = await fetch('/api/cfp/prefill');
+    const response = await fetch("/api/cfp/prefill");
 
     if (!response.ok) {
-      throw new Error('Failed to load CFP prefill');
+      throw new Error("Failed to load CFP prefill");
     }
 
     return response.json() as Promise<CFPPrefillData>;
@@ -80,7 +80,7 @@ export default function CFPForm() {
 
         if (isCancelled) return;
 
-        setFormState(prev => ({
+        setFormState((prev) => ({
           ...prev,
           firstName: prefill.firstName,
           lastName: prefill.lastName,
@@ -97,7 +97,7 @@ export default function CFPForm() {
           imagePreview: null,
         }));
       } catch (error) {
-        console.error('Failed to prefill CFP form:', error);
+        console.error("Failed to prefill CFP form:", error);
       } finally {
         if (!isCancelled) {
           setIsPrefillLoading(false);
@@ -140,12 +140,12 @@ export default function CFPForm() {
           imagePreview: null,
         };
 
-        setFormState(prev => ({
+        setFormState((prev) => ({
           ...prev,
           ...nextFormState,
         }));
       } catch (error) {
-        console.error('Failed to refresh CFP prefill before submit:', error);
+        console.error("Failed to refresh CFP prefill before submit:", error);
       } finally {
         setIsPrefillLoading(false);
       }
@@ -155,78 +155,79 @@ export default function CFPForm() {
     setValidationErrors(errors);
 
     if (hasErrors(errors)) {
-      track('form_error', {
-        errorType: 'validation_failed',
-        errorFields: Object.keys(errors).join(', '),
+      track("form_error", {
+        errorType: "validation_failed",
+        errorFields: Object.keys(errors).join(", "),
       });
-      setFormState(prev => ({ ...prev, error: 'Please fix the highlighted errors below' }));
+      setFormState((prev) => ({ ...prev, error: "Please fix the highlighted errors below" }));
       return;
     }
 
-    setFormState(prev => ({ ...prev, isSubmitting: true, error: '' }));
+    setFormState((prev) => ({ ...prev, isSubmitting: true, error: "" }));
 
     try {
       const formData = new FormData();
       const fullName = `${nextFormState.firstName} ${nextFormState.lastName}`;
 
-      formData.append('name', fullName);
-      formData.append('firstName', nextFormState.firstName);
-      formData.append('lastName', nextFormState.lastName);
-      formData.append('jobTitle', nextFormState.jobTitle);
-      formData.append('biography', nextFormState.biography);
-      formData.append('email', nextFormState.email);
-      formData.append('linkedinProfile', nextFormState.linkedinProfile);
-      formData.append('githubProfile', nextFormState.githubProfile || '');
-      formData.append('twitterHandle', nextFormState.twitterHandle || '');
-      formData.append('title', nextFormState.title);
-      formData.append('description', nextFormState.description);
-      formData.append('talkLength', nextFormState.talkLength);
-      formData.append('talkLevel', nextFormState.talkLevel);
-      formData.append('topics', JSON.stringify(nextFormState.topics));
-      formData.append('submissionMode', user ? 'authenticated' : 'guest');
+      formData.append("name", fullName);
+      formData.append("firstName", nextFormState.firstName);
+      formData.append("lastName", nextFormState.lastName);
+      formData.append("jobTitle", nextFormState.jobTitle);
+      formData.append("biography", nextFormState.biography);
+      formData.append("email", nextFormState.email);
+      formData.append("linkedinProfile", nextFormState.linkedinProfile);
+      formData.append("githubProfile", nextFormState.githubProfile || "");
+      formData.append("twitterHandle", nextFormState.twitterHandle || "");
+      formData.append("title", nextFormState.title);
+      formData.append("description", nextFormState.description);
+      formData.append("talkLength", nextFormState.talkLength);
+      formData.append("talkLevel", nextFormState.talkLevel);
+      formData.append("topics", JSON.stringify(nextFormState.topics));
+      formData.append("submissionMode", user ? "authenticated" : "guest");
 
       if (nextFormState.speakerImage) {
-        formData.append('speakerImage', nextFormState.speakerImage);
+        formData.append("speakerImage", nextFormState.speakerImage);
       }
 
-      track('form_submit', {
+      track("form_submit", {
         talkLength: nextFormState.talkLength,
         talkLevel: nextFormState.talkLevel,
         topicsCount: nextFormState.topics.length,
         isLoggedIn: !!user,
       });
 
-      const response = await fetch('/api/submit-talk', {
-        method: 'POST',
+      const response = await fetch("/api/submit-talk", {
+        method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'An error occurred while submitting your talk');
+        throw new Error(data.error || "An error occurred while submitting your talk");
       }
 
-      track('form_submit_success', { talkTitle: nextFormState.title });
+      track("form_submit_success", { talkTitle: nextFormState.title });
 
       clearStorage();
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         submitted: true,
         isSubmitting: false,
-        error: '',
+        error: "",
       }));
     } catch (error: unknown) {
-      console.error('Submission error:', error);
+      console.error("Submission error:", error);
 
-      track('form_submit_error', {
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      track("form_submit_error", {
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
-      setFormState(prev => ({
+      setFormState((prev) => ({
         ...prev,
         isSubmitting: false,
-        error: error instanceof Error ? error.message : 'An error occurred while submitting your talk',
+        error:
+          error instanceof Error ? error.message : "An error occurred while submitting your talk",
       }));
     }
   };
@@ -250,10 +251,10 @@ export default function CFPForm() {
         <div className="flex items-start gap-2 text-sm text-gray-700">
           <MessageCircle size={16} className="mt-0.5 text-gray-500 flex-shrink-0" />
           <span>
-            <strong>Having trouble?</strong> You can always email your talk proposal directly to{' '}
+            <strong>Having trouble?</strong> You can always email your talk proposal directly to{" "}
             <a href="mailto:hello@zurichjs.com" className="underline font-semibold">
               hello@zurichjs.com
-            </a>{' '}
+            </a>{" "}
             if you encounter any issues with this form.
           </span>
         </div>
@@ -273,7 +274,7 @@ export default function CFPForm() {
             error={formState.error}
             validationErrors={validationErrors}
             generateEmailBody={generateEmailBody}
-            onEmailFallback={() => track('email_fallback_used', { error: formState.error })}
+            onEmailFallback={() => track("email_fallback_used", { error: formState.error })}
           />
         )}
 
@@ -340,10 +341,10 @@ export default function CFPForm() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                {isPrefillLoading ? 'Refreshing profile...' : 'Submitting...'}
+                {isPrefillLoading ? "Refreshing profile..." : "Submitting..."}
               </>
             ) : (
-              'Submit Your Talk'
+              "Submit Your Talk"
             )}
           </Button>
         </div>

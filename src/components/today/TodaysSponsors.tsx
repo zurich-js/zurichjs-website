@@ -1,8 +1,8 @@
-import { motion } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
+import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
 
-import { getTodaysSponsors, SponsorshipTier } from '@/data';
+import { getTodaysSponsors, SponsorshipTier } from "@/data";
 
 type TierMeta = {
   label: string;
@@ -12,29 +12,29 @@ type TierMeta = {
 
 const TIER_META: Record<SponsorshipTier, TierMeta> = {
   [SponsorshipTier.Champion]: {
-    label: 'Champion Sponsor',
-    tagTone: 'bg-brand-orange text-white',
-    logoSize: 'w-20 h-20',
+    label: "Champion Sponsor",
+    tagTone: "bg-brand-orange text-white",
+    logoSize: "w-20 h-20",
   },
   [SponsorshipTier.Builder]: {
-    label: 'Builder Sponsor',
-    tagTone: 'bg-brand-blue text-white',
-    logoSize: 'w-20 h-20',
+    label: "Builder Sponsor",
+    tagTone: "bg-brand-blue text-white",
+    logoSize: "w-20 h-20",
   },
   [SponsorshipTier.Friend]: {
-    label: 'Friend Sponsor',
-    tagTone: 'bg-brand-green text-white',
-    logoSize: 'w-20 h-20',
+    label: "Friend Sponsor",
+    tagTone: "bg-brand-green text-white",
+    logoSize: "w-20 h-20",
   },
   [SponsorshipTier.Supporter]: {
-    label: 'Supporter Sponsor',
-    tagTone: 'bg-brand-yellow-main text-black',
-    logoSize: 'w-20 h-20',
+    label: "Supporter Sponsor",
+    tagTone: "bg-brand-yellow-main text-black",
+    logoSize: "w-20 h-20",
   },
   [SponsorshipTier.Other]: {
-    label: 'Sponsor',
-    tagTone: 'bg-brand-black text-white',
-    logoSize: 'w-20 h-20',
+    label: "Sponsor",
+    tagTone: "bg-brand-black text-white",
+    logoSize: "w-20 h-20",
   },
 };
 
@@ -56,16 +56,12 @@ export default function TodaysSponsors() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">
-            Today&apos;s Sponsors
-          </h2>
-          <p className="text-xs text-gray-600 mt-0.5">
-            Making this event possible 🙏
-          </p>
+          <h2 className="text-lg font-bold text-gray-900">Today&apos;s Sponsors</h2>
+          <p className="text-xs text-gray-600 mt-0.5">Making this event possible 🙏</p>
         </div>
-        
+
         <Link
-          href="/partnerships" 
+          href="/partnerships"
           className="text-xs text-zurich hover:text-zurich/80 font-medium underline transition-colors duration-200 whitespace-nowrap"
         >
           Become a sponsor →
@@ -76,7 +72,7 @@ export default function TodaysSponsors() {
         {sponsors.map((sponsor, index) => {
           const tier = sponsor.sponsorshipTier ?? SponsorshipTier.Supporter;
           const tierMeta = TIER_META[tier];
-          const sponsorUrl = sponsor.url.includes('?')
+          const sponsorUrl = sponsor.url.includes("?")
             ? sponsor.url
             : `${sponsor.url}?utm_source=zurichjs.com&utm_medium=website&utm_campaign=sponsorship`;
 
@@ -111,14 +107,26 @@ export default function TodaysSponsors() {
                         <h3 className="font-bold text-lg sm:text-base leading-tight mb-1">
                           {sponsor.name}
                         </h3>
-                        <div className={`inline-flex items-center rounded-full font-semibold uppercase tracking-[0.08em] sm:px-2 py-1 text-[10px] sm:text-[9px] leading-tight ${tierMeta.tagTone}`}>
+                        <div
+                          className={`inline-flex items-center rounded-full font-semibold uppercase tracking-[0.08em] sm:px-2 py-1 text-[10px] sm:text-[9px] leading-tight ${tierMeta.tagTone}`}
+                        >
                           {tierMeta.label}
                         </div>
                       </div>
 
                       <div className="hidden sm:block flex-shrink-0 transition-opacity duration-200 mt-0.5 opacity-60 group-hover:opacity-100">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -131,8 +139,18 @@ export default function TodaysSponsors() {
 
                     <div className="mt-3 sm:hidden transition-opacity duration-200 flex items-center justify-center gap-1 text-sm opacity-60 group-hover:opacity-100">
                       <span>Visit website</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -151,7 +169,7 @@ export default function TodaysSponsors() {
             key={tier}
             className={`text-[10px] font-semibold uppercase tracking-[0.08em] px-2 py-1 rounded-full ${TIER_META[tier].tagTone}`}
           >
-            {TIER_META[tier].label.replace(' Sponsor', '')}
+            {TIER_META[tier].label.replace(" Sponsor", "")}
           </span>
         ))}
       </div>

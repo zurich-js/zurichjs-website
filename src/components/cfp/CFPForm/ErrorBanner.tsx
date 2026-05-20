@@ -1,7 +1,7 @@
-import { motion } from 'framer-motion';
-import { AlertCircle } from 'lucide-react';
+import { motion } from "framer-motion";
+import { AlertCircle } from "lucide-react";
 
-import { ValidationErrors } from '../types';
+import { ValidationErrors } from "../types";
 
 interface ErrorBannerProps {
   error: string;
@@ -16,7 +16,7 @@ export default function ErrorBanner({
   generateEmailBody,
   onEmailFallback,
 }: ErrorBannerProps) {
-  const errorCount = Object.values(validationErrors).filter(e => e !== undefined).length;
+  const errorCount = Object.values(validationErrors).filter((e) => e !== undefined).length;
 
   return (
     <motion.div
@@ -31,8 +31,8 @@ export default function ErrorBanner({
         <div>
           <h3 className="text-red-800 font-semibold">
             {errorCount > 0
-              ? `Please fix ${errorCount} error${errorCount > 1 ? 's' : ''} below`
-              : 'Submission Error'}
+              ? `Please fix ${errorCount} error${errorCount > 1 ? "s" : ""} below`
+              : "Submission Error"}
           </h3>
           <p className="text-red-700 mt-1">{error}</p>
         </div>
@@ -42,8 +42,8 @@ export default function ErrorBanner({
         <div className="bg-red-100 border border-red-200 rounded-lg p-4">
           <h4 className="text-red-800 font-semibold mb-2">Alternative: Email Your Submission</h4>
           <p className="text-red-700 text-sm mb-3">
-            Don&apos;t worry! You can send your talk proposal directly to us via email. Click below to
-            generate an email with your current form data.
+            Don&apos;t worry! You can send your talk proposal directly to us via email. Click below
+            to generate an email with your current form data.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <a
@@ -61,8 +61,8 @@ export default function ErrorBanner({
             </a>
           </div>
           <p className="text-xs text-red-600 mt-2">
-            The first option will pre-fill an email with your current form data so you don&apos;t lose
-            your work.
+            The first option will pre-fill an email with your current form data so you don&apos;t
+            lose your work.
           </p>
         </div>
       )}

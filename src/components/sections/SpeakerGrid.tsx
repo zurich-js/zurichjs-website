@@ -1,9 +1,9 @@
-import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
-import Section from '../Section';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import Section from "../Section";
+import Button from "../ui/Button";
+import Card from "../ui/Card";
 
 // Define TypeScript interfaces for the component
 interface Speaker {
@@ -20,13 +20,13 @@ interface SpeakerGridProps {
   titleClassName?: string;
 }
 
-export default function SpeakerGrid({ 
-  speakers, 
-  textClassName = 'text-gray-800',
-  titleClassName = 'text-gray-900'
+export default function SpeakerGrid({
+  speakers,
+  textClassName = "text-gray-800",
+  titleClassName = "text-gray-900",
 }: SpeakerGridProps) {
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -44,9 +44,7 @@ export default function SpeakerGrid({
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className={`text-3xl font-bold mb-2 ${titleClassName}`}>
-            Featured Speakers 🎤
-          </h2>
+          <h2 className={`text-3xl font-bold mb-2 ${titleClassName}`}>Featured Speakers 🎤</h2>
           <p className={textClassName}>
             Get inspired by these JavaScript wizards sharing their coding superpowers! ✨
           </p>
@@ -57,8 +55,8 @@ export default function SpeakerGrid({
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Button 
-            href="/speakers" 
+          <Button
+            href="/speakers"
             variant="outline"
             className="border-blue-700 text-blue-700 hover:bg-blue-50"
           >
@@ -76,10 +74,7 @@ export default function SpeakerGrid({
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: isClient ? index * 0.1 : 0 }}
           >
-            <Card 
-              type="speaker" 
-              item={speaker}
-            />
+            <Card type="speaker" item={speaker} />
           </motion.div>
         ))}
       </div>
@@ -91,11 +86,7 @@ export default function SpeakerGrid({
         transition={{ duration: 0.5, delay: isClient ? 0.3 : 0 }}
         className="mt-12 text-center"
       >
-        <Button 
-          href="/cfp" 
-          variant="secondary" 
-          size="lg"
-        >
+        <Button href="/cfp" variant="secondary" size="lg">
           Become a Speaker 💻
         </Button>
         <p className={`mt-4 text-sm ${textClassName}`}>

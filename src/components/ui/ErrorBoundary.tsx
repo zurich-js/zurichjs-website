@@ -1,6 +1,6 @@
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import posthog from 'posthog-js';
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import posthog from "posthog-js";
+import { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -22,7 +22,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -35,27 +35,27 @@ class ErrorBoundary extends Component<Props, State> {
 
     // Report to PostHog
     try {
-      posthog.capture('$exception', {
+      posthog.capture("$exception", {
         $exception_message: error.message,
         $exception_type: error.name,
         $exception_stack_trace_raw: error.stack,
         component_stack: errorInfo.componentStack,
-        source: 'error_boundary',
-        ...this.props.context
+        source: "error_boundary",
+        ...this.props.context,
       });
     } catch (err) {
-      console.error('Failed to report error to PostHog:', err);
+      console.error("Failed to report error to PostHog:", err);
     }
 
     // Also log to console for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   handleReset = () => {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
 
     if (this.props.onReset) {
@@ -65,7 +65,10 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const { fallbackTitle = 'Something went wrong', fallbackMessage = 'We encountered an unexpected error. Please try again.' } = this.props;
+      const {
+        fallbackTitle = "Something went wrong",
+        fallbackMessage = "We encountered an unexpected error. Please try again.",
+      } = this.props;
 
       return (
         <div className="min-h-[400px] flex items-center justify-center p-6">
@@ -74,15 +77,11 @@ class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">
-              {fallbackTitle}
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">{fallbackTitle}</h2>
 
-            <p className="text-gray-600 mb-6">
-              {fallbackMessage}
-            </p>
+            <p className="text-gray-600 mb-6">{fallbackMessage}</p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env.NODE_ENV === "development" && this.state.error && (
               <details className="mb-6 text-left bg-gray-50 rounded-lg p-4 text-sm">
                 <summary className="cursor-pointer font-medium text-gray-700 mb-2">
                   Error Details (Development)
@@ -112,7 +111,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <p className="text-xs text-gray-500 mt-6">
-              If this problem persists, please contact us at{' '}
+              If this problem persists, please contact us at{" "}
               <a href="mailto:hello@zurichjs.com" className="text-blue-600 hover:underline">
                 hello@zurichjs.com
               </a>

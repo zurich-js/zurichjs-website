@@ -1,20 +1,21 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 
 interface ConfBannerProps {
   className?: string;
 }
 
-const CONF_URL = 'https://conf.zurichjs.com';
-const UTM_PARAMS = '?utm_source=zurichjs&utm_medium=website&utm_campaign=conf2026&utm_content=banner';
+const CONF_URL = "https://conf.zurichjs.com";
+const UTM_PARAMS =
+  "?utm_source=zurichjs&utm_medium=website&utm_campaign=conf2026&utm_content=banner";
 
 const slides = [
-  { text: 'Early Bird tickets on sale', short: 'Early Bird on sale' },
-  { text: 'First speakers revealed', short: 'Speakers revealed' },
-  { text: 'September 11, 2026', short: 'Sept 11, 2026' },
+  { text: "Early Bird tickets on sale", short: "Early Bird on sale" },
+  { text: "First speakers revealed", short: "Speakers revealed" },
+  { text: "September 11, 2026", short: "Sept 11, 2026" },
 ];
 
-export default function ConfBanner({ className = '' }: ConfBannerProps) {
+export default function ConfBanner({ className = "" }: ConfBannerProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = useCallback(() => {
@@ -32,7 +33,7 @@ export default function ConfBanner({ className = '' }: ConfBannerProps) {
       target="_blank"
       rel="noopener noreferrer"
       className={`group block w-full bg-black cursor-pointer ${className}`}
-      whileHover={{ backgroundColor: '#1a1a1a' }}
+      whileHover={{ backgroundColor: "#1a1a1a" }}
     >
       <div className="px-4 py-3 sm:py-2.5">
         <div className="flex items-center justify-center gap-2.5 sm:gap-4">

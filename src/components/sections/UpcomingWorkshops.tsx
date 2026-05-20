@@ -1,11 +1,11 @@
-import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
-import Section from '../Section';
-import Button from '../ui/Button';
+import Section from "../Section";
+import Button from "../ui/Button";
 
 // Define workshop state type
-export type WorkshopState = 'confirmed' | 'interest';
+export type WorkshopState = "confirmed" | "interest";
 
 export interface Workshop {
   id: string;
@@ -36,9 +36,7 @@ interface UpcomingWorkshopsProps {
   titleClassName?: string;
 }
 
-export default function UpcomingWorkshops({
-  workshops,
-}: UpcomingWorkshopsProps) {
+export default function UpcomingWorkshops({ workshops }: UpcomingWorkshopsProps) {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -58,9 +56,7 @@ export default function UpcomingWorkshops({
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl font-bold mb-2">
-            Upcoming JavaScript Workshops
-          </h2>
+          <h2 className="text-3xl font-bold mb-2">Upcoming JavaScript Workshops</h2>
           <p className="mb-4">
             Level up your JavaScript skills with our hands-on workshops led by industry experts!
           </p>
@@ -99,18 +95,26 @@ export default function UpcomingWorkshops({
                   />
                 ) : (
                   // Fallback graphic when no image is provided
-                  <div 
+                  <div
                     className="w-full h-48 relative flex items-center justify-center"
                     style={{ backgroundColor: workshop.iconColor }}
                   >
                     <div className="absolute inset-0 opacity-10">
-                      <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <polygon points="0,100 30,80 50,90 80,70 100,85 100,100" fill="white"/>
-                        <polygon points="0,100 20,85 40,95 70,75 100,90 100,100" fill="white" opacity="0.5"/>
+                      <svg
+                        className="w-full h-full"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                      >
+                        <polygon points="0,100 30,80 50,90 80,70 100,85 100,100" fill="white" />
+                        <polygon
+                          points="0,100 20,85 40,95 70,75 100,90 100,100"
+                          fill="white"
+                          opacity="0.5"
+                        />
                       </svg>
                     </div>
                     <div className="relative z-10 text-center text-white">
-                      <div className="text-4xl mb-2">{workshop.tag.split(' ')[0]}</div>
+                      <div className="text-4xl mb-2">{workshop.tag.split(" ")[0]}</div>
                       <div className="text-lg font-bold px-4">{workshop.title}</div>
                       <div className="text-sm opacity-90 mt-1">{workshop.subtitle}</div>
                     </div>

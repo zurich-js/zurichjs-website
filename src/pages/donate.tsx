@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Heart, Coins } from "lucide-react";
 import Head from "next/head";
 import Image from "next/image";
+import Script from "next/script";
 
 import Layout from "@/components/layout/Layout";
 
@@ -42,11 +43,11 @@ export default function DonatePage() {
                 thriving.
               </p>
 
-              {/* TWINT QR Code */}
-              <div className="mb-8 flex flex-col items-center">
+              {/* TWINT QR Code - Desktop only */}
+              <div className="mb-8 hidden md:flex flex-col items-center">
                 <div className="bg-white p-6 rounded-xl shadow-lg border-2 border-gray-100 mb-4">
                   <Image
-                    src="/images/twint-code.jpg"
+                    src="/images/twint-code.png"
                     alt="TWINT Donation QR Code"
                     width={300}
                     height={300}
@@ -58,6 +59,28 @@ export default function DonatePage() {
                   <Heart className="w-5 h-5 text-red-500" />
                   <span className="font-medium">Scan with TWINT to donate</span>
                 </div>
+              </div>
+
+              {/* TWINT Button - Mobile only */}
+              <div className="mb-8 flex md:hidden flex-col items-center">
+                <div id="rnw-paylink-button-vbthm" />
+                <Script
+                  type="module"
+                  strategy="afterInteractive"
+                  dangerouslySetInnerHTML={{
+                    __html: `
+                      import {TwintButton} from "https://unpkg.com/@raisenow/paylink-button@2/dist/TwintButton.js"
+                      TwintButton.render("#rnw-paylink-button-vbthm", {
+                        "solution-id": "vbthm",
+                        "solution-type": "pay",
+                        "language": "en",
+                        "size": "large",
+                        "width": "fixed",
+                        "color-scheme": "dark",
+                      })
+                    `,
+                  }}
+                />
               </div>
 
               {/* Cash donation message */}

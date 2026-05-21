@@ -167,43 +167,43 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
           </motion.div>
 
           <div className="flex flex-col gap-6 md:flex-row">
-            <motion.div
-              initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.25 }}
-              data-section="raffle"
-            >
-              <TodayCard className="h-full">
-                <div className="flex flex-col gap-4 h-full md:min-w-96">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Give us feedback, get some swag!
-                  </h2>
+            {/*<motion.div*/}
+            {/*  initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}*/}
+            {/*  animate={{ opacity: 1, y: 0 }}*/}
+            {/*  transition={{ duration: 0.5, delay: 0.25 }}*/}
+            {/*  data-section="raffle"*/}
+            {/*>*/}
+            {/*  <TodayCard className="h-full">*/}
+            {/*    <div className="flex flex-col gap-4 h-full md:min-w-96">*/}
+            {/*      <h2 className="text-xl font-bold text-gray-900">*/}
+            {/*        Give us feedback, get some swag!*/}
+            {/*      </h2>*/}
 
-                  <p className="text-sm text-gray-600">
-                    Fill out the form below for a chance to win a Stripe book.
-                  </p>
+            {/*      <p className="text-sm text-gray-600">*/}
+            {/*        Fill out the form below for a chance to win a Stripe book.*/}
+            {/*      </p>*/}
 
-                  <div className="flex-1 grid place-items-center my-6">
-                    <Image
-                      src="/images/partners/stripe.png"
-                      alt="Stripe logo"
-                      width={320}
-                      height={320}
-                      className="object-contain"
-                    />
-                  </div>
+            {/*      <div className="flex-1 grid place-items-center my-6">*/}
+            {/*        <Image*/}
+            {/*          src="/images/partners/stripe.png"*/}
+            {/*          alt="Stripe logo"*/}
+            {/*          width={320}*/}
+            {/*          height={320}*/}
+            {/*          className="object-contain"*/}
+            {/*        />*/}
+            {/*      </div>*/}
 
-                  <Link
-                    href="https://forms.gle/EBop98LxwBnYNkoH9"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full bg-brand-black text-white font-bold py-4 px-8 rounded-2xl text-center hover:bg-brand-gray-dark transition-colors duration-200"
-                  >
-                    Enter the Stripe book raffle
-                  </Link>
-                </div>
-              </TodayCard>
-            </motion.div>
+            {/*      <Link*/}
+            {/*        href="https://forms.gle/EBop98LxwBnYNkoH9"*/}
+            {/*        target="_blank"*/}
+            {/*        rel="noopener noreferrer"*/}
+            {/*        className="block w-full bg-brand-black text-white font-bold py-4 px-8 rounded-2xl text-center hover:bg-brand-gray-dark transition-colors duration-200"*/}
+            {/*      >*/}
+            {/*        Enter the Stripe book raffle*/}
+            {/*      </Link>*/}
+            {/*    </div>*/}
+            {/*  </TodayCard>*/}
+            {/*</motion.div>*/}
 
             <motion.div
               initial={isClient ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
@@ -235,7 +235,7 @@ export async function getStaticProps() {
         upcomingEvent: upcomingEvent
           ? {
               ...upcomingEvent,
-              attendees: Math.max(upcomingEvent.attendees, 80),
+              attendees: upcomingEvent.attendees ?? 65,
             }
           : null,
       },

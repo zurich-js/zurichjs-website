@@ -6,7 +6,7 @@ import oxlint from "eslint-plugin-oxlint";
 
 export default defineConfig([
   {
-    ignores: [".vercel/**"],
+    ignores: [".vercel/**", "scripts/**"],
   },
   {
     extends: [...nextCoreWebVitals, ...nextTypescript],

@@ -923,11 +923,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 }
 
 export async function getStaticProps() {
-  // Fetch upcoming events
-  const upcomingEvents = await getUpcomingEvents();
-
-  // Fetch past events to count the number of events hosted
-  const pastEvents = await getPastEvents();
+  const [upcomingEvents, pastEvents] = await Promise.all([getUpcomingEvents(), getPastEvents()]);
   const eventsHosted = pastEvents.length;
 
   // Sample recent supporters data

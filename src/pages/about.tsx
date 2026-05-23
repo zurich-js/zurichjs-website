@@ -1,16 +1,4 @@
-// Import Chart.js modules first
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartData,
-  TooltipItem,
-} from "chart.js";
+import type { ChartData, ChartOptions, TooltipItem } from "chart.js";
 import { motion } from "framer-motion";
 import {
   Code,
@@ -40,12 +28,11 @@ import useReferrerTracking from "@/hooks/useReferrerTracking";
 import { getPastEvents, getStats } from "@/sanity/queries";
 import { Event } from "@/sanity/queries";
 
-// Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-// Dynamically import the Chart component with no SSR to avoid hydration issues
-const Chart = dynamic(() => import("react-chartjs-2").then((mod) => mod.Line), {
+// chart.js + its registration + react-chartjs-2 are pulled in only via this dynamic
+// import — keeps the about-page initial bundle ~150KB lighter.
+const AttendanceLineChart = dynamic(() => import("@/components/charts/AttendanceLineChart"), {
   ssr: false,
+  loading: () => <div className="h-64 w-full animate-pulse rounded bg-gray-100" />,
 });
 
 // Define our TypeScript interfaces
@@ -210,7 +197,7 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
   }, [filteredEvents]);
 
   // Chart options
-  const chartOptions = useMemo(() => {
+  const chartOptions = useMemo<ChartOptions<"line">>(() => {
     return {
       responsive: true,
       maintainAspectRatio: false,
@@ -788,7 +775,7 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
 
           <div className="h-80 w-full">
             {filteredEvents.length > 0 ? (
-              <Chart data={attendanceChartData} options={chartOptions} />
+              <AttendanceLineChart data={attendanceChartData} options={chartOptions} />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p className="text-lg text-gray-400">No past events data available</p>
@@ -1109,9 +1096,7 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
 }
 
 export async function getStaticProps() {
-  // Get stats using the same function as the homepage
-  const stats = await getStats();
-  const pastEvents = await getPastEvents();
+  const [stats, pastEvents] = await Promise.all([getStats(), getPastEvents()]);
 
   // This would be replaced with actual CMS fetching
   return {

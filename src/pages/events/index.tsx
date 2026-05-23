@@ -558,15 +558,17 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   );
 }
 
-export async function getServerSideProps() {
-  const upcomingEvents = await getUpcomingEvents();
-  const pastEvents = await getPastEvents();
+// Was getServerSideProps; events do not change per-request. ISR with a short revalidate
+// gives us SSG-fast cold loads while staying within minutes of the CMS.
+export async function getStaticProps() {
+  const [upcomingEvents, pastEvents] = await Promise.all([getUpcomingEvents(), getPastEvents()]);
 
   return {
     props: {
       upcomingEvents,
       pastEvents,
     },
+    revalidate: 300,
   };
 }
 

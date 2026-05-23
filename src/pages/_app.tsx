@@ -4,6 +4,7 @@ import { ClerkProvider, useUser, useClerk } from "@clerk/nextjs";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { AppProps } from "next/app";
 import { Router, useRouter } from "next/router";
+import Script from "next/script";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import { useEffect } from "react";
@@ -45,10 +46,8 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user, isValid, router]);
 
-  // Identify the user with PostHog when they log in
   useEffect(() => {
     if (user) {
-      // PostHog identification
       posthog.identify(user.id, {
         email: user.primaryEmailAddress?.emailAddress,
         name: user.fullName,
@@ -57,20 +56,13 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
     }
   }, [user]);
 
-  // Set up a listener for Clerk's beforeSignOut event
   useEffect(() => {
-    // Register an event listener for signing out
     const unsubscribe = clerk.addListener(({ session }) => {
-      // If session changes to null (user signs out), reset PostHog
       if (!session && clerk.session === null) {
         posthog.reset();
       }
     });
-
-    // Cleanup function to remove the listener
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [clerk]);
 
   return <>{children}</>;
@@ -78,20 +70,29 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
-      person_profiles: "always" as const,
-      loaded: (posthog) => {
-        if (process.env.NODE_ENV === "development") posthog.debug();
-      },
+    // Defer PostHog .init() off the critical path — it triggers a flag-fetch network
+    // round trip on every page load. requestIdleCallback runs after first paint / LCP.
+    const win = window as unknown as {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const scheduler = win.requestIdleCallback || ((cb: () => void) => window.setTimeout(cb, 1));
+    const handle = scheduler(() => {
+      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
+        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+        person_profiles: "always" as const,
+        loaded: (ph) => {
+          if (process.env.NODE_ENV === "development") ph.debug();
+        },
+      });
     });
 
     const handleRouteChange = () => posthog?.capture("$pageview");
-
     Router.events.on("routeChangeComplete", handleRouteChange);
 
     return () => {
       Router.events.off("routeChangeComplete", handleRouteChange);
+      if (typeof handle === "number" && win.cancelIdleCallback) win.cancelIdleCallback(handle);
     };
   }, []);
 
@@ -103,6 +104,19 @@ export default function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
         </AuthCheck>
       </ClerkProvider>
+
+      <Script id="linkedin-insight-init" strategy="lazyOnload">
+        {`
+          _linkedin_partner_id = "7172098";
+          window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+          window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+        `}
+      </Script>
+      <Script
+        id="linkedin-insight"
+        strategy="lazyOnload"
+        src="https://snap.licdn.com/li.lms-analytics/insight.min.js"
+      />
     </PostHogProvider>
   );
 }

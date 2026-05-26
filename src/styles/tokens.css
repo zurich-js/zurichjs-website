@@ -1,0 +1,168 @@
+/* ===========================================================
+   ZurichJS — Design Tokens (v0.1)
+   Source of truth for color, type, spacing, radius, shadow.
+   Import this file once at root. Reference via var(--zjs-*).
+   =========================================================== */
+
+/* ---------- SELF-HOSTED VARIABLE FONTS ---------- */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/InterVariable-Italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMonoVariable.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- BRAND ---------- */
+  --zjs-yellow: #ecdc30; /* primary brand surface */
+  --zjs-yellow-soft: #f8ee7c; /* soft yellow accent (highlight bg, hovers) */
+  --zjs-yellow-mute: #fef9c3; /* subtle wash (sponsor card, info banners) */
+  --zjs-blue: #2563eb; /* primary action blue */
+  --zjs-blue-deep: #1d4ed8; /* hover / pressed */
+  --zjs-blue-soft: #dbeafe; /* info pill bg, focus rings */
+  --zjs-black: #0a0a0a; /* text + dark CTA */
+
+  /* ---------- NEUTRALS ---------- */
+  --zjs-white: #ffffff;
+  --zjs-gray-50: #f9fafb;
+  --zjs-gray-100: #f3f4f6;
+  --zjs-gray-200: #e5e7eb;
+  --zjs-gray-300: #d1d5db;
+  --zjs-gray-400: #9ca3af;
+  --zjs-gray-500: #6b7280;
+  --zjs-gray-600: #4b5563;
+  --zjs-gray-700: #374151;
+  --zjs-gray-800: #1f2937;
+  --zjs-gray-900: #111827;
+
+  /* Slate (used for dark pricing/stat cards) */
+  --zjs-slate-900: #0f172a;
+  --zjs-slate-800: #1e293b;
+  --zjs-slate-700: #334155;
+
+  /* ---------- ACCENTS (sparingly) ---------- */
+  --zjs-pink: #ec4899; /* "Submit Talk" CTA, hearts */
+  --zjs-rose: #f43f5e; /* destructive / hot */
+  --zjs-green: #16a34a; /* success, "auto-save enabled" */
+  --zjs-amber: #f59e0b; /* warnings, calendar icon */
+  --zjs-cyan: #06b6d4; /* tertiary accent */
+
+  /* Topic chip colors (used for Popular Topics) */
+  --zjs-topic-yellow: #f59e0b;
+  --zjs-topic-blue: #3b82f6;
+  --zjs-topic-green: #10b981;
+  --zjs-topic-purple: #a855f7;
+  --zjs-topic-red: #ef4444;
+  --zjs-topic-indigo: #6366f1;
+  --zjs-topic-cyan: #06b6d4;
+  --zjs-topic-gray: #6b7280;
+
+  /* ---------- SEMANTIC ---------- */
+  --zjs-bg: var(--zjs-white);
+  --zjs-bg-muted: var(--zjs-gray-50);
+  --zjs-surface: var(--zjs-white);
+  --zjs-surface-dark: var(--zjs-slate-900);
+  --zjs-text: var(--zjs-black);
+  --zjs-text-muted: var(--zjs-gray-500);
+  --zjs-text-subtle: var(--zjs-gray-400);
+  --zjs-border: var(--zjs-gray-200);
+  --zjs-border-strong: var(--zjs-gray-300);
+  --zjs-focus: var(--zjs-blue);
+
+  /* ---------- TYPOGRAPHY ---------- */
+  --zjs-font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --zjs-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* Type scale */
+  --zjs-fs-xs: 0.75rem; /* 12px — meta, table sub-text */
+  --zjs-fs-sm: 0.875rem; /* 14px — labels, micro UI */
+  --zjs-fs-base: 1rem; /* 16px — body */
+  --zjs-fs-md: 1.0625rem; /* 17px — body large */
+  --zjs-fs-lg: 1.125rem; /* 18px — sub-section */
+  --zjs-fs-xl: 1.25rem; /* 20px — card titles */
+  --zjs-fs-2xl: 1.5rem; /* 24px */
+  --zjs-fs-3xl: 1.875rem; /* 30px — page section header */
+  --zjs-fs-4xl: 2.25rem; /* 36px */
+  --zjs-fs-5xl: 3rem; /* 48px — hero secondary */
+  --zjs-fs-6xl: 3.75rem; /* 60px — hero primary */
+  --zjs-fs-7xl: 4.5rem; /* 72px — mega display */
+
+  --zjs-fw-regular: 400;
+  --zjs-fw-medium: 500;
+  --zjs-fw-semibold: 600;
+  --zjs-fw-bold: 700;
+  --zjs-fw-extra: 800;
+
+  --zjs-lh-tight: 1.05;
+  --zjs-lh-snug: 1.2;
+  --zjs-lh-normal: 1.5;
+  --zjs-lh-relaxed: 1.65;
+
+  --zjs-tracking-tight: -0.02em;
+  --zjs-tracking-snug: -0.01em;
+  --zjs-tracking-wide: 0.04em;
+
+  /* ---------- SPACING (4px base) ---------- */
+  --zjs-space-1: 0.25rem; /*  4px */
+  --zjs-space-2: 0.5rem; /*  8px */
+  --zjs-space-3: 0.75rem; /* 12px */
+  --zjs-space-4: 1rem; /* 16px */
+  --zjs-space-5: 1.25rem; /* 20px */
+  --zjs-space-6: 1.5rem; /* 24px */
+  --zjs-space-8: 2rem; /* 32px */
+  --zjs-space-10: 2.5rem; /* 40px */
+  --zjs-space-12: 3rem; /* 48px */
+  --zjs-space-16: 4rem; /* 64px */
+  --zjs-space-20: 5rem; /* 80px */
+  --zjs-space-24: 6rem; /* 96px */
+  --zjs-space-32: 8rem; /* 128px */
+
+  /* ---------- RADII ---------- */
+  --zjs-radius-xs: 0.25rem; /* 4px — tags */
+  --zjs-radius-sm: 0.375rem; /* 6px — inputs */
+  --zjs-radius-md: 0.625rem; /* 10px — buttons */
+  --zjs-radius-lg: 1rem; /* 16px — cards */
+  --zjs-radius-xl: 1.5rem; /* 24px — panels */
+  --zjs-radius-2xl: 2rem; /* 32px */
+  --zjs-radius-pill: 999px;
+
+  /* ---------- SHADOWS ---------- */
+  --zjs-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --zjs-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --zjs-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --zjs-shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --zjs-shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.12);
+  --zjs-shadow-card: 0 1px 0 rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
+
+  /* ---------- LAYOUT ---------- */
+  --zjs-container: 1200px;
+  --zjs-container-narrow: 880px;
+  --zjs-nav-height: 72px;
+
+  /* ---------- MOTION ---------- */
+  --zjs-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --zjs-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --zjs-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --zjs-dur-fast: 120ms;
+  --zjs-dur-base: 200ms;
+  --zjs-dur-slow: 400ms;
+}

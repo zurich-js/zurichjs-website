@@ -1,35 +1,37 @@
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { ReactNode, MouseEvent, ButtonHTMLAttributes, AnchorHTMLAttributes } from "react";
 
-// Define our variant and size types
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+type ButtonVariant =
+  | "primary"
+  | "dark"
+  | "yellow"
+  | "ghost"
+  | "ghost-dark"
+  | "secondary"
+  | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 
-// Props that are common to both button and link
 interface BaseButtonProps {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
   external?: boolean;
+  "data-flow"?: string;
 }
 
-// Props specific to button element
 interface ButtonElementProps
   extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps> {
   href?: undefined;
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
-// Props specific to anchor element
 interface AnchorElementProps
   extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> {
   href: string;
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-// Combined props type - component will accept either button or anchor props
 type ButtonProps = ButtonElementProps | AnchorElementProps;
 
 export default function Button({
@@ -42,37 +44,30 @@ export default function Button({
   external = false,
   ...props
 }: ButtonProps) {
-  // Define button styles based on variant and size
   const baseStyles =
-    "inline-flex items-center justify-center font-medium rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 !cursor-pointer hover:!cursor-pointer";
+    "inline-flex items-center justify-center gap-2 font-semibold rounded-zjs-pill transition-all cursor-pointer hover:translate-y-[-1px] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zjs-blue";
 
   const variantStyles: Record<ButtonVariant, string> = {
-    primary: "bg-black text-white hover:bg-gray-800 focus:ring-black",
-    secondary: "bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500",
+    primary: "bg-zjs-blue text-white hover:bg-zjs-blue-deep",
+    dark: "bg-zjs-black text-white hover:bg-zjs-gray-800",
+    yellow: "bg-zjs-yellow text-zjs-black hover:brightness-105",
+    ghost: "bg-transparent text-zjs-blue border-[1.5px] border-zjs-blue hover:bg-zjs-blue-soft",
+    "ghost-dark":
+      "bg-transparent text-zjs-black border-[1.5px] border-zjs-black hover:bg-zjs-black hover:text-white",
+    // Legacy aliases — map to new variants
+    secondary: "bg-zjs-black text-white hover:bg-zjs-gray-800",
     outline:
-      "bg-transparent border-2 border-current text-black hover:bg-black hover:text-white focus:ring-black",
-    ghost: "bg-transparent text-black hover:bg-yellow-100 focus:ring-black",
+      "bg-transparent text-zjs-black border-[1.5px] border-zjs-black hover:bg-zjs-black hover:text-white",
   };
 
   const sizeStyles: Record<ButtonSize, string> = {
-    sm: "text-sm px-3 py-1.5",
-    md: "text-base px-4 py-2",
-    lg: "text-lg px-6 py-3",
+    sm: "text-[var(--zjs-fs-xs)] px-3 py-1.5",
+    md: "text-[var(--zjs-fs-sm)] px-5 py-3",
+    lg: "text-base px-7 py-4",
   };
 
   const buttonStyles = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
 
-  const buttonContent = (
-    <motion.span
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.98 }}
-      className="w-full h-full flex items-center justify-center"
-    >
-      {children}
-    </motion.span>
-  );
-
-  // Return link or button based on href prop
   if (href) {
     const {
       target: targetProp,
@@ -92,7 +87,7 @@ export default function Button({
         onClick={onClick as AnchorElementProps["onClick"]}
         {...anchorRest}
       >
-        {buttonContent}
+        {children}
       </Link>
     );
   }
@@ -103,7 +98,7 @@ export default function Button({
       onClick={onClick as ButtonElementProps["onClick"]}
       {...(props as ButtonElementProps)}
     >
-      {buttonContent}
+      {children}
     </button>
   );
 }

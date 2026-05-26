@@ -7,11 +7,11 @@ import { useState, useEffect, useRef } from "react";
 
 import Logo from "@/components/ui/Logo";
 
-// Design tokens matching hero
-const COLORS = {
-  primaryBlue: "#1D4ED8",
-  heroYellow: "#F0DC62",
-};
+// Nav active state classes
+const NAV_ACTIVE = "text-[var(--zjs-blue-deep)] bg-[var(--zjs-blue-soft)]";
+const NAV_IDLE_SCROLLED =
+  "text-[var(--zjs-gray-700)] hover:text-[var(--zjs-black)] hover:bg-[var(--zjs-gray-100)]";
+const NAV_IDLE_TRANSPARENT = "text-black/80 hover:text-black hover:bg-black/5";
 
 interface NavSubItem {
   name: string;
@@ -116,16 +116,16 @@ export default function Header() {
   return (
     <header
       className={`w-full fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${
-        scrolled ? "bg-white shadow-md py-2" : "bg-transparent py-3 lg:py-4"
+        scrolled
+          ? "bg-white/[0.92] backdrop-blur-[14px] shadow-[var(--zjs-shadow-sm)] py-2 border-b border-[var(--zjs-border)]"
+          : "bg-transparent py-3 lg:py-4"
       }`}
     >
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Logo variant="black" className="h-5 w-auto" />
-            </motion.div>
+          <Link href="/" className="flex items-center hover:opacity-90 transition-opacity">
+            <Logo variant="black" className="h-5 w-auto" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -137,10 +137,10 @@ export default function Header() {
                 href={item.path || "/"}
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActivePath(item.path || "/")
-                    ? "text-blue-600 bg-blue-50"
+                    ? NAV_ACTIVE
                     : scrolled
-                      ? "text-gray-700 hover:text-black hover:bg-gray-100"
-                      : "text-black/80 hover:text-black hover:bg-black/5"
+                      ? NAV_IDLE_SCROLLED
+                      : NAV_IDLE_TRANSPARENT
                 }`}
               >
                 {item.name}
@@ -186,8 +186,8 @@ export default function Header() {
                         href={item.path}
                         className={`block px-4 py-2.5 text-sm transition-colors ${
                           isActivePath(item.path)
-                            ? "text-blue-600 bg-blue-50"
-                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                            ? NAV_ACTIVE
+                            : "text-[var(--zjs-gray-700)] hover:text-[var(--zjs-black)] hover:bg-[var(--zjs-gray-50)]"
                         }`}
                       >
                         {item.name}
@@ -291,8 +291,8 @@ export default function Header() {
             {/* Primary CTA - Submit a Talk */}
             <Link
               href="/cfp"
-              className="ml-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              style={{ backgroundColor: COLORS.primaryBlue }}
+              className="ml-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-zjs-pill text-sm font-semibold text-white bg-zjs-blue hover:bg-zjs-blue-deep transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--zjs-blue)]"
+              data-flow="F2.nav"
             >
               Submit a Talk
               <ArrowRight size={16} />
@@ -303,8 +303,8 @@ export default function Header() {
           <div className="lg:hidden flex items-center gap-3">
             <Link
               href="/cfp"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-              style={{ backgroundColor: COLORS.primaryBlue }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-zjs-pill text-sm font-semibold text-white bg-zjs-blue hover:bg-zjs-blue-deep transition-colors"
+              data-flow="F2.nav"
             >
               Speak
               <ArrowRight size={14} />
@@ -368,8 +368,8 @@ export default function Header() {
               {/* Primary CTA - prominent on mobile */}
               <Link
                 href="/cfp"
-                className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl text-white font-semibold mb-4 transition-all hover:opacity-90"
-                style={{ backgroundColor: COLORS.primaryBlue }}
+                className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-zjs-pill text-white bg-zjs-blue hover:bg-zjs-blue-deep font-semibold mb-4 transition-all"
+                data-flow="F2.nav"
               >
                 Submit a Talk
                 <ArrowRight size={18} />

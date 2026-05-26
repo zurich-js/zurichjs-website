@@ -7,14 +7,14 @@ import type { Workshop } from "@/components/sections/UpcomingWorkshops";
 import useEvents from "@/hooks/useEvents";
 import { Event } from "@/sanity/queries";
 
-// Design tokens from spec
+// Design tokens — now referenced via CSS custom properties from tokens.css
 const COLORS = {
-  primaryBlue: "#1D4ED8",
-  pageYellow: "#F0DC62",
-  nextEventPillYellow: "#FDC700",
-  workshopPillBg: "#DBEAFE",
-  workshopPillText: "#1D4ED8",
-  darkNavy: "#0F172A",
+  primaryBlue: "var(--zjs-blue)",
+  pageYellow: "var(--zjs-yellow)",
+  nextEventPillYellow: "var(--zjs-yellow)",
+  workshopPillBg: "var(--zjs-blue-soft)",
+  workshopPillText: "var(--zjs-blue-deep)",
+  darkNavy: "var(--zjs-slate-900)",
 };
 
 const CONF_URL = "https://conf.zurichjs.com";

@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from "next/document";
+import Script from "next/script";
 
 export default function Document() {
   return (
@@ -9,18 +10,29 @@ export default function Document() {
         <link rel="apple-touch-icon" href="/logo-square.png" />
 
         {/* Theme Color for Mobile Browsers */}
-        <meta name="theme-color" content="#F7DF1E" />
+        <meta name="theme-color" content="#ECDC30" />
 
-        {/* Verification Tags (add when available) */}
-        {/* <meta name="google-site-verification" content="your-verification-code" /> */}
+        {/* Self-hosted font preload (critical — body font) */}
+        <link
+          rel="preload"
+          href="/fonts/InterVariable.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
 
         {/* Preconnect to External Domains for Performance */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://cdn.sanity.io" />
-        {/* Begin Inspectlet Asynchronous Code */}
-        <script
-          type="text/javascript"
+      </Head>
+      <body className="antialiased">
+        <Main />
+        <NextScript />
+
+        {/* Inspectlet — deferred to avoid blocking render */}
+        <Script
+          id="inspectlet"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
             (function() {
@@ -33,31 +45,24 @@ export default function Document() {
             `,
           }}
         />
-        {/* End Inspectlet Asynchronous Code */}
 
-        {/* Begin LinkedIn Insight Tag */}
-        <script
-          type="text/javascript"
+        {/* LinkedIn Insight Tag — deferred to avoid blocking render */}
+        <Script
+          id="linkedin-partner"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
             _linkedin_partner_id = "7172098";
             window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
             window._linkedin_data_partner_ids.push(_linkedin_partner_id);
-            `,
-          }}
-        />
-        <script
-          type="text/javascript"
-          dangerouslySetInnerHTML={{
-            __html: `
             (function(l) {
-            if (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};
-            window.lintrk.q=[]}
-            var s = document.getElementsByTagName("script")[0];
-            var b = document.createElement("script");
-            b.type = "text/javascript";b.async = true;
-            b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
-            s.parentNode.insertBefore(b, s);})(window.lintrk);
+              if (!l){window.lintrk = function(a,b){window.lintrk.q.push([a,b])};
+              window.lintrk.q=[]}
+              var s = document.getElementsByTagName("script")[0];
+              var b = document.createElement("script");
+              b.type = "text/javascript";b.async = true;
+              b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
+              s.parentNode.insertBefore(b, s);})(window.lintrk);
             `,
           }}
         />
@@ -70,11 +75,6 @@ export default function Document() {
             src="https://px.ads.linkedin.com/collect/?pid=7172098&fmt=gif"
           />
         </noscript>
-        {/* End LinkedIn Insight Tag */}
-      </Head>
-      <body className="antialiased">
-        <Main />
-        <NextScript />
       </body>
     </Html>
   );

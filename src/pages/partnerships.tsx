@@ -2224,13 +2224,13 @@ export default function Partnerships() {
 }
 
 export async function getStaticProps() {
-  const upcomingEvents = await getUpcomingEvents();
-  const stats = await getStats();
+  const [upcomingEvents, stats] = await Promise.all([getUpcomingEvents(), getStats()]);
 
   return {
     props: {
       upcomingEvent: upcomingEvents[0],
       stats,
     },
+    revalidate: 3600,
   };
 }

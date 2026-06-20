@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft, ChevronRight, Download, Share2, Sparkles } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 import { generateOptimizedImage, generateSizes } from "../../utils/thumbnailGenerator";
 
@@ -13,9 +13,14 @@ interface ImageGalleryProps {
     url: string;
     thumbnailUrl?: string;
     duration?: number;
+    eventId?: string;
   }>;
   eventTitle: string;
   initialIndex?: number;
+  viewAllHref?:
+    | string
+    | ((photo: { eventId?: string; url: string }, index: number) => string | undefined);
+  viewAllLabel?: string;
   onAIFunMode?: (imageUrl: string, imageAlt: string) => void;
   isAIFunModeEnabled?: boolean;
 }
@@ -26,6 +31,8 @@ export default function ImageGallery({
   media,
   eventTitle,
   initialIndex = 0,
+  viewAllHref,
+  viewAllLabel = "View all event media",
   onAIFunMode,
   isAIFunModeEnabled = false,
 }: ImageGalleryProps) {
@@ -33,7 +40,8 @@ export default function ImageGallery({
   const [isLoading, setIsLoading] = useState(true);
 
   // Filter only photos for the gallery
-  const photos = media.filter((item) => item.type === "photo");
+  const photos = useMemo(() => media.filter((item) => item.type === "photo"), [media]);
+  const getModalImageUrl = useCallback((url: string) => generateOptimizedImage(url, "modal"), []);
 
   const scrollToThumbnail = (index: number) => {
     const thumbnailElement = document.getElementById(`thumbnail-${index}`);
@@ -49,6 +57,10 @@ export default function ImageGallery({
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
+
+  useEffect(() => {
+    setIsLoading(true);
+  }, [currentIndex]);
 
   // Scroll to thumbnail when current index changes
   useEffect(() => {
@@ -105,6 +117,24 @@ export default function ImageGallery({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    if (!isOpen || photos.length === 0 || typeof window === "undefined") return;
+
+    const indexes = [
+      currentIndex,
+      currentIndex === photos.length - 1 ? 0 : currentIndex + 1,
+      currentIndex === 0 ? photos.length - 1 : currentIndex - 1,
+    ];
+
+    indexes.forEach((index) => {
+      const photo = photos[index];
+      if (!photo) return;
+
+      const image = new window.Image();
+      image.src = getModalImageUrl(photo.url);
+    });
+  }, [currentIndex, getModalImageUrl, isOpen, photos]);
+
   const handleImageLoad = () => {
     setIsLoading(false);
   };
@@ -141,6 +171,11 @@ export default function ImageGallery({
   };
 
   if (!isOpen || photos.length === 0) return null;
+
+  const activeViewAllHref =
+    typeof viewAllHref === "function"
+      ? viewAllHref(photos[currentIndex], currentIndex)
+      : viewAllHref;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
@@ -191,6 +226,14 @@ export default function ImageGallery({
 
       {/* Action buttons */}
       <div className="absolute bottom-4 right-4 z-10 flex gap-2">
+        {activeViewAllHref && (
+          <a
+            href={activeViewAllHref}
+            className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-gray-200"
+          >
+            {viewAllLabel}
+          </a>
+        )}
         <button
           onClick={handleDownload}
           className="p-2 bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
@@ -223,16 +266,17 @@ export default function ImageGallery({
               </div>
             )}
             <Image
-              src={generateOptimizedImage(photos[currentIndex].url, "modal")}
+              src={getModalImageUrl(photos[currentIndex].url)}
               alt={`${eventTitle} - Photo ${currentIndex + 1}`}
               width={1200}
               height={800}
               className="max-w-full max-h-[calc(100vh-240px)] object-contain rounded-lg"
+              style={{ width: "auto", height: "auto" }}
               sizes={generateSizes()}
               onLoad={handleImageLoad}
               onError={handleImageError}
               priority
-              quality={90}
+              unoptimized
             />
           </motion.div>
         </AnimatePresence>

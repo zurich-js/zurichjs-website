@@ -21,6 +21,7 @@ import { useFeatureFlagEnabled } from "posthog-js/react";
 import React, { Fragment, useState, useEffect } from "react";
 
 import Layout from "@/components/layout/Layout";
+import EventMediaSection from "@/components/media/EventMediaSection";
 import Section from "@/components/Section";
 import SEO from "@/components/SEO";
 import Button from "@/components/ui/Button";
@@ -634,6 +635,12 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </Link>
               </motion.div>
             )}
+
+            <EventMediaSection
+              eventId={event.id}
+              eventTitle={event.title}
+              isUpcoming={isUpcoming}
+            />
 
             {/* Schedule */}
             {event.talks.length > 0 && (

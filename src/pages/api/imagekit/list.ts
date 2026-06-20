@@ -2,13 +2,15 @@ import { ImageKit } from "@imagekit/nodejs";
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { ImageKitFile } from "../../../types/gallery";
-import { isVideoFile, getAllThumbnailSizes } from "../../../utils/thumbnailGenerator";
+import { isVideoFile, generateThumbnail } from "../../../utils/thumbnailGenerator";
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
   try {
+    res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+
     const imagekit = new ImageKit({
       privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
     });
@@ -43,31 +45,23 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           // Calculate aspect ratio for consistent display
           const aspectRatio = actualWidth / actualHeight;
 
-          // Generate all thumbnail sizes using the enhanced utility
-          const thumbnailSizes = getAllThumbnailSizes(fileObj.url as string, isVideo);
+          const thumbnailUrl = isVideo
+            ? undefined
+            : generateThumbnail(fileObj.url as string, false, "medium");
 
-          // Enhance file object with additional metadata and multiple thumbnail sizes
           const enhancedFile: ImageKitFile = {
             fileId: fileObj.fileId as string,
             name: fileObj.name as string,
             filePath: fileObj.filePath as string,
             url: fileObj.url as string,
             createdAt: fileObj.createdAt as string,
-            updatedAt: fileObj.updatedAt as string | undefined,
-            metadata,
             isVideo,
             width: actualWidth,
             height: actualHeight,
             aspectRatio,
-            // Use optimized thumbnails with new parameters
-            thumbnailUrl: thumbnailSizes.medium,
-            thumbnailUrlSmall: thumbnailSizes.small,
-            thumbnailUrlLarge: thumbnailSizes.large,
-            fallbackUrl: fileObj.url as string,
+            thumbnailUrl,
             duration: (fileObj.duration as number) || (isVideo ? 120 : undefined),
-            tags: (fileObj.tags as string[]) || undefined,
             fileSize: (fileObj.size as number) || 0,
-            mimeType: (fileObj.mimeType as string) || (isVideo ? "video/mp4" : "image/jpeg"),
           };
 
           filesByFolder[folder].push(enhancedFile);

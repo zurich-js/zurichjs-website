@@ -371,6 +371,34 @@ export const getPastEvents = async () => {
   return events.map(mapEventData);
 };
 
+export const getPastEventsForMedia = async (): Promise<Event[]> => {
+  const events = await client.withConfig({ useCdn: true }).fetch(
+    `*[_type == "events" && datetime < $startOfToday] | order(datetime desc) {
+      _id,
+      id,
+      title,
+      datetime,
+      location,
+      address,
+      attendees,
+      isProMeetup,
+      stripePriceId,
+      description,
+      meetupUrl,
+      excludeFromStats,
+      "image": {
+        "asset": {
+          "url": image.asset->url
+        }
+      },
+      "talks": []
+    }`,
+    { startOfToday: getStartOfTodayISO() },
+  );
+
+  return events.map(mapEventData);
+};
+
 export const getEventById = async (eventId: string) => {
   const [event] = await client.fetch(
     `*[_type == "events" && id.current == $eventId] {

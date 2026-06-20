@@ -150,12 +150,12 @@ export function generateOptimizedImage(
     const encodedPath = pathSegments.join("/");
     const baseUrl = `${url.protocol}//${url.host}${encodedPath}`;
 
-    // Context-specific optimizations without cropping
+    // Context-specific optimizations with bounded dimensions.
     const optimizations = {
-      gallery: "f-webp,q-80,dpr-2,pr-true,fo-auto",
-      featured: "f-webp,q-85,dpr-2,pr-true,fo-auto",
-      modal: "f-webp,q-90,dpr-2,pr-true,fo-auto",
-      hero: "f-webp,q-85,dpr-2,pr-true,fo-auto",
+      gallery: "w-480,q-75,dpr-2,pr-true,fo-auto",
+      featured: "w-960,q-82,dpr-2,pr-true,fo-auto",
+      modal: "w-1600,q-80,pr-true,fo-auto",
+      hero: "w-1400,q-82,dpr-2,pr-true,fo-auto",
     };
 
     return `${baseUrl}?tr=${optimizations[context]}`;

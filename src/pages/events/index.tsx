@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import type { GetStaticProps } from "next";
 import { Calendar, MapPin, Users, ChevronRight, Search, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,6 +32,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(upcomingEvents);
   const [isClient, setIsClient] = useState(false);
   const showNewsletter = useFeatureFlagEnabled(FeatureFlags.Newsletter);
+  const hasSearchQuery = searchQuery.trim().length > 0;
 
   // Set up client-side rendering flag to prevent hydration issues
   useEffect(() => {
@@ -350,12 +352,17 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
             </motion.div>
             <h3 className="text-xl font-bold mb-2 text-gray-900">No events found</h3>
             <p className="text-gray-700 mb-6">
-              No matches for &quot;{searchQuery}&quot;. Try a different search term or check back
-              later!
+              {hasSearchQuery
+                ? `We couldn't find any events for "${searchQuery.trim()}".`
+                : activeTab === "upcoming"
+                  ? "No upcoming events are scheduled right now."
+                  : "No past events are available right now."}
             </p>
-            <Button onClick={() => setSearchQuery("")} variant="secondary">
-              Clear Search
-            </Button>
+            {hasSearchQuery && (
+              <Button onClick={() => setSearchQuery("")} variant="secondary">
+                Clear Search
+              </Button>
+            )}
           </div>
         )}
 
@@ -558,17 +565,17 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   );
 }
 
-export async function getServerSideProps() {
-  const upcomingEvents = await getUpcomingEvents();
-  const pastEvents = await getPastEvents();
+export const getStaticProps: GetStaticProps<EventsPageProps> = async () => {
+  const [upcomingEvents, pastEvents] = await Promise.all([getUpcomingEvents(), getPastEvents()]);
 
   return {
     props: {
       upcomingEvents,
       pastEvents,
     },
+    revalidate: 600,
   };
-}
+};
 
 export async function trackEventView(page: string) {
   // This function would normally be imported from your analytics library

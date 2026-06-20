@@ -5,6 +5,7 @@ const nextConfig = {
     NEXT_PUBLIC_ZURICHJS_ADMIN_ORG_ID: process.env.ZURICHJS_ADMIN_ORG_ID,
   },
   images: {
+    qualities: [75, 85, 90],
     remotePatterns: [
       {
         protocol: "https",

@@ -19,6 +19,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   autoplay = false,
   muted = false,
 }) => {
+  const safeThumbnail =
+    thumbnail && !/\.(mp4|mov|avi|mkv|webm|wmv|flv|m4v)(?:[?#].*)?$/i.test(thumbnail)
+      ? thumbnail
+      : undefined;
   const [isPlaying, setIsPlaying] = useState(autoplay);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -26,7 +30,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(muted);
   const [showControls, setShowControls] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showThumbnail, setShowThumbnail] = useState(true);
+  const [showThumbnail, setShowThumbnail] = useState(Boolean(safeThumbnail) && !autoplay);
   const [thumbnailError, setThumbnailError] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -141,8 +145,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Reset thumbnail error state when thumbnail changes
   useEffect(() => {
     setThumbnailError(false);
-    setShowThumbnail(!!thumbnail);
-  }, [thumbnail]);
+    setShowThumbnail(Boolean(safeThumbnail) && !autoplay);
+  }, [safeThumbnail, autoplay]);
 
   // Detect mobile device
   useEffect(() => {
@@ -173,10 +177,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setShowThumbnail(true);
         });
       } else {
-        setShowThumbnail(!!thumbnail); // Show thumbnail if not autoplaying
+        setShowThumbnail(!!safeThumbnail); // Show thumbnail if not autoplaying
       }
     }
-  }, [autoplay, muted, isMobile, thumbnail]);
+  }, [autoplay, muted, isMobile, safeThumbnail]);
 
   return (
     <div
@@ -186,10 +190,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       onMouseLeave={() => setShowControls(false)}
     >
       {/* Thumbnail overlay */}
-      {showThumbnail && thumbnail && !thumbnailError && (
+      {showThumbnail && safeThumbnail && !thumbnailError && (
         <div className="absolute inset-0 cursor-pointer" onClick={handlePlayClick}>
           <Image
-            src={thumbnail}
+            src={safeThumbnail}
             alt={title}
             fill
             className="object-cover"

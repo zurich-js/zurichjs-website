@@ -28,7 +28,7 @@ import Button from "@/components/ui/Button";
 import Callout from "@/components/ui/Callout";
 import useEvents from "@/hooks/useEvents";
 import useReferrerTracking from "@/hooks/useReferrerTracking";
-import { getUpcomingEvents, getPastEvents } from "@/sanity/queries";
+import { getPastEvents } from "@/sanity/queries";
 
 interface StripePrice {
   id: string;
@@ -923,9 +923,6 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 }
 
 export async function getStaticProps() {
-  // Fetch upcoming events
-  const upcomingEvents = await getUpcomingEvents();
-
   // Fetch past events to count the number of events hosted
   const pastEvents = await getPastEvents();
   const eventsHosted = pastEvents.length;
@@ -960,7 +957,6 @@ export async function getStaticProps() {
 
   return {
     props: {
-      upcomingEvent: upcomingEvents[0],
       recentSupporters,
       eventsHosted, // Pass the number of events hosted as a prop
     },

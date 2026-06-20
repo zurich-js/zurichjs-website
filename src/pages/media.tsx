@@ -100,14 +100,12 @@ export default function Media() {
           className="max-w-4xl"
         >
           <p className="mb-3 text-sm font-bold uppercase tracking-wide text-black/70">
-            ZurichJS Media
+            Capturing our JS community
           </p>
-          <h1 className="text-4xl font-bold text-gray-950 md:text-6xl">
-            Community moments, grouped by event.
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-950 md:text-6xl">Media gallery</h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-gray-800 md:text-lg">
-            Photos, recordings, and small glimpses from nights spent learning, shipping, and
-            catching up with the Zurich JavaScript community.
+            Dive into the stories of learning, networking, and community building told through
+            photos and videos from meetups, workshops, and special events.
           </p>
         </motion.div>
 

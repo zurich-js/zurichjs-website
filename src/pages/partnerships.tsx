@@ -16,7 +16,7 @@ import {
 } from "@/data";
 import useEvents from "@/hooks/useEvents";
 import useReferrerTracking from "@/hooks/useReferrerTracking";
-import { getStats, getUpcomingEvents } from "@/sanity/queries";
+import { getStats } from "@/sanity/queries";
 
 // Define our TypeScript interfaces
 interface PricingOption {
@@ -2224,12 +2224,10 @@ export default function Partnerships() {
 }
 
 export async function getStaticProps() {
-  const upcomingEvents = await getUpcomingEvents();
   const stats = await getStats();
 
   return {
     props: {
-      upcomingEvent: upcomingEvents[0],
       stats,
     },
   };

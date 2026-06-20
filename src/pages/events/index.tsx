@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import type { GetStaticProps } from "next";
 import { Calendar, MapPin, Users, ChevronRight, Search, Clock } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -558,17 +559,17 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
   );
 }
 
-export async function getServerSideProps() {
-  const upcomingEvents = await getUpcomingEvents();
-  const pastEvents = await getPastEvents();
+export const getStaticProps: GetStaticProps<EventsPageProps> = async () => {
+  const [upcomingEvents, pastEvents] = await Promise.all([getUpcomingEvents(), getPastEvents()]);
 
   return {
     props: {
       upcomingEvents,
       pastEvents,
     },
+    revalidate: 600,
   };
-}
+};
 
 export async function trackEventView(page: string) {
   // This function would normally be imported from your analytics library

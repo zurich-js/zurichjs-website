@@ -305,7 +305,7 @@ export const useReferrals = () => {
 
       // 5. Send platform notification
       try {
-        await fetch("/api/notifications/send", {
+        const notificationResponse = await fetch("/api/notifications/send", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -317,6 +317,14 @@ export const useReferrals = () => {
             priority: "low",
           }),
         });
+
+        if (!notificationResponse.ok) {
+          console.error(
+            "Failed to send platform notification:",
+            notificationResponse.status,
+            await notificationResponse.text(),
+          );
+        }
       } catch (error) {
         console.error("Error sending platform notification:", error);
         // Continue even if notification fails

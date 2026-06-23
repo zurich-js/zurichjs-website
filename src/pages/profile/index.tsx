@@ -120,7 +120,7 @@ export default function Profile() {
 
           // 3. Send platform notification
           try {
-            await fetch("/api/notifications/send", {
+            const notificationResponse = await fetch("/api/notifications/send", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -133,7 +133,17 @@ export default function Profile() {
               }),
             });
 
-            console.log("Successfully sent platform notification about referral from profile page");
+            if (!notificationResponse.ok) {
+              console.error(
+                "Failed to send platform notification from profile page:",
+                notificationResponse.status,
+                await notificationResponse.text(),
+              );
+            } else {
+              console.log(
+                "Successfully sent platform notification about referral from profile page",
+              );
+            }
           } catch (error) {
             console.error("Error sending platform notification from profile page:", error);
           }

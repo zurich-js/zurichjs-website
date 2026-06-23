@@ -193,7 +193,7 @@ export default function Survey() {
 
           // 3. Send platform notification
           try {
-            await fetch("/api/notifications/send", {
+            const notificationResponse = await fetch("/api/notifications/send", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -206,7 +206,15 @@ export default function Survey() {
               }),
             });
 
-            console.log("Successfully sent platform notification about referral");
+            if (!notificationResponse.ok) {
+              console.error(
+                "Failed to send platform notification:",
+                notificationResponse.status,
+                await notificationResponse.text(),
+              );
+            } else {
+              console.log("Successfully sent platform notification about referral");
+            }
           } catch (error) {
             console.error("Error sending platform notification:", error);
           }

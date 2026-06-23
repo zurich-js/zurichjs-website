@@ -6,6 +6,8 @@ interface RateLimitEntry {
 }
 
 const buckets = new Map<string, RateLimitEntry>();
+const CLEANUP_INTERVAL_MS = 60 * 1000;
+let lastCleanupAt = 0;
 
 function getClientIp(req: NextApiRequest): string {
   const forwardedFor = req.headers["x-forwarded-for"];
@@ -21,12 +23,28 @@ function getClientIp(req: NextApiRequest): string {
   return req.socket.remoteAddress || "unknown";
 }
 
+function cleanupExpiredBuckets(now: number) {
+  if (now - lastCleanupAt < CLEANUP_INTERVAL_MS) {
+    return;
+  }
+
+  lastCleanupAt = now;
+
+  for (const [key, entry] of buckets) {
+    if (entry.resetAt <= now) {
+      buckets.delete(key);
+    }
+  }
+}
+
 export function rateLimitRequest(
   req: NextApiRequest,
   res: NextApiResponse,
   options: { key: string; limit: number; windowMs: number },
 ): boolean {
   const now = Date.now();
+  cleanupExpiredBuckets(now);
+
   const bucketKey = `${options.key}:${getClientIp(req)}`;
   const current = buckets.get(bucketKey);
 

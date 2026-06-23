@@ -100,8 +100,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: "Invalid notification type" });
       }
 
+      if (notification.priority === "high" || notification.slackChannel) {
+        return res.status(403).json({
+          error: "High priority notifications and Slack channel routing require internal access",
+        });
+      }
+
       notification.priority = notification.priority === "low" ? "low" : "normal";
-      notification.slackChannel = undefined;
     }
 
     // Set default priority if not provided

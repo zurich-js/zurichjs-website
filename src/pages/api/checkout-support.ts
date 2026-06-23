@@ -29,11 +29,11 @@ function getRequestOrigin(req: NextApiRequest) {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   if (configuredBaseUrl) {
-    return configuredBaseUrl;
+    return configuredBaseUrl.replace(/\/$/, "");
   }
 
-  if (req.headers.origin) {
-    return req.headers.origin;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_BASE_URL is required for checkout redirects in production");
   }
 
   const host = req.headers.host;
@@ -42,8 +42,14 @@ function getRequestOrigin(req: NextApiRequest) {
     throw new Error("Unable to determine request origin");
   }
 
-  const protocol = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https";
-  return `${protocol}://${host}`;
+  const isLocalHost =
+    host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
+
+  if (!isLocalHost) {
+    throw new Error("NEXT_PUBLIC_BASE_URL is required for non-local checkout redirects");
+  }
+
+  return `http://${host}`;
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {

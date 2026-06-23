@@ -2229,7 +2229,7 @@ export async function getStaticProps() {
 
   return {
     props: {
-      upcomingEvent: upcomingEvents[0],
+      upcomingEvent: upcomingEvents[0] ?? null,
       stats,
     },
   };

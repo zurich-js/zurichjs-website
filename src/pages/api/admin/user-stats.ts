@@ -1,6 +1,8 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+
 // Define types for survey data
 interface SurveyData {
   role: string;
@@ -17,6 +19,10 @@ interface UserMetadata {
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireAdminOrg(req, res)) {
+    return;
   }
 
   try {

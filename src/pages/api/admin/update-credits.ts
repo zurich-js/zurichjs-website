@@ -1,30 +1,19 @@
 import { clerkClient } from "@clerk/nextjs/server";
-import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { requireAdminOrg } from "@/lib/api/adminAuth";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Get the authenticated user
-  const { userId: adminId } = getAuth(req);
-
-  if (!adminId) {
-    return res.status(401).json({ error: "Unauthorized" });
+  if (!requireAdminOrg(req, res)) {
+    return;
   }
 
   try {
-    // Verify if the user is an admin (by role or organization membership)
     const clerk = await clerkClient();
-    const adminUser = await clerk.users.getUser(adminId);
-
-    // Check if user is admin (in a real app, check for admin role or org membership)
-    const isAdmin = adminUser.publicMetadata?.role === "admin" || true; // For demo purposes, always allow
-
-    if (!isAdmin) {
-      return res.status(403).json({ error: "Forbidden: Admin access required" });
-    }
 
     // Get request data
     const { userId, credits, action } = req.body;

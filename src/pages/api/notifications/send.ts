@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 interface PlatformNotification {
@@ -51,17 +52,56 @@ interface PlatformNotification {
   };
 }
 
+const PUBLIC_NOTIFICATION_TYPES = new Set<PlatformNotification["type"]>([
+  "referral",
+  "event",
+  "workshop",
+  "tshirt",
+  "merch-suggestion",
+  "other",
+]);
+
+function isValidText(value: unknown, maxLength: number): value is string {
+  return typeof value === "string" && value.trim().length > 0 && value.length <= maxLength;
+}
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, {
+      key: "notifications-send",
+      limit: 5,
+      windowMs: 10 * 60 * 1000,
+    })
+  ) {
+    return;
+  }
+
   try {
     const notification: PlatformNotification = req.body;
+    const internalSecret = process.env.INTERNAL_NOTIFICATION_SECRET;
+    const isInternalRequest =
+      Boolean(internalSecret) && req.headers["x-internal-notification-secret"] === internalSecret;
 
     // Validate required fields
-    if (!notification.title || !notification.message || !notification.type) {
+    if (
+      !isValidText(notification.title, 160) ||
+      !isValidText(notification.message, 2500) ||
+      !notification.type
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (!isInternalRequest) {
+      if (!PUBLIC_NOTIFICATION_TYPES.has(notification.type)) {
+        return res.status(400).json({ error: "Invalid notification type" });
+      }
+
+      notification.priority = notification.priority === "low" ? "low" : "normal";
+      notification.slackChannel = undefined;
     }
 
     // Set default priority if not provided

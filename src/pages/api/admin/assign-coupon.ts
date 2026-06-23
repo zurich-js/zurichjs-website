@@ -1,5 +1,6 @@
-import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { requireAdminOrg } from "@/lib/api/adminAuth";
 
 interface Coupon {
   code: string;
@@ -14,9 +15,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const { userId } = getAuth(req);
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+    const admin = requireAdminOrg(req, res);
+    if (!admin) {
+      return;
     }
 
     const { userId: targetUserId, couponCode } = req.body;
@@ -50,7 +51,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const newCoupon: Coupon = {
       code: couponCode,
       assignedAt: new Date().toISOString(),
-      assignedBy: userId,
+      assignedBy: admin.userId,
       isActive: true,
     };
 

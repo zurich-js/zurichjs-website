@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { stripe } from "@/lib/stripe";
 import { encodePaymentData } from "@/utils/encoding";
 
@@ -18,6 +19,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, {
+      key: "stripe-checkout-sessions",
+      limit: 8,
+      windowMs: 10 * 60 * 1000,
+    })
+  ) {
+    return;
+  }
+
   try {
     const {
       priceId,
@@ -33,7 +44,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: "Price ID is required" });
     }
 
-    if (isNaN(quantity) || quantity < 1) {
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
       return res.status(400).json({ error: "Invalid quantity" });
     }
 

@@ -1,10 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (
+    !rateLimitRequest(req, res, { key: "payment-reservation", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
   }
 
   try {
@@ -25,7 +32,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     } = req.body;
 
     // Validate required fields
-    if (!name || !email || !ticketTitle || !price || !paymentMethod) {
+    if (
+      typeof name !== "string" ||
+      name.length > 120 ||
+      typeof email !== "string" ||
+      email.length > 254 ||
+      typeof ticketTitle !== "string" ||
+      ticketTitle.length > 200 ||
+      !price ||
+      (paymentMethod !== "cash" && paymentMethod !== "bank")
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 

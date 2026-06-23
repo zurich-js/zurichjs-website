@@ -1,14 +1,22 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "public-user-lookup", limit: 20, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   const { id } = req.query;
 
-  if (!id || typeof id !== "string") {
+  if (!id || typeof id !== "string" || !/^user_[a-zA-Z0-9]+$/.test(id)) {
     return res.status(400).json({ error: "User ID is required" });
   }
 

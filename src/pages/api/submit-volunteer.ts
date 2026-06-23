@@ -1,6 +1,7 @@
 import formidable from "formidable";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 // Disable the default body parser to handle form-data
@@ -19,15 +20,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = formidable({
     keepExtensions: true,
     multiples: false,
+    maxFields: 20,
+    maxFieldsSize: 64 * 1024,
+    maxFileSize: 2 * 1024 * 1024,
   });
 
   try {
-    // Send notification that submission process has started
-    await sendPlatformNotification({
-      title: "Volunteer Application Started",
-      message: "A new volunteer application process has started.",
-      priority: 0,
-    });
+    if (
+      !rateLimitRequest(req, res, { key: "submit-volunteer", limit: 3, windowMs: 10 * 60 * 1000 })
+    ) {
+      return;
+    }
 
     // Parse the form
     const [fields] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
@@ -61,7 +64,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       : [];
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !linkedinProfile || !message) {
+    if (
+      !firstName ||
+      firstName.length > 80 ||
+      !lastName ||
+      lastName.length > 80 ||
+      !email ||
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      !linkedinProfile ||
+      linkedinProfile.length > 300 ||
+      !message ||
+      message.length > 3000
+    ) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 

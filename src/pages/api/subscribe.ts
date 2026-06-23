@@ -1,5 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+
 // EmailOctopus API details
 const API_KEY = process.env.EMAIL_OCTOPUS_API_KEY;
 const LIST_ID = process.env.EMAIL_OCTOPUS_LIST_ID;
@@ -11,9 +13,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!rateLimitRequest(req, res, { key: "subscribe", limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return;
+  }
+
   const { email } = req.body;
 
-  if (!email) {
+  if (
+    typeof email !== "string" ||
+    email.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
     return res.status(400).json({ error: "Email is required" });
   }
 

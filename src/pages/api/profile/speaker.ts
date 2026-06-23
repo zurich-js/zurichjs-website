@@ -2,6 +2,7 @@ import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import formidable from "formidable";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { resolveSpeakerProfile, upsertSpeakerProfile } from "@/lib/cfp/speakerProfile";
 
 export const config = {
@@ -37,9 +38,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const form = formidable({
       keepExtensions: true,
       multiples: false,
+      maxFields: 20,
+      maxFieldsSize: 64 * 1024,
+      maxFileSize: 5 * 1024 * 1024,
     });
 
     try {
+      if (
+        !rateLimitRequest(req, res, { key: "profile-speaker", limit: 10, windowMs: 10 * 60 * 1000 })
+      ) {
+        return;
+      }
+
       const [fields, files] = await new Promise<[formidable.Fields, formidable.Files]>(
         (resolve, reject) => {
           form.parse(

@@ -3,6 +3,8 @@ import crypto from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "next-sanity";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { sendPlatformNotification } from "@/lib/notification";
 import { getEventById } from "@/sanity/queries";
 
 // Types
@@ -45,6 +47,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
       success: false,
       message: "Method not allowed",
     });
+  }
+
+  if (!rateLimitRequest(req, res, { key: "event-feedback", limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return;
   }
 
   try {
@@ -213,17 +219,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
             10,
         ) / 10;
 
-      await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: `New Comprehensive ${isWorkshop ? "Workshop" : "Event"} Feedback ${ratingStars}`,
-          message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\n${isWorkshop ? "Workshop" : "Event"}: ${itemTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
-          type: "other",
-          priority: overallRating <= 2 ? "high" : "normal",
-        }),
+      await sendPlatformNotification({
+        title: `New Comprehensive ${isWorkshop ? "Workshop" : "Event"} Feedback ${ratingStars}`,
+        message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\n${isWorkshop ? "Workshop" : "Event"}: ${itemTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
+        priority: overallRating <= 2 ? 2 : 1,
       });
     } catch (notificationError) {
       console.error("Failed to send comprehensive feedback notification:", notificationError);

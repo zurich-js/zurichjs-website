@@ -3,6 +3,8 @@ import crypto from "crypto";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "next-sanity";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { sendPlatformNotification } from "@/lib/notification";
 import { getEventById, getSpeakerById, getTalkById } from "@/sanity/queries";
 
 // Types to match the client-side types
@@ -72,6 +74,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
       success: false,
       message: "Method not allowed",
     });
+  }
+
+  if (!rateLimitRequest(req, res, { key: "feedback", limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return;
   }
 
   try {
@@ -257,17 +263,10 @@ async function handleLegacyFeedback(
     const speakerName = speakerObj?.name || "Unknown Speaker";
     const ratingStars = "⭐".repeat(rating);
 
-    await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: `New Feedback Received ${ratingStars}`,
-        message: `Rating: ${rating}/5 stars\nEvent: ${eventTitle}\nTalk: "${talkTitle}" by ${speakerName}\nComment: ${comment.length > 100 ? comment.substring(0, 100) + "..." : comment}`,
-        type: "other",
-        priority: rating <= 2 ? "high" : "normal", // High priority for poor ratings
-      }),
+    await sendPlatformNotification({
+      title: `New Feedback Received ${ratingStars}`,
+      message: `Rating: ${rating}/5 stars\nEvent: ${eventTitle}\nTalk: "${talkTitle}" by ${speakerName}\nComment: ${comment.length > 100 ? comment.substring(0, 100) + "..." : comment}`,
+      priority: rating <= 2 ? 2 : 1,
     });
   } catch (notificationError) {
     console.error("Failed to send feedback notification:", notificationError);
@@ -439,17 +438,10 @@ async function handleComprehensiveFeedback(
           10,
       ) / 10;
 
-    await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: `New Comprehensive Feedback ${ratingStars}`,
-        message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\nEvent: ${eventTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
-        type: "other",
-        priority: overallRating <= 2 ? "high" : "normal",
-      }),
+    await sendPlatformNotification({
+      title: `New Comprehensive Feedback ${ratingStars}`,
+      message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\nEvent: ${eventTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
+      priority: overallRating <= 2 ? 2 : 1,
     });
   } catch (notificationError) {
     console.error("Failed to send comprehensive feedback notification:", notificationError);

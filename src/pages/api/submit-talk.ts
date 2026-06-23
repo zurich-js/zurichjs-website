@@ -7,6 +7,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "next-sanity";
 import { v4 as uuidv4 } from "uuid";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { getSpeakerByEmail } from "@/lib/cfp/speakerProfile";
 import { sendPlatformNotification } from "@/lib/notification";
 
@@ -37,17 +38,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = formidable({
     keepExtensions: true,
     multiples: false,
+    maxFields: 30,
+    maxFieldsSize: 128 * 1024,
+    maxFileSize: 5 * 1024 * 1024,
   });
 
   try {
-    const { userId } = getAuth(req);
+    if (!rateLimitRequest(req, res, { key: "submit-talk", limit: 3, windowMs: 10 * 60 * 1000 })) {
+      return;
+    }
 
-    // Send notification that submission process has started
-    await sendPlatformNotification({
-      title: "CFP Submission Started",
-      message: "A new CFP submission process has started.",
-      priority: 0,
-    });
+    const { userId } = getAuth(req);
 
     // Parse the form
     const [fields, files] = await new Promise<[formidable.Fields, formidable.Files]>(
@@ -123,6 +124,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       !description
     ) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    if (
+      firstName.length > 80 ||
+      lastName.length > 80 ||
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      linkedinProfile.length > 300 ||
+      jobTitle.length > 160 ||
+      biography.length > 3000 ||
+      title.length > 180 ||
+      description.length > 5000
+    ) {
+      return res.status(400).json({ error: "Invalid field length" });
     }
 
     if (!topics || topics.length === 0) {

@@ -1,6 +1,7 @@
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,6 +21,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "workshop-waitlist", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   const {
     workshopId,
     workshopTitle,
@@ -30,6 +37,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (!workshopId || !workshopTitle) {
     return res.status(400).json({ error: "Workshop ID and title are required" });
+  }
+
+  if (workshopId.length > 120 || workshopTitle.length > 200) {
+    return res.status(400).json({ error: "Invalid workshop details" });
   }
 
   if (outcome !== "walk-in" && outcome !== "email-when-available") {
@@ -60,7 +71,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
     if (!name && typeof bodyName === "string") {
       const trimmed = bodyName.trim();
-      if (trimmed) name = trimmed;
+      if (trimmed) name = trimmed.slice(0, 120);
     }
 
     if (!email || !EMAIL_REGEX.test(email)) {

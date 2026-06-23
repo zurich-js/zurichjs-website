@@ -1,4 +1,7 @@
+import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 
 // Example API route to process referrals
 // In a real implementation, you would connect to a database
@@ -9,12 +12,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "referrals-process", limit: 10, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
+    const { userId: authenticatedUserId } = getAuth(req);
     const { referrerId, userId, purchaseType } = req.body;
     // userEmail is also available in req.body but not used in this example
 
     // Validate required fields
-    if (!referrerId || !userId) {
+    if (!authenticatedUserId || authenticatedUserId !== userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (
+      typeof referrerId !== "string" ||
+      !/^user_[a-zA-Z0-9]+$/.test(referrerId) ||
+      typeof userId !== "string" ||
+      !/^user_[a-zA-Z0-9]+$/.test(userId)
+    ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 

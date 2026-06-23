@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 interface CheckoutCancelledBody {
@@ -16,6 +17,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "checkout-cancelled", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
     const { workshopId, eventId, ticketType, itemTitle, reason, email } =
       req.body as CheckoutCancelledBody;
@@ -24,6 +31,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const isWorkshop = ticketType === "workshop" || Boolean(workshopId);
     const itemId = isWorkshop ? workshopId : eventId;
     const itemType = isWorkshop ? "Workshop" : "Event";
+
+    if (
+      typeof itemTitle !== "string" ||
+      itemTitle.length > 200 ||
+      typeof reason !== "string" ||
+      reason.length > 500 ||
+      typeof email !== "string" ||
+      email.length > 254
+    ) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
 
     // Create a descriptive message
     const message = {

@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
 });
@@ -8,6 +10,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireAdminOrg(req, res)) {
+    return;
   }
 
   const { priceId, quantity, customerEmail, couponCode, mode } = req.body;

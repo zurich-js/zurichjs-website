@@ -65,7 +65,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<string>("");
-  const [customAmount, setCustomAmount] = useState("");
+  const [customAmount, setCustomAmount] = useState("20");
   const [isRecurring, setIsRecurring] = useState(true);
   const [selectedPresetAmount, setSelectedPresetAmount] = useState<number | null>(20);
   const [pricesData, setPricesData] = useState<SupportPricesData | null>(null);
@@ -149,9 +149,13 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
     const fetchPrices = async () => {
       try {
         const response = await fetch("/api/support-prices");
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
 
-        console.log("data", data);
+        if (!response.ok || !data) {
+          console.error("Error fetching prices:", data?.error || response.statusText);
+          return;
+        }
+
         setPricesData(data);
       } catch (error) {
         console.error("Error fetching prices:", error);
@@ -172,24 +176,29 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
     () => pricesData?.oneTime?.sort((a, b) => a.amount - b.amount) || [],
     [pricesData],
   );
+  const visibleAmountOptions = isRecurring ? monthlyOptions : oneOffOptions;
+  const presetAmounts = useMemo(
+    () => visibleAmountOptions.map((option) => option.amount),
+    [visibleAmountOptions],
+  );
 
   // Set default selected amount when prices load
   useEffect(() => {
-    if (pricesData && !selectedAmount) {
-      if (isRecurring && monthlyOptions.length > 0) {
-        setSelectedAmount(monthlyOptions[0].id);
-      } else if (!isRecurring && oneOffOptions.length > 0) {
-        setSelectedAmount(oneOffOptions[0].id);
-      }
+    const firstOption = visibleAmountOptions[0];
+
+    if (firstOption && !selectedAmount) {
+      setSelectedAmount(firstOption.id);
+      setSelectedPresetAmount(firstOption.amount);
+      setCustomAmount(String(firstOption.amount));
     }
-  }, [pricesData, isRecurring, selectedAmount, monthlyOptions, oneOffOptions]);
+  }, [selectedAmount, visibleAmountOptions]);
 
   // Function to handle Stripe checkout
   const handleSupportClick = async () => {
-    const amount = customAmount ? parseFloat(customAmount) : selectedPresetAmount;
+    const amount = Number(customAmount);
 
-    if (!amount) {
-      alert("Please select or enter an amount");
+    if (!Number.isFinite(amount)) {
+      alert("Please enter a valid amount");
       return;
     }
 
@@ -202,8 +211,9 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
 
     try {
       // Find the appropriate Stripe price based on amount and recurring type
-      const targetPrices = isRecurring ? monthlyOptions : oneOffOptions;
-      const matchingPrice = targetPrices.find((p) => p.amount === amount);
+      const matchingPrice =
+        visibleAmountOptions.find((price) => price.id === selectedAmount) ||
+        visibleAmountOptions.find((price) => price.amount === amount);
 
       const requestBody: {
         priceId?: string;
@@ -228,9 +238,9 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
         body: JSON.stringify(requestBody),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
-      if (data.url) {
+      if (response.ok && data?.url) {
         track("support_click", {
           type: isRecurring ? "monthly" : "oneoff",
           amount: amount,
@@ -238,7 +248,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
         });
         window.location.href = data.url;
       } else {
-        throw new Error(data.error || "Failed to create checkout session");
+        throw new Error(data?.error || "Failed to create checkout session");
       }
     } catch (error) {
       console.error("Error creating checkout session:", error);
@@ -415,25 +425,26 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">Amount</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
-                {[10, 20, 40, 50].map((amount) => (
+                {visibleAmountOptions.map((option) => (
                   <button
-                    key={amount}
+                    key={option.id}
                     onClick={() => {
-                      setSelectedPresetAmount(amount);
-                      setCustomAmount("");
+                      setSelectedAmount(option.id);
+                      setSelectedPresetAmount(option.amount);
+                      setCustomAmount(String(option.amount));
                     }}
                     className={`p-3 sm:p-4 rounded-lg border-2 transition-all text-center min-h-[60px] touch-manipulation ${
-                      selectedPresetAmount === amount && !customAmount
+                      selectedPresetAmount === option.amount
                         ? "border-js-dark bg-js-dark/10"
                         : "border-gray-200 hover:border-gray-300 active:border-gray-400"
                     }`}
                   >
-                    <div className="font-semibold text-base">CHF {amount}</div>
+                    <div className="font-semibold text-base">CHF {option.amount}</div>
                   </button>
                 ))}
               </div>
 
-              {selectedPresetAmount && !customAmount && isRecurring && (
+              {selectedPresetAmount && isRecurring && (
                 <Callout
                   key={selectedPresetAmount}
                   className="mt-4 mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg"
@@ -449,10 +460,12 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                     "CHF 10 per month helps us pay for Drive storage and other tooling"}
                   {selectedPresetAmount === 20 &&
                     "CHF 20 per month ensures we never run out of snacks"}
+                  {selectedPresetAmount === 30 &&
+                    "CHF 30 per month helps us keep drinks stocked for the next meetup"}
                   {selectedPresetAmount === 40 &&
-                    "CHF 40 per month helps us cover the cost of a couple of beers for one meetup"}
+                    "CHF 40 per month helps us cover 1 large pizza at a meetup"}
                   {selectedPresetAmount === 50 &&
-                    "CHF 50 per month helps cover two large pizzas at a meetup"}
+                    "CHF 50 per month ensures ZurichJS can always happen"}
                 </Callout>
               )}
               {/* Custom Amount */}
@@ -465,14 +478,38 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   placeholder="Enter amount in CHF (min. 5)"
                   value={customAmount}
                   onChange={(e) => {
-                    // force min 5 before even validating
-                    setCustomAmount(Math.max(5, parseInt(e.target.value)).toString());
-                    if (e.target.value) {
-                      setSelectedPresetAmount(null);
+                    const nextAmount = e.target.value;
+                    const numericAmount = Number(nextAmount);
+
+                    setCustomAmount(nextAmount);
+                    setSelectedAmount("");
+                    setSelectedPresetAmount(
+                      presetAmounts.includes(numericAmount) ? numericAmount : null,
+                    );
+                  }}
+                  onBlur={() => {
+                    if (!customAmount) {
+                      return;
                     }
+
+                    const amount = Number(customAmount);
+
+                    if (!Number.isFinite(amount)) {
+                      setCustomAmount("");
+                      setSelectedPresetAmount(null);
+                      return;
+                    }
+
+                    const normalizedAmount = Math.max(5, amount);
+                    setCustomAmount(String(normalizedAmount));
+                    setSelectedAmount("");
+                    setSelectedPresetAmount(
+                      presetAmounts.includes(normalizedAmount) ? normalizedAmount : null,
+                    );
                   }}
                   className="w-full px-4 py-4 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-js-dark touch-manipulation"
                   min="5"
+                  step="1"
                   inputMode="decimal"
                 />
               </div>
@@ -483,7 +520,10 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
               <label className="block text-sm font-medium text-gray-700 mb-3">Recurring?</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 <button
-                  onClick={() => setIsRecurring(true)}
+                  onClick={() => {
+                    setIsRecurring(true);
+                    setSelectedAmount("");
+                  }}
                   className={`p-4 sm:p-5 sm:h-24 rounded-lg border-2 transition-all text-center touch-manipulation min-h-[70px] ${
                     isRecurring
                       ? "border-js-dark bg-js-dark/10 text-gray-900"
@@ -493,7 +533,10 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                   <div className="font-medium text-base">Monthly</div>
                 </button>
                 <button
-                  onClick={() => setIsRecurring(false)}
+                  onClick={() => {
+                    setIsRecurring(false);
+                    setSelectedAmount("");
+                  }}
                   className={`p-4 sm:p-5 sm:h-24 rounded-lg border-2 transition-all text-center touch-manipulation min-h-[70px] ${
                     !isRecurring
                       ? "border-js-dark bg-js-dark/10 text-gray-900"
@@ -551,7 +594,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
             {/* Support Button */}
             <Button
               onClick={handleSupportClick}
-              disabled={loading || (!selectedPresetAmount && !customAmount)}
+              disabled={loading || !customAmount}
               className="w-full mt-10 bg-gray-900 hover:bg-gray-800 text-white font-medium py-4 sm:py-5 px-6 sm:px-8 rounded-lg
                   shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95
                   flex items-center gap-3 justify-center text-base sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none touch-manipulation min-h-[56px]"
@@ -960,7 +1003,7 @@ export async function getStaticProps() {
 
   return {
     props: {
-      upcomingEvent: upcomingEvents[0],
+      upcomingEvent: upcomingEvents[0] ?? null,
       recentSupporters,
       eventsHosted, // Pass the number of events hosted as a prop
     },

@@ -1,11 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
 import { getSpeakerById } from "@/sanity/queries";
 import { generateSpeakerToken, generateSpeakerFeedbackUrl } from "@/utils/tokens";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  if (!requireAdminOrg(req, res)) {
+    return;
   }
 
   console.log("Generating feedback link");

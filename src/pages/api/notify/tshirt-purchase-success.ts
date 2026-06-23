@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 import { stripe } from "@/lib/stripe";
 
@@ -13,8 +14,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, {
+      key: "tshirt-purchase-success",
+      limit: 5,
+      windowMs: 10 * 60 * 1000,
+    })
+  ) {
+    return;
+  }
+
   try {
     const { sessionId, userEmail } = req.body as TshirtPurchaseSuccessBody;
+
+    if (
+      typeof sessionId !== "string" ||
+      sessionId.length > 200 ||
+      (userEmail && (typeof userEmail !== "string" || userEmail.length > 254))
+    ) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
 
     // Retrieve session details from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {

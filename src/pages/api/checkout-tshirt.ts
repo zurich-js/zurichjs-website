@@ -1,6 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
 });
@@ -8,6 +10,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!rateLimitRequest(req, res, { key: "checkout-tshirt", limit: 8, windowMs: 10 * 60 * 1000 })) {
+    return;
   }
 
   const {
@@ -25,13 +31,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  if (!Number.isInteger(totalQuantity) || totalQuantity < 1 || totalQuantity > 25) {
+    return res.status(400).json({ error: "Invalid total quantity" });
+  }
+
   // Validate sizeQuantities
   const validSizes = ["S", "M", "L", "XL", "XXL"];
   const hasValidItems = Object.entries(sizeQuantities).some(
     ([size, qty]) => validSizes.includes(size) && typeof qty === "number" && qty > 0,
   );
 
-  if (!hasValidItems) {
+  const hasInvalidItems = Object.entries(sizeQuantities).some(
+    ([size, qty]) =>
+      !validSizes.includes(size) ||
+      typeof qty !== "number" ||
+      !Number.isInteger(qty) ||
+      qty < 0 ||
+      qty > 25,
+  );
+
+  if (!hasValidItems || hasInvalidItems) {
     return res.status(400).json({ error: "No valid items in order" });
   }
 

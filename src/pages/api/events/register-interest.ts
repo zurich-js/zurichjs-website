@@ -1,6 +1,7 @@
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -8,9 +9,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "register-interest", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   const { eventId, eventTitle } = req.body;
 
-  if (!eventId || !eventTitle) {
+  if (
+    typeof eventId !== "string" ||
+    eventId.length > 120 ||
+    typeof eventTitle !== "string" ||
+    eventTitle.length > 200
+  ) {
     return res.status(400).json({ error: "Event ID and title are required" });
   }
 

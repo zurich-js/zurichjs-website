@@ -2,8 +2,6 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 
-import { sendPlatformNotification } from "@/lib/notification";
-
 interface ReferralData {
   credits: number;
   referrals: {
@@ -307,11 +305,17 @@ export const useReferrals = () => {
 
       // 5. Send platform notification
       try {
-        await sendPlatformNotification({
-          title: "New Referral Signup",
-          message: `${referrerName} successfully referred ${user.fullName || user.username || "New User"} to ZurichJS!`,
-          priority: 0,
-          sound: "success",
+        await fetch("/api/notifications/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: "New Referral Signup",
+            message: `${referrerName} successfully referred ${user.fullName || user.username || "New User"} to ZurichJS!`,
+            type: "referral",
+            priority: "low",
+          }),
         });
       } catch (error) {
         console.error("Error sending platform notification:", error);

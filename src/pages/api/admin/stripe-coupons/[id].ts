@@ -1,8 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
 import { stripe } from "@/lib/stripe";
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!requireAdminOrg(req, res)) {
+    return;
+  }
+
   const { id } = req.query;
 
   if (!id || typeof id !== "string") {

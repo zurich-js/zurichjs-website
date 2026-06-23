@@ -1,6 +1,8 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+
 interface UserEmail {
   id: string;
   name: string;
@@ -18,6 +20,10 @@ interface UserEmail {
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!requireAdminOrg(req, res)) {
+    return;
   }
 
   try {

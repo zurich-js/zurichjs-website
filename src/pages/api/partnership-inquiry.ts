@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 
 type ResponseData = {
@@ -13,16 +14,34 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
     return res.status(405).json({ success: false, message: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "partnership-inquiry", limit: 3, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
     const { companyName, contactName, email, phone, message, tierInterest, venueDetails } =
       req.body;
 
     // Basic validation
-    if (!companyName || !contactName || !email) {
+    if (
+      typeof companyName !== "string" ||
+      companyName.length > 160 ||
+      typeof contactName !== "string" ||
+      contactName.length > 120 ||
+      typeof email !== "string" ||
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
+    }
+
+    if (typeof message === "string" && message.length > 2500) {
+      return res.status(400).json({ success: false, message: "Message is too long" });
     }
 
     // Format the notification message

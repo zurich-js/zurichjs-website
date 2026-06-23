@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 import { stripe } from "@/lib/stripe";
 
@@ -22,9 +23,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "purchase-success", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
     const { sessionId, workshopId, eventId, ticketType, email, coupon } =
       req.body as PurchaseSuccessBody;
+
+    if (
+      typeof sessionId !== "string" ||
+      sessionId.length > 200 ||
+      (workshopId && (typeof workshopId !== "string" || workshopId.length > 120)) ||
+      (eventId && (typeof eventId !== "string" || eventId.length > 120)) ||
+      (email && (typeof email !== "string" || email.length > 254)) ||
+      (coupon && (typeof coupon !== "string" || coupon.length > 120))
+    ) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
 
     // Determine purchase type and item name
     const isWorkshop = ticketType === "workshop" || Boolean(workshopId);

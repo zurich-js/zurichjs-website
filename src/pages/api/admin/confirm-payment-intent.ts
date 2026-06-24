@@ -1,10 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
 
 import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { requiredText } from "@/lib/validation/input";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
+});
+
+const confirmPaymentIntentSchema = z.object({
+  paymentIntentId: requiredText(200),
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -16,11 +22,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  const { paymentIntentId } = req.body;
+  const parsed = confirmPaymentIntentSchema.safeParse(req.body);
 
-  if (!paymentIntentId) {
+  if (!parsed.success) {
     return res.status(400).json({ error: "Missing paymentIntentId" });
   }
+
+  const { paymentIntentId } = parsed.data;
 
   try {
     // In a real Stripe Terminal implementation, the payment would be confirmed

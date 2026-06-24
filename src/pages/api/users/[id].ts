@@ -1,7 +1,13 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { requiredText } from "@/lib/validation/input";
+
+const userLookupQuerySchema = z.object({
+  id: requiredText(160).regex(/^user_[a-zA-Z0-9]+$/),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -14,11 +20,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  const { id } = req.query;
+  const parsed = userLookupQuerySchema.safeParse(req.query);
 
-  if (!id || typeof id !== "string" || !/^user_[a-zA-Z0-9]+$/.test(id)) {
+  if (!parsed.success) {
     return res.status(400).json({ error: "User ID is required" });
   }
+
+  const { id } = parsed.data;
 
   try {
     // Initialize the clerk client

@@ -1,18 +1,25 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { stripe } from "@/lib/stripe";
+import {
+  emailSchema,
+  optionalCouponCodeSchema,
+  slugSchema,
+  stripeIdSchema,
+} from "@/lib/validation/input";
 import { encodePaymentData } from "@/utils/encoding";
 
-interface CheckoutRequestBody {
-  priceId: string;
-  email?: string;
-  quantity?: number;
-  couponCode?: string;
-  workshopId?: string;
-  eventId?: string;
-  ticketType?: "workshop" | "event";
-}
+const checkoutRequestSchema = z.object({
+  priceId: stripeIdSchema,
+  email: emailSchema.optional(),
+  quantity: z.coerce.number().int().min(1).max(10).optional().default(1),
+  couponCode: optionalCouponCodeSchema,
+  workshopId: slugSchema.optional(),
+  eventId: slugSchema.optional(),
+  ticketType: z.enum(["workshop", "event"]).optional(),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -30,23 +37,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const {
-      priceId,
-      email,
-      quantity = 1,
-      couponCode,
-      workshopId,
-      eventId,
-      ticketType,
-    } = req.body as CheckoutRequestBody;
+    const parsed = checkoutRequestSchema.safeParse(req.body);
 
-    if (!priceId) {
-      return res.status(400).json({ error: "Price ID is required" });
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid checkout request" });
     }
 
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10) {
-      return res.status(400).json({ error: "Invalid quantity" });
-    }
+    const { priceId, email, quantity, couponCode, workshopId, eventId, ticketType } = parsed.data;
 
     const origin = req.headers.origin || "http://localhost:3000";
 

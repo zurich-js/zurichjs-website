@@ -1,15 +1,33 @@
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import formidable from "formidable";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { resolveSpeakerProfile, upsertSpeakerProfile } from "@/lib/cfp/speakerProfile";
+import {
+  formString,
+  githubHandleSchema,
+  linkedinSchema,
+  requiredText,
+  twitterHandleSchema,
+} from "@/lib/validation/input";
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+const speakerProfileSchema = z.object({
+  firstName: requiredText(80),
+  lastName: requiredText(80),
+  jobTitle: requiredText(160),
+  biography: requiredText(3000),
+  linkedinProfile: linkedinSchema,
+  githubProfile: githubHandleSchema,
+  twitterHandle: twitterHandleSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { userId } = getAuth(req);
@@ -62,23 +80,32 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         },
       );
 
-      const firstName = Array.isArray(fields.firstName)
-        ? fields.firstName[0]
-        : fields.firstName || "";
-      const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || "";
-      const jobTitle = Array.isArray(fields.jobTitle) ? fields.jobTitle[0] : fields.jobTitle || "";
-      const biography = Array.isArray(fields.biography)
-        ? fields.biography[0]
-        : fields.biography || "";
-      const linkedinProfile = Array.isArray(fields.linkedinProfile)
-        ? fields.linkedinProfile[0]
-        : fields.linkedinProfile || "";
-      const githubProfile = Array.isArray(fields.githubProfile)
-        ? fields.githubProfile[0]
-        : fields.githubProfile || "";
-      const twitterHandle = Array.isArray(fields.twitterHandle)
-        ? fields.twitterHandle[0]
-        : fields.twitterHandle || "";
+      const parsed = speakerProfileSchema.safeParse({
+        firstName: formString(fields.firstName),
+        lastName: formString(fields.lastName),
+        jobTitle: formString(fields.jobTitle),
+        biography: formString(fields.biography),
+        linkedinProfile: formString(fields.linkedinProfile),
+        githubProfile: formString(fields.githubProfile),
+        twitterHandle: formString(fields.twitterHandle),
+      });
+
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Failed to update speaker profile",
+          message: "Invalid speaker profile fields",
+        });
+      }
+
+      const {
+        firstName,
+        lastName,
+        jobTitle,
+        biography,
+        linkedinProfile,
+        githubProfile,
+        twitterHandle,
+      } = parsed.data;
       const imageFile = Array.isArray(files.speakerImage)
         ? files.speakerImage[0]
         : files.speakerImage;
@@ -96,8 +123,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           jobTitle,
           biography,
           linkedinProfile,
-          githubProfile,
-          twitterHandle,
+          githubProfile: githubProfile || "",
+          twitterHandle: twitterHandle || "",
         },
         imageFile && imageFile.filepath ? imageFile : null,
       );

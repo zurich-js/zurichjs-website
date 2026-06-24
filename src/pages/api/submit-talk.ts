@@ -6,10 +6,21 @@ import formidable from "formidable";
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "next-sanity";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 
+import { TALK_TOPICS } from "@/components/cfp/constants";
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { getSpeakerByEmail } from "@/lib/cfp/speakerProfile";
 import { sendPlatformNotification } from "@/lib/notification";
+import {
+  emailSchema,
+  formString,
+  githubHandleSchema,
+  linkedinSchema,
+  parseJsonArrayField,
+  requiredText,
+  twitterHandleSchema,
+} from "@/lib/validation/input";
 
 // pages/api/submit-talk.ts
 
@@ -28,6 +39,23 @@ export const config = {
     bodyParser: false,
   },
 };
+
+const talkSubmissionSchema = z.object({
+  submissionMode: z.enum(["guest", "authenticated"]).optional().default("guest"),
+  firstName: requiredText(80),
+  lastName: requiredText(80),
+  jobTitle: requiredText(160),
+  biography: requiredText(3000),
+  email: emailSchema,
+  linkedinProfile: linkedinSchema,
+  githubProfile: githubHandleSchema,
+  twitterHandle: twitterHandleSchema,
+  title: requiredText(180),
+  description: requiredText(5000),
+  talkLength: z.enum(["10", "25", "40"]),
+  talkLevel: z.enum(["beginner", "intermediate", "advanced"]),
+  topics: z.array(z.enum(TALK_TOPICS)).min(1).max(8),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -60,39 +88,41 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       },
     );
 
-    // Extract values from form fields
-    const submissionMode = Array.isArray(fields.submissionMode)
-      ? fields.submissionMode[0]
-      : fields.submissionMode || "guest";
-    let firstName = Array.isArray(fields.firstName) ? fields.firstName[0] : fields.firstName || "";
-    let lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || "";
-    const jobTitle = Array.isArray(fields.jobTitle) ? fields.jobTitle[0] : fields.jobTitle || "";
-    const biography = Array.isArray(fields.biography)
-      ? fields.biography[0]
-      : fields.biography || "";
-    let email = Array.isArray(fields.email) ? fields.email[0] : fields.email || "";
-    const linkedinProfile = Array.isArray(fields.linkedinProfile)
-      ? fields.linkedinProfile[0]
-      : fields.linkedinProfile || "";
-    const githubProfile = Array.isArray(fields.githubProfile)
-      ? fields.githubProfile[0]
-      : fields.githubProfile || "";
-    const twitterHandle = Array.isArray(fields.twitterHandle)
-      ? fields.twitterHandle[0]
-      : fields.twitterHandle || "";
-    const title = Array.isArray(fields.title) ? fields.title[0] : fields.title || "";
-    const description = Array.isArray(fields.description)
-      ? fields.description[0]
-      : fields.description || "";
-    const talkLength = Array.isArray(fields.talkLength)
-      ? fields.talkLength[0]
-      : fields.talkLength || "";
-    const talkLevel = Array.isArray(fields.talkLevel)
-      ? fields.talkLevel[0]
-      : fields.talkLevel || "";
-    const topics = fields.topics
-      ? JSON.parse((Array.isArray(fields.topics) ? fields.topics[0] : fields.topics).toString())
-      : [];
+    const parsed = talkSubmissionSchema.safeParse({
+      submissionMode: formString(fields.submissionMode) || "guest",
+      firstName: formString(fields.firstName),
+      lastName: formString(fields.lastName),
+      jobTitle: formString(fields.jobTitle),
+      biography: formString(fields.biography),
+      email: formString(fields.email),
+      linkedinProfile: formString(fields.linkedinProfile),
+      githubProfile: formString(fields.githubProfile),
+      twitterHandle: formString(fields.twitterHandle),
+      title: formString(fields.title),
+      description: formString(fields.description),
+      talkLength: formString(fields.talkLength),
+      talkLevel: formString(fields.talkLevel),
+      topics: parseJsonArrayField(fields.topics),
+    });
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid talk submission" });
+    }
+
+    const {
+      submissionMode,
+      jobTitle,
+      biography,
+      linkedinProfile,
+      githubProfile,
+      twitterHandle,
+      title,
+      description,
+      talkLength,
+      talkLevel,
+      topics,
+    } = parsed.data;
+    let { firstName, lastName, email } = parsed.data;
     let name = `${firstName} ${lastName}`;
 
     if (userId && submissionMode === "authenticated") {
@@ -111,38 +141,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       message: `Processing submission from ${name} (${email}):\n"${title}" - ${talkLength} minutes, ${talkLevel} level`,
       priority: 0,
     });
-
-    // Validate required fields
-    if (
-      !firstName ||
-      !lastName ||
-      !email ||
-      !linkedinProfile ||
-      !jobTitle ||
-      !biography ||
-      !title ||
-      !description
-    ) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    if (
-      firstName.length > 80 ||
-      lastName.length > 80 ||
-      email.length > 254 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
-      linkedinProfile.length > 300 ||
-      jobTitle.length > 160 ||
-      biography.length > 3000 ||
-      title.length > 180 ||
-      description.length > 5000
-    ) {
-      return res.status(400).json({ error: "Invalid field length" });
-    }
-
-    if (!topics || topics.length === 0) {
-      return res.status(400).json({ error: "Please select at least one topic" });
-    }
 
     // Convert talk length to integer
     const durationMinutes = parseInt(talkLength || "0", 10);

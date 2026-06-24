@@ -1,7 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { requiredText } from "@/lib/validation/input";
 import { getFeedbackBySpeakerId } from "@/sanity/queries";
 import { verifyToken } from "@/utils/tokens";
+
+const speakerFeedbackQuerySchema = z.object({
+  token: requiredText(2000),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -9,11 +15,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const { token } = req.query;
+    const parsed = speakerFeedbackQuerySchema.safeParse(req.query);
 
-    if (!token || typeof token !== "string") {
+    if (!parsed.success) {
       return res.status(400).json({ message: "Missing token" });
     }
+
+    const { token } = parsed.data;
 
     // Verify the token and extract the speaker ID
     const payload = verifyToken(token);

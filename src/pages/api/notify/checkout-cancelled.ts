@@ -1,16 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import { emailSchema, requiredText, slugSchema } from "@/lib/validation/input";
 
-interface CheckoutCancelledBody {
-  workshopId?: string;
-  eventId?: string;
-  ticketType?: string;
-  itemTitle: string;
-  reason: string;
-  email: string;
-}
+const checkoutCancelledSchema = z.object({
+  workshopId: slugSchema.optional(),
+  eventId: slugSchema.optional(),
+  ticketType: z.enum(["workshop", "event"]).optional(),
+  itemTitle: requiredText(200),
+  reason: requiredText(500),
+  email: emailSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -24,24 +26,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const { workshopId, eventId, ticketType, itemTitle, reason, email } =
-      req.body as CheckoutCancelledBody;
+    const parsed = checkoutCancelledSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    const { workshopId, eventId, ticketType, itemTitle, reason, email } = parsed.data;
 
     // Determine purchase type
     const isWorkshop = ticketType === "workshop" || Boolean(workshopId);
     const itemId = isWorkshop ? workshopId : eventId;
     const itemType = isWorkshop ? "Workshop" : "Event";
-
-    if (
-      typeof itemTitle !== "string" ||
-      itemTitle.length > 200 ||
-      typeof reason !== "string" ||
-      reason.length > 500 ||
-      typeof email !== "string" ||
-      email.length > 254
-    ) {
-      return res.status(400).json({ error: "Invalid request" });
-    }
 
     // Create a descriptive message
     const message = {

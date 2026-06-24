@@ -1,7 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import {
+  emailSchema,
+  optionalText,
+  ratingSchema,
+  requiredText,
+  validationErrorMessage,
+} from "@/lib/validation/input";
 
 interface PlatformNotification {
   title: string;
@@ -52,6 +60,62 @@ interface PlatformNotification {
   };
 }
 
+const notificationSchema = z.object({
+  title: requiredText(160),
+  message: requiredText(2500),
+  type: z.enum([
+    "referral",
+    "event",
+    "workshop",
+    "tshirt",
+    "merch-suggestion",
+    "tap_to_pay_success",
+    "other",
+  ]),
+  priority: z.enum(["low", "normal", "high"]).optional().default("normal"),
+  slackChannel: optionalText(120),
+  userData: z
+    .object({
+      name: requiredText(160),
+      email: emailSchema,
+      userId: optionalText(160).default(""),
+      isLoggedIn: z.boolean(),
+    })
+    .optional(),
+  eventData: z
+    .object({
+      eventId: requiredText(160),
+      eventTitle: requiredText(240),
+    })
+    .optional(),
+  feedbackData: z
+    .object({
+      overallRating: ratingSchema,
+      worthTime: requiredText(80),
+      wouldRecommend: requiredText(80),
+      ratings: z.object({
+        food: ratingSchema,
+        drinks: ratingSchema,
+        talks: ratingSchema,
+        timing: ratingSchema,
+        execution: ratingSchema,
+        dealOfDay: ratingSchema,
+      }),
+      comments: z.object({
+        food: optionalText(1200).default(""),
+        drinks: optionalText(1200).default(""),
+        talks: optionalText(1200).default(""),
+        timing: optionalText(1200).default(""),
+        execution: optionalText(1200).default(""),
+        dealOfDay: optionalText(1200).default(""),
+        improvements: optionalText(1200).default(""),
+        futureTopics: optionalText(1200).default(""),
+        additional: optionalText(1200).default(""),
+      }),
+    })
+    .optional(),
+});
+
 const PUBLIC_NOTIFICATION_TYPES = new Set<PlatformNotification["type"]>([
   "referral",
   "event",
@@ -60,10 +124,6 @@ const PUBLIC_NOTIFICATION_TYPES = new Set<PlatformNotification["type"]>([
   "merch-suggestion",
   "other",
 ]);
-
-function isValidText(value: unknown, maxLength: number): value is string {
-  return typeof value === "string" && value.trim().length > 0 && value.length <= maxLength;
-}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -81,19 +141,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const notification: PlatformNotification = req.body;
+    const parsed = notificationSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: validationErrorMessage(parsed.error) });
+    }
+
+    const notification: PlatformNotification = parsed.data;
     const internalSecret = process.env.INTERNAL_NOTIFICATION_SECRET;
     const isInternalRequest =
       Boolean(internalSecret) && req.headers["x-internal-notification-secret"] === internalSecret;
-
-    // Validate required fields
-    if (
-      !isValidText(notification.title, 160) ||
-      !isValidText(notification.message, 2500) ||
-      !notification.type
-    ) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
 
     if (!isInternalRequest) {
       if (!PUBLIC_NOTIFICATION_TYPES.has(notification.type)) {
@@ -107,11 +164,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       notification.priority = notification.priority === "low" ? "low" : "normal";
-    }
-
-    // Set default priority if not provided
-    if (!notification.priority) {
-      notification.priority = "normal";
     }
 
     // Map priority strings to numbers for the notification system

@@ -1,7 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { optionalText } from "@/lib/validation/input";
 
 // Define the possible order by fields that Clerk API accepts
 type OrderByField =
@@ -25,6 +27,12 @@ interface UserQueryParams {
   query?: string;
 }
 
+const usersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(100000).optional(),
+  limit: z.coerce.number().int().min(1).max(500).optional(),
+  query: optionalText(160).default(""),
+});
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -37,7 +45,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     console.log("Users API: Processing request", { query: req.query });
 
-    const { page, limit, query = "" } = req.query;
+    const parsed = usersQuerySchema.safeParse(req.query);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid user query" });
+    }
+
+    const { page, limit, query } = parsed.data;
 
     // If no page or limit provided, return all users
     if (!page || !limit) {
@@ -51,7 +65,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       };
 
       if (query) {
-        queryParams.query = query as string;
+        queryParams.query = query;
       }
 
       const { data: users, totalCount } = await client.users.getUserList(queryParams);
@@ -67,8 +81,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
-    const pageNumber = parseInt(page as string, 10);
-    const limitNumber = parseInt(limit as string, 10);
+    const pageNumber = page;
+    const limitNumber = limit;
     const offset = (pageNumber - 1) * limitNumber;
 
     console.log("Users API: Initializing Clerk client");
@@ -85,7 +99,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     // Add search query if provided
     if (query) {
-      queryParams.query = query as string;
+      queryParams.query = query;
     }
 
     console.log("Users API: Calling getUserList with params", queryParams);

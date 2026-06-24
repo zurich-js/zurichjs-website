@@ -1,13 +1,20 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 import { stripe } from "@/lib/stripe";
+import { emailSchema, requiredText } from "@/lib/validation/input";
 
-interface TshirtPurchaseSuccessBody {
-  sessionId: string;
-  userEmail: string;
-}
+const tshirtPurchaseSuccessSchema = z.object({
+  sessionId: requiredText(200),
+  userEmail: emailSchema.optional(),
+});
+
+const tshirtSizeQuantitiesSchema = z.partialRecord(
+  z.enum(["S", "M", "L", "XL", "XXL"]),
+  z.coerce.number().int().min(0).max(25),
+);
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -25,15 +32,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const { sessionId, userEmail } = req.body as TshirtPurchaseSuccessBody;
+    const parsed = tshirtPurchaseSuccessSchema.safeParse(req.body);
 
-    if (
-      typeof sessionId !== "string" ||
-      sessionId.length > 200 ||
-      (userEmail && (typeof userEmail !== "string" || userEmail.length > 254))
-    ) {
+    if (!parsed.success) {
       return res.status(400).json({ error: "Invalid request" });
     }
+
+    const { sessionId, userEmail } = parsed.data;
 
     // Retrieve session details from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId, {
@@ -41,9 +46,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     // Get order details from session metadata
-    const sizeQuantities = session.metadata?.sizeQuantities
-      ? JSON.parse(session.metadata.sizeQuantities)
-      : {};
+    let sizeQuantities: Record<string, number> = {};
+    if (session.metadata?.sizeQuantities) {
+      try {
+        const parsedSizeQuantities = tshirtSizeQuantitiesSchema.safeParse(
+          JSON.parse(session.metadata.sizeQuantities),
+        );
+        if (parsedSizeQuantities.success) {
+          sizeQuantities = parsedSizeQuantities.data;
+        }
+      } catch {
+        sizeQuantities = {};
+      }
+    }
     const delivery = session.metadata?.delivery === "true";
     const totalQuantity = parseInt(session.metadata?.totalQuantity || "0");
     const sessionEmail = session.metadata?.userEmail || "";

@@ -1,12 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import { emailSchema, optionalText, requiredText } from "@/lib/validation/input";
 
 type ResponseData = {
   success: boolean;
   message: string;
 };
+
+const partnershipInquirySchema = z.object({
+  companyName: requiredText(160),
+  contactName: requiredText(120),
+  email: emailSchema,
+  phone: optionalText(80),
+  message: optionalText(2500),
+  tierInterest: optionalText(80),
+  venueDetails: z
+    .object({
+      canProvideFoodDrinks: z.boolean().optional(),
+      venueCapacity: optionalText(80),
+    })
+    .optional(),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   // Only allow POST requests
@@ -21,28 +38,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
   }
 
   try {
-    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } =
-      req.body;
+    const parsed = partnershipInquirySchema.safeParse(req.body);
 
-    // Basic validation
-    if (
-      typeof companyName !== "string" ||
-      companyName.length > 160 ||
-      typeof contactName !== "string" ||
-      contactName.length > 120 ||
-      typeof email !== "string" ||
-      email.length > 254 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ) {
+    if (!parsed.success) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
     }
 
-    if (typeof message === "string" && message.length > 2500) {
-      return res.status(400).json({ success: false, message: "Message is too long" });
-    }
+    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } =
+      parsed.data;
 
     // Format the notification message
     const notificationMessage = {

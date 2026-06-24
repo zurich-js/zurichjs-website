@@ -1,7 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { emailSchema, stripeIdSchema } from "@/lib/validation/input";
 
 function createStripeClient() {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -14,6 +16,17 @@ function createStripeClient() {
     apiVersion: "2025-08-27.basil",
   });
 }
+
+const supportCheckoutSchema = z
+  .object({
+    priceId: stripeIdSchema.optional(),
+    amount: z.coerce.number().min(1).max(1000).optional(),
+    email: emailSchema.optional(),
+    recurring: z.boolean().optional().default(false),
+  })
+  .refine((value) => value.priceId || value.amount !== undefined, {
+    message: "Price ID or custom amount is required",
+  });
 
 function getSupportProductId() {
   const supportProductId = process.env.STRIPE_SUPPORT_PRODUCT_ID;
@@ -63,18 +76,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return;
   }
 
-  const { priceId, amount, email, recurring } = req.body;
+  const parsed = supportCheckoutSchema.safeParse(req.body);
 
-  if (!priceId && !amount) {
+  if (!parsed.success) {
     return res.status(400).json({ error: "Price ID or custom amount is required" });
   }
 
-  if (amount !== undefined) {
-    const numericAmount = Number(amount);
-    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 1000) {
-      return res.status(400).json({ error: "Invalid custom amount" });
-    }
-  }
+  const { priceId, amount, email, recurring } = parsed.data;
 
   try {
     const stripe = createStripeClient();
@@ -129,6 +137,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         },
       };
     } else {
+      if (!priceId) {
+        return res.status(400).json({ error: "Price ID is required" });
+      }
+
       // Use the provided price ID
       const price = await stripe.prices.retrieve(priceId);
       const mode = price.type === "recurring" ? "subscription" : "payment";

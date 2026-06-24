@@ -1,5 +1,8 @@
 import { clerkClient, getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
+
+import { optionalEmailSchema, optionalText, requiredText } from "@/lib/validation/input";
 
 interface ReferralInfo {
   userId: string;
@@ -23,6 +26,17 @@ interface UserMetadata {
   [key: string]: unknown;
 }
 
+const clerkUserIdSchema = requiredText(160).regex(/^user_[a-zA-Z0-9]+$/);
+const updateReferrerMetadataSchema = z.object({
+  referrerId: clerkUserIdSchema,
+  refereeId: clerkUserIdSchema,
+  refereeName: requiredText(160),
+  refereeEmail: optionalEmailSchema,
+  date: requiredText(80).datetime({ offset: true }).optional(),
+  type: optionalText(80),
+  creditValue: z.coerce.number().int().min(0).max(100000).optional(),
+});
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -39,14 +53,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { referrerId, refereeId, refereeName, refereeEmail, date, type, creditValue } = req.body;
+    const parsed = updateReferrerMetadataSchema.safeParse(req.body);
 
-    console.log("Request payload:", { referrerId, refereeId, type });
-
-    // Validate required fields
-    if (!referrerId || !refereeId) {
+    if (!parsed.success) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    const { referrerId, refereeId, refereeName, refereeEmail, date, type, creditValue } =
+      parsed.data;
+    const referralCreditValue = creditValue ?? 5;
+
+    console.log("Request payload:", { referrerId, refereeId, type });
 
     // Prevent circular references - don't allow someone to be referred by someone they referred
     if (referrerId === refereeId) {
@@ -113,7 +130,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         email: refereeEmail || "",
         date: date || new Date().toISOString(),
         type: type || "signup",
-        creditValue: creditValue || 5,
+        creditValue: referralCreditValue,
       };
 
       console.log("Adding new referral:", newReferral);
@@ -124,7 +141,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           ...currentMetadata,
           referrals: [...referrals, newReferral],
           // Increment credits
-          credits: (currentMetadata?.credits || 0) + creditValue,
+          credits: (currentMetadata?.credits || 0) + referralCreditValue,
         },
       });
 

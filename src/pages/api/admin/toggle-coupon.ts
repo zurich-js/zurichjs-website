@@ -1,6 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { couponCodeSchema, requiredText } from "@/lib/validation/input";
 
 interface Coupon {
   code: string;
@@ -8,6 +10,12 @@ interface Coupon {
   assignedBy: string;
   isActive: boolean;
 }
+
+const couponToggleSchema = z.object({
+  userId: requiredText(160),
+  couponCode: couponCodeSchema,
+  isActive: z.boolean(),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -19,11 +27,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return;
     }
 
-    const { userId: targetUserId, couponCode, isActive } = req.body;
+    const parsed = couponToggleSchema.safeParse(req.body);
 
-    if (!targetUserId || !couponCode || typeof isActive !== "boolean") {
+    if (!parsed.success) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+
+    const { userId: targetUserId, couponCode, isActive } = parsed.data;
 
     // First, fetch the current user data to get existing metadata
     const userResponse = await fetch(`https://api.clerk.dev/v1/users/${targetUserId}`, {

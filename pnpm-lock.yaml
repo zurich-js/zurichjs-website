@@ -99,6 +99,9 @@ importers:
       uuid:
         specifier: ^13.0.2
         version: 13.0.2
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@eslint/compat':
         specifier: ^2.1.0

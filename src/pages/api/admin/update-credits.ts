@@ -1,7 +1,15 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { requiredText } from "@/lib/validation/input";
+
+const updateCreditsSchema = z.object({
+  userId: requiredText(160),
+  credits: z.coerce.number().int().min(0).max(100000),
+  action: z.enum(["add", "remove", "set"]),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -16,15 +24,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const clerk = await clerkClient();
 
     // Get request data
-    const { userId, credits, action } = req.body;
+    const parsed = updateCreditsSchema.safeParse(req.body);
 
-    if (!userId || credits === undefined || !action) {
+    if (!parsed.success) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    if (isNaN(credits) || (action !== "set" && credits < 0)) {
-      return res.status(400).json({ error: "Credits must be a non-negative number" });
-    }
+    const { userId, credits, action } = parsed.data;
 
     // Get the target user
     const user = await clerk.users.getUser(userId);

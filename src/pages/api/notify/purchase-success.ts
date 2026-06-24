@@ -1,17 +1,24 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 import { stripe } from "@/lib/stripe";
+import {
+  emailSchema,
+  optionalCouponCodeSchema,
+  requiredText,
+  slugSchema,
+} from "@/lib/validation/input";
 
-interface PurchaseSuccessBody {
-  sessionId: string;
-  workshopId?: string;
-  eventId?: string;
-  ticketType?: string;
-  email?: string;
-  coupon?: string;
-}
+const purchaseSuccessSchema = z.object({
+  sessionId: requiredText(200),
+  workshopId: slugSchema.optional(),
+  eventId: slugSchema.optional(),
+  ticketType: z.enum(["workshop", "event"]).optional(),
+  email: emailSchema.optional(),
+  coupon: optionalCouponCodeSchema,
+});
 
 function getValidEmail(email?: string | null) {
   const trimmedEmail = email?.trim();
@@ -30,19 +37,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
-    const { sessionId, workshopId, eventId, ticketType, email, coupon } =
-      req.body as PurchaseSuccessBody;
+    const parsed = purchaseSuccessSchema.safeParse(req.body);
 
-    if (
-      typeof sessionId !== "string" ||
-      sessionId.length > 200 ||
-      (workshopId && (typeof workshopId !== "string" || workshopId.length > 120)) ||
-      (eventId && (typeof eventId !== "string" || eventId.length > 120)) ||
-      (email && (typeof email !== "string" || email.length > 254)) ||
-      (coupon && (typeof coupon !== "string" || coupon.length > 120))
-    ) {
+    if (!parsed.success) {
       return res.status(400).json({ error: "Invalid request" });
     }
+
+    const { sessionId, workshopId, eventId, ticketType, email, coupon } = parsed.data;
 
     // Determine purchase type and item name
     const isWorkshop = ticketType === "workshop" || Boolean(workshopId);

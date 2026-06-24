@@ -1,11 +1,20 @@
 import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { requiredText } from "@/lib/validation/input";
 
 // Example API route to process referrals
 // In a real implementation, you would connect to a database
 // and store/update referral information
+
+const clerkUserIdSchema = requiredText(160).regex(/^user_[a-zA-Z0-9]+$/);
+const referralProcessSchema = z.object({
+  referrerId: clerkUserIdSchema,
+  userId: clerkUserIdSchema,
+  purchaseType: z.enum(["workshop", "event", "other"]).optional().default("other"),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -20,21 +29,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     const { userId: authenticatedUserId } = getAuth(req);
-    const { referrerId, userId, purchaseType } = req.body;
+    const parsed = referralProcessSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const { referrerId, userId, purchaseType } = parsed.data;
     // userEmail is also available in req.body but not used in this example
 
     // Validate required fields
     if (!authenticatedUserId || authenticatedUserId !== userId) {
       return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    if (
-      typeof referrerId !== "string" ||
-      !/^user_[a-zA-Z0-9]+$/.test(referrerId) ||
-      typeof userId !== "string" ||
-      !/^user_[a-zA-Z0-9]+$/.test(userId)
-    ) {
-      return res.status(400).json({ message: "Missing required fields" });
     }
 
     // In a real implementation, you would:

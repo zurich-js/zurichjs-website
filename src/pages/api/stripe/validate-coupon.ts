@@ -1,17 +1,25 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
 import { stripe } from "@/lib/stripe";
+import { couponCodeSchema } from "@/lib/validation/input";
+
+const validateCouponQuerySchema = z.object({
+  code: couponCodeSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { code } = req.query;
+  const parsed = validateCouponQuerySchema.safeParse(req.query);
 
-  if (!code || typeof code !== "string") {
+  if (!parsed.success) {
     return res.status(400).json({ error: "Coupon code is required" });
   }
+
+  const { code } = parsed.data;
 
   try {
     // Retrieve the coupon from Stripe

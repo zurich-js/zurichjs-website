@@ -1,4 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
+
+import { requiredText } from "@/lib/validation/input";
+
+const googleMapsQuerySchema = z.object({
+  location: requiredText(240),
+});
 
 function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow GET requests
@@ -6,13 +13,13 @@ function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Get the location from query parameters
-  const { location } = req.query;
+  const parsed = googleMapsQuerySchema.safeParse(req.query);
 
-  // Check if location is provided and is a string
-  if (!location || Array.isArray(location)) {
+  if (!parsed.success) {
     return res.status(400).json({ error: "Single location parameter is required" });
   }
+
+  const { location } = parsed.data;
 
   // Process the location (in a real app, you might call Google Maps API here)
   const encodedLocation = encodeURIComponent(location);

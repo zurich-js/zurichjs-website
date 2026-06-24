@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { getTrustedRequestOrigin } from "@/lib/api/requestOrigin";
 import {
   emailSchema,
   optionalCouponCodeSchema,
@@ -83,6 +84,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   // Create Stripe Checkout session
   try {
+    const origin = getTrustedRequestOrigin(req);
     const orderedSizes = Object.entries(sizeQuantities)
       .filter(([, qty]) => qty > 0)
       .map(([size]) => size)
@@ -97,8 +99,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         })),
       mode: "payment",
       discounts,
-      success_url: `${req.headers.origin}/tshirt?success=true&session_id={CHECKOUT_SESSION_ID}&delivery=${delivery}`,
-      cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
+      success_url: `${origin}/tshirt?success=true&session_id={CHECKOUT_SESSION_ID}&delivery=${delivery}`,
+      cancel_url: `${origin}/tshirt?canceled=true`,
       metadata: {
         sizes: orderedSizes,
         sizeQuantities: JSON.stringify(sizeQuantities),

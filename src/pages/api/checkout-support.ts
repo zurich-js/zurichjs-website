@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { getTrustedRequestOrigin } from "@/lib/api/requestOrigin";
 import { emailSchema, stripeIdSchema } from "@/lib/validation/input";
 
 function createStripeClient() {
@@ -38,33 +39,6 @@ function getSupportProductId() {
   return supportProductId;
 }
 
-function getRequestOrigin(req: NextApiRequest) {
-  const configuredBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
-
-  if (configuredBaseUrl) {
-    return configuredBaseUrl.replace(/\/$/, "");
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("NEXT_PUBLIC_BASE_URL is required for checkout redirects in production");
-  }
-
-  const host = req.headers.host;
-
-  if (!host) {
-    throw new Error("Unable to determine request origin");
-  }
-
-  const isLocalHost =
-    host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("[::1]");
-
-  if (!isLocalHost) {
-    throw new Error("NEXT_PUBLIC_BASE_URL is required for non-local checkout redirects");
-  }
-
-  return `http://${host}`;
-}
-
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -87,7 +61,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const stripe = createStripeClient();
     const supportProductId = getSupportProductId();
-    const origin = getRequestOrigin(req);
+    const origin = getTrustedRequestOrigin(req);
     let sessionParams: Stripe.Checkout.SessionCreateParams;
 
     if (amount && !priceId) {

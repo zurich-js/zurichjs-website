@@ -125,6 +125,29 @@ const PUBLIC_NOTIFICATION_TYPES = new Set<PlatformNotification["type"]>([
   "other",
 ]);
 
+const PUBLIC_SAFETY_ALERT_CHANNELS = new Set(["#zurichjs-safety", "#organizers"]);
+
+function isAllowedPublicEscalation(notification: PlatformNotification) {
+  if (notification.type === "event" && notification.feedbackData) {
+    return (
+      notification.priority === "high" &&
+      !notification.slackChannel &&
+      notification.feedbackData.overallRating <= 2
+    );
+  }
+
+  if (notification.type === "other" && notification.slackChannel) {
+    return (
+      notification.priority === "high" &&
+      PUBLIC_SAFETY_ALERT_CHANNELS.has(notification.slackChannel) &&
+      /safety alert/i.test(notification.title) &&
+      /code phrase/i.test(notification.message)
+    );
+  }
+
+  return false;
+}
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -157,13 +180,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: "Invalid notification type" });
       }
 
-      if (notification.priority === "high" || notification.slackChannel) {
+      if (
+        (notification.priority === "high" || notification.slackChannel) &&
+        !isAllowedPublicEscalation(notification)
+      ) {
         return res.status(403).json({
           error: "High priority notifications and Slack channel routing require internal access",
         });
       }
 
-      notification.priority = notification.priority === "low" ? "low" : "normal";
+      if (!isAllowedPublicEscalation(notification)) {
+        notification.priority = notification.priority === "low" ? "low" : "normal";
+      }
     }
 
     // Map priority strings to numbers for the notification system

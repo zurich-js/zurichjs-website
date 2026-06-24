@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { getTrustedRequestOrigin } from "@/lib/api/requestOrigin";
 import { stripe } from "@/lib/stripe";
 import {
   emailSchema,
@@ -45,7 +46,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const { priceId, email, quantity, couponCode, workshopId, eventId, ticketType } = parsed.data;
 
-    const origin = req.headers.origin || "http://localhost:3000";
+    const origin = getTrustedRequestOrigin(req);
 
     // Determine the right path for success and cancel URLs
     let returnPath = "";

@@ -27,11 +27,15 @@ interface UserQueryParams {
   query?: string;
 }
 
-const usersQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).max(100000).optional(),
-  limit: z.coerce.number().int().min(1).max(500).optional(),
-  query: optionalText(160).default(""),
-});
+const usersQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).max(100000).optional(),
+    limit: z.coerce.number().int().min(1).max(500).optional(),
+    query: optionalText(160).default(""),
+  })
+  .refine((value) => (value.page === undefined) === (value.limit === undefined), {
+    message: "page and limit must be provided together",
+  });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {

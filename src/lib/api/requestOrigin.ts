@@ -8,7 +8,7 @@ export function getTrustedRequestOrigin(req: NextApiRequest) {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   if (configuredBaseUrl) {
-    return configuredBaseUrl.replace(/\/+$/, "");
+    return new URL(configuredBaseUrl).origin;
   }
 
   if (process.env.NODE_ENV === "production") {
@@ -25,5 +25,6 @@ export function getTrustedRequestOrigin(req: NextApiRequest) {
     throw new Error("NEXT_PUBLIC_BASE_URL is required for non-local checkout redirects");
   }
 
+  // Only local development reaches this branch. Deployed checkout redirects must use NEXT_PUBLIC_BASE_URL.
   return `http://${host}`;
 }

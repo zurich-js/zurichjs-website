@@ -1,16 +1,24 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
 import { stripe } from "@/lib/stripe";
+import {
+  emailSchema,
+  optionalCouponCodeSchema,
+  requiredText,
+  slugSchema,
+} from "@/lib/validation/input";
 
-interface PurchaseSuccessBody {
-  sessionId: string;
-  workshopId?: string;
-  eventId?: string;
-  ticketType?: string;
-  email?: string;
-  coupon?: string;
-}
+const purchaseSuccessSchema = z.object({
+  sessionId: requiredText(200),
+  workshopId: slugSchema.optional(),
+  eventId: slugSchema.optional(),
+  ticketType: z.enum(["workshop", "event"]).optional(),
+  email: emailSchema.optional(),
+  coupon: optionalCouponCodeSchema,
+});
 
 function getValidEmail(email?: string | null) {
   const trimmedEmail = email?.trim();
@@ -22,9 +30,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "purchase-success", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
-    const { sessionId, workshopId, eventId, ticketType, email, coupon } =
-      req.body as PurchaseSuccessBody;
+    const parsed = purchaseSuccessSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    const { sessionId, workshopId, eventId, ticketType, email, coupon } = parsed.data;
 
     // Determine purchase type and item name
     const isWorkshop = ticketType === "workshop" || Boolean(workshopId);

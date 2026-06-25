@@ -1,13 +1,50 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import {
+  emailSchema,
+  optionalCouponCodeSchema,
+  optionalText,
+  requiredText,
+  slugSchema,
+} from "@/lib/validation/input";
+
+const paymentReservationNotificationSchema = z.object({
+  name: requiredText(120),
+  email: emailSchema,
+  streetAndNumber: optionalText(180),
+  postcode: optionalText(40),
+  city: optionalText(120),
+  country: optionalText(80),
+  ticketTitle: requiredText(200),
+  price: z.coerce.number().min(0).max(100000),
+  paymentMethod: z.enum(["cash", "bank"]),
+  workshopId: slugSchema.optional(),
+  eventId: slugSchema.optional(),
+  ticketType: optionalText(80),
+  coupon: optionalCouponCodeSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "payment-reservation", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
+    const parsed = paymentReservationNotificationSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid payment reservation notification" });
+    }
+
     const {
       name,
       email,
@@ -22,12 +59,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       eventId,
       ticketType,
       coupon,
-    } = req.body;
-
-    // Validate required fields
-    if (!name || !email || !ticketTitle || !price || !paymentMethod) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    } = parsed.data;
 
     // Create payment method text for notifications
     const paymentMethodText = paymentMethod === "cash" ? "Cash on Site" : "Bank Transfer";

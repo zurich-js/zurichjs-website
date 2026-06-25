@@ -1,18 +1,34 @@
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import { requiredText } from "@/lib/validation/input";
+
+const registerInterestSchema = z.object({
+  eventId: requiredText(120),
+  eventTitle: requiredText(200),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { eventId, eventTitle } = req.body;
+  if (
+    !rateLimitRequest(req, res, { key: "register-interest", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
 
-  if (!eventId || !eventTitle) {
+  const parsed = registerInterestSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     return res.status(400).json({ error: "Event ID and title are required" });
   }
+
+  const { eventId, eventTitle } = parsed.data;
 
   try {
     // Get user auth info from Clerk

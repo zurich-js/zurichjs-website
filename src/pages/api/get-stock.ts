@@ -1,8 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
+
+import { stripeIdSchema } from "@/lib/validation/input";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
+});
+
+const stockQuerySchema = z.object({
+  priceId: stripeIdSchema,
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -11,8 +18,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    const parsed = stockQuerySchema.safeParse(req.query);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Price ID is required" });
+    }
+
     // Fetch the product by price ID to get metadata
-    const price = await stripe.prices.retrieve(req.query.priceId as string);
+    const price = await stripe.prices.retrieve(parsed.data.priceId);
     const product = await stripe.products.retrieve(price.product as string);
 
     // Extract stock data from metadata

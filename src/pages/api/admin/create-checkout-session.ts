@@ -1,8 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
+
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { emailSchema, optionalCouponCodeSchema, stripeIdSchema } from "@/lib/validation/input";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
+});
+
+const createCheckoutSessionSchema = z.object({
+  priceId: stripeIdSchema,
+  quantity: z.coerce.number().int().min(1).max(25),
+  customerEmail: emailSchema,
+  couponCode: optionalCouponCodeSchema,
+  mode: z.enum(["card_entry", "tap_to_pay"]).optional(),
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -10,13 +22,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { priceId, quantity, customerEmail, couponCode, mode } = req.body;
+  if (!requireAdminOrg(req, res)) {
+    return;
+  }
 
-  if (!priceId || !quantity || !customerEmail) {
+  const parsed = createCheckoutSessionSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     return res
       .status(400)
       .json({ error: "Missing required fields: priceId, quantity, customerEmail" });
   }
+
+  const { priceId, quantity, customerEmail, couponCode, mode } = parsed.data;
 
   try {
     // Validate the price exists

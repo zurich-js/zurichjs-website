@@ -1,21 +1,34 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { slugSchema } from "@/lib/validation/input";
 import { getSpeakerById } from "@/sanity/queries";
 import { generateSpeakerToken, generateSpeakerFeedbackUrl } from "@/utils/tokens";
+
+const generateFeedbackLinkSchema = z.object({
+  speakerId: slugSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
+  if (!requireAdminOrg(req, res)) {
+    return;
+  }
+
   console.log("Generating feedback link");
 
   try {
-    const { speakerId } = req.body;
+    const parsed = generateFeedbackLinkSchema.safeParse(req.body);
 
-    if (!speakerId) {
+    if (!parsed.success) {
       return res.status(400).json({ message: "Missing speaker ID" });
     }
+
+    const { speakerId } = parsed.data;
 
     // Verify that the speaker exists
     const speaker = await getSpeakerById(speakerId);

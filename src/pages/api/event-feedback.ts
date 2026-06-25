@@ -2,7 +2,17 @@ import crypto from "crypto";
 
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "next-sanity";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { sendPlatformNotification } from "@/lib/notification";
+import {
+  feedbackRatingBlockSchema,
+  optionalText,
+  ratingSchema,
+  requiredText,
+  slugSchema,
+} from "@/lib/validation/input";
 import { getEventById } from "@/sanity/queries";
 
 // Types
@@ -30,6 +40,32 @@ type ResponseData = {
   error?: string;
 };
 
+const comprehensiveFeedbackSchema = z
+  .object({
+    selectedEventId: slugSchema.optional(),
+    eventId: slugSchema.optional(),
+    overallRating: ratingSchema,
+    foodOptions: feedbackRatingBlockSchema,
+    drinks: feedbackRatingBlockSchema,
+    talks: feedbackRatingBlockSchema,
+    timing: feedbackRatingBlockSchema,
+    execution: feedbackRatingBlockSchema,
+    improvements: optionalText(2000).default(""),
+    futureTopics: optionalText(2000).default(""),
+    worthTime: z.enum(["definitely", "mostly", "somewhat", "not_really", ""]),
+    wouldRecommend: z.enum(["definitely", "probably", "maybe", "unlikely", ""]),
+    dealOfDay: feedbackRatingBlockSchema,
+    additionalComments: optionalText(2000).default(""),
+    submittedAt: requiredText(80).datetime({ offset: true }),
+  })
+  .refine((value) => value.selectedEventId || value.eventId, {
+    message: "Event ID is required",
+  })
+  .transform(({ eventId, ...value }) => ({
+    ...value,
+    selectedEventId: value.selectedEventId || eventId || "",
+  }));
+
 // Initialize Sanity client
 const sanityClient = createClient({
   projectId: "viqjrovw",
@@ -47,8 +83,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
     });
   }
 
+  if (!rateLimitRequest(req, res, { key: "event-feedback", limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return;
+  }
+
   try {
-    const feedback: ComprehensiveFeedbackData = req.body;
+    const parsed = comprehensiveFeedbackSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid feedback submission",
+      });
+    }
+
+    const feedback: ComprehensiveFeedbackData = parsed.data;
     const {
       selectedEventId,
       overallRating,
@@ -65,13 +114,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
       additionalComments,
       submittedAt,
     } = feedback;
-
-    if (!selectedEventId || !overallRating || !submittedAt) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
-    }
 
     // Check if this is a workshop (starts with 'workshop-') or an event
     const isWorkshop = selectedEventId.startsWith("workshop-");
@@ -213,17 +255,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
             10,
         ) / 10;
 
-      await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: `New Comprehensive ${isWorkshop ? "Workshop" : "Event"} Feedback ${ratingStars}`,
-          message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\n${isWorkshop ? "Workshop" : "Event"}: ${itemTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
-          type: "other",
-          priority: overallRating <= 2 ? "high" : "normal",
-        }),
+      await sendPlatformNotification({
+        title: `New Comprehensive ${isWorkshop ? "Workshop" : "Event"} Feedback ${ratingStars}`,
+        message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\n${isWorkshop ? "Workshop" : "Event"}: ${itemTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
+        priority: overallRating <= 2 ? 2 : 1,
       });
     } catch (notificationError) {
       console.error("Failed to send comprehensive feedback notification:", notificationError);

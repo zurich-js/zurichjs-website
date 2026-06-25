@@ -1,13 +1,66 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
+
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { getTrustedRequestOrigin } from "@/lib/api/requestOrigin";
+import {
+  emailSchema,
+  optionalCouponCodeSchema,
+  requiredText,
+  stripeIdSchema,
+} from "@/lib/validation/input";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
 });
 
+const tshirtSizeSchema = z.enum(["S", "M", "L", "XL", "XXL"]);
+const tshirtCheckoutSchema = z
+  .object({
+    sizeQuantities: z
+      .partialRecord(tshirtSizeSchema, z.coerce.number().int().min(0).max(25))
+      .refine((value) => Object.values(value).some((quantity) => quantity > 0), {
+        message: "No valid items in order",
+      }),
+    delivery: z.boolean().optional().default(false),
+    priceId: stripeIdSchema,
+    isMember: z.boolean().optional().default(false),
+    totalQuantity: z.coerce.number().int().min(1).max(25),
+    shippingRateId: stripeIdSchema.optional(),
+    email: emailSchema.optional(),
+    couponCode: optionalCouponCodeSchema,
+    deliveryAddress: z
+      .object({
+        name: requiredText(160),
+        email: emailSchema,
+        address: requiredText(160),
+        city: requiredText(120),
+        zipCode: requiredText(40),
+        country: requiredText(80),
+      })
+      .optional(),
+  })
+  .refine(
+    (value) =>
+      Object.values(value.sizeQuantities).reduce((total, quantity) => total + quantity, 0) ===
+      value.totalQuantity,
+    { message: "Invalid total quantity" },
+  );
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!rateLimitRequest(req, res, { key: "checkout-tshirt", limit: 8, windowMs: 10 * 60 * 1000 })) {
+    return;
+  }
+
+  const parsed = tshirtCheckoutSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid T-shirt checkout request" });
   }
 
   const {
@@ -20,20 +73,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     email,
     couponCode,
     deliveryAddress,
-  } = req.body;
-  if (!sizeQuantities || !priceId || !totalQuantity) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  // Validate sizeQuantities
-  const validSizes = ["S", "M", "L", "XL", "XXL"];
-  const hasValidItems = Object.entries(sizeQuantities).some(
-    ([size, qty]) => validSizes.includes(size) && typeof qty === "number" && qty > 0,
-  );
-
-  if (!hasValidItems) {
-    return res.status(400).json({ error: "No valid items in order" });
-  }
+  } = parsed.data;
 
   // Calculate discount
   let discounts: Stripe.Checkout.SessionCreateParams.Discount[] = [];
@@ -44,21 +84,25 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   // Create Stripe Checkout session
   try {
+    const origin = getTrustedRequestOrigin(req);
+    const orderedSizes = Object.entries(sizeQuantities)
+      .filter(([, qty]) => qty > 0)
+      .map(([size]) => size)
+      .join(",");
+
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       line_items: Object.entries(sizeQuantities)
-        .filter(([, qty]) => (qty as number) > 0)
+        .filter(([, qty]) => qty > 0)
         .map(([, qty]) => ({
           price: priceId,
-          quantity: qty as number,
+          quantity: qty,
         })),
       mode: "payment",
       discounts,
-      success_url: `${req.headers.origin}/tshirt?success=true&session_id={CHECKOUT_SESSION_ID}&delivery=${delivery}`,
-      cancel_url: `${req.headers.origin}/tshirt?canceled=true`,
+      success_url: `${origin}/tshirt?success=true&session_id={CHECKOUT_SESSION_ID}&delivery=${delivery}`,
+      cancel_url: `${origin}/tshirt?canceled=true`,
       metadata: {
-        sizes: Object.keys(sizeQuantities)
-          .filter((size) => sizeQuantities[size] > 0)
-          .join(","),
+        sizes: orderedSizes,
         sizeQuantities: JSON.stringify(sizeQuantities),
         delivery: delivery ? "true" : "false",
         totalQuantity: String(totalQuantity),
@@ -70,9 +114,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         enabled: true,
         invoice_data: {
           metadata: {
-            sizes: Object.keys(sizeQuantities)
-              .filter((size) => sizeQuantities[size] > 0)
-              .join(","),
+            sizes: orderedSizes,
             sizeQuantities: JSON.stringify(sizeQuantities),
             delivery: delivery ? "true" : "false",
             totalQuantity: String(totalQuantity),

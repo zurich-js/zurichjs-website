@@ -329,7 +329,7 @@ export default function Partnerships() {
           title: "🚀 New Partnership Interest",
           message: `Quick interest from: ${quickInterest.name} (${quickInterest.email})`,
           type: "other",
-          priority: "high",
+          priority: "normal",
           userData: {
             name: quickInterest.name,
             email: quickInterest.email,
@@ -2229,7 +2229,7 @@ export async function getStaticProps() {
 
   return {
     props: {
-      upcomingEvent: upcomingEvents[0],
+      upcomingEvent: upcomingEvents[0] ?? null,
       stats,
     },
   };

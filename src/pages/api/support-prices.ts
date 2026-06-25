@@ -1,14 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-08-27.basil",
-});
+function createStripeClient() {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-const SUPPORT_PRODUCT_ID =
-  process.env.NODE_ENV === "production"
-    ? "prod_SkD5vsBEz5iO6W" // You'll fill this in later
-    : "prod_SkCbG5XY7IZzkT"; // Test product ID
+  if (!stripeSecretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+
+  return new Stripe(stripeSecretKey, {
+    apiVersion: "2025-08-27.basil",
+  });
+}
+
+function getSupportProductId() {
+  const supportProductId = process.env.STRIPE_SUPPORT_PRODUCT_ID;
+
+  if (!supportProductId) {
+    throw new Error("STRIPE_SUPPORT_PRODUCT_ID is not configured");
+  }
+
+  return supportProductId;
+}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
@@ -16,9 +29,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   try {
+    const stripe = createStripeClient();
+    const supportProductId = getSupportProductId();
+
     // Fetch all prices for the support product
     const prices = await stripe.prices.list({
-      product: SUPPORT_PRODUCT_ID,
+      product: supportProductId,
       active: true,
       limit: 100,
     });
@@ -42,7 +58,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       oneTime: oneTimePrices.map(formatPrice),
       recurring: recurringPrices.map(formatPrice),
       product: {
-        id: SUPPORT_PRODUCT_ID,
+        id: supportProductId,
         name: "ZurichJS Support",
       },
     };
@@ -50,16 +66,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(200).json(formattedData);
   } catch (err: unknown) {
     console.error("Error fetching support prices:", err);
-    let message = "Unknown error";
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "message" in err &&
-      typeof (err as { message?: unknown }).message === "string"
-    ) {
-      message = (err as { message: string }).message;
-    }
-    return res.status(500).json({ error: message });
+    return res.status(500).json({ error: "Unable to load support prices" });
   }
 }
 

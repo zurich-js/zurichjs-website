@@ -193,17 +193,28 @@ export default function Survey() {
 
           // 3. Send platform notification
           try {
-            // Import the notification function dynamically to avoid SSR issues
-            const { sendPlatformNotification } = await import("@/lib/notification");
-
-            await sendPlatformNotification({
-              title: "New Referral Signup",
-              message: `${referrerName} successfully referred ${user.fullName || user.username || "New User"} to ZurichJS! They both earned 5 credits.`,
-              priority: 0,
-              sound: "success",
+            const notificationResponse = await fetch("/api/notifications/send", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                title: "New Referral Signup",
+                message: `${referrerName} successfully referred ${user.fullName || user.username || "New User"} to ZurichJS! They both earned 5 credits.`,
+                type: "referral",
+                priority: "low",
+              }),
             });
 
-            console.log("Successfully sent platform notification about referral");
+            if (!notificationResponse.ok) {
+              console.error(
+                "Failed to send platform notification:",
+                notificationResponse.status,
+                await notificationResponse.text(),
+              );
+            } else {
+              console.log("Successfully sent platform notification about referral");
+            }
           } catch (error) {
             console.error("Error sending platform notification:", error);
           }

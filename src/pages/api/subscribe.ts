@@ -1,9 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
+
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { emailSchema, optionalText } from "@/lib/validation/input";
 
 // EmailOctopus API details
 const API_KEY = process.env.EMAIL_OCTOPUS_API_KEY;
 const LIST_ID = process.env.EMAIL_OCTOPUS_LIST_ID;
 const API_URL = "https://emailoctopus.com/api/1.6";
+const subscribeSchema = z.object({
+  email: emailSchema,
+  firstName: optionalText(120),
+  lastName: optionalText(120),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow POST requests
@@ -11,11 +20,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { email } = req.body;
+  if (!rateLimitRequest(req, res, { key: "subscribe", limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return;
+  }
 
-  if (!email) {
+  const parsed = subscribeSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     return res.status(400).json({ error: "Email is required" });
   }
+
+  const { email } = parsed.data;
 
   try {
     // Make request to EmailOctopus API

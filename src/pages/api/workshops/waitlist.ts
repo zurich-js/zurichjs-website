@@ -1,40 +1,37 @@
 import { getAuth, clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import { emailSchema, optionalText, requiredText } from "@/lib/validation/input";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-type WaitlistOutcome = "walk-in" | "email-when-available";
-
-interface WaitlistRequestBody {
-  workshopId?: string;
-  workshopTitle?: string;
-  email?: string;
-  name?: string;
-  outcome?: WaitlistOutcome;
-}
+const waitlistRequestSchema = z.object({
+  workshopId: requiredText(120),
+  workshopTitle: requiredText(200),
+  email: emailSchema.optional(),
+  name: optionalText(120),
+  outcome: z.enum(["walk-in", "email-when-available"]),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const {
-    workshopId,
-    workshopTitle,
-    email: bodyEmail,
-    name: bodyName,
-    outcome,
-  } = (req.body || {}) as WaitlistRequestBody;
-
-  if (!workshopId || !workshopTitle) {
-    return res.status(400).json({ error: "Workshop ID and title are required" });
+  if (
+    !rateLimitRequest(req, res, { key: "workshop-waitlist", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
   }
 
-  if (outcome !== "walk-in" && outcome !== "email-when-available") {
-    return res.status(400).json({ error: "Invalid waitlist outcome" });
+  const parsed = waitlistRequestSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid waitlist request" });
   }
+
+  const { workshopId, workshopTitle, email: bodyEmail, name: bodyName, outcome } = parsed.data;
 
   try {
     // If signed in via Clerk, prefer that email/name (more trustworthy)
@@ -55,15 +52,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       source = "authenticated";
     }
 
-    if (!email && typeof bodyEmail === "string") {
-      email = bodyEmail.trim();
+    if (!email) {
+      email = bodyEmail;
     }
-    if (!name && typeof bodyName === "string") {
-      const trimmed = bodyName.trim();
-      if (trimmed) name = trimmed;
+    if (!name) {
+      name = bodyName;
     }
 
-    if (!email || !EMAIL_REGEX.test(email)) {
+    if (!email) {
       return res.status(400).json({ error: "A valid email is required to join the waitlist" });
     }
 

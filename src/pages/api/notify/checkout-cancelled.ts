@@ -1,24 +1,38 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import { emailSchema, requiredText, slugSchema } from "@/lib/validation/input";
 
-interface CheckoutCancelledBody {
-  workshopId?: string;
-  eventId?: string;
-  ticketType?: string;
-  itemTitle: string;
-  reason: string;
-  email: string;
-}
+const checkoutCancelledSchema = z.object({
+  workshopId: slugSchema.optional(),
+  eventId: slugSchema.optional(),
+  ticketType: z.enum(["workshop", "event"]).optional(),
+  itemTitle: requiredText(200),
+  reason: requiredText(500),
+  email: emailSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (
+    !rateLimitRequest(req, res, { key: "checkout-cancelled", limit: 5, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
+
   try {
-    const { workshopId, eventId, ticketType, itemTitle, reason, email } =
-      req.body as CheckoutCancelledBody;
+    const parsed = checkoutCancelledSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid request" });
+    }
+
+    const { workshopId, eventId, ticketType, itemTitle, reason, email } = parsed.data;
 
     // Determine purchase type
     const isWorkshop = ticketType === "workshop" || Boolean(workshopId);

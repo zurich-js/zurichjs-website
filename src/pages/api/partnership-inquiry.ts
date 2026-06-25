@@ -1,11 +1,29 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import { emailSchema, optionalText, requiredText } from "@/lib/validation/input";
 
 type ResponseData = {
   success: boolean;
   message: string;
 };
+
+const partnershipInquirySchema = z.object({
+  companyName: requiredText(160),
+  contactName: requiredText(120),
+  email: emailSchema,
+  phone: optionalText(80),
+  message: optionalText(2500),
+  tierInterest: optionalText(80),
+  venueDetails: z
+    .object({
+      canProvideFoodDrinks: z.boolean().optional(),
+      venueCapacity: optionalText(80),
+    })
+    .optional(),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {
   // Only allow POST requests
@@ -13,17 +31,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
     return res.status(405).json({ success: false, message: "Method not allowed" });
   }
 
-  try {
-    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } =
-      req.body;
+  if (
+    !rateLimitRequest(req, res, { key: "partnership-inquiry", limit: 3, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
 
-    // Basic validation
-    if (!companyName || !contactName || !email) {
+  try {
+    const parsed = partnershipInquirySchema.safeParse(req.body);
+
+    if (!parsed.success) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
       });
     }
+
+    const { companyName, contactName, email, phone, message, tierInterest, venueDetails } =
+      parsed.data;
 
     // Format the notification message
     const notificationMessage = {

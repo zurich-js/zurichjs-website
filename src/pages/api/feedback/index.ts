@@ -2,7 +2,17 @@ import crypto from "crypto";
 
 import { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "next-sanity";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { sendPlatformNotification } from "@/lib/notification";
+import {
+  feedbackRatingBlockSchema,
+  optionalText,
+  ratingSchema,
+  requiredText,
+  slugSchema,
+} from "@/lib/validation/input";
 import { getEventById, getSpeakerById, getTalkById } from "@/sanity/queries";
 
 // Types to match the client-side types
@@ -52,6 +62,45 @@ type ResponseData = {
   error?: string;
 };
 
+const productFeedbackSchema = z.object({
+  productId: slugSchema,
+  productName: optionalText(180),
+  rating: ratingSchema,
+  interests: z.array(requiredText(80)).max(12).default([]),
+  questions: optionalText(2000).default(""),
+  learningPreferences: z.array(requiredText(80)).max(12).default([]),
+  detailedFeedback: optionalText(2000).default(""),
+});
+
+const comprehensiveFeedbackSchema = z.object({
+  selectedEventId: slugSchema,
+  overallRating: ratingSchema,
+  foodOptions: feedbackRatingBlockSchema,
+  drinks: feedbackRatingBlockSchema,
+  talks: feedbackRatingBlockSchema,
+  timing: feedbackRatingBlockSchema,
+  execution: feedbackRatingBlockSchema,
+  improvements: optionalText(2000).default(""),
+  futureTopics: optionalText(2000).default(""),
+  worthTime: z.enum(["definitely", "mostly", "somewhat", "not_really", ""]),
+  wouldRecommend: z.enum(["definitely", "probably", "maybe", "unlikely", ""]),
+  dealOfDay: feedbackRatingBlockSchema,
+  additionalComments: optionalText(2000).default(""),
+  submittedAt: requiredText(80).datetime({ offset: true }),
+});
+
+const legacyFeedbackSchema = z.object({
+  eventId: slugSchema,
+  talkId: slugSchema,
+  speakerId: slugSchema,
+  rating: ratingSchema,
+  comment: optionalText(2000).default(""),
+  submittedAt: requiredText(80).datetime({ offset: true }),
+  productFeedback: productFeedbackSchema.optional(),
+});
+
+const feedbackSchema = z.union([comprehensiveFeedbackSchema, legacyFeedbackSchema]);
+
 // Initialize Sanity client
 const sanityClient = createClient({
   projectId: "viqjrovw",
@@ -74,8 +123,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) 
     });
   }
 
+  if (!rateLimitRequest(req, res, { key: "feedback", limit: 5, windowMs: 10 * 60 * 1000 })) {
+    return;
+  }
+
   try {
-    const feedback: FeedbackData = req.body;
+    const parsed = feedbackSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid feedback submission",
+      });
+    }
+
+    const feedback = parsed.data as FeedbackData;
 
     if (isComprehensiveFeedback(feedback)) {
       return await handleComprehensiveFeedback(feedback, req, res);
@@ -257,17 +319,10 @@ async function handleLegacyFeedback(
     const speakerName = speakerObj?.name || "Unknown Speaker";
     const ratingStars = "⭐".repeat(rating);
 
-    await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: `New Feedback Received ${ratingStars}`,
-        message: `Rating: ${rating}/5 stars\nEvent: ${eventTitle}\nTalk: "${talkTitle}" by ${speakerName}\nComment: ${comment.length > 100 ? comment.substring(0, 100) + "..." : comment}`,
-        type: "other",
-        priority: rating <= 2 ? "high" : "normal", // High priority for poor ratings
-      }),
+    await sendPlatformNotification({
+      title: `New Feedback Received ${ratingStars}`,
+      message: `Rating: ${rating}/5 stars\nEvent: ${eventTitle}\nTalk: "${talkTitle}" by ${speakerName}\nComment: ${comment.length > 100 ? comment.substring(0, 100) + "..." : comment}`,
+      priority: rating <= 2 ? 2 : 1,
     });
   } catch (notificationError) {
     console.error("Failed to send feedback notification:", notificationError);
@@ -439,17 +494,10 @@ async function handleComprehensiveFeedback(
           10,
       ) / 10;
 
-    await fetch(`${req.headers.origin || process.env.NEXTAUTH_URL}/api/notifications/send`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        title: `New Comprehensive Feedback ${ratingStars}`,
-        message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\nEvent: ${eventTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
-        type: "other",
-        priority: overallRating <= 2 ? "high" : "normal",
-      }),
+    await sendPlatformNotification({
+      title: `New Comprehensive Feedback ${ratingStars}`,
+      message: `Overall: ${overallRating}/5 stars | Avg Details: ${avgRating}/5\nEvent: ${eventTitle}\nWorth Time: ${worthTime}\nWould Recommend: ${wouldRecommend}\n\nImprovements: ${improvements.length > 50 ? improvements.substring(0, 50) + "..." : improvements}`,
+      priority: overallRating <= 2 ? 2 : 1,
     });
   } catch (notificationError) {
     console.error("Failed to send comprehensive feedback notification:", notificationError);

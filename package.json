@@ -45,7 +45,8 @@
     "react-intersection-observer": "^9.16.0",
     "sanity": "^5.26.0",
     "stripe": "^18.5.0",
-    "uuid": "^13.0.2"
+    "uuid": "^13.0.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.0",

@@ -1,8 +1,30 @@
 import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
+
+import { emailSchema, optionalText, requiredText, slugSchema } from "@/lib/validation/input";
 
 // In a real app, you would use a database to store this information
 const paymentReservations = new Map();
+
+const cashPaymentSchema = z
+  .object({
+    name: requiredText(160),
+    email: emailSchema,
+    streetAndNumber: requiredText(180),
+    postcode: requiredText(40),
+    city: requiredText(120),
+    country: requiredText(80),
+    ticketTitle: requiredText(240),
+    price: z.coerce.number().min(0).max(100000),
+    eventId: slugSchema.optional(),
+    workshopId: slugSchema.optional(),
+    ticketType: optionalText(80),
+    paymentMethod: z.enum(["cash", "bank"]).optional().default("cash"),
+  })
+  .refine((value) => value.eventId || value.workshopId, {
+    message: "eventId or workshopId is required",
+  });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -11,6 +33,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   try {
     const { userId } = getAuth(req);
+
+    const parsed = cashPaymentSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid payment reservation request" });
+    }
 
     const {
       name,
@@ -24,31 +52,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       eventId,
       workshopId,
       ticketType,
-      paymentMethod = "cash", // Default to cash if not specified
-    } = req.body;
-
-    // Validate required fields
-    const missingFields = [];
-    if (!name) missingFields.push("name");
-    if (!email) missingFields.push("email");
-    if (!streetAndNumber) missingFields.push("streetAndNumber");
-    if (!postcode) missingFields.push("postcode");
-    if (!city) missingFields.push("city");
-    if (!country) missingFields.push("country");
-    if (!ticketTitle) missingFields.push("ticketTitle");
-    if (price === undefined) missingFields.push("price");
-    if (!eventId && !workshopId) missingFields.push("eventId or workshopId");
-
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        error: `Missing required fields: ${missingFields.join(", ")}`,
-      });
-    }
-
-    // Validate payment method
-    if (paymentMethod !== "cash" && paymentMethod !== "bank") {
-      return res.status(400).json({ error: "Invalid payment method" });
-    }
+      paymentMethod,
+    } = parsed.data;
 
     // Create reservation data
     const reservation = {

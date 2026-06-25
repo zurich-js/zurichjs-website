@@ -1,16 +1,32 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
+
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { requiredText } from "@/lib/validation/input";
+
+const userLookupQuerySchema = z.object({
+  id: requiredText(160).regex(/^user_[a-zA-Z0-9]+$/),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { id } = req.query;
+  if (
+    !rateLimitRequest(req, res, { key: "public-user-lookup", limit: 20, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
 
-  if (!id || typeof id !== "string") {
+  const parsed = userLookupQuerySchema.safeParse(req.query);
+
+  if (!parsed.success) {
     return res.status(400).json({ error: "User ID is required" });
   }
+
+  const { id } = parsed.data;
 
   try {
     // Initialize the clerk client

@@ -1,7 +1,18 @@
 import formidable from "formidable";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { rateLimitRequest } from "@/lib/api/rateLimit";
 import { sendPlatformNotification } from "@/lib/notification";
+import {
+  emailSchema,
+  formString,
+  githubHandleSchema,
+  linkedinSchema,
+  parseJsonArrayField,
+  requiredText,
+  safeTextArraySchema,
+} from "@/lib/validation/input";
 
 // Disable the default body parser to handle form-data
 export const config = {
@@ -9,6 +20,17 @@ export const config = {
     bodyParser: false,
   },
 };
+
+const volunteerApplicationSchema = z.object({
+  firstName: requiredText(80),
+  lastName: requiredText(80),
+  email: emailSchema,
+  linkedinProfile: linkedinSchema,
+  githubProfile: githubHandleSchema,
+  message: requiredText(3000),
+  availability: z.enum(["weekly", "monthly", "events", "other"]),
+  interests: safeTextArraySchema(80, 12),
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -19,15 +41,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const form = formidable({
     keepExtensions: true,
     multiples: false,
+    maxFields: 20,
+    maxFieldsSize: 64 * 1024,
+    maxFileSize: 2 * 1024 * 1024,
   });
 
   try {
-    // Send notification that submission process has started
-    await sendPlatformNotification({
-      title: "Volunteer Application Started",
-      message: "A new volunteer application process has started.",
-      priority: 0,
-    });
+    if (
+      !rateLimitRequest(req, res, { key: "submit-volunteer", limit: 3, windowMs: 10 * 60 * 1000 })
+    ) {
+      return;
+    }
 
     // Parse the form
     const [fields] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
@@ -37,37 +61,32 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       });
     });
 
-    // Extract values from form fields
-    const firstName = Array.isArray(fields.firstName)
-      ? fields.firstName[0]
-      : fields.firstName || "";
-    const lastName = Array.isArray(fields.lastName) ? fields.lastName[0] : fields.lastName || "";
+    const parsed = volunteerApplicationSchema.safeParse({
+      firstName: formString(fields.firstName),
+      lastName: formString(fields.lastName),
+      email: formString(fields.email),
+      linkedinProfile: formString(fields.linkedinProfile),
+      githubProfile: formString(fields.githubProfile),
+      message: formString(fields.message),
+      availability: formString(fields.availability),
+      interests: parseJsonArrayField(fields.interests),
+    });
+
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid volunteer application" });
+    }
+
+    const {
+      firstName,
+      lastName,
+      email,
+      linkedinProfile,
+      githubProfile,
+      message,
+      availability,
+      interests,
+    } = parsed.data;
     const name = `${firstName} ${lastName}`;
-    const email = Array.isArray(fields.email) ? fields.email[0] : fields.email || "";
-    const linkedinProfile = Array.isArray(fields.linkedinProfile)
-      ? fields.linkedinProfile[0]
-      : fields.linkedinProfile || "";
-    const githubProfile = Array.isArray(fields.githubProfile)
-      ? fields.githubProfile[0]
-      : fields.githubProfile || "";
-    const message = Array.isArray(fields.message) ? fields.message[0] : fields.message || "";
-    const availability = Array.isArray(fields.availability)
-      ? fields.availability[0]
-      : fields.availability || "";
-    const interests = fields.interests
-      ? JSON.parse(
-          (Array.isArray(fields.interests) ? fields.interests[0] : fields.interests).toString(),
-        )
-      : [];
-
-    // Validate required fields
-    if (!firstName || !lastName || !email || !linkedinProfile || !message) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
-
-    if (!interests || interests.length === 0) {
-      return res.status(400).json({ error: "Please select at least one area of interest" });
-    }
 
     // Format the availability text for better readability
     let availabilityText = "Unknown";

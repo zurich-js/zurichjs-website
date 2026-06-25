@@ -1,27 +1,67 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-08-27.basil",
-});
+import { rateLimitRequest } from "@/lib/api/rateLimit";
+import { getTrustedRequestOrigin } from "@/lib/api/requestOrigin";
+import { emailSchema, stripeIdSchema } from "@/lib/validation/input";
 
-const SUPPORT_PRODUCT_ID =
-  process.env.NODE_ENV === "production"
-    ? "prod_SkD5vsBEz5iO6W" // You'll fill this in later
-    : "prod_SkCbG5XY7IZzkT"; // Test product ID
+function createStripeClient() {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!stripeSecretKey) {
+    throw new Error("STRIPE_SECRET_KEY is not configured");
+  }
+
+  return new Stripe(stripeSecretKey, {
+    apiVersion: "2025-08-27.basil",
+  });
+}
+
+const supportCheckoutSchema = z
+  .object({
+    priceId: stripeIdSchema.optional(),
+    amount: z.coerce.number().min(1).max(1000).optional(),
+    email: emailSchema.optional(),
+    recurring: z.boolean().optional().default(false),
+  })
+  .refine((value) => value.priceId || value.amount !== undefined, {
+    message: "Price ID or custom amount is required",
+  });
+
+function getSupportProductId() {
+  const supportProductId = process.env.STRIPE_SUPPORT_PRODUCT_ID;
+
+  if (!supportProductId) {
+    throw new Error("STRIPE_SUPPORT_PRODUCT_ID is not configured");
+  }
+
+  return supportProductId;
+}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { priceId, amount, email, recurring } = req.body;
+  if (
+    !rateLimitRequest(req, res, { key: "checkout-support", limit: 8, windowMs: 10 * 60 * 1000 })
+  ) {
+    return;
+  }
 
-  if (!priceId && !amount) {
+  const parsed = supportCheckoutSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     return res.status(400).json({ error: "Price ID or custom amount is required" });
   }
 
+  const { priceId, amount, email, recurring } = parsed.data;
+
   try {
+    const stripe = createStripeClient();
+    const supportProductId = getSupportProductId();
+    const origin = getTrustedRequestOrigin(req);
     let sessionParams: Stripe.Checkout.SessionCreateParams;
 
     if (amount && !priceId) {
@@ -43,7 +83,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       const priceData: Stripe.Checkout.SessionCreateParams.LineItem.PriceData = {
         currency: "chf",
-        product: SUPPORT_PRODUCT_ID,
+        product: supportProductId,
         unit_amount: Math.round(amount * 100), // Convert to cents
       };
 
@@ -62,8 +102,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           },
         ],
         mode,
-        success_url: `${req.headers.origin}/buy-us-a-coffee?${successParams.toString()}`,
-        cancel_url: `${req.headers.origin}/buy-us-a-coffee?canceled=true`,
+        success_url: `${origin}/buy-us-a-coffee?${successParams.toString()}`,
+        cancel_url: `${origin}/buy-us-a-coffee?canceled=true`,
         metadata: {
           type: mode,
           amount: String(amount),
@@ -71,6 +111,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         },
       };
     } else {
+      if (!priceId) {
+        return res.status(400).json({ error: "Price ID is required" });
+      }
+
       // Use the provided price ID
       const price = await stripe.prices.retrieve(priceId);
       const mode = price.type === "recurring" ? "subscription" : "payment";
@@ -95,8 +139,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           },
         ],
         mode,
-        success_url: `${req.headers.origin}/buy-us-a-coffee?${successParams.toString()}`,
-        cancel_url: `${req.headers.origin}/buy-us-a-coffee?canceled=true`,
+        success_url: `${origin}/buy-us-a-coffee?${successParams.toString()}`,
+        cancel_url: `${origin}/buy-us-a-coffee?canceled=true`,
         metadata: {
           type: mode,
           priceId,
@@ -113,16 +157,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     return res.status(200).json({ url: session.url });
   } catch (err: unknown) {
-    let message = "Unknown error";
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "message" in err &&
-      typeof (err as { message?: unknown }).message === "string"
-    ) {
-      message = (err as { message: string }).message;
-    }
-    return res.status(500).json({ error: message });
+    console.error("Error creating support checkout session:", err);
+    return res.status(500).json({ error: "Unable to create checkout session" });
   }
 }
 

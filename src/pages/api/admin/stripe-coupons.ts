@@ -1,8 +1,53 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
 import { stripe } from "@/lib/stripe";
+import { couponCodeSchema, optionalText } from "@/lib/validation/input";
+
+const emptyStringToUndefined = (value: unknown) => (value === "" ? undefined : value);
+
+const stripeCouponCreateSchema = z
+  .object({
+    id: couponCodeSchema,
+    name: optionalText(160),
+    discountType: z.enum(["percent", "amount"]),
+    percentOff: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().min(0.01).max(100).optional(),
+    ),
+    amountOff: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().min(0.01).max(100000).optional(),
+    ),
+    currency: z.enum(["chf", "eur", "usd", "gbp"]).optional().default("chf"),
+    duration: z.enum(["forever", "once", "repeating"]),
+    durationInMonths: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().min(1).max(36).optional(),
+    ),
+    maxRedemptions: z.preprocess(
+      emptyStringToUndefined,
+      z.coerce.number().int().min(1).max(100000).optional(),
+    ),
+    redeemBy: optionalText(80),
+    metadata: z.record(z.string().max(80), z.string().max(500)).optional().default({}),
+  })
+  .refine((value) => value.discountType !== "percent" || value.percentOff !== undefined, {
+    message: "Invalid percent off value",
+  })
+  .refine((value) => value.discountType !== "amount" || value.amountOff !== undefined, {
+    message: "Invalid amount off value",
+  })
+  .refine((value) => value.duration !== "repeating" || value.durationInMonths !== undefined, {
+    message: "Duration in months required for repeating coupons",
+  });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (!requireAdminOrg(req, res)) {
+    return;
+  }
+
   if (req.method === "GET") {
     try {
       // Fetch coupons from Stripe
@@ -33,6 +78,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
   } else if (req.method === "POST") {
     try {
+      const parsed = stripeCouponCreateSchema.safeParse(req.body);
+
+      if (!parsed.success) {
+        return res.status(400).json({ message: "Invalid coupon request" });
+      }
+
       const {
         id,
         name,
@@ -45,27 +96,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         maxRedemptions,
         redeemBy,
         metadata,
-      } = req.body;
-
-      // Validate required fields
-      if (!id || !discountType || !duration) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-
-      if (discountType === "percent" && (!percentOff || percentOff <= 0 || percentOff > 100)) {
-        return res.status(400).json({ message: "Invalid percent off value" });
-      }
-
-      if (discountType === "amount" && (!amountOff || amountOff <= 0)) {
-        return res.status(400).json({ message: "Invalid amount off value" });
-      }
+      } = parsed.data;
 
       // Build coupon parameters
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const couponParams: Record<string, any> = {
         id,
         duration,
-        metadata: metadata || {},
+        metadata,
       };
 
       if (name) {
@@ -73,23 +111,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       if (discountType === "percent") {
-        couponParams.percent_off = parseFloat(percentOff);
+        couponParams.percent_off = percentOff;
       } else {
-        couponParams.amount_off = Math.round(parseFloat(amountOff) * 100); // Convert to cents
-        couponParams.currency = currency || "usd";
+        couponParams.amount_off = Math.round((amountOff ?? 0) * 100); // Convert to cents
+        couponParams.currency = currency;
       }
 
       if (duration === "repeating") {
-        if (!durationInMonths || durationInMonths <= 0) {
-          return res
-            .status(400)
-            .json({ message: "Duration in months required for repeating coupons" });
-        }
-        couponParams.duration_in_months = parseInt(durationInMonths);
+        couponParams.duration_in_months = durationInMonths;
       }
 
-      if (maxRedemptions && maxRedemptions > 0) {
-        couponParams.max_redemptions = parseInt(maxRedemptions);
+      if (maxRedemptions) {
+        couponParams.max_redemptions = maxRedemptions;
       }
 
       if (redeemBy) {

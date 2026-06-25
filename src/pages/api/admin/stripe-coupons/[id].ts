@@ -1,13 +1,26 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
 
+import { requireAdminOrg } from "@/lib/api/adminAuth";
 import { stripe } from "@/lib/stripe";
+import { couponCodeSchema } from "@/lib/validation/input";
+
+const stripeCouponQuerySchema = z.object({
+  id: couponCodeSchema,
+});
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
+  if (!requireAdminOrg(req, res)) {
+    return;
+  }
 
-  if (!id || typeof id !== "string") {
+  const parsed = stripeCouponQuerySchema.safeParse(req.query);
+
+  if (!parsed.success) {
     return res.status(400).json({ error: "Coupon ID is required" });
   }
+
+  const { id } = parsed.data;
 
   if (req.method === "DELETE") {
     try {

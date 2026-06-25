@@ -1,8 +1,26 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { z } from "zod";
+
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { optionalCouponCodeSchema, stripeIdSchema } from "@/lib/validation/input";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   apiVersion: "2025-08-27.basil",
+});
+
+const createPaymentLinkSchema = z.object({
+  cartItems: z
+    .array(
+      z.object({
+        priceId: stripeIdSchema,
+        productId: stripeIdSchema,
+        quantity: z.coerce.number().int().min(1).max(25),
+      }),
+    )
+    .min(1)
+    .max(20),
+  couponCode: optionalCouponCodeSchema,
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -10,13 +28,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { cartItems, couponCode } = req.body;
+  if (!requireAdminOrg(req, res)) {
+    return;
+  }
 
-  if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+  const parsed = createPaymentLinkSchema.safeParse(req.body);
+
+  if (!parsed.success) {
     return res
       .status(400)
       .json({ error: "Missing required field: cartItems (must be non-empty array)" });
   }
+
+  const { cartItems, couponCode } = parsed.data;
 
   try {
     // Prepare line items from cart
@@ -24,12 +48,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const productDetails = [];
 
     for (const item of cartItems) {
-      if (!item.priceId || !item.quantity || !item.productId) {
-        return res
-          .status(400)
-          .json({ error: "Each cart item must have priceId, quantity, and productId" });
-      }
-
       // Validate the price and product exist
       await stripe.prices.retrieve(item.priceId);
       const product = await stripe.products.retrieve(item.productId);

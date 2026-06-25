@@ -1,5 +1,8 @@
-import { getAuth } from "@clerk/nextjs/server";
 import { NextApiRequest, NextApiResponse } from "next";
+import { z } from "zod";
+
+import { requireAdminOrg } from "@/lib/api/adminAuth";
+import { couponCodeSchema, requiredText } from "@/lib/validation/input";
 
 interface Coupon {
   code: string;
@@ -8,22 +11,28 @@ interface Coupon {
   isActive: boolean;
 }
 
+const couponRemovalSchema = z.object({
+  userId: requiredText(160),
+  couponCode: couponCodeSchema,
+});
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { userId } = getAuth(req);
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+    if (!requireAdminOrg(req, res)) {
+      return;
     }
 
-    const { userId: targetUserId, couponCode } = req.body;
+    const parsed = couponRemovalSchema.safeParse(req.body);
 
-    if (!targetUserId || !couponCode) {
+    if (!parsed.success) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+
+    const { userId: targetUserId, couponCode } = parsed.data;
 
     // First, fetch the current user data to get existing metadata
     const userResponse = await fetch(`https://api.clerk.dev/v1/users/${targetUserId}`, {

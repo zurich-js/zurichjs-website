@@ -31,6 +31,7 @@ if (typeof window !== "undefined") {
   };
 }
 
+import ConfRedirectModal from "@/components/banners/ConfRedirectModal";
 import { useCheckUserSurvey } from "@/hooks/useCheckUserSurvey";
 const AuthCheck = ({ children }: { children: React.ReactNode }) => {
   const { user } = useUser();
@@ -101,6 +102,7 @@ export default function App({ Component, pageProps }: AppProps) {
       <ClerkProvider>
         <AuthCheck>
           <Component {...pageProps} />
+          <ConfRedirectModal />
         </AuthCheck>
       </ClerkProvider>
     </PostHogProvider>

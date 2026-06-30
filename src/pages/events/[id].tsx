@@ -1584,7 +1584,18 @@ export async function getStaticProps({ params }: { params: { id: string } }) {
   const { id } = params;
   const event = await getEventById(id);
 
+  // getEventById returns null when no event matches the id (unknown/draft/removed
+  // event). Returning it as a prop made the page crash on `event.stripePriceId`
+  // during render, so render the 404 page instead and retry on the next request.
+  if (!event) {
+    return {
+      notFound: true,
+      revalidate: 60,
+    };
+  }
+
   return {
     props: { event },
+    revalidate: 60,
   };
 }

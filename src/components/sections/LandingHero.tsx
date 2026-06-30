@@ -306,7 +306,7 @@ function EventCard({
 
       {/* Submit Talk Link */}
       <Link
-        href="/cfp/form"
+        href="/cfp"
         className="block text-center text-sm text-gray-600 hover:text-black transition-colors focus:outline-none focus:underline"
         onClick={onSubmitTalkClick}
       >

@@ -64,7 +64,7 @@ export default function SpeakerProfilePage() {
     const queryValue = Array.isArray(router.query.returnTo)
       ? router.query.returnTo[0]
       : router.query.returnTo;
-    return queryValue || "/cfp/form";
+    return queryValue || "/cfp";
   }, [router.query.returnTo]);
 
   useEffect(() => {

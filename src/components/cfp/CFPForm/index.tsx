@@ -10,6 +10,7 @@ import useEvents from "@/hooks/useEvents";
 
 import { useCFPForm } from "../hooks/useCFPForm";
 import { useFormValidation } from "../hooks/useFormValidation";
+import { ValidationErrors } from "../types";
 
 import AutoSaveIndicator from "./AutoSaveIndicator";
 import ErrorBanner from "./ErrorBanner";
@@ -55,7 +56,7 @@ export default function CFPForm() {
 
   const { validateForm, hasErrors } = useFormValidation();
 
-  const editProfileHref = useMemo(() => "/profile/speaker?returnTo=%2Fcfp%2Fform", []);
+  const editProfileHref = useMemo(() => "/profile/speaker?returnTo=%2Fcfp", []);
 
   const loadPrefill = async (): Promise<CFPPrefillData> => {
     const response = await fetch("/api/cfp/prefill");
@@ -204,7 +205,25 @@ export default function CFPForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "An error occurred while submitting your talk");
+        // If the server returned field-level validation errors, map them back
+        // onto the form so the user sees exactly what to fix.
+        if (data.fields && typeof data.fields === "object") {
+          const serverErrors: ValidationErrors = {};
+          for (const key of Object.keys(data.fields)) {
+            const messages = data.fields[key];
+            const message = Array.isArray(messages) ? messages[0] : messages;
+            if (message && key in validationErrors) {
+              serverErrors[key as keyof ValidationErrors] = String(message);
+            }
+          }
+          if (Object.keys(serverErrors).length > 0) {
+            setValidationErrors((prev) => ({ ...prev, ...serverErrors }));
+          }
+        }
+
+        throw new Error(
+          data.message || data.error || "An error occurred while submitting your talk",
+        );
       }
 
       track("form_submit_success", { talkTitle: nextFormState.title });
@@ -286,7 +305,7 @@ export default function CFPForm() {
           isSignedIn={!!user}
           editProfileHref={editProfileHref}
           signInCta={
-            <SignInButton mode="modal" forceRedirectUrl="/cfp/form">
+            <SignInButton mode="modal" forceRedirectUrl="/cfp">
               <button
                 type="button"
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800"

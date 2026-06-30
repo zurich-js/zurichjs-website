@@ -52,7 +52,9 @@ const talkSubmissionSchema = z.object({
   twitterHandle: twitterHandleSchema,
   title: requiredText(180),
   description: requiredText(5000),
-  talkLength: z.enum(["10", "25", "40"]),
+  // Must stay in sync with the options rendered in
+  // src/components/cfp/CFPForm/TalkSection.tsx
+  talkLength: z.enum(["5", "25", "35"]),
   talkLevel: z.enum(["beginner", "intermediate", "advanced"]),
   topics: z.array(z.enum(TALK_TOPICS)).min(1).max(8),
 });
@@ -71,6 +73,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     maxFileSize: 5 * 1024 * 1024,
   });
 
+  // Keep a reference to the parsed fields so the catch block can build a
+  // helpful error notification without re-parsing the (already consumed) body.
+  let parsedFields: formidable.Fields | null = null;
+
   try {
     if (!rateLimitRequest(req, res, { key: "submit-talk", limit: 3, windowMs: 10 * 60 * 1000 })) {
       return;
@@ -87,6 +93,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         });
       },
     );
+
+    parsedFields = fields;
 
     const parsed = talkSubmissionSchema.safeParse({
       submissionMode: formString(fields.submissionMode) || "guest",
@@ -106,7 +114,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     if (!parsed.success) {
-      return res.status(400).json({ error: "Invalid talk submission" });
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      const invalidFields = Object.keys(fieldErrors);
+
+      // Surface which fields failed so this is debuggable from logs/notifications
+      // instead of a generic "Invalid talk submission".
+      console.warn("Talk submission validation failed:", invalidFields);
+
+      await sendPlatformNotification({
+        title: "CFP Submission Rejected (validation)",
+        message: `A talk submission was rejected due to invalid fields: ${invalidFields.join(", ")}`,
+        priority: 1,
+      });
+
+      return res.status(400).json({
+        error: "Invalid talk submission",
+        fields: fieldErrors,
+        message: `Please double-check the following: ${invalidFields.join(", ")}.`,
+      });
     }
 
     const {
@@ -294,23 +319,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   } catch (error) {
     console.error("Error submitting talk:", error);
 
-    // Get form data for error notification if possible
+    // Build submitter info from the already-parsed fields. The request body is a
+    // stream that has already been consumed, so we cannot re-parse it here.
     let submitterInfo = "Unknown user";
-    try {
-      const [errorFields] = await new Promise<[formidable.Fields, formidable.Files]>(
-        (resolve, reject) => {
-          form.parse(req, (err: unknown, fields: formidable.Fields, files: formidable.Files) => {
-            if (err) reject(err);
-            resolve([fields, files]);
-          });
-        },
-      );
+    if (parsedFields) {
+      const firstName = formString(parsedFields.firstName);
+      const lastName = formString(parsedFields.lastName);
+      const submitterEmail = formString(parsedFields.email);
 
-      if (errorFields.firstName && errorFields.lastName && errorFields.email) {
-        submitterInfo = `${errorFields.firstName} ${errorFields.lastName} (${errorFields.email})`;
+      if (firstName && lastName && submitterEmail) {
+        submitterInfo = `${firstName} ${lastName} (${submitterEmail})`;
       }
-    } catch (formError) {
-      console.error("Could not parse form data for error notification:", formError);
     }
 
     // Send failure notification with submitter info

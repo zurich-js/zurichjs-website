@@ -343,6 +343,8 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
                   alt="ZurichJS Community"
                   fill
                   className="object-cover"
+                  sizes="(max-width: 1023px) calc(100vw - 3rem), 50vw"
+                  loading="eager"
                 />
               </div>
               <div className="text-center mt-4 mb-2">
@@ -570,6 +572,7 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
                         alt={milestone.title}
                         fill
                         className="object-cover"
+                        sizes="42vw"
                       />
                     </div>
                   )}
@@ -613,6 +616,7 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
                         alt={milestone.title}
                         fill
                         className="object-cover"
+                        sizes="calc(100vw - 4rem)"
                       />
                     </div>
                   )}
@@ -896,7 +900,13 @@ export default function About({ teamMembers, milestones, stats, pastEvents }: Ab
               className="bg-gray-50 rounded-lg overflow-hidden shadow-md"
             >
               <div className="relative h-64 w-full">
-                <Image src={member.image} alt={member.name} fill className="object-cover" />
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 767px) calc(100vw - 3rem), (max-width: 1023px) 50vw, 33vw"
+                />
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-1 text-gray-900">{member.name}</h3>

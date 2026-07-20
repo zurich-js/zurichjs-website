@@ -241,6 +241,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                               alt={workshop.title}
                               fill
                               className="object-cover"
+                              sizes="(max-width: 767px) calc(100vw - 3rem), 50vw"
                               priority
                             />
                           ) : (
@@ -326,6 +327,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                                       alt={workshopSpeakers[0].name}
                                       fill
                                       className="object-cover"
+                                      sizes="(max-width: 767px) 28px, 40px"
                                     />
                                   </div>
                                   <div className="flex flex-col">
@@ -350,6 +352,7 @@ export default function WorkshopsPage({ speakers }: WorkshopsPageProps) {
                                           alt={speaker.name}
                                           fill
                                           className="object-cover"
+                                          sizes="(max-width: 767px) 28px, 40px"
                                         />
                                       </div>
                                     ))}

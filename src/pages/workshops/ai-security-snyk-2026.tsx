@@ -829,6 +829,7 @@ export default function AISecuritySnykWorkshopPage({ speakers }: WorkshopPagePro
                               width={160}
                               height={160}
                               className="w-full h-full object-cover object-center"
+                              sizes="160px"
                             />
                           </div>
                           {/* Floating accent badge */}

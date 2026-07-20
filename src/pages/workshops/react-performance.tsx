@@ -359,6 +359,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     width={48}
                     height={48}
                     className="rounded-full mr-3 border-2 border-purple-100"
+                    sizes="48px"
                   />
                   <div>
                     <p className="font-bold text-lg">{workshop.speaker.name}</p>
@@ -883,6 +884,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     alt={workshop.speaker.name}
                     fill
                     className="object-cover"
+                    sizes="96px"
                   />
                 </div>
                 <div>

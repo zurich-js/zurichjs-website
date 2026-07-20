@@ -110,6 +110,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                             width={56}
                             height={56}
                             className="w-full h-full object-cover"
+                            sizes="56px"
                           />
                         </div>
                       ))}

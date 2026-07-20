@@ -195,7 +195,13 @@ export default function Contact({ contactPeople }: ContactPageProps) {
                 className="bg-gray-50 rounded-lg overflow-hidden shadow-md flex flex-col md:flex-row"
               >
                 <div className="relative h-64 md:h-auto md:w-1/3">
-                  <Image src={person.image} alt={person.name} fill className="object-cover" />
+                  <Image
+                    src={person.image}
+                    alt={person.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 767px) calc(100vw - 3rem), 17vw"
+                  />
                 </div>
                 <div className="p-6 md:w-2/3">
                   <h3 className="text-xl font-bold mb-1 text-gray-900">{person.name}</h3>

@@ -103,6 +103,7 @@ export default function Partners({ partners, titleClassName = "text-blue-700" }:
                           alt={partner.name}
                           fill
                           className="object-contain"
+                          sizes="(max-width: 639px) 224px, (max-width: 1023px) 256px, 288px"
                         />
                       </div>
                     </motion.a>
@@ -199,6 +200,7 @@ export default function Partners({ partners, titleClassName = "text-blue-700" }:
                           alt={partner.name}
                           fill
                           className="object-contain"
+                          sizes="(max-width: 639px) 112px, (max-width: 767px) 128px, 160px"
                         />
                       </div>
                     </motion.a>
@@ -295,6 +297,7 @@ export default function Partners({ partners, titleClassName = "text-blue-700" }:
                           alt={partner.name}
                           fill
                           className="object-contain"
+                          sizes="(max-width: 639px) 112px, (max-width: 767px) 128px, 160px"
                         />
                       </div>
                     </motion.a>
@@ -400,6 +403,7 @@ export default function Partners({ partners, titleClassName = "text-blue-700" }:
                             alt={partner.name}
                             fill
                             className="object-contain"
+                            sizes="(max-width: 639px) 112px, (max-width: 767px) 128px, 160px"
                           />
                         </div>
                       </motion.a>
@@ -555,6 +559,7 @@ export default function Partners({ partners, titleClassName = "text-blue-700" }:
                   alt={`${partner.name} logo`}
                   fill
                   className="object-contain"
+                  sizes="(max-width: 639px) 120px, (max-width: 1023px) 150px, 180px"
                 />
               </motion.a>
             ))}

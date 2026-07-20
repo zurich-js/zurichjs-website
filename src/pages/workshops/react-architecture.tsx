@@ -807,6 +807,7 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                                     width={80}
                                     height={80}
                                     className="w-full h-full object-cover object-center"
+                                    sizes="80px"
                                   />
                                 </div>
                                 {/* Small accent badge */}
@@ -863,6 +864,7 @@ export default function ReactArchitectureWorkshopPage({ speakers }: WorkshopPage
                                 width={160}
                                 height={160}
                                 className="w-full h-full object-cover object-center"
+                                sizes="160px"
                               />
                             </div>
                             {/* Floating accent badge */}

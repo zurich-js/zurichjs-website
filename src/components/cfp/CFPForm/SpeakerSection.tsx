@@ -83,6 +83,7 @@ export default function SpeakerSection({
                           fill
                           unoptimized
                           className="object-cover"
+                          sizes="64px"
                         />
                       </div>
                     )}
@@ -259,6 +260,7 @@ export default function SpeakerSection({
                     fill
                     unoptimized
                     className="object-cover rounded-md"
+                    sizes="64px"
                   />
                 </div>
               )}

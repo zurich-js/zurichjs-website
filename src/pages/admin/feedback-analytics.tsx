@@ -329,6 +329,7 @@ export default function FeedbackAnalytics({
                             alt={talk.speakerName}
                             fill
                             className="object-cover"
+                            sizes="(max-width: 639px) 32px, 40px"
                           />
                         </div>
                         <div className="flex-grow min-w-0">
@@ -364,6 +365,7 @@ export default function FeedbackAnalytics({
                             alt={speaker.name}
                             fill
                             className="object-cover"
+                            sizes="(max-width: 639px) 40px, 48px"
                           />
                         </div>
                         <div className="flex-grow min-w-0">
@@ -611,6 +613,7 @@ export default function FeedbackAnalytics({
                             alt={speaker.name}
                             fill
                             className="object-cover rounded-full"
+                            sizes="48px"
                           />
                         </div>
                         <div>
@@ -711,6 +714,7 @@ export default function FeedbackAnalytics({
                                 alt={speaker.name}
                                 fill
                                 className="object-cover rounded-full"
+                                sizes="40px"
                               />
                             </div>
                             <div className="ml-4">
@@ -760,6 +764,7 @@ export default function FeedbackAnalytics({
                             alt={talk.speakerName}
                             fill
                             className="object-cover rounded-full"
+                            sizes="24px"
                           />
                         </div>
                         <div className="text-xs text-gray-600">{talk.speakerName}</div>
@@ -903,6 +908,7 @@ export default function FeedbackAnalytics({
                                 alt={talk.speakerName}
                                 fill
                                 className="object-cover rounded-full"
+                                sizes="32px"
                               />
                             </div>
                             <div className="ml-3 text-sm text-gray-900">{talk.speakerName}</div>
@@ -955,6 +961,7 @@ export default function FeedbackAnalytics({
                               alt={feedback.speaker.name}
                               fill
                               className="object-cover"
+                              sizes="(max-width: 639px) 24px, 32px"
                             />
                           </div>
                           <span className="ml-2 text-xs sm:text-sm text-gray-600">

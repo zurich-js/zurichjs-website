@@ -302,6 +302,7 @@ const ProductAnalytics = ({ productFeedbackByProduct, className = "" }: ProductA
                         width={32}
                         height={32}
                         className="object-contain"
+                        sizes="32px"
                       />
                     </div>
                   )}
@@ -1465,6 +1466,7 @@ export default function SpeakerFeedbackPage({ feedbackData, error }: SpeakerFeed
                 width={144}
                 height={144}
                 className="object-cover w-full h-full"
+                sizes="144px"
                 priority
               />
             </div>
@@ -1713,6 +1715,7 @@ export default function SpeakerFeedbackPage({ feedbackData, error }: SpeakerFeed
                                         width={24}
                                         height={24}
                                         className="object-contain"
+                                        sizes="24px"
                                       />
                                     </div>
                                   )}

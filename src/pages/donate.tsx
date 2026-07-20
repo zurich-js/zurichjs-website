@@ -52,6 +52,7 @@ export default function DonatePage() {
                     width={300}
                     height={300}
                     className="rounded-lg"
+                    sizes="(max-width: 347px) calc(100vw - 3rem), 300px"
                     priority
                   />
                 </div>

@@ -673,6 +673,7 @@ Delivery Method: Meetup Pickup`,
                     width={400}
                     height={400}
                     className="w-full h-auto rounded-xl sm:rounded-2xl shadow-lg"
+                    sizes="(max-width: 639px) calc(100vw - 3rem), 400px"
                     priority
                   />
 

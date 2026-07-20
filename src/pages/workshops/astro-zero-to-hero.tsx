@@ -332,6 +332,7 @@ export default function WorkshopPage({ speaker }: WorkshopPageProps) {
                     width={220}
                     height={220}
                     className="rounded-full border-4 border-white shadow-lg relative z-10"
+                    sizes="220px"
                   />
                 </div>
                 <div className="text-center">

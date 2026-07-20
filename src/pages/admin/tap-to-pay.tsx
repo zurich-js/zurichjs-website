@@ -542,6 +542,7 @@ export default function TapToPayAdmin() {
                       width={192}
                       height={192}
                       className="mx-auto border-2 border-gray-200 rounded-lg"
+                      sizes="192px"
                     />
                     <p className="text-sm text-gray-600 mt-2">
                       Customer can scan this QR code to pay

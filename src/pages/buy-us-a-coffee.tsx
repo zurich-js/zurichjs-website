@@ -698,6 +698,7 @@ export default function Support({ recentSupporters, eventsHosted }: SupportPageP
                       alt={supporter.name}
                       fill
                       className="object-cover"
+                      sizes="(max-width: 639px) calc(100vw - 3rem), (max-width: 1023px) 50vw, 33vw"
                     />
                   </div>
                 ) : (

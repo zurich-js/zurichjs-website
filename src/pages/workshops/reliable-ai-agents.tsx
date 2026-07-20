@@ -453,6 +453,7 @@ export default function ReliableAiAgentsWorkshopPage({ speakers }: WorkshopPageP
                           alt={speaker.name}
                           fill
                           className="object-cover"
+                          sizes="80px"
                         />
                       </div>
                       <div>

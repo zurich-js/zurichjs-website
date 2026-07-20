@@ -37,6 +37,7 @@ export default function Card({ type = "event", item, ...props }: CardProps) {
                   alt={`${eventItem.title} - ZurichJS event`}
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out"
+                  sizes="(max-width: 767px) calc(100vw - 3rem), (max-width: 1023px) 50vw, 33vw"
                 />
               </div>
             ) : (
@@ -113,6 +114,7 @@ export default function Card({ type = "event", item, ...props }: CardProps) {
               alt={`${speakerItem.name} - ZurichJS speaker`}
               fill
               className="object-cover object-center"
+              sizes="(max-width: 639px) calc(100vw - 3rem), (max-width: 1023px) 50vw, 33vw"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/50" />
             <div className="absolute bottom-0 left-0 right-0 p-4">

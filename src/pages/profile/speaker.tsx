@@ -352,6 +352,7 @@ export default function SpeakerProfilePage() {
                       fill
                       unoptimized
                       className="object-cover"
+                      sizes="64px"
                     />
                   </div>
                 )}

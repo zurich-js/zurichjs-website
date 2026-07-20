@@ -690,7 +690,13 @@ export default function Partnerships() {
               ].map((member, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
-                    <Image src={member.image} alt={member.name} fill className="object-cover" />
+                    <Image
+                      src={member.image}
+                      alt={member.name}
+                      fill
+                      className="object-cover"
+                      sizes="48px"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -1158,6 +1164,7 @@ export default function Partnerships() {
                               alt={partner.name}
                               fill
                               className="object-contain"
+                              sizes="(max-width: 639px) 224px, (max-width: 1023px) 256px, 288px"
                             />
                           </div>
                         </motion.a>
@@ -1254,6 +1261,7 @@ export default function Partnerships() {
                               alt={partner.name}
                               fill
                               className="object-contain"
+                              sizes="(max-width: 639px) 192px, (max-width: 1023px) 224px, 256px"
                             />
                           </div>
                         </motion.a>
@@ -1350,6 +1358,7 @@ export default function Partnerships() {
                               alt={partner.name}
                               fill
                               className="object-contain"
+                              sizes="(max-width: 639px) 128px, (max-width: 767px) 144px, 160px"
                             />
                           </div>
                         </motion.a>
@@ -1456,6 +1465,7 @@ export default function Partnerships() {
                                 alt={partner.name}
                                 fill
                                 className="object-contain"
+                                sizes="(max-width: 639px) 112px, (max-width: 767px) 128px, 160px"
                               />
                             </div>
                           </motion.a>
@@ -1671,6 +1681,7 @@ export default function Partnerships() {
                         alt={partner.name}
                         fill
                         className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                        sizes="(max-width: 639px) 140px, (max-width: 1023px) 180px, 200px"
                       />
                     </motion.a>
                   ))}
@@ -1714,6 +1725,7 @@ export default function Partnerships() {
                         alt={partner.name}
                         fill
                         className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                        sizes="(max-width: 639px) 140px, (max-width: 1023px) 180px, 200px"
                       />
                     </motion.a>
                   ))}
@@ -1757,6 +1769,7 @@ export default function Partnerships() {
                         alt={partner.name}
                         fill
                         className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                        sizes="(max-width: 639px) 140px, (max-width: 1023px) 180px, 200px"
                       />
                     </motion.a>
                   ))}
@@ -1800,6 +1813,7 @@ export default function Partnerships() {
                         alt={partner.name}
                         fill
                         className="object-contain transition-all duration-300 filter grayscale group-hover:grayscale-0"
+                        sizes="(max-width: 639px) 140px, (max-width: 1023px) 180px, 200px"
                       />
                     </motion.a>
                   ))}
@@ -1853,6 +1867,7 @@ export default function Partnerships() {
                   width={160}
                   height={96}
                   className="object-contain max-w-full max-h-full"
+                  sizes="160px"
                 />
               </div>
             ))}
@@ -1875,6 +1890,7 @@ export default function Partnerships() {
                   width={160}
                   height={96}
                   className="object-contain max-w-full max-h-full"
+                  sizes="160px"
                 />
               </div>
             ))}

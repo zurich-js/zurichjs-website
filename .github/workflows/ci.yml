@@ -12,19 +12,30 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
-          node-version: "22"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
 
       - name: Lint
         run: pnpm run lint
+
+      - name: Format
+        run: pnpm run format:check
+
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level moderate
 
       # - name: Test  Minimal tests with playwright to be added later
       #   run: pnpm test

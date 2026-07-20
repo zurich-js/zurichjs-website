@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import Header from "@/components/layout/Header";

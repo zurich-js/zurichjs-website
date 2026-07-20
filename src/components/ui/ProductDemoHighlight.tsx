@@ -56,7 +56,13 @@ const ProductDemoHighlight: React.FC<ProductDemoHighlightProps> = ({
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
               {demo.logo ? (
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-white rounded-lg p-2 border border-purple-100 shadow-sm overflow-hidden">
-                  <Image src={demo.logo} alt={demo.name} fill className="object-contain p-1" />
+                  <Image
+                    src={demo.logo}
+                    alt={demo.name}
+                    fill
+                    className="object-contain p-1"
+                    sizes="(max-width: 639px) 80px, 96px"
+                  />
                 </div>
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-purple-200 rounded-lg flex items-center justify-center text-purple-700">

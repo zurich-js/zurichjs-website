@@ -371,6 +371,7 @@ export default function Speakers({ speakers, speakerStats, upcomingTalks }: Spea
                     alt={speaker.name}
                     fill
                     className="object-cover"
+                    sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw"
                   />
                   {/* Badge positioned absolutely on top right of image */}
                   {isClient && (

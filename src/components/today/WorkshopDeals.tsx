@@ -139,7 +139,14 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-[1]"></div>
             {deal.image ? (
-              <Image src={deal.image} alt={deal.title} fill className="object-cover" priority />
+              <Image
+                src={deal.image}
+                alt={deal.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 767px) calc(100vw - 3rem), 50vw"
+                priority
+              />
             ) : (
               <div
                 className="w-full h-full flex items-center justify-center"
@@ -206,6 +213,7 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                           alt={deal.instructors[0].name}
                           fill
                           className="object-cover"
+                          sizes="24px"
                         />
                       </div>
                       <div className="flex flex-col">
@@ -228,6 +236,7 @@ function WorkshopDealCard({ deal }: { deal: WorkshopDeal }) {
                               alt={instructor.name}
                               fill
                               className="object-cover"
+                              sizes="24px"
                             />
                           </div>
                         ))}

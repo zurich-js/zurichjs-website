@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import { useState, useEffect } from "react";
 
 import Header from "@/components/layout/Header";
@@ -111,6 +110,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                             width={56}
                             height={56}
                             className="w-full h-full object-cover"
+                            sizes="56px"
                           />
                         </div>
                       ))}

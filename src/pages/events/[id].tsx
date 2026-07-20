@@ -542,6 +542,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                   alt={event.title}
                   fill
                   className="object-cover border-4 border-black rounded-lg"
+                  sizes="(max-width: 1023px) calc(100vw - 3rem), 50vw"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
@@ -958,6 +959,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                                                     alt={speaker.name}
                                                     fill
                                                     className="object-cover"
+                                                    sizes="64px"
                                                   />
                                                 </div>
                                                 <div className="flex-grow">
@@ -1162,6 +1164,7 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                         alt={`Map of ${event.location}`}
                         fill
                         className="object-cover"
+                        sizes="(max-width: 1023px) calc(100vw - 3rem), 50vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-100">

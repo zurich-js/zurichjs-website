@@ -172,6 +172,7 @@ const ProductFeedback = ({
                   width={48}
                   height={48}
                   className="h-full w-full object-contain"
+                  sizes="48px"
                 />
               </div>
             )}

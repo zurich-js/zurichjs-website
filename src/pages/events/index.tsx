@@ -200,6 +200,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                         alt={event.title}
                         fill
                         className="object-cover object-center"
+                        sizes="(max-width: 767px) calc(100vw - 3rem), (max-width: 1023px) 50vw, 33vw"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center p-6">
@@ -297,6 +298,7 @@ export default function Events({ upcomingEvents, pastEvents }: EventsPageProps) 
                                     alt={speaker.name}
                                     fill
                                     className="object-cover"
+                                    sizes="64px"
                                   />
                                 </div>
                               )),

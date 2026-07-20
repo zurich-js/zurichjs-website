@@ -14,6 +14,7 @@ export default function SentryRaffle() {
           width={32}
           height={32}
           className="object-contain"
+          sizes="32px"
         />
         <h2 className="text-lg font-bold text-gray-900">Sentry Raffle</h2>
       </div>

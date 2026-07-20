@@ -506,6 +506,7 @@ export default function SuccessPage() {
                       alt="ZurichJS T-Shirt"
                       fill
                       className="object-contain p-2 border-4 border-purple-200 rounded-2xl"
+                      sizes="(max-width: 639px) calc(100vw - 3rem), 50vw"
                     />
                   </div>
                 </div>

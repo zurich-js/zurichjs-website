@@ -92,7 +92,7 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                       The first-ever ZurichJS Conference! 1 day, 1 track, world-renowned experts.
                     </p>
                     <p className="text-blue-200 text-xs mt-1">
-                      Warm-up events & workshops included
+                      1 track · 19 speakers · 6 workshops · 1 meetup
                     </p>
                   </div>
 
@@ -114,6 +114,12 @@ export default function TodayPage({ upcomingEvent }: TodayPageProps) {
                           />
                         </div>
                       ))}
+                      <div
+                        className="grid w-14 h-14 place-items-center rounded-full bg-white border-2 border-white text-sm font-black text-black"
+                        title="14 more announced speakers"
+                      >
+                        +14
+                      </div>
                     </div>
                     <a
                       href={confTicketUrl}

@@ -239,7 +239,6 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
   const gyff = allPartners.find((p) => p.name.toLowerCase() === "gyff");
   const fin = allPartners.find((p) => p.name.toLowerCase() === "fin");
   const smallpdf = allPartners.find((p) => p.name.toLowerCase() === "smallpdf");
-  const vercel = allPartners.find((p) => p.name.toLowerCase() === "vercel");
 
   const sponsors: TodaySponsor[] = [
     // Community Champion sponsorshipTier
@@ -252,19 +251,6 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
             url: smallpdf.url,
             sponsorshipTier: SponsorshipTier.Champion,
             description: smallpdf.description,
-          },
-        ]
-      : []),
-
-    ...(vercel
-      ? [
-          {
-            id: vercel.id,
-            name: vercel.name,
-            logo: vercel.logo,
-            url: vercel.url,
-            sponsorshipTier: SponsorshipTier.Champion,
-            description: vercel.description,
           },
         ]
       : []),

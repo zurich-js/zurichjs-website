@@ -1,0 +1,12 @@
+diff --git a/dist/commonjs/index.js b/dist/commonjs/index.js
+index be9df86be09c7655787a65c55ae6da01858894c3..e3ebfc5eea63bf0e047eb8f6f21a600dbb507caa 100644
+--- a/dist/commonjs/index.js
++++ b/dist/commonjs/index.js
+@@ -260,4 +260,7 @@ function expand_(str, max, maxLength, isTop) {
+     }
+     return acc;
+ }
++// Older minimatch releases call the CommonJS export directly. Preserve that
++// interface while retaining the named exports expected by current releases.
++module.exports = Object.assign(expand, exports);
+ //# sourceMappingURL=index.js.map

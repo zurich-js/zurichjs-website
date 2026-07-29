@@ -6,7 +6,17 @@ import { useState, useRef, FormEvent } from "react";
 import Layout from "@/components/layout/Layout";
 
 type Tier = "basic" | "supporter";
-type BillingCycle = "quarterly" | "yearly";
+type BillingCycle = "monthly" | "quarterly" | "yearly";
+
+const billingCycleOptions: readonly {
+  value: BillingCycle;
+  label: string;
+  unit: string;
+}[] = [
+  { value: "monthly", label: "Monthly", unit: "month" },
+  { value: "quarterly", label: "Quarterly", unit: "quarter" },
+  { value: "yearly", label: "Yearly", unit: "year" },
+];
 
 const tiers = {
   basic: {
@@ -129,7 +139,8 @@ export default function MembershipPage() {
   };
 
   const currentTier = tiers[selectedTier];
-  const price = billingCycle === "quarterly" ? currentTier.quarterly : currentTier.yearly;
+  const price = currentTier[billingCycle];
+  const billingUnit = billingCycleOptions.find(({ value }) => value === billingCycle)?.unit;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -270,35 +281,24 @@ export default function MembershipPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Billing cycle
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setBillingCycle("quarterly")}
-                      className={`py-3 px-4 rounded-xl border-2 text-sm transition-colors ${
-                        billingCycle === "quarterly"
-                          ? "border-black bg-black text-white"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="font-semibold">Quarterly</span>
-                      <span className="block text-xs mt-0.5 opacity-75">
-                        CHF {currentTier.quarterly}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBillingCycle("yearly")}
-                      className={`py-3 px-4 rounded-xl border-2 text-sm transition-colors ${
-                        billingCycle === "yearly"
-                          ? "border-black bg-black text-white"
-                          : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
-                      }`}
-                    >
-                      <span className="font-semibold">Yearly</span>
-                      <span className="block text-xs mt-0.5 opacity-75">
-                        CHF {currentTier.yearly}
-                      </span>
-                    </button>
+                  <div className="grid grid-cols-3 gap-3">
+                    {billingCycleOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setBillingCycle(option.value)}
+                        className={`py-3 px-2 rounded-xl border-2 text-sm transition-colors ${
+                          billingCycle === option.value
+                            ? "border-black bg-black text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                        }`}
+                      >
+                        <span className="font-semibold">{option.label}</span>
+                        <span className="block text-xs mt-0.5 opacity-75">
+                          CHF {currentTier[option.value]}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -308,7 +308,7 @@ export default function MembershipPage() {
                     Selected:{" "}
                     <span className="font-semibold text-gray-900">{currentTier.name}</span> &middot;{" "}
                     <span className="font-semibold text-gray-900">
-                      CHF {price}/{billingCycle === "quarterly" ? "quarter" : "year"}
+                      CHF {price}/{billingUnit}
                     </span>
                   </p>
                 </div>
@@ -378,7 +378,7 @@ export default function MembershipPage() {
                 >
                   {submitting
                     ? "Sending..."
-                    : `Join as ${currentTier.name} — CHF ${price}/${billingCycle === "quarterly" ? "quarter" : "year"}`}
+                    : `Join as ${currentTier.name} — CHF ${price}/${billingUnit}`}
                 </button>
               </form>
             )}

@@ -15,7 +15,7 @@ const vereinInquirySchema = z.object({
   email: emailSchema,
   message: optionalText(2000),
   tier: optionalText(80),
-  billingCycle: z.enum(["monthly", "yearly"]).optional(),
+  billingCycle: z.enum(["monthly", "quarterly", "yearly"]).optional(),
 });
 
 async function handler(req: NextApiRequest, res: NextApiResponse<ResponseData>) {

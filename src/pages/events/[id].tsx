@@ -1,5 +1,4 @@
 import { Disclosure, DisclosurePanel, DisclosureButton } from "@headlessui/react";
-import { atcb_action } from "add-to-calendar-button-react";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -123,103 +122,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  // Add-to-calendar function
-  const addToCalendar = () => {
-    if (!event.datetime) return;
-
-    // Track the calendar add event
-    track("add_to_calendar", {
-      event_id: event.id,
-      event_title: event.title,
-      event_date: event.datetime,
-      is_pro_meetup: event.isProMeetup,
-    });
-
-    // Create date objects using the event datetime
-    const dateObj = new Date(event.datetime);
-
-    // Duration in minutes (default: 3 hours = 180 minutes)
-    const durationMinutes = event.duration || 180;
-
-    // Format dates for calendar - ensure we use YYYY-MM-DD format
-    const formatDate = (date: Date): string => {
-      return date.toLocaleDateString("en-CA", {
-        timeZone: "Europe/Zurich",
-      }); // en-CA uses YYYY-MM-DD format
-    };
-
-    // Format time with hours and minutes in 24-hour format (HH:MM)
-    const formatTime = (date: Date): string => {
-      return date.toLocaleTimeString("en-GB", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Europe/Zurich",
-      });
-    };
-
-    // Get start time components in Zurich timezone
-    const startDate = formatDate(dateObj);
-    const startTime = formatTime(dateObj);
-
-    // Calculate end time
-    // Create a date object using the formatted date and time strings to ensure timezone consistency
-    const [startHours, startMinutes] = startTime.split(":").map(Number);
-    let endDate = startDate; // Usually same day for most events
-
-    // Calculate end hours and minutes
-    let endHours = startHours + Math.floor(durationMinutes / 60);
-    let endMinutes = startMinutes + (durationMinutes % 60);
-
-    // Adjust for minute overflow
-    if (endMinutes >= 60) {
-      endHours += 1;
-      endMinutes -= 60;
-    }
-
-    // Handle next day overflow (if event runs past midnight)
-    if (endHours >= 24) {
-      // Create a new date object for the end date by adding one day
-      const nextDay = new Date(dateObj);
-      nextDay.setDate(nextDay.getDate() + Math.floor(endHours / 24));
-      endDate = formatDate(nextDay);
-      endHours = endHours % 24;
-    }
-
-    // Format end time properly with leading zeros
-    const endTime = `${endHours.toString().padStart(2, "0")}:${endMinutes.toString().padStart(2, "0")}`;
-
-    // Debug logging to help troubleshoot timezone issues
-    console.log("Calendar event details:", {
-      original: {
-        datetime: event.datetime,
-        dateObj: dateObj.toString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
-      formatted: {
-        startDate,
-        startTime,
-        endDate,
-        endTime,
-        targetTimezone: "Europe/Zurich",
-      },
-    });
-
-    atcb_action({
-      name: event.title,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      location: event.location || "TBD",
-      description: event.description || `ZurichJS event: ${event.title}`,
-      options: ["Apple", "Google", "iCal", "Microsoft365", "Outlook.com", "Yahoo"],
-      timeZone: "Europe/Zurich",
-      iCalFileName: `zurichjs-event-${event.id}`,
-      buttonStyle: "date",
-    });
-  };
 
   // Share event function
   const shareEvent = async () => {
@@ -507,23 +409,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 >
                   <Share2 size={16} className="mr-1.5" />
                   {copySuccess ? "Link copied! 👍" : "Share event"}
-                </Button>
-              )}
-
-              {isClient && event.datetime && (
-                <Button
-                  onClick={() => {
-                    track("calendar_button_click", {
-                      event_id: event.id,
-                      source: "hero_section",
-                    });
-                    addToCalendar();
-                  }}
-                  variant="outline"
-                  className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-none hover:from-purple-600 hover:to-indigo-700"
-                >
-                  <Calendar size={16} className="mr-1.5" />
-                  Add to Calendar
                 </Button>
               )}
             </div>
@@ -1217,41 +1102,6 @@ export default function EventDetail({ event }: EventDetailPageProps) {
                 </div>
               )}
             </motion.div>
-
-            {/* Save the Date (Add new section for upcoming events) */}
-            {isUpcoming && event.datetime && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-gradient-to-r from-purple-500 to-indigo-600 p-6 rounded-lg shadow-md mb-8 text-white"
-              >
-                <h3 className="text-xl font-bold mb-3 flex items-center">
-                  <Calendar className="mr-2" size={20} />
-                  Save the Date
-                </h3>
-                <p className="mb-4">
-                  Don&apos;t miss this event! Add it to your calendar to get notified.
-                </p>
-
-                {isClient && (
-                  <button
-                    onClick={() => {
-                      track("calendar_button_click", {
-                        event_id: event.id,
-                        source: "save_the_date_section",
-                      });
-                      addToCalendar();
-                    }}
-                    className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 font-bold py-3 px-4 rounded-md flex items-center justify-center transition-colors"
-                  >
-                    <Calendar size={18} className="mr-2" />
-                    Add to My Calendar
-                  </button>
-                )}
-              </motion.div>
-            )}
 
             {/* Pro Meetup Info */}
             {event.isProMeetup && (

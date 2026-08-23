@@ -1,12 +1,8 @@
 import type { GetStaticProps } from "next";
+import dynamic from "next/dynamic";
 
 import Layout from "@/components/layout/Layout";
-import CommunityValues from "@/components/sections/CommunityValues";
-import JoinCTA from "@/components/sections/JoinCTA";
 import LandingHero from "@/components/sections/LandingHero";
-import Partners from "@/components/sections/Partners";
-import UpcomingEvents from "@/components/sections/UpcomingEvents";
-import UpcomingWorkshops from "@/components/sections/UpcomingWorkshops";
 import type { Workshop } from "@/components/sections/UpcomingWorkshops";
 import SEO from "@/components/SEO";
 import { getPartners } from "@/data";
@@ -15,6 +11,22 @@ import useReferrerTracking from "@/hooks/useReferrerTracking";
 import type { Event } from "@/sanity/queries";
 import { getHomepageUpcomingEvents } from "@/sanity/queries";
 import { generateHomePageStructuredData } from "@/utils/structuredData";
+
+const UpcomingEvents = dynamic(() => import("@/components/sections/UpcomingEvents"), {
+  ssr: true,
+});
+const UpcomingWorkshops = dynamic(() => import("@/components/sections/UpcomingWorkshops"), {
+  ssr: true,
+});
+const CommunityValues = dynamic(() => import("@/components/sections/CommunityValues"), {
+  ssr: true,
+});
+const Partners = dynamic(() => import("@/components/sections/Partners"), {
+  ssr: true,
+});
+const JoinCTA = dynamic(() => import("@/components/sections/JoinCTA"), {
+  ssr: true,
+});
 
 interface Partner {
   id: string;

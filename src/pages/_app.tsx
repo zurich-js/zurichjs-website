@@ -1,12 +1,11 @@
 import "@/styles/globals.css";
 
 import { ClerkProvider, useUser, useClerk } from "@clerk/nextjs";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import type { AppProps } from "next/app";
 import { Router, useRouter } from "next/router";
 import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // Strip traceparent headers from all fetch requests to prevent CORS issues
 if (typeof window !== "undefined") {
@@ -77,27 +76,34 @@ const AuthCheck = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default function App({ Component, pageProps }: AppProps) {
+  const posthogInitialized = useRef(false);
+
   useEffect(() => {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
-      person_profiles: "always" as const,
-      loaded: (posthog) => {
-        if (process.env.NODE_ENV === "development") posthog.debug();
-      },
-    });
+    if (posthogInitialized.current) return;
 
-    const handleRouteChange = () => posthog?.capture("$pageview");
+    const initPostHog = () => {
+      posthogInitialized.current = true;
+      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY as string, {
+        api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+        person_profiles: "always" as const,
+        loaded: (posthog) => {
+          if (process.env.NODE_ENV === "development") posthog.debug();
+        },
+      });
 
-    Router.events.on("routeChangeComplete", handleRouteChange);
-
-    return () => {
-      Router.events.off("routeChangeComplete", handleRouteChange);
+      const handleRouteChange = () => posthog?.capture("$pageview");
+      Router.events.on("routeChangeComplete", handleRouteChange);
     };
+
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(initPostHog, { timeout: 3000 });
+    } else {
+      setTimeout(initPostHog, 2000);
+    }
   }, []);
 
   return (
     <PostHogProvider client={posthog}>
-      <GoogleAnalytics gaId="G-GWWBJT7QS5" />
       <ClerkProvider>
         <AuthCheck>
           <Component {...pageProps} />

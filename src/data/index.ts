@@ -238,19 +238,19 @@ export const getTodaysSponsors = (): TodaySponsor[] => {
   const allPartners = getPartners();
   const gyff = allPartners.find((p) => p.name.toLowerCase() === "gyff");
   const fin = allPartners.find((p) => p.name.toLowerCase() === "fin");
-  const smallpdf = allPartners.find((p) => p.name.toLowerCase() === "smallpdf");
+  const getYourGuide = allPartners.find((p) => p.name.toLowerCase() === "get your guide");
 
   const sponsors: TodaySponsor[] = [
-    // Community Champion sponsorshipTier
-    ...(smallpdf
+    // Warm-up meetup venue sponsor
+    ...(getYourGuide
       ? [
           {
-            id: smallpdf.id,
-            name: smallpdf.name,
-            logo: smallpdf.logo,
-            url: smallpdf.url,
-            sponsorshipTier: SponsorshipTier.Champion,
-            description: smallpdf.description,
+            id: getYourGuide.id,
+            name: "GetYourGuide",
+            logo: getYourGuide.logo,
+            url: getYourGuide.url,
+            sponsorshipTier: SponsorshipTier.Other,
+            description: getYourGuide.description,
           },
         ]
       : []),

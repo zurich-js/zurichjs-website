@@ -8,9 +8,12 @@ interface HeroProps {
 }
 
 export default function TodayHero({ event }: HeroProps) {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.toLocaleDateString("en-US", { month: "short" });
+  const eventDate = new Date(event.datetime);
+  const day = eventDate.toLocaleDateString("en-US", { day: "numeric", timeZone: "Europe/Zurich" });
+  const month = eventDate.toLocaleDateString("en-US", {
+    month: "short",
+    timeZone: "Europe/Zurich",
+  });
 
   return (
     <div className="text-center flex flex-col [&>*]:grow gap-6">
@@ -25,12 +28,12 @@ export default function TodayHero({ event }: HeroProps) {
         </div>
 
         {/* Event Title - Minimalistic */}
-        <h1 className="text-3xl md:text-2xl lg:text-3xl mb-4 font-black text-gray-900 max-w-[25ch]">
+        <h1 className="text-3xl md:text-2xl lg:text-3xl my-4 font-black text-gray-900 max-w-[25ch]">
           {event.title}
         </h1>
 
         {/* Attendees Count */}
-        {event.attendees > 0 && <p className="text-center">{event.attendees}+ Joining today!</p>}
+        {event.attendees > 0 && <p className="text-center">{event.attendees}+ joining us!</p>}
 
         <Link
           href={`/events/${event.id}`}

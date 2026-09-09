@@ -38,121 +38,63 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
     }
   };
 
-  // Create schedule from event data with proper timing
-  const eventDate = new Date(event.datetime);
-
-  // Doors open: 17:30-18:30
-  const doorsOpenTime = new Date(eventDate);
-  doorsOpenTime.setHours(17, 30, 0, 0);
-
-  // Welcome & intro: 18:30-18:45
-  const welcomeTime = new Date(eventDate);
-  welcomeTime.setHours(18, 30, 0, 0);
-
-  // First talk starts at 18:50
-  const firstTalkTime = new Date(eventDate);
-  firstTalkTime.setHours(18, 50, 0, 0);
-
-  const baseSchedule: ScheduleItem[] = [
+  // Keep the existing estimated meetup timings until the final timetable is confirmed.
+  // Use minutes in Zurich local time so server and browser timezones agree.
+  const formatTime = (minutes: number) =>
+    `${Math.floor(minutes / 60)
+      .toString()
+      .padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`;
+  const doorsTime = new Date(event.datetime).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Zurich",
+  });
+  const [doorsHour, doorsMinute] = doorsTime.split(":").map(Number);
+  const schedule: ScheduleItem[] = [
     {
-      time: doorsOpenTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      title: "Doors Open",
+      time: doorsTime,
+      title: "Doors open & early conference badge pickup",
       type: "welcome",
-      durationMins: 60,
-      speaker: undefined,
+      durationMins: Math.max(0, 18 * 60 + 30 - (doorsHour * 60 + doorsMinute)),
     },
-    {
-      time: welcomeTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      title: "Welcome & Intro",
-      type: "opening",
-      durationMins: 15,
-      speaker: undefined,
-    },
+    { time: "18:30", title: "Welcome & Intro", type: "opening", durationMins: 15 },
   ];
 
-  // Add talks from Sanity data with proper timing and break logic
-  let currentTime = firstTalkTime.getTime();
-  const talksSchedule: ScheduleItem[] = [];
-
+  let currentTime = 18 * 60 + 50;
   event.talks.forEach((talk, index) => {
-    const talkTime = new Date(currentTime);
     const duration = talk.durationMinutes || 20;
-
-    const scheduleItem: ScheduleItem = {
-      time: talkTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
+    schedule.push({
+      time: formatTime(currentTime),
       title: talk.title,
-      speaker: talk.speakers.map((s) => s.name).join(", "),
-      speakerIds: talk.speakers.map((s) => s.id),
+      speaker: talk.speakers.map((speaker) => speaker.name.trim()).join(", "),
+      speakerIds: talk.speakers.map((speaker) => speaker.id),
       type: talk.type || "talk",
       durationMins: duration,
-    };
-
-    talksSchedule.push(scheduleItem);
-    currentTime += duration * 60000; // Add talk duration
-
-    // Add 15 min break after 2 talks (index 1 means 2nd talk, 0-indexed)
-    if (index === 1) {
-      const breakTime = new Date(currentTime);
-      talksSchedule.push({
-        time: breakTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }),
+    });
+    currentTime += duration;
+    if (index === 1 && index < event.talks.length - 1) {
+      schedule.push({
+        time: formatTime(currentTime),
         title: "Pizza Break",
         type: "break",
         durationMins: 15,
-        speaker: undefined,
       });
-      currentTime += 15 * 60000; // Add break duration
+      currentTime += 15;
     } else if (index < event.talks.length - 1) {
-      // Add 5 min buffer between other talks
-      currentTime += 5 * 60000;
+      currentTime += 5;
     }
   });
-
-  // Add networking at the end - starts after last talk, ends at 21:30
-  const networkingStartTime = new Date(currentTime + 5 * 60000); // 5 min buffer after last talk
-  const networkingEndTime = new Date(eventDate);
-  networkingEndTime.setHours(21, 30, 0, 0);
-
-  // Calculate networking duration from start time to 21:30
-  const networkingDuration = Math.max(
-    30,
-    Math.round((networkingEndTime.getTime() - networkingStartTime.getTime()) / 60000),
-  );
-
-  const endSchedule: ScheduleItem[] = [
-    {
-      time: networkingStartTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }),
-      title: "Networking & Drinks",
-      type: "closing",
-      durationMins: networkingDuration,
-      speaker: undefined,
-    },
-  ];
-
-  const schedule = [...baseSchedule, ...talksSchedule, ...endSchedule];
+  currentTime += 5;
+  schedule.push({
+    time: formatTime(currentTime),
+    title: "Networking & Drinks",
+    type: "closing",
+    durationMins: Math.max(0, 21 * 60 + 30 - currentTime),
+  });
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg sm:text-xl font-black text-gray-900">Schedule</h2>
+      <h2 className="text-xl font-bold text-gray-900">Schedule</h2>
       <p className="text-xs sm:text-sm text-gray-500 italic">
         Times are estimates and subject to change
       </p>
@@ -166,15 +108,17 @@ export default function ScheduleCard({ event }: ScheduleCardProps) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {/* Time Badge */}
-                  <div
-                    className={`px-2 py-1 rounded-md text-xs font-bold min-w-[45px] text-center flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}
-                  >
-                    {item.time}
-                  </div>
+                  {item.time && (
+                    <div
+                      className={`px-2 py-1 rounded-md text-xs font-bold min-w-[45px] text-center flex-shrink-0 ${getTypeColor(item.type, item.durationMins)}`}
+                    >
+                      {item.time}
+                    </div>
+                  )}
                 </div>
 
                 {/* Duration */}
-                {item.durationMins && (
+                {item.durationMins > 0 && (
                   <div className="text-xs text-gray-500 font-medium">{item.durationMins}m</div>
                 )}
               </div>

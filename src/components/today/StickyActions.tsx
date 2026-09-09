@@ -75,12 +75,12 @@ export default function StickyActions() {
                 </span>
               </button>
               <Link
-                href="/events"
+                href="#workshops"
                 className="flex-1 min-h-[52px] bg-gray-600 text-white rounded-2xl font-bold text-sm flex items-center justify-center active:scale-[0.98] transition-transform duration-200 touch-manipulation shadow-lg"
               >
                 <span className="flex items-center gap-2">
                   <span className="text-base">📅</span>
-                  <span>Upcoming Events</span>
+                  <span>Book a workshop</span>
                 </span>
               </Link>
             </div>
@@ -98,12 +98,12 @@ export default function StickyActions() {
               </span>
             </button>
             <Link
-              href="/events"
+              href="#workshops"
               className="flex-1 min-h-[52px] bg-gray-600 text-white rounded-2xl font-bold text-base flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 shadow-lg"
             >
               <span className="flex items-center gap-2">
                 <span className="text-lg">📅</span>
-                Upcoming Events
+                Book a workshop
               </span>
             </Link>
           </div>

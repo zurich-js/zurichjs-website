@@ -10,7 +10,20 @@ on:
       - main
 
 jobs:
+  # Runs before anything installs or executes: `pnpm install` runs lifecycle
+  # scripts, which is exactly what triggers the EtherHiding payload if a
+  # compromised workstation re-injects it (see scripts/scan-etherhiding.sh).
+  malware-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Scan for EtherHiding loader signatures
+        run: bash scripts/scan-etherhiding.sh
+
   ci:
+    needs: malware-scan
     runs-on: ubuntu-latest
     permissions:
       contents: read

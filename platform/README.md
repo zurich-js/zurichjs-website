@@ -1,6 +1,6 @@
 # ZurichJS platform (V2)
 
-Static-first Astro site and shared packages. Lives beside the production Next.js app until the switchover. This folder is its own pnpm root.
+Static-first Astro 7 site and shared packages. Lives beside the production Next.js app until the switchover. This folder is its own pnpm root.
 
 ```bash
 cd platform

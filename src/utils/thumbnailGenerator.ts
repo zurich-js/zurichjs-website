@@ -166,22 +166,6 @@ export function generateOptimizedImage(
 }
 
 /**
- * Generate srcSet for responsive images
- * @param imageUrl Original image URL
- * @param isVideo Whether the media is a video
- * @returns srcSet string for responsive images
- */
-export function generateSrcSet(imageUrl: string, isVideo: boolean): string {
-  const sizes = getAllThumbnailSizes(imageUrl, isVideo);
-  return [
-    `${sizes.small} 300w`,
-    `${sizes.medium} 600w`,
-    `${sizes.large} 900w`,
-    `${sizes.xl} 1200w`,
-  ].join(", ");
-}
-
-/**
  * Generate sizes attribute for responsive images
  * @returns sizes string for responsive images
  */

@@ -36,15 +36,3 @@ export const aiSecuritySnykTickets: TicketOption[] = [
 ];
 
 // Team discount configuration
-export const teamDiscounts = {
-  three_plus: {
-    minQuantity: 3,
-    discount: 0.15, // 15% off
-    description: "15% off for teams of 3-4",
-  },
-  five_plus: {
-    minQuantity: 5,
-    discount: 0.25, // 25% off
-    description: "25% off for teams of 5+",
-  },
-};

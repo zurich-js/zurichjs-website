@@ -221,11 +221,6 @@ export const getPartnersBySponsorshipTier = (tier: SponsorshipTier) => {
   return getPartners().filter((partner) => partner.sponsorshipTier === tier);
 };
 
-// Helper function to get all partners with sponsorship tiers (excluding those without tiers)
-export const getSponsorshipPartners = () => {
-  return getPartners().filter((partner) => partner.sponsorshipTier);
-};
-
 // Helper function to get partners without sponsorship tiers (regular partners)
 export const getRegularPartners = () => {
   return getPartners().filter((partner) => !partner.sponsorshipTier);

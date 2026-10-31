@@ -57,16 +57,6 @@ export function getCurrentDate(): Date {
 }
 
 /**
- * Get a date relative to the current test/real date
- */
-export function getRelativeDate(days: number): Date {
-  const currentDate = getCurrentDate();
-  const relativeDate = new Date(currentDate);
-  relativeDate.setDate(relativeDate.getDate() + days);
-  return relativeDate;
-}
-
-/**
  * Format date for test mode display
  */
 export function formatTestDate(date: Date): string {
@@ -132,5 +122,3 @@ export const TEST_SCENARIOS = {
     },
   },
 } as const;
-
-export type TestScenario = keyof typeof TEST_SCENARIOS;

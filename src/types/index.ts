@@ -42,41 +42,6 @@ export interface Talk {
   }>;
 }
 
-// Additional interfaces used in the application
-export interface Event {
-  id: string;
-  title: string;
-  datetime: string;
-  location: string;
-  _id?: string;
-}
-
-export interface TalkData {
-  id?: string;
-  _id?: string;
-  title: string;
-  description?: string;
-  type?: string;
-  tags?: string[];
-  durationMinutes?: number;
-  slides?: string;
-  videoUrl?: string;
-  events?: Event[];
-  speakers?: {
-    id: string;
-    name: string;
-    title?: string;
-    image?: string;
-  }[];
-}
-
-export interface SpeakerSummary {
-  id: string;
-  name: string;
-  title: string;
-  image: string | null;
-}
-
 export interface ProductDemo {
   _id: string;
   _type?: string;

@@ -31,5 +31,3 @@ export const TALK_TOPICS = [
   "Remote Work",
   "Career Development",
 ] as const;
-
-export type TalkTopic = (typeof TALK_TOPICS)[number];

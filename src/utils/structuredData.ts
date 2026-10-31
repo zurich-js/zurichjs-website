@@ -108,6 +108,8 @@ export const generateOrganizationSchema = () => ({
 
 /**
  * Generate Event structured data
+ *
+ * @public Not used by the current app; kept as the reference for the V2 @zurichjs/seo package.
  */
 export const generateEventSchema = (event: Event, priceAmount?: number) => {
   const schema: Record<string, unknown> = {
@@ -167,6 +169,8 @@ export const generateEventSchema = (event: Event, priceAmount?: number) => {
 
 /**
  * Generate Person (Speaker) structured data
+ *
+ * @public Not used by the current app; kept as the reference for the V2 @zurichjs/seo package.
  */
 export const generatePersonSchema = (speaker: Speaker) => ({
   "@context": "https://schema.org",
@@ -186,6 +190,8 @@ export const generatePersonSchema = (speaker: Speaker) => ({
 
 /**
  * Generate BreadcrumbList structured data
+ *
+ * @public Not used by the current app; kept as the reference for the V2 @zurichjs/seo package.
  */
 export const generateBreadcrumbSchema = (items: { name: string; url: string }[]) => ({
   "@context": "https://schema.org",

@@ -8,7 +8,15 @@ export default defineType({
     { name: 'id', title: 'ID', type: 'slug' },
     { name: 'title', title: 'Title', type: 'string' },
     { name: 'description', title: 'Description', type: 'text' },
-    { name: 'type', title: 'Type', type: 'string' },
+    {
+      name: 'type',
+      title: 'Format',
+      type: 'string',
+      description: 'The site shows "Talk", "Lightning talk" or "Deep dive". Older free-text values still work.',
+      options: {list: [{title: 'Talk', value: 'talk'}, {title: 'Lightning talk', value: 'lightning'}, {title: 'Deep dive', value: 'deep-dive'}]},
+    },
+    { name: 'level', title: 'Level', type: 'string', options: {list: ['Beginner', 'Intermediate', 'Advanced', 'All levels']} },
+    { name: 'language', title: 'Language', type: 'string', initialValue: 'English' },
     { name: 'durationMinutes', title: 'Duration (minutes)', type: 'number' },
     {
       name: 'speakers',
@@ -35,6 +43,7 @@ export default defineType({
     },
     {
       name: 'slides',
+      description: 'Kept for the archive. Not shown on the website: ZurichJS does not publish slides.',
       title: 'Slides',
       type: 'file',
       options: {
@@ -43,9 +52,9 @@ export default defineType({
     },
     {
       name: 'videoUrl',
+      description: 'Kept for the archive. Not shown on the website: ZurichJS talks are not recorded.',
       title: 'Video URL',
       type: 'url',
-      description: 'Link to the talk recording'
     }
   ],
   preview: {

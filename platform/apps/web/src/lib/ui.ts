@@ -56,7 +56,8 @@ const monoSizes: Record<MonogramSize, string> = {
   tile: 'aspect-square w-full rounded-card items-center justify-center text-[clamp(36px,4vw,56px)]',
   portrait: 'aspect-square w-full rounded-card items-end p-[18px] text-[44px]',
 };
-export const monogramClass = (tone: MonogramTone = 'grey', size: MonogramSize = 'tile', extra?: string) => cx('flex font-bold text-black box-border', monoTones[tone], monoSizes[size], extra);
+export const monogramClass = (tone: MonogramTone = 'grey', size: MonogramSize = 'tile', extra?: string) =>
+  cx('flex font-bold text-black box-border', monoTones[tone], monoSizes[size], extra);
 
 export const headingSizes = {
   lg: 'text-[clamp(30px,3.4vw,48px)] leading-[1.1]',

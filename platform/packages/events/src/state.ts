@@ -29,14 +29,12 @@ export function byStartAsc(a: Event, b: Event) {
 }
 export const byStartDesc = (a: Event, b: Event) => -byStartAsc(a, b);
 
-export const upcomingEvents = (events: Event[], now = new Date()) =>
-  events.filter((e) => isUpcomingState(resolveState(e, now))).sort(byStartAsc);
+export const upcomingEvents = (events: Event[], now = new Date()) => events.filter((e) => isUpcomingState(resolveState(e, now))).sort(byStartAsc);
 
 export const pastEvents = (events: Event[], now = new Date()) => events.filter((e) => isPastState(resolveState(e, now))).sort(byStartDesc);
 
 /** The next meetup that is not cancelled or past. Used by the hero and the header button. */
-export const nextMeetup = (events: Event[], now = new Date()) =>
-  upcomingEvents(events, now).find((e) => resolveState(e, now) !== 'cancelled');
+export const nextMeetup = (events: Event[], now = new Date()) => upcomingEvents(events, now).find((e) => resolveState(e, now) !== 'cancelled');
 
 export const eventHref = (ev: Pick<Event, 'slug'>) => `/events/${ev.slug}`;
 

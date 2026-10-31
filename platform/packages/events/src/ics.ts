@@ -5,7 +5,7 @@ const utc = (iso: string) => {
   const d = new Date(iso);
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
 };
-const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+const esc = (s: string) => s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
 
 /** RFC 5545 calendar file for one event, or null when the date is not fixed. */
 export function buildIcs(ev: Event, url: string, stamp: Date = new Date()): string | null {

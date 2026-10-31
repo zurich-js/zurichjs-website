@@ -14,7 +14,7 @@ platform/                     own pnpm root (pnpm-workspace.yaml, lockfile, mini
     content/                  Sanity client, GROQ queries, typegen types, mappers, sample fallback
     seo/                      buildMeta, JSON-LD builders, sitemap and llms.txt helpers
     forms/                    zod schemas shared by islands and functions
-    integrations/             Stripe, Resend, Slack, EmailOctopus; TicketingProvider, TalkProposalSink
+    integrations/             Stripe, Resend, Slack, EmailOctopus; TalkProposalSink (TicketingProvider lives in events)
     config/                   shared tsconfig, oxlint, oxfmt, knip config
   tools/seo/                  snapshot.mjs (crawl), compare.mjs (parity gate), routes files
 ```

@@ -1,0 +1,70 @@
+---
+/** One template for the four policy pages: tabs, "On this page" on desktop, the text. */
+import { getCollection, render } from 'astro:content';
+import { dateShort } from '@zurichjs/events';
+import { breadcrumbSchema } from '@zurichjs/seo';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+import { cx } from '~/lib/ui';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('policies')).sort((a, b) => a.data.order - b.data.order);
+  return all.map((entry) => ({ params: { slug: entry.id }, props: { entry, all } }));
+}
+
+const { entry, all } = Astro.props;
+const { Content, headings } = await render(entry);
+const sections = headings.filter((h) => h.depth === 2);
+const isCoc = entry.id === 'code-of-conduct';
+---
+
+<BaseLayout title={entry.data.title} description={entry.data.description} jsonLd={[breadcrumbSchema([{ name: 'Policies', path: `/policies/${entry.id}` }, { name: entry.data.title, path: `/policies/${entry.id}` }])]}>
+  <PageOpening slot="opening" title={entry.data.title} compact />
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(32px,4vw,48px)]">
+    <nav aria-label="Policies" class="flex gap-2 flex-wrap">
+      {
+        all.map((p) => (
+          <a
+            href={`/policies/${p.id}`}
+            aria-current={p.id === entry.id ? 'page' : undefined}
+            class={cx('no-underline min-h-[44px] px-5 rounded-pill border border-black font-bold text-[16px] inline-flex items-center', p.id === entry.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey')}
+          >
+            {p.data.tab}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] gap-[clamp(32px,5vw,72px)] items-start">
+      <nav aria-label="On this page" class="hidden md:flex sticky top-6 flex-col gap-1">
+        <div class="text-[16px] font-bold mb-1.5">On this page</div>
+        {sections.map((s) => <a href={`#${s.slug}`} class="py-1.5 text-[16px] text-ink-2 no-underline hover:text-black hover:underline">{s.text}</a>)}
+      </nav>
+      <article class="flex flex-col gap-[clamp(28px,3vw,40px)] max-w-[720px] min-w-0">
+        <div class="text-[16px] text-grey-text">Last updated {dateShort(entry.data.updated.toISOString())}</div>
+        {
+          isCoc && (
+            <div class="bg-yellow rounded-card py-[22px] px-6 flex flex-col gap-2">
+              <div class="text-[21px] font-bold">Report a concern</div>
+              <div class="text-[17px] leading-[1.55]">
+                At a meetup, talk to an organiser in a yellow ZurichJS T-shirt. Any other time, email{' '}
+                <a href={`mailto:${SITE.email}`} class="font-bold">
+                  {SITE.email}
+                </a>
+                . Reports are handled in confidence. In an emergency, call 112.
+              </div>
+            </div>
+          )
+        }
+        <div
+          class="policy flex flex-col gap-4 [&_h2]:m-0 [&_h2]:mt-4 [&_h2]:text-[clamp(24px,2.4vw,30px)] [&_h2]:leading-[1.2] [&_h2]:font-bold [&_h2]:text-black [&_h2]:scroll-mt-6 [&_h3]:m-0 [&_h3]:text-[20px] [&_h3]:font-bold [&_p]:m-0 [&_p]:text-[18px] [&_p]:leading-[1.65] [&_p]:text-ink-2 [&_ul]:m-0 [&_ul]:pl-6 [&_ul]:text-[18px] [&_ul]:leading-[1.65] [&_ul]:text-ink-2 [&_ul]:list-disc [&_ol]:pl-6 [&_ol]:text-[18px] [&_ol]:text-ink-2 [&_li]:mb-1.5 [&_a]:font-bold [&_strong]:text-black"
+        >
+          <Content />
+        </div>
+        <div class="text-[16px] leading-[1.55] text-ink-2">
+          Questions about this policy? Email <a href={`mailto:${SITE.email}`} class="font-bold">{SITE.email}</a>.
+        </div>
+      </article>
+    </div>
+  </div>
+</BaseLayout>

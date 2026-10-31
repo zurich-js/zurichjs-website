@@ -28,7 +28,7 @@ export interface TalkProposalSink {
   submit(p: TalkProposal): Promise<{ id: string }>;
 }
 
-const FORMAT_MINUTES: Record<string, number> = { lightning: 5, 'lightning talk': 5, standard: 25, 'standard talk': 25, talk: 25, 'deep dive': 45 };
+const FORMAT_MINUTES: Record<string, number> = { lightning: 5, 'lightning talk': 5, standard: 25, 'standard talk': 25, talk: 25, 'deep dive': 35 };
 const minutesFor = (format: string) => FORMAT_MINUTES[format.trim().toLowerCase()] ?? 25;
 const slug = (s: string) =>
   s
@@ -41,7 +41,13 @@ const slug = (s: string) =>
 
 export const sanityWriteClient = (env: Env): SanityClient | null =>
   env.SANITY_WRITE_TOKEN
-    ? createClient({ projectId: env.SANITY_PROJECT_ID ?? 'viqjrovw', dataset: env.SANITY_DATASET ?? 'production', apiVersion: '2026-10-01', token: env.SANITY_WRITE_TOKEN, useCdn: false })
+    ? createClient({
+        projectId: env.SANITY_PROJECT_ID ?? 'viqjrovw',
+        dataset: env.SANITY_DATASET ?? 'production',
+        apiVersion: '2026-10-01',
+        token: env.SANITY_WRITE_TOKEN,
+        useCdn: false,
+      })
     : null;
 
 /** Same documents as the production /api/submit-talk: a speaker (matched by email) and a pending talkSubmission. */
@@ -82,7 +88,13 @@ export async function sendEmail(env: Env, subject: string, text: string, replyTo
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>', to: [env.FORMS_TO ?? 'hello@zurichjs.com'], subject, text, ...(replyTo ? { reply_to: replyTo } : {}) }),
+    body: JSON.stringify({
+      from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>',
+      to: [env.FORMS_TO ?? 'hello@zurichjs.com'],
+      subject,
+      text,
+      ...(replyTo ? { reply_to: replyTo } : {}),
+    }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}`);
 }
@@ -139,7 +151,16 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
   switch (kind) {
     case 'cfp': {
       const sink = deps.proposals ?? (sanity ? sanityTalkProposals(sanity, now) : undefined);
-      const proposal: TalkProposal = { name: String(d.name), email: String(d.email), title: String(d.title), format: String(d.format), abstract: d.abstract as string | undefined, level: d.level as string | undefined, target: d.target as string | undefined, bio: d.bio as string | undefined };
+      const proposal: TalkProposal = {
+        name: String(d.name),
+        email: String(d.email),
+        title: String(d.title),
+        format: String(d.format),
+        abstract: d.abstract as string | undefined,
+        level: d.level as string | undefined,
+        target: d.target as string | undefined,
+        bio: d.bio as string | undefined,
+      };
       const saved = sink ? await sink.submit(proposal) : (log('[forms] SANITY_WRITE_TOKEN missing; talk proposal not stored'), { id });
       await postSlack(env, `New talk proposal: “${proposal.title}” by ${proposal.name} (${proposal.format})`, log);
       return { ok: true, id: saved.id };
@@ -161,9 +182,12 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         eventId: String(d.eventId),
         eventType: 'meetup',
         overallRating: Number(d.overall),
-        improvements: d.improve ?? d.improvements,
-        futureTopics: d.topics ?? d.futureTopics,
-        additionalComments: d.other ?? d.additionalComments,
+        // V2 questions (platform/apps/web feedback form) → comprehensiveFeedback fields.
+        moreOf: d.more,
+        improvements: d.less,
+        futureTopics: d.next,
+        arrivalIssues: d.first,
+        describeToFriend: d.friend,
         quoteConsent: d.quote === true || d.quote === 'yes',
         email: d.email || undefined,
         submittedAt: now().toISOString(),

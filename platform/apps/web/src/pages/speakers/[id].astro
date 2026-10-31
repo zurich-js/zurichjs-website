@@ -1,0 +1,114 @@
+---
+/** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
+import { eventHref, monthYear, presentEvent, resolveState, upcomingEvents, type Speaker } from '@zurichjs/events';
+import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import Button from '~/components/ui/Button.astro';
+import Monogram from '~/components/ui/Monogram.astro';
+import Photo from '~/components/ui/Photo.astro';
+import Surface from '~/components/ui/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { BUILD_TIME, content, ticketing } from '~/lib/content';
+import { clip } from '~/lib/text';
+
+export async function getStaticPaths() {
+  const { speakers } = await content();
+  return speakers.map((s) => ({ params: { id: s.id }, props: { s } }));
+}
+
+const { s } = Astro.props as { s: Speaker };
+const { events } = await content();
+const byId = new Map(events.map((e) => [e.id, e]));
+const roleLine = `${s.role}${s.company ? ` at ${s.company}` : ''}`;
+
+// Speaking next: the first upcoming (not cancelled) event whose agenda lists this speaker.
+const upcoming = (() => {
+  for (const ev of upcomingEvents(events, BUILD_TIME)) {
+    if (resolveState(ev, BUILD_TIME) === 'cancelled') continue;
+    const item = ev.agenda.find((a) => a.talk?.speakerIds.includes(s.id));
+    if (item) return { ev, item, p: presentEvent(ev, { now: BUILD_TIME, ticketing }) };
+  }
+  return null;
+})();
+
+const history = s.talks.map((t) => ({ t, ev: byId.get(t.eventId) })).sort((a, b) => (b.ev?.startsAt ?? '').localeCompare(a.ev?.startsAt ?? ''));
+
+const fallback = `${s.name}, ${roleLine}, has spoken at ZurichJS, the JavaScript meetup in Zurich.`;
+const description = clip(s.bio.length >= 50 ? s.bio : `${fallback} ${s.bio}`);
+const [firstName, ...rest] = s.name.split(' ');
+const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/speakers' }, { name: s.name, path: `/speakers/${s.id}` }])];
+---
+
+<BaseLayout
+  title={s.name}
+  fullTitle={`${s.name} · Speaker at ZurichJS`}
+  description={description}
+  type="profile"
+  profile={{ firstName, lastName: rest.join(' ') || undefined }}
+  image={s.photo?.src}
+  imageAlt={s.photo ? s.photo.alt : undefined}
+  keywords={[s.name, 'JavaScript', 'ZurichJS', 'tech talks', ...s.topics]}
+  jsonLd={jsonLd}
+>
+  <PageOpening slot="opening" title={s.name} crumb={{ label: 'Speakers', href: '/speakers', here: s.name }} sub={roleLine} />
+
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-14 gap-y-7 items-start">
+      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] !text-[88px]" />}
+      <div class="flex flex-col gap-[18px] col-span-full md:col-span-2 min-w-0">
+        <p class="m-0 text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty">{s.bio}</p>
+        {
+          s.links.length > 0 && (
+            <div class="flex flex-wrap gap-2">
+              {s.links.map((l) => (
+                <Button href={l.url} variant="grey" size="sm" class="!border-0">
+                  {l.label}
+                </Button>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </div>
+
+    {
+      upcoming && (
+        <Surface tone="yellow" class="py-6 px-7 flex flex-wrap gap-x-7 gap-y-4 items-center justify-between">
+          <div class="flex flex-col gap-1 min-w-0">
+            <div class="text-[17px] font-bold">Speaking next: {upcoming.p.dateLineShort}</div>
+            <div class="text-[22px] font-bold leading-[1.25]">{upcoming.item.title}</div>
+          </div>
+          <Button href={eventHref(upcoming.ev)} variant="black" class="text-[17px]">
+            See the meetup
+          </Button>
+        </Surface>
+      )
+    }
+
+    <section class="flex flex-col gap-5" aria-labelledby="h-talks">
+      <h2 id="h-talks" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Talks at ZurichJS</h2>
+      {
+        history.map(({ t, ev }) => {
+          const meta = [ev?.startsAt ? monthYear(ev.startsAt) : null, ev?.title, t.format].filter(Boolean).join(' · ');
+          return ev ? (
+            <a href={eventHref(ev)} class="no-underline text-black rounded-[20px] bg-grey-soft hover:bg-grey flex flex-col gap-1.5 py-[18px] px-5">
+              <span class="text-[16px] text-ink-2">{meta}</span>
+              <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+            </a>
+          ) : (
+            <Surface tone="soft" class="flex flex-col gap-1.5 py-[18px] px-5 !rounded-[20px]">
+              <div class="text-[16px] text-ink-2">{meta}</div>
+              <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+            </Surface>
+          );
+        })
+      }
+      {history.length === 0 && <p class="m-0 text-[17px] text-ink-2">No past talks listed yet.</p>}
+    </section>
+
+    <Surface class="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center py-6 px-7">
+      <p class="m-0 text-[18px]">Want to give a talk like this? First-time speakers are welcome, and we’ll help you get ready.</p>
+      <Button href="/cfp" variant="black" class="text-[17px]">Propose a talk</Button>
+    </Surface>
+  </div>
+</BaseLayout>

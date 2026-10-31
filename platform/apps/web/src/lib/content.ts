@@ -1,5 +1,5 @@
 /** Build-time content access for pages. One fetch per build (see @zurichjs/content). */
-import { SITE, loadContent } from '@zurichjs/content';
+import { loadContent } from '@zurichjs/content';
 import { nextMeetup } from '@zurichjs/events';
 
 export { ticketing } from './ticketing';

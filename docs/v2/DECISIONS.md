@@ -55,3 +55,26 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 - **Dead code in production goes in a separate PR** (`v2/root-dead-code`, from `main`): 28 files, 5 dependencies, a stray `.tmp` file and dead exports. The structured-data builders are kept as porting reference. Nothing reachable by URL is removed. (Owner asked for knip; scope is an assumption.)
 - **The Studio repo lags the data the site writes** (CONTENT-MODEL-DIFF.md, finding 3). Phase 3 declares the missing fields and types before adding anything new. (Assumption)
 - **The production SEO baseline was captured with a placeholder Clerk publishable key**, locally only. Clerk's development keys redirect browser navigations to a handshake host, so a `pk_live_` key in the right format was used. Nothing was sent to Clerk. (Assumption)
+
+## Phase 1 (Astro app)
+
+- **Astro 5.18 as specified, not 7.** Astro 7 is current, but the brief names Astro 5; `@astrojs/tailwind` (Tailwind 3 and the V2 config as preset) supports only up to Astro 5. Upgrading is a follow-up once the design package moves to Tailwind 4. (Assumption)
+- **Islands are Preact with `compat`.** compat lets the V2 React code port almost verbatim; new code uses Preact idioms. Islands: event actions, banner, summary and programme (clock-aware state and rating), /today, the forms, and the events/speakers filters. The mobile menu and the events tabs are small inline scripts, not framework islands. (Assumption)
+- **Prerendered state plus clock re-check.** Pages render the event state as of build time. Islands re-evaluate it in the browser every minute and swap the actions, banner and rating. A page built before doors switches to feedback mode without a rebuild; the switch to the recap waits for the doors + 48 h rebuild (Phase 4) and tells visitors to reload. (Assumption)
+- **Sanity reads use plain `fetch`, not `@sanity/client`.** It is smaller, and the client crashed the build with an uncatchable socket error when Sanity was unreachable. **Sample content never ships:** builds fall back to the V2 sample content only outside production, and fail on `CONTEXT=production` or `CONTENT_REQUIRE_SANITY=1`. (Assumption)
+- **Every production URL is kept:** events and speakers use the Sanity `id.current` slug, policies keep production slugs, and every V2 rename is a 301 in `astro.config.mjs` (written to Netlify `_redirects`). (Assumption)
+- **Policies use the production legal text** (Markdown content collection), not the V2 placeholder wording. "Last updated" shows the last real edit (20 May 2026); production printed today's date on every visit. (Assumption)
+- **SEO improvements over production** (the parity gate enforces them):
+  - Event, Person and Breadcrumb JSON-LD
+  - a complete `/sitemap.xml`
+  - absolute OG images
+  - `/llms.txt` and `/llms-full.txt`
+  - `/ai-context` linked from the footer
+  - `/today` and `/feedback` stay indexable, as in production
+  - Titles keep production keywords and use the V2 " · " separator (`tools/seo/allowlist.json`). (Assumption)
+- **Form confirmation copy now matches what the site does.** "We sent a copy to …" became "An organiser will reply to …": the forms never emailed the person who submitted. Donations without Stripe configured say nothing was charged. (Assumption)
+- **Images:** photos ship as WebP at 480, 960 and 1600 px with `srcset`. CSS is inlined to remove the render-blocking request. Lighthouse mobile: home 99, event 100, speaker 100 for performance, with 100 for accessibility, best practices and SEO on all three. (Assumption)
+- **The browser validates forms without zod** (`@zurichjs/forms/client`; a test keeps the required fields in sync with the zod schemas). Server functions validate with zod. This saves about 87 KB of JavaScript per form page. (Assumption)
+- **V2 evening-feedback answers are stored in named fields** (`moreOf`, `improvements`, `futureTopics`, `arrivalIssues`, `describeToFriend`) on `comprehensiveFeedback`, declared in the Studio. A deep dive is 35 minutes, as the form says. (Assumption)
+- **`.ics` escaping fixed:** semicolons were not escaped (the same bug was in `v2/`). (Assumption)
+- **pnpm `packageExtensions`** declares `@emnapi/runtime` for `@napi-rs/wasm-runtime`, which `@astrojs/check` needs and which does not declare it. (Assumption)

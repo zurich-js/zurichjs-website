@@ -17,7 +17,9 @@ type Props = Omit<MetaInput, 'path' | 'title'> & {
   jsonLd?: (Record<string, unknown> | null)[];
 };
 
-const { title, fullTitle, path = Astro.url.pathname, jsonLd = [], ...meta } = Astro.props;
+// build.format 'file' renders /events/x as events/x.html; the public URL has no extension.
+const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '') || '/';
+const { title, fullTitle, path = cleanPath, jsonLd = [], ...meta } = Astro.props;
 const docTitle = fullTitle ?? (title === 'ZurichJS' ? 'ZurichJS · JavaScript meetups in Zurich' : `${title} · ZurichJS`);
 const head = buildMeta({ ...meta, title: docTitle, path });
 const nextHref = await nextMeetupHref();

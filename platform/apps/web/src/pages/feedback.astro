@@ -1,0 +1,30 @@
+---
+import { byStartDesc, eventHref, pastEvents } from '@zurichjs/events';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import FeedbackForm, { feedbackSub, feedbackTitle, type FeedbackEvent } from '~/components/islands/forms/FeedbackForm';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { BUILD_TIME, content, nextMeetupHref } from '~/lib/content';
+
+const { events } = await content();
+const nextHref = await nextMeetupHref();
+const pick = ({ id, slug, title, startsAt }: FeedbackEvent): FeedbackEvent => ({ id, slug, title, startsAt });
+// Default: the most recent past event as of the build. The island may switch to
+// `?event=<slug>`, so it also gets events that were still upcoming or live at build
+// time (the event page links here from doors on).
+const past = pastEvents(events, BUILD_TIME).slice(0, 6);
+const soon = events.filter((e) => e.startsAt && !past.includes(e) && Date.parse(e.startsAt) - BUILD_TIME.getTime() < 60 * 86_400_000).sort(byStartDesc);
+const list = [...soon, ...past].map(pick);
+const ev = past[0] ? pick(past[0]) : undefined;
+---
+
+<BaseLayout
+  title="Share Your Feedback"
+  description="Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes."
+>
+  <PageOpening slot="opening" title={feedbackTitle(ev)} crumb={ev ? { label: 'Past event', href: eventHref(ev), here: 'Feedback' } : undefined}>
+    {ev && <span slot="sub" id="feedback-sub">{feedbackSub(ev)}</span>}
+  </PageOpening>
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-8">
+    <FeedbackForm client:load events={list} initialId={ev?.id} nextHref={nextHref} />
+  </div>
+</BaseLayout>

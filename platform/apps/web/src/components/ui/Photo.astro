@@ -1,6 +1,7 @@
 ---
 /** A cover-cropped photo with rounded corners. Fills its parent, so give the parent an aspect ratio. */
 import type { Photo } from '@zurichjs/events';
+import { srcFor, srcsetFor } from '~/lib/images';
 import { cx } from '~/lib/ui';
 
 interface Props {
@@ -8,16 +9,17 @@ interface Props {
   class?: string;
   /** Above the fold: load eagerly with high priority. */
   priority?: boolean;
-  /** Width hint for Sanity CDN images. */
-  width?: number;
+  /** The `sizes` attribute: how wide the photo is rendered. */
+  sizes?: string;
 }
-const { photo, class: extra, priority = false, width = 1200 } = Astro.props;
-const src = photo.src.startsWith('https://cdn.sanity.io/') ? `${photo.src}?w=${width}&auto=format&fit=max` : photo.src;
+const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw, 100vw' } = Astro.props;
 ---
 
 <span class={cx('relative block overflow-hidden rounded-card bg-grey', extra)}>
   <img
-    src={src}
+    src={srcFor(photo.src)}
+    srcset={srcsetFor(photo.src)}
+    sizes={sizes}
     alt={photo.alt}
     width={photo.width}
     height={photo.height}

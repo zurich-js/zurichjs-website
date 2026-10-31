@@ -3,18 +3,7 @@
  * Venue AG, placeholder logos). Used only when Sanity is not configured or not
  * reachable; the build logs loudly when it is used. Never presented as real.
  */
-import type {
-  AwardRecord,
-  ConferenceCopy,
-  ConferenceState,
-  Event,
-  Milestone,
-  Partner,
-  Quote,
-  RatingRecord,
-  Speaker,
-  TeamMember,
-} from '@zurichjs/events';
+import type { AwardRecord, ConferenceCopy, ConferenceState, Event, Milestone, Partner, Quote, RatingRecord, Speaker, TeamMember } from '@zurichjs/events';
 
 /* -------------------------------------------------------------------------- */
 /* Site-wide records                                                           */
@@ -358,7 +347,10 @@ export const EVENTS: Event[] = [
       { time: '21:30', title: 'Close' },
     ],
     practical: PRACTICAL_MEETUP,
-    photos: [{ src: PHOTOS.conversation.src, alt: 'Meetup photo' }, { src: PHOTOS.audience.src, alt: 'Audience during a talk' }],
+    photos: [
+      { src: PHOTOS.conversation.src, alt: 'Meetup photo' },
+      { src: PHOTOS.audience.src, alt: 'Audience during a talk' },
+    ],
     recap: {
       talks: [
         {
@@ -387,14 +379,23 @@ export const EVENTS: Event[] = [
         title: 'Testing what users actually do',
         talk: { speakerIds: ['jonas-test', 'sara-vorlage'], title: 'Testing what users actually do', format: 'talk', durationMin: 25 },
       },
-      { time: '19:35', title: 'React at scale: what we measure', talk: { speakerIds: ['lea-platzhalter'], title: 'React at scale: what we measure', format: 'talk', durationMin: 25 } },
+      {
+        time: '19:35',
+        title: 'React at scale: what we measure',
+        talk: { speakerIds: ['lea-platzhalter'], title: 'React at scale: what we measure', format: 'talk', durationMin: 25 },
+      },
       { time: '21:30', title: 'Close' },
     ],
     practical: PRACTICAL_MEETUP,
     photos: [],
     recap: {
       talks: [
-        { title: 'Testing what users actually do', speakerIds: ['jonas-test', 'sara-vorlage'], summary: 'Traces, real sessions and the tests that caught nothing.', format: 'Talk · 25 min' },
+        {
+          title: 'Testing what users actually do',
+          speakerIds: ['jonas-test', 'sara-vorlage'],
+          summary: 'Traces, real sessions and the tests that caught nothing.',
+          format: 'Talk · 25 min',
+        },
         { title: 'React at scale: what we measure', speakerIds: ['lea-platzhalter'], summary: 'The four numbers a platform team watches every release.', format: 'Talk · 25 min' },
       ],
     },

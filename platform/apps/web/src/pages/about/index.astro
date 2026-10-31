@@ -1,0 +1,272 @@
+---
+/** About: the first visit, the name, the story, values, team, the nonprofit, quotes and ways to take part. */
+import { eventHref } from '@zurichjs/events';
+import { breadcrumbSchema, organizationSchema } from '@zurichjs/seo';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import Button from '~/components/ui/Button.astro';
+import Monogram from '~/components/ui/Monogram.astro';
+import Photo from '~/components/ui/Photo.astro';
+import SectionHeading from '~/components/ui/SectionHeading.astro';
+import Surface from '~/components/ui/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
+import { cx } from '~/lib/ui';
+
+const { events, milestones, team, quotes } = await content();
+const eventsById = new Map(events.map((e) => [e.id, e]));
+const nextHref = await nextMeetupHref();
+
+const FIRST_STEPS = [
+  ['18:30', 'Doors open', 'Grab a drink and a name tag. Plenty of people come alone. Find us in yellow T-shirts if you’d like an introduction.'],
+  ['19:00', 'Talks', 'Two to four talks: full-length slots and quick lightning talks, some on what’s new, some on ideas that last. In English, and not always about JavaScript.'],
+  ['20:15', 'Food and conversation', 'The part many people come for. Nobody minds if you just listen.'],
+  ['21:30', 'Close', 'Free to attend. RSVP on Meetup so the host can plan food and space.'],
+] as const;
+
+const VALUES = [
+  ['Trust', 'We act responsibly with the trust that members place in us to execute on our mission.', 'grey'],
+  ['Authenticity', 'Everyone should feel included. We only promote partners we believe in ourselves.', 'grey'],
+  ['Quality', 'Conference-level experiences in a relaxed meetup space.', 'yellow'],
+] as const;
+
+const SUPPORT = [
+  { h: 'Become a member', d: 'Join the Swiss JavaScript Group association.', href: 'https://zurichjs.com/membership' },
+  { h: 'Buy us a coffee', d: 'A small one-off contribution.', href: '/donate' },
+  { h: 'Host or sponsor a meetup', d: 'Offer a room, food or a contribution.', href: '/partners' },
+];
+
+const TOUCH = [
+  { label: 'Meetup', bg: 'bg-[#ED1C40]', href: SITE.meetupGroupUrl },
+  { label: 'Slack', bg: 'bg-[#4A154B]', href: SITE.slackInviteUrl },
+  { label: 'LinkedIn', bg: 'bg-[#0A66C2]', href: SITE.linkedinUrl },
+  { label: 'Instagram', bg: 'bg-[linear-gradient(45deg,#F58529_0%,#DD2A7B_50%,#8134AF_100%)]', href: SITE.instagramUrl },
+  { label: 'Bluesky', bg: 'bg-[#1185FE]', href: SITE.blueskyUrl },
+];
+
+const INVOLVE = [
+  { h: 'Come to a meetup', d: 'Free, in English, and fine to come alone.', cta: 'See the next meetup', href: nextHref, tone: 'yellow' as const },
+  { h: 'Give a talk', d: 'It doesn’t have to be about JavaScript. First-time speakers get help preparing.', cta: 'Propose a talk', href: '/cfp', tone: 'grey' as const },
+  { h: 'Volunteer', d: 'After almost every event, someone new offers to help. On the night, with photos, or with the website.', cta: 'Volunteer with us', href: '/cfv', tone: 'grey' as const },
+  { h: 'Meet the speakers', d: 'Everyone who has spoken so far, and what they talked about.', cta: 'Browse speakers', href: '/speakers', tone: 'grey' as const },
+];
+
+const isExt = (href: string) => /^https?:/.test(href);
+---
+
+<BaseLayout
+  title="About ZurichJS"
+  fullTitle="About ZurichJS · JavaScript community in Zurich"
+  description="ZurichJS is the volunteer-run JavaScript community in Zurich since 2024. Who runs it, how it started on personal savings, and how you can take part."
+  keywords={['ZurichJS', 'JavaScript community Zurich', 'developer community Switzerland', 'Swiss JavaScript Group', 'JavaScript meetup Zurich']}
+  image={PHOTOS.community3.src}
+  jsonLd={[organizationSchema(), breadcrumbSchema([{ name: 'About', path: '/about' }])]}
+>
+  <PageOpening
+    slot="opening"
+    title="JavaScript is the common ground that brought us together"
+    sub="On 14 November 2024, we hosted our very first event, powered only by personal savings, donated time, and a lot of late nights. People showed up not just for the tech, but for the chance to connect face-to-face, across backgrounds, languages, and experience levels."
+  >
+    <div class="flex flex-wrap gap-3 pt-1.5">
+      <Button href={nextHref} variant="yellow" grow>See the next meetup</Button>
+      <Button href="#first-visit" variant="outline-white" grow>What a first visit is like</Button>
+    </div>
+  </PageOpening>
+
+  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+    <section id="first-visit" aria-labelledby="h-first" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center scroll-mt-6">
+      <div class="flex flex-col gap-7">
+        <h2 id="h-first" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What your first meetup is like</h2>
+        <div class="flex flex-col gap-[22px]">
+          {
+            FIRST_STEPS.map(([t, h, d]) => (
+              <div class="grid grid-cols-[64px_minmax(0,1fr)] gap-4 items-start">
+                <div class="text-[18px] font-bold pt-0.5">{t}</div>
+                <div class="flex flex-col gap-1">
+                  <h3 class="m-0 text-[20px] font-bold">{h}</h3>
+                  <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{d}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <Button href={nextHref} variant="black" grow>See the next meetup</Button>
+          <Button href="/policies/code-of-conduct" variant="grey" grow>Read the code of conduct</Button>
+        </div>
+      </div>
+      <Photo photo={PHOTOS.community3} class="aspect-[4/3] w-full" />
+    </section>
+
+    <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
+      <div class="flex flex-col gap-[18px]">
+        <h2 id="h-why" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Why it’s called ZurichJS</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">People ask this surprisingly often.</p>
+        <div class="flex flex-wrap gap-2">
+          {['Why not ZurichTS?', 'Why not Zurich Web?', 'Why not Zurich Tech?'].map((q) => <span class="text-[17px] font-bold py-2 px-4 rounded-pill bg-grey">{q}</span>)}
+        </div>
+      </div>
+      <div class="flex flex-col gap-4 text-[18px] leading-[1.6] text-ink-2 max-w-[640px]">
+        <p class="m-0 text-[clamp(22px,2.2vw,28px)] leading-[1.3] font-bold text-black">The short answer is simple: JavaScript is the common ground that brought us together.</p>
+        <p class="m-0">Bogdan and Faris first crossed paths at the Zürich ReactJS Meetup. React is a library. Angular is a framework. All of them orbit the same gravity well. JavaScript.</p>
+        <p class="m-0">At the time, it was mostly practical. A neutral home base that wasn’t tied to one framework, and most importantly, the Meetup.com group was free!</p>
+        <p class="m-0">In the beginning, ZurichJS was just a name. Now it’s a philosophy: accessibility, experimentation, cross-stack thinking, and a welcoming entry point into software.</p>
+        <p class="m-0 text-black font-bold">JavaScript just happens to be the banner we stand under. And it turns out that banner is wide enough to welcome everyone.</p>
+        <Button href="/about/why-zurichjs" variant="white" class="self-start mt-1 text-[17px]">Read the full story</Button>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-story" class="px-gut flex flex-col gap-7">
+      <SectionHeading id="h-story">
+        From a free Meetup group to a Swiss nonprofit
+        <Fragment slot="sub">We started with personal financial investments, a LinkedIn page, an inactive Meetup group with no past events, and good relationships that allowed us to host events. Here’s what happened next.</Fragment>
+        <Button slot="action" href="/events?tab=past" variant="white">Browse all past events</Button>
+      </SectionHeading>
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-x-4 gap-y-6">
+        {
+          milestones.map((m) => {
+            const ev = m.eventId ? eventsById.get(m.eventId) : undefined;
+            const Tag = ev ? 'a' : 'div';
+            return (
+              <Tag href={ev ? eventHref(ev) : undefined} class={cx('flex flex-col gap-3', ev && 'no-underline text-black')}>
+                {m.photo ? (
+                  <Photo photo={m.photo} class="aspect-[4/3] w-full !rounded-[20px]" sizes="(min-width: 800px) 33vw, 100vw" />
+                ) : (
+                  <span class="w-full aspect-[4/3] rounded-[20px] bg-yellow flex items-end p-[18px] box-border text-[26px] font-bold leading-[1.1]" aria-hidden="true">
+                    {m.title}
+                  </span>
+                )}
+                <span class="flex flex-col gap-1">
+                  <span class="text-[16px] text-ink-2">{m.date}</span>
+                  <span class="text-[20px] font-bold leading-[1.25] text-pretty">{m.title}</span>
+                </span>
+              </Tag>
+            );
+          })
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-values" class="px-gut flex flex-col gap-7">
+      <SectionHeading id="h-values">
+        Trust, authenticity, quality
+        <Fragment slot="sub">We believe a healthy developer community relies on these three pillars.</Fragment>
+      </SectionHeading>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+        {
+          VALUES.map(([h, d, tone]) => (
+            <Surface tone={tone} class="p-7 flex flex-col gap-2.5">
+              <h3 class="m-0 text-[24px] font-bold">{h}</h3>
+              <p class="m-0 text-[17px] leading-[1.55]">{d}</p>
+            </Surface>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-team" class="px-gut flex flex-col gap-7">
+      <SectionHeading id="h-team">
+        The people who run it
+        <Fragment slot="sub">We’ve built everything by volunteering our time and effort. Say hello at the next meetup; we’re the ones in yellow T-shirts.</Fragment>
+        <Button slot="action" href="/cfv" variant="black">Volunteer with us</Button>
+      </SectionHeading>
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-7">
+        {
+          team.map((m) => (
+            <div class="flex flex-col gap-3">
+              {m.photo ? <Photo photo={m.photo} class="aspect-square w-full" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
+              <div class="flex flex-col gap-1">
+                <h3 class="m-0 text-[20px] font-bold">{m.name}</h3>
+                <div class="text-[16px] text-ink-2">{m.role}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-verein" class="mx-gut bg-grey rounded-block p-[clamp(24px,4vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-x-12 gap-y-7 items-start">
+      <div class="flex flex-col gap-3.5">
+        <h2 id="h-verein" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">A nonprofit, run by volunteers</h2>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+          ZurichJS is a registered non-profit under the Swiss JavaScript Group. All revenue we make goes directly into the conference or venues, speaker travel, workshops, experiences, and the infrastructure that keeps the meetup community running.
+        </p>
+      </div>
+      <div class="flex flex-col gap-3">
+        {
+          SUPPORT.map((s) => (
+            <a
+              href={s.href}
+              {...(isExt(s.href) ? { target: '_blank', rel: 'noopener' } : {})}
+              class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-white hover:bg-grey-soft"
+            >
+              <span class="flex flex-col gap-[3px]">
+                <span class="text-[18px] font-bold">{s.h}</span>
+                <span class="text-[16px] leading-[1.45] text-ink-2">{s.d}</span>
+              </span>
+              <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-yellow">
+                →
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-quotes" class="px-gut flex flex-col gap-7">
+      <h2 id="h-quotes" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What people tell us afterwards</h2>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
+        {
+          quotes.map((q, i) => (
+            <Surface as="figure" tone={i === 0 ? 'yellow' : 'grey'} class="m-0 p-7 flex flex-col gap-4 justify-between">
+              <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">“{q.text}”</blockquote>
+              <figcaption class="text-[16px] leading-[1.4]">
+                <b>{q.name}</b>
+                <br />
+                <span class="text-ink-2">{q.role}</span>
+              </figcaption>
+            </Surface>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-involved" class="px-gut flex flex-col gap-7">
+      <h2 id="h-involved" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Ways to take part</h2>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))] gap-4">
+        {
+          INVOLVE.map((w) => (
+            <Surface tone={w.tone} class="p-[26px] flex flex-col gap-2.5">
+              <h3 class="m-0 text-[22px] font-bold">{w.h}</h3>
+              <p class="m-0 text-[17px] leading-[1.5] text-ink-2 flex-1">{w.d}</p>
+              <Button href={w.href} variant={w.tone === 'yellow' ? 'black' : 'white'} size="sm" class="self-start mt-2">
+                {w.cta}
+              </Button>
+            </Surface>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-touch" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-x-12 gap-y-6 items-center">
+      <div class="flex flex-col gap-2.5">
+        <h2 id="h-touch" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">Stay in touch between meetups</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Meetup.com announces every event. Slack is where the conversation keeps going in between.</p>
+      </div>
+      <div class="flex flex-wrap gap-2.5">
+        {
+          TOUCH.map((t) => (
+            <a
+              href={t.href}
+              target="_blank"
+              rel="noopener"
+              aria-label={`ZurichJS on ${t.label} (opens in a new tab)`}
+              class={cx('no-underline min-h-[52px] px-[22px] rounded-pill text-white font-bold text-[19px] flex items-center justify-center hover:brightness-[0.92] flex-[1_1_100%] md:flex-[0_0_auto]', t.bg)}
+            >
+              {t.label}
+            </a>
+          ))
+        }
+      </div>
+    </section>
+  </div>
+</BaseLayout>

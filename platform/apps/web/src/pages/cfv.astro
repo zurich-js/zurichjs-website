@@ -1,0 +1,19 @@
+---
+import PageOpening from '~/components/layout/PageOpening.astro';
+import VolunteerForm from '~/components/islands/forms/VolunteerForm';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { nextMeetupHref } from '~/lib/content';
+
+const nextHref = await nextMeetupHref();
+---
+
+<BaseLayout
+  title="Volunteer With Us"
+  description="Volunteer with ZurichJS on meetup nights, with photos and video, or with the website. Help us grow the JavaScript community in Zurich."
+  keywords={['volunteer Zurich', 'ZurichJS volunteer', 'JavaScript community Zurich', 'tech meetup volunteer']}
+>
+  <PageOpening slot="opening" title="Volunteer with us" sub="On the night, with photos, or with the website. A couple of hours around a meetup is already a lot." />
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+    <VolunteerForm client:load nextHref={nextHref} />
+  </div>
+</BaseLayout>

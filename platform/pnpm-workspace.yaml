@@ -9,3 +9,9 @@ minimumReleaseAge: 4320
 allowBuilds:
   esbuild: true
   sharp: true
+
+packageExtensions:
+  # @astrojs/check → astro2tsx loads @napi-rs/wasm-runtime, which imports @emnapi/runtime without declaring it.
+  '@napi-rs/wasm-runtime@1':
+    dependencies:
+      '@emnapi/runtime': 1.11.2

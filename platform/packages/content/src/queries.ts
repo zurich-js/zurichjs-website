@@ -4,6 +4,8 @@
  * and the additive V2 fields from docs/v2/CONTENT-MODEL-DIFF.md, so they work
  * before and after the Phase 3 schema migration.
  */
+import { defineQuery } from 'groq';
+
 const speakerFields = /* groq */ `
   "id": id.current, name, title, company, bio, location, interests, tagline,
   twitter, github, linkedin, website, isVisible, _updatedAt,
@@ -15,7 +17,7 @@ const talkFields = /* groq */ `
   "speakerIds": speakers[]->id.current
 `;
 
-export const EVENTS_QUERY = /* groq */ `
+export const EVENTS_QUERY = defineQuery(`
 *[_type == "events" && defined(id.current)] | order(datetime desc) {
   _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,
   location, address, venue, venueNote, description, meetupUrl, isProMeetup, stripePriceId,
@@ -26,22 +28,22 @@ export const EVENTS_QUERY = /* groq */ `
   agenda[]{ time, title, note, "talk": talk->{ ${talkFields} } },
   "talks": talks[]->{ ${talkFields} },
   recap{ "talks": talks[]{ summary, format, "talk": talk->{ ${talkFields} } } }
-}`;
+}`);
 
-export const SPEAKERS_QUERY = /* groq */ `
+export const SPEAKERS_QUERY = defineQuery(`
 *[_type == "speaker" && defined(id.current) && isVisible != false] {
   ${speakerFields},
   "talks": *[_type == "talk" && references(^._id)]{
     title, type, durationMinutes,
     "eventIds": *[_type == "events" && references(^._id)].id.current
   }
-}`;
+}`);
 
-export const PARTNERS_QUERY = /* groq */ `
-*[_type == "partner" && defined(id.current)] { "id": id.current, name, url, "logo": logo.asset->url }`;
+export const PARTNERS_QUERY = defineQuery(`
+*[_type == "partner" && defined(id.current)] { "id": id.current, name, url, "logo": logo.asset->url }`);
 
-export const SINGLETONS_QUERY = /* groq */ `{
+export const SINGLETONS_QUERY = defineQuery(`{
   "rating": *[_type == "meetupRating"][0]{ score, scale, count, url, source, checkedAt },
   "conference": *[_type == "conference"][0]{ state, headline, body, cta, cfp, url },
   "settings": *[_type == "siteSettings"][0]
-}`;
+}`);

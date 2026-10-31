@@ -1,0 +1,46 @@
+---
+/** Photo archive: every past event with photos, newest first. */
+import { dateLong, eventHref, pastEvents } from '@zurichjs/events';
+import { breadcrumbSchema } from '@zurichjs/seo';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import Photo from '~/components/ui/Photo.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { BUILD_TIME, content } from '~/lib/content';
+
+const { events } = await content();
+const withPhotos = pastEvents(events, BUILD_TIME).filter((e) => e.photos.length);
+const cover = withPhotos[0]?.photos[0];
+---
+
+<BaseLayout
+  title="Photos"
+  fullTitle="Photo gallery from ZurichJS meetups · ZurichJS"
+  description="Photos from past ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed."
+  image={cover?.src}
+  imageAlt={cover?.alt}
+  keywords={['ZurichJS photos', 'JavaScript meetup Zurich', 'Zurich tech events', 'ZurichJS media gallery']}
+  jsonLd={[breadcrumbSchema([{ name: 'Photos', path: '/media' }])]}
+>
+  <PageOpening slot="opening" title="Photos" sub="From past meetups. Ask us if you want a picture of you removed." compact />
+
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
+    {
+      withPhotos.map((ev) => (
+        <section class="flex flex-col gap-4" aria-label={ev.title}>
+          <div class="flex justify-between items-baseline flex-wrap gap-2.5">
+            <h2 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">{ev.title}</h2>
+            <a href={eventHref(ev)} class="font-bold text-[17px] underline underline-offset-[3px]">
+              {ev.startsAt ? dateLong(ev.startsAt) : 'Event page'}
+            </a>
+          </div>
+          <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3">
+            {ev.photos.map((p) => (
+              <Photo photo={p} class="aspect-[4/3] w-full !rounded-2xl" sizes="(min-width: 800px) 25vw, 100vw" />
+            ))}
+          </div>
+        </section>
+      ))
+    }
+    {withPhotos.length === 0 && <p class="m-0 text-[18px] text-ink-2">Photos from our meetups will appear here soon.</p>}
+  </div>
+</BaseLayout>

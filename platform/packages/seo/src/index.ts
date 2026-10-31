@@ -56,7 +56,12 @@ export function buildMeta(m: MetaInput): MetaTags {
   ];
   if (m.keywords?.length) meta.push({ name: 'keywords', content: m.keywords.join(', ') });
   if (m.geo) {
-    meta.push({ name: 'geo.region', content: 'CH-ZH' }, { name: 'geo.placename', content: 'Zurich' }, { name: 'geo.position', content: '47.3769;8.5417' }, { name: 'ICBM', content: '47.3769, 8.5417' });
+    meta.push(
+      { name: 'geo.region', content: 'CH-ZH' },
+      { name: 'geo.placename', content: 'Zurich' },
+      { name: 'geo.position', content: '47.3769;8.5417' },
+      { name: 'ICBM', content: '47.3769, 8.5417' },
+    );
   }
   if (m.type === 'profile' && m.profile) {
     if (m.profile.firstName) meta.push({ property: 'profile:first_name', content: m.profile.firstName });
@@ -85,12 +90,31 @@ export const organizationSchema = (): JsonLd => ({
   logo: `${SITE_URL}/logo-square.png`,
   description:
     'ZurichJS is the JavaScript and TypeScript community in Zurich, Switzerland. We host regular meetups, workshops and a yearly conference for web developers, with talks on React, Node.js, Vue, Angular, AI and modern web development.',
-  sameAs: ['https://twitter.com/zurichjs', 'https://www.linkedin.com/company/zurichjs', 'https://github.com/zurichjs', 'https://www.meetup.com/zurich-js/', 'https://bsky.app/profile/zurichjs.com'],
+  sameAs: [
+    'https://twitter.com/zurichjs',
+    'https://www.linkedin.com/company/zurichjs',
+    'https://github.com/zurichjs',
+    'https://www.meetup.com/zurich-js/',
+    'https://bsky.app/profile/zurichjs.com',
+  ],
   address: { '@type': 'PostalAddress', addressLocality: 'Zurich', addressRegion: 'ZH', addressCountry: 'CH' },
   geo: { '@type': 'GeoCoordinates', latitude: 47.3769, longitude: 8.5417 },
   areaServed: ['Zurich', 'Winterthur', 'Zug', 'Basel', 'Konstanz', 'St. Gallen'].map((name) => ({ '@type': 'City', name })),
   contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: 'hello@zurichjs.com' },
-  knowsAbout: ['JavaScript', 'TypeScript', 'React', 'Node.js', 'Vue.js', 'Angular', 'Web Development', 'Frontend Development', 'Backend Development', 'Artificial Intelligence', 'Web Performance', 'Software Engineering'],
+  knowsAbout: [
+    'JavaScript',
+    'TypeScript',
+    'React',
+    'Node.js',
+    'Vue.js',
+    'Angular',
+    'Web Development',
+    'Frontend Development',
+    'Backend Development',
+    'Artificial Intelligence',
+    'Web Performance',
+    'Software Engineering',
+  ],
 });
 
 export const websiteSchema = (): JsonLd => ({

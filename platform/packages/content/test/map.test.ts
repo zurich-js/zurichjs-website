@@ -50,7 +50,13 @@ describe('helpers', () => {
     expect(talkFormat('talk', 25)).toBe('talk');
   });
   it('builds speaker links and initials, never exposing email', () => {
-    const s = mapSpeaker({ id: 'ada', name: 'Ada Lovelace', title: 'Engineer', github: 'https://github.com/ada', talks: [{ title: 'Typed forms', type: 'talk', eventIds: ['e1'] }] });
+    const s = mapSpeaker({
+      id: 'ada',
+      name: 'Ada Lovelace',
+      title: 'Engineer',
+      github: 'https://github.com/ada',
+      talks: [{ title: 'Typed forms', type: 'talk', eventIds: ['e1'] }],
+    });
     expect(s.initials).toBe('AL');
     expect(s.links).toEqual([{ label: 'GitHub', url: 'https://github.com/ada' }]);
     expect(s.talks).toEqual([{ eventId: 'e1', title: 'Typed forms', format: 'Talk' }]);

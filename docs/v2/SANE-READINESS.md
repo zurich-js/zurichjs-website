@@ -41,7 +41,7 @@ Constraints that shape the seams:
 
 ## Seams built in the V2 platform (Phases 1 and 1b)
 
-1. **`TicketingProvider`** in `@zurichjs/integrations`:
+1. **`TicketingProvider`** in `@zurichjs/events` (pure, so islands can use it; `platform/packages/events/src/ticketing.ts`):
 
    ```ts
    interface TicketingAction {
@@ -57,11 +57,11 @@ Constraints that shape the seams:
    }
    ```
 
-   - Today: `meetupProvider` (RSVP, waitlist and follow links to meetup.com) and `stripeProvider` (pro meetups with `stripePriceId`).
+   - Today: `meetupTicketing` (RSVP, waitlist and follow links to meetup.com) and `stripeTicketing` (pro meetups with `stripePriceId`), chained in `platform/apps/web/src/lib/ticketing.ts`.
    - `presentEvent()` in `@zurichjs/events` takes the action as data and never branches on Meetup or Stripe itself.
    - A later `saneProvider` reads `GET /v1/public/events/{org}/{event}` at build time and returns a buy or registration link. Switching one event is a per-event field, added when Sane is adopted.
 
-2. **`TalkProposalSink`** in `@zurichjs/integrations`:
+2. **`TalkProposalSink`** in `@zurichjs/integrations` (`platform/packages/integrations/src/index.ts`):
 
    ```ts
    interface TalkProposalSink {

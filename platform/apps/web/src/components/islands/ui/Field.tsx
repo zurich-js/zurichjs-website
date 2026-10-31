@@ -1,5 +1,6 @@
 /** Form controls for islands (Preact). Labels wrap controls; errors are announced politely. */
 import type { ComponentChildren, JSX } from 'preact';
+import { useId } from 'preact/hooks';
 import { cx } from '~/lib/ui';
 
 const control = 'rounded-[14px] border px-3.5 text-[17px] font-normal bg-white text-black w-full box-border';
@@ -13,14 +14,26 @@ interface Wrap {
   labelSize?: 'md' | 'lg';
 }
 
-function Wrapper({ label, hint, error, class: className, labelSize = 'md', children }: Wrap & { children: ComponentChildren }) {
+/** Ids for the hint and error, and the aria-describedby value that points at them. */
+function useDescribedBy(hint: unknown, error: string | undefined) {
+  const id = useId();
+  const ids = { hint: `${id}-hint`, error: `${id}-error` };
+  const describedBy = [hint ? ids.hint : '', error ? ids.error : ''].filter(Boolean).join(' ') || undefined;
+  return { ids, describedBy };
+}
+
+function Wrapper({ label, hint, error, class: className, labelSize = 'md', ids, children }: Wrap & { ids: { hint: string; error: string }; children: ComponentChildren }) {
   return (
     <label class={cx('flex flex-col gap-1.5 font-bold', labelSize === 'lg' ? 'text-[clamp(19px,1.8vw,22px)] leading-[1.3]' : 'text-[16px]', className)}>
       {label}
-      {hint && <span class="text-[16px] font-normal text-grey-text leading-[1.45]">{hint}</span>}
+      {hint && (
+        <span id={ids.hint} class="text-[16px] font-normal text-grey-text leading-[1.45]">
+          {hint}
+        </span>
+      )}
       {children}
       {error !== undefined && (
-        <span class="font-normal text-[14px] text-danger min-h-[1.2em]" aria-live="polite">
+        <span id={ids.error} class="font-normal text-[14px] text-danger min-h-[1.2em]" aria-live="polite">
           {error}
         </span>
       )}
@@ -29,25 +42,33 @@ function Wrapper({ label, hint, error, class: className, labelSize = 'md', child
 }
 
 export function TextField({ label, hint, error, class: className, labelSize, invalid, ...rest }: Wrap & JSX.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean }) {
+  const { ids, describedBy } = useDescribedBy(hint, error);
   return (
-    <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize}>
-      <input aria-invalid={invalid || undefined} class={cx(control, 'min-h-[52px]', border(invalid))} {...rest} />
+    <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize} ids={ids}>
+      <input aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-[52px]', border(invalid))} {...rest} />
     </Wrapper>
   );
 }
 
 export function TextArea({ label, hint, error, class: className, labelSize, invalid, ...rest }: Wrap & JSX.TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean }) {
+  const { ids, describedBy } = useDescribedBy(hint, error);
   return (
-    <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize}>
-      <textarea aria-invalid={invalid || undefined} class={cx(control, 'py-3 resize-y leading-[1.5]', border(invalid), labelSize === 'lg' && 'mt-1')} {...rest} />
+    <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize} ids={ids}>
+      <textarea
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        class={cx(control, 'py-3 resize-y leading-[1.5]', border(invalid), labelSize === 'lg' && 'mt-1')}
+        {...rest}
+      />
     </Wrapper>
   );
 }
 
 export function SelectField({ label, hint, error, class: className, children, ...rest }: Wrap & JSX.SelectHTMLAttributes<HTMLSelectElement>) {
+  const { ids, describedBy } = useDescribedBy(hint, error);
   return (
-    <Wrapper label={label} hint={hint} error={error} class={className}>
-      <select class={cx(control, 'min-h-[52px] px-3', border(false))} {...rest}>
+    <Wrapper label={label} hint={hint} error={error} class={className} ids={ids}>
+      <select aria-describedby={describedBy} class={cx(control, 'min-h-[52px] px-3', border(false))} {...rest}>
         {children}
       </select>
     </Wrapper>
@@ -81,7 +102,10 @@ export function ChipGroup<T extends string>({ label, options, value, onChange }:
               role="radio"
               aria-checked={on}
               onClick={() => onChange(o.value)}
-              class={cx('min-h-[44px] px-[18px] rounded-pill border border-black font-bold text-[16px] cursor-pointer', on ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey')}
+              class={cx(
+                'min-h-[44px] px-[18px] rounded-pill border border-black font-bold text-[16px] cursor-pointer',
+                on ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey',
+              )}
             >
               {o.label}
             </button>
@@ -93,4 +117,3 @@ export function ChipGroup<T extends string>({ label, options, value, onChange }:
 }
 
 export const isEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
-export const filled = (v: string) => v.trim().length > 0;

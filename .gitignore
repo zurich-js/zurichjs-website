@@ -48,3 +48,5 @@ next-env.d.ts
 /platform/**/.astro
 /platform/**/.netlify
 /platform/node_modules
+/platform/test-results
+/platform/playwright-report

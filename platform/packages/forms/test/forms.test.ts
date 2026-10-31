@@ -25,3 +25,20 @@ describe('form schemas (V2 payload contract)', () => {
     expect(isFormKind('feedback')).toBe(true);
   });
 });
+
+describe('browser validator agrees with the server schemas', async () => {
+  const { fieldErrors, REQUIRED } = await import('../src/client');
+  it('requires the same fields', () => {
+    for (const kind of Object.keys(REQUIRED) as (keyof typeof REQUIRED)[]) {
+      const server = validate(kind, {});
+      const client = fieldErrors(kind, {});
+      expect(Object.keys(client).sort(), kind).toEqual(
+        server.ok
+          ? []
+          : Object.keys(server.fields)
+              .filter((k) => k !== HONEYPOT)
+              .sort(),
+      );
+    }
+  });
+});

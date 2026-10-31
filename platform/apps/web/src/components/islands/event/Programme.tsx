@@ -57,7 +57,9 @@ export default function Programme({ ev, initial, speakers }: { ev: Event; initia
                   })}
                 </div>
                 {a.talk.description && <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[640px]">{a.talk.description}</p>}
-                <div class="text-[15px] text-ink-2">{[a.talk.durationMin ? `${a.talk.durationMin} min` : '', a.talk.level, a.talk.language ?? 'English'].filter(Boolean).join(' · ')}</div>
+                <div class="text-[15px] text-ink-2">
+                  {[a.talk.durationMin ? `${a.talk.durationMin} min` : '', a.talk.level, a.talk.language ?? 'English'].filter(Boolean).join(' · ')}
+                </div>
                 {live && (
                   <Button variant={rated[keyOf(i)] ? 'grey' : 'yellow'} size="sm" class="self-start mt-1 !border-black" onClick={() => setTarget(toTarget(i))}>
                     {rated[keyOf(i)] ? 'Rated ✓ · change' : 'Rate this talk'}

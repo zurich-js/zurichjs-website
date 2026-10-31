@@ -1,0 +1,2156 @@
+{
+  "base": "http://localhost:4400",
+  "checkedAt": "2026-10-31T22:40:39.742Z",
+  "builtPages": 41,
+  "crawled": 58,
+  "failures": [],
+  "notes": [
+    "/ai-context: title \"ZurichJS for AI Assistants | Community Information for ChatGPT, Claude & LLMs\" → \"ZurichJS for AI Assistants · Community Information for ChatGPT, Claude & LLMs\"",
+    "/cfp: title \"Call for Papers | ZurichJS\" → \"Call for Papers · Speak at a ZurichJS Meetup\"",
+    "/cfv: title \"Volunteer With Us | ZurichJS\" → \"Volunteer With Us · ZurichJS\"",
+    "/contact: title \"Contact ZurichJS | JavaScript Community in Zurich\" → \"Contact ZurichJS · JavaScript Community in Zurich\"",
+    "/donate: title \"Donate - ZurichJS\" → \"Donate to ZurichJS · Support the JavaScript Community\"",
+    "/feedback: title \"Share Your Feedback | ZurichJS\" → \"Share Your Feedback · ZurichJS\"",
+    "/media-demo: removed",
+    "/membership: title \"Membership - ZurichJS\" → \"Membership · Join the ZurichJS Association\"",
+    "/policies/code-of-conduct: title \"Code of Conduct | ZurichJS\" → \"Code of conduct · ZurichJS\"",
+    "/policies/privacy-policy: title \"Privacy Policy | ZurichJS\" → \"Privacy policy · ZurichJS\"",
+    "/policies/refund-policy: title \"Refund Policy | ZurichJS\" → \"Refund policy · ZurichJS\"",
+    "/policies/terms-and-conditions: title \"Terms and Conditions | ZurichJS\" → \"Terms and conditions · ZurichJS\"",
+    "/today: title \"Today - Today - ZurichJS\" → \"Tonight · ZurichJS\"",
+    "/tshirt: descoped",
+    "/waitlist/conf: title \"ZurichJS Conference 2026 - Join the Waitlist | ZurichJS\" → \"ZurichJS Conference Waitlist · JavaScript Conference in Zurich\"",
+    "/workshops/react-architecture: descoped",
+    "/admin: removed",
+    "/profile: removed",
+    "/invite: removed",
+    "/: title \"ZurichJS | JavaScript & TypeScript Meetup Community in Zurich, Switzerland\" → \"ZurichJS · JavaScript & TypeScript meetups in Zurich, Switzerland\"",
+    "/about: title \"About ZurichJS | JavaScript Community in Zurich\" → \"About ZurichJS · JavaScript community in Zurich\"",
+    "/conferences/tech-conferences-zurich: title \"Tech Conferences & Meetups in Zurich | ZurichJS Alternative to FrontConf & Voxxed Days\" → \"Tech Conferences & Meetups in Zurich · ZurichJS Alternative to FrontConf & Voxxed Days\"",
+    "/events: title \"Upcoming Events | ZurichJS\" → \"Upcoming and past JavaScript events in Zurich · ZurichJS\"",
+    "/media: title \"Media Gallery - ZurichJS\" → \"Photo gallery from ZurichJS meetups · ZurichJS\"",
+    "/meetups/ai-ml-zurich: title \"AI & Machine Learning Meetups in Zurich | ZurichJS - JavaScript AI Development\" → \"AI & Machine Learning Meetups in Zurich · ZurichJS · JavaScript AI Development\"",
+    "/meetups/javascript-zurich: title \"JavaScript Meetups in Zurich | ZurichJS - Premier JS & TypeScript Community\" → \"JavaScript Meetups in Zurich · ZurichJS · Premier JS & TypeScript Community\"",
+    "/speakers: title \"Speakers | ZurichJS\" → \"Speakers · ZurichJS\"",
+    "/workshops: descoped",
+    "/workshops/accessibility-fundamentals: descoped",
+    "/workshops/ai-security-snyk-2026: descoped",
+    "/workshops/astro-zero-to-hero: descoped",
+    "/workshops/observability-dynatrace: descoped",
+    "/workshops/react-performance: descoped",
+    "/workshops/reliable-ai-agents: descoped"
+  ],
+  "results": [
+    {
+      "route": "/ai-context",
+      "status": 200,
+      "finalPath": "/ai-context",
+      "redirectedFrom": [],
+      "title": "ZurichJS for AI Assistants · Community Information for ChatGPT, Claude & LLMs",
+      "description": "Facts about ZurichJS for AI assistants and LLMs: free monthly JavaScript and TypeScript meetups in Zurich, Switzerland, who they are for and how to join.",
+      "canonical": "https://zurichjs.com/ai-context",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "ZurichJS: information for AI assistants"
+      ],
+      "textLength": 7823,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "ZurichJS for AI Assistants · Community Information for ChatGPT, Claude & LLMs",
+        "og:description": "Facts about ZurichJS for AI assistants and LLMs: free monthly JavaScript and TypeScript meetups in Zurich, Switzerland, who they are for and how to join.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/ai-context",
+        "og:image": "https://zurichjs.com/og/ai-context.png",
+        "og:image:alt": "ZurichJS: information for AI assistants",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "ZurichJS for AI Assistants · Community Information for ChatGPT, Claude & LLMs",
+        "twitter:description": "Facts about ZurichJS for AI assistants and LLMs: free monthly JavaScript and TypeScript meetups in Zurich, Switzerland, who they are for and how to join.",
+        "twitter:image": "https://zurichjs.com/og/ai-context.png"
+      },
+      "jsonld": [
+        {
+          "type": "Organization",
+          "name": "ZurichJS"
+        }
+      ]
+    },
+    {
+      "route": "/cfp",
+      "status": 200,
+      "finalPath": "/cfp",
+      "redirectedFrom": [],
+      "title": "Call for Papers · Speak at a ZurichJS Meetup",
+      "description": "Propose a talk for a ZurichJS meetup in Zurich: lightning, standard or deep dive. First-time speakers welcome, with mentoring from the organisers.",
+      "canonical": "https://zurichjs.com/cfp",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Speak at a meetup"
+      ],
+      "textLength": 1415,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Call for Papers · Speak at a ZurichJS Meetup",
+        "og:description": "Propose a talk for a ZurichJS meetup in Zurich: lightning, standard or deep dive. First-time speakers welcome, with mentoring from the organisers.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/cfp",
+        "og:image": "https://zurichjs.com/og/cfp.png",
+        "og:image:alt": "Call for Papers · Speak at a ZurichJS Meetup",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Call for Papers · Speak at a ZurichJS Meetup",
+        "twitter:description": "Propose a talk for a ZurichJS meetup in Zurich: lightning, standard or deep dive. First-time speakers welcome, with mentoring from the organisers.",
+        "twitter:image": "https://zurichjs.com/og/cfp.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/cfp/form",
+      "status": 200,
+      "finalPath": "/cfp",
+      "redirectedFrom": [
+        "/cfp/form"
+      ],
+      "title": "Call for Papers · Speak at a ZurichJS Meetup",
+      "description": "Propose a talk for a ZurichJS meetup in Zurich: lightning, standard or deep dive. First-time speakers welcome, with mentoring from the organisers.",
+      "canonical": "https://zurichjs.com/cfp",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Speak at a meetup"
+      ],
+      "textLength": 1415,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Call for Papers · Speak at a ZurichJS Meetup",
+        "og:description": "Propose a talk for a ZurichJS meetup in Zurich: lightning, standard or deep dive. First-time speakers welcome, with mentoring from the organisers.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/cfp",
+        "og:image": "https://zurichjs.com/og/cfp.png",
+        "og:image:alt": "Call for Papers · Speak at a ZurichJS Meetup",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Call for Papers · Speak at a ZurichJS Meetup",
+        "twitter:description": "Propose a talk for a ZurichJS meetup in Zurich: lightning, standard or deep dive. First-time speakers welcome, with mentoring from the organisers.",
+        "twitter:image": "https://zurichjs.com/og/cfp.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/cfv",
+      "status": 200,
+      "finalPath": "/cfv",
+      "redirectedFrom": [],
+      "title": "Volunteer With Us · ZurichJS",
+      "description": "Volunteer with ZurichJS on meetup nights, with photos and video, or with the website. Help us grow the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/cfv",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Volunteer with us"
+      ],
+      "textLength": 836,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Volunteer With Us · ZurichJS",
+        "og:description": "Volunteer with ZurichJS on meetup nights, with photos and video, or with the website. Help us grow the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/cfv",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Volunteer With Us · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Volunteer With Us · ZurichJS",
+        "twitter:description": "Volunteer with ZurichJS on meetup nights, with photos and video, or with the website. Help us grow the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/checkout/success",
+      "status": 200,
+      "finalPath": "/checkout/success",
+      "redirectedFrom": [],
+      "title": "Thank you for your purchase · ZurichJS",
+      "description": "Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout.",
+      "canonical": "https://zurichjs.com/checkout/success",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Thank you for your purchase"
+      ],
+      "textLength": 809,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Thank you for your purchase · ZurichJS",
+        "og:description": "Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/checkout/success",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Thank you for your purchase · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Thank you for your purchase · ZurichJS",
+        "twitter:description": "Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/contact",
+      "status": 200,
+      "finalPath": "/contact",
+      "redirectedFrom": [],
+      "title": "Contact ZurichJS · JavaScript Community in Zurich",
+      "description": "Contact the ZurichJS organisers about a meetup, speaking, hosting or sponsoring. Real people from the JavaScript community in Zurich reply by email.",
+      "canonical": "https://zurichjs.com/contact",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Contact the organisers"
+      ],
+      "textLength": 1216,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Contact ZurichJS · JavaScript Community in Zurich",
+        "og:description": "Contact the ZurichJS organisers about a meetup, speaking, hosting or sponsoring. Real people from the JavaScript community in Zurich reply by email.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/contact",
+        "og:image": "https://zurichjs.com/og/contact.png",
+        "og:image:alt": "Contact ZurichJS · JavaScript Community in Zurich",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Contact ZurichJS · JavaScript Community in Zurich",
+        "twitter:description": "Contact the ZurichJS organisers about a meetup, speaking, hosting or sponsoring. Real people from the JavaScript community in Zurich reply by email.",
+        "twitter:image": "https://zurichjs.com/og/contact.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/donate",
+      "status": 200,
+      "finalPath": "/donate",
+      "redirectedFrom": [],
+      "title": "Donate to ZurichJS · Support the JavaScript Community",
+      "description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+      "canonical": "https://zurichjs.com/donate",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Support ZurichJS"
+      ],
+      "textLength": 1205,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Donate to ZurichJS · Support the JavaScript Community",
+        "og:description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/donate",
+        "og:image": "https://zurichjs.com/og/donate.png",
+        "og:image:alt": "Donate to ZurichJS · Support the JavaScript Community",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Donate to ZurichJS · Support the JavaScript Community",
+        "twitter:description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+        "twitter:image": "https://zurichjs.com/og/donate.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/event-feedback",
+      "status": 200,
+      "finalPath": "/feedback",
+      "redirectedFrom": [
+        "/event-feedback"
+      ],
+      "title": "Share Your Feedback · ZurichJS",
+      "description": "Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes.",
+      "canonical": "https://zurichjs.com/feedback",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "How was the Sept meetup?"
+      ],
+      "textLength": 1779,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Share Your Feedback · ZurichJS",
+        "og:description": "Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/feedback",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Share Your Feedback · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Share Your Feedback · ZurichJS",
+        "twitter:description": "Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/feedback",
+      "status": 200,
+      "finalPath": "/feedback",
+      "redirectedFrom": [],
+      "title": "Share Your Feedback · ZurichJS",
+      "description": "Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes.",
+      "canonical": "https://zurichjs.com/feedback",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "How was the Sept meetup?"
+      ],
+      "textLength": 1779,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Share Your Feedback · ZurichJS",
+        "og:description": "Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/feedback",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Share Your Feedback · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Share Your Feedback · ZurichJS",
+        "twitter:description": "Tell the ZurichJS organisers how the last meetup went. Rate the evening and help shape the next JavaScript meetup in Zurich in about five minutes.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/media-demo",
+      "status": 404,
+      "finalPath": "/media-demo",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/membership",
+      "status": 200,
+      "finalPath": "/membership",
+      "redirectedFrom": [],
+      "title": "Membership · Join the ZurichJS Association",
+      "description": "Join ZurichJS as a member of the Swiss JavaScript Group association. Support the Zurich JavaScript community as a Basic Member or Supporter.",
+      "canonical": "https://zurichjs.com/membership",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Become a member"
+      ],
+      "textLength": 1800,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Membership · Join the ZurichJS Association",
+        "og:description": "Join ZurichJS as a member of the Swiss JavaScript Group association. Support the Zurich JavaScript community as a Basic Member or Supporter.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/membership",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Membership · Join the ZurichJS Association",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Membership · Join the ZurichJS Association",
+        "twitter:description": "Join ZurichJS as a member of the Swiss JavaScript Group association. Support the Zurich JavaScript community as a Basic Member or Supporter.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/policies/code-of-conduct",
+      "status": 200,
+      "finalPath": "/policies/code-of-conduct",
+      "redirectedFrom": [],
+      "title": "Code of conduct · ZurichJS",
+      "description": "ZurichJS code of conduct: how we keep our JavaScript meetups in Zurich welcoming, inclusive and harassment-free, and how to report a concern.",
+      "canonical": "https://zurichjs.com/policies/code-of-conduct",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Code of conduct"
+      ],
+      "textLength": 4157,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Code of conduct · ZurichJS",
+        "og:description": "ZurichJS code of conduct: how we keep our JavaScript meetups in Zurich welcoming, inclusive and harassment-free, and how to report a concern.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/policies/code-of-conduct",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Code of conduct · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Code of conduct · ZurichJS",
+        "twitter:description": "ZurichJS code of conduct: how we keep our JavaScript meetups in Zurich welcoming, inclusive and harassment-free, and how to report a concern.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/policies/privacy-policy",
+      "status": 200,
+      "finalPath": "/policies/privacy-policy",
+      "redirectedFrom": [],
+      "title": "Privacy policy · ZurichJS",
+      "description": "How ZurichJS and the Swiss JavaScript Group collect, use and protect your personal data at our events and on this website.",
+      "canonical": "https://zurichjs.com/policies/privacy-policy",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Privacy policy"
+      ],
+      "textLength": 3972,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Privacy policy · ZurichJS",
+        "og:description": "How ZurichJS and the Swiss JavaScript Group collect, use and protect your personal data at our events and on this website.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/policies/privacy-policy",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Privacy policy · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Privacy policy · ZurichJS",
+        "twitter:description": "How ZurichJS and the Swiss JavaScript Group collect, use and protect your personal data at our events and on this website.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/policies/refund-policy",
+      "status": 200,
+      "finalPath": "/policies/refund-policy",
+      "redirectedFrom": [],
+      "title": "Refund policy · ZurichJS",
+      "description": "ZurichJS refund policy for event tickets: when refunds are possible, how to request one and how long it takes.",
+      "canonical": "https://zurichjs.com/policies/refund-policy",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Refund policy"
+      ],
+      "textLength": 3007,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Refund policy · ZurichJS",
+        "og:description": "ZurichJS refund policy for event tickets: when refunds are possible, how to request one and how long it takes.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/policies/refund-policy",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Refund policy · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Refund policy · ZurichJS",
+        "twitter:description": "ZurichJS refund policy for event tickets: when refunds are possible, how to request one and how long it takes.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/policies/terms-and-conditions",
+      "status": 200,
+      "finalPath": "/policies/terms-and-conditions",
+      "redirectedFrom": [],
+      "title": "Terms and conditions · ZurichJS",
+      "description": "The terms and conditions for using the ZurichJS website and attending ZurichJS events, run by the Swiss JavaScript Group.",
+      "canonical": "https://zurichjs.com/policies/terms-and-conditions",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Terms and conditions"
+      ],
+      "textLength": 3309,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Terms and conditions · ZurichJS",
+        "og:description": "The terms and conditions for using the ZurichJS website and attending ZurichJS events, run by the Swiss JavaScript Group.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/policies/terms-and-conditions",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Terms and conditions · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Terms and conditions · ZurichJS",
+        "twitter:description": "The terms and conditions for using the ZurichJS website and attending ZurichJS events, run by the Swiss JavaScript Group.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/success",
+      "status": 200,
+      "finalPath": "/success",
+      "redirectedFrom": [],
+      "title": "Thank you · ZurichJS",
+      "description": "Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout.",
+      "canonical": "https://zurichjs.com/success",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Thank you"
+      ],
+      "textLength": 791,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Thank you · ZurichJS",
+        "og:description": "Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/success",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Thank you · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Thank you · ZurichJS",
+        "twitter:description": "Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/support",
+      "status": 200,
+      "finalPath": "/donate",
+      "redirectedFrom": [
+        "/support"
+      ],
+      "title": "Donate to ZurichJS · Support the JavaScript Community",
+      "description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+      "canonical": "https://zurichjs.com/donate",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Support ZurichJS"
+      ],
+      "textLength": 1205,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Donate to ZurichJS · Support the JavaScript Community",
+        "og:description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/donate",
+        "og:image": "https://zurichjs.com/og/donate.png",
+        "og:image:alt": "Donate to ZurichJS · Support the JavaScript Community",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Donate to ZurichJS · Support the JavaScript Community",
+        "twitter:description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+        "twitter:image": "https://zurichjs.com/og/donate.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/today",
+      "status": 200,
+      "finalPath": "/today",
+      "redirectedFrom": [],
+      "title": "Tonight · ZurichJS",
+      "description": "Tonight at ZurichJS: what is on now, what is next, the full programme, and a quick way to rate each talk while it is still fresh.",
+      "canonical": "https://zurichjs.com/today",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Forms, types and design systems"
+      ],
+      "textLength": 1766,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Tonight · ZurichJS",
+        "og:description": "Tonight at ZurichJS: what is on now, what is next, the full programme, and a quick way to rate each talk while it is still fresh.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/today",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Tonight · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Tonight · ZurichJS",
+        "twitter:description": "Tonight at ZurichJS: what is on now, what is next, the full programme, and a quick way to rate each talk while it is still fresh.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/tshirt",
+      "status": 404,
+      "finalPath": "/tshirt",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/waitlist/conf",
+      "status": 200,
+      "finalPath": "/waitlist/conf",
+      "redirectedFrom": [],
+      "title": "ZurichJS Conference Waitlist · JavaScript Conference in Zurich",
+      "description": "Join the ZurichJS Conference waitlist and get an email when tickets, speakers and dates for the next JavaScript conference in Zurich are announced.",
+      "canonical": "https://zurichjs.com/waitlist/conf",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "ZurichJS Conference waitlist"
+      ],
+      "textLength": 1457,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "ZurichJS Conference Waitlist · JavaScript Conference in Zurich",
+        "og:description": "Join the ZurichJS Conference waitlist and get an email when tickets, speakers and dates for the next JavaScript conference in Zurich are announced.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/waitlist/conf",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "ZurichJS Conference Waitlist · JavaScript Conference in Zurich",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "ZurichJS Conference Waitlist · JavaScript Conference in Zurich",
+        "twitter:description": "Join the ZurichJS Conference waitlist and get an email when tickets, speakers and dates for the next JavaScript conference in Zurich are announced.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/react-architecture",
+      "status": 404,
+      "finalPath": "/workshops/react-architecture",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/admin",
+      "status": 404,
+      "finalPath": "/admin",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/profile",
+      "status": 404,
+      "finalPath": "/profile",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/invite",
+      "status": 404,
+      "finalPath": "/invite",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/",
+      "status": 200,
+      "finalPath": "/",
+      "redirectedFrom": [],
+      "title": "ZurichJS · JavaScript & TypeScript meetups in Zurich, Switzerland",
+      "description": "The JavaScript and TypeScript community in Zurich: free monthly meetups with talks on React, Node.js, Vue, Angular, AI and the web, run by volunteers.",
+      "canonical": "https://zurichjs.com",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "JavaScript meetups in Zurich."
+      ],
+      "textLength": 2879,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "ZurichJS · JavaScript & TypeScript meetups in Zurich, Switzerland",
+        "og:description": "The JavaScript and TypeScript community in Zurich: free monthly meetups with talks on React, Node.js, Vue, Angular, AI and the web, run by volunteers.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com",
+        "og:image": "https://zurichjs.com/og/home.png",
+        "og:image:alt": "ZurichJS · JavaScript & TypeScript meetups in Zurich, Switzerland",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "ZurichJS · JavaScript & TypeScript meetups in Zurich, Switzerland",
+        "twitter:description": "The JavaScript and TypeScript community in Zurich: free monthly meetups with talks on React, Node.js, Vue, Angular, AI and the web, run by volunteers.",
+        "twitter:image": "https://zurichjs.com/og/home.png"
+      },
+      "jsonld": [
+        {
+          "type": "Organization",
+          "name": "ZurichJS"
+        },
+        {
+          "type": "WebSite",
+          "name": "ZurichJS"
+        },
+        {
+          "type": "LocalBusiness",
+          "name": "ZurichJS"
+        }
+      ]
+    },
+    {
+      "route": "/about",
+      "status": 200,
+      "finalPath": "/about",
+      "redirectedFrom": [],
+      "title": "About ZurichJS · JavaScript community in Zurich",
+      "description": "ZurichJS is the volunteer-run JavaScript community in Zurich since 2024. Who runs it, how it started on personal savings, and how you can take part.",
+      "canonical": "https://zurichjs.com/about",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "JavaScript is the common ground that brought us together"
+      ],
+      "textLength": 5359,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "About ZurichJS · JavaScript community in Zurich",
+        "og:description": "ZurichJS is the volunteer-run JavaScript community in Zurich since 2024. Who runs it, how it started on personal savings, and how you can take part.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/about",
+        "og:image": "https://zurichjs.com/images/photos/meetup-3.webp",
+        "og:image:alt": "About ZurichJS · JavaScript community in Zurich",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "About ZurichJS · JavaScript community in Zurich",
+        "twitter:description": "ZurichJS is the volunteer-run JavaScript community in Zurich since 2024. Who runs it, how it started on personal savings, and how you can take part.",
+        "twitter:image": "https://zurichjs.com/images/photos/meetup-3.webp"
+      },
+      "jsonld": [
+        {
+          "type": "Organization",
+          "name": "ZurichJS"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/buy-us-a-coffee",
+      "status": 200,
+      "finalPath": "/donate",
+      "redirectedFrom": [
+        "/buy-us-a-coffee"
+      ],
+      "title": "Donate to ZurichJS · Support the JavaScript Community",
+      "description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+      "canonical": "https://zurichjs.com/donate",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Support ZurichJS"
+      ],
+      "textLength": 1205,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Donate to ZurichJS · Support the JavaScript Community",
+        "og:description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/donate",
+        "og:image": "https://zurichjs.com/og/donate.png",
+        "og:image:alt": "Donate to ZurichJS · Support the JavaScript Community",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Donate to ZurichJS · Support the JavaScript Community",
+        "twitter:description": "Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does.",
+        "twitter:image": "https://zurichjs.com/og/donate.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/conferences/tech-conferences-zurich",
+      "status": 200,
+      "finalPath": "/conferences/tech-conferences-zurich",
+      "redirectedFrom": [],
+      "title": "Tech Conferences & Meetups in Zurich · ZurichJS Alternative to FrontConf & Voxxed Days",
+      "description": "Tech conferences in Zurich and the meetups between them: ZurichJS complements FrontConf and Voxxed Days Zurich with free monthly JavaScript meetups.",
+      "canonical": "https://zurichjs.com/conferences/tech-conferences-zurich",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Meetups & conferences in Zurich"
+      ],
+      "textLength": 8485,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Tech Conferences & Meetups in Zurich · ZurichJS Alternative to FrontConf & Voxxed Days",
+        "og:description": "Tech conferences in Zurich and the meetups between them: ZurichJS complements FrontConf and Voxxed Days Zurich with free monthly JavaScript meetups.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/conferences/tech-conferences-zurich",
+        "og:image": "https://zurichjs.com/og/tech-conferences-zurich.png",
+        "og:image:alt": "Meetups and conferences in Zurich, ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Tech Conferences & Meetups in Zurich · ZurichJS Alternative to FrontConf & Voxxed Days",
+        "twitter:description": "Tech conferences in Zurich and the meetups between them: ZurichJS complements FrontConf and Voxxed Days Zurich with free monthly JavaScript meetups.",
+        "twitter:image": "https://zurichjs.com/og/tech-conferences-zurich.png"
+      },
+      "jsonld": [
+        {
+          "type": "Organization",
+          "name": "ZurichJS"
+        },
+        {
+          "type": "FAQPage",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events",
+      "status": 200,
+      "finalPath": "/events",
+      "redirectedFrom": [],
+      "title": "Upcoming and past JavaScript events in Zurich · ZurichJS",
+      "description": "Upcoming and past ZurichJS meetups: JavaScript and TypeScript talks in Zurich for developers of all levels. Every event keeps its page, speakers and photos.",
+      "canonical": "https://zurichjs.com/events",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Events"
+      ],
+      "textLength": 835,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Upcoming and past JavaScript events in Zurich · ZurichJS",
+        "og:description": "Upcoming and past ZurichJS meetups: JavaScript and TypeScript talks in Zurich for developers of all levels. Every event keeps its page, speakers and photos.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events",
+        "og:image": "https://zurichjs.com/og/events.png",
+        "og:image:alt": "Upcoming and past JavaScript events in Zurich · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Upcoming and past JavaScript events in Zurich · ZurichJS",
+        "twitter:description": "Upcoming and past ZurichJS meetups: JavaScript and TypeScript talks in Zurich for developers of all levels. Every event keeps its page, speakers and photos.",
+        "twitter:image": "https://zurichjs.com/og/events.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/media",
+      "status": 200,
+      "finalPath": "/media",
+      "redirectedFrom": [],
+      "title": "Photo gallery from ZurichJS meetups · ZurichJS",
+      "description": "Photos from past ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed.",
+      "canonical": "https://zurichjs.com/media",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Photos"
+      ],
+      "textLength": 852,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Photo gallery from ZurichJS meetups · ZurichJS",
+        "og:description": "Photos from past ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/media",
+        "og:image": "https://zurichjs.com/images/photos/meetup-may.webp",
+        "og:image:alt": "Audience during a talk",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Photo gallery from ZurichJS meetups · ZurichJS",
+        "twitter:description": "Photos from past ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed.",
+        "twitter:image": "https://zurichjs.com/images/photos/meetup-may.webp"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/meetups/ai-ml-zurich",
+      "status": 200,
+      "finalPath": "/meetups/ai-ml-zurich",
+      "redirectedFrom": [],
+      "title": "AI & Machine Learning Meetups in Zurich · ZurichJS · JavaScript AI Development",
+      "description": "AI and machine learning meetups in Zurich for JavaScript and TypeScript developers: OpenAI API, LangChain, RAG, vector databases and AI agents. Free, monthly.",
+      "canonical": "https://zurichjs.com/meetups/ai-ml-zurich",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "AI development meetups in Zurich"
+      ],
+      "textLength": 6789,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "AI & Machine Learning Meetups in Zurich · ZurichJS · JavaScript AI Development",
+        "og:description": "AI and machine learning meetups in Zurich for JavaScript and TypeScript developers: OpenAI API, LangChain, RAG, vector databases and AI agents. Free, monthly.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/meetups/ai-ml-zurich",
+        "og:image": "https://zurichjs.com/og/ai-ml-zurich.png",
+        "og:image:alt": "AI development meetups in Zurich, ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "AI & Machine Learning Meetups in Zurich · ZurichJS · JavaScript AI Development",
+        "twitter:description": "AI and machine learning meetups in Zurich for JavaScript and TypeScript developers: OpenAI API, LangChain, RAG, vector databases and AI agents. Free, monthly.",
+        "twitter:image": "https://zurichjs.com/og/ai-ml-zurich.png"
+      },
+      "jsonld": [
+        {
+          "type": "Organization",
+          "name": "ZurichJS"
+        },
+        {
+          "type": "FAQPage",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/meetups/javascript-zurich",
+      "status": 200,
+      "finalPath": "/meetups/javascript-zurich",
+      "redirectedFrom": [],
+      "title": "JavaScript Meetups in Zurich · ZurichJS · Premier JS & TypeScript Community",
+      "description": "Free monthly JavaScript and TypeScript meetups in Zurich: expert speakers on React, Node.js, Vue and Angular. Developers from Winterthur, Basel and Zug welcome.",
+      "canonical": "https://zurichjs.com/meetups/javascript-zurich",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "JavaScript meetups in Zurich"
+      ],
+      "textLength": 6932,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "JavaScript Meetups in Zurich · ZurichJS · Premier JS & TypeScript Community",
+        "og:description": "Free monthly JavaScript and TypeScript meetups in Zurich: expert speakers on React, Node.js, Vue and Angular. Developers from Winterthur, Basel and Zug welcome.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/meetups/javascript-zurich",
+        "og:image": "https://zurichjs.com/og/javascript-zurich.png",
+        "og:image:alt": "JavaScript meetups in Zurich, ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "JavaScript Meetups in Zurich · ZurichJS · Premier JS & TypeScript Community",
+        "twitter:description": "Free monthly JavaScript and TypeScript meetups in Zurich: expert speakers on React, Node.js, Vue and Angular. Developers from Winterthur, Basel and Zug welcome.",
+        "twitter:image": "https://zurichjs.com/og/javascript-zurich.png"
+      },
+      "jsonld": [
+        {
+          "type": "Organization",
+          "name": "ZurichJS"
+        },
+        {
+          "type": "FAQPage",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/partnerships",
+      "status": 200,
+      "finalPath": "/partners",
+      "redirectedFrom": [
+        "/partnerships"
+      ],
+      "title": "Partnership Opportunities · Host or Sponsor ZurichJS",
+      "description": "Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich.",
+      "canonical": "https://zurichjs.com/partners",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Host or support a ZurichJS meetup"
+      ],
+      "textLength": 3532,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Partnership Opportunities · Host or Sponsor ZurichJS",
+        "og:description": "Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/partners",
+        "og:image": "https://zurichjs.com/og/partners.png",
+        "og:image:alt": "Partnership Opportunities · Host or Sponsor ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Partnership Opportunities · Host or Sponsor ZurichJS",
+        "twitter:description": "Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich.",
+        "twitter:image": "https://zurichjs.com/og/partners.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/speakers",
+      "status": 200,
+      "finalPath": "/speakers",
+      "redirectedFrom": [],
+      "title": "Speakers · ZurichJS",
+      "description": "Meet the speakers who have shared their JavaScript knowledge at ZurichJS meetups in Zurich, and see what each of them talked about.",
+      "canonical": "https://zurichjs.com/speakers",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Speakers"
+      ],
+      "textLength": 1164,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Speakers · ZurichJS",
+        "og:description": "Meet the speakers who have shared their JavaScript knowledge at ZurichJS meetups in Zurich, and see what each of them talked about.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/speakers",
+        "og:image": "https://zurichjs.com/og/speakers.png",
+        "og:image:alt": "Speakers · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Speakers · ZurichJS",
+        "twitter:description": "Meet the speakers who have shared their JavaScript knowledge at ZurichJS meetups in Zurich, and see what each of them talked about.",
+        "twitter:image": "https://zurichjs.com/og/speakers.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/workshops",
+      "status": 404,
+      "finalPath": "/workshops",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/accessibility-fundamentals",
+      "status": 404,
+      "finalPath": "/workshops/accessibility-fundamentals",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/ai-security-snyk-2026",
+      "status": 404,
+      "finalPath": "/workshops/ai-security-snyk-2026",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/astro-zero-to-hero",
+      "status": 404,
+      "finalPath": "/workshops/astro-zero-to-hero",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/observability-dynatrace",
+      "status": 404,
+      "finalPath": "/workshops/observability-dynatrace",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/react-performance",
+      "status": 404,
+      "finalPath": "/workshops/react-performance",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/workshops/reliable-ai-agents",
+      "status": 404,
+      "finalPath": "/workshops/reliable-ai-agents",
+      "redirectedFrom": [],
+      "title": "Page not found · ZurichJS",
+      "description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+      "canonical": "https://zurichjs.com/404",
+      "robots": "noindex,nofollow",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "We couldn’t find that page"
+      ],
+      "textLength": 1120,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Page not found · ZurichJS",
+        "og:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/404",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Page not found · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Page not found · ZurichJS",
+        "twitter:description": "This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/about/why-zurichjs",
+      "status": 200,
+      "finalPath": "/about/why-zurichjs",
+      "redirectedFrom": [],
+      "title": "Why it’s called ZurichJS · ZurichJS",
+      "description": "Why ZurichJS and not ZurichTS or Zurich Web? JavaScript is the common ground that brought our Zurich developer community together. Here is the full story.",
+      "canonical": "https://zurichjs.com/about/why-zurichjs",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Why it’s called ZurichJS"
+      ],
+      "textLength": 4635,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Why it’s called ZurichJS · ZurichJS",
+        "og:description": "Why ZurichJS and not ZurichTS or Zurich Web? JavaScript is the common ground that brought our Zurich developer community together. Here is the full story.",
+        "og:type": "article",
+        "og:url": "https://zurichjs.com/about/why-zurichjs",
+        "og:image": "https://zurichjs.com/logo-square.png",
+        "og:image:alt": "Why it’s called ZurichJS · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Why it’s called ZurichJS · ZurichJS",
+        "twitter:description": "Why ZurichJS and not ZurichTS or Zurich Web? JavaScript is the common ground that brought our Zurich developer community together. Here is the full story.",
+        "twitter:image": "https://zurichjs.com/logo-square.png"
+      },
+      "jsonld": [
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2025-03-partnerships",
+      "status": 200,
+      "finalPath": "/events/2025-03-partnerships",
+      "redirectedFrom": [],
+      "title": "Partnerships to the Moon! · ZurichJS",
+      "description": "Thu 20 Mar 2025 · Sample Venue AG, Zürich. No talks and photos from the evening. Partnerships to the Moon!",
+      "canonical": "https://zurichjs.com/events/2025-03-partnerships",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Partnerships to the Moon!"
+      ],
+      "textLength": 966,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Partnerships to the Moon! · ZurichJS",
+        "og:description": "Thu 20 Mar 2025 · Sample Venue AG, Zürich. No talks and photos from the evening. Partnerships to the Moon!",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2025-03-partnerships",
+        "og:image": "https://zurichjs.com/images/photos/meetup-3.webp",
+        "og:image:alt": "Partnerships to the Moon! · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Partnerships to the Moon! · ZurichJS",
+        "twitter:description": "Thu 20 Mar 2025 · Sample Venue AG, Zürich. No talks and photos from the evening. Partnerships to the Moon!",
+        "twitter:image": "https://zurichjs.com/images/photos/meetup-3.webp"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "Partnerships to the Moon!"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2025-06-nodejs-workshop",
+      "status": 200,
+      "finalPath": "/events/2025-06-nodejs-workshop",
+      "redirectedFrom": [],
+      "title": "Node.js: More Threads Than You Think · ZurichJS",
+      "description": "Wed 18 Jun 2025 · ORBIZ Josef, Zürich. No talks and photos from the evening. Workshop with Matteo Collina.",
+      "canonical": "https://zurichjs.com/events/2025-06-nodejs-workshop",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Node.js: More Threads Than You Think"
+      ],
+      "textLength": 973,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Node.js: More Threads Than You Think · ZurichJS",
+        "og:description": "Wed 18 Jun 2025 · ORBIZ Josef, Zürich. No talks and photos from the evening. Workshop with Matteo Collina.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2025-06-nodejs-workshop",
+        "og:image": "https://zurichjs.com/images/photos/meetup-june.webp",
+        "og:image:alt": "Node.js: More Threads Than You Think · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Node.js: More Threads Than You Think · ZurichJS",
+        "twitter:description": "Wed 18 Jun 2025 · ORBIZ Josef, Zürich. No talks and photos from the evening. Workshop with Matteo Collina.",
+        "twitter:image": "https://zurichjs.com/images/photos/meetup-june.webp"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "Node.js: More Threads Than You Think"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2025-11-anniversary",
+      "status": 200,
+      "finalPath": "/events/2025-11-anniversary",
+      "redirectedFrom": [],
+      "title": "One year anniversary is here! · ZurichJS",
+      "description": "Thu 13 Nov 2025 · Sample Venue AG, Zürich. No talks. One year of ZurichJS, with talks and cake.",
+      "canonical": "https://zurichjs.com/events/2025-11-anniversary",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "One year anniversary is here!"
+      ],
+      "textLength": 1021,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "One year anniversary is here! · ZurichJS",
+        "og:description": "Thu 13 Nov 2025 · Sample Venue AG, Zürich. No talks. One year of ZurichJS, with talks and cake.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2025-11-anniversary",
+        "og:image": "https://zurichjs.com/og/event-2025-11-anniversary.png",
+        "og:image:alt": "One year anniversary is here! · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "One year anniversary is here! · ZurichJS",
+        "twitter:description": "Thu 13 Nov 2025 · Sample Venue AG, Zürich. No talks. One year of ZurichJS, with talks and cake.",
+        "twitter:image": "https://zurichjs.com/og/event-2025-11-anniversary.png"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "One year anniversary is here!"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2026-05-testing",
+      "status": 200,
+      "finalPath": "/events/2026-05-testing",
+      "redirectedFrom": [],
+      "title": "Testing what users actually do · ZurichJS",
+      "description": "Wed 20 May 2026 · Sample Venue AG, Zürich. Two talks. Two talks.",
+      "canonical": "https://zurichjs.com/events/2026-05-testing",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Testing what users actually do"
+      ],
+      "textLength": 1277,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Testing what users actually do · ZurichJS",
+        "og:description": "Wed 20 May 2026 · Sample Venue AG, Zürich. Two talks. Two talks.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2026-05-testing",
+        "og:image": "https://zurichjs.com/og/event-2026-05-testing.png",
+        "og:image:alt": "Testing what users actually do · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Testing what users actually do · ZurichJS",
+        "twitter:description": "Wed 20 May 2026 · Sample Venue AG, Zürich. Two talks. Two talks.",
+        "twitter:image": "https://zurichjs.com/og/event-2026-05-testing.png"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "Testing what users actually do"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2026-06-edge-runtimes",
+      "status": 200,
+      "finalPath": "/events/2026-06-edge-runtimes",
+      "redirectedFrom": [],
+      "title": "Edge runtimes in practice: what actually changed in our deploys · ZurichJS",
+      "description": "Wed 24 Jun 2026 · Sample Venue AG, Zürich. Two talks and photos from the evening. Three talks and photos from the evening.",
+      "canonical": "https://zurichjs.com/events/2026-06-edge-runtimes",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Edge runtimes in practice: what actually changed in our deploys"
+      ],
+      "textLength": 1302,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Edge runtimes in practice: what actually changed in our deploys · ZurichJS",
+        "og:description": "Wed 24 Jun 2026 · Sample Venue AG, Zürich. Two talks and photos from the evening. Three talks and photos from the evening.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2026-06-edge-runtimes",
+        "og:image": "https://zurichjs.com/images/photos/meetup-ginetta.webp",
+        "og:image:alt": "Edge runtimes in practice: what actually changed in our deploys · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Edge runtimes in practice: what actually changed in our deploys · ZurichJS",
+        "twitter:description": "Wed 24 Jun 2026 · Sample Venue AG, Zürich. Two talks and photos from the evening. Three talks and photos from the evening.",
+        "twitter:image": "https://zurichjs.com/images/photos/meetup-ginetta.webp"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "Edge runtimes in practice: what actually changed in our deploys"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2026-09-signals-streams",
+      "status": 200,
+      "finalPath": "/events/2026-09-signals-streams",
+      "redirectedFrom": [],
+      "title": "Signals, streams and the state of state · ZurichJS",
+      "description": "Wed 16 Sept 2026 · Sample Venue AG, Zürich. Two talks and photos from the evening. Two talks and photos from the evening.",
+      "canonical": "https://zurichjs.com/events/2026-09-signals-streams",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Signals, streams and the state of state"
+      ],
+      "textLength": 1333,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Signals, streams and the state of state · ZurichJS",
+        "og:description": "Wed 16 Sept 2026 · Sample Venue AG, Zürich. Two talks and photos from the evening. Two talks and photos from the evening.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2026-09-signals-streams",
+        "og:image": "https://zurichjs.com/images/photos/meetup-may.webp",
+        "og:image:alt": "Signals, streams and the state of state · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Signals, streams and the state of state · ZurichJS",
+        "twitter:description": "Wed 16 Sept 2026 · Sample Venue AG, Zürich. Two talks and photos from the evening. Two talks and photos from the evening.",
+        "twitter:image": "https://zurichjs.com/images/photos/meetup-may.webp"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "Signals, streams and the state of state"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/events/2026-11-forms-types",
+      "status": 200,
+      "finalPath": "/events/2026-11-forms-types",
+      "redirectedFrom": [],
+      "title": "Forms, types and design systems · ZurichJS",
+      "description": "Wed 18 Nov 2026, 18:30 · Sample Venue AG, Zürich. Two talks about building forms people can trust and the design systems that hold them together. Bring…",
+      "canonical": "https://zurichjs.com/events/2026-11-forms-types",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Forms, types and design systems"
+      ],
+      "textLength": 2331,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Forms, types and design systems · ZurichJS",
+        "og:description": "Wed 18 Nov 2026, 18:30 · Sample Venue AG, Zürich. Two talks about building forms people can trust and the design systems that hold them together. Bring…",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/events/2026-11-forms-types",
+        "og:image": "https://zurichjs.com/og/event-2026-11-forms-types.png",
+        "og:image:alt": "Forms, types and design systems · ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Forms, types and design systems · ZurichJS",
+        "twitter:description": "Wed 18 Nov 2026, 18:30 · Sample Venue AG, Zürich. Two talks about building forms people can trust and the design systems that hold them together. Bring…",
+        "twitter:image": "https://zurichjs.com/og/event-2026-11-forms-types.png"
+      },
+      "jsonld": [
+        {
+          "type": "Event",
+          "name": "Forms, types and design systems"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/partners",
+      "status": 200,
+      "finalPath": "/partners",
+      "redirectedFrom": [],
+      "title": "Partnership Opportunities · Host or Sponsor ZurichJS",
+      "description": "Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich.",
+      "canonical": "https://zurichjs.com/partners",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Host or support a ZurichJS meetup"
+      ],
+      "textLength": 3532,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Partnership Opportunities · Host or Sponsor ZurichJS",
+        "og:description": "Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich.",
+        "og:type": "website",
+        "og:url": "https://zurichjs.com/partners",
+        "og:image": "https://zurichjs.com/og/partners.png",
+        "og:image:alt": "Partnership Opportunities · Host or Sponsor ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Partnership Opportunities · Host or Sponsor ZurichJS",
+        "twitter:description": "Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich.",
+        "twitter:image": "https://zurichjs.com/og/partners.png"
+      },
+      "jsonld": []
+    },
+    {
+      "route": "/speakers/anna-beispiel",
+      "status": 200,
+      "finalPath": "/speakers/anna-beispiel",
+      "redirectedFrom": [],
+      "title": "Anna Beispiel · Speaker at ZurichJS",
+      "description": "Anna builds form-heavy products and cares about what happens when validation meets real users. She has spoken at ZurichJS about accessible components and…",
+      "canonical": "https://zurichjs.com/speakers/anna-beispiel",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Anna Beispiel"
+      ],
+      "textLength": 1240,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Anna Beispiel · Speaker at ZurichJS",
+        "og:description": "Anna builds form-heavy products and cares about what happens when validation meets real users. She has spoken at ZurichJS about accessible components and…",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/anna-beispiel",
+        "og:image": "https://zurichjs.com/og/speaker-anna-beispiel.png",
+        "og:image:alt": "Anna Beispiel · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Anna Beispiel · Speaker at ZurichJS",
+        "twitter:description": "Anna builds form-heavy products and cares about what happens when validation meets real users. She has spoken at ZurichJS about accessible components and…",
+        "twitter:image": "https://zurichjs.com/og/speaker-anna-beispiel.png",
+        "profile:first_name": "Anna",
+        "profile:last_name": "Beispiel"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Anna Beispiel"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/jonas-test",
+      "status": 200,
+      "finalPath": "/speakers/jonas-test",
+      "redirectedFrom": [],
+      "title": "Jonas Test · Speaker at ZurichJS",
+      "description": "Jonas tests what users actually do and has a soft spot for Playwright traces.",
+      "canonical": "https://zurichjs.com/speakers/jonas-test",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Jonas Test"
+      ],
+      "textLength": 1165,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Jonas Test · Speaker at ZurichJS",
+        "og:description": "Jonas tests what users actually do and has a soft spot for Playwright traces.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/jonas-test",
+        "og:image": "https://zurichjs.com/og/speaker-jonas-test.png",
+        "og:image:alt": "Jonas Test · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Jonas Test · Speaker at ZurichJS",
+        "twitter:description": "Jonas tests what users actually do and has a soft spot for Playwright traces.",
+        "twitter:image": "https://zurichjs.com/og/speaker-jonas-test.png",
+        "profile:first_name": "Jonas",
+        "profile:last_name": "Test"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Jonas Test"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/lea-platzhalter",
+      "status": 200,
+      "finalPath": "/speakers/lea-platzhalter",
+      "redirectedFrom": [],
+      "title": "Lea Platzhalter · Speaker at ZurichJS",
+      "description": "Lea works on React performance at scale and co-presents with Max on design system adoption.",
+      "canonical": "https://zurichjs.com/speakers/lea-platzhalter",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Lea Platzhalter"
+      ],
+      "textLength": 1053,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Lea Platzhalter · Speaker at ZurichJS",
+        "og:description": "Lea works on React performance at scale and co-presents with Max on design system adoption.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/lea-platzhalter",
+        "og:image": "https://zurichjs.com/og/speaker-lea-platzhalter.png",
+        "og:image:alt": "Lea Platzhalter · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Lea Platzhalter · Speaker at ZurichJS",
+        "twitter:description": "Lea works on React performance at scale and co-presents with Max on design system adoption.",
+        "twitter:image": "https://zurichjs.com/og/speaker-lea-platzhalter.png",
+        "profile:first_name": "Lea",
+        "profile:last_name": "Platzhalter"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Lea Platzhalter"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/max-muster",
+      "status": 200,
+      "finalPath": "/speakers/max-muster",
+      "redirectedFrom": [],
+      "title": "Max Muster · Speaker at ZurichJS",
+      "description": "Max leads a design system used by four product teams and talks about adoption, versioning and the components worth deleting.",
+      "canonical": "https://zurichjs.com/speakers/max-muster",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Max Muster"
+      ],
+      "textLength": 1246,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Max Muster · Speaker at ZurichJS",
+        "og:description": "Max leads a design system used by four product teams and talks about adoption, versioning and the components worth deleting.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/max-muster",
+        "og:image": "https://zurichjs.com/og/speaker-max-muster.png",
+        "og:image:alt": "Max Muster · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Max Muster · Speaker at ZurichJS",
+        "twitter:description": "Max leads a design system used by four product teams and talks about adoption, versioning and the components worth deleting.",
+        "twitter:image": "https://zurichjs.com/og/speaker-max-muster.png",
+        "profile:first_name": "Max",
+        "profile:last_name": "Muster"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Max Muster"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/mia-entwurf",
+      "status": 200,
+      "finalPath": "/speakers/mia-entwurf",
+      "redirectedFrom": [],
+      "title": "Mia Entwurf · Speaker at ZurichJS",
+      "description": "Mia manages a platform team and keeps a list of the places fine-grained reactivity paid off, and the two where it did not.",
+      "canonical": "https://zurichjs.com/speakers/mia-entwurf",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Mia Entwurf"
+      ],
+      "textLength": 1077,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Mia Entwurf · Speaker at ZurichJS",
+        "og:description": "Mia manages a platform team and keeps a list of the places fine-grained reactivity paid off, and the two where it did not.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/mia-entwurf",
+        "og:image": "https://zurichjs.com/og/speaker-mia-entwurf.png",
+        "og:image:alt": "Mia Entwurf · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Mia Entwurf · Speaker at ZurichJS",
+        "twitter:description": "Mia manages a platform team and keeps a list of the places fine-grained reactivity paid off, and the two where it did not.",
+        "twitter:image": "https://zurichjs.com/og/speaker-mia-entwurf.png",
+        "profile:first_name": "Mia",
+        "profile:last_name": "Entwurf"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Mia Entwurf"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/noah-probe",
+      "status": 200,
+      "finalPath": "/speakers/noah-probe",
+      "redirectedFrom": [],
+      "title": "Noah Probe · Speaker at ZurichJS",
+      "description": "Noah is finishing a degree in Zurich and gave his first talk at ZurichJS, about Node streams and a coffee machine.",
+      "canonical": "https://zurichjs.com/speakers/noah-probe",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Noah Probe"
+      ],
+      "textLength": 964,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Noah Probe · Speaker at ZurichJS",
+        "og:description": "Noah is finishing a degree in Zurich and gave his first talk at ZurichJS, about Node streams and a coffee machine.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/noah-probe",
+        "og:image": "https://zurichjs.com/og/speaker-noah-probe.png",
+        "og:image:alt": "Noah Probe · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Noah Probe · Speaker at ZurichJS",
+        "twitter:description": "Noah is finishing a degree in Zurich and gave his first talk at ZurichJS, about Node streams and a coffee machine.",
+        "twitter:image": "https://zurichjs.com/og/speaker-noah-probe.png",
+        "profile:first_name": "Noah",
+        "profile:last_name": "Probe"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Noah Probe"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/sara-vorlage",
+      "status": 200,
+      "finalPath": "/speakers/sara-vorlage",
+      "redirectedFrom": [],
+      "title": "Sara Vorlage · Speaker at ZurichJS",
+      "description": "Sara audits component libraries and teaches teams to test with assistive technology. She has spoken twice at ZurichJS.",
+      "canonical": "https://zurichjs.com/speakers/sara-vorlage",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Sara Vorlage"
+      ],
+      "textLength": 1047,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Sara Vorlage · Speaker at ZurichJS",
+        "og:description": "Sara audits component libraries and teaches teams to test with assistive technology. She has spoken twice at ZurichJS.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/sara-vorlage",
+        "og:image": "https://zurichjs.com/og/speaker-sara-vorlage.png",
+        "og:image:alt": "Sara Vorlage · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Sara Vorlage · Speaker at ZurichJS",
+        "twitter:description": "Sara audits component libraries and teaches teams to test with assistive technology. She has spoken twice at ZurichJS.",
+        "twitter:image": "https://zurichjs.com/og/speaker-sara-vorlage.png",
+        "profile:first_name": "Sara",
+        "profile:last_name": "Vorlage"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Sara Vorlage"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    },
+    {
+      "route": "/speakers/urs-vorlage",
+      "status": 200,
+      "finalPath": "/speakers/urs-vorlage",
+      "redirectedFrom": [],
+      "title": "Urs Vorlage · Speaker at ZurichJS",
+      "description": "Urs moved three client deployments to edge runtimes and reports on what actually changed.",
+      "canonical": "https://zurichjs.com/speakers/urs-vorlage",
+      "robots": "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      "lang": "en",
+      "hreflang": [],
+      "h1": [
+        "Urs Vorlage"
+      ],
+      "textLength": 986,
+      "og": {
+        "og:site_name": "ZurichJS",
+        "og:locale": "en_US",
+        "og:title": "Urs Vorlage · Speaker at ZurichJS",
+        "og:description": "Urs moved three client deployments to edge runtimes and reports on what actually changed.",
+        "og:type": "profile",
+        "og:url": "https://zurichjs.com/speakers/urs-vorlage",
+        "og:image": "https://zurichjs.com/og/speaker-urs-vorlage.png",
+        "og:image:alt": "Urs Vorlage · Speaker at ZurichJS",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@zurichjs",
+        "twitter:title": "Urs Vorlage · Speaker at ZurichJS",
+        "twitter:description": "Urs moved three client deployments to edge runtimes and reports on what actually changed.",
+        "twitter:image": "https://zurichjs.com/og/speaker-urs-vorlage.png",
+        "profile:first_name": "Urs",
+        "profile:last_name": "Vorlage"
+      },
+      "jsonld": [
+        {
+          "type": "Person",
+          "name": "Urs Vorlage"
+        },
+        {
+          "type": "BreadcrumbList",
+          "name": null
+        }
+      ]
+    }
+  ]
+}

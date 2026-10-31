@@ -47,3 +47,4 @@ next-env.d.ts
 /platform/**/dist
 /platform/**/.astro
 /platform/**/.netlify
+/platform/node_modules

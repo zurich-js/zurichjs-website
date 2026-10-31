@@ -1,0 +1,105 @@
+---
+import { eventHref, monthYear, pastEvents } from '@zurichjs/events';
+import { localBusinessSchema, organizationSchema, websiteSchema } from '@zurichjs/seo';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import ConferenceModule from '~/components/site/ConferenceModule.astro';
+import HomeHero from '~/components/site/HomeHero.astro';
+import HostsSection from '~/components/site/HostsSection.astro';
+import SpeakCta from '~/components/site/SpeakCta.astro';
+import SpeakerCard from '~/components/site/SpeakerCard.astro';
+import TalkRow, { type TalkRowData } from '~/components/site/TalkRow.astro';
+import Photo from '~/components/ui/Photo.astro';
+import { BUILD_TIME, PHOTOS, content } from '~/lib/content';
+
+const { events, speakers } = await content();
+const byId = new Map(speakers.map((s) => [s.id, s]));
+
+const LIKE = [
+  {
+    t: 'Talks, then time to talk',
+    d: 'Two to four talks, a mix of full-length and lightning, on what’s new and on ideas that stand the test of time. Not always about JavaScript, and always open to everyone. Then food, drinks and meeting who else is building things in your city.',
+  },
+  { t: 'Every framework, every level', d: 'Juniors to CTOs, frontend to infrastructure. JavaScript is the common ground, and the banner is wide enough for everyone.' },
+  {
+    t: 'A mini-conference in a meetup room',
+    d: 'Speakers from Zurich and well beyond, and every practical detail on the event page before you go: cost, language, how to get there, who to ask.',
+  },
+];
+
+const talks: TalkRowData[] = [];
+outer: for (const ev of pastEvents(events, BUILD_TIME)) {
+  const list = ev.recap?.talks.length ? ev.recap.talks : ev.agenda.flatMap((a) => (a.talk ? [{ title: a.talk.title, speakerIds: a.talk.speakerIds, format: a.talk.format === 'lightning' ? 'Lightning talk' : 'Talk' }] : []));
+  for (const t of list) {
+    talks.push({ title: t.title, speakers: t.speakerIds.map((id) => byId.get(id)).filter((s) => !!s), date: ev.startsAt ? monthYear(ev.startsAt) : '', format: t.format.split(' · ')[0] ?? 'Talk', href: eventHref(ev) });
+    if (talks.length === 4) break outer;
+  }
+}
+const teaser = speakers.slice(0, 4);
+---
+
+<BaseLayout
+  title="ZurichJS"
+  fullTitle="ZurichJS · JavaScript & TypeScript meetups in Zurich, Switzerland"
+  description="ZurichJS is the JavaScript and TypeScript community in Zurich. Free monthly meetups with talks on React, Node.js, Vue, Angular, AI and the web, run by volunteers. Juniors to CTOs welcome."
+  keywords={['JavaScript meetup Zurich', 'TypeScript meetup Zurich', 'Zurich tech events', 'React Zurich', 'Node.js Zurich', 'Vue Zurich', 'Angular Zurich', 'web development Zurich', 'developer community Switzerland', 'tech talks Zurich', 'ZurichJS']}
+  geo
+  image="/api/og/home.png"
+  jsonLd={[organizationSchema(), websiteSchema(), localBusinessSchema()]}
+>
+  <HomeHero slot="opening" />
+  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+    <section aria-labelledby="h-like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+      <Photo photo={PHOTOS.speaker} class="aspect-[4/3] w-full" />
+      <div class="flex flex-col gap-7">
+        <h2 id="h-like" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What happens at a meetup</h2>
+        {
+          LIKE.map((l) => (
+            <div class="flex flex-col gap-1.5">
+              <h3 class="m-0 text-[21px] font-bold">{l.t}</h3>
+              <p class="m-0 text-[18px] leading-[1.55] text-ink-2 text-pretty">{l.d}</p>
+            </div>
+          ))
+        }
+        <figure class="m-0 flex flex-col gap-2.5">
+          <blockquote class="m-0 text-[clamp(20px,1.9vw,24px)] leading-[1.45] font-bold text-pretty">“It felt like a large group of friends because folks knew each other, and were also very welcoming.”</blockquote>
+          <figcaption class="text-[16px] text-ink-2">Harshil Agrawal, Dev Educator at Cloudflare</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    {
+      talks.length > 0 && (
+        <section aria-labelledby="h-talks" class="px-gut flex flex-col gap-7">
+          <div class="flex justify-between items-baseline gap-4 flex-wrap">
+            <h2 id="h-talks" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
+              Talks from past meetups
+            </h2>
+            <a href="/events?tab=past" class="font-bold text-[18px] underline underline-offset-4">
+              All past events
+            </a>
+          </div>
+          <div class="flex flex-col gap-2">
+            {talks.map((t) => (
+              <TalkRow t={t} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <ConferenceModule />
+
+    <section aria-labelledby="h-speakers" class="px-gut flex flex-col gap-7">
+      <div class="flex justify-between items-baseline gap-4 flex-wrap">
+        <h2 id="h-speakers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Meet the speakers</h2>
+        <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All speakers</a>
+      </div>
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-6">
+        {teaser.map((s) => <SpeakerCard speaker={s} meta={s.tagline} />)}
+      </div>
+      <SpeakCta />
+    </section>
+
+    <HostsSection />
+  </div>
+</BaseLayout>

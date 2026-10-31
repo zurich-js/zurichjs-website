@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Figtree variable font from the ZurichJS conference repo (same file), self-hosted, weights 300–900. */
+@font-face {
+  font-family: 'Figtree';
+  src: url('/fonts/figtree-var.woff2') format('woff2-variations'), url('/fonts/figtree-var.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Side gutter: 20px on phones, 48px on desktop, centred to a 1280px column. */
+  --px: 20px;
+  --gut: max(var(--px), calc((100% - 1280px) / 2));
+}
+@media (min-width: 800px) {
+  :root {
+    --px: 48px;
+  }
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  font-synthesis: none;
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #000000;
+  font-family: Figtree, ui-sans-serif, system-ui, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 3px solid #268bcc;
+  outline-offset: 2px;
+}
+
+/* Yellow focus ring on black surfaces, where blue would disappear. */
+.on-black :focus-visible {
+  outline-color: #f1e271;
+}
+
+@layer utilities {
+  .px-gut {
+    padding-left: var(--gut);
+    padding-right: var(--gut);
+  }
+  .mx-gut {
+    margin-left: var(--gut);
+    margin-right: var(--gut);
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}

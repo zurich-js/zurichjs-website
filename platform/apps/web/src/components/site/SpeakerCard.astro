@@ -1,0 +1,21 @@
+---
+import type { Speaker } from '@zurichjs/events';
+import Monogram from '~/components/ui/Monogram.astro';
+import Photo from '~/components/ui/Photo.astro';
+
+interface Props {
+  speaker: Speaker;
+  /** Second line: tagline (home) or "role · n talks" (directory). */
+  meta: string;
+  tone?: 'grey' | 'yellow';
+}
+const { speaker, meta, tone = 'grey' } = Astro.props;
+---
+
+<a href={`/speakers/${speaker.id}`} class="no-underline text-black flex flex-col gap-3" data-speaker-card data-search={`${speaker.name} ${speaker.role} ${speaker.company ?? ''} ${speaker.topics.join(' ')}`.toLowerCase()}>
+  {speaker.photo ? <Photo photo={speaker.photo} class="aspect-square w-full" width={600} /> : <Monogram initials={speaker.initials} size="tile" tone={tone} />}
+  <span class="flex flex-col gap-0.5">
+    <span class="text-[19px] font-bold">{speaker.name}</span>
+    <span class="text-[16px] text-ink-2">{meta}</span>
+  </span>
+</a>

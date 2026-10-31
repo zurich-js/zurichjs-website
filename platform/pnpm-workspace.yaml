@@ -21,5 +21,7 @@ overrides:
   # glob 13 → 14 and minimatch 10 → 11 keep the same named-export API.
   glob@13: ^14.0.2
   minimatch@10: ^11.0.1
+  # satori → @shuding/opentype.js pins fflate 0.7.3 (GHSA-px8p-9vwx-vf98); 0.7.5 is the same-minor fix.
+  fflate@0.7: ^0.7.5
   # No patched deepmerge release exists; vendor/deepmerge carries the fix (see its README).
   deepmerge: link:./vendor/deepmerge

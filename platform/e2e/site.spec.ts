@@ -22,6 +22,15 @@ export const ROUTES = [
   '/policies/privacy-policy',
   '/policies/terms-and-conditions',
   '/policies/refund-policy',
+  // Phase 1b: production routes outside the V2 design
+  '/meetups/javascript-zurich',
+  '/meetups/ai-ml-zurich',
+  '/conferences/tech-conferences-zurich',
+  '/ai-context',
+  '/membership',
+  '/waitlist/conf',
+  '/success',
+  '/checkout/success',
 ];
 
 for (const route of ROUTES) {

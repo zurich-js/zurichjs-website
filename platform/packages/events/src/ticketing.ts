@@ -67,7 +67,7 @@ export const stripeTicketing: TicketingProvider = {
   actionFor(ev, state) {
     if (!ev.stripePriceId) return undefined;
     if (state === 'open' || state === 'notopen') {
-      return { kind: 'buy', label: 'Get a ticket', href: '#tickets', note: 'Pay with card or TWINT. Your ticket arrives by email.' };
+      return { kind: 'buy', label: 'Get a ticket', href: '#tickets', note: 'Pay through Stripe. An organiser emails your ticket.' };
     }
     return undefined;
   },

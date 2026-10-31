@@ -24,7 +24,7 @@ const faqs = [
   {
     question: 'How does ZurichJS complement FrontConf and Voxxed Days Zurich?',
     answer:
-      'ZurichJS is the official warm-up event partner for both FrontConf and Voxxed Days Zurich 2026! We complement these annual conferences with free monthly meetups throughout the year, keeping the community connected between major events. Our Pro Meetups bring conference-level international speakers to Zurich, all completely free thanks to our non-profit model and community support.',
+      'ZurichJS was the official warm-up event partner for both FrontConf and Voxxed Days Zurich 2026. We complement these annual conferences with free monthly meetups throughout the year, keeping the community connected between major events. Our Pro Meetups bring conference-level international speakers to Zurich, run as a non-profit with community support.',
   },
   {
     question: 'Should I attend both ZurichJS meetups and tech conferences?',
@@ -68,7 +68,7 @@ const CONFERENCES = [
       ['When', '27 February 2026'],
       ['Best for', 'Frontend developers, UX designers, design system enthusiasts'],
     ],
-    text: 'ZurichJS is the official warm-up event partner for FrontConf 2026. Join our meetups throughout the year to connect with the community and get excited for the main conference.',
+    text: 'ZurichJS was the official warm-up event partner for FrontConf 2026. Join our meetups throughout the year to connect with the community and get excited for the main conference.',
     tip: 'Attend ZurichJS meetups to meet fellow FrontConf attendees year-round.',
   },
   {
@@ -78,15 +78,15 @@ const CONFERENCES = [
       ['When', '24 March 2026'],
       ['Best for', 'Developers interested in diverse technology stacks'],
     ],
-    text: 'ZurichJS serves as the official warm-up event for Voxxed Days Zurich 2026. Our JavaScript track complements Voxxed Days’ comprehensive program with year-round community events.',
+    text: 'ZurichJS was the official warm-up event for Voxxed Days Zurich 2026. Our JavaScript track complements Voxxed Days’ comprehensive program with year-round community events.',
     tip: 'Network with Voxxed Days speakers and attendees at our monthly meetups.',
   },
 ];
 
 const WHY = [
-  { t: '100% free', d: 'All meetups are free to attend, including Pro Meetups with international speakers. We’re a non-profit funded by community donations.' },
+  { t: 'Free monthly meetups', d: 'Regular meetups are free to attend; some Pro Meetups with international speakers are ticketed. We’re a non-profit funded by partners, members and donations.' },
   { t: 'Consistent learning', d: 'Don’t wait a year between conferences. Attend 12+ events annually.' },
-  { t: 'Pro Meetups', d: 'Conference-quality talks with international speakers flown to Zurich, still completely free.' },
+  { t: 'Pro Meetups', d: 'Conference-quality talks with international speakers flown to Zurich.' },
   { t: 'Current topics', d: 'Monthly format means we adapt quickly to new trends and technologies.' },
   { t: 'Community building', d: 'See the same faces monthly, build lasting relationships.' },
   { t: 'Speaker opportunities', d: 'We welcome speakers of all experience levels.' },
@@ -138,7 +138,7 @@ const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
 >
   <PageOpening slot="opening" title="Meetups & conferences in Zurich">
     <Fragment slot="sub">
-      In late 2024, we started ZurichJS because Zurich’s meetup scene had become history after the pandemic. Today, we’re the <strong>official warm-up partner</strong> for both FrontConf and Voxxed Days Zurich 2026: proof that consistent, community-driven events can
+      In late 2024, we started ZurichJS because Zurich’s meetup scene had become history after the pandemic. In 2026 we were the <strong>official warm-up partner</strong> for both FrontConf and Voxxed Days Zurich: proof that consistent, community-driven events can
       complement the conference scene, not replace it.
     </Fragment>
     <div class="flex flex-wrap gap-3 pt-1.5">
@@ -252,7 +252,7 @@ const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
         <div class="flex flex-col gap-2.5 max-w-[760px]">
           <h3 class={h3}>Why attend ZurichJS meetups?</h3>
           <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
-            As a registered non-profit, ZurichJS is committed to making tech education accessible to everyone. All our events are completely free thanks to community donations and sponsors:
+            As a registered non-profit, ZurichJS is committed to making tech education accessible to everyone. Our regular meetups are free thanks to partners, members and donations:
           </p>
         </div>
         <PointList items={WHY} min={280} />

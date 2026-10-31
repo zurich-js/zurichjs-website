@@ -18,7 +18,7 @@ const { conference } = await content();
   <div class="flex flex-col gap-[18px]">
     <img src="/images/logo/wordmark-conf-white.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-[clamp(26px,2.6vw,34px)] w-auto max-w-full self-start" />
     <h2 class="m-0 text-[clamp(26px,3vw,40px)] leading-[1.15] font-bold">{conference.copy.headline}</h2>
-    <p class="m-0 text-[18px] leading-[1.5] text-grey max-w-[560px]">{conference.copy.body}</p>
+    <p class="m-0 text-[18px] leading-normal text-grey max-w-[560px]">{conference.copy.body}</p>
   </div>
   <div class="flex flex-col gap-2.5 items-start justify-self-end self-end">
     <Button href={confLink('/', placement)} variant="yellow" {...trackAttrs('conf_outbound_click', { placement, confstate: conference.state })}>{conference.copy.cta}</Button>

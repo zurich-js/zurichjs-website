@@ -94,7 +94,7 @@ const isExt = (href: string) => /^https?:/.test(href);
           <Button href="/policies/code-of-conduct" variant="grey" grow>Read the code of conduct</Button>
         </div>
       </div>
-      <Photo photo={PHOTOS.community3} class="aspect-[4/3] w-full" />
+      <Photo photo={PHOTOS.community3} class="aspect-4/3 w-full" />
     </section>
 
     <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
@@ -129,15 +129,15 @@ const isExt = (href: string) => /^https?:/.test(href);
             return (
               <Tag href={ev ? eventHref(ev) : undefined} class={cx('flex flex-col gap-3', ev && 'no-underline text-black')}>
                 {m.photo ? (
-                  <Photo photo={m.photo} class="aspect-[4/3] w-full !rounded-[20px]" sizes="(min-width: 800px) 33vw, 100vw" />
+                  <Photo photo={m.photo} class="aspect-4/3 w-full rounded-[20px]!" sizes="(min-width: 800px) 33vw, 100vw" />
                 ) : (
-                  <span class="w-full aspect-[4/3] rounded-[20px] bg-yellow flex items-end p-[18px] box-border text-[26px] font-bold leading-[1.1]" aria-hidden="true">
+                  <span class="w-full aspect-4/3 rounded-[20px] bg-yellow flex items-end p-[18px] box-border text-[26px] font-bold leading-[1.1]" aria-hidden="true">
                     {m.title}
                   </span>
                 )}
                 <span class="flex flex-col gap-1">
                   <span class="text-[16px] text-ink-2">{m.date}</span>
-                  <span class="text-[20px] font-bold leading-[1.25] text-pretty">{m.title}</span>
+                  <span class="text-[20px] font-bold leading-tight text-pretty">{m.title}</span>
                 </span>
               </Tag>
             );
@@ -237,7 +237,7 @@ const isExt = (href: string) => /^https?:/.test(href);
           INVOLVE.map((w) => (
             <Surface tone={w.tone} class="p-[26px] flex flex-col gap-2.5">
               <h3 class="m-0 text-[22px] font-bold">{w.h}</h3>
-              <p class="m-0 text-[17px] leading-[1.5] text-ink-2 flex-1">{w.d}</p>
+              <p class="m-0 text-[17px] leading-normal text-ink-2 flex-1">{w.d}</p>
               <Button href={w.href} variant={w.tone === 'yellow' ? 'black' : 'white'} size="sm" class="self-start mt-2">
                 {w.cta}
               </Button>

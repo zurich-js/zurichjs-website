@@ -133,7 +133,7 @@ export default function DonateForm({ nextHref }: { nextHref: string }) {
             {err}
           </p>
         )}
-        <div class="text-[15px] leading-[1.5] text-ink-2">One-off payment through Stripe.</div>
+        <div class="text-[15px] leading-normal text-ink-2">One-off payment through Stripe.</div>
       </form>
 
       <Modal open={paid !== null} onClose={() => setPaid(null)} labelledBy="dn-h">

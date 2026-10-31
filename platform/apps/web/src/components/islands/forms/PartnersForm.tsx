@@ -62,14 +62,14 @@ export default function PartnersForm({ nextHref }: { nextHref: string }) {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-none">
+      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
         <div class="text-[28px] font-bold leading-[1.15]">Thanks, we have your inquiry.</div>
         <p class="m-0 text-[18px] leading-[1.55]">An organiser will reply to {f.email} to plan the next step.</p>
         <div class="flex flex-wrap gap-2.5 mt-1.5">
           <Button href={nextHref} variant="black" class="text-[17px]">
             See the next meetup
           </Button>
-          <Button href="/about" variant="outline-black" class="text-[17px] !border">
+          <Button href="/about" variant="outline-black" class="text-[17px] border!">
             About ZurichJS
           </Button>
         </div>

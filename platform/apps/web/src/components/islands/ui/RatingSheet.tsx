@@ -51,7 +51,7 @@ export function RatingSheet({ eventId, target, pending, onRated, onNext, onClose
     <Modal open={!!target} onClose={close} labelledBy="rate-h">
       {target && phase !== 'done' && (
         <div class="flex flex-col gap-4">
-          <h2 id="rate-h" class="m-0 text-[24px] leading-[1.25] font-bold text-pretty">
+          <h2 id="rate-h" class="m-0 text-[24px] leading-tight font-bold text-pretty">
             {target.title}
           </h2>
           <div class="text-[16px] text-ink-2">{target.sub}</div>

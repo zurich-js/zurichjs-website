@@ -33,7 +33,7 @@ test.describe('visual', () => {
         await document.fonts.ready;
         await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => i.addEventListener('load', r, { once: true })))));
       });
-      await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true, animations: 'disabled', maxDiffPixelRatio: 0.01 });
+      await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true, animations: 'disabled', maxDiffPixelRatio: Number(process.env.VISUAL_MAX_DIFF ?? 0.01) });
     });
   }
 });

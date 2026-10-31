@@ -36,7 +36,7 @@ const { speakers } = await content();
     <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-8">
       {speakers.map((s, i) => <SpeakerCard speaker={s} meta={`${s.role} · ${s.talks.length} talk${s.talks.length === 1 ? '' : 's'}`} tone={i % 3 === 0 ? 'yellow' : 'grey'} />)}
     </div>
-    <Surface class="p-7 flex flex-col gap-2.5 [&[hidden]]:hidden" data-empty hidden>
+    <Surface class="p-7 flex flex-col gap-2.5 [[hidden]]:hidden" data-empty hidden>
       <h2 class="m-0 text-[24px] font-bold" data-empty-title>No speakers match.</h2>
       <p class="m-0 text-[17px] text-ink-2">Try a first name or a topic like “testing”, or be the first to talk about it.</p>
       <Button href="/cfp" variant="black" class="self-start">Propose a talk</Button>

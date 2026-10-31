@@ -1,6 +1,7 @@
 // @ts-check
 import netlify from '@astrojs/netlify';
 import preact from '@astrojs/preact';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 import { LEGACY_REDIRECTS } from './src/lib/redirects.mjs';
@@ -15,6 +16,7 @@ export default defineConfig({
   // Inline CSS: removes the render-blocking stylesheet request (one Tailwind sheet, small).
   build: { format: 'file', inlineStylesheets: 'always' },
   integrations: [preact({ compat: true })],
+  vite: { plugins: [tailwindcss()] },
   redirects: LEGACY_REDIRECTS,
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   devToolbar: { enabled: false },

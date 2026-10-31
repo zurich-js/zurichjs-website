@@ -97,13 +97,13 @@ export default function Tonight({ part, ev, names, now: nowIso, venue = '', even
             <div class="text-[15px] font-bold text-yellow">
               {beforeDoors ? `Doors open at ${items[0]?.time ?? '18:30'}` : wrapped ? 'That’s a wrap' : `Now · since ${nowItem!.time}`}
             </div>
-            <div class="text-[22px] leading-[1.25] font-bold text-pretty">{beforeDoors ? 'Find the venue' : wrapped ? 'Thanks for coming tonight' : nowItem!.title}</div>
+            <div class="text-[22px] leading-tight font-bold text-pretty">{beforeDoors ? 'Find the venue' : wrapped ? 'Thanks for coming tonight' : nowItem!.title}</div>
             <div class="text-[16px] text-[#D4D5DA]">{beforeDoors ? venue : wrapped ? 'Rate the talks while they are fresh.' : who(nowItem!)}</div>
           </div>
           {!wrapped && nextItem && (
             <div class="rounded-card py-5 px-[22px] flex flex-col gap-1.5 shadow-[inset_0_0_0_2px_#19191B]">
               <div class="text-[15px] font-bold text-grey-mid">Next · {nextItem.time}</div>
-              <div class="text-[20px] leading-[1.25] font-bold text-pretty">{nextItem.title}</div>
+              <div class="text-[20px] leading-tight font-bold text-pretty">{nextItem.title}</div>
               <div class="text-[16px] text-grey-mid">{who(nextItem)}</div>
             </div>
           )}
@@ -155,7 +155,7 @@ export default function Tonight({ part, ev, names, now: nowIso, venue = '', even
               <Button
                 variant={rated[k] ? 'grey' : 'white'}
                 size="sm"
-                class="justify-self-start md:justify-self-end col-span-full md:col-auto !border-black"
+                class="justify-self-start md:justify-self-end col-span-full md:col-auto border-black!"
                 onClick={() => setShared({ target: toTarget(r.i) })}
               >
                 {rated[k] ? 'Rated ✓' : 'Rate this talk'}

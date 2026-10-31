@@ -33,3 +33,15 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 - Keep the `events` type name, `datetime`, `location` and `address`; add V2 fields additively. (Assumption)
 - Declare `stripePriceId` on `events` (the site already reads it). Deprecate `ticketSaleUrl` without deleting it. Add no `workshop.stripePriceId`. (Assumption)
 - Never render `talk.slides` or `talk.videoUrl` (brand rule).
+
+## CI: production dependency audit (2026-10-31, owner asked to fix all failing CI)
+
+- **The `ci` job's `pnpm audit --audit-level moderate` was failing on `main`** with 72 advisories. Fixed in the production app's dependencies:
+  - Next.js 16.2.11 → 16.4.3 (with `eslint-config-next` and `@next/third-parties`)
+  - axios ^1.21.0, zod ^4.6.7, `@vercel/og` ^1.0.3 (satori 0.33.5, SVG escaping fix), `next-sanity` ^13.4.0
+  - Scoped overrides for transitive packages, each at a patched release in the same major: sharp, js-yaml 3, adm-zip, smol-toml, tinypool, markdown-it, follow-redirects, vite 7, undici, dompurify, qs, source-map-js, baseline-browser-mapping, postcss-selector-parser 6, zod 4, brace-expansion 5.0.12. The existing CommonJS-compatibility patch is regenerated for 5.0.12.
+- **One advisory is ignored with a reason** (`auditConfig.ignoreGhsas`): GHSA-g3hv-75wg-m249 (minimatch < 11.0.1, denial of service through crafted glob patterns). Only 11.x is patched, and its export is not callable like the 3.x/5.x/10.x APIs our tooling uses. The patterns come from config files, never from users.
+- **Verified:**
+  - `pnpm audit --audit-level moderate` exits 0
+  - oxlint, ESLint, oxfmt, `tsc` pass
+  - `next build` compiles; it stops at Sanity data collection only because Sanity is blocked in this environment, the same as on `main`

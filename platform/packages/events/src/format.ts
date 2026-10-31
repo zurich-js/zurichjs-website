@@ -5,8 +5,7 @@ const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-GB
 const part = (iso: string, opts: Intl.DateTimeFormatOptions) => fmt(opts).format(new Date(iso));
 
 /** "Wed 18 Nov 2026" */
-export const dateLong = (iso: string) =>
-  `${part(iso, { weekday: 'short' })} ${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
+export const dateLong = (iso: string) => `${part(iso, { weekday: 'short' })} ${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
 
 /** "18 Nov 2026" */
 export const dateShort = (iso: string) => `${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
@@ -31,8 +30,7 @@ export const dateTimeRange = (startIso: string, endIso?: string) => `${dateLong(
 export const dateTime = (startIso: string) => `${dateLong(startIso)}, ${time(startIso)}`;
 
 /** "Fri 20 Nov, 21:30" (no year, for deadlines close to the event) */
-export const dateTimeNoYear = (iso: string) =>
-  `${part(iso, { weekday: 'short' })} ${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })}, ${time(iso)}`;
+export const dateTimeNoYear = (iso: string) => `${part(iso, { weekday: 'short' })} ${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })}, ${time(iso)}`;
 
 export const chf = (n: number) => `CHF ${n}`;
 

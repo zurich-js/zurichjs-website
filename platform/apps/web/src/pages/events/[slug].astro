@@ -100,7 +100,7 @@ const image = ev.photos[0]?.src;
           {ev.photos.length > 0 ? (
             <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3">
               {ev.photos.map((ph) => (
-                <Photo photo={ph} class="aspect-[4/3] w-full !rounded-2xl" width={800} />
+                <Photo photo={ph} class="aspect-[4/3] w-full !rounded-2xl" sizes="(min-width: 800px) 25vw, 100vw" />
               ))}
             </div>
           ) : (

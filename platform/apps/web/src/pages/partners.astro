@@ -1,0 +1,175 @@
+---
+import PageOpening from '~/components/layout/PageOpening.astro';
+import PartnersForm from '~/components/islands/forms/PartnersForm';
+import Button from '~/components/ui/Button.astro';
+import LogoGrid from '~/components/ui/LogoGrid.astro';
+import Photo from '~/components/ui/Photo.astro';
+import Surface from '~/components/ui/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { confLink, trackAttrs } from '~/lib/analytics';
+import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
+
+const { partners, conference } = await content();
+const nextHref = await nextMeetupHref();
+
+const WAYS = [
+  { k: 'host', h: 'Host a meetup', give: 'A room with seating, a screen and sound for one evening.', get: 'Your team in the room, a short welcome from the stage, and your logo on the event page and Meetup listing.', yellow: true },
+  { k: 'food', h: 'Cover food and drinks', give: 'Pizza, drinks or both for one evening.', get: 'Thanks from the stage and your logo on the event page and on /today.', yellow: false },
+  { k: 'partner', h: 'Community partner', give: 'A contribution toward the season’s meetups and speaker travel.', get: 'Your logo on the homepage and every event page for the season, and first pick of hosting dates.', yellow: false },
+];
+const AUDIENCE = [
+  ['75%+', 'full-stack or frontend engineers'],
+  ['40%', 'in senior roles'],
+  ['60%+', 'with five or more years of experience'],
+];
+const INTERESTS = ['TypeScript', 'React', 'Node.js', 'Next.js', 'Performance', 'AI integration', 'Testing', 'GraphQL', 'DevOps'];
+const HANDLE = [
+  ['Speakers and programme', 'We find the speakers and support each one individually, from mentoring and preparation to travel, accommodation and technical checks.'],
+  ['Promotion', 'We announce on Meetup, LinkedIn and Slack, and credit you everywhere the event appears.'],
+  ['The evening itself', 'Organisers welcome people, run the stage, and look after the code of conduct.'],
+  ['Photos afterwards', 'Our photographer shares pictures you can use on your own channels.'],
+];
+---
+
+<BaseLayout
+  title="Partnership Opportunities"
+  fullTitle="Partnership Opportunities · Host or Sponsor ZurichJS"
+  description="Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich."
+  keywords={['sponsor a meetup Zurich', 'host a tech meetup', 'developer community sponsorship', 'JavaScript meetup sponsor', 'ZurichJS partners', 'developer relations Switzerland']}
+>
+  <PageOpening
+    slot="opening"
+    title="Host or support a ZurichJS meetup"
+    sub="By sponsoring, you help us keep events accessible, bring in international expertise, and create opportunities for developers at all levels."
+  >
+    <div class="flex flex-wrap gap-3 pt-1.5">
+      <Button href="#partner-form" variant="yellow" grow>Send an inquiry</Button>
+      <Button href={`mailto:${SITE.email}`} variant="outline-white" grow>Email the organisers</Button>
+    </div>
+  </PageOpening>
+
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
+    <section aria-labelledby="h-ways" class="flex flex-col gap-7">
+      <h2 id="h-ways" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Three ways to support a meetup</h2>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4">
+        {
+          WAYS.map((w) => (
+            <Surface tone={w.yellow ? 'yellow' : 'grey'} class="p-7 flex flex-col gap-3.5">
+              <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
+              <div class="flex flex-col gap-1">
+                <div class="text-[16px] font-bold">You provide</div>
+                <div class="text-[17px] leading-[1.5] text-ink-2">{w.give}</div>
+              </div>
+              <div class="flex flex-col gap-1 flex-1">
+                <div class="text-[16px] font-bold">You get</div>
+                <div class="text-[17px] leading-[1.5] text-ink-2">{w.get}</div>
+              </div>
+              <Button href="#partner-form" variant={w.yellow ? 'black' : 'white'} size="sm" class="self-start" data-partner-way={w.k} aria-label={`Choose this: ${w.h}`}>
+                Choose this
+              </Button>
+            </Surface>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-aud" class="on-black bg-black text-white rounded-block p-[clamp(24px,4vw,56px)] flex flex-col gap-[clamp(24px,3vw,36px)]">
+      <div class="flex flex-col gap-2.5 max-w-[720px]">
+        <h2 id="h-aud" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Who comes to our meetups</h2>
+        <p class="m-0 text-[18px] leading-[1.55]">Mostly engineers who shape the products they work on.</p>
+      </div>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+        {
+          AUDIENCE.map(([v, l]) => (
+            <div class="flex flex-col gap-1.5">
+              <div class="text-[clamp(44px,5vw,64px)] leading-none font-bold text-yellow">{v}</div>
+              <div class="text-[18px] leading-[1.4]">{l}</div>
+            </div>
+          ))
+        }
+      </div>
+      <div class="flex flex-col gap-2.5">
+        <div class="text-[17px] font-bold">What they work with</div>
+        <div class="flex flex-wrap gap-2">
+          {INTERESTS.map((i) => <span class="text-[16px] font-bold py-2 px-4 rounded-pill bg-ink">{i}</span>)}
+        </div>
+      </div>
+      <div class="text-[15px] leading-[1.5] text-grey-mid">
+        Meetup attendee profile, as published on <a href={SITE.confSponsorshipUrl} target="_blank" rel="noopener" class="text-white">conf.zurichjs.com/sponsorship</a>.
+      </div>
+    </section>
+
+    <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+      <Photo photo={{ ...PHOTOS.conversation, alt: 'Attendees talking after the talks at a hosted ZurichJS meetup' }} class="aspect-[4/3] w-full" />
+      <div class="flex flex-col gap-[22px]">
+        <h2 id="h-handle" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What we take care of</h2>
+        {
+          HANDLE.map(([h, d]) => (
+            <div class="flex flex-col gap-1">
+              <div class="text-[20px] font-bold">{h}</div>
+              <div class="text-[17px] leading-[1.55] text-ink-2">{d}</div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-trust" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start">
+      <div class="flex flex-col gap-3.5">
+        <h2 id="h-trust" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">We only work with partners we know and trust</h2>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          When we recommend and propagate a sponsor’s product, service, or image, it’s because we believe in it ourselves. That’s what makes promotion more effective, because it’s genuine and relevant to the community.
+        </p>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          Our role as organizers is to connect people. Sponsors meet developers, speakers meet new audiences, and attendees meet peers they wouldn’t otherwise cross paths with.
+        </p>
+      </div>
+      <Surface as="figure" tone="yellow" class="m-0 p-7 flex flex-col gap-4 justify-between">
+        <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">
+          “Organizing a workshop and a meetup with the ZurichJS team was a great experience. They took care of everything and are very supportive. The community they are building is truly amazing.”
+        </blockquote>
+        <figcaption class="text-[16px] leading-[1.4]">
+          <b>Harshil Agrawal</b>
+          <br />
+          <span class="text-ink-2">Dev Educator, Cloudflare</span>
+        </figcaption>
+      </Surface>
+    </section>
+
+    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-none">
+      <div class="flex flex-col gap-3">
+        <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">An organiser replies from {SITE.email} to plan a date and the details. Nothing is agreed until you confirm.</p>
+      </div>
+      <PartnersForm client:visible nextHref={nextHref} />
+    </section>
+
+    <section aria-labelledby="h-confsp" class="bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center">
+      <div class="flex flex-col gap-2.5">
+        <img src="/images/logo/wordmark-conf.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-[26px] w-auto max-w-full self-start" />
+        <h2 id="h-confsp" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Reach a European audience too</h2>
+        <p class="m-0 text-[18px] leading-[1.55]">The conference has its own sponsorship packages, from Supporter to Diamond. You can combine them with meetup support.</p>
+      </div>
+      <div class="flex justify-end">
+        <Button href={confLink('/sponsorship', 'partners')} variant="black" grow {...trackAttrs('conf_outbound_click', { placement: 'partners', confstate: conference.state })}>
+          See conference packages ↗
+        </Button>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-cur" class="flex flex-col gap-[18px]">
+      <h2 id="h-cur" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Companies who have hosted or supported us</h2>
+      <LogoGrid partners={partners} />
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  // "Choose this" preselects the way of helping in the form island, even before it hydrates.
+  document.addEventListener('click', (e) => {
+    const el = (e.target as Element | null)?.closest<HTMLElement>('[data-partner-way]');
+    if (!el?.dataset.partnerWay) return;
+    window.__zjsPartnerWay = el.dataset.partnerWay;
+    document.dispatchEvent(new CustomEvent('zjs:partner-way', { detail: el.dataset.partnerWay }));
+  });
+</script>

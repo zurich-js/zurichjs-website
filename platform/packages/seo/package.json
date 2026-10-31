@@ -1,9 +1,9 @@
 {
   "name": "@zurichjs/seo",
-  "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "private": true,
   "description": "SEO and LLM surface: meta, JSON-LD, sitemap and llms.txt builders.",
+  "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },

@@ -28,11 +28,29 @@ export const meetupTicketing = (groupUrl: string): TicketingProvider => ({
   actionFor(ev, state) {
     switch (state) {
       case 'open':
-        return { kind: 'rsvp', label: 'RSVP on Meetup', href: ev.meetupUrl ?? groupUrl, external: true, note: 'Opens Meetup in a new tab. Your RSVP is confirmed there, not on this site.' };
+        return {
+          kind: 'rsvp',
+          label: 'RSVP on Meetup',
+          href: ev.meetupUrl ?? groupUrl,
+          external: true,
+          note: 'Opens Meetup in a new tab. Your RSVP is confirmed there, not on this site.',
+        };
       case 'full':
-        return { kind: 'waitlist', label: 'Join the waitlist on Meetup', href: ev.meetupUrl ?? groupUrl, external: true, note: 'This meetup is full. Meetup runs the waitlist, and places often open up on the day.' };
+        return {
+          kind: 'waitlist',
+          label: 'Join the waitlist on Meetup',
+          href: ev.meetupUrl ?? groupUrl,
+          external: true,
+          note: 'This meetup is full. Meetup runs the waitlist, and places often open up on the day.',
+        };
       case 'notopen':
-        return { kind: 'follow', label: 'Follow the group on Meetup', href: groupUrl, external: true, note: 'RSVP opens on Meetup soon. Follow the group to get the announcement.' };
+        return {
+          kind: 'follow',
+          label: 'Follow the group on Meetup',
+          href: groupUrl,
+          external: true,
+          note: 'RSVP opens on Meetup soon. Follow the group to get the announcement.',
+        };
       case 'tbc':
         return { kind: 'follow', label: 'Follow the group on Meetup', href: groupUrl, external: true, note: 'Date and venue are still being arranged.' };
       case 'postponed':

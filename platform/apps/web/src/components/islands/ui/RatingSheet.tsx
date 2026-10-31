@@ -1,4 +1,4 @@
-import { submitForm } from '@zurichjs/forms';
+import { submitForm } from '@zurichjs/forms/client';
 import { useState } from 'preact/hooks';
 import { track } from '~/lib/analytics';
 import { Button } from './Button';
@@ -58,7 +58,12 @@ export function RatingSheet({ eventId, target, pending, onRated, onNext, onClose
           <StarRating value={stars} onChange={setStars} label="Rating from 1 to 5" />
           <label class="flex flex-col gap-1.5 text-[15px] font-bold">
             {target.key === 'evening' ? 'Anything for the organisers? (optional)' : 'Anything for the speaker? (optional)'}
-            <textarea value={note} onInput={(e) => setNote(e.currentTarget.value)} rows={3} class="border border-grey-line rounded-[14px] py-2.5 px-3 text-[16px] font-normal resize-y" />
+            <textarea
+              value={note}
+              onInput={(e) => setNote(e.currentTarget.value)}
+              rows={3}
+              class="border border-grey-line rounded-[14px] py-2.5 px-3 text-[16px] font-normal resize-y"
+            />
           </label>
           {phase === 'error' && (
             <p role="alert" class="m-0 text-[15px] text-danger">

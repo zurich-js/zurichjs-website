@@ -2,6 +2,7 @@
  * Permanent redirects for URLs that change in V2 (docs/v2/PLAN.md, section 2).
  * Old production URLs keep working and pass their ranking to the new page.
  */
+/** @type {Record<string, { status: 301; destination: string }>} */
 export const LEGACY_REDIRECTS = {
   '/partnerships': { status: 301, destination: '/partners' },
   '/buy-us-a-coffee': { status: 301, destination: '/donate' },

@@ -46,3 +46,42 @@ Plain-language status after each phase. Newest at the bottom.
   - whether the Studio repo is the deployed Studio
 
 **Next:** the `v2/root-dead-code` PR (production cleanup), then Phase 1 (Astro app).
+
+## Phase 1: Astro app (2026-10-31)
+
+**Done**
+
+- `platform/`, a separate pnpm workspace:
+  - **Astro 5 site:** static, Netlify adapter, Preact islands.
+  - **Packages:**
+    - `events`: state, presentation, ticketing seam, `.ics`
+    - `content`: Sanity over fetch, mappers, sample fallback
+    - `seo`: meta, JSON-LD, sitemap, llms.txt
+    - `forms`: zod on the server, a light validator in the browser
+    - `integrations`: Sanity writes, Resend, Slack, Stripe, the talk-proposal seam
+    - `config`
+- **All V2 screens are ported except workshops (de-scoped):** home, events list and detail (upcoming, live and recap), speakers, CFP, about, why ZurichJS, /today, partners, feedback, contact, donate, volunteer, photos, policies (production text), 404.
+- **Forms API:** `/api/forms/[kind]` runs as a Netlify Function with the V2 payload contract.
+- **Generated files:** `/sitemap.xml` (complete), `/robots.txt`, `/llms.txt`, `/llms-full.txt`. Legacy URLs redirect with 301.
+
+**Verified how**
+
+- `astro build` and `astro check` (0 errors); oxlint, oxfmt and knip all clean.
+- Vitest: 50 tests, covering every event-state transition including the exact 48-hour boundary and cancelled/postponed precedence, the content mappers, forms, SEO builders, form forwarding and the API.
+- Playwright: 47 tests. Every route returns 200 with Figtree loaded and one h1, with no horizontal scroll at 320, 390 or 1440. Redirects, skip link, focus ring and the keyboard mobile menu all pass.
+- SEO parity gate passes against the production baseline.
+- Lighthouse mobile scores on home, event and speaker pages:
+
+  | Page    | Performance | Accessibility | Best practices | SEO |
+  | ------- | ----------- | ------------- | -------------- | --- |
+  | Home    | 99          | 100           | 100            | 100 |
+  | Event   | 100         | 100           | 100            | 100 |
+  | Speaker | 100         | 100           | 100            | 100 |
+
+**Open**
+
+- Content is still sample content here, because Sanity is blocked from this environment.
+- Stripe, Resend and Slack are stubbed until their secrets exist.
+- Production routes outside the V2 design (membership, landing pages, ai-context, success pages, speaker feedback, OG images) are Phase 1b.
+
+**Next:** Phase 1b.

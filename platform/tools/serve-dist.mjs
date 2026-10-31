@@ -8,7 +8,21 @@ import { extname, join, normalize } from 'node:path';
 
 const port = Number(process.argv[2] ?? 4321);
 const root = process.argv[3] ?? new URL('../apps/web/dist/', import.meta.url).pathname;
-const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8', '.json': 'application/json' };
+const TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.woff2': 'font/woff2',
+  '.ico': 'image/x-icon',
+  '.xml': 'application/xml',
+  '.txt': 'text/plain; charset=utf-8',
+  '.json': 'application/json',
+};
 const redirects = new Map();
 const rfile = join(root, '_redirects');
 if (existsSync(rfile)) {

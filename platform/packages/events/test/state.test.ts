@@ -126,7 +126,7 @@ describe('buildIcs', () => {
   it('escapes text and uses UTC times', () => {
     const ics = buildIcs(ev({ title: 'A; B, C' }), 'https://zurichjs.com/events/forms-types', at(0))!;
     expect(ics).toContain('DTSTART:20261118T173000Z');
-    expect(ics).toContain('SUMMARY:ZurichJS: A\; B\\, C');
+    expect(ics).toContain('SUMMARY:ZurichJS: A\\; B\\, C');
   });
   it('returns null without a date', () => {
     expect(buildIcs(ev({ startsAt: undefined }), 'u')).toBeNull();

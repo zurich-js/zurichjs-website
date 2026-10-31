@@ -32,14 +32,15 @@ export function Modal({ open, onClose, labelledBy, children }: Props) {
 
   if (!open) return null;
   return (
-    <div onClick={onClose} class="fixed inset-0 z-40 bg-black/55 flex items-center justify-center p-4">
+    // Backdrop click is a mouse shortcut; keyboard users close with Escape (handled above).
+    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events
+    <div role="presentation" onClick={(e) => e.target === e.currentTarget && onClose()} class="fixed inset-0 z-40 bg-black/55 flex items-center justify-center p-4">
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
         class="bg-white text-black rounded-[28px] w-full max-w-[460px] max-h-[90vh] overflow-auto p-7 box-border flex flex-col gap-4 outline-none"
       >
         {children}

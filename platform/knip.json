@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "workspaces": {
+    ".": {
+      "entry": ["tools/**/*.mjs", "e2e/**/*.ts"]
+    },
+    "apps/web": {
+      "entry": ["src/pages/**/*.{astro,ts}", "test/**/*.ts"],
+      "project": ["src/**/*.{astro,ts,tsx}"]
+    },
+    "packages/config": {
+      "ignoreDependencies": ["preact"]
+    },
+    "packages/*": {
+      "entry": ["test/**/*.ts"]
+    }
+  }
+}

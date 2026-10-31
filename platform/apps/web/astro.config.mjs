@@ -13,7 +13,8 @@ export default defineConfig({
   output: 'static',
   adapter: netlify(),
   trailingSlash: 'never',
-  build: { format: 'file' },
+  // Inline CSS: removes the render-blocking stylesheet request (one Tailwind sheet, small).
+  build: { format: 'file', inlineStylesheets: 'always' },
   integrations: [preact({ compat: true }), tailwind({ applyBaseStyles: false })],
   redirects: LEGACY_REDIRECTS,
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },

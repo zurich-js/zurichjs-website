@@ -1,0 +1,55 @@
+---
+/** Not found. The search is a plain GET form to /events, so it works without JavaScript. */
+import PageOpening from '~/components/layout/PageOpening.astro';
+import Button from '~/components/ui/Button.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE, nextMeetupHref } from '~/lib/content';
+import { cx } from '~/lib/ui';
+
+const nextHref = await nextMeetupHref();
+const LINKS = [
+  { h: 'Upcoming events', d: 'The next meetups in Zurich.', href: '/events', yellow: true },
+  { h: 'Past talks', d: 'Every talk and who gave it.', href: '/events?tab=past' },
+  { h: 'Speakers', d: 'Everyone who has spoken.', href: '/speakers' },
+  { h: 'Speak at a meetup', d: 'Propose a talk.', href: '/cfp' },
+  { h: 'About ZurichJS', d: 'Who runs it and how.', href: '/about' },
+  { h: 'Contact', d: 'Reach the organisers.', href: '/contact' },
+];
+---
+
+<BaseLayout title="Page not found" path="/404" description="This page does not exist. Find upcoming JavaScript meetups, past talks and speakers at ZurichJS, the JavaScript community in Zurich." noindex>
+  <PageOpening
+    slot="opening"
+    title="We couldn’t find that page"
+    sub="The link may be old, or the page moved when we rebuilt the site. Even JavaScript can’t find everything. Try a search or one of the pages below."
+  >
+    <div class="flex flex-col gap-4 pt-1 max-w-[640px]">
+      <form action="/events" method="get" role="search" class="flex items-center gap-2.5 bg-ink rounded-pill pl-[22px] pr-2 min-h-[56px]">
+        <label for="nf-q" class="sr-only">Search events, talks and speakers</label>
+        <input id="nf-q" type="search" name="q" placeholder="Search events, talks, speakers" class="flex-1 min-w-0 border-0 bg-transparent text-white text-[18px] outline-offset-[6px] placeholder:text-grey-mid" />
+        <Button type="submit" variant="yellow" size="sm" class="!border-0">Search</Button>
+      </form>
+      <div class="flex flex-wrap gap-3">
+        <Button href="/" variant="outline-white" class="text-[17px]">Go to the homepage</Button>
+        <Button href={nextHref} variant="outline-white" class="text-[17px]">See the next meetup</Button>
+      </div>
+    </div>
+  </PageOpening>
+
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[22px]">
+    <h2 class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Popular pages</h2>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-3">
+      {
+        LINKS.map((l) => (
+          <a href={l.href} class={cx('no-underline text-black text-left rounded-[20px] py-5 px-[22px] flex flex-col gap-1', l.yellow ? 'bg-yellow hover:bg-yellow-hover' : 'bg-grey hover:bg-[#E2E2E6]')}>
+            <span class="text-[19px] font-bold">{l.h}</span>
+            <span class="text-[16px] leading-[1.45] text-ink-2">{l.d}</span>
+          </a>
+        ))
+      }
+    </div>
+    <p class="m-0 mt-3 text-[17px] leading-[1.55] text-ink-2">
+      If you followed a link from our site, tell us at <a href={`mailto:${SITE.email}`} class="font-bold">{SITE.email}</a> and we will fix it.
+    </p>
+  </div>
+</BaseLayout>

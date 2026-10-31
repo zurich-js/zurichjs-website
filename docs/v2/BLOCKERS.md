@@ -14,3 +14,8 @@ Things this session could not do, why, and what unblocks them. Work continued ar
 ## Found in Phase 0
 
 - **The Studio repo may not be what is deployed.** `zurich-js/zurich-js-website-sanity-studio` was last pushed 2025-04-28, and its schema lacks fields the site writes (`stripePriceId`, `comprehensiveFeedback`, speaker `company`/`location`/`interests`, status `under_review`). The owner should confirm whether the deployed Studio comes from this repo. Phase 3 continues on the repo.
+
+## Found in Phase 1
+
+- **Production CI is red on every PR, including `main`**, because `pnpm audit --audit-level moderate` reports 72 advisories in the current app's dependencies (8 critical). It predates this work; the V2 PRs do not touch the root lockfile (the dead-code PR only removes dependencies and adds knip). Suggested follow-up: upgrade or override the affected packages in a separate PR.
+- **Sanity CLI commands that call the API** (`sanity schema extract`, the auto-update check in `sanity build`) fail here. Workarounds: `scripts/extract-schema.ts` (offline) and `sanity build --no-auto-updates`.

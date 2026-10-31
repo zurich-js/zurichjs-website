@@ -5,7 +5,9 @@
 /* Figtree variable font from the ZurichJS conference repo (same file), self-hosted, weights 300–900. */
 @font-face {
   font-family: 'Figtree';
-  src: url('/fonts/figtree-var.woff2') format('woff2-variations'), url('/fonts/figtree-var.woff2') format('woff2');
+  src:
+    url('/fonts/figtree-var.woff2') format('woff2-variations'),
+    url('/fonts/figtree-var.woff2') format('woff2');
   font-weight: 300 900;
   font-style: normal;
   font-display: swap;

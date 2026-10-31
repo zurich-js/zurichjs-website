@@ -1,4 +1,16 @@
-import { initials, type AgendaItem, type Event, type EventStatus, type Partner, type Photo, type Speaker, type SpeakerTalk, type TalkFormat, type TalkRef, type Venue } from '@zurichjs/events';
+import {
+  initials,
+  type AgendaItem,
+  type Event,
+  type EventStatus,
+  type Partner,
+  type Photo,
+  type Speaker,
+  type SpeakerTalk,
+  type TalkFormat,
+  type TalkRef,
+  type Venue,
+} from '@zurichjs/events';
 
 /* Raw shapes returned by queries.ts. Every field is optional: documents predate the V2 schema. */
 export interface RawTalk {

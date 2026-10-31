@@ -21,7 +21,11 @@ export function StarRating({ value, onChange, label, invalid, size = 'md' }: Pro
             aria-checked={value === n}
             aria-label={`${n} of 5`}
             onClick={() => onChange(n)}
-            class={cx('rounded-2xl border-0 font-bold text-[20px] cursor-pointer', size === 'lg' ? 'min-h-[56px]' : 'min-h-[52px]', value >= n ? 'bg-yellow' : 'bg-grey hover:bg-[#E2E2E6]')}
+            class={cx(
+              'rounded-2xl border-0 font-bold text-[20px] cursor-pointer',
+              size === 'lg' ? 'min-h-[56px]' : 'min-h-[52px]',
+              value >= n ? 'bg-yellow' : 'bg-grey hover:bg-[#E2E2E6]',
+            )}
           >
             {n}
           </button>

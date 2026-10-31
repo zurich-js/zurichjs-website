@@ -1,0 +1,76 @@
+---
+/** Speaker directory. Every card is prerendered; a small script filters by name, company or topic (?q=). */
+import { breadcrumbSchema } from '@zurichjs/seo';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import SpeakerCard from '~/components/site/SpeakerCard.astro';
+import Button from '~/components/ui/Button.astro';
+import Surface from '~/components/ui/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { content } from '~/lib/content';
+
+const { speakers } = await content();
+---
+
+<BaseLayout
+  title="Speakers"
+  description="Meet the speakers who have shared their JavaScript knowledge at ZurichJS meetups in Zurich, and see what each of them talked about."
+  keywords={['ZurichJS speakers', 'JavaScript speakers Zurich', 'tech talks Zurich', 'JavaScript meetup Zurich']}
+  jsonLd={[breadcrumbSchema([{ name: 'Speakers', path: '/speakers' }])]}
+>
+  <PageOpening
+    slot="opening"
+    title="Speakers"
+    sub="Half of our speakers travel in from outside Zurich. We’ve hosted contributors from Node.js, Astro and Qwik, alongside Microsoft MVPs and Google Developer Experts. Here they all are, with what they talked about."
+    compact
+  />
+
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-8" data-speakers>
+    <div class="flex flex-wrap gap-3 items-center">
+      <label class="flex-[1_1_280px] flex min-w-0">
+        <span class="sr-only">Search speakers and topics</span>
+        <input type="search" name="q" data-q placeholder="Name, company or topic" autocomplete="off" class="flex-1 min-w-0 min-h-[48px] border border-grey-line rounded-pill px-5 text-[17px] bg-white" />
+      </label>
+      <Button href="/cfp" variant="black" class="text-[17px]">Speak at a meetup</Button>
+    </div>
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-8">
+      {speakers.map((s, i) => <SpeakerCard speaker={s} meta={`${s.role} · ${s.talks.length} talk${s.talks.length === 1 ? '' : 's'}`} tone={i % 3 === 0 ? 'yellow' : 'grey'} />)}
+    </div>
+    <Surface class="p-7 flex flex-col gap-2.5 [&[hidden]]:hidden" data-empty hidden>
+      <h2 class="m-0 text-[24px] font-bold" data-empty-title>No speakers match.</h2>
+      <p class="m-0 text-[17px] text-ink-2">Try a first name or a topic like “testing”, or be the first to talk about it.</p>
+      <Button href="/cfp" variant="black" class="self-start">Propose a talk</Button>
+    </Surface>
+  </div>
+</BaseLayout>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-speakers]');
+  if (root) {
+    const input = root.querySelector<HTMLInputElement>('[data-q]')!;
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-speaker-card]')];
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const title = root.querySelector<HTMLElement>('[data-empty-title]')!;
+    const render = () => {
+      const q = input.value.trim();
+      const needle = q.toLowerCase();
+      let shown = 0;
+      for (const c of cards) {
+        const match = !needle || (c.dataset.search ?? '').includes(needle);
+        // The card is display:flex, which would override the hidden attribute.
+        c.style.display = match ? '' : 'none';
+        if (match) shown++;
+      }
+      empty.hidden = shown > 0;
+      title.textContent = `No speakers match “${q}”.`;
+    };
+    input.value = new URLSearchParams(location.search).get('q') ?? '';
+    input.addEventListener('input', () => {
+      const u = new URL(location.href);
+      if (input.value) u.searchParams.set('q', input.value);
+      else u.searchParams.delete('q');
+      history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+      render();
+    });
+    render();
+  }
+</script>

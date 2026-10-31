@@ -1,23 +1,37 @@
 import type { ComponentChildren, JSX } from 'preact';
 import { buttonClass, isExternal, type ButtonSize, type ButtonVariant } from '~/lib/ui';
 
-type Common = { variant?: ButtonVariant; size?: ButtonSize; grow?: boolean; class?: string; children: ComponentChildren };
+interface Props {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  grow?: boolean;
+  class?: string;
+  children: ComponentChildren;
+  /** Renders a link when set. */
+  href?: string;
+  external?: boolean;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  onClick?: (e: JSX.TargetedMouseEvent<HTMLElement>) => void;
+  id?: string;
+  'aria-describedby'?: string;
+  'aria-controls'?: string;
+  'aria-expanded'?: boolean;
+}
 
 /** Island twin of Button.astro; both use buttonClass so the look is defined once. */
-export function Button(props: Common & (({ href: string; external?: boolean } & JSX.HTMLAttributes<HTMLAnchorElement>) | ({ href?: undefined } & JSX.HTMLAttributes<HTMLButtonElement>))) {
-  const { variant = 'yellow', size = 'md', grow, class: extra, children, ...rest } = props as Common & { href?: string; external?: boolean } & Record<string, unknown>;
+export function Button({ variant = 'yellow', size = 'md', grow, class: extra, children, href, external, type = 'button', disabled, onClick, ...aria }: Props) {
   const cls = buttonClass(variant, size, grow, extra);
-  if (typeof rest.href === 'string') {
-    const { href, external, ...a } = rest as { href: string; external?: boolean } & Record<string, unknown>;
+  if (href !== undefined) {
     const ext = external ?? isExternal(href);
     return (
-      <a href={href} class={cls} {...(ext && !href.startsWith('mailto:') ? { target: '_blank', rel: 'noopener' } : {})} {...a}>
+      <a href={href} class={cls} onClick={onClick} {...(ext && !href.startsWith('mailto:') ? { target: '_blank', rel: 'noopener' } : {})} {...aria}>
         {children}
       </a>
     );
   }
   return (
-    <button type="button" class={cls} {...(rest as JSX.HTMLAttributes<HTMLButtonElement>)}>
+    <button type={type} class={cls} disabled={disabled} onClick={onClick} {...aria}>
       {children}
     </button>
   );

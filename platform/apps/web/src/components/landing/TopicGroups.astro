@@ -1,0 +1,27 @@
+---
+/** Grouped lists of topics as pills, one grey card per group. */
+import Surface from '~/components/ui/Surface.astro';
+
+interface Props {
+  groups: { title: string; items: string[] }[];
+  /** Heading level of each group title, to keep the production outline. */
+  level?: 'h3' | 'h4';
+  min?: number;
+}
+const { groups, level: H = 'h4', min = 260 } = Astro.props;
+---
+
+<div class="grid gap-4" style={`grid-template-columns: repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))`}>
+  {
+    groups.map((g) => (
+      <Surface class="p-6 flex flex-col gap-4">
+        <H class="m-0 text-[20px] leading-[1.25] font-bold">{g.title}</H>
+        <ul class="m-0 p-0 list-none flex flex-wrap gap-2">
+          {g.items.map((it) => (
+            <li class="text-[16px] leading-[1.3] py-1.5 px-3.5 rounded-pill bg-white">{it}</li>
+          ))}
+        </ul>
+      </Surface>
+    ))
+  }
+</div>

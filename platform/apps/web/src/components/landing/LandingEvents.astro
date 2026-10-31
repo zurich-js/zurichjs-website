@@ -1,0 +1,48 @@
+---
+/**
+ * Upcoming meetups for the landing pages, rendered from content at build time.
+ * When nothing is scheduled, the most recent meetups take their place so the
+ * section always links to real event pages.
+ */
+import { pastEvents, upcomingEvents } from '@zurichjs/events';
+import EventRow from '~/components/site/EventRow.astro';
+import Button from '~/components/ui/Button.astro';
+import SectionHeading from '~/components/ui/SectionHeading.astro';
+import { BUILD_TIME, SITE, content } from '~/lib/content';
+
+interface Props {
+  id: string;
+  title: string;
+  sub: string;
+  /** How many events to list. */
+  limit?: number;
+}
+const { id, title, sub, limit = 3 } = Astro.props;
+const { events } = await content();
+const upcoming = upcomingEvents(events, BUILD_TIME).slice(0, limit);
+const list = upcoming.length ? upcoming : pastEvents(events, BUILD_TIME).slice(0, limit);
+---
+
+{
+  list.length > 0 && (
+    <section aria-labelledby={id} class="px-gut flex flex-col gap-7">
+      <SectionHeading id={id}>
+        {upcoming.length ? title : 'Recent meetups in Zurich'}
+        <Fragment slot="sub">{upcoming.length ? sub : 'The next date is announced on Meetup.com first. Here is what happened at the latest meetups.'}</Fragment>
+        <Button slot="action" href="/events" variant="white">
+          View all events
+        </Button>
+      </SectionHeading>
+      <div class="flex flex-col gap-1 max-w-[880px]">
+        {list.map((ev) => <EventRow ev={ev} />)}
+      </div>
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+        Every meetup is announced on{' '}
+        <a href={SITE.meetupGroupUrl} target="_blank" rel="noopener" class="font-bold text-black">
+          our Meetup.com group
+        </a>
+        , where you RSVP.
+      </p>
+    </section>
+  )
+}

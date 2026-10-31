@@ -33,3 +33,25 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 - Keep the `events` type name, `datetime`, `location` and `address`; add V2 fields additively. (Assumption)
 - Declare `stripePriceId` on `events` (the site already reads it). Deprecate `ticketSaleUrl` without deleting it. Add no `workshop.stripePriceId`. (Assumption)
 - Never render `talk.slides` or `talk.videoUrl` (brand rule).
+
+## Phase 0
+
+- **Production URLs win over V2 URLs:**
+  - Policies keep `/policies/privacy-policy`, `/policies/refund-policy` and `/policies/terms-and-conditions`; the V2 slugs (`privacy`, `refunds`, `terms`) become 301s.
+  - Event and speaker URLs keep the Sanity `id.current` slug.
+  - `/cfp/form` 301s to `/cfp`, where V2 has the two-step form. (Assumption)
+- **The SEO parity gate fails on lost signals, not on copy changes.** V2 rewrites titles and descriptions, so wording changes must be listed in an allowlist with a reason. Missing titles, canonicals, JSON-LD types, sitemap entries or crawler allowances fail the build (SEO-BASELINE.md). (Assumption)
+- **Known SEO defects in production are fixed in V2, not copied:**
+  - `/sitemap.xml` is a 3-URL file
+  - Event and Person JSON-LD are never emitted
+  - relative OG images
+  - `og:url` on zurichjs.org for speakers
+  - indexable private pages
+  - `/ai-context` is orphaned
+
+  (Assumption)
+
+- **Sane is read-only reference material.** `farisaziz12/sane` was attached for reading; nothing was written there. Seams: `TicketingProvider` and `TalkProposalSink` (SANE-READINESS.md). (Assumption)
+- **Dead code in production goes in a separate PR** (`v2/root-dead-code`, from `main`): 28 files, 5 dependencies, a stray `.tmp` file and dead exports. The structured-data builders are kept as porting reference. Nothing reachable by URL is removed. (Owner asked for knip; scope is an assumption.)
+- **The Studio repo lags the data the site writes** (CONTENT-MODEL-DIFF.md, finding 3). Phase 3 declares the missing fields and types before adding anything new. (Assumption)
+- **The production SEO baseline was captured with a placeholder Clerk publishable key**, locally only. Clerk's development keys redirect browser navigations to a handshake host, so a `pk_live_` key in the right format was used. Nothing was sent to Clerk. (Assumption)

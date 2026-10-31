@@ -1,89 +1,136 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-/* Figtree variable font from the ZurichJS conference repo (same file), self-hosted, weights 300–900. */
-@font-face {
-  font-family: 'Figtree';
-  src:
-    url('/fonts/figtree-var.woff2') format('woff2-variations'),
-    url('/fonts/figtree-var.woff2') format('woff2');
-  font-weight: 300 900;
-  font-style: normal;
-  font-display: swap;
+@theme {
+  --breakpoint-*: initial;
+  --breakpoint-md: 800px;
+  --breakpoint-lg: 1100px;
+
+  --color-black: #000000;
+  --color-white: #ffffff;
+
+  --color-yellow: #f1e271;
+  --color-yellow-hover: #edc936;
+
+  --color-ink-2: #242528;
+  --color-ink-3: #3a3b40;
+  --color-ink: #19191b;
+
+  --color-grey: #ededef;
+  --color-grey-soft: #f6f6f4;
+  --color-grey-mid: #a9aab1;
+  --color-grey-text: #5f626b;
+  --color-grey-line: #7c7f89;
+  --color-grey-frame: #d9d9dc;
+
+  --color-blue: #268bcc;
+
+  --color-danger: #b3261e;
+  --color-danger-soft: #f6d8d3;
+
+  --font-sans: Figtree, ui-sans-serif, system-ui, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 24px;
+  --radius-block: clamp(24px, 3vw, 40px);
+
+  --container-site: 1280px;
 }
 
-:root {
-  /* Side gutter: 20px on phones, 48px on desktop, centred to a 1280px column. */
-  --px: 20px;
-  --gut: max(var(--px), calc((100% - 1280px) / 2));
-}
-@media (min-width: 800px) {
-  :root {
-    --px: 48px;
-  }
-}
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
 
-html {
-  -webkit-font-smoothing: antialiased;
-  font-synthesis: none;
-  scroll-behavior: smooth;
-}
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
   *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
   }
 }
 
-body {
-  margin: 0;
-  background: #ffffff;
-  color: #000000;
-  font-family: Figtree, ui-sans-serif, system-ui, sans-serif;
+@utility px-gut {
+  padding-left: var(--gut);
+  padding-right: var(--gut);
 }
 
-button,
-input,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
-}
-
-a {
-  color: inherit;
-  text-underline-offset: 3px;
-}
-
-:focus-visible {
-  outline: 3px solid #268bcc;
-  outline-offset: 2px;
-}
-
-/* Yellow focus ring on black surfaces, where blue would disappear. */
-.on-black :focus-visible {
-  outline-color: #f1e271;
+@utility mx-gut {
+  margin-left: var(--gut);
+  margin-right: var(--gut);
 }
 
 @layer utilities {
-  .px-gut {
-    padding-left: var(--gut);
-    padding-right: var(--gut);
+  /* Figtree variable font from the ZurichJS conference repo (same file), self-hosted, weights 300–900. */
+  @font-face {
+    font-family: 'Figtree';
+    src:
+      url('/fonts/figtree-var.woff2') format('woff2-variations'),
+      url('/fonts/figtree-var.woff2') format('woff2');
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: swap;
   }
-  .mx-gut {
-    margin-left: var(--gut);
-    margin-right: var(--gut);
+
+  :root {
+    /* Side gutter: 20px on phones, 48px on desktop, centred to a 1280px column. */
+    --px: 20px;
+    --gut: max(var(--px), calc((100% - 1280px) / 2));
   }
-  .text-balance {
-    text-wrap: balance;
+  @media (min-width: 800px) {
+    :root {
+      --px: 48px;
+    }
   }
-  .text-pretty {
-    text-wrap: pretty;
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    font-synthesis: none;
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: #000000;
+    font-family: Figtree, ui-sans-serif, system-ui, sans-serif;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: 3px;
+  }
+
+  :focus-visible {
+    outline: 3px solid #268bcc;
+    outline-offset: 2px;
+  }
+
+  /* Yellow focus ring on black surfaces, where blue would disappear. */
+  .on-black :focus-visible {
+    outline-color: #f1e271;
   }
 }

@@ -97,7 +97,7 @@ export default function MembershipForm() {
               <article key={k} class={cx('rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5', k === 'supporter' ? 'bg-yellow' : 'bg-grey')}>
                 <div class="flex flex-col gap-1.5">
                   <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">{x.name}</h3>
-                  <p class="m-0 text-[17px] leading-[1.5] text-ink-2">{x.tagline}</p>
+                  <p class="m-0 text-[17px] leading-normal text-ink-2">{x.tagline}</p>
                 </div>
                 <div class="flex flex-wrap gap-x-8 gap-y-3">
                   <div class="flex flex-col">
@@ -145,14 +145,14 @@ export default function MembershipForm() {
         </div>
 
         {sent ? (
-          <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-none">
+          <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
             <div class="text-[28px] font-bold leading-[1.15]">Request sent.</div>
             <p class="m-0 text-[18px] leading-[1.55]">
               An organiser will reply to {f.email} about joining as {t.name} ({chf(t[cycle])} a {unit}). Nothing has been charged.
             </p>
             <Button
               variant="outline-black"
-              class="self-start mt-1.5 text-[17px] !border"
+              class="self-start mt-1.5 text-[17px] border!"
               onClick={() => {
                 setSent(false);
                 setTried(false);

@@ -54,14 +54,14 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
 
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
     <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-14 gap-y-7 items-start">
-      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] !text-[88px]" />}
+      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] text-[88px]!" />}
       <div class="flex flex-col gap-[18px] col-span-full md:col-span-2 min-w-0">
         <p class="m-0 text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty">{s.bio}</p>
         {
           s.links.length > 0 && (
             <div class="flex flex-wrap gap-2">
               {s.links.map((l) => (
-                <Button href={l.url} variant="grey" size="sm" class="!border-0">
+                <Button href={l.url} variant="grey" size="sm" class="border-0!">
                   {l.label}
                 </Button>
               ))}
@@ -76,7 +76,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
         <Surface tone="yellow" class="py-6 px-7 flex flex-wrap gap-x-7 gap-y-4 items-center justify-between">
           <div class="flex flex-col gap-1 min-w-0">
             <div class="text-[17px] font-bold">Speaking next: {upcoming.p.dateLineShort}</div>
-            <div class="text-[22px] font-bold leading-[1.25]">{upcoming.item.title}</div>
+            <div class="text-[22px] font-bold leading-tight">{upcoming.item.title}</div>
           </div>
           <Button href={eventHref(upcoming.ev)} variant="black" class="text-[17px]">
             See the meetup
@@ -96,7 +96,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
               <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
             </a>
           ) : (
-            <Surface tone="soft" class="flex flex-col gap-1.5 py-[18px] px-5 !rounded-[20px]">
+            <Surface tone="soft" class="flex flex-col gap-1.5 py-[18px] px-5 rounded-[20px]!">
               <div class="text-[16px] text-ink-2">{meta}</div>
               <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
             </Surface>

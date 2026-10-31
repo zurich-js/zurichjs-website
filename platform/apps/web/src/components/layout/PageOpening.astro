@@ -36,6 +36,6 @@ const hasSub = !!sub || Astro.slots.has('sub');
     )
   }
   <h1 class="m-0 text-[clamp(36px,5.4vw,72px)] leading-[1.08] font-bold max-w-[1000px] text-balance">{title}</h1>
-  {hasSub && <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-[1.5] max-w-[700px] text-pretty">{sub}<slot name="sub" /></p>}
+  {hasSub && <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[700px] text-pretty">{sub}<slot name="sub" /></p>}
   <slot />
 </section>

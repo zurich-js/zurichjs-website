@@ -77,13 +77,13 @@ const TABS = [
 
     {
       TABS.map((t, i) => (
-        <div role="tabpanel" id={`panel-${t.k}`} aria-labelledby={`tab-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [&[hidden]]:hidden">
+        <div role="tabpanel" id={`panel-${t.k}`} aria-labelledby={`tab-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [[hidden]]:hidden">
           {t.list.map((e) => (
             <div data-hay={hay(e)}>
               <EventRow ev={e} />
             </div>
           ))}
-          <Surface class="p-7 flex flex-col gap-3 [&[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
+          <Surface class="p-7 flex flex-col gap-3 [[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
             <h2 class="m-0 text-[24px] font-bold" data-empty-title>
               {t.k === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.'}
             </h2>
@@ -91,7 +91,7 @@ const TABS = [
               The next meetup is being planned. It is announced on Meetup first.
             </p>
             <div class="flex gap-2.5 flex-wrap">
-              <Button variant="white" class="[&[hidden]]:hidden" data-clear hidden>
+              <Button variant="white" class="[[hidden]]:hidden" data-clear hidden>
                 Clear search
               </Button>
               <Button variant="black" href={SITE.meetupGroupUrl}>

@@ -231,7 +231,7 @@ const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
           {
             CONFERENCES.map((c) => (
               <Surface class="p-[clamp(22px,3vw,32px)] flex flex-col gap-4">
-                <h4 class="m-0 text-[22px] leading-[1.25] font-bold">{c.name}</h4>
+                <h4 class="m-0 text-[22px] leading-tight font-bold">{c.name}</h4>
                 <dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-[17px] leading-[1.45]">
                   {c.facts.map(([k, v]) => (
                     <>

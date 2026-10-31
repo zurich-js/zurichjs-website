@@ -133,7 +133,7 @@ export default function ProMeetupTickets({ eventId, slug, title, stripePriceId }
         <h2 id="h-tickets" class="m-0 text-[clamp(26px,2.6vw,34px)] leading-[1.15] font-bold">
           Tickets
         </h2>
-        <p class="m-0 text-[17px] leading-[1.5] text-ink-2">{title} is a pro meetup. A ticket holds your place and helps pay for speaker travel, the venue and food.</p>
+        <p class="m-0 text-[17px] leading-normal text-ink-2">{title} is a pro meetup. A ticket holds your place and helps pay for speaker travel, the venue and food.</p>
       </div>
 
       {canceled && (

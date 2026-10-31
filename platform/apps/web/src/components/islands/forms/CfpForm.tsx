@@ -132,7 +132,7 @@ export default function CfpForm({ nextHref, confHref, confCfp, confState }: Prop
           <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
             <button ref={startRef} type="button" onClick={() => setStep(1)} class="text-left cursor-pointer border-0 bg-yellow rounded-card p-7 flex flex-col gap-2.5">
               <span class="text-[24px] font-bold">At a ZurichJS meetup</span>
-              <span class="text-[17px] leading-[1.5]">Open all year. Lightning (5 min), standard (25 min) or deep dive (35 min). Good for a first talk.</span>
+              <span class="text-[17px] leading-normal">Open all year. Lightning (5 min), standard (25 min) or deep dive (35 min). Good for a first talk.</span>
               <span class="font-bold text-[17px] mt-1.5 underline underline-offset-[3px]">Start a proposal</span>
             </button>
             <a
@@ -143,7 +143,7 @@ export default function CfpForm({ nextHref, confHref, confCfp, confState }: Prop
               class="no-underline text-black text-left bg-grey rounded-card p-7 flex flex-col gap-2.5"
             >
               <span class="text-[24px] font-bold">At ZurichJS Conf</span>
-              <span class="text-[17px] leading-[1.5] text-ink-2">The conference runs its own call for papers. {confCfp}</span>
+              <span class="text-[17px] leading-normal text-ink-2">The conference runs its own call for papers. {confCfp}</span>
               <span class="font-bold text-[17px] mt-1.5 underline underline-offset-[3px]">Go to conf.zurichjs.com</span>
             </a>
           </div>
@@ -263,10 +263,10 @@ export default function CfpForm({ nextHref, confHref, confCfp, confState }: Prop
       </form>
 
       {step === 2 && (
-        <div ref={doneRef} tabIndex={-1} role="status" class="flex flex-col gap-7 outline-none">
+        <div ref={doneRef} tabIndex={-1} role="status" class="flex flex-col gap-7 outline-hidden">
           <div class={surfaceClass('yellow', 'p-7 flex flex-col gap-2')}>
             <h2 class="m-0 text-[28px] font-bold">Thanks. Your proposal is in.</h2>
-            <p class="m-0 text-[18px] leading-[1.5]">Organisers review proposals when planning each meetup and reply to {d.email || 'your email'} either way.</p>
+            <p class="m-0 text-[18px] leading-normal">Organisers review proposals when planning each meetup and reply to {d.email || 'your email'} either way.</p>
           </div>
           <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-5">
             {STAGES.map(([label, desc], i) => (

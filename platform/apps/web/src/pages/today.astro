@@ -40,7 +40,7 @@ const description = 'Tonight at ZurichJS: what is on now, what is next, the full
   ) : (
     <BaseLayout title="Tonight" description={description}>
       <PageOpening slot="opening" title={ev.title}>
-        <div class="text-[clamp(18px,1.6vw,21px)] leading-[1.5]">
+        <div class="text-[clamp(18px,1.6vw,21px)] leading-normal">
           <b class="text-yellow">{p.whenShort}</b>
           <br />
           <span class="text-grey-mid">{p.venueShort}</span>
@@ -90,7 +90,7 @@ const description = 'Tonight at ZurichJS: what is on now, what is next, the full
           </h2>
           <Surface class="p-6 flex flex-col gap-2.5">
             <h3 class="m-0 text-[21px] font-bold">Keep in touch</h3>
-            <p class="m-0 text-[17px] leading-[1.5] flex-1">Talk between meetups on Slack, or follow along on LinkedIn.</p>
+            <p class="m-0 text-[17px] leading-normal flex-1">Talk between meetups on Slack, or follow along on LinkedIn.</p>
             <div class="flex flex-wrap gap-2 mt-1.5">
               <Button href={SITE.slackInviteUrl} variant="black" size="sm">
                 Join Slack
@@ -102,7 +102,7 @@ const description = 'Tonight at ZurichJS: what is on now, what is next, the full
           </Surface>
           <Surface class="p-6 flex flex-col gap-2.5">
             <h3 class="m-0 text-[21px] font-bold">Support the community</h3>
-            <p class="m-0 text-[17px] leading-[1.5] flex-1">ZurichJS is a non-profit. Coffee money and T-shirts help pay for the next one.</p>
+            <p class="m-0 text-[17px] leading-normal flex-1">ZurichJS is a non-profit. Coffee money and T-shirts help pay for the next one.</p>
             <div class="flex flex-wrap gap-2 mt-1.5">
               <Button href="/donate" variant="black" size="sm">
                 Donate with Twint
@@ -114,14 +114,14 @@ const description = 'Tonight at ZurichJS: what is on now, what is next, the full
           </Surface>
           <Surface tone="black" class="p-6 flex flex-col gap-2.5">
             <h3 class="m-0 text-[21px] font-bold">Coming up</h3>
-            <p class="m-0 text-[17px] leading-[1.5] flex-1">
+            <p class="m-0 text-[17px] leading-normal flex-1">
               {after ? `${after.title}, the next meetup${after.startsAt ? ` on ${dateLong(after.startsAt)}` : ''}.` : 'The next meetup is being planned. It is announced on Meetup first.'}
             </p>
             <div class="flex flex-wrap gap-2 mt-1.5">
               <Button href={after ? eventHref(after) : '/events'} variant="yellow" size="sm">
                 {after ? 'See the next meetup' : 'See all events'}
               </Button>
-              <Button href={share} variant="outline-white" size="sm" class="!border">
+              <Button href={share} variant="outline-white" size="sm" class="border!">
                 Share tonight
               </Button>
             </div>

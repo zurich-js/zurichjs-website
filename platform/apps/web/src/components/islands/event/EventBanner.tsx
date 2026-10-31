@@ -12,7 +12,7 @@ export default function EventBanner({ ev, initial }: { ev: Event; initial: Event
   return (
     <div role="status" class={cx('rounded-card py-[22px] px-6 text-black flex flex-col gap-1.5', TONE[banner.tone])}>
       <h2 class="m-0 text-[21px] font-bold">{banner.title}</h2>
-      <p class="m-0 text-[17px] leading-[1.5]">{banner.body}</p>
+      <p class="m-0 text-[17px] leading-normal">{banner.body}</p>
     </div>
   );
 }

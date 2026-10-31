@@ -61,7 +61,7 @@ export default function Programme({ ev, initial, speakers }: { ev: Event; initia
                   {[a.talk.durationMin ? `${a.talk.durationMin} min` : '', a.talk.level, a.talk.language ?? 'English'].filter(Boolean).join(' · ')}
                 </div>
                 {live && (
-                  <Button variant={rated[keyOf(i)] ? 'grey' : 'yellow'} size="sm" class="self-start mt-1 !border-black" onClick={() => setTarget(toTarget(i))}>
+                  <Button variant={rated[keyOf(i)] ? 'grey' : 'yellow'} size="sm" class="self-start mt-1 border-black!" onClick={() => setTarget(toTarget(i))}>
                     {rated[keyOf(i)] ? 'Rated ✓ · change' : 'Rate this talk'}
                   </Button>
                 )}

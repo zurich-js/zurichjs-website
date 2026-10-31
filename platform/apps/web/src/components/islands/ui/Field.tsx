@@ -57,7 +57,7 @@ export function TextArea({ label, hint, error, class: className, labelSize, inva
       <textarea
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        class={cx(control, 'py-3 resize-y leading-[1.5]', border(invalid), labelSize === 'lg' && 'mt-1')}
+        class={cx(control, 'py-3 resize-y leading-normal', border(invalid), labelSize === 'lg' && 'mt-1')}
         {...rest}
       />
     </Wrapper>
@@ -78,7 +78,7 @@ export function SelectField({ label, hint, error, class: className, children, ..
 export function Checkbox({ label, class: className, ...rest }: { label: ComponentChildren; class?: string } & JSX.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label class={cx('flex gap-3 items-start text-[17px] leading-[1.45] cursor-pointer', className)}>
-      <input type="checkbox" class="w-[22px] h-[22px] mt-[1px] flex-none accent-black" {...rest} />
+      <input type="checkbox" class="w-[22px] h-[22px] mt-px flex-none accent-black" {...rest} />
       <span>{label}</span>
     </label>
   );

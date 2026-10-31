@@ -42,7 +42,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-none">
+      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-hidden">
         <div class="text-[28px] font-bold leading-[1.15]">Thanks. We’ll be in touch.</div>
         <p class="m-0 text-[18px] leading-[1.55]">An organiser replies to {f.email} before the next meetup.</p>
         <Button href={nextHref} variant="black" class="self-start mt-1.5 text-[17px]">

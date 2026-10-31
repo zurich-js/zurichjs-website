@@ -86,8 +86,8 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4 max-w-[1000px] outline-none">
-        <div class={surfaceClass('yellow', '!rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
+      <div ref={doneRef} tabIndex={-1} role="status" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4 max-w-[1000px] outline-hidden">
+        <div class={surfaceClass('yellow', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
           <div class="text-[28px] font-bold leading-[1.15]">Thanks. That helps.</div>
           <p class="m-0 text-[18px] leading-[1.55]">Speakers see the ratings and comments for their talk. Organisers use the rest to plan the next programme.</p>
           <Button href={nextHref} variant="black" class="self-start mt-1.5 text-[17px]">
@@ -95,7 +95,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
           </Button>
         </div>
         {ev && (
-          <div class={surfaceClass('grey', '!rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
+          <div class={surfaceClass('grey', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
             <div class="text-[24px] font-bold leading-[1.2]">Photos from the evening</div>
             <p class="m-0 text-[17px] leading-[1.55] text-ink-2">The recap page has the talks, speakers and photos.</p>
             <Button href={eventHref(ev)} variant="white" class="self-start mt-1.5 text-[17px]">

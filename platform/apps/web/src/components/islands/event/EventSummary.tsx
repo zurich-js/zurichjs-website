@@ -43,7 +43,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
           </Button>
         )
       )}
-      {p.ctaNote && <div class="text-[15px] leading-[1.5] text-ink-2">{p.ctaNote}</div>}
+      {p.ctaNote && <div class="text-[15px] leading-normal text-ink-2">{p.ctaNote}</div>}
       <Button
         variant="link"
         class="self-start text-[16px]"

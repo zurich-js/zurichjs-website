@@ -128,7 +128,7 @@ const sub = data
                 <ul class="m-0 p-0 list-none flex flex-col gap-2.5">
                   {t.comments.map((c) => (
                     <li class="bg-grey-soft rounded-card px-5 py-4 flex flex-col gap-1.5">
-                      <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line break-words">“{c.text}”</p>
+                      <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line wrap-break-word">“{c.text}”</p>
                       <span class="text-[15px] text-grey-text">
                         {[c.rating ? `${c.rating} ${c.rating === 1 ? 'star' : 'stars'}` : '', c.submittedAt ? dateShort(c.submittedAt) : ''].filter(Boolean).join(' · ')}
                       </span>

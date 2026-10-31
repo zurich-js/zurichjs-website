@@ -59,11 +59,11 @@ const HANDLE = [
               <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
               <div class="flex flex-col gap-1">
                 <div class="text-[16px] font-bold">You provide</div>
-                <div class="text-[17px] leading-[1.5] text-ink-2">{w.give}</div>
+                <div class="text-[17px] leading-normal text-ink-2">{w.give}</div>
               </div>
               <div class="flex flex-col gap-1 flex-1">
                 <div class="text-[16px] font-bold">You get</div>
-                <div class="text-[17px] leading-[1.5] text-ink-2">{w.get}</div>
+                <div class="text-[17px] leading-normal text-ink-2">{w.get}</div>
               </div>
               <Button href="#partner-form" variant={w.yellow ? 'black' : 'white'} size="sm" class="self-start" data-partner-way={w.k} aria-label={`Choose this: ${w.h}`}>
                 Choose this
@@ -95,13 +95,13 @@ const HANDLE = [
           {INTERESTS.map((i) => <span class="text-[16px] font-bold py-2 px-4 rounded-pill bg-ink">{i}</span>)}
         </div>
       </div>
-      <div class="text-[15px] leading-[1.5] text-grey-mid">
+      <div class="text-[15px] leading-normal text-grey-mid">
         Meetup attendee profile, as published on <a href={SITE.confSponsorshipUrl} target="_blank" rel="noopener" class="text-white">conf.zurichjs.com/sponsorship</a>.
       </div>
     </section>
 
     <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
-      <Photo photo={{ ...PHOTOS.conversation, alt: 'Attendees talking after the talks at a hosted ZurichJS meetup' }} class="aspect-[4/3] w-full" />
+      <Photo photo={{ ...PHOTOS.conversation, alt: 'Attendees talking after the talks at a hosted ZurichJS meetup' }} class="aspect-4/3 w-full" />
       <div class="flex flex-col gap-[22px]">
         <h2 id="h-handle" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What we take care of</h2>
         {
@@ -137,7 +137,7 @@ const HANDLE = [
       </Surface>
     </section>
 
-    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-none">
+    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
       <div class="flex flex-col gap-3">
         <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
         <p class="m-0 text-[18px] leading-[1.55] text-ink-2">An organiser replies from {SITE.email} to plan a date and the details. Nothing is agreed until you confirm.</p>

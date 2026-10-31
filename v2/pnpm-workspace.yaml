@@ -1,0 +1,11 @@
+# v2/ is its own pnpm root, isolated from the production app at the repository root.
+# Same supply-chain policy as the root workspace: packages must be 3 days old.
+minimumReleaseAge: 4320
+
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+
+overrides:
+  # Same as the root workspace: patched postcss for next's bundled copy.
+  postcss: ^8.5.23

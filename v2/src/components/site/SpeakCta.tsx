@@ -1,0 +1,20 @@
+import { Button } from '@/components/ui/Button';
+
+/** Yellow "Speak at a meetup" block, used on the homepage. */
+export function SpeakCta() {
+  return (
+    <div className="mt-3 bg-yellow text-black rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-x-10 gap-y-5 items-center">
+      <div className="flex flex-col gap-2.5">
+        <h2 className="m-0 text-[clamp(26px,2.8vw,38px)] leading-[1.15] font-bold">Speak at a meetup</h2>
+        <p className="m-0 text-[18px] leading-[1.5] max-w-[560px]">
+          Does it have to be about JavaScript? Not really. We’ve had talks on Laravel, careers, infrastructure and observability. First-time speakers are welcome, and we help you prepare.
+        </p>
+      </div>
+      <div className="flex justify-end">
+        <Button href="/cfp" variant="black">
+          Propose a talk
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -38,3 +38,12 @@ yarn-error.log*
 next-env.d.ts
 
 .idea/
+
+# V2 reference site and platform workspace (each has its own pnpm root)
+/v2/node_modules
+/v2/.next
+/v2/out
+/platform/**/node_modules
+/platform/**/dist
+/platform/**/.astro
+/platform/**/.netlify

@@ -15,3 +15,11 @@ packageExtensions:
   '@napi-rs/wasm-runtime@1':
     dependencies:
       '@emnapi/runtime': 1.11.2
+
+overrides:
+  # Security (pnpm audit / dependency review, 2026-10-31): Netlify dev tooling pulls these in.
+  # glob 13 → 14 and minimatch 10 → 11 keep the same named-export API.
+  glob@13: ^14.0.2
+  minimatch@10: ^11.0.1
+  # No patched deepmerge release exists; vendor/deepmerge carries the fix (see its README).
+  deepmerge: link:./vendor/deepmerge

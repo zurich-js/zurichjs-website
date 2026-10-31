@@ -8,6 +8,8 @@ const PORT = Number(process.env.E2E_PORT ?? 4321);
 
 export default defineConfig({
   testDir: './e2e',
+  // Baselines live next to the spec; VISUAL_SNAPSHOT_DIR points a run at another set (e.g. a reference build).
+  snapshotPathTemplate: process.env.VISUAL_SNAPSHOT_DIR ? `${process.env.VISUAL_SNAPSHOT_DIR}/{projectName}/{arg}{ext}` : '{testDir}/__screenshots__/{projectName}/{arg}{ext}',
   timeout: 30_000,
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
@@ -24,7 +26,7 @@ export default defineConfig({
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
-    command: `node tools/serve-dist.mjs ${PORT}`,
+    command: `node tools/serve-dist.mjs ${PORT}${process.env.E2E_DIST ? ` ${process.env.E2E_DIST}` : ''}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
   },

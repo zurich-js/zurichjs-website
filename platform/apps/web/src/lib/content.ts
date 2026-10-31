@@ -7,8 +7,11 @@ export { ticketing } from './ticketing';
 export { PHOTOS, SITE } from '@zurichjs/content';
 export const content = () => loadContent(import.meta.env.MODE === 'test' ? { ...process.env, CONTENT_SOURCE: 'sample' } : process.env);
 
-/** The build time is the reference clock for prerendered state; islands re-check it in the browser. */
-export const BUILD_TIME = new Date();
+/**
+ * The build time is the reference clock for prerendered state; islands re-check it in the browser.
+ * `BUILD_NOW` (ISO date) fixes it for deterministic builds (visual regression, previews of a given day).
+ */
+export const BUILD_TIME = process.env.BUILD_NOW ? new Date(process.env.BUILD_NOW) : new Date();
 
 export async function nextMeetupHref() {
   const c = await content();

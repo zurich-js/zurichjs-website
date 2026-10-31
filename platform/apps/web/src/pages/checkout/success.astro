@@ -1,0 +1,16 @@
+---
+/**
+ * Older Stripe return URL, kept so links from the old site still land. Same
+ * island as /success; static and noindex.
+ */
+import PageOpening from '~/components/layout/PageOpening.astro';
+import CheckoutResult from '~/components/islands/checkout/CheckoutResult';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Thank you for your purchase" description="Confirmation after paying for a ZurichJS meetup ticket or making a donation through Stripe Checkout." noindex>
+  <PageOpening slot="opening" title="Thank you for your purchase" compact />
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
+    <CheckoutResult client:load />
+  </div>
+</BaseLayout>

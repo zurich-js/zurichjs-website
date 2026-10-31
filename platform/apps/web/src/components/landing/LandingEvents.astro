@@ -37,11 +37,7 @@ const list = upcoming.length ? upcoming : pastEvents(events, BUILD_TIME).slice(0
         {list.map((ev) => <EventRow ev={ev} />)}
       </div>
       <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
-        Every meetup is announced on{' '}
-        <a href={SITE.meetupGroupUrl} target="_blank" rel="noopener" class="font-bold text-black">
-          our Meetup.com group
-        </a>
-        , where you RSVP.
+        <a href={SITE.meetupGroupUrl} target="_blank" rel="noopener" class="font-bold text-black">RSVP for every meetup in our Meetup.com group</a>
       </p>
     </section>
   )

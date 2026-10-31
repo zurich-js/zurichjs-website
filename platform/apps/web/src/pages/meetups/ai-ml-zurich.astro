@@ -1,0 +1,239 @@
+---
+/** Landing page for "AI meetups in Zurich" searches. Copy and FAQ from production; events and AI talks from content. */
+import { eventHref, monthYear, pastEvents } from '@zurichjs/events';
+import { faqSchema, organizationSchema } from '@zurichjs/seo';
+import LandingCta from '~/components/landing/LandingCta.astro';
+import LandingEvents from '~/components/landing/LandingEvents.astro';
+import LandingFaq from '~/components/landing/LandingFaq.astro';
+import PointList from '~/components/landing/PointList.astro';
+import TopicGroups from '~/components/landing/TopicGroups.astro';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import Button from '~/components/ui/Button.astro';
+import SectionHeading from '~/components/ui/SectionHeading.astro';
+import Surface from '~/components/ui/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { BUILD_TIME, content } from '~/lib/content';
+
+const { events, speakers } = await content();
+const byId = new Map(speakers.map((s) => [s.id, s]));
+
+// Verbatim from production: these answers feed the FAQPage JSON-LD and the visible FAQ.
+const faqs = [
+  {
+    question: 'Are there AI and Machine Learning meetups in Zurich?',
+    answer:
+      'Yes! ZurichJS regularly features AI and Machine Learning talks focusing on practical JavaScript/TypeScript implementations. We cover topics like OpenAI API integration, LangChain, vector databases, RAG systems, AI-powered applications, and machine learning in the browser with TensorFlow.js. Our meetups welcome both AI enthusiasts and web developers looking to integrate AI into their applications.',
+  },
+  {
+    question: 'What AI topics does ZurichJS cover?',
+    answer:
+      'ZurichJS covers practical AI implementation in JavaScript including: OpenAI & Anthropic API integration, LangChain.js, vector databases (Pinecone, Weaviate), RAG (Retrieval Augmented Generation), AI agents, ChatGPT plugins, prompt engineering, LLM fine-tuning, TensorFlow.js, ONNX.js, AI-powered web applications, and Edge AI.',
+  },
+  {
+    question: 'Do I need AI experience to attend AI talks at ZurichJS?',
+    answer:
+      'No! Our AI talks cater to all levels. We feature beginner-friendly introductions to AI concepts, practical tutorials for integrating AI APIs, and advanced topics for experienced practitioners. Many talks focus on how web developers can leverage AI without deep ML knowledge.',
+  },
+  {
+    question: 'How can I learn about AI development with JavaScript in Zurich?',
+    answer:
+      'Join ZurichJS meetups to learn from practitioners building real AI applications with JavaScript and TypeScript. Our speakers share practical experience with OpenAI, Anthropic Claude, LangChain, vector databases, and modern AI frameworks. We also host workshops on AI integration and best practices.',
+  },
+];
+
+const PILLARS = [
+  { h: 'Production-ready', d: 'Talks from people shipping AI features in real products. Not demos: actual implementation stories with lessons learned.', tone: 'yellow' as const },
+  { h: 'Web-first approach', d: 'OpenAI/Claude APIs, LangChain.js, vector databases, streaming responses: the stack web developers actually use.', tone: 'grey' as const },
+  { h: 'Free events', d: 'All AI talks are free. Same non-profit model, same community funding. No barriers to learning this tech.', tone: 'grey' as const },
+];
+
+const LEARN = [
+  { title: 'LLM integration', items: ['OpenAI API (GPT-4, GPT-3.5)', 'Anthropic Claude API', 'LangChain.js framework', 'Prompt engineering', 'Function calling', 'Streaming responses', 'Token optimization'] },
+  { title: 'Vector databases & RAG', items: ['Pinecone integration', 'Weaviate setup', 'Embeddings generation', 'Semantic search', 'RAG systems', 'Context retrieval', 'Document Q&A'] },
+  { title: 'AI agents & automation', items: ['LangChain agents', 'Tool integration', 'Multi-step reasoning', 'AutoGPT patterns', 'Workflow automation', 'Agent monitoring', 'Error handling'] },
+  { title: 'Browser ML & edge AI', items: ['TensorFlow.js', 'ONNX.js runtime', 'WebNN API', 'Client-side inference', 'Model optimization', 'Privacy-preserving ML', 'WebGPU acceleration'] },
+];
+
+const POPULAR = [
+  { t: 'Building ChatGPT-like interfaces', d: 'Create conversational AI applications with modern frameworks.' },
+  { t: 'RAG systems', d: 'Implement Retrieval Augmented Generation for context-aware AI.' },
+  { t: 'AI-powered code assistants', d: 'Build developer tools with OpenAI Codex and GPT-4.' },
+  { t: 'Semantic search', d: 'Vector embeddings and similarity search implementations.' },
+  { t: 'AI content generation', d: 'Automated content creation and summarization.' },
+  { t: 'Computer vision in the browser', d: 'Object detection and image classification with TensorFlow.js.' },
+  { t: 'Natural language processing', d: 'Sentiment analysis, named entity recognition, text classification.' },
+  { t: 'AI ethics & best practices', d: 'Responsible AI development, bias mitigation, privacy.' },
+];
+
+const STACK = [
+  { title: 'LLM providers', items: ['OpenAI (GPT-4, GPT-3.5)', 'Anthropic Claude', 'Google PaLM', 'Cohere', 'Hugging Face'] },
+  { title: 'Frameworks & tools', items: ['LangChain.js', 'Vercel AI SDK', 'TensorFlow.js', 'ONNX.js', 'Transformers.js'] },
+  { title: 'Vector databases', items: ['Pinecone', 'Weaviate', 'Qdrant', 'Chroma', 'Milvus'] },
+];
+
+const WHO = [
+  { t: 'Web developers', d: 'Learn to add AI capabilities to your applications.' },
+  { t: 'Full-stack engineers', d: 'Build end-to-end AI-powered features.' },
+  { t: 'Frontend developers', d: 'Implement browser-based ML and AI interfaces.' },
+  { t: 'Backend developers', d: 'Integrate LLM APIs and manage AI workflows.' },
+  { t: 'Product managers', d: 'Understand AI capabilities and limitations.' },
+  { t: 'Data scientists', d: 'Bridge ML models and production web applications.' },
+  { t: 'AI enthusiasts', d: 'Explore practical AI implementations with JavaScript.' },
+];
+
+// Past talks about AI, from content: real links to the event and the speakers.
+const AI_TALK = /\b(AI|LLMs?|GPT|ChatGPT|Claude|agents?|agentic|machine learning|ML|RAG|embeddings?|vector|prompts?|OpenAI|Anthropic|LangChain|TensorFlow|MCP|copilot)\b/i;
+const aiTalks = pastEvents(events, BUILD_TIME)
+  .flatMap((ev) => {
+    const list = ev.recap?.talks.length ? ev.recap.talks : ev.agenda.flatMap((a) => (a.talk ? [{ title: a.talk.title, speakerIds: a.talk.speakerIds }] : []));
+    return list.filter((t) => AI_TALK.test(t.title)).map((t) => ({ title: t.title, ev, speakers: t.speakerIds.map((id) => byId.get(id)).filter((s) => !!s) }));
+  })
+  .slice(0, 6);
+---
+
+<BaseLayout
+  title="AI & Machine Learning Meetups in Zurich"
+  fullTitle="AI & Machine Learning Meetups in Zurich · ZurichJS · JavaScript AI Development"
+  description="AI and machine learning meetups in Zurich for JavaScript and TypeScript developers: OpenAI API, LangChain, RAG, vector databases and AI agents. Free, monthly."
+  keywords={[
+    'AI Zurich',
+    'Machine Learning Zurich',
+    'AI meetup Zurich',
+    'AI development Zurich',
+    'OpenAI Zurich',
+    'LangChain meetup',
+    'AI JavaScript Zurich',
+    'ML TypeScript Zurich',
+    'ChatGPT development Zurich',
+    'LLM Zurich',
+    'Artificial Intelligence Zurich',
+    'TensorFlow.js Zurich',
+    'AI engineering Zurich',
+    'AI events Switzerland',
+    'Machine Learning events Zurich',
+    'AI community Zurich',
+    'RAG systems Zurich',
+    'Vector databases Zurich',
+    'AI agents Zurich',
+  ]}
+  geo
+  image="/og/ai-ml-zurich.png"
+  imageAlt="AI development meetups in Zurich, ZurichJS"
+  jsonLd={[organizationSchema(), faqSchema(faqs)]}
+>
+  <PageOpening
+    slot="opening"
+    title="AI development meetups in Zurich"
+    sub="When we started ZurichJS in late 2024, we noticed something: most AI meetups in Zurich focused on Python and data science. But web developers needed practical answers for integrating AI into real applications. So we started hosting talks on OpenAI APIs, LangChain, RAG systems: the stuff you actually use in production JavaScript."
+  >
+    <div class="flex flex-wrap gap-3 pt-1.5">
+      <Button href="/events" variant="yellow" grow>View AI meetups</Button>
+      <Button href="/cfp" variant="outline-white" grow>Share your AI knowledge</Button>
+    </div>
+  </PageOpening>
+
+  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+    <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
+      <h2 id="h-why" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Why AI at a JavaScript meetup?</h2>
+      <div class="flex flex-col gap-4 text-[18px] leading-[1.6] text-ink-2 max-w-[680px]">
+        <p class="m-0">
+          Because that’s where the real integration happens. Most companies aren’t training their own models. They’re using APIs. They’re building interfaces. They’re connecting LLMs to existing systems. And all of that lives in the web stack.
+        </p>
+        <p class="m-0">Our AI talks come from people building this in production: ChatGPT-style interfaces, RAG systems for documentation, AI agents for workflow automation. Not theoretical, practical.</p>
+        <p class="m-0 text-black font-bold">Plus, Zurich has Google’s AI labs, ETH research, and AI startups. The knowledge is here. We’re just creating the space for web developers to access it.</p>
+      </div>
+    </section>
+
+    <section aria-label="What the AI talks are like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+      {
+        PILLARS.map((p) => (
+          <Surface tone={p.tone} class="p-7 flex flex-col gap-2.5">
+            <h3 class="m-0 text-[22px] font-bold">{p.h}</h3>
+            <p class="m-0 text-[17px] leading-[1.55]">{p.d}</p>
+          </Surface>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="h-web" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
+      <div class="flex flex-col gap-4 max-w-[760px]">
+        <h2 id="h-web" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What AI looks like for web developers</h2>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          We’re not training models. We’re integrating them. The practical reality of AI for most web developers is: call an API, manage prompts, handle streaming, deal with rate limits, build interfaces that users actually understand.
+        </p>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          Our AI talks reflect that. They come from people who’ve debugged token limits at 2am. Who’ve figured out how to do RAG without blowing their budget. Who’ve built chat interfaces that don’t feel clunky. This is implementation knowledge, not hype.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">What you’ll learn</h3>
+        <TopicGroups groups={LEARN} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Popular AI topics at ZurichJS</h3>
+        <PointList items={POPULAR} min={280} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">AI tech stack we cover</h3>
+        <TopicGroups groups={STACK} min={240} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Who should attend?</h3>
+        <PointList items={WHO} min={280} />
+      </div>
+
+      <div class="flex flex-col gap-4 max-w-[760px]">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Zurich’s AI ecosystem</h3>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          Zurich is emerging as a major AI hub in Europe. ZurichJS connects with the broader AI community including ETH Zurich AI research, Google Zurich’s AI teams, and numerous AI startups. Our meetups bridge academic AI research with practical industry
+          applications.
+        </p>
+      </div>
+    </section>
+
+    {
+      aiTalks.length > 0 && (
+        <section aria-labelledby="h-ai-talks" class="px-gut flex flex-col gap-7">
+          <SectionHeading id="h-ai-talks">
+            AI talks from past meetups
+            <Fragment slot="sub">A few of the AI talks given at ZurichJS, with the evening they were part of.</Fragment>
+          </SectionHeading>
+          <ul class="m-0 p-0 list-none grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]">
+            {aiTalks.map((t) => (
+              <li class="rounded-card bg-grey-soft p-6 flex flex-col gap-2">
+                <a href={eventHref(t.ev)} class="text-[19px] leading-[1.3] font-bold text-black no-underline hover:underline text-pretty [overflow-wrap:anywhere]">
+                  {t.title}
+                </a>
+                <span class="text-[16px] leading-[1.45] text-ink-2">
+                  {t.speakers.map((s, i) => (
+                    <>
+                      {i > 0 && ', '}
+                      <a href={`/speakers/${s.id}`} class="font-bold text-black">
+                        {s.name}
+                      </a>
+                    </>
+                  ))}
+                  {t.speakers.length > 0 && ' · '}
+                  {t.ev.startsAt ? monthYear(t.ev.startsAt) : t.ev.title}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <LandingEvents id="h-next" title="Next meetups in Zurich" sub="AI talks are part of the regular programme. Free to attend, in English, and fine to come alone." />
+
+    <LandingFaq faqs={faqs} />
+
+    <LandingCta id="h-join" title="Join Zurich’s AI developer community" text="Learn practical AI development with JavaScript & TypeScript. Connect with developers building real AI applications.">
+      <Button href="/events" variant="black" grow>View AI meetups</Button>
+      <Button href="/cfp" variant="white" grow>Share your AI knowledge</Button>
+    </LandingCta>
+  </div>
+</BaseLayout>

@@ -58,7 +58,7 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 
 ## Phase 1 (Astro app)
 
-- **Astro 5.18 as specified, not 7.** Astro 7 is current, but the brief names Astro 5; `@astrojs/tailwind` (Tailwind 3 and the V2 config as preset) supports only up to Astro 5. Upgrading is a follow-up once the design package moves to Tailwind 4. (Assumption)
+- **Astro 7.4, not 5 (changed for security, 2026-10-31).** The brief named Astro 5, but Astro < 7.2.8 has a critical advisory (GHSA-26w7-cxv4-gfx2) and the Netlify adapter for Astro 5 has more; the dependency review blocked the PR. The platform now uses Astro 7.4.4, `@astrojs/netlify` 8.2.10, `@astrojs/preact` 6.1.1 and Vitest 4.1.12. Tailwind stays on v3 (the V2 config is the preset) and runs through PostCSS (`postcss.config.mjs`), because `@astrojs/tailwind` has no Astro 7 release. Build, `astro check`, tests, e2e, the SEO gate and Lighthouse are unchanged. (Owner asked for all CI to pass.)
 - **Islands are Preact with `compat`.** compat lets the V2 React code port almost verbatim; new code uses Preact idioms. Islands: event actions, banner, summary and programme (clock-aware state and rating), /today, the forms, and the events/speakers filters. The mobile menu and the events tabs are small inline scripts, not framework islands. (Assumption)
 - **Prerendered state plus clock re-check.** Pages render the event state as of build time. Islands re-evaluate it in the browser every minute and swap the actions, banner and rating. A page built before doors switches to feedback mode without a rebuild; the switch to the recap waits for the doors + 48 h rebuild (Phase 4) and tells visitors to reload. (Assumption)
 - **Sanity reads use plain `fetch`, not `@sanity/client`.** It is smaller, and the client crashed the build with an uncatchable socket error when Sanity was unreachable. **Sample content never ships:** builds fall back to the V2 sample content only outside production, and fail on `CONTEXT=production` or `CONTENT_REQUIRE_SANITY=1`. (Assumption)
@@ -78,3 +78,21 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 - **V2 evening-feedback answers are stored in named fields** (`moreOf`, `improvements`, `futureTopics`, `arrivalIssues`, `describeToFriend`) on `comprehensiveFeedback`, declared in the Studio. A deep dive is 35 minutes, as the form says. (Assumption)
 - **`.ics` escaping fixed:** semicolons were not escaped (the same bug was in `v2/`). (Assumption)
 - **pnpm `packageExtensions`** declares `@emnapi/runtime` for `@napi-rs/wasm-runtime`, which `@astrojs/check` needs and which does not declare it. (Assumption)
+
+## CI: production dependency audit (2026-10-31, owner asked to fix all failing CI)
+
+- **The `ci` job's `pnpm audit --audit-level moderate` was failing on `main`** with 72 advisories. Fixed in the production app's dependencies:
+  - Next.js 16.2.11 → 16.4.3 (with `eslint-config-next` and `@next/third-parties`)
+  - axios ^1.21.0, zod ^4.6.7, `@vercel/og` ^1.0.3 (satori 0.33.5, SVG escaping fix), `next-sanity` ^13.4.0
+  - Scoped overrides for transitive packages, each at a patched release in the same major: sharp, js-yaml 3, adm-zip, smol-toml, tinypool, markdown-it, follow-redirects, vite 7, undici, dompurify, qs, source-map-js, baseline-browser-mapping, postcss-selector-parser 6, zod 4, brace-expansion 5.0.12. The existing CommonJS-compatibility patch is regenerated for 5.0.12.
+- **One advisory is ignored with a reason** (`auditConfig.ignoreGhsas`): GHSA-g3hv-75wg-m249 (minimatch < 11.0.1, denial of service through crafted glob patterns). Only 11.x is patched, and its export is not callable like the 3.x/5.x/10.x APIs our tooling uses. The patterns come from config files, never from users.
+- **Verified:**
+  - `pnpm audit --audit-level moderate` exits 0
+  - oxlint, ESLint, oxfmt, `tsc` pass
+  - `next build` compiles; it stops at Sanity data collection only because Sanity is blocked in this environment, the same as on `main`
+
+## CI: platform dependency review (2026-10-31)
+
+- `platform/pnpm audit` is clean. Two overrides keep the same API: `glob@13` → 14 and `minimatch@10` → 11, both only in Netlify's dev tooling.
+- **deepmerge has no patched release** (GHSA-gcqx-w48m-w2h4, low; 4.3.1 is the latest). Instead of ignoring it, `platform/vendor/deepmerge` is 4.3.1 with the fix (skip own `__proto__` keys), wired through a `link:` override. It is only used by `@netlify/config`. Remove it once a fixed version is published.
+- **Production-app (root) audit decisions are recorded separately, in the "CI: production dependency audit" section.**

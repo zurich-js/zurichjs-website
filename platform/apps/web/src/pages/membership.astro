@@ -1,0 +1,48 @@
+---
+import PageOpening from '~/components/layout/PageOpening.astro';
+import MembershipForm from '~/components/islands/forms/MembershipForm';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+
+const FEES = [
+  ['Venues and food', 'Evenings that no host or sponsor covers.'],
+  ['Speakers', 'Travel for speakers from outside Zurich.'],
+  ['Infrastructure', 'The tools that keep the meetup community running.'],
+];
+---
+
+<BaseLayout
+  title="Membership"
+  fullTitle="Membership · Join the ZurichJS Association"
+  description="Join ZurichJS as a member of the Swiss JavaScript Group association. Support the Zurich JavaScript community as a Basic Member or Supporter."
+  keywords={['ZurichJS membership', 'Swiss JavaScript Group', 'Verein Zurich', 'JavaScript community Zurich', 'support ZurichJS']}
+>
+  <PageOpening
+    slot="opening"
+    title="Become a member"
+    sub={`ZurichJS is run by the ${SITE.association}, a registered Swiss association (Verein). Members fund the meetups and have a say in how the community grows.`}
+  />
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+    <MembershipForm client:load />
+
+    <section aria-labelledby="h-fees" class="flex flex-col gap-[18px] max-w-[880px]">
+      <h2 id="h-fees" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where the fees go</h2>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-x-10 gap-y-5">
+        {
+          FEES.map(([h, d]) => (
+            <div class="flex flex-col gap-1">
+              <h3 class="m-0 text-[19px] font-bold">{h}</h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{d}</p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+        You don’t need to be a member to come to a meetup. Prefer a one-off gift? <a href="/donate" class="font-bold text-black">Donate instead</a>. Questions about membership: <a
+          href={`mailto:${SITE.email}`}
+          class="font-bold text-black">{SITE.email}</a
+        >.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

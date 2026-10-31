@@ -81,7 +81,17 @@ const titleSize = (s: string) => (s.length <= 28 ? 84 : s.length <= 48 ? 72 : s.
 function frame(wordmark: string, body: Node, footer: string): Node {
   return h(
     'div',
-    { width: W, height: H, background: '#000', color: '#fff', fontFamily: 'Figtree', flexDirection: 'column', justifyContent: 'space-between', padding: '64px 72px' },
+    {
+      width: '100%',
+      height: '100%',
+      boxSizing: 'border-box',
+      background: '#000',
+      color: '#fff',
+      fontFamily: 'Figtree',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      padding: '64px 72px',
+    },
     { type: 'img', props: { src: wordmark, width: 329, height: 48, style: { width: 329, height: 48 } } },
     body,
     h(

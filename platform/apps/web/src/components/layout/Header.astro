@@ -1,0 +1,71 @@
+---
+import { confLink, trackAttrs } from '~/lib/analytics';
+import { content } from '~/lib/content';
+import { buttonClass, cx } from '~/lib/ui';
+
+interface Props {
+  /** Where the "Next meetup" action goes. */
+  nextHref: string;
+}
+const { nextHref } = Astro.props;
+const { conference } = await content();
+const NAV = [
+  { label: 'Events', href: '/events', match: ['/events', '/feedback', '/today'] },
+  { label: 'Speakers', href: '/speakers', match: ['/speakers', '/cfp'] },
+  { label: 'Community', href: '/about', match: ['/about', '/partners', '/donate', '/contact', '/cfv', '/media'] },
+];
+const path = Astro.url.pathname.replace(/\.html$/, '');
+const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p + '/'));
+const confHref = confLink('/', 'nav');
+const confTrack = trackAttrs('conf_outbound_click', { placement: 'nav', confstate: conference.state });
+---
+
+<header class="flex items-center justify-between gap-5 py-5 px-gut">
+  <a href="/" aria-label="ZurichJS home" class="flex">
+    <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[22px] md:h-7 w-auto" />
+  </a>
+
+  <nav aria-label="Main" class="hidden md:flex items-center gap-7 text-[17px]">
+    {
+      NAV.map((n) => (
+        <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-1.5 font-bold no-underline hover:text-yellow', isCurrent(n.match) ? 'text-yellow' : 'text-white')}>
+          {n.label}
+        </a>
+      ))
+    }
+    <a href={confHref} target="_blank" rel="noopener" class="py-1.5 font-bold no-underline text-white hover:text-yellow" {...confTrack}>Conference</a>
+    <a href={nextHref} class={buttonClass('yellow', 'md', false, '!min-h-0 py-2.5 px-[22px] text-[17px]')}>Next meetup</a>
+  </nav>
+
+  <button
+    type="button"
+    data-menu-toggle
+    aria-expanded="false"
+    aria-controls="mobile-nav"
+    class="md:hidden border-2 border-white bg-transparent rounded-pill min-w-[44px] h-11 px-4 font-bold text-[15px] text-white cursor-pointer">Menu</button
+  >
+</header>
+
+<nav id="mobile-nav" aria-label="Main" hidden class="md:hidden flex-col gap-1 px-gut pb-6 [&:not([hidden])]:flex">
+  {
+    NAV.map((n) => (
+      <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2.5 text-[24px] font-bold no-underline', isCurrent(n.match) ? 'text-yellow' : 'text-white')}>
+        {n.label}
+      </a>
+    ))
+  }
+  <a href={confHref} target="_blank" rel="noopener" class="py-2.5 text-[24px] font-bold no-underline text-white" {...confTrack}>Conference</a>
+  <a href={nextHref} class={buttonClass('yellow', 'md', false, 'mt-3 w-full text-[17px]')}>Next meetup</a>
+</nav>
+
+<script>
+  // Mobile menu: progressive enhancement, no framework.
+  const btn = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const nav = document.getElementById('mobile-nav');
+  btn?.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', String(open));
+    btn.textContent = open ? 'Close' : 'Menu';
+    if (nav) nav.hidden = !open;
+  });
+</script>

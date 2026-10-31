@@ -1,0 +1,20 @@
+{
+  "name": "@zurichjs/seo",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "SEO and LLM surface: meta, JSON-LD, sitemap and llms.txt builders.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@zurichjs/events": "workspace:*"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "@zurichjs/forms",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Form schemas (zod) shared by islands and Netlify Functions.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

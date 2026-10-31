@@ -1,0 +1,167 @@
+---
+/**
+ * Event page. One URL for the whole life of an event: upcoming (RSVP), live
+ * (48 h feedback window with per-talk rating), then the recap. The state is
+ * prerendered as of the build; islands follow the clock in the browser, and
+ * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
+ */
+import { dateLong, eventHref, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
+import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
+import PageOpening from '~/components/layout/PageOpening.astro';
+import EventActions from '~/components/islands/event/EventActions';
+import EventBanner from '~/components/islands/event/EventBanner';
+import EventSummary from '~/components/islands/event/EventSummary';
+import Programme from '~/components/islands/event/Programme';
+import Button from '~/components/ui/Button.astro';
+import Photo from '~/components/ui/Photo.astro';
+import Surface from '~/components/ui/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
+import { clip } from '~/lib/text';
+
+export async function getStaticPaths() {
+  const { events } = await content();
+  return events.map((ev) => ({ params: { slug: ev.slug }, props: { ev } }));
+}
+
+const { ev } = Astro.props as { ev: Event };
+const c = await content();
+const state = resolveState(ev, BUILD_TIME);
+const p = presentEvent(ev, { now: BUILD_TIME, ticketing });
+const url = canonicalUrl(eventHref(ev));
+const byId = new Map(c.speakers.map((s) => [s.id, s]));
+const speakerIds = [...new Set([...ev.agenda.flatMap((a) => a.talk?.speakerIds ?? []), ...(ev.recap?.talks.flatMap((t) => t.speakerIds) ?? [])])];
+const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
+const progSpeakers = speakers.map(({ id, name, role, initials }) => ({ id, name, role, initials }));
+const hosts = c.partners.filter((h) => ev.hosts?.includes(h.id));
+const isPast = state === 'past';
+const next = nextMeetup(c.events, BUILD_TIME);
+const nextP = next ? presentEvent(next, { now: BUILD_TIME, ticketing }) : null;
+const description = clip(isPast ? `${recapSummary(ev)} ${ev.description}` : `${p.dateLineShort} · ${p.venueShort}. ${ev.description}`);
+const jsonLd = [eventSchema(ev, c.speakers, hosts), breadcrumbSchema([{ name: 'Events', path: '/events' }, { name: ev.title, path: eventHref(ev) }])];
+const image = ev.photos[0]?.src;
+---
+
+<BaseLayout title={ev.title} description={description} image={image} jsonLd={jsonLd}>
+  {
+    isPast ? (
+      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev)} />
+    ) : (
+      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }} pills={p.pills}>
+        <div class="flex flex-col gap-[18px] pt-1">
+          <div class="text-[clamp(18px,1.6vw,21px)] leading-[1.5]">
+            <b class="text-yellow">{p.whenShort}</b>
+            <br />
+            <span class="text-grey-mid">{`${p.venueShort}${p.venueStreet}`}</span>
+          </div>
+          <EventActions client:load ev={ev} initial={state} url={url} />
+        </div>
+      </PageOpening>
+    )
+  }
+
+  {
+    isPast ? (
+      <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+        {ev.recap && ev.recap.talks.length > 0 ? (
+          <section class="flex flex-col gap-6">
+            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Talks</h2>
+            {ev.recap.talks.map((t) => (
+              <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-x-10 gap-y-3.5 items-start">
+                <div class="flex flex-col gap-2 col-span-full md:[grid-column:1/-2]">
+                  <h3 class="m-0 text-[22px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+                  <div class="flex flex-wrap gap-x-3">
+                    {t.speakerIds
+                      .map((id) => byId.get(id))
+                      .filter((s) => !!s)
+                      .map((s) => (
+                        <a href={`/speakers/${s.id}`} class="text-[17px] font-bold underline underline-offset-[3px]">
+                          {s.name}
+                        </a>
+                      ))}
+                  </div>
+                  <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{t.summary}</p>
+                </div>
+                <span class="text-[16px] font-bold text-ink-2">{t.format}</span>
+              </div>
+            ))}
+          </section>
+        ) : (
+          ev.agenda.some((a) => a.talk) && <Programme ev={ev} initial={state} speakers={progSpeakers} />
+        )}
+
+        <section class="flex flex-col gap-[18px]">
+          <div class="flex justify-between items-baseline flex-wrap gap-2.5">
+            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Photos from the evening</h2>
+            <a href="/media" class="font-bold text-[17px] underline underline-offset-[3px]">
+              All photos
+            </a>
+          </div>
+          {ev.photos.length > 0 ? (
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3">
+              {ev.photos.map((ph) => (
+                <Photo photo={ph} class="aspect-[4/3] w-full !rounded-2xl" width={800} />
+              ))}
+            </div>
+          ) : (
+            <Surface class="p-6 text-[17px] text-ink-2">Photos from this evening aren’t online yet. They usually follow within a week.</Surface>
+          )}
+        </section>
+
+        <section class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
+          <Surface class="p-7 flex flex-col gap-2.5">
+            <h2 class="m-0 text-[24px] font-bold">Were you there?</h2>
+            <p class="m-0 text-[17px] leading-[1.5] text-ink-2">A few open questions, about five minutes. Speakers read every answer, and it’s how the next one gets better.</p>
+            <Button href={`/feedback?event=${ev.slug}`} variant="outline-black" class="self-start text-[17px]">
+              Give feedback
+            </Button>
+          </Surface>
+          <Surface tone="yellow" class="p-7 flex flex-col gap-2.5">
+            <h2 class="m-0 text-[24px] font-bold">{next ? `Next: ${next.title}` : 'The next meetup is being planned'}</h2>
+            <p class="m-0 text-[17px] leading-[1.5]">{next && nextP ? `${nextP.dateLineShort} · ${nextP.venueShort}` : 'It is announced on Meetup first.'}</p>
+            <Button href={next ? eventHref(next) : SITE.meetupGroupUrl} variant="black" class="self-start text-[17px]">
+              {next ? 'See the next meetup' : 'Follow the group on Meetup'}
+            </Button>
+          </Surface>
+        </section>
+      </div>
+    ) : (
+      <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(40px,5vw,72px)] items-start">
+        <div class="flex flex-col gap-[clamp(40px,5vw,64px)] col-span-full md:[grid-column:1/-2] min-w-0">
+          <EventBanner client:load ev={ev} initial={state} />
+
+          <section class="flex flex-col gap-3.5">
+            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
+            <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
+          </section>
+
+          {ev.agenda.length > 0 && <Programme client:visible ev={ev} initial={state} speakers={progSpeakers} />}
+
+          {ev.practical.length > 0 && (
+            <section class="flex flex-col gap-5">
+              <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Good to know</h2>
+              <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-x-10 gap-y-[22px]">
+                {ev.practical.map((x) => (
+                  <div class="flex flex-col gap-1">
+                    <h3 class="m-0 text-[18px] font-bold">{x.label}</h3>
+                    <p class="m-0 text-[17px] leading-[1.5] text-ink-2">
+                      {x.label === 'Code of conduct' ? (
+                        <>
+                          All ZurichJS events follow our <a href="/policies/code-of-conduct">code of conduct</a>.
+                        </>
+                      ) : (
+                        x.value
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+
+        <EventSummary client:idle ev={ev} initial={state} url={url} />
+      </div>
+    )
+  }
+</BaseLayout>

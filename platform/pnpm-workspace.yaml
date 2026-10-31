@@ -1,0 +1,11 @@
+# platform/ is its own pnpm root, isolated from the production app at the repository root.
+# Same supply-chain policy as the root workspace: packages must be at least 3 days old.
+packages:
+  - apps/*
+  - packages/*
+
+minimumReleaseAge: 4320
+
+allowBuilds:
+  esbuild: true
+  sharp: true

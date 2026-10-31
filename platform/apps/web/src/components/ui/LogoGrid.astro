@@ -1,0 +1,24 @@
+---
+import type { Partner } from '@zurichjs/events';
+
+interface Props {
+  partners: Partner[];
+}
+const { partners } = Astro.props;
+---
+
+<ul class="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3 list-none m-0 p-0">
+  {
+    partners.map((p) => (
+      <li class="h-20 rounded-2xl bg-grey flex items-center justify-center text-[14px] text-ink-2 px-4">
+        {p.logo ? (
+          <a href={p.url} target="_blank" rel="noopener" class="flex items-center justify-center w-full h-full">
+            <img src={p.logo} alt={p.name} width="120" height="48" loading="lazy" class="max-h-12 w-auto object-contain" />
+          </a>
+        ) : (
+          <span>{p.name}</span>
+        )}
+      </li>
+    ))
+  }
+</ul>

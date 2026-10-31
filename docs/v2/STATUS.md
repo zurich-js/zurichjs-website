@@ -23,3 +23,26 @@ Plain-language status after each phase. Newest at the bottom.
 - The root `next build` cannot finish here because Sanity is blocked (BLOCKERS #1). It compiles; it fails at data collection.
 
 **Next:** Phase 0. Write PLAN.md, the SEO baseline, the dead-code report and the Sane readiness note.
+
+## Phase 0: plan (2026-10-31)
+
+**Done**
+
+- `PLAN.md`: platform layout, sitemap with rendering mode and rebuild trigger per route (including every production-only route and its fate), design-system inventory, CI matrix, risks and decisions.
+- `SEO-BASELINE.md`, plus the crawl tool and baseline data in `platform/tools/seo/`. Records what Google and LLM crawlers get today, the parity rules the Astro app must pass, and the production SEO defects V2 fixes.
+- `DEAD-CODE.md`: knip report for the production app (28 dead files, 5 unused dependencies, dead exports).
+- `SANE-READINESS.md`: what Sane offers today and the two seams (`TicketingProvider`, `TalkProposalSink`) the platform builds so Sane can plug in later.
+
+**Verified how**
+
+- Crawled 27 production routes locally with JavaScript off. The 20 routes that need Sanity were read from source, by an agent and spot-checked.
+- knip findings were grep-checked: every flagged file is referenced only by other flagged files.
+
+**Open**
+
+- No live crawl of zurichjs.com (blocked; BLOCKERS #3).
+- Owner decisions:
+  - what `/workshops/*`, `/tshirt` and `/invite` do at switchover
+  - whether the Studio repo is the deployed Studio
+
+**Next:** the `v2/root-dead-code` PR (production cleanup), then Phase 1 (Astro app).

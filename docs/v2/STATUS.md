@@ -85,3 +85,37 @@ Plain-language status after each phase. Newest at the bottom.
 - Production routes outside the V2 design (membership, landing pages, ai-context, success pages, speaker feedback, OG images) are Phase 1b.
 
 **Next:** Phase 1b.
+
+## Phase 1b: remaining public routes (2026-10-31)
+
+**Done**
+
+- Every remaining production URL that is not de-scoped or removed is now ported:
+  - `/meetups/javascript-zurich`, `/meetups/ai-ml-zurich`, `/conferences/tech-conferences-zurich` (FAQ content verbatim with FAQPage JSON-LD, keywords, geo tags)
+  - `/ai-context` (every URL a real link, plus links to `/llms.txt`)
+  - `/membership`, `/waitlist/conf`
+  - `/success`, `/checkout/success` (noindex)
+  - `/feedback/speaker/[token]` (on demand, noindex, JWT)
+- Pro-meetup ticket sales on the event page (Stripe Checkout through a function that checks the price against Sanity).
+- Static OG images (`/og/*.png`, satori), and the production `/api/og/*` URLs 301 to them (Phase 4 netlify.toml).
+- Functions: `verein-inquiry`, `subscribe` (EmailOctopus), `stripe/checkout-sessions`, `get-price`, `validate-coupon`, `speaker-feedback/[token]`.
+- **Copy corrected to match what the code does:**
+  - the 2026 FrontConf and Voxxed Days partnerships are in the past tense
+  - Pro Meetups are no longer described as free
+  - no promises about receipts or ticket delivery times that the code cannot keep
+
+**Verified how**
+
+- Unit tests: 103.
+- `astro check`: 0 errors.
+- Playwright: 63 tests, including every new route at 390 and 1440 and 320px overflow.
+- SEO parity gate: 0 failures and no pending routes. Only the owner-decision routes remain (workshops, T-shirt, admin, profile, invite).
+- Platform `pnpm audit`: no known vulnerabilities.
+
+**Open (owner)**
+
+- Production copy kept as is: "900+ developers" and the workshops mentioned in two landing-page FAQs.
+- **Purchase notifications** now post to Slack the first time a paid session is viewed. A Stripe webhook would be more reliable.
+- Stripe customer receipts must be switched on in the Stripe dashboard if receipts are wanted.
+
+**Next:** Phase 2.

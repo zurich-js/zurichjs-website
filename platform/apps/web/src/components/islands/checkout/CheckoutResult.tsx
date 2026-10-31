@@ -87,7 +87,7 @@ export default function CheckoutResult() {
       return (
         <div role="status" class={body}>
           <h2 class={h2}>Your donation went through.</h2>
-          <p class={p}>Stripe took the payment for ZurichJS and emails your receipt to the address you used at checkout. It goes towards venues, food and speaker travel.</p>
+          <p class={p}>Stripe took the payment for ZurichJS. It goes towards venues, food and speaker travel.</p>
           {help}
           <div class="flex flex-wrap gap-3 pt-1">
             <Button href="/events" variant="black">
@@ -143,7 +143,7 @@ export default function CheckoutResult() {
       return (
         <div role="status" class={body}>
           <h2 class={h2}>We couldn’t check this payment.</h2>
-          <p class={p}>If you finished paying on Stripe, an organiser emails your ticket to the address you used at checkout within 24 hours.</p>
+          <p class={p}>If you finished paying on Stripe, an organiser emails your ticket to the address you used at checkout.</p>
           {help}
           <div class="flex flex-wrap gap-3 pt-1">
             <Button href={eventHref(view)} variant="black">
@@ -156,7 +156,7 @@ export default function CheckoutResult() {
       return (
         <div class={body}>
           <h2 class={h2}>Thanks for supporting ZurichJS.</h2>
-          <p class={p}>If you just bought a meetup ticket, an organiser emails it to the address you used at checkout within 24 hours. A donation needs nothing more from you.</p>
+          <p class={p}>If you just bought a meetup ticket, an organiser emails it to the address you used at checkout. A donation needs nothing more from you.</p>
           {help}
           <div class="flex flex-wrap gap-3 pt-1">
             <Button href="/events" variant="black">

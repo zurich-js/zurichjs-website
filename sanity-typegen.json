@@ -1,0 +1,5 @@
+{
+  "path": "../zurichjs-website/platform/packages/content/src/**/*.ts",
+  "schema": "schema.json",
+  "generates": "../zurichjs-website/platform/packages/content/src/sanity.types.ts"
+}

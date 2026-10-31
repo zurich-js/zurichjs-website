@@ -1,27 +1,215 @@
-import { defineType } from 'sanity';
+import {CalendarIcon} from '@sanity/icons'
+import {defineArrayMember, defineField, defineType} from 'sanity'
+import {readiness, type EventDraft} from '../lib/readiness'
 
+/**
+ * Events (type name stays "events"; renaming would mean migrating every document and reference).
+ * V2 fields are additive: existing documents keep working, and migrations/v2-additive fills defaults.
+ */
 export default defineType({
   name: 'events',
   title: 'Events',
   type: 'document',
-  fields: [
-    { name: 'id', title: 'ID', type: 'slug' },
-    { name: 'title', title: 'Title', type: 'string' },
-    { name: 'datetime', title: 'Date and Time', type: 'datetime' },
-    { name: 'location', title: 'Location', type: 'string' },
-    { name: 'address', title: 'Address', type: 'string' },
-    { name: 'description', title: 'Description', type: 'text' },
-    { name: 'meetupUrl', title: 'Meetup URL', type: 'url' },
-    { name: 'isProMeetup', title: 'Is Pro Meetup', type: 'boolean', initialValue: false },
-    { name: 'ticketSaleUrl', title: 'Ticket Sale URL', type: 'url' },
-    { name: 'image', title: 'Image', type: 'image' },
-    { name: 'attendees', title: 'Attendees', type: 'number' },
-    { name: 'excludeFromStats', title: 'Exclude from Stats', type: 'boolean', initialValue: false },
-    { 
-      name: 'talks', 
-      title: 'Talks', 
-      type: 'array', 
-      of: [{ type: 'reference', to: [{ type: 'talk' }] }]
-    },
+  icon: CalendarIcon,
+  groups: [
+    {name: 'basics', title: 'Basics', default: true},
+    {name: 'venue', title: 'Venue'},
+    {name: 'programme', title: 'Programme'},
+    {name: 'practical', title: 'Good to know'},
+    {name: 'tickets', title: 'Meetup and tickets'},
+    {name: 'after', title: 'After the event'},
   ],
-});
+  fields: [
+    defineField({name: 'title', title: 'Title', type: 'string', group: 'basics', validation: (r) => r.required()}),
+    defineField({
+      name: 'id',
+      title: 'URL (ID)',
+      type: 'slug',
+      group: 'basics',
+      description: 'The page lives at zurichjs.com/events/<ID>. Do not change it after publishing: links and search results use it.',
+      options: {source: 'title', maxLength: 96},
+      validation: (r) => r.required(),
+    }),
+    defineField({
+      name: 'status',
+      title: 'Status',
+      type: 'string',
+      group: 'basics',
+      description: 'The site also follows the clock: from doors the page opens feedback for 48 hours, then becomes the recap.',
+      options: {
+        list: [
+          {title: 'Scheduled (RSVP open on Meetup)', value: 'scheduled'},
+          {title: 'Date set, RSVP opens soon', value: 'rsvp-soon'},
+          {title: 'Date to be confirmed', value: 'tbc'},
+          {title: 'Full (Meetup waitlist)', value: 'full'},
+          {title: 'Postponed', value: 'postponed'},
+          {title: 'Cancelled', value: 'cancelled'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'scheduled',
+    }),
+    defineField({
+      name: 'datetime',
+      title: 'Doors',
+      type: 'datetime',
+      group: 'basics',
+      options: {timeStep: 15},
+      validation: (r) =>
+        r.custom((value, ctx) => {
+          const s = (ctx.document as EventDraft | undefined)?.status ?? 'scheduled'
+          return !value && ['scheduled', 'rsvp-soon', 'full'].includes(s) ? 'Scheduled events need a date and doors time.' : true
+        }),
+    }),
+    defineField({name: 'endsAt', title: 'Ends', type: 'datetime', group: 'basics', options: {timeStep: 15}}),
+    defineField({
+      name: 'dateText',
+      title: 'Month (when the date is not fixed)',
+      type: 'string',
+      group: 'basics',
+      description: 'For "Date to be confirmed" events, e.g. "January 2027".',
+      hidden: ({document}) => document?.status !== 'tbc',
+    }),
+    defineField({name: 'description', title: 'Description', type: 'text', rows: 4, group: 'basics', validation: (r) => r.min(50).warning('Search snippets need at least 50 characters.')}),
+
+    defineField({
+      name: 'venue',
+      title: 'Venue',
+      type: 'object',
+      group: 'venue',
+      options: {collapsible: false},
+      fields: [
+        defineField({name: 'name', title: 'Name', type: 'string'}),
+        defineField({name: 'street', title: 'Street and number', type: 'string'}),
+        defineField({name: 'zip', title: 'Postcode', type: 'string'}),
+        defineField({name: 'city', title: 'City', type: 'string', initialValue: 'Zürich'}),
+        defineField({name: 'directions', title: 'How to get there', type: 'text', rows: 3}),
+      ],
+    }),
+    defineField({name: 'venueNote', title: 'Venue note', type: 'string', group: 'venue', description: 'Shown when the venue is not confirmed yet.'}),
+    defineField({name: 'location', title: 'Location (legacy)', type: 'string', group: 'venue', description: 'Used by the current site. Keep in sync with Venue › Name until the switch to V2.'}),
+    defineField({name: 'address', title: 'Address (legacy)', type: 'string', group: 'venue', description: 'Used by the current site, e.g. "Hardstrasse 201, 8005 Zürich".'}),
+    defineField({name: 'hosts', title: 'Hosts', type: 'array', group: 'venue', of: [defineArrayMember({type: 'reference', to: [{type: 'partner'}]})]}),
+
+    defineField({
+      name: 'talks',
+      title: 'Talks',
+      type: 'array',
+      group: 'programme',
+      description: 'In running order. Used for the programme when the agenda below is empty.',
+      of: [defineArrayMember({type: 'reference', to: [{type: 'talk'}]})],
+    }),
+    defineField({
+      name: 'agenda',
+      title: 'Agenda',
+      type: 'array',
+      group: 'programme',
+      description: 'Optional: the evening with times (doors, talks, food). Leave empty to list the talks above at doors time.',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'agendaItem',
+          fields: [
+            defineField({name: 'time', title: 'Time', type: 'string', description: 'e.g. 18:30', validation: (r) => r.regex(/^\d{2}:\d{2}$/, {name: 'HH:MM'})}),
+            defineField({name: 'title', title: 'Title', type: 'string'}),
+            defineField({name: 'talk', title: 'Talk', type: 'reference', to: [{type: 'talk'}]}),
+            defineField({name: 'note', title: 'Note', type: 'string'}),
+          ],
+          preview: {select: {time: 'time', title: 'title', talk: 'talk.title'}, prepare: ({time, title, talk}) => ({title: `${time ?? ''} ${title ?? talk ?? ''}`})},
+        }),
+      ],
+    }),
+
+    defineField({
+      name: 'practical',
+      title: 'Good to know',
+      type: 'array',
+      group: 'practical',
+      description: 'Short facts: cost, language, food, accessibility, code of conduct.',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'practicalInfo',
+          fields: [defineField({name: 'label', title: 'Label', type: 'string'}), defineField({name: 'value', title: 'Text', type: 'text', rows: 2})],
+          preview: {select: {title: 'label', subtitle: 'value'}},
+        }),
+      ],
+    }),
+
+    defineField({name: 'meetupUrl', title: 'Meetup event link', type: 'url', group: 'tickets', description: 'RSVPs happen on Meetup. The site links here; it does not register anyone.'}),
+    defineField({name: 'isProMeetup', title: 'Pro meetup (paid tickets on the site)', type: 'boolean', group: 'tickets', initialValue: false}),
+    defineField({
+      name: 'stripePriceId',
+      title: 'Stripe price ID',
+      type: 'string',
+      group: 'tickets',
+      description: 'The ticket price for pro meetups (price_…). The current site already reads this field.',
+      hidden: ({document}) => !document?.isProMeetup,
+      validation: (r) => r.custom((v, ctx) => ((ctx.document as EventDraft | undefined)?.isProMeetup && !v ? 'Pro meetups need a Stripe price.' : true)),
+    }),
+    defineField({
+      name: 'ticketSaleUrl',
+      title: 'Ticket sale URL (deprecated)',
+      type: 'url',
+      group: 'tickets',
+      readOnly: true,
+      hidden: ({value}) => !value,
+      description: 'Not used by the site. Kept so existing values are not lost; use the Stripe price ID instead.',
+    }),
+
+    defineField({name: 'image', title: 'Main image', type: 'image', group: 'after', options: {hotspot: true}, fields: [defineField({name: 'alt', title: 'Alt text', type: 'string'})]}),
+    defineField({
+      name: 'photos',
+      title: 'Photos from the evening',
+      type: 'array',
+      group: 'after',
+      of: [defineArrayMember({type: 'image', options: {hotspot: true}, fields: [defineField({name: 'alt', title: 'Alt text', type: 'string', validation: (r) => r.required()})]})],
+      options: {layout: 'grid'},
+    }),
+    defineField({
+      name: 'recap',
+      title: 'Recap',
+      type: 'object',
+      group: 'after',
+      description: 'Shown on the same URL once the feedback window has closed. Talks only; no recordings or slides.',
+      fields: [
+        defineField({
+          name: 'talks',
+          title: 'Talks',
+          type: 'array',
+          of: [
+            defineArrayMember({
+              type: 'object',
+              name: 'recapTalk',
+              fields: [
+                defineField({name: 'talk', title: 'Talk', type: 'reference', to: [{type: 'talk'}]}),
+                defineField({name: 'summary', title: 'One or two sentences', type: 'text', rows: 3}),
+                defineField({name: 'format', title: 'Format label', type: 'string', description: 'e.g. "Talk · 25 min". Leave empty to derive it.'}),
+              ],
+              preview: {select: {title: 'talk.title', subtitle: 'summary'}},
+            }),
+          ],
+        }),
+      ],
+    }),
+    defineField({name: 'attendees', title: 'Attendees', type: 'number', group: 'after'}),
+    defineField({name: 'excludeFromStats', title: 'Exclude from stats', type: 'boolean', group: 'after', initialValue: false}),
+  ],
+  validation: (r) =>
+    r.custom((doc) => {
+      if (!doc) return true
+      const missing = readiness(doc as EventDraft).filter((c) => !c.ok)
+      return missing.length ? {message: `Not ready to publish: ${missing.map((m) => m.label).join(', ')}`, level: 'warning'} as never : true
+    }),
+  orderings: [{title: 'Date, newest first', name: 'dateDesc', by: [{field: 'datetime', direction: 'desc'}]}],
+  preview: {
+    select: {title: 'title', datetime: 'datetime', status: 'status', dateText: 'dateText', media: 'image'},
+    prepare: ({title, datetime, status, dateText, media}) => ({
+      title,
+      subtitle: [datetime ? new Date(datetime).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Zurich'}) : dateText, status && status !== 'scheduled' ? status : null]
+        .filter(Boolean)
+        .join(' · '),
+      media,
+    }),
+  },
+})

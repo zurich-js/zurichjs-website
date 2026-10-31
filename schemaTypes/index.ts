@@ -1,11 +1,18 @@
-import event from './events';
-import speaker from './speaker';
-import stats from './stats';
-import partner from './partner';
-import talk from './talk';
-import talkSubmission from './talkSubmission';
-import feedback from './feedback';
-import announcement from './announcement';
+import announcement from './announcement'
+import comprehensiveFeedback from './comprehensiveFeedback'
+import conference from './conference'
+import event from './events'
+import feedback from './feedback'
+import meetupRating from './meetupRating'
+import partner from './partner'
+import siteSettings from './siteSettings'
+import speaker from './speaker'
+import stats from './stats'
+import talk from './talk'
+import talkSubmission from './talkSubmission'
+
+/** One document each; the desk structure opens them directly and the actions below hide create/delete. */
+export const SINGLETONS = ['meetupRating', 'conference', 'siteSettings'] as const
 
 export const schemaTypes = [
   event,
@@ -15,5 +22,9 @@ export const schemaTypes = [
   talk,
   talkSubmission,
   feedback,
+  comprehensiveFeedback,
   announcement,
-];
+  meetupRating,
+  conference,
+  siteSettings,
+]

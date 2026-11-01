@@ -1,38 +1,49 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# zurichjs.com
 
-## Getting Started
-
-First, run the development server:
+The website of ZurichJS, the JavaScript community in Zurich. It is a static-first [Astro 7](https://astro.build) site on Netlify, with content in Sanity.
 
 ```bash
-npm run dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev                                   # http://localhost:4321 (reads Sanity; set CONTENT_SOURCE=sample to work offline)
+CONTENT_SOURCE=sample pnpm build           # build with sample content
+pnpm test                                  # Vitest: packages, API functions, rebuild logic
+pnpm e2e                                   # Playwright against apps/web/dist (build first)
+node tools/serve-dist.mjs 4321 &           # serve the build like Netlify (pretty URLs, redirects)
+node tools/seo/compare.mjs --base http://localhost:4321   # SEO and LLM parity gate
+pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+| Path                    | What                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| `apps/web`              | The Astro 7 site: static output, Netlify adapter, Preact islands, Tailwind 4. `netlify.toml` is here.     |
+| `packages/design`       | The design system: tokens, the generated Tailwind 4 theme, Figtree, Astro components, Preact islands.     |
+| `packages/events`       | Domain types, clock-based event state, presentation copy, the ticketing seam, `.ics`.                     |
+| `packages/content`      | Sanity GROQ over `fetch`, types generated from the Studio schema, mappers, sample content.                |
+| `packages/seo`          | Meta tags, JSON-LD, sitemap and `llms.txt` builders.                                                      |
+| `packages/forms`        | zod schemas shared by islands and the forms function.                                                     |
+| `packages/integrations` | Form forwarding: Sanity writes, Resend, Slack, EmailOctopus; `TalkProposalSink`.                          |
+| `packages/config`       | Shared TypeScript config.                                                                                 |
+| `tools/`                | The SEO baseline and parity gate, the local Netlify-like server, CI helpers.                              |
+| `e2e/`                  | Playwright: routes, accessibility, redirects, visual regression.                                          |
+| `docs/`                 | [Runbook](docs/v2/RUNBOOK.md), [design system](docs/design-system.md), [decisions](docs/v2/DECISIONS.md). |
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Content
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+`loadContent()` reads Sanity. It uses `SANITY_PROJECT_ID` (default `viqjrovw`), `SANITY_DATASET` (default `production`) and, optionally, `SANITY_READ_TOKEN` or `SANITY_TOKEN`.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- **When Sanity is unreachable:** the build falls back to sample content with a warning. On production builds (`CONTEXT=production` or `CONTENT_REQUIRE_SANITY=1`) it fails instead, so sample content never ships.
+- **Typed queries:** the Studio repo generates `packages/content/src/sanity.types.ts` (`npm run typegen`, with both repos checked out side by side). A test fails when a query changes without re-running it.
+- **Draft preview:** `SANITY_PERSPECTIVE=drafts` (which needs a read token) builds with unpublished changes. The pages are noindex and show a "Draft preview" bar.
+- **Rebuilds:** publishing in Sanity, and each event's doors and doors + 48 h, trigger a rebuild. See the [runbook](docs/v2/RUNBOOK.md).
 
-## Learn More
+## Event state
 
-To learn more about Next.js, take a look at the following resources:
+An event's displayed state comes from its editorial `status` plus the clock (`packages/events/src/state.ts`):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Before doors:** open, RSVP soon, TBC or full.
+- **From doors, for 48 hours:** live, which means feedback mode.
+- **After that:** past, which means the recap.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Cancelled and postponed override the clock. Pages are prerendered in the state that is true at build time, and the event islands re-check the clock in the browser.

@@ -1,6 +1,6 @@
 # ZurichJS design system
 
-`@zurichjs/design` (`platform/packages/design`) is the one place the ZurichJS look is defined. The meetup site (`platform/apps/web`) uses it today; the conference site can use the same tokens and theme later.
+`@zurichjs/design` (`packages/design`) is the one place the ZurichJS look is defined. The meetup site (`apps/web`) uses it today; the conference site can use the same tokens and theme later.
 
 - **Gallery:** `/design` on any build. It shows every component in every variant. The page is noindex, is not in the sitemap or `llms.txt`, and is not linked from anywhere.
 - **Stack:** Astro 7 components, Preact islands, Tailwind 4 (`@theme`), and Figtree through the Astro Fonts API.
@@ -114,9 +114,9 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 
 ```css
 /* globals.css */
-@import "tailwindcss";
-@import "@zurichjs/design/theme.css";
-@import "@zurichjs/design/fonts.css"; /* only without the Astro Fonts API */
+@import 'tailwindcss';
+@import '@zurichjs/design/theme.css';
+@import '@zurichjs/design/fonts.css'; /* only without the Astro Fonts API */
 @source '../node_modules/@zurichjs/design/src';
 ```
 
@@ -125,7 +125,7 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 
 ## Visual regression
 
-`platform/e2e/visual.spec.ts` screenshots these pages at 390px and 1440px against the baselines in `platform/e2e/__screenshots__`:
+`e2e/visual.spec.ts` screenshots these pages at 390px and 1440px against the baselines in `e2e/__screenshots__`:
 
 - home
 - an upcoming event and a recap event

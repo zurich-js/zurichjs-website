@@ -7,7 +7,7 @@ Owner decisions are in [DECISIONS.md](./DECISIONS.md), blockers in [BLOCKERS.md]
 ```
 platform/                     own pnpm root (pnpm-workspace.yaml, lockfile, minimumReleaseAge 4320)
   apps/web/                   Astro 7 site, output 'static', @astrojs/netlify, Preact islands, Tailwind 4
-    netlify.toml              read only by a Netlify site whose base directory is platform/apps/web
+    netlify.toml              read only by a Netlify site whose base directory is apps/web
   packages/
     design/                   tokens.ts → generated Tailwind 4 theme.css, Figtree, .astro and Preact components
     events/                   framework-free event-state logic (resolveState, presentEvent, formatting, ics)
@@ -170,7 +170,7 @@ Every token and component comes from `v2/src`. Rules and usage: [docs/design-sys
 2. **Phase 1b:** remaining public routes and APIs, OG images, PARITY.md.
 3. **Phase 2:** `@zurichjs/design` extraction, gallery, rules, visual regression.
 4. **Phase 3:** Studio schema, migrations, singletons, event workspace and readiness, Presentation, webhook definition, typegen.
-5. **Phase 4:** CI workflows, `platform/apps/web/netlify.toml`, rebuild triggers, RUNBOOK.
+5. **Phase 4:** CI workflows, `apps/web/netlify.toml`, rebuild triggers, RUNBOOK.
 6. **Phase 5:** CLAUDE.md, skills, agents, `.mcp.json`, AUTOMATION.md.
 
 Each phase gets one PR stacked on the previous one, with screenshots and recordings.

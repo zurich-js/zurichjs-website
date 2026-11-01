@@ -4,11 +4,11 @@ What search engines and LLM crawlers get from the current site, captured on 2026
 
 ## How it was captured
 
-- **Crawl:** `platform/tools/seo/snapshot.mjs` crawled the root Next app with JavaScript disabled, as a crawler sees it. Routes are in `platform/tools/seo/routes.production.txt`, output in `platform/tools/seo/baseline.crawl.json` (27 routes).
+- **Crawl:** `tools/seo/snapshot.mjs` crawled the root Next app with JavaScript disabled, as a crawler sees it. Routes are in `tools/seo/routes.production.txt`, output in `tools/seo/baseline.crawl.json` (27 routes).
   - The app ran with `next dev` and a placeholder Clerk key, locally.
   - Sanity is blocked from this environment ([BLOCKERS #1](./BLOCKERS.md)).
-- **Source:** pages that fetch Sanity while rendering returned 500 locally. Their SEO surface was read from source instead, in `platform/tools/seo/baseline.source.json` (20 routes, marked "source-derived").
-- **Live crawl not possible:** `zurichjs.com` is blocked here (BLOCKERS #3). Once it is allowed, re-run with `node platform/tools/seo/snapshot.mjs https://zurichjs.com platform/tools/seo/routes.production.txt baseline.live.json`.
+- **Source:** pages that fetch Sanity while rendering returned 500 locally. Their SEO surface was read from source instead, in `tools/seo/baseline.source.json` (20 routes, marked "source-derived").
+- **Live crawl not possible:** `zurichjs.com` is blocked here (BLOCKERS #3). Once it is allowed, re-run with `node tools/seo/snapshot.mjs https://zurichjs.com tools/seo/routes.production.txt baseline.live.json`.
 
 ## What production has today
 
@@ -25,7 +25,7 @@ What search engines and LLM crawlers get from the current site, captured on 2026
 | Language                | `content-language: en`, `og:locale en_US`                                                                                                                                                                                     |                                                                                                                                                                                                                           |
 | Geo                     | `geo.*` and `ICBM` on `/` and the three landing pages                                                                                                                                                                         |                                                                                                                                                                                                                           |
 
-## Parity rules for the Astro app (enforced by `platform/tools/seo/compare.mjs`)
+## Parity rules for the Astro app (enforced by `tools/seo/compare.mjs`)
 
 **Fail the build when any of these happens:**
 
@@ -39,7 +39,7 @@ What search engines and LLM crawlers get from the current site, captured on 2026
 8. `/ai-context`, `/llms.txt` or `/llms-full.txt` is missing.
 9. An indexable page has an empty `<h1>`, or under 200 characters of server-rendered text (content rendered only on the client).
 
-**Reported but not failed:** title and description wording changes, because V2 rewrites the copy. Each must be listed in `platform/tools/seo/allowlist.json` with a reason, or the report flags it.
+**Reported but not failed:** title and description wording changes, because V2 rewrites the copy. Each must be listed in `tools/seo/allowlist.json` with a reason, or the report flags it.
 
 **Improvements V2 makes on top of parity** (all checked by the gate):
 
@@ -52,12 +52,12 @@ What search engines and LLM crawlers get from the current site, captured on 2026
 
 ## Routes and their V2 status
 
-| Route                                                                                                                                                                                                                                                                                   | Baseline source | V2                                                     |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------------------------------ |
-| `/`, `/about`, `/events`, `/events/[id]`, `/speakers`, `/speakers/[id]`, `/media`, `/cfp`, `/cfv`, `/contact`, `/donate`, `/feedback`, `/today`, `/membership`, `/ai-context`, `/meetups/*`, `/conferences/tech-conferences-zurich`, `/waitlist/conf`, `/policies/*` (production slugs) | crawl or source | Ported, same URL                                       |
-| `/partnerships` → `/partners`; `/buy-us-a-coffee`, `/support` → `/donate`; `/event-feedback` → `/feedback`; `/cfp/form` → `/cfp`                                                                                                                                                        | crawl or source | 301                                                    |
-| `/checkout/success`, `/success`                                                                                                                                                                                                                                                         | crawl           | 301 → `/events`, `/donate` (Stripe removed)            |
-| `/feedback/speaker/[token]`                                                                                                                                                                                                                                                             | source          | Ported, noindex                                        |
-| `/workshops`, `/workshops/*` (8), `/tshirt`                                                                                                                                                                                                                                             | crawl or source | **De-scoped (owner decision pending)**                 |
-| `/admin/*`, `/profile/*`, `/invite/*`                                                                                                                                                                                                                                                   | crawl           | **Removed (owner).** `/invite` proposed 301 → `/about` |
-| `/media-demo`                                                                                                                                                                                                                                                                           | crawl           | Proposed 301 → `/media`                                |
+| Route                                                                                                                                                                                                                                                                                   | Baseline source | V2                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------------------- |
+| `/`, `/about`, `/events`, `/events/[id]`, `/speakers`, `/speakers/[id]`, `/media`, `/cfp`, `/cfv`, `/contact`, `/donate`, `/feedback`, `/today`, `/membership`, `/ai-context`, `/meetups/*`, `/conferences/tech-conferences-zurich`, `/waitlist/conf`, `/policies/*` (production slugs) | crawl or source | Ported, same URL                                           |
+| `/partnerships` → `/partners`; `/buy-us-a-coffee`, `/support` → `/donate`; `/event-feedback` → `/feedback`; `/cfp/form` → `/cfp`                                                                                                                                                        | crawl or source | 301                                                        |
+| `/checkout/success`, `/success`                                                                                                                                                                                                                                                         | crawl           | 301 → `/events`, `/donate` (Stripe removed)                |
+| `/feedback/speaker/[token]`                                                                                                                                                                                                                                                             | source          | Ported, noindex                                            |
+| `/workshops`, `/workshops/*` (8), `/tshirt`                                                                                                                                                                                                                                             | crawl or source | 301 → `/events`; `/tshirt` → `/donate` (switchover)        |
+| `/admin/*`, `/profile/*`, `/invite/*`                                                                                                                                                                                                                                                   | crawl           | 301 → `/` (admin, profile), `/about` (invite) (switchover) |
+| `/media-demo`                                                                                                                                                                                                                                                                           | crawl           | 301 → `/media` (switchover)                                |

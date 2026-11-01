@@ -94,7 +94,7 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 ## CI: platform dependency review (2026-10-31)
 
 - `platform/pnpm audit` is clean. Two overrides keep the same API: `glob@13` → 14 and `minimatch@10` → 11, both only in Netlify's dev tooling.
-- **deepmerge has no patched release** (GHSA-gcqx-w48m-w2h4, low; 4.3.1 is the latest). Instead of ignoring it, `platform/vendor/deepmerge` is 4.3.1 with the fix (skip own `__proto__` keys), wired through a `link:` override. It is only used by `@netlify/config`. Remove it once a fixed version is published.
+- **deepmerge has no patched release** (GHSA-gcqx-w48m-w2h4, low; 4.3.1 is the latest). Instead of ignoring it, `vendor/deepmerge` is 4.3.1 with the fix (skip own `__proto__` keys), wired through a `link:` override. It is only used by `@netlify/config`. Remove it once a fixed version is published.
 - **Production-app (root) audit decisions are recorded separately, in the "CI: production dependency audit" section.**
 
 ## Phase 2: design system (2026-11-01)
@@ -125,7 +125,7 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - **Result:** 80 of 82 screenshots are pixel-identical; the other 2 are that underline.
 - **The `/design` gallery** is a normal static page with `noindex`. It is left out of `STATIC_ROUTES`, so it appears in neither the sitemap nor `llms.txt`.
   - It renders from fixtures, so it is deterministic and shows every event state whatever is in Sanity.
-- **Visual baselines** are committed under `platform/e2e/__screenshots__` (8 pages × 2 widths, about 9 MB).
+- **Visual baselines** are committed under `e2e/__screenshots__` (8 pages × 2 widths, about 9 MB).
   - They come from Playwright 1.63 Chromium on Linux. CI must run them in the same environment; Phase 4 uses the Playwright container image.
 
 ## No payments: pro meetups and Stripe removed (owner, 2026-11-01)
@@ -152,7 +152,7 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 ## Phase 3: Sanity (2026-11-01)
 
 - **Types are generated in the Studio repo and committed in the website.**
-  - `sanity-typegen.json` reads the website's `queries.ts` from a side-by-side checkout and writes `platform/packages/content/src/sanity.types.ts`.
+  - `sanity-typegen.json` reads the website's `queries.ts` from a side-by-side checkout and writes `packages/content/src/sanity.types.ts`.
   - `npm run typegen` also extracts the schema offline (`scripts/extract-schema.ts`), so it needs no Sanity login or network.
   - `overloadClientMethods` is off, because the content package uses plain `fetch`, not `@sanity/client`.
   - CI cannot run typegen without the Studio repo. Instead, `types-in-sync.test.ts` fails when a query's text differs from the one its type was generated from.
@@ -179,15 +179,49 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 - **Debounce in Netlify Blobs.** The webhook only records "pending". The scheduled tick builds once nothing has been published for 2 minutes, so a burst of publishes causes one build. The state is written only after the build hook accepts the request, so a failed hook retries on the next tick.
 - **Webhook signature:** the same scheme as `@sanity/webhook`, checked against its source: `t=<ms>,v1=<base64url HMAC-SHA256 of "<t>.<body>">`, with a 5-minute replay window.
 - **`/state-changes.json`** is generated at build and lists the doors and doors + 48 h times still ahead. The scheduled function reads it from the deployed site, so the build alone decides when the next rebuild is due.
-- **Netlify base directory: `platform/apps/web`, with no package directory.**
+- **Netlify base directory: `apps/web`, with no package directory.**
   - Resolving the config with `@netlify/config` showed that base `platform` plus package `apps/web` resolves `publish` and `functions` against `platform/`.
-  - With base `platform/apps/web`, every path in `netlify.toml` resolves correctly, including the 11 redirects Astro writes to `dist/_redirects`.
+  - With base `apps/web`, every path in `netlify.toml` resolves correctly, including the 11 redirects Astro writes to `dist/_redirects`.
 - **No HSTS `preload` header.** Production does not send one, Netlify already sends HSTS on HTTPS, and preload is hard to undo. The other security headers match production's `next.config.mjs`.
 - **New redirect:** `/api/og/cfv` (referenced in production but missing) → a new `/og/cfv.png` card, which `/cfv` now uses.
-- **Node 22.23.4 for the platform** (`platform/.nvmrc`, `engines`, `NODE_VERSION` in `netlify.toml`). Astro 7.4.4 requires at least 22.23.4. The repository root's `.nvmrc` (22.23.1) stays as it is for the production app. A test keeps `platform/.nvmrc` at or above Astro's minimum and equal to `netlify.toml`. The first CI run on the Phase 4 PR found this.
+- **Node 22.23.4 for the platform** (`.nvmrc`, `engines`, `NODE_VERSION` in `netlify.toml`). Astro 7.4.4 requires at least 22.23.4. The repository root's `.nvmrc` (22.23.1) stays as it is for the production app. A test keeps `.nvmrc` at or above Astro's minimum and equal to `netlify.toml`. The first CI run on the Phase 4 PR found this.
 - **Chromium renders text the same everywhere** (`--disable-lcd-text`, `--font-render-hinting=none`, `--force-color-profile=srgb` in `playwright.config.ts`). The first CI run showed GitHub's runner using coloured LCD antialiasing and hinting that shifts text by about 1px, so 11 of 16 screenshots differed by about 2%. The baselines here already match these flags exactly.
 - **CI runs on `ubuntu-latest` with Playwright's own Chromium**, the same Chromium build and Ubuntu 24.04 the baselines were made on. Text that system fonts would render was removed, so the screenshots do not depend on installed fonts:
   - Figtree has no ✓ and no non-breaking hyphen; there is now an SVG `Check` icon and a plain hyphen.
   - The gallery's `<code>` labels use Figtree instead of a system monospace.
 - **Lighthouse thresholds:** accessibility and SEO = 1, best practices ≥ 0.95, performance ≥ 0.9 as the median of 3 runs. Shared CI runners vary in speed, and local runs score 99–100.
 - **No Claude review workflow (owner).** The owner does not want reviews that run on an Anthropic API key. The drafted `claude-review.yml` was removed; CodeRabbit and the CI checks remain.
+
+## Switchover: V2 becomes the repository (owner, 2026-11-01)
+
+- **Removed (owner: "remove all the junk"):**
+  - the production Next.js app (`src/`, `public/`, its configs, lockfile, `patches/` and `.env.example`)
+  - the `v2/` handoff reference site
+  - the old app's docs (`TAP_TO_PAY_IMPLEMENTATION.md`, `coupons.md`, `DEAD-CODE.md`)
+  - the committed `.claude/settings.local.json`
+- **`platform/` is now the repository root** (moved with `git mv`, so history is kept). The root `.nvmrc` is 22.23.4.
+- **One CI workflow** (`ci.yml`) replaces the old app's CI and `v2.yml`. The husky pre-commit hook now runs oxfmt and oxlint through lint-staged, then a typecheck.
+- **One switchover PR into `main` (owner).** The stacked phase PRs remain as the review record.
+- **The Netlify base directory becomes `apps/web`.** The owner changes it on the existing zurichjs.com site; see the RUNBOOK's "Go live". DNS does not change.
+- **The production site's existing environment variables keep working.** New code also accepts:
+  - `SANITY_TOKEN` as the read and write token
+  - `SLACK_BOT_TOKEN` with `SLACK_DEFAULT_CHANNEL`, besides `SLACK_WEBHOOK_URL`
+  - `NEXT_PUBLIC_POSTHOG_*`
+
+  Only `SANITY_WEBHOOK_SECRET` and `NETLIFY_BUILD_HOOK_URL` are new.
+
+- **Production URLs V2 does not have now redirect with a 301 to the closest page,** so links and search ranking carry over. These were decided at switchover:
+
+  | Old URL                                            | New URL        |
+  | -------------------------------------------------- | -------------- |
+  | `/workshops`, `/workshops/*`                       | `/events`      |
+  | `/tshirt`                                          | `/donate`      |
+  | `/media-demo`                                      | `/media`       |
+  | `/admin/*`, `/profile/*`                           | `/`            |
+  | `/invite/*`                                        | `/about`       |
+  | `/api/sitemap.xml` (production's complete sitemap) | `/sitemap.xml` |
+  - The section roots are in `src/lib/redirects.mjs`, and the `/*` sub-paths are in `netlify.toml`.
+  - `tools/serve-dist.mjs` now applies `netlify.toml` redirects too, so e2e and the SEO gate test them as Netlify serves them.
+  - The SEO gate has no routes left in a removed, descoped or pending state.
+
+- **The Studio's typegen** writes to `packages/content/src/sanity.types.ts`, the new path.

@@ -1,47 +1,27 @@
-minimumReleaseAge: 4320
-minimumReleaseAgeExclude: []
+# platform/ is its own pnpm root, isolated from the production app at the repository root.
+# Same supply-chain policy as the root workspace: packages must be at least 3 days old.
+packages:
+  - apps/*
+  - packages/*
 
-overrides:
-  "@sanity/preview-url-secret>@sanity/uuid": 3.0.3
-  brace-expansion@<=5.0.11: ^5.0.12
-  # Security: patched versions of transitive dependencies (pnpm audit, 2026-10-31).
-  sharp: ^0.35.5
-  baseline-browser-mapping: ^2.11.0
-  source-map-js: ^1.2.2
-  "typeid-js@1.2.0>uuid": 11.1.1
-  # Security overrides for transitive dependency vulnerabilities
-  undici: ^7.30.1
-  js-yaml@>=4.0.0: ^4.3.1
-  nanoid: ^3.3.18
-  browserslist: ^4.28.7
-  postcss: ^8.5.23
-  dompurify: ^3.4.17
-  qs: ^6.16.1
-  fflate: ^0.8.0
-  js-yaml@<3.15.2: ^3.15.2
-  adm-zip: ^0.6.1
-  smol-toml: ^1.8.1
-  tinypool: ^2.1.2
-  markdown-it: ^14.3.3
-  follow-redirects: ^1.16.2
-  vite@7: ^7.3.7
-  postcss-selector-parser@6: ^6.1.5
-  zod@4: ^4.6.6
+minimumReleaseAge: 4320
 
 allowBuilds:
-  "@clerk/shared": true
-  core-js: true
   esbuild: true
-  protobufjs: true
   sharp: true
-  unrs-resolver: true
 
-patchedDependencies:
-  brace-expansion@5.0.12: patches/brace-expansion@5.0.12.patch
+packageExtensions:
+  # @astrojs/check → astro2tsx loads @napi-rs/wasm-runtime, which imports @emnapi/runtime without declaring it.
+  '@napi-rs/wasm-runtime@1':
+    dependencies:
+      '@emnapi/runtime': 1.11.2
 
-auditConfig:
-  ignoreGhsas:
-    # minimatch < 11.0.1: denial of service via "globparts amplification" with crafted glob patterns.
-    # Only patched in 11.x, whose CommonJS export is not callable like the 3.x/5.x/10.x APIs our tooling uses
-    # (eslint-plugin-import, sanity CLI, glob). Patterns here come from config files, never from users.
-    - GHSA-g3hv-75wg-m249
+overrides:
+  # Security (pnpm audit / dependency review, 2026-10-31): Netlify dev tooling pulls these in.
+  # glob 13 → 14 and minimatch 10 → 11 keep the same named-export API.
+  glob@13: ^14.0.2
+  minimatch@10: ^11.0.1
+  # satori → @shuding/opentype.js pins fflate 0.7.3 (GHSA-px8p-9vwx-vf98); 0.7.5 is the same-minor fix.
+  fflate@0.7: ^0.7.5
+  # No patched deepmerge release exists; vendor/deepmerge carries the fix (see its README).
+  deepmerge: link:./vendor/deepmerge

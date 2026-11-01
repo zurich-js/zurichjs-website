@@ -52,3 +52,29 @@ export function eventSupporters(ev: Pick<Event, 'hosts' | 'supporters'>, partner
   }
   return [...out.values()].sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
 }
+
+const TIER_ORDER = ['champion', 'builder', 'friend', 'supporter', undefined];
+
+/** Partners grouped for display. Only partners marked current are ever called current sponsors. */
+export function groupPartners(partners: Partner[]) {
+  const byTier = (a: Partner, b: Partner) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier) || a.name.localeCompare(b.name);
+  const has = (p: Partner, k: Partner['kinds'][number]) => p.kinds.includes(k);
+  const sponsors = partners.filter((p) => has(p, 'sponsor'));
+  return {
+    currentSponsors: sponsors.filter((p) => p.current).sort(byTier),
+    pastSponsors: sponsors.filter((p) => !p.current).sort(byTier),
+    venues: partners.filter((p) => has(p, 'venue') || has(p, 'food')).sort((a, b) => a.name.localeCompare(b.name)),
+    community: partners.filter((p) => p.current && (has(p, 'community') || has(p, 'conference'))).sort((a, b) => a.name.localeCompare(b.name)),
+    supporting: partners.filter((p) => p.current && has(p, 'supporting')).sort((a, b) => a.name.localeCompare(b.name)),
+    pastPartners: partners.filter((p) => !p.current && !has(p, 'sponsor') && !has(p, 'venue') && !has(p, 'food')).sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
+/** "Since 2025", "2024–2025", or undefined when no dates are recorded. */
+export const partnerPeriod = (p: Pick<Partner, 'since' | 'until'>) => {
+  const y = (d?: string) => d?.slice(0, 4);
+  if (p.since && p.until) return y(p.since) === y(p.until) ? `In ${y(p.since)}` : `${y(p.since)}–${y(p.until)}`;
+  if (p.since) return `Since ${y(p.since)}`;
+  if (p.until) return `Until ${y(p.until)}`;
+  return undefined;
+};

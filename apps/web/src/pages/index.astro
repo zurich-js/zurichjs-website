@@ -1,5 +1,5 @@
 ---
-import { eventHref, monthYear, nextMeetup, pastEvents, eventTalks, talkAnchor } from '@zurichjs/events';
+import { eventHref, monthYear, nextMeetup, pastEvents, eventTalks, talkAnchor, groupPartners } from '@zurichjs/events';
 import { localBusinessSchema, organizationSchema, websiteSchema } from '@zurichjs/seo';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
@@ -10,8 +10,9 @@ import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import { BUILD_TIME, PHOTOS, SITE, content, ticketing } from '~/lib/content';
+import { pickFeatured } from '@zurichjs/content';
 
-const { events, speakers, rating, award, conference, partners } = await content();
+const { events, speakers, rating, award, conference, partners, media } = await content();
 const next = nextMeetup(events, BUILD_TIME);
 const byId = new Map(speakers.map((s) => [s.id, s]));
 
@@ -42,6 +43,12 @@ outer: for (const ev of pastEvents(events, BUILD_TIME)) {
   }
 }
 const teaser = speakers.slice(0, 4);
+// Home photos: editors pick them in ImageKit (tag "featured-home"); the defaults fill any gap. No repeats.
+const featured = pickFeatured(media.items, 'featured-home', 3);
+const asPhoto = (m?: (typeof featured)[number]) => (m ? { src: m.src, alt: m.alt, width: m.width, height: m.height } : undefined);
+const heroPhotos = { audience: asPhoto(featured[0]) ?? PHOTOS.audience, speaker: asPhoto(featured[1]) ?? PHOTOS.speaker, conversation: asPhoto(featured[2]) ?? PHOTOS.conversation };
+// Current sponsors (only those an organiser marked current), then the venues that hosted us.
+const partnerGroups = groupPartners(partners);
 ---
 
 <BaseLayout
@@ -53,7 +60,7 @@ const teaser = speakers.slice(0, 4);
   image="/og/home.png"
   jsonLd={[organizationSchema(), websiteSchema(), localBusinessSchema()]}
 >
-  <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={PHOTOS} rating={rating} award={award} meetupGroupUrl={SITE.meetupGroupUrl} />
+  <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={heroPhotos} rating={rating} award={award} meetupGroupUrl={SITE.meetupGroupUrl} />
   <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
     <section aria-labelledby="h-like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
       <Photo photo={PHOTOS.speaker} class="aspect-4/3 w-full" />
@@ -107,6 +114,6 @@ const teaser = speakers.slice(0, 4);
       <SpeakCta />
     </section>
 
-    <HostsSection partners={partners} />
+    <HostsSection partners={[...partnerGroups.currentSponsors, ...partnerGroups.venues]} />
   </div>
 </BaseLayout>

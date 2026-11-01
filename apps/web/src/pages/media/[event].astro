@@ -1,0 +1,46 @@
+---
+/** One event's photos and videos: the page "All photos" links to. Stable URL: /media/<event slug>. */
+import { mediaForEvent } from '@zurichjs/content';
+import { dateLong, eventHref, type Event } from '@zurichjs/events';
+import { breadcrumbSchema } from '@zurichjs/seo';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import { sizedSrc } from '@zurichjs/design/images';
+import { Gallery } from '@zurichjs/design/islands/Gallery';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE, content } from '~/lib/content';
+import { countLabel, toGallery } from '~/lib/media';
+
+export async function getStaticPaths() {
+  const { events, media } = await content();
+  return events.filter((ev) => mediaForEvent(media.items, ev.slug).length > 0).map((ev) => ({ params: { event: ev.slug }, props: { ev } }));
+}
+
+const { ev } = Astro.props as { ev: Event };
+const { media } = await content();
+const items = mediaForEvent(media.items, ev.slug);
+const credits = [...new Set(items.map((m) => m.credit).filter(Boolean))];
+const cover = items.find((m) => m.kind === 'photo');
+const when = ev.startsAt ? dateLong(ev.startsAt) : '';
+---
+
+<BaseLayout
+  title={`Photos: ${ev.title}`}
+  description={`${countLabel(items)} from ${ev.title}${when ? `, ${when}` : ''}, a ZurichJS meetup in ${ev.venue?.city ?? 'Zurich'}.`}
+  image={cover ? sizedSrc(cover.src, 1200) : undefined}
+  imageAlt={cover?.alt}
+  jsonLd={[breadcrumbSchema([{ name: 'Photos', path: '/media' }, { name: ev.title, path: `/media/${ev.slug}` }])]}
+>
+  <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Photos', href: '/media', here: when || 'Event' }} sub={[when, ev.venue ? `${ev.venue.name}, ${ev.venue.city}` : '', countLabel(items)].filter(Boolean).join(' · ')} compact>
+    <div class="flex flex-wrap gap-3 pt-1">
+      <Button href={eventHref(ev)} variant="outline-white">The event page</Button>
+    </div>
+  </PageOpening>
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-6">
+    <Gallery client:load items={toGallery(items)} label={`Photos and videos from ${ev.title}`} />
+    {credits.length > 0 && <p class="m-0 text-[16px] text-ink-2">{credits.join(' · ')}</p>}
+    <p class="m-0 text-[16px] leading-[1.55] text-ink-2 max-w-[720px]">
+      Want a photo of you removed? Email <a href={`mailto:${SITE.email}?subject=${encodeURIComponent(`Photo removal request: ${ev.title}`)}`} class="font-bold text-black">{SITE.email}</a> with a link to it, and we take it down.
+    </p>
+  </div>
+</BaseLayout>

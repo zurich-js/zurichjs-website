@@ -1,46 +1,88 @@
 ---
-/** Photo archive: every past event with photos, newest first. */
-import { dateLong, eventHref, pastEvents } from '@zurichjs/events';
+/**
+ * The media archive: photos and videos taken at ZurichJS events, by event,
+ * newest first (ImageKit and Sanity, see @zurichjs/content media.ts).
+ * Promotional artwork is not included. Each event has its own gallery page.
+ */
+import { mediaCounts, mediaForEvent, mediaInFolder } from '@zurichjs/content';
+import { byStartDesc, dateLong } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
-import Photo from '@zurichjs/design/components/Photo.astro';
+import { sizedSrc } from '@zurichjs/design/images';
+import { Gallery } from '@zurichjs/design/islands/Gallery';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { BUILD_TIME, content } from '~/lib/content';
+import { SITE, content } from '~/lib/content';
+import { countLabel, mediaHref, toGallery } from '~/lib/media';
 
-const { events } = await content();
-const withPhotos = pastEvents(events, BUILD_TIME).filter((e) => e.photos.length);
-const cover = withPhotos[0]?.photos[0];
+const { events, media, settings } = await content();
+const withMedia = [...events]
+  .sort(byStartDesc)
+  .map((ev) => ({ ev, items: mediaForEvent(media.items, ev.slug) }))
+  .filter((x) => x.items.length > 0);
+const conference = mediaInFolder(media.items, settings.conferenceMediaFolder);
+const counts = mediaCounts(media.items);
+const cover = withMedia[0]?.items.find((m) => m.kind === 'photo');
+const summary = counts.events ? `${countLabel(media.items.filter((m) => m.eventSlug))} from ${counts.events} event${counts.events === 1 ? '' : 's'}.` : '';
 ---
 
 <BaseLayout
-  title="Photos"
-  fullTitle="Photo gallery from ZurichJS meetups · ZurichJS"
-  description="Photos from past ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed."
-  image={cover?.src}
+  title="Photos and videos"
+  fullTitle="Photos and videos from ZurichJS meetups · ZurichJS"
+  description="Photos and videos from ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed."
+  image={cover ? sizedSrc(cover.src, 1200) : undefined}
   imageAlt={cover?.alt}
   keywords={['ZurichJS photos', 'JavaScript meetup Zurich', 'Zurich tech events', 'ZurichJS media gallery']}
   jsonLd={[breadcrumbSchema([{ name: 'Photos', path: '/media' }])]}
 >
-  <PageOpening slot="opening" title="Photos" sub="From past meetups. Ask us if you want a picture of you removed." compact />
+  <PageOpening slot="opening" title="Photos and videos" sub={`Taken at ZurichJS events. ${summary}`.trim()} compact />
 
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
+    <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[720px]">
+      Want a photo of you removed? Email <a href={`mailto:${SITE.email}?subject=${encodeURIComponent('Photo removal request')}`} class="font-bold text-black">{SITE.email}</a> with a link to it (open the photo and copy the address), and we take it down.
+    </p>
+
     {
-      withPhotos.map((ev) => (
-        <section class="flex flex-col gap-4" aria-label={ev.title}>
-          <div class="flex justify-between items-baseline flex-wrap gap-2.5">
-            <h2 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">{ev.title}</h2>
-            <a href={eventHref(ev)} class="font-bold text-[17px] underline underline-offset-[3px]">
-              {ev.startsAt ? dateLong(ev.startsAt) : 'Event page'}
-            </a>
+      withMedia.map(({ ev, items }) => (
+        <section class="flex flex-col gap-4" aria-labelledby={`h-${ev.slug}`}>
+          <div class="flex justify-between items-baseline flex-wrap gap-x-4 gap-y-1.5">
+            <h2 id={`h-${ev.slug}`} class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
+              <a href={mediaHref(ev.slug)} class="no-underline hover:underline">
+                {ev.title}
+              </a>
+            </h2>
+            <span class="text-[16px] text-ink-2">
+              {[ev.startsAt ? dateLong(ev.startsAt) : '', countLabel(items)].filter(Boolean).join(' · ')}
+            </span>
           </div>
-          <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3">
-            {ev.photos.map((p) => (
-              <Photo photo={p} class="aspect-4/3 w-full rounded-2xl!" sizes="(min-width: 800px) 25vw, 100vw" />
-            ))}
+          <Gallery client:visible items={toGallery(items)} label={`Photos and videos from ${ev.title}`} max={8} />
+          <div class="flex flex-wrap gap-x-5 gap-y-2 text-[17px]">
+            {items.length > 8 && (
+              <a href={mediaHref(ev.slug)} class="font-bold underline underline-offset-[3px]">
+                {`All ${items.length} from this event`}
+              </a>
+            )}
+            <a href={`/events/${ev.slug}`} class="underline underline-offset-[3px]">
+              The event page
+            </a>
           </div>
         </section>
       ))
     }
-    {withPhotos.length === 0 && <p class="m-0 text-[18px] text-ink-2">Photos from our meetups will appear here soon.</p>}
+
+    {
+      conference.length > 0 && (
+        <section class="flex flex-col gap-4" aria-labelledby="h-conf">
+          <h2 id="h-conf" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
+            ZurichJS Conf
+          </h2>
+          <p class="m-0 text-[17px] text-ink-2">
+            From our annual conference. More on <a href={SITE.confUrl} class="font-bold text-black">conf.zurichjs.com</a>.
+          </p>
+          <Gallery client:visible items={toGallery(conference)} label="Photos from ZurichJS Conf" max={12} />
+        </section>
+      )
+    }
+
+    {withMedia.length === 0 && conference.length === 0 && <p class="m-0 text-[18px] text-ink-2">Photos from our meetups will appear here soon. They usually follow within a week of an event.</p>}
   </div>
 </BaseLayout>

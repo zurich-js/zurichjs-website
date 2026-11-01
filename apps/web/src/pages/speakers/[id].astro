@@ -8,6 +8,9 @@ import Monogram from '@zurichjs/design/components/Monogram.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import { Gallery } from '@zurichjs/design/islands/Gallery';
+import { mediaTagged } from '@zurichjs/content';
+import { toGallery } from '~/lib/media';
 import { BUILD_TIME, content, ticketing } from '~/lib/content';
 import { clip } from '~/lib/text';
 
@@ -17,7 +20,9 @@ export async function getStaticPaths() {
 }
 
 const { s } = Astro.props as { s: Speaker };
-const { events } = await content();
+const { events, media } = await content();
+// Photos of this speaker, tagged speaker:<id> in ImageKit by the editors.
+const stage = mediaTagged(media.items, `speaker:${s.id}`);
 // Speakers reference events by their public slug (not the Sanity _id).
 const bySlug = new Map(events.map((e) => [e.slug, e]));
 const roleLine = `${s.role}${s.company ? ` at ${s.company}` : ''}`;
@@ -160,6 +165,17 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
             ))}
           </section>
         ))
+    }
+
+    {
+      stage.length > 0 && (
+        <section class="flex flex-col gap-4" aria-labelledby="h-stage">
+          <h2 id="h-stage" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+            At ZurichJS
+          </h2>
+          <Gallery client:visible items={toGallery(stage, events)} label={`Photos of ${s.name} at ZurichJS`} max={6} />
+        </section>
+      )
     }
 
     <Surface class="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center py-6 px-7">

@@ -8,14 +8,18 @@ import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink, trackAttrs } from '@zurichjs/design/analytics';
 import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
+import { mediaTagged } from '@zurichjs/content';
+import { groupPartners, partnerPeriod } from '@zurichjs/events';
 
-const { partners, conference } = await content();
+const { partners, conference, media } = await content();
+const groups = groupPartners(partners);
+const hostedPhoto = mediaTagged(media.items, 'featured-partners').find((m) => m.kind === 'photo');
 const nextHref = await nextMeetupHref();
 
 const WAYS = [
   { k: 'host', h: 'Host a meetup', give: 'A room with seating, a screen and sound for one evening.', get: 'Your team in the room, a short welcome from the stage, and your logo on the event page and Meetup listing.', yellow: true },
-  { k: 'food', h: 'Cover food and drinks', give: 'Pizza, drinks or both for one evening.', get: 'Thanks from the stage and your logo on the event page and on /today.', yellow: false },
-  { k: 'partner', h: 'Community partner', give: 'A contribution toward the season’s meetups and speaker travel.', get: 'Your logo on the homepage and every event page for the season, and first pick of hosting dates.', yellow: false },
+  { k: 'food', h: 'Cover food and drinks', give: 'Pizza, drinks or both for one evening.', get: 'Thanks from the stage and your logo on the event page and on the Tonight page during the meetup.', yellow: false },
+  { k: 'partner', h: 'Community partner', give: 'A contribution toward the season’s meetups and speaker travel.', get: 'Your logo on the home page and on every meetup page while you support us, and first pick of hosting dates.', yellow: false },
 ];
 const AUDIENCE = [
   ['75%+', 'full-stack or frontend engineers'],
@@ -65,7 +69,7 @@ const HANDLE = [
                 <div class="text-[16px] font-bold">You get</div>
                 <div class="text-[17px] leading-normal text-ink-2">{w.get}</div>
               </div>
-              <Button href="#partner-form" variant={w.yellow ? 'black' : 'white'} size="sm" class="self-start" data-partner-way={w.k} aria-label={`Choose this: ${w.h}`}>
+              <Button href={`/partners?way=${w.k}#partner-form`} variant={w.yellow ? 'black' : 'white'} size="sm" class="self-start" data-partner-way={w.k} aria-label={`Choose this: ${w.h}`}>
                 Choose this
               </Button>
             </Surface>
@@ -101,7 +105,10 @@ const HANDLE = [
     </section>
 
     <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
-      <Photo photo={{ ...PHOTOS.conversation, alt: 'Attendees talking after the talks at a hosted ZurichJS meetup' }} class="aspect-4/3 w-full" />
+      <Photo
+        photo={hostedPhoto ? { src: hostedPhoto.src, alt: hostedPhoto.alt, width: hostedPhoto.width, height: hostedPhoto.height } : { ...PHOTOS.conversation, alt: 'Attendees talking after the talks at a hosted ZurichJS meetup' }}
+        class="aspect-4/3 w-full"
+      />
       <div class="flex flex-col gap-[22px]">
         <h2 id="h-handle" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What we take care of</h2>
         {
@@ -142,7 +149,7 @@ const HANDLE = [
         <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
         <p class="m-0 text-[18px] leading-[1.55] text-ink-2">An organiser replies from {SITE.email} to plan a date and the details. Nothing is agreed until you confirm.</p>
       </div>
-      <PartnersForm client:visible nextHref={nextHref} />
+      <PartnersForm client:load nextHref={nextHref} />
     </section>
 
     <section aria-labelledby="h-confsp" class="bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center">
@@ -158,19 +165,48 @@ const HANDLE = [
       </div>
     </section>
 
-    <section aria-labelledby="h-cur" class="flex flex-col gap-[18px]">
-      <h2 id="h-cur" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Companies who have hosted or supported us</h2>
-      <LogoGrid partners={partners} />
-    </section>
+    {
+      [
+        { id: 'current', h: 'Supporting ZurichJS now', sub: 'Our current sponsors.', list: groups.currentSponsors },
+        { id: 'venues', h: 'Companies who have hosted our meetups', sub: 'Rooms, food and drinks for an evening.', list: groups.venues },
+        { id: 'community', h: 'Community and conference partners', sub: 'Communities and conferences we work with.', list: groups.community },
+        { id: 'supporting', h: 'Tools and perks', sub: 'Companies supporting the organisers and members.', list: groups.supporting },
+        { id: 'past', h: 'Past supporters', sub: 'Thank you for supporting ZurichJS in earlier seasons.', list: [...groups.pastSponsors, ...groups.pastPartners] },
+      ]
+        .filter((g) => g.list.length > 0)
+        .map((g) => (
+          <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-[18px] scroll-mt-6">
+            <div class="flex flex-col gap-1.5">
+              <h2 id={`h-p-${g.id}`} class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+                {g.h}
+              </h2>
+              <p class="m-0 text-[17px] text-ink-2">{g.sub}</p>
+            </div>
+            <LogoGrid partners={g.list} caption={(p) => [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined} />
+          </section>
+        ))
+    }
   </div>
 </BaseLayout>
 
 <script>
-  // "Choose this" preselects the way of helping in the form island, even before it hydrates.
+  // "Choose this" selects the matching option in the form. The choice is in the link
+  // (?way=…#partner-form), so it also works when this script or the form island has not
+  // loaded yet: the page then reloads with ?way= and the island reads it. Once loaded, the
+  // URL is updated in place and the form is told directly.
   document.addEventListener('click', (e) => {
-    const el = (e.target as Element | null)?.closest<HTMLElement>('[data-partner-way]');
-    if (!el?.dataset.partnerWay) return;
-    window.__zjsPartnerWay = el.dataset.partnerWay;
-    document.dispatchEvent(new CustomEvent('zjs:partner-way', { detail: el.dataset.partnerWay }));
+    const el = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[data-partner-way]');
+    const way = el?.dataset.partnerWay;
+    if (!el || !way) return;
+    e.preventDefault();
+    const u = new URL(location.href);
+    u.searchParams.set('way', way);
+    u.hash = 'partner-form';
+    history.replaceState(history.state, '', u);
+    window.__zjsPartnerWay = way;
+    document.dispatchEvent(new CustomEvent('zjs:partner-way', { detail: way }));
+    const form = document.getElementById('partner-form');
+    form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    form?.focus({ preventScroll: true });
   });
 </script>

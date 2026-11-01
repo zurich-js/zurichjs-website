@@ -7,6 +7,8 @@ import { expect, test, type Page } from '@playwright/test';
  * and no message is sent.
  */
 const at = async (page: Page, iso: string) => page.clock.setFixedTime(new Date(iso));
+/** Waits until every island on the page has hydrated (Astro removes the `ssr` attribute). */
+const hydrated = async (page: Page) => expect(page.locator('astro-island[ssr]')).toHaveCount(0);
 
 test.describe('event schedule and venue', () => {
   test('a programme with an agenda shows every line with its own time, including doors and breaks', async ({ page }) => {
@@ -96,6 +98,7 @@ test.describe('feedback', () => {
 
   test('evening feedback explains who reads it and asks for a name only when quoting is allowed', async ({ page }) => {
     await page.goto('/feedback?event=2026-09-signals-streams');
+    await hydrated(page);
     await expect(page.getByText(/Who reads this: the ZurichJS organisers/)).toBeVisible();
     await expect(page.getByLabel(/Name to show with the quote/)).toHaveCount(0);
     await page.getByLabel('You may quote my answers on the ZurichJS website.').check();
@@ -145,6 +148,7 @@ test.describe('donations and membership', () => {
       await route.fulfill({ json: { ok: true, url: '/donate/thanks' } });
     });
     await page.goto('/donate');
+    await hydrated(page);
     await page.getByRole('radio', { name: 'Monthly' }).click();
     await page.getByRole('button', { name: 'CHF 30' }).click();
     await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 30 every month until you cancel.');
@@ -161,6 +165,7 @@ test.describe('donations and membership', () => {
       route.fulfill({ status: 503, json: { ok: false, error: 'Online payments are not available right now. You can still give by Twint or by email below.' } }),
     );
     await page.goto('/donate');
+    await hydrated(page);
     await page.getByLabel(/Or another amount/).fill('2');
     await expect(page.locator('#donate-summary')).toHaveText('');
     await page.getByRole('button', { name: 'Continue to secure payment' }).click();
@@ -179,6 +184,7 @@ test.describe('donations and membership', () => {
 
   test('membership: choosing a tier and billing updates the price and the request button', async ({ page }) => {
     await page.goto('/membership');
+    await hydrated(page);
     await expect(page.getByText('Coming to meetups is free and never needs a membership.')).toBeVisible();
     await expect(page.getByText('Free or discounted workshops')).toBeVisible();
     await page.getByRole('button', { name: 'Choose Supporter' }).click();
@@ -199,6 +205,7 @@ test.describe('donations and membership', () => {
   test('membership: a failed request keeps the answers and offers email', async ({ page }) => {
     await page.route('**/api/verein-inquiry', (route) => route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now.' } }));
     await page.goto('/membership');
+    await hydrated(page);
     await page.getByLabel('Name').fill('Test Person');
     await page.getByLabel('Email').fill('test@example.com');
     await page.getByRole('button', { name: /Send request/ }).click();
@@ -282,5 +289,92 @@ test.describe('speakers', () => {
     await expect(page.locator('[data-panel="past"] [data-hay]:visible')).toHaveCount(1);
     await page.goto('/events?tab=past&q=entwurf');
     await expect(page.locator('[data-panel="past"] [data-hay]:visible').first()).toContainText('Signals');
+  });
+});
+
+test.describe('media archive', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/sample/clip.mp4', (route) => route.fulfill({ path: 'e2e/fixtures/clip.mp4', contentType: 'video/mp4' }));
+  });
+
+  test('archive lists events with counts and links each to its own gallery', async ({ page }) => {
+    await page.goto('/media');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Photos and videos');
+    const ev = page.locator('section', { has: page.getByRole('heading', { name: 'Signals, streams and the state of state' }) });
+    await expect(ev).toContainText('4 photos and 1 video');
+    await expect(ev.getByRole('link', { name: 'Signals, streams and the state of state' })).toHaveAttribute('href', '/media/2026-09-signals-streams');
+    await expect(page.getByText('Want a photo of you removed?')).toBeVisible();
+  });
+
+  test('viewer: keyboard, previous/next, close returns focus, video plays on request', async ({ page }) => {
+    await page.goto('/media/2026-09-signals-streams');
+    const first = page.getByRole('button', { name: /^Open photo:/ }).first();
+    await first.focus();
+    await page.keyboard.press('Enter');
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText('1 of 5');
+    await expect(dialog).toContainText('The room during the first talk.');
+    await expect(dialog).toContainText('Photo: sample credit');
+    await expect(page).toHaveURL(/#media-sample-2026-09-signals-streams-0$/);
+    await page.keyboard.press('ArrowRight');
+    await expect(dialog).toContainText('2 of 5');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    await expect(dialog).toContainText('5 of 5');
+    await expect(dialog.locator('video')).toHaveAttribute('preload', 'none');
+    await dialog.getByRole('button', { name: 'Next →' }).click();
+    await expect(dialog).toContainText('1 of 5');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(first).toBeFocused();
+    await expect(page).not.toHaveURL(/#media-/);
+  });
+
+  test('a shared photo link opens that photo', async ({ page }) => {
+    await page.goto('/media/2026-09-signals-streams#media-sample-2026-09-signals-streams-2');
+    await expect(page.getByRole('dialog')).toContainText('3 of 5');
+  });
+
+  test('event pages show their own gallery and "All photos" goes to it; promo artwork is not a photo', async ({ page }) => {
+    await page.goto('/events/2026-09-signals-streams');
+    await expect(page.getByRole('link', { name: 'All 4 photos and 1 video' })).toHaveAttribute('href', '/media/2026-09-signals-streams');
+    await page.goto('/events/2025-11-anniversary');
+    await expect(page.getByText('Photos from this evening aren’t online yet.')).toBeVisible();
+  });
+});
+
+test.describe('partners and sponsors', () => {
+  for (const [name, label] of [
+    ['Host a meetup', 'Host a meetup'],
+    ['Cover food and drinks', 'Food and drinks'],
+    ['Community partner', 'Community partner'],
+  ] as const) {
+    test(`"Choose this: ${name}" selects that option in the form`, async ({ page }) => {
+      await page.goto('/partners');
+      await page.getByRole('link', { name: `Choose this: ${name}` }).click();
+      await expect(page).toHaveURL(/#partner-form$/);
+      await expect(page.locator('#partner-form [role="radio"][aria-checked="true"]')).toHaveText(new RegExp(label, 'i'));
+    });
+  }
+
+  test('the choice also works from the link alone (before scripts load)', async ({ page }) => {
+    await page.goto('/partners?way=food#partner-form');
+    await expect(page.locator('#partner-form [role="radio"][aria-checked="true"]')).toHaveText(/food/i);
+  });
+
+  test('current sponsors and past supporters are separate, logos are named links', async ({ page }) => {
+    await page.goto('/partners');
+    const current = page.locator('#partners-current');
+    await expect(current.getByRole('link', { name: /Vercel/ })).toHaveAttribute('href', 'https://vercel.com');
+    await expect(page.locator('#partners-venues').getByRole('link', { name: /novu AG/ })).toBeVisible();
+    for (const img of await page.locator('#partners-current img').all()) expect(await img.getAttribute('alt')).toMatch(/\w/);
+  });
+
+  test('home shows current sponsors and hosts; upcoming event pages thank this season’s sponsors', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Companies who host and support ZurichJS' })).toBeVisible();
+    await page.goto('/events/2026-11-forms-types');
+    await expect(page.getByText('Supporting ZurichJS this season.')).toBeVisible();
   });
 });

@@ -5,7 +5,7 @@
  * prerendered as of the build; islands follow the clock in the browser, and
  * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
  */
-import { dateLong, eventHref, eventSupporters, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
+import { dateLong, eventHref, eventSupporters, groupPartners, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventActions from '~/components/islands/event/EventActions';
@@ -15,7 +15,10 @@ import Programme from '~/components/islands/event/Programme';
 import VenueCard from '~/components/islands/event/VenueCard';
 import SupporterList from '~/components/SupporterList.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Photo from '@zurichjs/design/components/Photo.astro';
+import { Gallery } from '@zurichjs/design/islands/Gallery';
+import { sizedSrc } from '@zurichjs/design/images';
+import { mediaForEvent } from '@zurichjs/content';
+import { countLabel, mediaHref, toGallery } from '~/lib/media';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, MAPS_EMBED_KEY, SITE, content, ticketing } from '~/lib/content';
@@ -37,12 +40,16 @@ const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
 const progSpeakers = speakers.map(({ id, name, role, initials }) => ({ id, name, role, initials }));
 const hosts = c.partners.filter((h) => ev.hosts?.includes(h.id));
 const supporters = eventSupporters(ev, c.partners);
+// Current sponsors appear on every upcoming meetup page (the /partners promise), after the event's own supporters.
+const seasonSponsors = groupPartners(c.partners).currentSponsors.filter((p) => !supporters.some((x) => x.partner.id === p.id));
+const gallery = mediaForEvent(c.media.items, ev.slug);
 const isPast = state === 'past';
 const next = nextMeetup(c.events, BUILD_TIME);
 const nextP = next ? presentEvent(next, { now: BUILD_TIME, ticketing }) : null;
-const description = clip(isPast ? `${recapSummary(ev)} ${ev.description}` : `${p.dateLineShort} · ${p.venueShort}. ${ev.description}`);
+const description = clip(isPast ? `${recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} ${ev.description}` : `${p.dateLineShort} · ${p.venueShort}. ${ev.description}`);
 const jsonLd = [eventSchema(ev, c.speakers, hosts), breadcrumbSchema([{ name: 'Events', path: '/events' }, { name: ev.title, path: eventHref(ev) }])];
-const image = ev.photos[0]?.src ?? ev.cover?.src ?? `/og/event-${ev.slug}.png`;
+const firstPhoto = gallery.find((m) => m.kind === 'photo');
+const image = firstPhoto ? sizedSrc(firstPhoto.src, 1200) : (ev.cover?.src ?? `/og/event-${ev.slug}.png`);
 const times = timesLine(ev);
 const summaries = Object.fromEntries((ev.recap?.talks ?? []).filter((t) => t.summary).map((t) => [t.title, t.summary]));
 // Recap talks that are not in the programme (older events) still get listed.
@@ -54,7 +61,7 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
 <BaseLayout title={ev.title} description={description} image={image} jsonLd={jsonLd}>
   {
     isPast ? (
-      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev)} />
+      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} />
     ) : (
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }} pills={p.pills}>
         <div class="flex flex-col gap-[18px] pt-1">
@@ -122,19 +129,22 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
           </section>
         )}
 
-        <section class="flex flex-col gap-[18px]">
+        <section id="photos" aria-labelledby="h-photos" class="flex flex-col gap-[18px] scroll-mt-6">
           <div class="flex justify-between items-baseline flex-wrap gap-2.5">
-            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Photos from the evening</h2>
-            <a href="/media" class="font-bold text-[17px] underline underline-offset-[3px]">
-              All photos
-            </a>
+            <h2 id="h-photos" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+              Photos from the evening
+            </h2>
+            {gallery.length > 0 && (
+              <a href={mediaHref(ev.slug)} class="font-bold text-[17px] underline underline-offset-[3px]">
+                {`All ${countLabel(gallery)}`}
+              </a>
+            )}
           </div>
-          {ev.photos.length > 0 ? (
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-3">
-              {ev.photos.map((ph) => (
-                <Photo photo={ph} class="aspect-4/3 w-full rounded-2xl!" sizes="(min-width: 800px) 25vw, 100vw" />
-              ))}
-            </div>
+          {gallery.length > 0 ? (
+            <>
+              <Gallery client:visible items={toGallery(gallery)} label={`Photos and videos from ${ev.title}`} max={8} />
+              {ev.photoCredit && <p class="m-0 text-[15px] text-ink-2">{ev.photoCredit}</p>}
+            </>
           ) : (
             <Surface class="p-6 text-[17px] text-ink-2">Photos from this evening aren’t online yet. They usually follow within a week.</Surface>
           )}
@@ -190,13 +200,23 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
 
           {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} />}
 
-          {supporters.length > 0 && (
+          {(supporters.length > 0 || seasonSponsors.length > 0) && (
             <section aria-labelledby="h-thanks" class="flex flex-col gap-4">
               <h2 id="h-thanks" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
                 Thanks to
               </h2>
-              <p class="m-0 text-[17px] text-ink-2">The companies that make this meetup possible.</p>
-              <SupporterList items={supporters} />
+              {supporters.length > 0 && (
+                <>
+                  <p class="m-0 text-[17px] text-ink-2">The companies that make this meetup possible.</p>
+                  <SupporterList items={supporters} />
+                </>
+              )}
+              {seasonSponsors.length > 0 && (
+                <>
+                  <p class="m-0 text-[17px] text-ink-2">Supporting ZurichJS this season.</p>
+                  <SupporterList items={seasonSponsors.map((partner) => ({ partner }))} />
+                </>
+              )}
             </section>
           )}
 

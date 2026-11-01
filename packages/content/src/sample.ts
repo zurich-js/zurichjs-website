@@ -3,6 +3,7 @@
  * Venue AG, placeholder logos). Used only when Sanity is not configured or not
  * reachable; the build logs loudly when it is used. Never presented as real.
  */
+import type { MediaItem } from './media';
 import {
   buildSchedule,
   type AwardRecord,
@@ -685,5 +686,48 @@ export const QUOTES: Quote[] = [
     text: 'It felt like a large group of friends because folks knew each other, and were also very welcoming. Looking forward to collaborating again in the future!',
     name: 'Harshil Agrawal',
     role: 'Dev Educator, Cloudflare',
+  },
+];
+
+/* -------------------------------------------------------------------------- */
+/* Media (sample): the events' photos plus tagged picks and one clip           */
+/* -------------------------------------------------------------------------- */
+
+const eventPhotos: MediaItem[] = EVENTS.flatMap((e) =>
+  e.photos.map((p, i) => ({
+    id: `sample-${e.slug}-${i}`,
+    kind: 'photo' as const,
+    src: p.src,
+    alt: p.alt,
+    eventSlug: e.slug,
+    folder: e.slug,
+    credit: e.photoCredit,
+    tags: [] as string[],
+  })),
+);
+export const MEDIA: MediaItem[] = [
+  ...eventPhotos.map((m, i) =>
+    i === 0 ? { ...m, caption: 'The room during the first talk.', credit: 'Photo: sample credit', tags: ['featured-home', 'speaker:mia-entwurf'] } : m,
+  ),
+  // A clip, so galleries can be tested with video. The file is served only in e2e tests.
+  {
+    id: 'sample-clip',
+    kind: 'video',
+    src: '/sample/clip.mp4',
+    poster: PHOTOS.audience.src,
+    alt: 'Short clip from the evening',
+    caption: 'Applause after the last talk.',
+    eventSlug: '2026-09-signals-streams',
+    folder: '2026-09-signals-streams',
+    tags: [],
+  },
+  {
+    id: 'sample-partners',
+    kind: 'photo',
+    src: PHOTOS.conversation.src,
+    alt: 'Attendees talking at a hosted ZurichJS meetup',
+    eventSlug: '2026-06-edge-runtimes',
+    folder: '2026-06-edge-runtimes',
+    tags: ['featured-partners'],
   },
 ];

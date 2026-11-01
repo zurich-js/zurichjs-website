@@ -1,9 +1,11 @@
 import type { AwardRecord, ConferenceCopy, ConferenceState, Event, Milestone, Partner, Quote, RatingRecord, Speaker, TeamMember } from '@zurichjs/events';
 import { mapEvent, mapPartner, mapRating, mapSpeaker, mapSupport, type RawEvent, type RawPartner, type RawSingletons, type RawSpeaker, type SupportInfo } from './map';
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries';
+import { loadMedia, type MediaCollection } from './media';
 import * as sample from './sample';
 
 export * from './map';
+export * from './media';
 export * from './queries';
 export { PHOTOS, SITE } from './sample';
 
@@ -23,6 +25,8 @@ export interface SiteContent {
   support: SupportInfo;
   /** Site settings editors change without a deploy. */
   settings: SiteSettings;
+  /** Photos and videos from events (ImageKit and Sanity). */
+  media: MediaCollection;
 }
 
 export interface SiteSettings {
@@ -117,6 +121,7 @@ function sampleContent(): SiteContent {
     support: {},
     // No sample Slack invite either: an unverified link would ship.
     settings: {},
+    media: { items: sample.MEDIA, imagekit: 'sample' },
   };
 }
 
@@ -130,9 +135,10 @@ async function sanityContent(env: Env): Promise<SiteContent> {
   ]);
   const fallback = sampleContent();
   const conf = singletons.conference;
+  const mappedEvents = events.map(mapEvent);
   return {
     source: 'sanity',
-    events: events.map(mapEvent),
+    events: mappedEvents,
     speakers: speakers.map(mapSpeaker),
     partners: partners.map(mapPartner),
     // Until the meetupRating singleton exists (Phase 3), keep the sourced record from the design handoff.
@@ -150,6 +156,7 @@ async function sanityContent(env: Env): Promise<SiteContent> {
       slackInviteUrl: validSlackInvite(singletons.site?.slackInviteUrl),
       conferenceMediaFolder: singletons.site?.conferenceMediaFolder ?? undefined,
     },
+    media: await loadMedia(env, mappedEvents),
   };
 }
 

@@ -8,7 +8,7 @@
  * the browser clock (islands/today/Tonight), so a future meetup is never
  * called "tonight".
  */
-import { dateLong, eventHref, eventSupporters, pickTodayEvent, presentEvent, resolveState, todayPhase, upcomingEvents } from '@zurichjs/events';
+import { dateLong, eventHref, eventSupporters, groupPartners, pickTodayEvent, presentEvent, resolveState, todayPhase, upcomingEvents } from '@zurichjs/events';
 import { SITE_URL } from '@zurichjs/seo';
 import Tonight from '~/components/islands/today/Tonight';
 import VenueCard from '~/components/islands/event/VenueCard';
@@ -24,6 +24,7 @@ const ev = pickTodayEvent(events, BUILD_TIME);
 const phase = todayPhase(ev, BUILD_TIME);
 const names = Object.fromEntries(speakers.map((s) => [s.id, s.name]));
 const supporters = ev ? eventSupporters(ev, partners) : [];
+const seasonSponsors = groupPartners(partners).currentSponsors.filter((p) => !supporters.some((x) => x.partner.id === p.id));
 const after = ev
   ? upcomingEvents(events, BUILD_TIME).find((e) => e.id !== ev.id && resolveState(e, BUILD_TIME) !== 'cancelled' && (!ev.startsAt || !e.startsAt || e.startsAt > ev.startsAt))
   : undefined;
@@ -62,15 +63,23 @@ const description = ev
     {ev && <Tonight client:load part="feedback" ev={ev} now={BUILD_TIME.toISOString()} />}
 
     {
-      supporters.length > 0 && (
+      (supporters.length > 0 || seasonSponsors.length > 0) && (
         <section aria-labelledby="h-made" class="px-gut flex flex-col gap-5">
-          <div class="flex flex-col gap-2">
-            <h2 id="h-made" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
-              Thanks to
-            </h2>
-            <p class="m-0 text-[18px] text-ink-2">The companies supporting this meetup.</p>
-          </div>
-          <SupporterList items={supporters} />
+          <h2 id="h-made" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
+            Thanks to
+          </h2>
+          {supporters.length > 0 && (
+            <>
+              <p class="m-0 text-[18px] text-ink-2">The companies supporting this meetup.</p>
+              <SupporterList items={supporters} />
+            </>
+          )}
+          {seasonSponsors.length > 0 && (
+            <>
+              <p class="m-0 text-[18px] text-ink-2">Supporting ZurichJS this season.</p>
+              <SupporterList items={seasonSponsors.map((partner) => ({ partner }))} />
+            </>
+          )}
         </section>
       )
     }

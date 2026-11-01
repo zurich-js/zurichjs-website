@@ -10,14 +10,12 @@ import {
   type ConferenceCopy,
   type ConferenceState,
   type Event,
-  type Milestone,
   type Partner,
   type Quote,
   type RatingRecord,
   type ScheduleInput,
   type Speaker,
   type TalkRef,
-  type TeamMember,
 } from '@zurichjs/events';
 
 /* -------------------------------------------------------------------------- */
@@ -62,13 +60,13 @@ export const CONFERENCE_STATE: ConferenceState = 'unannounced';
 
 export const CONFERENCE: Record<ConferenceState, ConferenceCopy> = {
   unannounced: {
-    headline: 'The community’s conference, one bigger day a year.',
+    headline: 'Our annual conference, with community events and workshops around it.',
     body: 'The next edition hasn’t been announced yet. The conference site has the latest.',
     cta: 'Visit conf.zurichjs.com',
     cfp: 'It opens when the next edition is announced.',
   },
   announced: {
-    headline: 'The community’s conference, one bigger day a year.',
+    headline: 'Our annual conference, with community events and workshops around it.',
     body: 'The next edition is announced. Tickets are not on sale yet.',
     cta: 'Visit conf.zurichjs.com',
     cfp: 'Check the conference site for dates.',
@@ -86,8 +84,8 @@ export const CONFERENCE: Record<ConferenceState, ConferenceCopy> = {
     cfp: 'It is closed.',
   },
   completed: {
-    headline: 'Enough talk, let’s build!',
-    body: 'The last edition is over. Talks and photos are on the conference site.',
+    headline: 'Our annual conference, with community events and workshops around it.',
+    body: 'The 2026 edition is over. The conference site has the recap.',
     cta: 'See the last edition',
     cfp: 'It is closed.',
   },
@@ -656,24 +654,6 @@ export const PARTNERS: Partner[] = [
 /* -------------------------------------------------------------------------- */
 /* About page content                                                           */
 /* -------------------------------------------------------------------------- */
-
-export const TEAM: TeamMember[] = [
-  { name: 'Faris Aziz', role: 'Founder & Lead Organizer', initials: 'FA', photo: { src: '/images/photos/faris.webp', alt: 'Faris Aziz', position: 'center 20%' } },
-  { name: 'Bogdan Mihai Ilie', role: 'Founder & Lead Organizer', initials: 'BI', photo: { src: '/images/photos/bogdan.webp', alt: 'Bogdan Mihai Ilie', position: 'center 20%' } },
-  { name: 'Enrique Ruiz Durazo', role: 'Official Photographer', initials: 'ER', photo: { src: '/images/photos/enrique.webp', alt: 'Enrique Ruiz Durazo', position: 'center 20%' } },
-  { name: 'Nadja Hesselbjerg', role: 'Community Supporter', initials: 'NH' },
-];
-
-export const MILESTONES: Milestone[] = [
-  { date: 'July 2024', title: 'Faris and Bogdan meet at a Zürich ReactJS meetup' },
-  { date: '14 Nov 2024', title: 'Zurich JS is Born!' },
-  { date: 'March 2025', title: 'Partnerships to the Moon!', photo: { src: '/images/photos/meetup-3.webp', alt: 'Partnerships to the Moon!, March 2025' }, eventId: 'p-mar-2025' },
-  { date: 'March 2025', title: 'ZurichJS x Vue Zurich', photo: { src: '/images/photos/vue-zurich.webp', alt: 'ZurichJS x Vue Zurich, March 2025' } },
-  { date: 'May 2025', title: 'May the Code be with you', photo: { src: '/images/photos/may-the-force.webp', alt: 'May the Code be with you, May 2025' } },
-  { date: '18 June 2025', title: 'ZurichJS becomes a Swiss nonprofit' },
-  { date: 'September 2025', title: 'Flare up your performance', photo: { src: '/images/photos/cloudflare.webp', alt: 'Flare up your performance, September 2025' } },
-  { date: 'November 2025', title: 'One year anniversary is here!', eventId: 'p-nov-2025' },
-];
 
 export const QUOTES: Quote[] = [
   {

@@ -202,17 +202,33 @@ export interface ConferenceCopy {
 }
 
 export interface Milestone {
+  /** "November 2024" as shown. */
   date: string;
+  /** Day or month (YYYY-MM-DD or YYYY-MM) for ordering and for matching an event on that day. */
+  iso: string;
   title: string;
+  text?: string;
   photo?: Photo;
-  eventId?: string;
+  /** Event slug, when the milestone is one meetup. */
+  eventSlug?: string;
+  /** Another page about it (a story, partners, the conference). */
+  link?: { label: string; href: string };
+  /** Where the fact comes from (not shown; see docs/v2/CONTENT-SOURCES.md). */
+  source: string;
 }
+
+export type TeamGroup = 'organisers' | 'conference' | 'contributors';
 
 export interface TeamMember {
   name: string;
   role: string;
+  group: TeamGroup;
   initials: string;
   photo?: Photo;
+  bio?: string;
+  links?: { label: string; url: string }[];
+  /** Speaker profile, when the person has spoken at ZurichJS. */
+  speakerId?: string;
 }
 
 export interface Quote {

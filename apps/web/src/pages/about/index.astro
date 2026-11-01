@@ -1,6 +1,8 @@
 ---
 /** About: the first visit, the name, the story, values, team, the nonprofit, quotes and ways to take part. */
-import { eventHref } from '@zurichjs/events';
+import { eventHref, normalizeSearch, zurichDay } from '@zurichjs/events';
+import { mediaForEvent, mediaTagged } from '@zurichjs/content';
+import { mediaHref } from '~/lib/media';
 import { breadcrumbSchema, organizationSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -12,9 +14,34 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import { PHOTOS, SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
 import { cx } from '@zurichjs/design/recipes';
 
-const { events, milestones, team, quotes, settings } = await content();
+const { events, milestones, team, volunteers, quotes, settings, speakers, media } = await content();
 const slack = slackLink(settings);
-const eventsById = new Map(events.map((e) => [e.id, e]));
+// A milestone links to its event: by slug, or the event held on that day.
+const eventsBySlug = new Map(events.map((e) => [e.slug, e]));
+const eventOn = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? events.find((e) => e.startsAt && zurichDay(e.startsAt) === iso) : undefined);
+const timeline = [...milestones]
+  .sort((a, b) => b.iso.localeCompare(a.iso))
+  .map((m) => {
+    const ev = (m.eventSlug && eventsBySlug.get(m.eventSlug)) || eventOn(m.iso);
+    const tagged = mediaTagged(media.items, `milestone:${m.iso}`).find((x) => x.kind === 'photo');
+    const photo = tagged ? { src: tagged.src, alt: tagged.alt } : m.photo;
+    return { m, ev, photo, gallery: ev && mediaForEvent(media.items, ev.slug).length > 0 ? mediaHref(ev.slug) : undefined };
+  });
+// Organisers who have spoken at ZurichJS link to their speaker profile.
+const speakerFor = (name: string) => speakers.find((x) => normalizeSearch(x.name) === normalizeSearch(name));
+const GROUPS = [
+  { k: 'organisers', h: 'Meetup organisers' },
+  { k: 'conference', h: 'ZurichJS Conf team' },
+  { k: 'contributors', h: 'Contributors' },
+] as const;
+const SECTIONS = [
+  ['story', 'Story'],
+  ['team', 'Team'],
+  ['values', 'Values'],
+  ['association', 'Association'],
+  ['get-involved', 'Get involved'],
+  ['first-visit', 'First visit'],
+] as const;
 const nextHref = await nextMeetupHref();
 
 const FIRST_STEPS = [
@@ -73,10 +100,25 @@ const isExt = (href: string) => /^https?:/.test(href);
     </div>
   </PageOpening>
 
+  <nav aria-label="On this page" class="px-gut pt-6 -mb-6">
+    <ul class="m-0 p-0 list-none flex flex-wrap gap-2">
+      {
+        SECTIONS.map(([id, label]) => (
+          <li>
+            <a href={`#${id}`} class="inline-flex items-center min-h-[40px] px-4 rounded-pill bg-grey text-black font-bold text-[16px] no-underline hover:bg-grey-hover">
+              {label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+
   <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
     <section id="first-visit" aria-labelledby="h-first" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center scroll-mt-6">
       <div class="flex flex-col gap-7">
         <h2 id="h-first" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What your first meetup is like</h2>
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">An example evening. Times change from meetup to meetup: your event page has the exact programme.</p>
         <div class="flex flex-col gap-[22px]">
           {
             FIRST_STEPS.map(([t, h, d]) => (
@@ -116,38 +158,52 @@ const isExt = (href: string) => /^https?:/.test(href);
       </div>
     </section>
 
-    <section aria-labelledby="h-story" class="px-gut flex flex-col gap-7">
+    <section id="story" aria-labelledby="h-story" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <SectionHeading id="h-story">
-        From a free Meetup group to a Swiss nonprofit
-        <Fragment slot="sub">We started with personal financial investments, a LinkedIn page, an inactive Meetup group with no past events, and good relationships that allowed us to host events. Here’s what happened next.</Fragment>
+        From a free Meetup group to a Swiss nonprofit and a conference
+        <Fragment slot="sub">We started with personal financial investments, a LinkedIn page, an inactive Meetup group with no past events, and good relationships that allowed us to host events. Here’s what happened next, newest first.</Fragment>
         <Button slot="action" href="/events?tab=past" variant="white">Browse all past events</Button>
       </SectionHeading>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-x-4 gap-y-6">
+      <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-x-4 gap-y-8">
         {
-          milestones.map((m) => {
-            const ev = m.eventId ? eventsById.get(m.eventId) : undefined;
-            const Tag = ev ? 'a' : 'div';
-            return (
-              <Tag href={ev ? eventHref(ev) : undefined} class={cx('flex flex-col gap-3', ev && 'no-underline text-black')}>
-                {m.photo ? (
-                  <Photo photo={m.photo} class="aspect-4/3 w-full rounded-[20px]!" sizes="(min-width: 800px) 33vw, 100vw" />
-                ) : (
-                  <span class="w-full aspect-4/3 rounded-[20px] bg-yellow flex items-end p-[18px] box-border text-[26px] font-bold leading-[1.1]" aria-hidden="true">
-                    {m.title}
-                  </span>
-                )}
-                <span class="flex flex-col gap-1">
-                  <span class="text-[16px] text-ink-2">{m.date}</span>
-                  <span class="text-[20px] font-bold leading-tight text-pretty">{m.title}</span>
+          timeline.map(({ m, ev, photo, gallery }) => (
+            <li id={`story-${m.iso}`} class="flex flex-col gap-3 scroll-mt-6">
+              {photo ? (
+                <Photo photo={photo} class="aspect-4/3 w-full rounded-[20px]!" sizes="(min-width: 800px) 33vw, 100vw" />
+              ) : (
+                <span class="w-full aspect-4/3 rounded-[20px] bg-yellow flex items-end p-[18px] box-border text-[26px] font-bold leading-[1.1]" aria-hidden="true">
+                  {m.title}
                 </span>
-              </Tag>
-            );
-          })
+              )}
+              <div class="flex flex-col gap-1.5">
+                <span class="text-[16px] text-ink-2">{m.date}</span>
+                <h3 class="m-0 text-[20px] font-bold leading-tight text-pretty">{m.title}</h3>
+                {m.text && <p class="m-0 text-[16px] leading-[1.5] text-ink-2">{m.text}</p>}
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-[16px]">
+                  {ev && (
+                    <a href={eventHref(ev)} class="font-bold underline underline-offset-[3px]">
+                      The event
+                    </a>
+                  )}
+                  {gallery && (
+                    <a href={gallery} class="font-bold underline underline-offset-[3px]">
+                      Photos
+                    </a>
+                  )}
+                  {m.link && (
+                    <a href={m.link.href} class="font-bold underline underline-offset-[3px]" {...(isExt(m.link.href) ? { target: '_blank', rel: 'noopener' } : {})}>
+                      {m.link.label}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </li>
+          ))
         }
-      </div>
+      </ol>
     </section>
 
-    <section aria-labelledby="h-values" class="px-gut flex flex-col gap-7">
+    <section id="values" aria-labelledby="h-values" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <SectionHeading id="h-values">
         Trust, authenticity, quality
         <Fragment slot="sub">We believe a healthy developer community relies on these three pillars.</Fragment>
@@ -164,33 +220,75 @@ const isExt = (href: string) => /^https?:/.test(href);
       </div>
     </section>
 
-    <section aria-labelledby="h-team" class="px-gut flex flex-col gap-7">
+    <section id="team" aria-labelledby="h-team" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <SectionHeading id="h-team">
         The people who run it
         <Fragment slot="sub">We’ve built everything by volunteering our time and effort. Say hello at the next meetup; we’re the ones in yellow T-shirts.</Fragment>
         <Button slot="action" href="/cfv" variant="black">Volunteer with us</Button>
       </SectionHeading>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-7">
-        {
-          team.map((m) => (
-            <div class="flex flex-col gap-3">
-              {m.photo ? <Photo photo={m.photo} class="aspect-square w-full" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
-              <div class="flex flex-col gap-1">
-                <h3 class="m-0 text-[20px] font-bold">{m.name}</h3>
-                <div class="text-[16px] text-ink-2">{m.role}</div>
-              </div>
+      {
+        GROUPS.map((g) => {
+          const people = team.filter((m) => m.group === g.k);
+          if (!people.length) return null;
+          return (
+            <div class="flex flex-col gap-4">
+              <h3 class="m-0 text-[22px] font-bold">{g.h}</h3>
+              <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-7">
+                {people.map((m) => {
+                  const sp = speakerFor(m.name);
+                  return (
+                    <li class="flex flex-col gap-3">
+                      {m.photo ? <Photo photo={m.photo} class="aspect-square w-full" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
+                      <div class="flex flex-col gap-1.5">
+                        <h4 class="m-0 text-[20px] font-bold">{m.name}</h4>
+                        <div class="text-[16px] text-ink-2">{m.role}</div>
+                        {m.bio && <p class="m-0 text-[15px] leading-[1.5] text-ink-2">{m.bio}</p>}
+                        {((m.links?.length ?? 0) > 0 || sp) && (
+                          <ul class="m-0 p-0 list-none flex flex-wrap gap-x-3 gap-y-1 text-[15px]" aria-label={`${m.name}: links`}>
+                            {sp && (
+                              <li>
+                                <a href={`/speakers/${sp.id}`} class="font-bold underline underline-offset-[3px]">
+                                  Speaker profile
+                                </a>
+                              </li>
+                            )}
+                            {m.links?.map((l) => (
+                              <li>
+                                <a href={l.url} target="_blank" rel="noopener" class="underline underline-offset-[3px]">
+                                  {l.label}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-          ))
-        }
-      </div>
+          );
+        })
+      }
+      {
+        volunteers.length > 0 && (
+          <div class="flex flex-col gap-2.5">
+            <h3 class="m-0 text-[22px] font-bold">Volunteers</h3>
+            <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
+              ZurichJS Conf 2026 happened thanks to {volunteers.length} volunteers: {volunteers.join(', ')}. And after almost every meetup, someone new offers to help.
+            </p>
+          </div>
+        )
+      }
     </section>
 
-    <section aria-labelledby="h-verein" class="mx-gut bg-grey rounded-block p-[clamp(24px,4vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-x-12 gap-y-7 items-start">
+    <section id="association" aria-labelledby="h-verein" class="mx-gut bg-grey rounded-block p-[clamp(24px,4vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-x-12 gap-y-7 items-start scroll-mt-6">
       <div class="flex flex-col gap-3.5">
         <h2 id="h-verein" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">A nonprofit, run by volunteers</h2>
         <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
           ZurichJS is a registered non-profit under the Swiss JavaScript Group. All revenue we make goes directly into the conference or venues, speaker travel, workshops, experiences, and the infrastructure that keeps the meetup community running.
         </p>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Members fund the association and have a say in it. Coming to meetups is free and never needs a membership.</p>
       </div>
       <div class="flex flex-col gap-3">
         {
@@ -231,7 +329,7 @@ const isExt = (href: string) => /^https?:/.test(href);
       </div>
     </section>
 
-    <section aria-labelledby="h-involved" class="px-gut flex flex-col gap-7">
+    <section id="get-involved" aria-labelledby="h-involved" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <h2 id="h-involved" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Ways to take part</h2>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))] gap-4">
         {

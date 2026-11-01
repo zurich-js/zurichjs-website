@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { Button } from '../ui/Button';
+import { Button } from '@zurichjs/design/islands/Button';
 
 /**
  * What happened at Stripe, for /success and /checkout/success. Reads the

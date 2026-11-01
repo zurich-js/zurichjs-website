@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
-import { buttonClass, cx } from '~/lib/ui';
+import { track } from '@zurichjs/design/analytics';
+import { buttonClass, cx } from '@zurichjs/design/recipes';
 
 interface Props {
   /** Sanity document id of the event. */

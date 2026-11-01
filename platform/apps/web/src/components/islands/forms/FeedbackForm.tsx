@@ -1,11 +1,11 @@
 import { dateLong, eventHref, monthYear } from '@zurichjs/events';
 import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
-import { surfaceClass } from '~/lib/ui';
-import { Button } from '../ui/Button';
-import { Checkbox, TextArea, TextField, isEmail } from '../ui/Field';
-import { StarRating } from '../ui/StarRating';
+import { track } from '@zurichjs/design/analytics';
+import { surfaceClass } from '@zurichjs/design/recipes';
+import { Button } from '@zurichjs/design/islands/Button';
+import { Checkbox, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
+import { StarRating } from '@zurichjs/design/islands/StarRating';
 import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
 
 export interface FeedbackEvent {

@@ -1,18 +1,21 @@
 ---
 /** Landing page for "tech conferences in Zurich" searches. Copy and FAQ from production; events and the conference module from content. */
 import { faqSchema, organizationSchema } from '@zurichjs/seo';
-import LandingCta from '~/components/landing/LandingCta.astro';
-import LandingEvents from '~/components/landing/LandingEvents.astro';
-import LandingFaq from '~/components/landing/LandingFaq.astro';
-import PointList from '~/components/landing/PointList.astro';
-import TopicGroups from '~/components/landing/TopicGroups.astro';
-import PageOpening from '~/components/layout/PageOpening.astro';
-import ConferenceModule from '~/components/site/ConferenceModule.astro';
-import Button from '~/components/ui/Button.astro';
-import SectionHeading from '~/components/ui/SectionHeading.astro';
-import Surface from '~/components/ui/Surface.astro';
+import LandingCta from '@zurichjs/design/components/landing/LandingCta.astro';
+import LandingEvents from '@zurichjs/design/components/landing/LandingEvents.astro';
+import LandingFaq from '@zurichjs/design/components/landing/LandingFaq.astro';
+import PointList from '@zurichjs/design/components/landing/PointList.astro';
+import TopicGroups from '@zurichjs/design/components/landing/TopicGroups.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { cx } from '~/lib/ui';
+import { cx } from '@zurichjs/design/recipes';
+import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
+
+const { events, conference } = await content();
 
 // Verbatim from production: these answers feed the FAQPage JSON-LD and the visible FAQ.
 const faqs = [
@@ -275,9 +278,9 @@ const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
       </div>
     </section>
 
-    <ConferenceModule placement="tech-conferences-zurich" />
+    <ConferenceModule conference={conference} placement="tech-conferences-zurich" />
 
-    <LandingEvents id="h-next" title="Next JavaScript meetups in Zurich" sub="Monthly, free to attend, in English, and fine to come alone." />
+    <LandingEvents events={events} now={BUILD_TIME} ticketing={ticketing} meetupGroupUrl={SITE.meetupGroupUrl} id="h-next" title="Next JavaScript meetups in Zurich" sub="Monthly, free to attend, in English, and fine to come alone." />
 
     <LandingFaq faqs={faqs} />
 

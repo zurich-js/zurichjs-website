@@ -1,10 +1,10 @@
 ---
-import PageOpening from '~/components/layout/PageOpening.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import ContactForm from '~/components/islands/forms/ContactForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { confLink } from '~/lib/analytics';
+import { confLink } from '@zurichjs/design/analytics';
 import { SITE } from '~/lib/content';
-import { cx, isExternal } from '~/lib/ui';
+import { cx, isExternal } from '@zurichjs/design/recipes';
 
 const ROUTES = [
   { h: 'Give a talk', d: 'Propose a talk for a meetup.', href: '/cfp', yellow: false },
@@ -37,7 +37,7 @@ const ROUTES = [
               {...(isExternal(r.href) ? { target: '_blank', rel: 'noopener' } : {})}
               class={cx(
                 'no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center',
-                r.yellow ? 'bg-yellow hover:bg-yellow-hover' : 'bg-grey hover:bg-[#E2E2E6]',
+                r.yellow ? 'bg-yellow hover:bg-yellow-hover' : 'bg-grey hover:bg-grey-hover',
               )}
             >
               <span class="flex flex-col gap-[3px]">

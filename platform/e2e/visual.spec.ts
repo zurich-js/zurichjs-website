@@ -17,6 +17,7 @@ const PAGES = [
   ['about', '/about'],
   ['today', '/today'],
   ['cfp', '/cfp'],
+  ['design-gallery', '/design'],
 ] as const;
 
 test.describe('visual', () => {

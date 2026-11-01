@@ -16,7 +16,8 @@ pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck
 
 | Path                    | What                                                                                                |
 | ----------------------- | --------------------------------------------------------------------------------------------------- |
-| `apps/web`              | Astro 5 site (`output: 'static'`, Netlify adapter, Preact islands, Tailwind 3).                     |
+| `apps/web`              | Astro 7 site (`output: 'static'`, Netlify adapter, Preact islands, Tailwind 4).                     |
+| `packages/design`       | Design system: tokens, generated Tailwind 4 theme, Figtree, Astro components, Preact islands.       |
 | `packages/events`       | Domain types, clock-based event state, presentation copy, ticketing seam, `.ics`. No framework.     |
 | `packages/content`      | Sanity GROQ over plain `fetch`, mappers from production documents to domain types, sample fallback. |
 | `packages/seo`          | Meta tags, JSON-LD, sitemap and `llms.txt` builders.                                                |

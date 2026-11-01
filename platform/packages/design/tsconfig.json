@@ -1,0 +1,4 @@
+{
+  "extends": ["astro/tsconfigs/strict", "@zurichjs/config/tsconfig.base.json"],
+  "include": ["src", "test", "scripts"]
+}

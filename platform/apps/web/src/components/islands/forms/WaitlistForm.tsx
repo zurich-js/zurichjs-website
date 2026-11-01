@@ -1,6 +1,6 @@
 import { useRef, useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
-import { TextField, isEmail } from '../ui/Field';
+import { track } from '@zurichjs/design/analytics';
+import { TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared';
 
 type Done = { email: string; outcome: 'added' | 'already' | 'off' };

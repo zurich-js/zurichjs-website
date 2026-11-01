@@ -1,8 +1,9 @@
 import type { Event } from '@zurichjs/events';
+import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cx } from '~/lib/ui';
-import { Button } from '../ui/Button';
-import { RatingSheet, type RateTarget } from '../ui/RatingSheet';
+import { cx } from '@zurichjs/design/recipes';
+import { Button } from '@zurichjs/design/islands/Button';
+import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 
 /**
  * The evening at a glance (/today). Two islands from this one module share a
@@ -98,7 +99,7 @@ export default function Tonight({ part, ev, names, now: nowIso, venue = '', even
               {beforeDoors ? `Doors open at ${items[0]?.time ?? '18:30'}` : wrapped ? 'That’s a wrap' : `Now · since ${nowItem!.time}`}
             </div>
             <div class="text-[22px] leading-tight font-bold text-pretty">{beforeDoors ? 'Find the venue' : wrapped ? 'Thanks for coming tonight' : nowItem!.title}</div>
-            <div class="text-[16px] text-[#D4D5DA]">{beforeDoors ? venue : wrapped ? 'Rate the talks while they are fresh.' : who(nowItem!)}</div>
+            <div class="text-[16px] text-grey-light">{beforeDoors ? venue : wrapped ? 'Rate the talks while they are fresh.' : who(nowItem!)}</div>
           </div>
           {!wrapped && nextItem && (
             <div class="rounded-card py-5 px-[22px] flex flex-col gap-1.5 shadow-[inset_0_0_0_2px_#19191B]">
@@ -165,6 +166,7 @@ export default function Tonight({ part, ev, names, now: nowIso, venue = '', even
         );
       })}
       <RatingSheet
+        onSubmit={submitRating}
         eventId={ev.id}
         target={target}
         pending={pending}

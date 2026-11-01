@@ -3,10 +3,10 @@
 import { getCollection, render } from 'astro:content';
 import { dateShort } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
-import PageOpening from '~/components/layout/PageOpening.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
-import { cx } from '~/lib/ui';
+import { cx } from '@zurichjs/design/recipes';
 
 export async function getStaticPaths() {
   const all = (await getCollection('policies')).sort((a, b) => a.data.order - b.data.order);

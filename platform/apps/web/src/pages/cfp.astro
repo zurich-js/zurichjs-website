@@ -1,8 +1,8 @@
 ---
-import PageOpening from '~/components/layout/PageOpening.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import CfpForm, { CFP_SUBS } from '~/components/islands/forms/CfpForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { confLink } from '~/lib/analytics';
+import { confLink } from '@zurichjs/design/analytics';
 import { content, nextMeetupHref } from '~/lib/content';
 
 const { conference } = await content();

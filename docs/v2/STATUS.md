@@ -119,3 +119,48 @@ Plain-language status after each phase. Newest at the bottom.
 - Stripe customer receipts must be switched on in the Stripe dashboard if receipts are wanted.
 
 **Next:** Phase 2.
+
+## Phase 2: design system (2026-11-01)
+
+**Done**
+
+- **`@zurichjs/design`** (`platform/packages/design`) holds:
+  - the tokens (`src/tokens.ts`), which generate the Tailwind 4 `theme.css` and `fonts.css`
+  - Figtree
+  - 22 Astro components and 5 Preact island primitives, moved with `git mv`, so history is kept
+- **Components take props and never load content.** `RatingSheet` takes `onSubmit`. The app keeps only its own islands (event, forms, today, tickets, checkout).
+- **Stack:**
+  - Astro 7.4.4 is locked in by a test.
+  - Tailwind 3 → 4 through `@tailwindcss/vite`. The PostCSS and Tailwind configs are removed.
+  - Figtree comes through the Astro 7 Fonts API: generated `@font-face`, a preload and a metric-matched fallback.
+- **The `/design` gallery** shows every component in every variant, plus colour, type, radius and gutter, EventRow in all 8 states, and the islands. It is noindex and in neither the sitemap nor `llms.txt`.
+- **Written rules:** [docs/design-system.md](../design-system.md).
+- **Visual regression:** `platform/e2e/visual.spec.ts`, 8 pages at 390px and 1440px.
+  - Builds and the browser clock are pinned with `BUILD_NOW`, so output is deterministic.
+  - Baselines are committed.
+- **Tests** guard the ownership rules:
+  - the generated CSS matches the tokens
+  - no component exists in both the package and the app
+  - no conflicting button classes
+  - heading recipes follow the tokens
+
+**Verified how**
+
+- **Migration check:** every sitemap route plus the success and 404 pages, at 390px and 1440px, compared against a Tailwind 3 build of Phase 1b. 80 of 82 screenshots are pixel-identical. The 2 that differ are the "Copy link" underline: the design specifies it, and Tailwind 3 had been dropping it ([DECISIONS](./DECISIONS.md#phase-2-design-system-2026-11-01)).
+- **Tests:**
+  - Unit tests: 122.
+  - `astro check`: 0 errors in the app and in the package, including all 22 `.astro` components.
+  - Playwright: 79 tests (site, accessibility, visual).
+- **Static checks:** knip, oxlint, oxfmt and `pnpm audit` are clean.
+- **SEO parity gate:** OK, with no change from Phase 1b.
+- **Lighthouse** (mobile):
+
+  | Page    | Performance | Accessibility | Best practices | SEO |
+  | ------- | ----------- | ------------- | -------------- | --- |
+  | Home    | 99          | 100           | 100            | 100 |
+  | Event   | 99          | 100           | 100            | 100 |
+  | Speaker | 100         | 100           | 100            | 100 |
+
+  The event page was 100 before. Its HTML grew by about 1 KB gzipped from the Tailwind 4 CSS, and the local server does not compress.
+
+**Next:** Phase 3 (Sanity: typed queries, draft preview, Studio PR).

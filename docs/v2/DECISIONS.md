@@ -58,7 +58,7 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 
 ## Phase 1 (Astro app)
 
-- **Astro 7.4, not 5 (changed for security, 2026-10-31).** The brief named Astro 5, but Astro < 7.2.8 has a critical advisory (GHSA-26w7-cxv4-gfx2) and the Netlify adapter for Astro 5 has more; the dependency review blocked the PR. The platform now uses Astro 7.4.4, `@astrojs/netlify` 8.2.10, `@astrojs/preact` 6.1.1 and Vitest 4.1.12. Tailwind stays on v3 (the V2 config is the preset) and runs through PostCSS (`postcss.config.mjs`), because `@astrojs/tailwind` has no Astro 7 release. Build, `astro check`, tests, e2e, the SEO gate and Lighthouse are unchanged. (Owner asked for all CI to pass.)
+- **Astro 7.4, not 5 (changed for security, 2026-10-31).** The brief named Astro 5, but Astro < 7.2.8 has a critical advisory (GHSA-26w7-cxv4-gfx2) and the Netlify adapter for Astro 5 has more; the dependency review blocked the PR. The platform now uses Astro 7.4.4, `@astrojs/netlify` 8.2.10, `@astrojs/preact` 6.1.1 and Vitest 4.1.12. Tailwind first stayed on v3 through PostCSS, because `@astrojs/tailwind` has no Astro 7 release; Phase 2 moved it to Tailwind 4 (see below). Build, `astro check`, tests, e2e, the SEO gate and Lighthouse are unchanged. (Owner asked for all CI to pass.)
 - **Islands are Preact with `compat`.** compat lets the V2 React code port almost verbatim; new code uses Preact idioms. Islands: event actions, banner, summary and programme (clock-aware state and rating), /today, the forms, and the events/speakers filters. The mobile menu and the events tabs are small inline scripts, not framework islands. (Assumption)
 - **Prerendered state plus clock re-check.** Pages render the event state as of build time. Islands re-evaluate it in the browser every minute and swap the actions, banner and rating. A page built before doors switches to feedback mode without a rebuild; the switch to the recap waits for the doors + 48 h rebuild (Phase 4) and tells visitors to reload. (Assumption)
 - **Sanity reads use plain `fetch`, not `@sanity/client`.** It is smaller, and the client crashed the build with an uncatchable socket error when Sanity was unreachable. **Sample content never ships:** builds fall back to the V2 sample content only outside production, and fail on `CONTEXT=production` or `CONTENT_REQUIRE_SANITY=1`. (Assumption)
@@ -96,3 +96,34 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
 - `platform/pnpm audit` is clean. Two overrides keep the same API: `glob@13` → 14 and `minimatch@10` → 11, both only in Netlify's dev tooling.
 - **deepmerge has no patched release** (GHSA-gcqx-w48m-w2h4, low; 4.3.1 is the latest). Instead of ignoring it, `platform/vendor/deepmerge` is 4.3.1 with the fix (skip own `__proto__` keys), wired through a `link:` override. It is only used by `@netlify/config`. Remove it once a fixed version is published.
 - **Production-app (root) audit decisions are recorded separately, in the "CI: production dependency audit" section.**
+
+## Phase 2: design system (2026-11-01)
+
+- **Astro 7 is locked in (owner).** `astro` 7.4.4, `@astrojs/netlify` 8.2.10 and `@astrojs/preact` 6.1.1 are pinned exactly. `apps/web/test/stack.test.ts` fails if the installed Astro major is not 7, or the Tailwind major is not 4.
+- **Tailwind 4 (owner choice).** It is the same version as the conference repository, so both sites can share one `@theme`.
+  - It runs through `@tailwindcss/vite` 4.3.3.
+  - `tailwind.config.ts`, `postcss.config.mjs` and `@tailwindcss/postcss` are removed.
+  - Utilities were migrated with the official codemod.
+- **Tokens live in TypeScript; the CSS is generated.**
+  - `packages/design/src/tokens.ts` is the single source.
+  - `scripts/build-theme.mjs` writes `theme.css` (the Tailwind `@theme` block, the gutter utilities and the base layer) and `fonts.css`.
+  - A test fails when the generated files are stale.
+  - This means TypeScript (the Astro font config, the OG image renderer later, the conference site) and CSS read the same values.
+- **Figtree comes through the Astro 7 Fonts API** (`fontProviders.local()`, `<Font preload>`), with its settings read from the tokens.
+  - Astro now generates the `@font-face`, the preload link and a metric-matched fallback font, so text shifts less while the font loads.
+  - `fonts.css` covers sites without the Fonts API.
+  - The OG image renderer keeps its static TTFs in the app, because satori cannot read woff2.
+- **Components take props; the package never loads content.**
+  - Header, Footer, HomeHero, ProofSentence, ConferenceModule, HostsSection, EventRow and LandingEvents receive content, the clock and the ticketing provider from the page.
+  - `RatingSheet` takes `onSubmit`; the app passes `submitForm('rating', …)`.
+  - The package depends only on `@zurichjs/events`, with `astro` and `preact` as peers.
+- **Four hard-coded hex values became tokens:** `grey-hover`, `grey-light`, `blue-soft` and `danger-hover`, plus `grey-placeholder`.
+  - Third-party brand colours on the About page (Meetup, Slack, LinkedIn, Bluesky) stay inline, because they are not ZurichJS colours.
+- **Two Tailwind 3 → 4 differences were found by comparing every route at 390px and 1440px against a Tailwind 3 build:**
+  - **Placeholder colour:** Tailwind 4 preflight uses 50% `currentColor`. The `grey-placeholder` token keeps the shipped grey.
+  - **The `link` button variant:** in Tailwind 3, `no-underline` (button base) silently beat `underline` (link variant), so "Copy link" rendered without the underline the design specifies (`text-decoration: underline; text-underline-offset: 3px`). The recipe no longer emits conflicting classes, so the link variant is now underlined as designed. This is the one intended visual change.
+  - **Result:** 80 of 82 screenshots are pixel-identical; the other 2 are that underline.
+- **The `/design` gallery** is a normal static page with `noindex`. It is left out of `STATIC_ROUTES`, so it appears in neither the sitemap nor `llms.txt`.
+  - It renders from fixtures, so it is deterministic and shows every event state whatever is in Sanity.
+- **Visual baselines** are committed under `platform/e2e/__screenshots__` (8 pages × 2 widths, about 9 MB).
+  - They come from Playwright 1.63 Chromium on Linux. CI must run them in the same environment; Phase 4 uses the Playwright container image.

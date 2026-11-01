@@ -7,15 +7,15 @@
  */
 import { dateLong, eventHref, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
-import PageOpening from '~/components/layout/PageOpening.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventActions from '~/components/islands/event/EventActions';
 import EventBanner from '~/components/islands/event/EventBanner';
 import EventSummary from '~/components/islands/event/EventSummary';
 import Programme from '~/components/islands/event/Programme';
 import ProMeetupTickets from '~/components/islands/tickets/ProMeetupTickets';
-import Button from '~/components/ui/Button.astro';
-import Photo from '~/components/ui/Photo.astro';
-import Surface from '~/components/ui/Surface.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
 import { clip } from '~/lib/text';

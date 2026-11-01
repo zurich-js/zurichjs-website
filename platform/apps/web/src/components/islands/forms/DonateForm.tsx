@@ -1,9 +1,9 @@
 import { submitForm } from '@zurichjs/forms/client';
 import { useRef, useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
-import { cx } from '~/lib/ui';
-import { Button } from '../ui/Button';
-import { Modal } from '../ui/Modal';
+import { track } from '@zurichjs/design/analytics';
+import { cx } from '@zurichjs/design/recipes';
+import { Button } from '@zurichjs/design/islands/Button';
+import { Modal } from '@zurichjs/design/islands/Modal';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError } from './shared';
 
 const AMOUNTS: { v: number | 'custom'; label: string; sub: string }[] = [

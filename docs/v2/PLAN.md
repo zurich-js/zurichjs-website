@@ -6,10 +6,10 @@ Owner decisions are in [DECISIONS.md](./DECISIONS.md), blockers in [BLOCKERS.md]
 
 ```
 platform/                     own pnpm root (pnpm-workspace.yaml, lockfile, minimumReleaseAge 4320)
-  apps/web/                   Astro 5 site, output 'static', @astrojs/netlify, Preact islands
+  apps/web/                   Astro 7 site, output 'static', @astrojs/netlify, Preact islands, Tailwind 4
     netlify.toml              read only by a Netlify site whose base directory is platform/apps/web
   packages/
-    design/                   tokens.css, Tailwind preset, Figtree, .astro and Preact components
+    design/                   tokens.ts → generated Tailwind 4 theme.css, Figtree, .astro and Preact components
     events/                   framework-free event-state logic (resolveState, presentEvent, formatting, ics)
     content/                  Sanity client, GROQ queries, typegen types, mappers, sample fallback
     seo/                      buildMeta, JSON-LD builders, sitemap and llms.txt helpers
@@ -102,16 +102,16 @@ See [CONTENT-MODEL-DIFF.md](./CONTENT-MODEL-DIFF.md). In short:
 
 ## 4. Design system (`@zurichjs/design`)
 
-Every token and component comes from `v2/src`.
+Every token and component comes from `v2/src`. Rules and usage: [docs/design-system.md](../design-system.md); gallery at `/design` (noindex).
 
-**Tokens** (`tokens.css`, mirrored in the Tailwind preset):
+**Tokens** (`src/tokens.ts`, generated into the Tailwind 4 `@theme` in `src/theme.css`):
 
 - black `#000`, white `#FFF`
 - yellow `#F1E271` (hover `#EDC936`)
 - ink `#19191B` / `#242528` / `#3A3B40`
-- grey `#EDEDEF`, soft `#F6F6F4`, mid `#A9AAB1`, text `#5F626B`, line `#7C7F89`, frame `#D9D9DC`
-- blue `#268BCC` (focus ring and logo only)
-- danger `#B3261E` / `#F6D8D3`
+- grey `#EDEDEF` (hover `#E2E2E6`), soft `#F6F6F4`, mid `#A9AAB1`, light `#D4D5DA`, text `#5F626B`, placeholder `#9CA3AF`, line `#7C7F89`, frame `#D9D9DC`
+- blue `#268BCC` (focus ring and logo only; soft `#D9E9F5` for monogram tiles)
+- danger `#B3261E` (hover `#8F1D17`) / `#F6D8D3`
 - radius: pill 999px, card 24px, block `clamp(24px, 3vw, 40px)`
 - breakpoint: 800px (plus 1100px for wide layouts)
 - gutter `--px` 20/48px, `--gut: max(var(--px), (100% - 1280px) / 2)`
@@ -127,7 +127,7 @@ Every token and component comes from `v2/src`.
 | SectionHeading | lg/md/sm, optional action                                                                                                                                     |
 | StarRating     | md/lg; interactive (island) or read-only                                                                                                                      |
 | Field          | TextField, TextArea, SelectField, Checkbox, ChipGroup (Preact, used in islands)                                                                               |
-| Layout         | Layout, Header, Footer, PageOpening (black opening)                                                                                                           |
+| Layout         | Header, Footer, PageOpening (black opening); the page layout stays in the app                                                                                 |
 | Site           | Modal, Photo, LogoGrid, EventRow, TalkRow, SpeakerCard (grey/yellow), ConferenceModule, ProofSentence, HomeHero, HostsSection, SpeakCta, RatingSheet (island) |
 
 **Rule:** a component is written once. Static components are `.astro`; components used inside islands are Preact `.tsx` and are also rendered statically by Astro. There are no duplicates.

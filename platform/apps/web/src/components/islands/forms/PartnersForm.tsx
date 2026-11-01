@@ -1,8 +1,8 @@
 import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
-import { Button } from '../ui/Button';
-import { ChipGroup, TextArea, TextField } from '../ui/Field';
+import { track } from '@zurichjs/design/analytics';
+import { Button } from '@zurichjs/design/islands/Button';
+import { ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
 
 export type Way = 'host' | 'food' | 'partner' | 'unsure';

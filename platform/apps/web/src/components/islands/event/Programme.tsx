@@ -1,8 +1,9 @@
 import type { Event, EventState } from '@zurichjs/events';
+import { submitRating } from '~/lib/rating';
 import { useState } from 'preact/hooks';
-import { cx, monogramClass } from '~/lib/ui';
-import { Button } from '../ui/Button';
-import { RatingSheet, type RateTarget } from '../ui/RatingSheet';
+import { cx, monogramClass } from '@zurichjs/design/recipes';
+import { Button } from '@zurichjs/design/islands/Button';
+import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { useEventState } from '../useEventState';
 
 export interface ProgrammeSpeaker {
@@ -71,7 +72,15 @@ export default function Programme({ ev, initial, speakers }: { ev: Event; initia
           </div>
         </div>
       ))}
-      <RatingSheet eventId={ev.id} target={target} pending={pending} onRated={(k, n) => setRated((r) => ({ ...r, [k]: n }))} onNext={setTarget} onClose={() => setTarget(null)} />
+      <RatingSheet
+        onSubmit={submitRating}
+        eventId={ev.id}
+        target={target}
+        pending={pending}
+        onRated={(k, n) => setRated((r) => ({ ...r, [k]: n }))}
+        onNext={setTarget}
+        onClose={() => setTarget(null)}
+      />
     </section>
   );
 }

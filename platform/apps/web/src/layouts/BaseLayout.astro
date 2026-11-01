@@ -4,9 +4,10 @@
  * black opening (header + slot "opening"), white content, black footer.
  */
 import { buildMeta, type MetaInput } from '@zurichjs/seo';
-import Footer from '~/components/layout/Footer.astro';
-import Header from '~/components/layout/Header.astro';
-import { content, nextMeetupHref } from '~/lib/content';
+import Footer from '@zurichjs/design/components/Footer.astro';
+import Header from '@zurichjs/design/components/Header.astro';
+import { Font } from 'astro:assets';
+import { SITE, content, nextMeetupHref } from '~/lib/content';
 import '~/styles/global.css';
 
 type Props = Omit<MetaInput, 'path' | 'title'> & {
@@ -41,7 +42,7 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/logo-square.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/logo-square.png" />
-    <link rel="preload" href="/fonts/figtree-var.woff2" as="font" type="font/woff2" crossorigin />
+    <Font cssVariable="--font-figtree" preload />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM summary" />
     <link rel="sitemap" href="/sitemap.xml" />
     {schemas.length > 0 && <script type="application/ld+json" set:html={JSON.stringify(schemas.length === 1 ? schemas[0] : schemas)} />}
@@ -63,11 +64,11 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
   <body class="min-h-screen flex flex-col bg-white text-black">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-3 focus:left-3 focus:bg-yellow focus:text-black focus:px-4 focus:py-2 focus:rounded-pill focus:font-bold">Skip to content</a>
     <div class="on-black bg-black text-white">
-      <Header nextHref={nextHref} />
+      <Header nextHref={nextHref} confState={c.conference.state} />
       <slot name="opening" />
     </div>
     <main id="main" class="flex-1"><slot /></main>
-    <Footer />
+    <Footer site={SITE} confState={c.conference.state} />
     <script>
       // One delegated listener for data-track="<event>" elements (see lib/analytics.ts).
       document.addEventListener('click', (e) => {

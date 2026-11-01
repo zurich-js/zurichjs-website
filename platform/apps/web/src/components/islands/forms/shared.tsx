@@ -2,7 +2,7 @@
 import { HONEYPOT, validate, type FormKind } from '@zurichjs/forms/client';
 import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { buttonClass, type ButtonSize, type ButtonVariant } from '~/lib/ui';
+import { buttonClass, type ButtonSize, type ButtonVariant } from '@zurichjs/design/recipes';
 
 /** Hidden field that bots fill in and people never see. The server rejects any value. */
 export function Honeypot() {

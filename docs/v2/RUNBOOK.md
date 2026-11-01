@@ -1,109 +1,151 @@
-# V2 runbook
+# Runbook: zurichjs.com
 
-How the V2 site (`platform/`) is built, deployed and rebuilt, and what the owner sets up once. Decisions are in [DECISIONS.md](./DECISIONS.md), and blockers in [BLOCKERS.md](./BLOCKERS.md).
+This runbook covers going live, the one-time Netlify and Sanity setup, how rebuilds happen, rollback, and what to do when a build fails. Decisions are in [DECISIONS.md](./DECISIONS.md).
 
-## One-time setup (owner)
+The repository is one pnpm workspace:
 
-1. **Netlify site for V2.** Add a new site from `zurich-js/zurichjs-website` with these settings:
-   - **Base directory:** `platform/apps/web`
-   - **Package directory:** empty
-   - **Build command, publish directory and functions:** come from `platform/apps/web/netlify.toml`. Leave them empty in the UI.
+- `apps/web` is the Astro 7 site.
+- `packages/*` are the shared packages.
+- `tools/*` holds the SEO gate, the local Netlify-like server and CI helpers.
+- `e2e/` holds the Playwright tests.
 
-   Node 22.23.4 is pinned in `netlify.toml` and in `platform/.nvmrc`, because Astro 7.4 requires at least 22.23.4.
+## Go live (switchover, owner)
 
-   pnpm installs the whole `platform` workspace from the base directory. Do **not** use base `platform` with a package directory: Netlify then resolves `publish` and `functions` against `platform/` (checked with `@netlify/config`).
+The switchover PR replaces the old Next.js app with this site. The steps below change the existing Netlify site that serves zurichjs.com. **DNS does not change.**
 
-2. **Environment variables.** Set these in Site configuration › Environment variables.
+### Before merging
 
-   | Variable                                                                          | Used by                                                       | Required                       |
-   | --------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------ |
-   | `SANITY_PROJECT_ID` (default `viqjrovw`), `SANITY_DATASET` (default `production`) | build                                                         | no                             |
-   | `SANITY_READ_TOKEN`                                                               | the draft preview site (Viewer token); speaker feedback pages | preview site; speaker feedback |
-   | `SANITY_WRITE_TOKEN`                                                              | forms: talk proposals, feedback, ratings                      | yes                            |
-   | `SANITY_WEBHOOK_SECRET`                                                           | `/api/rebuild`                                                | yes                            |
-   | `NETLIFY_BUILD_HOOK_URL`                                                          | scheduled rebuilds                                            | yes                            |
-   | `RESEND_API_KEY`, `FORMS_TO`, `FORMS_FROM`                                        | contact and partner emails                                    | yes                            |
-   | `SLACK_WEBHOOK_URL`                                                               | form notifications                                            | optional                       |
-   | `EMAIL_OCTOPUS_API_KEY`, `EMAIL_OCTOPUS_LIST_ID`                                  | conference waitlist                                           | yes                            |
-   | `JWT_SECRET`                                                                      | speaker feedback links (same value as production)             | yes                            |
-   | `PUBLIC_POSTHOG_KEY`, `PUBLIC_POSTHOG_HOST`                                       | analytics                                                     | optional                       |
+1. **Netlify › the zurichjs.com site › Site configuration › Build & deploy › Build settings**
 
-   `netlify.toml` sets `CONTENT_REQUIRE_SANITY=1` for production. A production build that cannot read Sanity fails instead of shipping sample content.
+   | Setting             | New value                                   |
+   | ------------------- | ------------------------------------------- |
+   | Base directory      | `apps/web`                                  |
+   | Package directory   | empty                                       |
+   | Build command       | empty (`apps/web/netlify.toml` sets it)     |
+   | Publish directory   | empty (`netlify.toml`: `dist`)              |
+   | Functions directory | empty (`netlify.toml`: `netlify/functions`) |
 
-3. **Build hook.** In Site configuration › Build & deploy › Build hooks, add one called "Scheduled rebuild" on branch `main`. Copy its URL into `NETLIFY_BUILD_HOOK_URL`.
+   Under Integrations › Build plugins, remove any Next.js plugin installed in the UI. Astro's own Netlify adapter takes over.
 
-4. **Sanity webhook.** Set this up in sanity.io/manage › project `viqjrovw` › API › Webhooks › Create webhook.
+   Node 22.23.4 is pinned in `netlify.toml` and `.nvmrc`, because Astro 7.4 needs at least 22.23.4. pnpm installs the whole workspace from `apps/web`.
+
+   Why base `apps/web`: `@netlify/config` showed that base `/` plus package `apps/web` resolves `publish` and `functions` against the repository root.
+
+2. **Netlify › Environment variables.** The site reads the production variable names that already exist, so most of these are already set:
+
+   | Variable                                              | Status                                                                                             | Used by                                                     |
+   | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+   | `SANITY_TOKEN`                                        | **already set**; also read as the read and write token                                             | build (if the dataset is private), forms, speaker feedback  |
+   | `JWT_SECRET`                                          | **already set**; keep the same value                                                               | speaker feedback links                                      |
+   | `EMAIL_OCTOPUS_API_KEY`, `EMAIL_OCTOPUS_LIST_ID`      | **already set**                                                                                    | conference waitlist                                         |
+   | `SLACK_BOT_TOKEN`, `SLACK_DEFAULT_CHANNEL`            | **already set**                                                                                    | form notifications. Alternatively, set `SLACK_WEBHOOK_URL`. |
+   | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | **already set**. `PUBLIC_POSTHOG_*` also work.                                                     | analytics                                                   |
+   | `SANITY_WEBHOOK_SECRET`                               | **add**: a long random string, also used in step 5                                                 | `/api/rebuild`                                              |
+   | `NETLIFY_BUILD_HOOK_URL`                              | **add after step 4**                                                                               | scheduled rebuilds                                          |
+   | `RESEND_API_KEY`, `FORMS_TO`, `FORMS_FROM`            | optional. Without them, contact and partner forms still reach Sanity and Slack, but send no email. | form emails                                                 |
+   | `SANITY_WRITE_TOKEN`, `SANITY_READ_TOKEN`             | optional                                                                                           | separate tokens instead of `SANITY_TOKEN`                   |
+   - **Leave the old app's variables for a week**, so a rollback to an old deploy keeps working: `CLERK_*`, `STRIPE_*`, `IMAGEKIT_*`, `PUSHOVER_*`, `GOOGLE_MAPS_API_KEY`, `INTERNAL_NOTIFICATION_SECRET`, `ZURICHJS_ADMIN_ORG_ID`, `NEXT_PUBLIC_BASE_URL`. Delete them afterwards.
+   - **Production must read Sanity:** `netlify.toml` sets `CONTENT_REQUIRE_SANITY=1`, so a production build that cannot read Sanity fails instead of shipping sample content.
+
+3. **Sanity Studio** (zurich-js/zurich-js-website-sanity-studio#1):
+   1. Merge the PR and run `sanity deploy`.
+   2. Run the additive migration on `production`: a dry run first, then `--no-dry-run`.
+
+   Every change is additive, so the old site keeps working with the new schema.
+
+### Merge and verify
+
+4. **Merge the switchover PR.** Netlify builds `main` with the new settings.
+   - **If the build fails, the old site stays live**, because a failed build never replaces a deploy. Read the deploy log and fix forward, or follow "Roll back" below.
+   - **Then add the build hook:** Build hooks › "Scheduled rebuild" on `main`. Copy its URL into `NETLIFY_BUILD_HOOK_URL` and trigger one more deploy.
+
+5. **Sanity webhook.** In sanity.io/manage › project `viqjrovw` › API › Webhooks, create:
 
    | Setting     | Value                                                                                                             |
    | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-   | URL         | `https://<v2-site>/api/rebuild`                                                                                   |
+   | URL         | `https://zurichjs.com/api/rebuild`                                                                                |
    | Dataset     | `production`                                                                                                      |
    | Trigger on  | Create, Update, Delete                                                                                            |
    | Filter      | `_type in ["events", "talk", "speaker", "partner", "meetupRating", "conference", "siteSettings", "announcement"]` |
    | Drafts      | off                                                                                                               |
    | Projection  | `{_id, _type}`                                                                                                    |
    | HTTP method | POST                                                                                                              |
-   | Secret      | a long random string. Use the same value for `SANITY_WEBHOOK_SECRET`.                                             |
+   | Secret      | the `SANITY_WEBHOOK_SECRET` value                                                                                 |
 
-   Requests without a valid signature, or signed more than 5 minutes ago, get a 401.
+6. **Smoke test** on zurichjs.com:
+   - **Pages:** home, `/events`, an upcoming event page, a past event page, a speaker, `/cfp`, `/donate`, `/today`.
+   - **Old URLs:** `/partnerships`, `/buy-us-a-coffee`, `/workshops/react-performance`, `/api/og/home` and `/api/sitemap.xml` must each return a 301.
+   - **Search and LLM files:** `/sitemap.xml`, `/robots.txt` and `/llms.txt` must load.
+   - **A form:** send a contact message with your own address. It should arrive in Sanity and Slack, and in email if Resend is set.
+   - **The webhook:** `curl -i -X POST https://zurichjs.com/api/rebuild` must answer `401`. Publishing any document in the Studio must lead to a deploy within about 4 minutes.
+   - **The SEO gate against live content:**
+     1. Run `CONTENT_REQUIRE_SANITY=1 pnpm build` with `SANITY_TOKEN` set.
+     2. Run `node tools/seo/compare.mjs --base https://zurichjs.com`.
 
-5. **Draft preview site** (optional, for editors). Create a second Netlify site with the same repository and settings, plus:
-   - `SANITY_PERSPECTIVE=drafts`
-   - `SANITY_READ_TOKEN`: a Sanity **Viewer** token. Drafts are private, so the build fails without it.
-   - its own build hook in `NETLIFY_BUILD_HOOK_URL`, and its own `SANITY_WEBHOOK_SECRET`
-   - a second Sanity webhook pointing at `https://<preview-site>/api/rebuild`, with **Drafts on**
-   - `SANITY_STUDIO_PREVIEW_URL=https://<preview-site>` in the Studio's environment, so the Presentation tool and the "Open preview" links use it
+7. **Search engines.** In Google Search Console and Bing Webmaster Tools, submit `https://zurichjs.com/sitemap.xml` (it replaces `/api/sitemap.xml`). Watch coverage and 404s for two weeks.
 
-   Preview builds are noindex on every page, `robots.txt` disallows everything, and a "Draft preview" bar is shown. If your Netlify plan includes it, also password-protect the site (Access control); this is a paid feature on some plans.
+8. **Optional:**
+   - the Twint QR, in the Studio under Site settings › Support page
+   - the draft preview site (below)
 
-6. **Twint QR for `/donate`.** In the Studio, go to Site settings › Support page › Twint QR code. Upload the QR from the Twint business app and publish. The next rebuild shows it.
+### Roll back
+
+1. In Netlify › Deploys, open the last deploy of the old app and click "Publish deploy". This is instant.
+2. To build the old app again, set the build settings back to their previous values (base `/`, the old build command) and revert the merge on `main`.
+
+## Draft preview site (optional, for editors)
+
+Create a second Netlify site with the same repository and build settings, plus:
+
+- `SANITY_PERSPECTIVE=drafts`
+- `SANITY_READ_TOKEN`: a Sanity **Viewer** token. The build fails without it, because drafts are private.
+- its own build hook in `NETLIFY_BUILD_HOOK_URL`, and its own `SANITY_WEBHOOK_SECRET`
+- a second Sanity webhook to `https://<preview-site>/api/rebuild` with **Drafts on**
+- `SANITY_STUDIO_PREVIEW_URL=https://<preview-site>` in the Studio's environment
+
+Preview builds are noindex on every page, `robots.txt` disallows everything, and a "Draft preview" bar is shown. If your Netlify plan includes it, also password-protect the site (Access control); this is a paid feature on some plans.
 
 ## How rebuilds happen
 
 The site is static, so content changes appear only after a rebuild.
 
-| Trigger                            | Path                                                                                                                                                                                                                                  | Delay                   |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| Publish in Sanity                  | The webhook calls `/api/rebuild`, which records a pending build in Netlify Blobs. `scheduled-rebuild` runs every 2 minutes and calls the build hook once no publish has arrived for 2 minutes. Ten quick publishes produce one build. | 2–4 min, plus the build |
-| An event's doors, and doors + 48 h | `scheduled-rebuild` reads `/state-changes.json`, which each build writes, and builds once per time. That rebuild moves the page from "RSVP open" to the live and feedback state, then to the recap.                                   | ≤ 2 min, plus the build |
-| Code merged to `main`              | Netlify builds automatically.                                                                                                                                                                                                         | the build               |
+| Trigger                            | Path                                                                                                                                                                                                                                         | Delay                   |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Publish in Sanity                  | The webhook calls `/api/rebuild`, which records a pending build in Netlify Blobs. `scheduled-rebuild` runs every 2 minutes and calls the build hook once nothing has been published for 2 minutes, so ten quick publishes produce one build. | 2–4 min, plus the build |
+| An event's doors, and doors + 48 h | `scheduled-rebuild` reads `/state-changes.json`, which each build writes, and builds once per time. That build moves the event page to its live and feedback state, then to the recap.                                                       | ≤ 2 min, plus the build |
+| Code merged to `main`              | Netlify builds automatically.                                                                                                                                                                                                                | the build               |
 
-- **No nightly rebuild (owner).** Nothing on the site changes on its own except at event state changes, and those are covered above.
-- **Between rebuilds**, the event islands re-check the clock in the browser, so the actions people can click are always right.
-- **Code:** `platform/apps/web/src/server/rebuild.ts` holds the pure logic and its tests. The webhook is `src/pages/api/rebuild.ts`, and the scheduled function is `netlify/functions/scheduled-rebuild.mts`.
+- **No nightly rebuild (owner).**
+- **Between rebuilds,** the event islands re-check the clock in the browser, so the buttons people can press are always right.
+- **Where the code lives:**
+  - the logic and its tests: `apps/web/src/server/rebuild.ts`
+  - the webhook: `apps/web/src/pages/api/rebuild.ts`
+  - the timer: `apps/web/netlify/functions/scheduled-rebuild.mts`
 
-## Force a rebuild
+**To force a rebuild:** in Netlify, go to Deploys › Trigger deploy, or run `curl -X POST "$NETLIFY_BUILD_HOOK_URL?trigger_title=Manual"`.
 
-- **Netlify UI:** Deploys › Trigger deploy › Deploy site.
-- **Terminal:** `curl -X POST "$NETLIFY_BUILD_HOOK_URL?trigger_title=Manual"`.
+## When something fails
 
-## Roll back
-
-1. In Netlify › Deploys, pick the last good deploy and click "Publish deploy". This is instant and changes no code.
-2. Fix forward with a PR.
-
-If a content change broke the build, the previous deploy stays live, because a failed build never replaces it. Fix or revert the document in Sanity's history.
-
-## When a build fails
-
-- **"Sanity is not reachable" on production:** this is deliberate. Production never ships sample content. Check Sanity's status and the token, then retry.
+- **"Sanity is not reachable" on a production build:** this is deliberate. Production never ships sample content. Check Sanity's status and the token, then retry.
 - **"SANITY_PERSPECTIVE=drafts needs SANITY_READ_TOKEN":** the preview site is missing its Viewer token.
-- **CI: the SEO parity gate fails:** a URL, title, canonical, JSON-LD type or sitemap entry was lost. Fix it, or record an intentional change, with a reason, in `platform/tools/seo/scope.json` or `allowlist.json`.
-- **CI: visual regression fails:** look at the diff images in the `v2-reports` artifact. If the change is intended, run `pnpm exec playwright test e2e/visual.spec.ts --update-snapshots` and commit the new baselines.
+- **A content change broke the build:** the previous deploy stays live. Fix or revert the document in Sanity's history.
+- **CI, the SEO parity gate:** a URL, title, canonical URL, JSON-LD type or sitemap entry was lost. Fix it, or record an intentional change, with a reason, in `tools/seo/scope.json` or `allowlist.json`.
+- **CI, visual regression:** the log's "Visual diff summary" step shows where each screenshot differs, and the `reports` artifact has the images. If the change is intended, run `pnpm exec playwright test e2e/visual.spec.ts --update-snapshots` and commit the new baselines. Chromium runs with fixed text rendering (`playwright.config.ts`), so baselines made locally on Linux match CI.
 
 ## CI (GitHub Actions)
 
-| Workflow                 | Runs on                                                                | What                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `V2 platform` (`v2.yml`) | PRs and pushes to `main` that touch `platform/`, `v2/` or the workflow | **checks:** oxlint, oxfmt, knip, `astro check` and `tsc`, Vitest, `pnpm audit`. **site:** the build (sample content, fixed clock); Playwright e2e, accessibility and visual regression at 390 and 1440 px; the SEO and LLM parity gate; Lighthouse mobile (performance ≥ 0.9 as the median of 3 runs; accessibility, SEO = 1; best practices ≥ 0.95). **reference:** the `v2/` site typechecks and builds. |
-| `CI` (`ci.yml`)          | PRs to `main`                                                          | the production app, unchanged                                                                                                                                                                                                                                                                                                                                                                              |
-| `dependency-review.yml`  | every PR                                                               | blocks known-vulnerable dependencies                                                                                                                                                                                                                                                                                                                                                                       |
+| Workflow            | Runs on                        | What it checks                        |
+| ------------------- | ------------------------------ | ------------------------------------- |
+| `CI` (`ci.yml`)     | every PR, and pushes to `main` | See the two jobs below.               |
+| `Dependency Review` | every PR                       | Blocks known-vulnerable dependencies. |
 
-Reports (Playwright HTML, diffs, the SEO report, Lighthouse) are uploaded as the `v2-reports` artifact for 14 days.
+- **checks job:** oxlint, oxfmt, knip, `astro check` and `tsc`, Vitest, `pnpm audit`.
+- **site job:**
+  - the build, with sample content and a fixed clock
+  - Playwright end-to-end, accessibility and visual regression at 390 and 1440 px
+  - the SEO and LLM parity gate
+  - Lighthouse on mobile: performance ≥ 0.9 as the median of 3 runs, accessibility and SEO = 1, best practices ≥ 0.95
 
-## Switchover checklist (owner decision)
+Reports are uploaded as the `reports` artifact for 14 days.
 
-1. Decide what happens to `/workshops/*`, `/tshirt`, `/invite` and `/media-demo`: keep them, 301, or 410 ([DECISIONS.md](./DECISIONS.md)).
-2. Run the live SEO baseline (`node platform/tools/seo/snapshot.mjs https://zurichjs.com …`). Then run the parity gate against the V2 deploy preview, with real content.
-3. Point zurichjs.com at the V2 Netlify site, and keep the old site on a subdomain for a week.
-4. Submit the new sitemap in Google Search Console and Bing. Watch coverage and 404s for two weeks.
+A pre-commit hook (husky) runs oxfmt and oxlint on staged files, then a typecheck.

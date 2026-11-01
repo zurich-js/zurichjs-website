@@ -29,7 +29,7 @@ Plain-language status after each phase. Newest at the bottom.
 **Done**
 
 - `PLAN.md`: platform layout, sitemap with rendering mode and rebuild trigger per route (including every production-only route and its fate), design-system inventory, CI matrix, risks and decisions.
-- `SEO-BASELINE.md`, plus the crawl tool and baseline data in `platform/tools/seo/`. Records what Google and LLM crawlers get today, the parity rules the Astro app must pass, and the production SEO defects V2 fixes.
+- `SEO-BASELINE.md`, plus the crawl tool and baseline data in `tools/seo/`. Records what Google and LLM crawlers get today, the parity rules the Astro app must pass, and the production SEO defects V2 fixes.
 - `DEAD-CODE.md`: knip report for the production app (28 dead files, 5 unused dependencies, dead exports).
 - `SANE-READINESS.md`: what Sane offers today and the two seams (`TicketingProvider`, `TalkProposalSink`) the platform builds so Sane can plug in later.
 
@@ -124,7 +124,7 @@ Plain-language status after each phase. Newest at the bottom.
 
 **Done**
 
-- **`@zurichjs/design`** (`platform/packages/design`) holds:
+- **`@zurichjs/design`** (`packages/design`) holds:
   - the tokens (`src/tokens.ts`), which generate the Tailwind 4 `theme.css` and `fonts.css`
   - Figtree
   - 22 Astro components and 5 Preact island primitives, moved with `git mv`, so history is kept
@@ -135,7 +135,7 @@ Plain-language status after each phase. Newest at the bottom.
   - Figtree comes through the Astro 7 Fonts API: generated `@font-face`, a preload and a metric-matched fallback.
 - **The `/design` gallery** shows every component in every variant, plus colour, type, radius and gutter, EventRow in all 8 states, and the islands. It is noindex and in neither the sitemap nor `llms.txt`.
 - **Written rules:** [docs/design-system.md](../design-system.md).
-- **Visual regression:** `platform/e2e/visual.spec.ts`, 8 pages at 390px and 1440px.
+- **Visual regression:** `e2e/visual.spec.ts`, 8 pages at 390px and 1440px.
   - Builds and the browser clock are pinned with `BUILD_NOW`, so output is deterministic.
   - Baselines are committed.
 - **Tests** guard the ownership rules:
@@ -228,7 +228,7 @@ Plain-language status after each phase. Newest at the bottom.
   - **site:** build, e2e and accessibility, visual regression, SEO parity, Lighthouse, with reports uploaded
   - **reference:** the `v2/` reference site
 - **No Claude review workflow** (owner: no API-key reviews).
-- **`platform/apps/web/netlify.toml`:**
+- **`apps/web/netlify.toml`:**
   - the build, with production required to read Sanity
   - the scheduled function
   - redirects from `/api/og/*` to the static images
@@ -248,7 +248,7 @@ Plain-language status after each phase. Newest at the bottom.
 - **SEO parity gate:** OK.
 - **Lighthouse CI**, run locally with `lighthouserc.json`: every assertion passes.
 - **Netlify tooling, run locally:**
-  - `@netlify/config` resolves `netlify.toml` with base `platform/apps/web`
+  - `@netlify/config` resolves `netlify.toml` with base `apps/web`
   - `zip-it-and-ship-it` bundles `scheduled-rebuild` with schedule `*/2 * * * *`
 - **`v2/`:** typecheck and build pass.
 - **The workflows themselves run on this PR.**
@@ -258,3 +258,29 @@ Plain-language status after each phase. Newest at the bottom.
 - Steps 1–7 of the RUNBOOK setup: the Netlify site or sites, environment variables, build hook, Sanity webhook or webhooks, and the Twint QR.
 
 **Next:** Phase 5 (agentic workflow).
+
+## Switchover (2026-11-01)
+
+**Done**
+
+- **Phase 4 CI is green on GitHub,** after three fixes the first runs found:
+  1. Node 22.23.4 for Astro 7.4.
+  2. The same text rendering everywhere (no LCD antialiasing or hinting differences), so the visual baselines match CI.
+  3. The Claude review workflow removed (owner).
+- **The switchover branch:**
+  - deletes the old Next.js app, `v2/` and the old docs, and moves `platform/` to the root
+  - has one `ci.yml` and a husky pre-commit hook
+  - falls back to the production site's existing environment variable names
+  - adds 301s for every production URL V2 does not have, and `/api/sitemap.xml`
+  - adds the go-live checklist in the RUNBOOK
+
+**Verified how**
+
+- Unit tests: 115, including the Slack bot-token and `SANITY_TOKEN` fallbacks.
+- Playwright: 79 tests, including 18 redirect checks.
+- SEO gate: OK, with every production URL either ported or redirected.
+- Static checks: knip, oxlint, oxfmt, `astro check` and `pnpm audit` are clean.
+- Lighthouse CI passes.
+- A fresh checkout of the switchover branch passes.
+
+**Open (owner):** follow "Go live" in [RUNBOOK.md](./RUNBOOK.md).

@@ -1,4 +1,6 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["v2/**", "platform/**"]
+  "printWidth": 180,
+  "singleQuote": true,
+  "ignorePatterns": ["**/dist/**", "**/.astro/**", "**/.netlify/**", "pnpm-lock.yaml", "tools/seo/baseline.*.json", "vendor/**", "packages/content/src/sanity.types.ts"]
 }

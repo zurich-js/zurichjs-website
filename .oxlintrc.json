@@ -1,4 +1,13 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "ignorePatterns": ["v2/**", "platform/**"]
+  "plugins": ["typescript", "import", "unicorn", "react", "jsx-a11y"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/no-unknown-property": "off",
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "ignorePatterns": ["**/dist/**", "**/.astro/**", "**/.netlify/**", "**/node_modules/**", "vendor/**", "packages/content/src/sanity.types.ts"]
 }

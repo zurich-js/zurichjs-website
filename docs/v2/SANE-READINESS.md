@@ -41,28 +41,28 @@ Constraints that shape the seams:
 
 ## Seams built in the V2 platform (Phases 1 and 1b)
 
-1. **`TicketingProvider`** in `@zurichjs/events` (pure, so islands can use it; `platform/packages/events/src/ticketing.ts`):
+1. **`TicketingProvider`** in `@zurichjs/events` (pure, so islands can use it; `packages/events/src/ticketing.ts`):
 
    ```ts
    interface TicketingAction {
-     kind: "rsvp" | "waitlist" | "buy" | "follow" | "none";
+     kind: 'rsvp' | 'waitlist' | 'buy' | 'follow' | 'none';
      label: string;
      href?: string;
      note: string;
    }
    interface TicketingProvider {
-     id: "meetup" | "sane";
+     id: 'meetup' | 'sane';
      /** Called at build time for each event; must not need the browser. */
      actionFor(event: DomainEvent, state: EventState): TicketingAction;
    }
    ```
 
-   - Today: `meetupTicketing` only (RSVP, waitlist and follow links to meetup.com), in `platform/apps/web/src/lib/ticketing.ts`. Every meetup is free; pro meetups and Stripe were removed (owner, 2026-11-01).
+   - Today: `meetupTicketing` only (RSVP, waitlist and follow links to meetup.com), in `apps/web/src/lib/ticketing.ts`. Every meetup is free; pro meetups and Stripe were removed (owner, 2026-11-01).
    - `presentEvent()` in `@zurichjs/events` takes the action as data and never branches on the provider itself.
    - Sane goes in front with `chainTicketing(saneTicketing, meetupTicketing(...))`; the first provider with an answer wins (tested in `packages/events/test/state.test.ts`).
    - A later `saneProvider` reads `GET /v1/public/events/{org}/{event}` at build time and returns a buy or registration link. Switching one event is a per-event field, added when Sane is adopted.
 
-2. **`TalkProposalSink`** in `@zurichjs/integrations` (`platform/packages/integrations/src/index.ts`):
+2. **`TalkProposalSink`** in `@zurichjs/integrations` (`packages/integrations/src/index.ts`):
 
    ```ts
    interface TalkProposalSink {

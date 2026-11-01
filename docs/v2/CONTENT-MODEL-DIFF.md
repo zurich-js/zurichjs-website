@@ -146,4 +146,4 @@ Status values used below:
   - the deprecated ticket fields (kept, read-only)
   - the `siteSettings` Twint QR fields for `/donate`
 - **Not run:** the migration and seed. They are owner steps, listed in the Studio PR.
-- **The website reads types generated from that schema** (`platform/packages/content/src/sanity.types.ts`). A mapper that reads a field the query does not return fails `tsc`.
+- **The website reads types generated from that schema** (`packages/content/src/sanity.types.ts`). A mapper that reads a field the query does not return fails `tsc`.

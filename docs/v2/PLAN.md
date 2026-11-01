@@ -147,7 +147,6 @@ Every token and component comes from `v2/src`. Rules and usage: [docs/design-sys
 | Playwright visual regression (390, 1440)                                   | ✓   | ✓    |
 | Lighthouse CI (perf ≥ 90 median of 3; a11y, SEO 100; home, event, speaker) | ✓   | ✓    |
 | `pnpm audit` (platform)                                                    | ✓   | ✓    |
-| Claude Code review (needs `ANTHROPIC_API_KEY`)                             | ✓   |      |
 
 ## 6. Risks and decisions
 
@@ -171,7 +170,7 @@ Every token and component comes from `v2/src`. Rules and usage: [docs/design-sys
 2. **Phase 1b:** remaining public routes and APIs, OG images, PARITY.md.
 3. **Phase 2:** `@zurichjs/design` extraction, gallery, rules, visual regression.
 4. **Phase 3:** Studio schema, migrations, singletons, event workspace and readiness, Presentation, webhook definition, typegen.
-5. **Phase 4:** CI workflows, `platform/apps/web/netlify.toml`, rebuild triggers, Claude review, RUNBOOK.
+5. **Phase 4:** CI workflows, `platform/apps/web/netlify.toml`, rebuild triggers, RUNBOOK.
 6. **Phase 5:** CLAUDE.md, skills, agents, `.mcp.json`, AUTOMATION.md.
 
 Each phase gets one PR stacked on the previous one, with screenshots and recordings.

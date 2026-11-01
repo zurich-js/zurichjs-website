@@ -6,6 +6,7 @@
  * POST /api/verein-inquiry  JSON { name, email, message?, tier?, billingCycle?, website_url? }
  *   200 { ok: true }
  *   400 { ok: false, error, field? }   invalid JSON or fields
+ *   429 { ok: false, error }           more than 3 requests in 10 minutes
  *   502 { ok: false, error }           a configured channel failed
  *
  * Without RESEND_API_KEY / SLACK_WEBHOOK_URL each channel logs a stub line.
@@ -13,6 +14,7 @@
 import { postSlack, sendEmail } from '@zurichjs/integrations';
 import type { APIRoute } from 'astro';
 import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http';
+import { clientKey, rateLimited } from '../../server/rateLimit';
 
 export const prerender = false;
 
@@ -47,6 +49,8 @@ export function parseInquiry(body: Record<string, unknown>): { ok: true; data: V
 
 export async function handleInquiry(request: Request, deps: { env?: Env; log?: (m: string) => void } = {}): Promise<Response> {
   const { env = process.env, log = console.log } = deps;
+  // As on the old site: 3 requests per 10 minutes per client.
+  if (rateLimited('membership', clientKey(request), 3, 10 * 60_000)) return fail(429, `Too many requests. Please wait a few minutes, or email ${CONTACT_EMAIL}.`);
   const body = await readJsonObject(request);
   if (!body) return fail(400, 'Send the form as JSON.');
   const parsed = parseInquiry(body);

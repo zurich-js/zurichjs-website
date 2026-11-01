@@ -481,7 +481,7 @@ export const MILESTONES: Milestone[] = [
 
 export const QUOTES: Quote[] = [
   {
-    text: 'Every meetup feels like a mini‑conference, thanks to the impressive depth of expertise in the room. Finding a local group that consistently sets a high technical standard while maintaining authentic community spirit is truly uncommon.',
+    text: 'Every meetup feels like a mini-conference, thanks to the impressive depth of expertise in the room. Finding a local group that consistently sets a high technical standard while maintaining authentic community spirit is truly uncommon.',
     name: 'Colin Schwarz',
     role: 'Attendee',
   },

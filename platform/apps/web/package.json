@@ -12,6 +12,7 @@
   "dependencies": {
     "@astrojs/netlify": "8.2.10",
     "@astrojs/preact": "6.1.1",
+    "@netlify/blobs": "11.1.7",
     "@resvg/resvg-js": "2.6.2",
     "@tailwindcss/vite": "4.3.3",
     "@zurichjs/content": "workspace:*",

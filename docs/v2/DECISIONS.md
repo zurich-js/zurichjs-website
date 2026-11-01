@@ -168,3 +168,24 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - Sample content never contains a QR, so a placeholder payment code cannot ship.
   - Stripe, including Apple Pay, stays out for now.
 - **Legal text stays as it is (owner):** the refund policy and the terms and conditions still describe paid tickets, in case payments come back.
+
+## Phase 4: CI and Netlify (2026-11-01)
+
+- **No nightly rebuild (owner).** Builds happen on a Sanity publish (debounced), at each event's doors and doors + 48 h, and when code is merged. The nightly workflow from the plan is dropped.
+- **The webhook is an Astro endpoint (`/api/rebuild`); the timer is a Netlify Scheduled Function.**
+  - A standalone Netlify Function that claims a path under `/api/*` would compete with the Astro SSR function for the same URL.
+  - An Astro endpoint follows the same routing as `/api/forms/*`.
+  - Only the schedule needs a Netlify Function (`netlify/functions/scheduled-rebuild.mts`, every 2 minutes). Netlify's bundler (`zip-it-and-ship-it`) was run locally: it reads the schedule and includes the shared logic.
+- **Debounce in Netlify Blobs.** The webhook only records "pending". The scheduled tick builds once nothing has been published for 2 minutes, so a burst of publishes causes one build. The state is written only after the build hook accepts the request, so a failed hook retries on the next tick.
+- **Webhook signature:** the same scheme as `@sanity/webhook`, checked against its source: `t=<ms>,v1=<base64url HMAC-SHA256 of "<t>.<body>">`, with a 5-minute replay window.
+- **`/state-changes.json`** is generated at build and lists the doors and doors + 48 h times still ahead. The scheduled function reads it from the deployed site, so the build alone decides when the next rebuild is due.
+- **Netlify base directory: `platform/apps/web`, with no package directory.**
+  - Resolving the config with `@netlify/config` showed that base `platform` plus package `apps/web` resolves `publish` and `functions` against `platform/`.
+  - With base `platform/apps/web`, every path in `netlify.toml` resolves correctly, including the 11 redirects Astro writes to `dist/_redirects`.
+- **No HSTS `preload` header.** Production does not send one, Netlify already sends HSTS on HTTPS, and preload is hard to undo. The other security headers match production's `next.config.mjs`.
+- **New redirect:** `/api/og/cfv` (referenced in production but missing) → a new `/og/cfv.png` card, which `/cfv` now uses.
+- **CI runs on `ubuntu-latest` with Playwright's own Chromium**, the same Chromium build and Ubuntu 24.04 the baselines were made on. Text that system fonts would render was removed, so the screenshots do not depend on installed fonts:
+  - Figtree has no ✓ and no non-breaking hyphen; there is now an SVG `Check` icon and a plain hyphen.
+  - The gallery's `<code>` labels use Figtree instead of a system monospace.
+- **Lighthouse thresholds:** accessibility and SEO = 1, best practices ≥ 0.95, performance ≥ 0.9 as the median of 3 runs. Shared CI runners vary in speed, and local runs score 99–100.
+- **Claude review is pinned to a commit SHA** (`anthropics/claude-code-action` v1.0.266). Without `ANTHROPIC_API_KEY` it passes with a notice.

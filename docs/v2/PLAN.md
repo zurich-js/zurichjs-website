@@ -35,23 +35,23 @@ Legend:
 - **S**: static page (prerendered).
 - **S+I**: static page plus an island.
 - **F**: Netlify Function (`prerender = false`).
-- **Rebuild:** P = Sanity publish webhook, N = nightly, D = next event's doors and doors+48h.
+- **Rebuild:** P = Sanity publish webhook, D = next event's doors and doors+48h. (No nightly rebuild: owner decision, 2026-11-01.)
 - **SEO** column: how the route relates to the production baseline ([SEO-BASELINE.md](./SEO-BASELINE.md)).
 
 ### Public pages (ported)
 
 | Route                                                                                                                | Source of truth                                                             | Mode                                        | Rebuild | SEO vs production                                                                |
 | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
-| `/`                                                                                                                  | Sanity `events`, `talk`, `speaker`, `meetupRating`, `conference`, `partner` | S+I (state re-check)                        | P, N, D | Same URL; V2 copy (allowlisted title and description change)                     |
-| `/events`                                                                                                            | `events`                                                                    | S+I (tabs, search)                          | P, N, D | Same URL                                                                         |
-| `/events/[id]`                                                                                                       | `events` (+ talks, speakers)                                                | S+I (state re-check, rating sheet)          | P, N, D | Same URLs (`id.current`); Event JSON-LD kept                                     |
+| `/`                                                                                                                  | Sanity `events`, `talk`, `speaker`, `meetupRating`, `conference`, `partner` | S+I (state re-check)                        | P, D    | Same URL; V2 copy (allowlisted title and description change)                     |
+| `/events`                                                                                                            | `events`                                                                    | S+I (tabs, search)                          | P, D    | Same URL                                                                         |
+| `/events/[id]`                                                                                                       | `events` (+ talks, speakers)                                                | S+I (state re-check, rating sheet)          | P, D    | Same URLs (`id.current`); Event JSON-LD kept                                     |
 | `/speakers`                                                                                                          | `speaker`                                                                   | S+I (search)                                | P       | Same URL                                                                         |
 | `/speakers/[id]`                                                                                                     | `speaker`, `talk`                                                           | S                                           | P       | Same URLs; Person JSON-LD kept                                                   |
 | `/cfp`                                                                                                               | file + `conference`                                                         | S+I (form)                                  | P       | Same URL                                                                         |
 | `/cfp/form`                                                                                                          | (none)                                                                      | 301 → `/cfp`                                | (none)  | V2 merges the two-step form into `/cfp`                                          |
 | `/about`                                                                                                             | file + `siteSettings`                                                       | S                                           | P       | Same URL                                                                         |
 | `/about/why-zurichjs`                                                                                                | file                                                                        | S                                           | (none)  | New URL                                                                          |
-| `/today`                                                                                                             | `events`                                                                    | S+I (clock, rating)                         | P, N, D | Same URL                                                                         |
+| `/today`                                                                                                             | `events`                                                                    | S+I (clock, rating)                         | P, D    | Same URL                                                                         |
 | `/partners`                                                                                                          | file + `partner`                                                            | S+I (form)                                  | P       | New URL                                                                          |
 | `/partnerships`                                                                                                      | (none)                                                                      | 301 → `/partners`                           | (none)  | Redirect                                                                         |
 | `/feedback`                                                                                                          | `events`                                                                    | S+I (form)                                  | P, D    | Same URL                                                                         |
@@ -135,36 +135,35 @@ Every token and component comes from `v2/src`. Rules and usage: [docs/design-sys
 
 ## 5. CI matrix
 
-| Check                                                                  | PR  | main | Nightly (03:00 Zurich) | Weekly |
-| ---------------------------------------------------------------------- | --- | ---- | ---------------------- | ------ |
-| Production app (existing `ci.yml`: lint, format, tsc, audit)           | ✓   | ✓    |                        |        |
-| platform: install (frozen), typecheck, oxlint, oxfmt                   | ✓   | ✓    |                        |        |
-| platform: knip (zero findings)                                         | ✓   | ✓    |                        |        |
-| platform: Vitest (events, forms, content mappers, seo)                 | ✓   | ✓    |                        |        |
-| platform: `astro build`                                                | ✓   | ✓    |                        |        |
-| SEO and LLM parity gate (`tools/seo/compare.mjs` against the baseline) | ✓   | ✓    |                        |        |
-| Playwright: routes, font, 320px overflow, keyboard, focus              | ✓   | ✓    |                        |        |
-| Playwright visual regression (390, 1440)                               | ✓   | ✓    |                        |        |
-| Lighthouse CI (perf and a11y ≥ 95, SEO 100 on home, event, speaker)    | ✓   | ✓    |                        | ✓      |
-| `pnpm audit` (platform)                                                | ✓   | ✓    |                        | ✓      |
-| Claude Code review (needs `ANTHROPIC_API_KEY`)                         | ✓   |      |                        |        |
-| Netlify build hook (rebuild)                                           |     |      | ✓                      |        |
+| Check                                                                      | PR  | main |
+| -------------------------------------------------------------------------- | --- | ---- |
+| Production app (existing `ci.yml`: lint, format, tsc, audit)               | ✓   | ✓    |
+| platform: install (frozen), typecheck, oxlint, oxfmt                       | ✓   | ✓    |
+| platform: knip (zero findings)                                             | ✓   | ✓    |
+| platform: Vitest (events, forms, content mappers, seo)                     | ✓   | ✓    |
+| platform: `astro build`                                                    | ✓   | ✓    |
+| SEO and LLM parity gate (`tools/seo/compare.mjs` against the baseline)     | ✓   | ✓    |
+| Playwright: routes, font, 320px overflow, keyboard, focus                  | ✓   | ✓    |
+| Playwright visual regression (390, 1440)                                   | ✓   | ✓    |
+| Lighthouse CI (perf ≥ 90 median of 3; a11y, SEO 100; home, event, speaker) | ✓   | ✓    |
+| `pnpm audit` (platform)                                                    | ✓   | ✓    |
+| Claude Code review (needs `ANTHROPIC_API_KEY`)                             | ✓   |      |
 
 ## 6. Risks and decisions
 
-| Risk                                                  | Decision                                                                                                                                                                                                                                  |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Event state depends on the clock but pages are static | Prerender the state true at build time. An island re-evaluates it on load and every minute, and swaps the banner and actions. Rebuilds run at doors and doors+48h (scheduled function) plus nightly, so the HTML catches up for crawlers. |
-| SEO and LLM regressions                               | A baseline of every production route; a parity gate in CI; an allowlist with a reason for each intended change; complete sitemap; JSON-LD kept; `llms.txt` added.                                                                         |
-| Sanity and Netlify unreachable from this environment  | Typed sample fallback (the V2 sample content), clearly logged. GROQ queries are typed with `sanity typegen` from the schema, which needs no network. Live verification is owner-side.                                                     |
-| Removing Clerk and admin                              | Organisers lose coupons, tap-to-pay, user and referral stats, and credits. Logged for the owner; Sane is a candidate replacement for ticketing and check-in.                                                                              |
-| Workshops and T-shirt URLs are indexed                | Not touched in production. Owner decision before switchover.                                                                                                                                                                              |
-| Abuse on forms without sign-in                        | Honeypot field, zod validation, the existing IP-hash and fingerprint duplicate checks, and Netlify rate limiting on functions.                                                                                                            |
-| Visual drift from the approved design                 | Visual regression against screenshots of `v2/`; a design gallery; written rules.                                                                                                                                                          |
-| Two package managers or lockfiles in one repo         | Separate pnpm roots with the same supply-chain policy; root CI ignores `platform/` and `v2/`. A separate workflow covers `platform/`.                                                                                                     |
-| Image weight (1.5–3.6 MB PNGs)                        | `astro:assets` generates AVIF/WebP with explicit sizes; Lighthouse budget enforced.                                                                                                                                                       |
-| Netlify build minutes from rebuild triggers           | Debounce (one build per 2 minutes), drafts filtered out, D triggers fire at most twice per event.                                                                                                                                         |
-| Sane later                                            | Ticketing and talk proposals behind interfaces; see [SANE-READINESS.md](./SANE-READINESS.md).                                                                                                                                             |
+| Risk                                                  | Decision                                                                                                                                                                                                                     |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Event state depends on the clock but pages are static | Prerender the state true at build time. An island re-evaluates it on load and every minute, and swaps the banner and actions. Rebuilds run at doors and doors+48h (scheduled function), so the HTML catches up for crawlers. |
+| SEO and LLM regressions                               | A baseline of every production route; a parity gate in CI; an allowlist with a reason for each intended change; complete sitemap; JSON-LD kept; `llms.txt` added.                                                            |
+| Sanity and Netlify unreachable from this environment  | Typed sample fallback (the V2 sample content), clearly logged. GROQ queries are typed with `sanity typegen` from the schema, which needs no network. Live verification is owner-side.                                        |
+| Removing Clerk and admin                              | Organisers lose coupons, tap-to-pay, user and referral stats, and credits. Logged for the owner; Sane is a candidate replacement for ticketing and check-in.                                                                 |
+| Workshops and T-shirt URLs are indexed                | Not touched in production. Owner decision before switchover.                                                                                                                                                                 |
+| Abuse on forms without sign-in                        | Honeypot field, zod validation, the existing IP-hash and fingerprint duplicate checks, and Netlify rate limiting on functions.                                                                                               |
+| Visual drift from the approved design                 | Visual regression against screenshots of `v2/`; a design gallery; written rules.                                                                                                                                             |
+| Two package managers or lockfiles in one repo         | Separate pnpm roots with the same supply-chain policy; root CI ignores `platform/` and `v2/`. A separate workflow covers `platform/`.                                                                                        |
+| Image weight (1.5–3.6 MB PNGs)                        | `astro:assets` generates AVIF/WebP with explicit sizes; Lighthouse budget enforced.                                                                                                                                          |
+| Netlify build minutes from rebuild triggers           | Debounce (one build per 2 minutes), drafts filtered out, D triggers fire at most twice per event.                                                                                                                            |
+| Sane later                                            | Ticketing and talk proposals behind interfaces; see [SANE-READINESS.md](./SANE-READINESS.md).                                                                                                                                |
 
 ## 7. Order of work
 

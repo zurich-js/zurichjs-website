@@ -4,6 +4,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { cx } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
+import { Check } from '@zurichjs/design/islands/Check';
 
 /**
  * The evening at a glance (/today). Two islands from this one module share a
@@ -159,7 +160,13 @@ export default function Tonight({ part, ev, names, now: nowIso, venue = '', even
                 class="justify-self-start md:justify-self-end col-span-full md:col-auto border-black!"
                 onClick={() => setShared({ target: toTarget(r.i) })}
               >
-                {rated[k] ? 'Rated ✓' : 'Rate this talk'}
+                {rated[k] ? (
+                  <>
+                    Rated <Check />
+                  </>
+                ) : (
+                  'Rate this talk'
+                )}
               </Button>
             )}
           </div>

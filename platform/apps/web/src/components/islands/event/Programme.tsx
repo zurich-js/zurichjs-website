@@ -5,6 +5,7 @@ import { cx, monogramClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { useEventState } from '../useEventState';
+import { Check } from '@zurichjs/design/islands/Check';
 
 export interface ProgrammeSpeaker {
   id: string;
@@ -63,7 +64,13 @@ export default function Programme({ ev, initial, speakers }: { ev: Event; initia
                 </div>
                 {live && (
                   <Button variant={rated[keyOf(i)] ? 'grey' : 'yellow'} size="sm" class="self-start mt-1 border-black!" onClick={() => setTarget(toTarget(i))}>
-                    {rated[keyOf(i)] ? 'Rated ✓ · change' : 'Rate this talk'}
+                    {rated[keyOf(i)] ? (
+                      <>
+                        Rated <Check /> · change
+                      </>
+                    ) : (
+                      'Rate this talk'
+                    )}
                   </Button>
                 )}
               </div>

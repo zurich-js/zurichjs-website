@@ -1,11 +1,15 @@
 import { submitForm } from '@zurichjs/forms/client';
-import { useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
 
-const TOPICS = ['General question', 'Speaking', 'Hosting or sponsoring', 'Press or media', 'Problem with the website'];
+const TOPICS = ['General question', 'Slack invite', 'Speaking', 'Hosting or sponsoring', 'Press or media', 'Problem with the website'];
+/** ?topic= presets the topic, e.g. "Ask us for a Slack invite" links to /contact?topic=slack. */
+const PRESETS: Record<string, { topic: string; message: string }> = {
+  slack: { topic: 'Slack invite', message: 'Hi, could you send me an invite to the ZurichJS Slack?' },
+};
 const MESSAGES = { name: 'Add your name.', email: 'Enter an email like name@example.com.', message: 'Write a short message.' };
 
 /** Contact form on /contact. */
@@ -18,6 +22,11 @@ export default function ContactForm() {
   const formRef = useRef<HTMLFormElement>(null);
   const focusError = useFocusFirstError(formRef);
   const doneRef = useFocusWhen<HTMLDivElement>(sent);
+
+  useEffect(() => {
+    const preset = PRESETS[new URLSearchParams(location.search).get('topic') ?? ''];
+    if (preset) setF((p) => ({ ...p, topic: preset.topic, message: p.message || preset.message }));
+  }, []);
 
   const errs = fieldErrors('contact', f, MESSAGES);
   const valid = Object.keys(errs).length === 0;

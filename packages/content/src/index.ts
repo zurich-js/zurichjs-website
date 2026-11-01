@@ -1,6 +1,7 @@
 import type { AwardRecord, ConferenceCopy, ConferenceState, Event, Milestone, Partner, Quote, RatingRecord, Speaker, TeamMember } from '@zurichjs/events';
 import { mapEvent, mapPartner, mapRating, mapSpeaker, mapSupport, type RawEvent, type RawPartner, type RawSingletons, type RawSpeaker, type SupportInfo } from './map';
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries';
+import { MILESTONES, TEAM, VOLUNTEERS } from './community';
 import { loadMedia, type MediaCollection } from './media';
 import * as sample from './sample';
 
@@ -19,6 +20,8 @@ export interface SiteContent {
   award: AwardRecord;
   conference: { state: ConferenceState; copy: ConferenceCopy; url: string };
   team: TeamMember[];
+  /** First names and surnames of volunteers to thank (ZurichJS Conf 2026). */
+  volunteers: string[];
   milestones: Milestone[];
   quotes: Quote[];
   /** One-off contributions on /donate. */
@@ -114,8 +117,9 @@ function sampleContent(): SiteContent {
     rating: sample.RATING.score ? sample.RATING : null,
     award: sample.AWARD,
     conference: { state: sample.CONFERENCE_STATE, copy: sample.CONFERENCE[sample.CONFERENCE_STATE], url: sample.SITE.confUrl },
-    team: sample.TEAM,
-    milestones: sample.MILESTONES,
+    team: TEAM,
+    volunteers: VOLUNTEERS,
+    milestones: MILESTONES,
     quotes: sample.QUOTES,
     // Never a sample payment code: the Twint QR only ever comes from Sanity.
     support: {},
@@ -148,8 +152,9 @@ async function sanityContent(env: Env): Promise<SiteContent> {
       conf?.state && conf.headline
         ? { state: conf.state, copy: { headline: conf.headline, body: conf.body ?? '', cta: conf.cta ?? '', cfp: conf.cfp ?? '' }, url: conf.url ?? sample.SITE.confUrl }
         : fallback.conference,
-    team: fallback.team,
-    milestones: fallback.milestones,
+    team: TEAM,
+    volunteers: VOLUNTEERS,
+    milestones: MILESTONES,
     quotes: fallback.quotes,
     support: mapSupport(singletons.support),
     settings: {

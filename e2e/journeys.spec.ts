@@ -378,3 +378,51 @@ test.describe('partners and sponsors', () => {
     await expect(page.getByText('Supporting ZurichJS this season.')).toBeVisible();
   });
 });
+
+test.describe('community page', () => {
+  test('team photos (including Nadja), bios and links; volunteers are thanked', async ({ page }) => {
+    await page.goto('/about#team');
+    const team = page.locator('#team');
+    await expect(team.getByRole('img', { name: 'Nadja Hesselbjerg' })).toBeVisible();
+    await expect(team.getByRole('heading', { name: 'Meetup organisers' })).toBeVisible();
+    await expect(team.getByRole('list', { name: 'Faris Aziz: links' }).getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/farisaziz12');
+    await expect(team.getByText(/ZurichJS Conf 2026 happened thanks to 14 volunteers/)).toBeVisible();
+  });
+
+  test('section navigation with shareable anchors, and the first-visit link still works', async ({ page }) => {
+    await page.goto('/about');
+    const nav = page.getByRole('navigation', { name: 'On this page' });
+    for (const [label, id] of [
+      ['Story', 'story'],
+      ['Team', 'team'],
+      ['Values', 'values'],
+      ['Association', 'association'],
+      ['Get involved', 'get-involved'],
+      ['First visit', 'first-visit'],
+    ]) {
+      await expect(nav.getByRole('link', { name: label })).toHaveAttribute('href', `#${id}`);
+      await expect(page.locator(`#${id}`)).toHaveCount(1);
+    }
+    await page.goto('/about#first-visit');
+    await expect(page.locator('#first-visit')).toBeInViewport();
+    await expect(page.getByText(/An example evening\. Times change/)).toBeVisible();
+  });
+
+  test('timeline runs past November 2025, links out, and membership stays on this site', async ({ page }) => {
+    await page.goto('/about#story');
+    const story = page.locator('#story');
+    await expect(story.getByRole('heading', { name: 'The first ZurichJS Conf' })).toBeVisible();
+    await expect(story.getByRole('heading', { name: 'ZurichJS becomes a Swiss nonprofit' })).toBeVisible();
+    await expect(story.locator('#story-2025-06-18').getByRole('link', { name: 'Membership' })).toHaveAttribute('href', '/membership');
+    await expect(page.locator('a[href="https://zurichjs.com/membership"]')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Become a member/ }).first()).toHaveAttribute('href', '/membership');
+  });
+
+  test('Slack: no broken invite; without a verified link people can ask for one', async ({ page }) => {
+    for (const path of ['/about', '/today']) {
+      await page.goto(path);
+      await expect(page.locator('a[href*="shared_invite/"]:not([href*="shared_invite/zt-"])')).toHaveCount(0);
+    }
+    await expect(page.getByRole('link', { name: 'Ask us for a Slack invite' })).toHaveAttribute('href', '/contact?topic=slack');
+  });
+});

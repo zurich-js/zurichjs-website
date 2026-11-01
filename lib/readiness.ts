@@ -16,8 +16,6 @@ export interface EventDraft {
   venue?: {name?: string; city?: string}
   description?: string
   meetupUrl?: string
-  isProMeetup?: boolean
-  stripePriceId?: string
   talks?: unknown[]
   agenda?: unknown[]
 }
@@ -45,10 +43,9 @@ export function readiness(ev: EventDraft): Check[] {
     checks.push({ok: has(ev.talks) || has(ev.agenda), label: 'Programme (talks or agenda)', why: 'The page lists the talks.'})
   }
   if (status === 'tbc') checks.push({ok: has(ev.dateText), label: 'Month text (e.g. “January 2027”)', why: 'TBC events show the month instead of a date.'})
-  if ((status === 'scheduled' || status === 'full') && !ev.isProMeetup) {
+  if (status === 'scheduled' || status === 'full') {
     checks.push({ok: has(ev.meetupUrl), label: 'Meetup event link', why: 'The RSVP and waitlist buttons hand off to this Meetup event.'})
   }
-  if (ev.isProMeetup) checks.push({ok: has(ev.stripePriceId), label: 'Stripe price ID', why: 'Pro meetups sell tickets on the site with this price.'})
   return checks
 }
 

@@ -12,7 +12,7 @@ Now you can do the following things:
 
 Additive schema for the V2 site; existing documents keep working.
 
-- **Events:** status, end time, month text for TBC events, structured venue, hosts, agenda, "Good to know", photos and recap. `stripePriceId` is now declared (the current site already reads it); `ticketSaleUrl` is deprecated and kept read-only.
+- **Events:** status, end time, month text for TBC events, structured venue, hosts, agenda, "Good to know", photos and recap. `isProMeetup`, `stripePriceId` and `ticketSaleUrl` are deprecated (pro meetups and paid tickets are gone): read-only, hidden when empty, values kept.
 - **Event workspace:** Events › Upcoming / Needs attention / Past. Every event has a **Readiness** tab and badge listing what the public page still needs. "New document › Meetup (from template)" pre-fills the usual practical info.
 - **Singletons:** Meetup rating (manual, no scraping; empty score hides it), Conference module, Site settings.
 - **Talk proposals:** review stages Received → Under review → Accepted → Scheduled → Given (stored values unchanged), plus "Convert to Talk".

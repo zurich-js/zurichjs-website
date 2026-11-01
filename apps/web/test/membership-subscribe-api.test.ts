@@ -1,13 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleSubscribe } from '../src/pages/api/subscribe';
 import { ALL as vereinAll, handleInquiry, parseInquiry } from '../src/pages/api/verein-inquiry';
+import { resetRateLimits } from '../src/server/rateLimit';
 
 const req = (data: unknown) =>
   new Request('https://zurichjs.com/api/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof data === 'string' ? data : JSON.stringify(data) });
 const body = async (res: Response) => (await res.json()) as Record<string, unknown>;
 
 describe('POST /api/verein-inquiry', () => {
-  beforeEach(() => vi.spyOn(console, 'error').mockImplementation(() => {}));
+  beforeEach(() => {
+    resetRateLimits();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('allows 3 requests per 10 minutes per client, then answers 429', async () => {
+    const send = () => handleInquiry(req({ name: 'Anna', email: 'a@b.ch' }), { env: {}, log: () => {} });
+    for (let i = 0; i < 3; i++) expect((await send()).status).toBe(200);
+    const res = await send();
+    expect(res.status).toBe(429);
+    expect((await body(res)).error).toContain('hello@zurichjs.com');
+  });
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();

@@ -22,7 +22,7 @@ export const STATIC_ROUTES: (SitemapEntry & { title: string; summary: string })[
     priority: 0.5,
     changefreq: 'monthly',
     title: 'Support ZurichJS',
-    summary: 'Ways to support the community: membership, hosting or sponsoring, speaking and volunteering.',
+    summary: 'Donate once or monthly, or support the community as a member, host, sponsor, speaker or volunteer.',
   },
   { path: '/feedback', priority: 0.4, changefreq: 'monthly', title: 'Feedback', summary: 'Tell us how the last meetup went.' },
   { path: '/membership', priority: 0.5, changefreq: 'monthly', title: 'Membership', summary: 'Join the Swiss JavaScript Group association as a Basic Member or Supporter.' },

@@ -21,7 +21,9 @@ const FEES = [
     slot="opening"
     title="Become a member"
     sub={`ZurichJS is run by the ${SITE.association}, a registered Swiss association (Verein). Members fund the meetups and have a say in how the community grows.`}
-  />
+  >
+    <p class="m-0 text-[17px] text-grey-light max-w-[700px]">Coming to meetups is free and never needs a membership.</p>
+  </PageOpening>
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
     <MembershipForm client:load />
 
@@ -38,7 +40,7 @@ const FEES = [
         }
       </div>
       <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
-        You don’t need to be a member to come to a meetup. Other ways to help are on <a href="/donate" class="font-bold text-black">Support ZurichJS</a>. Questions about membership: <a
+        You don’t need to be a member to come to a meetup. To give without joining, <a href="/donate#donate" class="font-bold text-black">donate once or monthly</a>; other ways to help are on <a href="/donate" class="font-bold text-black">Support ZurichJS</a>. Questions about membership: <a
           href={`mailto:${SITE.email}`}
           class="font-bold text-black">{SITE.email}</a
         >.

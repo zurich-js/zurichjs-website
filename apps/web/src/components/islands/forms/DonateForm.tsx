@@ -1,0 +1,174 @@
+import { useEffect, useRef, useState } from 'preact/hooks';
+import { track } from '@zurichjs/design/analytics';
+import { cx } from '@zurichjs/design/recipes';
+import { ChipGroup, TextField, isEmail } from '@zurichjs/design/islands/Field';
+import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared';
+
+type Recurrence = 'once' | 'monthly';
+
+/** Production's preset amounts and what each one pays for (origin/main: buy-us-a-coffee). */
+const PRESETS: { amount: number; covers: string }[] = [
+  { amount: 10, covers: 'Storage and tooling for the organisers.' },
+  { amount: 20, covers: 'Snacks for a meetup.' },
+  { amount: 30, covers: 'Drinks for the next meetup.' },
+  { amount: 40, covers: 'One large pizza at a meetup.' },
+  { amount: 50, covers: 'Helps make sure the next meetup can happen.' },
+];
+const MIN = 5;
+const MAX = 1000;
+const chf = (n: number) => `CHF ${Number.isInteger(n) ? n : n.toFixed(2)}`;
+
+/**
+ * Online donation on /donate: one-time or monthly, in Swiss francs, paid on
+ * Stripe's hosted page. Nothing is charged here; the button hands over to
+ * Stripe, which confirms the payment. Separate from membership.
+ */
+export default function DonateForm({ portalUrl, email: contactEmail }: { portalUrl?: string; email: string }) {
+  const [recurrence, setRecurrence] = useState<Recurrence>('once');
+  const [preset, setPreset] = useState<number | null>(20);
+  const [custom, setCustom] = useState('');
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState<'canceled' | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const noticeRef = useFocusWhen<HTMLDivElement>(!!notice);
+  const attempt = useRef(Math.random().toString(36).slice(2, 12) + Date.now().toString(36));
+
+  // Back from Stripe without paying (also the old ?canceled=true links).
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.get('canceled') === '1' || q.get('canceled') === 'true') setNotice('canceled');
+    // Old success links (/buy-us-a-coffee?success=true…) land here: send them to the thanks page.
+    if (q.get('success') === 'true') location.replace('/donate/thanks');
+  }, []);
+
+  const customNum = custom.trim() ? Number(custom.replace(',', '.')) : NaN;
+  const amount = preset ?? customNum;
+  const amountBad = !Number.isFinite(amount) || amount < MIN || amount > MAX;
+  const emailBad = !!email && !isEmail(email);
+  const summary = amountBad ? '' : recurrence === 'monthly' ? `You’ll give ${chf(amount)} every month until you cancel.` : `You’ll give ${chf(amount)} once.`;
+
+  const submit = async (e: Event) => {
+    e.preventDefault();
+    if (amountBad) return setError(`Choose an amount from CHF ${MIN} to CHF ${MAX}.`);
+    if (emailBad) return setError('Check the email, or leave it empty.');
+    setBusy(true);
+    setError('');
+    try {
+      const res = await fetch('/api/donate/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ amount, recurrence, email: email.trim() || undefined, attempt: attempt.current, website_url: honeypotValue(formRef.current) }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string };
+      if (!res.ok || !body.ok || !body.url) throw new Error(body.error || 'We couldn’t start the payment. Nothing was charged. Please try again.');
+      track('donate_checkout', { recurrence, amount });
+      location.assign(body.url);
+    } catch (err) {
+      setError((err as Error).message || 'We couldn’t reach the server. Nothing was charged. Please try again.');
+      attempt.current = Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-5" aria-describedby="donate-summary">
+      <Honeypot />
+      {notice === 'canceled' && (
+        <div ref={noticeRef} tabIndex={-1} role="status" class="rounded-[20px] bg-grey p-4 text-[17px] outline-hidden">
+          <b>No payment was made.</b> You left the payment page before paying. You can try again below.
+        </div>
+      )}
+      <ChipGroup
+        label="How often"
+        value={recurrence}
+        onChange={setRecurrence}
+        options={[
+          { value: 'once', label: 'One-time' },
+          { value: 'monthly', label: 'Monthly' },
+        ]}
+      />
+      <fieldset class="border-0 p-0 m-0 flex flex-col gap-2.5 min-w-0">
+        <legend class="text-[16px] font-bold mb-2 p-0">Amount in Swiss francs</legend>
+        <div class="flex flex-wrap gap-2">
+          {PRESETS.map((p) => (
+            <button
+              key={p.amount}
+              type="button"
+              aria-pressed={preset === p.amount}
+              onClick={() => {
+                setPreset(p.amount);
+                setCustom('');
+                setError('');
+              }}
+              class={cx(
+                'min-h-[44px] px-5 rounded-pill text-[17px] font-bold border-2 cursor-pointer',
+                preset === p.amount ? 'bg-black text-white border-black' : 'bg-white text-black border-black hover:bg-grey-soft',
+              )}
+            >
+              {chf(p.amount)}
+            </button>
+          ))}
+        </div>
+        {preset !== null && <p class="m-0 text-[16px] text-ink-2">{PRESETS.find((p) => p.amount === preset)?.covers}</p>}
+        <TextField
+          label="Or another amount (CHF 5 to 1000)"
+          name="amount"
+          inputMode="decimal"
+          value={custom}
+          onInput={(e) => {
+            setCustom(e.currentTarget.value);
+            setPreset(null);
+            setError('');
+          }}
+          invalid={preset === null && !!custom && amountBad}
+          error={preset === null && !!custom && amountBad ? `Enter an amount from ${MIN} to ${MAX}.` : ''}
+          class="max-w-[260px]"
+        />
+      </fieldset>
+      <TextField
+        label="Email for the receipt (optional)"
+        hint="Stripe asks for it on the next page if you leave it empty."
+        name="email"
+        type="email"
+        autoComplete="email"
+        value={email}
+        onInput={(e) => setEmail(e.currentTarget.value)}
+        invalid={emailBad}
+        error={emailBad ? 'Check the email, or leave it empty.' : ''}
+        class="max-w-[440px]"
+      />
+      <p id="donate-summary" class="m-0 text-[18px] font-bold min-h-[1lh]" aria-live="polite">
+        {summary}
+      </p>
+      <div class="flex flex-wrap gap-3 items-center">
+        <SubmitButton variant="black" size="lg" busy={busy}>
+          {busy ? 'Opening the payment page…' : 'Continue to secure payment'}
+        </SubmitButton>
+        <span role="alert" class="text-[15px] text-danger">
+          {error}
+        </span>
+      </div>
+      <p class="m-0 text-[15px] leading-[1.55] text-ink-2">
+        Payment happens on Stripe’s secure page; nothing is charged here. Stripe confirms the payment and emails a receipt.
+        {recurrence === 'monthly' && (
+          <>
+            {' '}
+            You can cancel a monthly donation at any time{portalUrl ? ' ' : ' by writing to '}
+            {portalUrl ? (
+              <a href={portalUrl} class="font-bold text-black">
+                in the Stripe customer portal
+              </a>
+            ) : (
+              <a href={`mailto:${contactEmail}?subject=${encodeURIComponent('Cancel my monthly donation')}`} class="font-bold text-black">
+                {contactEmail}
+              </a>
+            )}
+            .
+          </>
+        )}
+      </p>
+    </form>
+  );
+}

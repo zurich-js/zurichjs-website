@@ -1,0 +1,26 @@
+---
+/**
+ * Where Stripe sends people after a donation. Not indexed. It reads back the
+ * amount and whether it is monthly (no personal data); without that it still
+ * thanks people and says that Stripe emails the receipt.
+ */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import DonateThanks from '~/components/islands/forms/DonateThanks';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE, nextMeetupHref } from '~/lib/content';
+
+const nextHref = await nextMeetupHref();
+const portalUrl = import.meta.env.PUBLIC_STRIPE_PORTAL_URL || process.env.PUBLIC_STRIPE_PORTAL_URL || undefined;
+---
+
+<BaseLayout title="Thank you" description="Thank you for supporting ZurichJS." noindex>
+  <PageOpening slot="opening" title="Thank you for supporting ZurichJS" sub="Your donation helps keep meetups free." />
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-6 max-w-[760px]">
+    <DonateThanks client:load portalUrl={portalUrl} email={SITE.email} />
+    <div class="flex flex-wrap gap-3">
+      <Button href={nextHref} variant="black">See the next meetup</Button>
+      <Button href="/donate" variant="outline-black">Back to Support</Button>
+    </div>
+  </div>
+</BaseLayout>

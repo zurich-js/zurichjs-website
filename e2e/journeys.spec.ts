@@ -136,3 +136,74 @@ test.describe('Tonight page', () => {
     await expect(page.getByRole('link', { name: 'Propose a talk' })).toBeVisible();
   });
 });
+
+test.describe('donations and membership', () => {
+  test('donate: one-time or monthly, amount summary, hand-over to the (stubbed) payment page', async ({ page }) => {
+    let sent: Record<string, unknown> | undefined;
+    await page.route('**/api/donate/checkout', async (route) => {
+      sent = route.request().postDataJSON();
+      await route.fulfill({ json: { ok: true, url: '/donate/thanks' } });
+    });
+    await page.goto('/donate');
+    await page.getByRole('radio', { name: 'Monthly' }).click();
+    await page.getByRole('button', { name: 'CHF 30' }).click();
+    await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 30 every month until you cancel.');
+    await expect(page.getByText(/cancel a monthly donation at any time/)).toBeVisible();
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await page.waitForURL('**/donate/thanks');
+    expect(sent).toMatchObject({ amount: 30, recurrence: 'monthly' });
+    // Without a session id the thanks page claims nothing.
+    await expect(page.getByText('If you completed the payment, Stripe emails you a receipt. If you didn’t, nothing was charged.')).toBeVisible();
+  });
+
+  test('donate: a custom amount is validated, and a server failure is explained', async ({ page }) => {
+    await page.route('**/api/donate/checkout', (route) =>
+      route.fulfill({ status: 503, json: { ok: false, error: 'Online payments are not available right now. You can still give by Twint or by email below.' } }),
+    );
+    await page.goto('/donate');
+    await page.getByLabel(/Or another amount/).fill('2');
+    await expect(page.locator('#donate-summary')).toHaveText('');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'Choose an amount' })).toBeVisible();
+    await page.getByLabel(/Or another amount/).fill('25');
+    await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 25 once.');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'Online payments are not available' })).toBeVisible();
+  });
+
+  test('coming back from Stripe without paying says so; old /buy-us-a-coffee links reach the donation form', async ({ page }) => {
+    await page.goto('/buy-us-a-coffee?canceled=true');
+    await expect(page).toHaveURL(/\/donate\?canceled=true/);
+    await expect(page.getByText('No payment was made.')).toBeVisible();
+  });
+
+  test('membership: choosing a tier and billing updates the price and the request button', async ({ page }) => {
+    await page.goto('/membership');
+    await expect(page.getByText('Coming to meetups is free and never needs a membership.')).toBeVisible();
+    await expect(page.getByText('Free or discounted workshops')).toBeVisible();
+    await page.getByRole('button', { name: 'Choose Supporter' }).click();
+    await page.getByRole('radio', { name: /Yearly, CHF 250/ }).click();
+    await expect(page.getByRole('button', { name: 'Send request: Supporter, CHF 250 a year' })).toBeVisible();
+    let sent: Record<string, unknown> | undefined;
+    await page.route('**/api/verein-inquiry', async (route) => {
+      sent = route.request().postDataJSON();
+      await route.fulfill({ json: { ok: true } });
+    });
+    await page.getByLabel('Name').fill('Test Person');
+    await page.getByLabel('Email').fill('test@example.com');
+    await page.getByRole('button', { name: /Send request/ }).click();
+    await expect(page.getByText('Request sent.')).toBeVisible();
+    expect(sent).toMatchObject({ tier: 'Supporter', billingCycle: 'yearly' });
+  });
+
+  test('membership: a failed request keeps the answers and offers email', async ({ page }) => {
+    await page.route('**/api/verein-inquiry', (route) => route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now.' } }));
+    await page.goto('/membership');
+    await page.getByLabel('Name').fill('Test Person');
+    await page.getByLabel('Email').fill('test@example.com');
+    await page.getByRole('button', { name: /Send request/ }).click();
+    await expect(page.getByRole('alert').filter({ hasText: 'We couldn’t send that' })).toBeVisible();
+    await expect(page.getByLabel('Name')).toHaveValue('Test Person');
+    await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toHaveAttribute('href', /^mailto:hello@zurichjs\.com\?subject=Membership/);
+  });
+});

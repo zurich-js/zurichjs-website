@@ -25,7 +25,8 @@ const TIERS: Record<Tier, { name: 'Basic Member' | 'Supporter'; tagline: string;
     monthly: 21,
     quarterly: 75,
     yearly: 250,
-    benefits: ['Everything in Basic', 'Access to exclusive events', 'Voting rights'],
+    // As on production (owner: keep the workshop line unchanged).
+    benefits: ['Everything in Basic', 'Access to exclusive events', 'Free or discounted workshops', 'Voting rights'],
   },
 };
 const CYCLES: { value: Cycle; label: string; unit: string }[] = [
@@ -141,7 +142,8 @@ export default function MembershipForm() {
             Ask to join
           </h2>
           <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-            Nothing is charged on this page. Your request goes to the organisers by email, and one of them replies with the next steps and how to pay the fee.
+            This sends a membership request; it doesn’t sign you up or charge anything. The organisers get it by email, and one of them replies with the next steps and how to pay
+            the fee.
           </p>
         </div>
 
@@ -191,11 +193,23 @@ export default function MembershipForm() {
             </div>
             <TextArea label="Message (optional)" name="message" rows={3} maxLength={2000} value={f.message} onInput={(e) => setF({ ...f, message: e.currentTarget.value })} />
             <SubmitButton variant="black" size="lg" busy={busy} class="w-full">
-              {busy ? 'Sending…' : `Ask to join as ${t.name}, ${chf(t[cycle])} a ${unit}`}
+              {busy ? 'Sending…' : `Send request: ${t.name}, ${chf(t[cycle])} a ${unit}`}
             </SubmitButton>
             <span role="alert" class="text-[15px] text-danger empty:hidden">
               {tried && !valid ? 'Fix the highlighted fields.' : serverError}
             </span>
+            {serverError && (
+              <p class="m-0 text-[15px] text-ink-2">
+                Your answers are still here. You can also email{' '}
+                <a
+                  href={`mailto:hello@zurichjs.com?subject=${encodeURIComponent(`Membership request: ${t.name}`)}&body=${encodeURIComponent(`Name: ${f.name}\nTier: ${t.name}\nBilling: ${cycle}\n\n${f.message}`)}`}
+                  class="font-bold text-black"
+                >
+                  hello@zurichjs.com
+                </a>{' '}
+                with the same details.
+              </p>
+            )}
           </form>
         )}
       </section>

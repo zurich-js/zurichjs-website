@@ -1,24 +1,30 @@
 ---
 /**
- * Support ZurichJS. Kept at the production URL /donate (and its 301s from
- * /buy-us-a-coffee and /support) for SEO, but there are no online payments:
- * Stripe was removed (owner decision, docs/v2/DECISIONS.md). The page lists
- * the ways to support the community; one-off contributions go by email or,
- * once uploaded in Sanity Site settings, by Twint QR code.
+ * Support ZurichJS at the production URL /donate (301s from /buy-us-a-coffee
+ * and /support keep working, with their query strings).
+ *
+ * Online donations, one-time or monthly, go through Stripe Checkout (owner
+ * decision 2026-11-01, docs/v2/DECISIONS.md). Twint (QR from Sanity Site
+ * settings) and email stay as alternatives. Membership of the association is
+ * separate: /membership.
  */
+import DonateForm from '~/components/islands/forms/DonateForm';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
+import Button from '@zurichjs/design/components/Button.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content } from '~/lib/content';
 import { isExternal } from '@zurichjs/design/recipes';
 
 const { support } = await content();
 const qr = support.twintQr;
+const portalUrl = import.meta.env.PUBLIC_STRIPE_PORTAL_URL || process.env.PUBLIC_STRIPE_PORTAL_URL || undefined;
 
 const GOES = [
   ['Venues', 'Room hire and equipment on nights without a host.'],
   ['Food and drinks', 'Evenings that no sponsor covers.'],
   ['Speakers', 'Travel for speakers from outside Zurich.'],
+  ['Tools', 'Storage, the website and the tools volunteers use to run meetups.'],
 ];
 const WAYS = [
   { h: 'Become a member', d: 'Join the Swiss JavaScript Group, the association behind ZurichJS.', href: '/membership', yellow: true },
@@ -32,11 +38,26 @@ const WAYS = [
   image="/og/donate.png"
   title="Support ZurichJS"
   fullTitle="Support ZurichJS · Help the JavaScript Community in Zurich"
-  description="Ways to support ZurichJS: become a member, host or sponsor a meetup, speak or volunteer. Meetups are free, run by volunteers and funded by members and partners."
-  keywords={['support ZurichJS', 'sponsor ZurichJS', 'JavaScript community Zurich', 'ZurichJS membership', 'non-profit meetup Switzerland']}
+  description="Donate to ZurichJS once or monthly, or support it as a member, host, sponsor, speaker or volunteer. Meetups are free, run by volunteers and funded by donations, members and partners."
+  keywords={['donate ZurichJS', 'support ZurichJS', 'sponsor ZurichJS', 'JavaScript community Zurich', 'ZurichJS membership', 'non-profit meetup Switzerland']}
 >
-  <PageOpening slot="opening" title="Support ZurichJS" sub="Meetups are free to attend. We started on personal savings; members and partners now cover the evenings." />
+  <PageOpening slot="opening" title="Support ZurichJS" sub="Meetups are free to attend. We started on personal savings; donations, members and partners now cover the evenings.">
+    <div class="flex flex-wrap gap-3 pt-1">
+      <Button href="#donate" variant="yellow" grow>Donate</Button>
+      <Button href="/membership" variant="outline-white" grow>Become a member</Button>
+    </div>
+  </PageOpening>
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(40px,5vw,80px)] items-start">
+    <section id="donate" aria-labelledby="h-donate" class="flex flex-col gap-[18px] scroll-mt-6 col-span-full md:col-span-2">
+      <div class="flex flex-col gap-2">
+        <h2 id="h-donate" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Donate</h2>
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[640px]">
+          A donation is a gift to ZurichJS; it doesn’t make you a member. To join the association with a vote, see <a href="/membership" class="font-bold text-black">membership</a>.
+        </p>
+      </div>
+      <DonateForm client:load portalUrl={portalUrl} email={SITE.email} />
+    </section>
+
     <section aria-labelledby="h-ways" class="flex flex-col gap-3">
       <h2 id="h-ways" class="m-0 mb-1 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Ways to help</h2>
       {
@@ -57,7 +78,7 @@ const WAYS = [
     </section>
 
     <section aria-labelledby="h-oneoff" class="flex flex-col gap-[18px]">
-      <h2 id="h-oneoff" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">One-off contribution</h2>
+      <h2 id="h-oneoff" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Other ways to give</h2>
       {
         qr && (
           <Surface class="p-6 flex flex-col gap-4 items-start">
@@ -79,8 +100,20 @@ const WAYS = [
         )
       }
       <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
-        {qr ? 'Or write to ' : 'We don’t take online payments. For a one-off contribution, write to '}
+        {qr ? 'Or write to ' : 'For a bank transfer or anything else, write to '}
         <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a>.
+        {portalUrl ? (
+          <>
+            {' '}
+            Already giving monthly?{' '}
+            <a href={portalUrl} class="font-bold text-black">
+              Manage or cancel your donation
+            </a>
+            .
+          </>
+        ) : (
+          <> To change or cancel a monthly donation, write to the same address.</>
+        )}
       </p>
     </section>
 

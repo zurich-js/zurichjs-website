@@ -4,7 +4,7 @@
  * when it is configured (PUBLIC_POSTHOG_KEY). Outbound RSVP clicks are
  * handoffs, not registrations, and are named that way.
  */
-export type TrackName = 'rsvp_handoff_click' | 'conf_outbound_click' | 'share_click' | 'ics_download' | 'form_submit' | 'rating_submit';
+export type TrackName = 'rsvp_handoff_click' | 'conf_outbound_click' | 'share_click' | 'ics_download' | 'form_submit' | 'rating_submit' | 'donate_checkout';
 
 export function track(name: TrackName, props: Record<string, string | number> = {}) {
   if (typeof window === 'undefined') return;

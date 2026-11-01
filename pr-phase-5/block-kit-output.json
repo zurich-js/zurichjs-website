@@ -1,0 +1,56 @@
+{
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "Done. I moved *Forms, types and design systems* (Wed 18 Nov) to Smallpdf AG and set doors to 18:00. It is a draft until an organiser publishes it."
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Draft changes: Forms, types and design systems* (`/events/zurichjs-meetup-november-2026`)\n*Doors:* Wed, 18 Nov 2026, 18:30 → Wed, 18 Nov 2026, 18:00\n*Venue:* Venue AG, Hardstrasse 201, 8005 Zürich → Smallpdf AG, Steinstrasse 21, 8003 Zürich"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "<https://zurichjs.sanity.studio/intent/edit/id=evt-nov;type=events|Open in Studio> · <https://preview.zurichjs.com/events/zurichjs-meetup-november-2026|Preview draft> · Not live until published."
+        }
+      ]
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "style": "primary",
+          "text": {
+            "type": "plain_text",
+            "text": "Publish"
+          },
+          "action_id": "publish",
+          "value": "{\"id\":\"evt-nov\",\"type\":\"events\"}"
+        },
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "Discard draft"
+          },
+          "action_id": "discard",
+          "value": "{\"id\":\"evt-nov\",\"type\":\"events\"}"
+        }
+      ]
+    }
+  ],
+  "publish": "<@UORG> published it. The site rebuilds and shows it in about 4 minutes.",
+  "denied": "<@UOTHER>, only organisers on the publish list can publish. Ask one of them to press Publish."
+}

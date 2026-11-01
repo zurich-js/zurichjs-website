@@ -9,7 +9,9 @@
     "start": "sanity start",
     "build": "sanity build",
     "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy"
+    "deploy-graphql": "sanity graphql deploy",
+    "schema": "npx --yes tsx@4.23.15 scripts/extract-schema.ts",
+    "typegen": "npm run schema && sanity typegen generate"
   },
   "keywords": [
     "sanity"

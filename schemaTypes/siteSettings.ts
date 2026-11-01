@@ -1,7 +1,7 @@
 import {CogIcon} from '@sanity/icons'
 import {defineField, defineType} from 'sanity'
 
-/** Contact details, social links, association details and the award shown on the site. */
+/** Contact details, social links, association details, the award and the support page's Twint QR. */
 export default defineType({
   name: 'siteSettings',
   title: 'Site settings',
@@ -12,6 +12,7 @@ export default defineType({
     {name: 'social', title: 'Social'},
     {name: 'association', title: 'Association'},
     {name: 'award', title: 'Award'},
+    {name: 'support', title: 'Support page'},
   ],
   fields: [
     defineField({name: 'email', title: 'Main email', type: 'string', group: 'contact', initialValue: 'hello@zurichjs.com', validation: (r) => r.required().email()}),
@@ -34,6 +35,30 @@ export default defineType({
         defineField({name: 'category', title: 'Category', type: 'string', initialValue: 'Most Impactful Contribution to the Community'}),
         defineField({name: 'url', title: 'Announcement link', type: 'url'}),
       ],
+    }),
+    defineField({
+      name: 'twintQr',
+      title: 'Twint QR code',
+      type: 'image',
+      group: 'support',
+      description: 'Shown on /donate for one-off contributions. Leave empty to show only the email address. Upload the QR from the Twint business app; never a test code.',
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Alt text',
+          type: 'string',
+          initialValue: 'Twint QR code for a contribution to ZurichJS',
+          validation: (r) => r.required(),
+        }),
+      ],
+    }),
+    defineField({
+      name: 'twintNote',
+      title: 'Line under the QR code',
+      type: 'string',
+      group: 'support',
+      description: 'Optional, one short sentence, e.g. "Scan with the Twint app. Any amount helps."',
+      validation: (r) => r.max(120),
     }),
   ],
   preview: {prepare: () => ({title: 'Site settings'})},

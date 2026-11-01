@@ -1,0 +1,34 @@
+---
+/**
+ * Partner logos with what each one does ("Venue host", "Sponsor"). Each
+ * logo links to the partner; the image's alt is the company name, so the
+ * link has an accessible name. Sponsors who asked for referral analytics
+ * (`allowReferrer`) get links without `noreferrer`.
+ */
+import { ROLE_LABEL, type Partner, type SupporterRole } from '@zurichjs/events';
+
+interface Props {
+  items: { partner: Partner; role?: SupporterRole; note?: string }[];
+}
+const { items } = Astro.props;
+const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer');
+---
+
+<ul class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,180px),1fr))] gap-3 list-none m-0 p-0">
+  {
+    items.map(({ partner: p, role, note }) => (
+      <li class="flex flex-col gap-1.5">
+        {p.url ? (
+          <a href={p.url} target="_blank" rel={rel(p)} class="h-24 rounded-2xl bg-grey flex items-center justify-center px-5 no-underline text-black hover:bg-grey-soft">
+            {p.logo ? <img src={p.logo} alt={`${p.name} (opens in a new tab)`} width="140" height="56" loading="lazy" decoding="async" class="max-h-14 max-w-full w-auto object-contain" /> : <span class="font-bold text-[17px]">{p.name}</span>}
+          </a>
+        ) : (
+          <div class="h-24 rounded-2xl bg-grey flex items-center justify-center px-5">
+            {p.logo ? <img src={p.logo} alt={p.name} width="140" height="56" loading="lazy" decoding="async" class="max-h-14 max-w-full w-auto object-contain" /> : <span class="font-bold text-[17px]">{p.name}</span>}
+          </div>
+        )}
+        {(role || note) && <span class="text-[15px] text-ink-2 px-1">{[p.name, role ? ROLE_LABEL[role] : '', note].filter(Boolean).join(' · ')}</span>}
+      </li>
+    ))
+  }
+</ul>

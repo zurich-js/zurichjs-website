@@ -37,11 +37,34 @@ describe('mapEvent (production document shape)', () => {
   it('builds a venue from location and address', () => {
     expect(ev.venue).toEqual({ name: 'Venue AG', street: 'Hardstrasse 201', zip: '8005', city: 'Zürich' });
   });
-  it('derives the agenda from talks when there is none, at doors time in Zurich', () => {
-    expect(ev.agenda).toEqual([{ time: '18:30', title: 'Typed forms', talk: expect.objectContaining({ speakerIds: ['ada'], format: 'talk' }) }]);
+  it('lists the talks without inventing times when there is no agenda: only doors (from datetime) has a time', () => {
+    expect(ev.agenda).toEqual([
+      { time: '18:30', kind: 'doors', title: 'Doors open' },
+      { time: '', kind: 'talk', title: 'Typed forms', talk: expect.objectContaining({ speakerIds: ['ada'], format: 'talk' }) },
+    ]);
   });
-  it('uses the single event image as the first photo', () => {
-    expect(ev.photos[0]?.src).toContain('cdn.sanity.io');
+  it('keeps the agenda times and order as organisers wrote them, including non-talk lines', () => {
+    const withAgenda = mapEvent({
+      ...raw,
+      agenda: [
+        { time: '18:00', title: 'Doors open' },
+        { time: '18:30', title: 'Welcome & Intro' },
+        { time: '18:50', talk: { _id: 't1', id: 'retro', title: 'Retrospective', durationMinutes: 25, speakerIds: ['ada'] } },
+        { time: '19:15', title: 'Pizza break' },
+        { time: '20:20', title: 'Networking & drinks' },
+      ],
+    });
+    expect(withAgenda.agenda.map((a) => [a.time, a.kind, a.title])).toEqual([
+      ['18:00', 'doors', 'Doors open'],
+      ['18:30', 'intro', 'Welcome & Intro'],
+      ['18:50', 'talk', 'Retrospective'],
+      ['19:15', 'break', 'Pizza break'],
+      ['20:20', 'networking', 'Networking & drinks'],
+    ]);
+  });
+  it('never presents the promotional artwork as a photo from the evening', () => {
+    expect(ev.photos).toEqual([]);
+    expect(ev.cover?.src).toContain('cdn.sanity.io');
   });
 });
 

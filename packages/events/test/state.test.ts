@@ -128,6 +128,25 @@ describe('buildIcs', () => {
     expect(ics).toContain('DTSTART:20261118T173000Z');
     expect(ics).toContain('SUMMARY:ZurichJS: A\\; B\\, C');
   });
+  it('never doubles the ZurichJS prefix', () => {
+    expect(buildIcs(ev({ title: 'ZurichJS: 2nd Anniversary' }), 'u', at(0))).toContain('SUMMARY:ZurichJS: 2nd Anniversary\r\n');
+    expect(buildIcs(ev({ title: 'ZurichJS 2nd Anniversary' }), 'u', at(0))).toContain('SUMMARY:ZurichJS 2nd Anniversary\r\n');
+  });
+  it('uses the public slug as UID, so a second download updates the same calendar entry', () => {
+    const a = buildIcs(ev({ id: 'drafts.abc' }), 'u', at(0))!;
+    const b = buildIcs(ev({ id: 'abc', updatedAt: '2026-11-02T10:00:00Z' }), 'u', at(1000))!;
+    expect(a).toContain('UID:forms-types@zurichjs.com');
+    expect(b).toContain('UID:forms-types@zurichjs.com');
+    expect(a).not.toContain('drafts.');
+  });
+  it('gives the exact instant in winter and in summer (UTC, no floating times)', () => {
+    expect(buildIcs(ev({ startsAt: '2026-09-10T18:00:00+02:00', endsAt: undefined }), 'u', at(0))).toContain('DTSTART:20260910T160000Z');
+    expect(buildIcs(ev({ startsAt: '2026-11-12T18:00:00+01:00', endsAt: undefined }), 'u', at(0))).toContain('DTSTART:20261112T170000Z');
+  });
+  it('folds long lines at 75 octets', () => {
+    const ics = buildIcs(ev({ description: 'ä'.repeat(200) }), 'u', at(0))!;
+    for (const line of ics.split('\r\n')) expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
+  });
   it('returns null without a date', () => {
     expect(buildIcs(ev({ startsAt: undefined }), 'u')).toBeNull();
   });

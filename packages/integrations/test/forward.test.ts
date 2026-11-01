@@ -59,3 +59,56 @@ describe('Sanity write token', () => {
     expect(sanityWriteClient({ SANITY_TOKEN: 'sk' })).not.toBeNull();
   });
 });
+
+describe('talk ratings (one per person, talk and speaker)', () => {
+  const lookup = { event: 'ev1', talk: 't1', inEvent: true, speaker: 'sp-ada', speakers: ['sp-ada', 'sp-grace'] };
+  const fakeSanity = (dup: string | null, found: object = lookup) => {
+    const create = vi.fn(async (doc: Record<string, unknown>) => ({ _id: 'fb1', ...doc }));
+    const fetch = vi.fn(async (q: string) => (q.includes('"inEvent"') ? found : dup));
+    return { client: { create, fetch } as never, create, fetch };
+  };
+  const rating = { eventId: 'ev1', target: 't1:ada', talkId: 't1', speakerId: 'ada', stars: 5, note: 'Great' };
+  const client = { ip: '203.0.113.9', headers: { 'user-agent': 'UA' } };
+
+  it('stores event, talk and speaker references with hashed client info', async () => {
+    const s = fakeSanity(null);
+    const r = await forwardForm('rating', rating, { env: {}, sanity: s.client, now, client });
+    expect(r).toEqual({ ok: true, id: 'fb1' });
+    const doc = s.create.mock.calls[0]![0];
+    expect(doc).toMatchObject({ _type: 'feedback', event: { _ref: 'ev1' }, talk: { _ref: 't1' }, speaker: { _ref: 'sp-ada' }, rating: 5, comment: 'Great' });
+    expect(doc.ipHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(JSON.stringify(doc)).not.toContain('203.0.113.9');
+  });
+  it('refuses a second rating of the same speaker’s talk with 409', async () => {
+    const s = fakeSanity('fb0');
+    await expect(forwardForm('rating', rating, { env: {}, sanity: s.client, now, client })).rejects.toMatchObject({ status: 409 });
+    expect(s.create).not.toHaveBeenCalled();
+  });
+  it('checks duplicates per speaker, so both speakers of a shared talk can be rated', async () => {
+    const s = fakeSanity(null);
+    await forwardForm('rating', { ...rating, speakerId: 'grace' }, { env: {}, sanity: s.client, now, client });
+    const dupQuery = s.fetch.mock.calls.find((c) => String(c[0]).includes('_type == "feedback"'))!;
+    expect(String(dupQuery[0])).toContain('speaker._ref == $speaker');
+  });
+  it('rejects a talk that is not part of the event (400)', async () => {
+    const s = fakeSanity(null, { ...lookup, inEvent: false });
+    await expect(forwardForm('rating', rating, { env: {}, sanity: s.client, now, client })).rejects.toMatchObject({ status: 400 });
+  });
+  it('logs and accepts without a Sanity token (nothing is written)', async () => {
+    const log = vi.fn();
+    const r = await forwardForm('rating', rating, { env: {}, sanity: null, now, log });
+    expect(r.ok).toBe(true);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('not stored'));
+  });
+});
+
+describe('evening feedback', () => {
+  it('keeps the quote name only when quoting is allowed', async () => {
+    const create = vi.fn(async (doc: Record<string, unknown>) => ({ _id: 'cf1', ...doc }));
+    const sanity = { create } as never;
+    await forwardForm('feedback', { eventId: 'ev1', overall: 4, quote: true, quoteName: '  Ada  ' }, { env: {}, sanity, now });
+    await forwardForm('feedback', { eventId: 'ev1', overall: 4, quote: false, quoteName: 'Ada' }, { env: {}, sanity, now });
+    expect(create.mock.calls[0]![0]).toMatchObject({ quoteConsent: true, quoteName: 'Ada' });
+    expect(create.mock.calls[1]![0].quoteName).toBeUndefined();
+  });
+});

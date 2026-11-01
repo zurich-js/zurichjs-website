@@ -5,22 +5,28 @@ import { Modal } from './Modal';
 import { StarRating } from './StarRating';
 
 export interface RateTarget {
-  /** Talk document id, or "evening". */
+  /** Unique per rating: "<talk id>:<speaker id>", or "evening". */
   key: string;
   title: string;
   sub: string;
+  /** Talk document id. */
+  talkId?: string;
+  /** Speaker the rating is for (talks with several speakers get one rating per speaker). */
+  speakerId?: string;
 }
 
 export interface RatingInput {
   eventId: string;
   target: string;
+  talkId?: string;
+  speakerId?: string;
   stars: number;
   note: string;
 }
 
 interface Props {
   /** Sends the rating (the app wires this to its forms API). */
-  onSubmit: (rating: RatingInput) => Promise<{ ok: boolean }>;
+  onSubmit: (rating: RatingInput) => Promise<{ ok: true } | { ok: false; error?: string }>;
   eventId: string;
   target: RateTarget | null;
   /** Other talks still unrated, offered after a successful submit. */
@@ -35,6 +41,7 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
   const [stars, setStars] = useState(0);
   const [note, setNote] = useState('');
   const [phase, setPhase] = useState<'rate' | 'sending' | 'done' | 'error'>('rate');
+  const [error, setError] = useState('');
 
   const reset = () => {
     setStars(0);
@@ -48,8 +55,11 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
   const submit = async () => {
     if (!target || !stars) return;
     setPhase('sending');
-    const r = await onSubmit({ eventId, target: target.key, stars, note });
-    if (!r.ok) return setPhase('error');
+    const r = await onSubmit({ eventId, target: target.key, talkId: target.talkId, speakerId: target.speakerId, stars, note });
+    if (!r.ok) {
+      setError(r.error || 'We couldn’t save that. Please try again.');
+      return setPhase('error');
+    }
     track('rating_submit', { eventId, target: target.key });
     onRated(target.key, stars);
     setPhase('done');
@@ -75,7 +85,7 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
           </label>
           {phase === 'error' && (
             <p role="alert" class="m-0 text-[15px] text-danger">
-              We couldn’t save that. Please try again.
+              {error}
             </p>
           )}
           <div class="flex gap-2.5">
@@ -93,7 +103,9 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
           <h2 id="rate-h" class="m-0 text-[26px] font-bold">
             Thanks, that helps.
           </h2>
-          <p class="m-0 text-[17px] leading-[1.55]">Your rating goes to the speaker and the organisers.</p>
+          <p class="m-0 text-[17px] leading-[1.55]">
+            {target.key === 'evening' ? 'The organisers read every rating.' : 'The speaker and the organisers can read your rating and comment. Nothing is published.'}
+          </p>
           <Button
             variant="black"
             onClick={() => {

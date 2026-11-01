@@ -25,13 +25,20 @@ export interface Venue {
   street?: string;
   zip?: string;
   city: string;
+  /** How to get there, as the organisers wrote it. */
   directions?: string;
+  entrance?: string;
+  transport?: string;
+  accessibility?: string;
 }
 
 export type TalkFormat = 'talk' | 'lightning' | 'deep-dive';
 
 export interface TalkRef {
+  /** Sanity document id: ratings reference it. */
   id?: string;
+  /** Public talk ID (`id.current`), used for the #talk-… anchor when present. */
+  slug?: string;
   speakerIds: string[];
   title: string;
   description?: string;
@@ -39,10 +46,22 @@ export interface TalkRef {
   durationMin: number;
   level?: string;
   language?: string;
+  tags?: string[];
+  /** Slides the speaker shared (owner: shown when present; talks are never recorded). */
+  slidesUrl?: string;
 }
 
+/** What a programme line is. Doors, intro, breaks and networking are part of the evening too. */
+export type ScheduleKind = 'doors' | 'intro' | 'talk' | 'break' | 'networking' | 'close' | 'other';
+
+/**
+ * One line of the evening, in running order. `time` is the Zurich wall-clock
+ * time ("18:50") or empty when the organisers have not fixed it: the site
+ * never invents a time.
+ */
 export interface AgendaItem {
-  time: string; // "18:30"
+  time: string;
+  kind: ScheduleKind;
   title: string;
   note?: string;
   talk?: TalkRef;
@@ -90,6 +109,12 @@ export interface Event {
   recap?: { talks: RecapTalk[] };
   /** Partner ids that host the evening. */
   hosts?: string[];
+  /** Partners thanked on this event, with their role. */
+  supporters?: { partnerId: string; role: SupporterRole }[];
+  /** Default photo credit for this event's gallery. */
+  photoCredit?: string;
+  /** Promotional artwork (social image, cover). Never shown as a photo from the evening. */
+  cover?: Photo;
   /** ISO date the content was last edited (sitemap lastmod). */
   updatedAt?: string;
 }
@@ -116,11 +141,24 @@ export interface Speaker {
   updatedAt?: string;
 }
 
+export type SupporterRole = 'venue' | 'food' | 'sponsor' | 'community';
+export type PartnerKind = 'sponsor' | 'venue' | 'food' | 'community' | 'conference' | 'supporting';
+export type SponsorTier = 'champion' | 'builder' | 'friend' | 'supporter';
+
 export interface Partner {
   id: string;
   name: string;
   logo?: string;
   url?: string;
+  kinds: PartnerKind[];
+  tier?: SponsorTier;
+  /** Only an organiser marks a partner current; everyone else is a past supporter. */
+  current: boolean;
+  since?: string;
+  until?: string;
+  description?: string;
+  /** Sponsors who asked to see referrals: links omit `noreferrer`. */
+  allowReferrer?: boolean;
 }
 
 /**

@@ -20,13 +20,13 @@ const OPEN = [
   ['less', 'What should we do less of, or stop doing?', 'Nothing is off limits. We would rather hear it from you than guess.', 3],
   ['next', 'Who or what would you like to hear about next?', 'A topic, a speaker, a company, a question you keep running into at work.', 2],
   ['first', 'Was anything confusing or awkward about coming?', 'Finding the venue, RSVPing, arriving alone, the food, the timing, the language.', 2],
-  ['friend', 'How would you describe tonight to a friend?', 'Your words, not ours. We might quote this if you allow it below.', 2],
+  ['friend', 'How would you describe the evening to a friend?', 'Your words, not ours. We only quote it on the website if you allow that below.', 2],
 ] as const;
 
 /** Opening copy for an event, shared with feedback.astro so server and island agree. */
 export const feedbackTitle = (ev?: FeedbackEvent) => (ev ? `How was the ${ev.startsAt ? monthYear(ev.startsAt).split(' ')[0] : ''} meetup?` : 'How was the meetup?');
 export const feedbackSub = (ev?: FeedbackEvent) =>
-  ev ? `${ev.title} · ${ev.startsAt ? dateLong(ev.startsAt) : ''}. About five minutes, mostly in your own words. Answers stay private unless you agree to be quoted.` : '';
+  ev ? `${ev.title} · ${ev.startsAt ? dateLong(ev.startsAt) : ''}. About five minutes, mostly in your own words. Only the organisers read your answers.` : '';
 
 interface Props {
   events: FeedbackEvent[];
@@ -34,13 +34,18 @@ interface Props {
   nextHref: string;
 }
 
-/** Event-level feedback on /feedback. Talk ratings live on the event page. `?event=<slug>` picks the event. */
+/**
+ * Event-level feedback on /feedback (the evening as a whole). Talk ratings are
+ * separate: on the event page via "Rate the talks" (`?feedback=true`) and on
+ * the Tonight page. `?event=<slug>` picks the event.
+ */
 export default function FeedbackForm({ events, initialId, nextHref }: Props) {
   const [evId, setEvId] = useState(initialId);
   const ev = events.find((e) => e.id === evId);
   const [overall, setOverall] = useState(0);
   const [text, setText] = useState<Record<string, string>>({});
   const [quote, setQuote] = useState(false);
+  const [quoteName, setQuoteName] = useState('');
   const [email, setEmail] = useState('');
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -76,7 +81,15 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
     }
     setBusy(true);
     setServerError('');
-    const r = await submitForm('feedback', { eventId: ev?.id, overall, ...text, quote, email, website_url: honeypotValue(formRef.current) });
+    const r = await submitForm('feedback', {
+      eventId: ev?.id,
+      overall,
+      ...text,
+      quote,
+      quoteName: quote ? quoteName.trim() : '',
+      email,
+      website_url: honeypotValue(formRef.current),
+    });
     setBusy(false);
     if (!r.ok) return setServerError(r.error);
     track('form_submit', { form: 'feedback' });
@@ -89,7 +102,9 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
       <div ref={doneRef} tabIndex={-1} role="status" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4 max-w-[1000px] outline-hidden">
         <div class={surfaceClass('yellow', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
           <div class="text-[28px] font-bold leading-[1.15]">Thanks. That helps.</div>
-          <p class="m-0 text-[18px] leading-[1.55]">Speakers see the ratings and comments for their talk. Organisers use the rest to plan the next programme.</p>
+          <p class="m-0 text-[18px] leading-[1.55]">
+            The organisers read every answer and use it to plan the next programme.{quote ? ' We may quote what you wrote on the website, as you allowed.' : ''}
+          </p>
           <Button href={nextHref} variant="black" class="self-start mt-1.5 text-[17px]">
             See the next meetup
           </Button>
@@ -97,10 +112,15 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
         {ev && (
           <div class={surfaceClass('grey', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
             <div class="text-[24px] font-bold leading-[1.2]">Photos from the evening</div>
-            <p class="m-0 text-[17px] leading-[1.55] text-ink-2">The recap page has the talks, speakers and photos.</p>
-            <Button href={eventHref(ev)} variant="white" class="self-start mt-1.5 text-[17px]">
-              Open the recap
-            </Button>
+            <p class="m-0 text-[17px] leading-[1.55] text-ink-2">The event page has the programme, photos once they are online, and the talk ratings.</p>
+            <div class="flex flex-wrap gap-2.5 mt-1.5">
+              <Button href={eventHref(ev)} variant="white" class="text-[17px]">
+                Open the event page
+              </Button>
+              <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="outline-black" class="text-[17px]">
+                Rate the talks
+              </Button>
+            </div>
           </div>
         )}
       </div>
@@ -112,7 +132,17 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-3 min-w-0">
         <legend class="text-[clamp(24px,2.4vw,30px)] font-bold mb-3 p-0">Overall, how was the evening?</legend>
         <p class="m-0 mb-1 text-[17px] leading-[1.55] text-ink-2">
-          The only required question. The open ones below matter more. Talks are rated separately, on the event page and on /today, while the evening is fresh.
+          The only required question. The open ones below matter more.
+          {ev && (
+            <>
+              {' '}
+              To rate individual talks, use{' '}
+              <a href={`${eventHref(ev)}?feedback=true#programme`} class="underline underline-offset-[3px] font-bold text-black">
+                Rate the talks
+              </a>{' '}
+              on the event page.
+            </>
+          )}
         </p>
         <StarRating value={overall} onChange={setOverall} label="Overall rating, 1 to 5" invalid={overallBad} size="lg" />
         {overallBad && (
@@ -131,12 +161,22 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
       </fieldset>
 
       <div class="flex flex-col gap-3.5">
-        <Checkbox
-          label="You can quote my comments on the ZurichJS website, with my first name only."
-          name="quote"
-          checked={quote}
-          onChange={(e) => setQuote(e.currentTarget.checked)}
-        />
+        <p class="m-0 text-[16px] leading-[1.55] text-ink-2">
+          Who reads this: the ZurichJS organisers. Speakers don’t see this form; they see only the ratings for their own talk. Nothing here is published unless you tick the box
+          below.
+        </p>
+        <Checkbox label="You may quote my answers on the ZurichJS website." name="quote" checked={quote} onChange={(e) => setQuote(e.currentTarget.checked)} />
+        {quote && (
+          <TextField
+            label="Name to show with the quote (optional)"
+            hint="For example your first name. Leave empty to be quoted anonymously."
+            name="quoteName"
+            autoComplete="given-name"
+            value={quoteName}
+            onInput={(e) => setQuoteName(e.currentTarget.value)}
+            class="max-w-[440px]"
+          />
+        )}
         <TextField
           label="Email, if you’d like a reply (optional)"
           name="email"

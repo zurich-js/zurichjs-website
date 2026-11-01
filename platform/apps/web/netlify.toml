@@ -12,7 +12,8 @@ command = "pnpm --filter @zurichjs/web build"
 publish = "dist"
 
 [build.environment]
-NODE_VERSION = "22.23.1"
+# Astro 7.4 needs Node >= 22.23.4 (same as platform/.nvmrc).
+NODE_VERSION = "22.23.4"
 # Production builds must read Sanity; a build that would fall back to sample content fails instead.
 CONTENT_REQUIRE_SANITY = "1"
 

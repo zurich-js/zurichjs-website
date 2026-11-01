@@ -10,6 +10,19 @@ const major = (pkg: string) => Number((require(`${pkg}/package.json`) as { versi
 describe('stack', () => {
   it('runs on Astro 7', () => expect(major('astro')).toBe(7));
   it('styles with Tailwind 4', () => expect(major('tailwindcss')).toBe(4));
+  it('pins a Node version Astro supports (platform/.nvmrc, used by CI and netlify.toml)', () => {
+    const v = (s: string) =>
+      s
+        .replace(/^[^\d]*/, '')
+        .split('.')
+        .map(Number);
+    const atLeast = (have: number[], need: number[]) => have[0]! > need[0]! || (have[0] === need[0] && (have[1]! > need[1]! || (have[1] === need[1] && have[2]! >= need[2]!)));
+    const astroMin = v((require('astro/package.json') as { engines: { node: string } }).engines.node);
+    const nvmrc = v(readFileSync(fileURLToPath(new URL('../../../.nvmrc', import.meta.url)), 'utf8').trim());
+    const netlify = v(readFileSync(fileURLToPath(new URL('../netlify.toml', import.meta.url)), 'utf8').match(/NODE_VERSION = "([^"]+)"/)![1]!);
+    expect(atLeast(nvmrc, astroMin), `platform/.nvmrc ${nvmrc.join('.')} < astro ${astroMin.join('.')}`).toBe(true);
+    expect(netlify).toEqual(nvmrc);
+  });
   it('has no Tailwind 3 or PostCSS config left', () => {
     const files = readdirSync(fileURLToPath(new URL('..', import.meta.url)));
     expect(files.filter((f) => /^(tailwind|postcss)\.config\./.test(f))).toEqual([]);

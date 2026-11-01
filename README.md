@@ -13,7 +13,7 @@ node tools/seo/compare.mjs --base http://localhost:4321   # SEO and LLM parity g
 pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck
 ```
 
-Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11.
+Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11. Agents (any tool) start with [`AGENTS.md`](AGENTS.md); automation and the Slack content agent are in [`docs/v2/AUTOMATION.md`](docs/v2/AUTOMATION.md).
 
 | Path                    | What                                                                                                      |
 | ----------------------- | --------------------------------------------------------------------------------------------------------- |
@@ -24,6 +24,7 @@ Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11.
 | `packages/seo`          | Meta tags, JSON-LD, sitemap and `llms.txt` builders.                                                      |
 | `packages/forms`        | zod schemas shared by islands and the forms function.                                                     |
 | `packages/integrations` | Form forwarding: Sanity writes, Resend, Slack, EmailOctopus; `TalkProposalSink`.                          |
+| `packages/agent`        | The Slack content agent: draft-only Sanity tools, model-agnostic loop ([setup](docs/v2/AUTOMATION.md)).   |
 | `packages/config`       | Shared TypeScript config.                                                                                 |
 | `tools/`                | The SEO baseline and parity gate, the local Netlify-like server, CI helpers.                              |
 | `e2e/`                  | Playwright: routes, accessibility, redirects, visual regression.                                          |

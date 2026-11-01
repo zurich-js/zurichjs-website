@@ -284,3 +284,40 @@ Plain-language status after each phase. Newest at the bottom.
 - A fresh checkout of the switchover branch passes.
 
 **Open (owner):** follow "Go live" in [RUNBOOK.md](./RUNBOOK.md).
+
+## Phase 5: agents and the Slack content agent (2026-11-01)
+
+**Done**
+
+- **`AGENTS.md`** (agent-agnostic), with `CLAUDE.md` importing it.
+- **Six playbooks** in `agents/skills`:
+  - `new-event`, `edit-event`, `event-recap`
+  - `rating-refresh`, `release`, `visual-review`
+- **Three roles** in `agents/roles`, plus the `.claude` pointers, a pinned `.mcp.json`, and `docs/v2/AUTOMATION.md`.
+- **The Slack content agent:**
+  - `packages/agent` holds the draft-only tools, the model-agnostic loop, the Slack helpers and the publish logic.
+  - Three Netlify Functions.
+  - The Slack app manifest, in `slack/manifest.yml`.
+  - `pnpm agent` runs it from a terminal.
+- **Readiness rules in `@zurichjs/events`.**
+- **A guard test** (`tools/agents.test.ts`) keeps the agent docs, `.mcp.json` and the Slack manifest true.
+
+**Verified how**
+
+- Unit tests: 147 in total. The agent package has 21:
+  - draft-only writes
+  - the field allowlist and slug protection
+  - Zurich time across summer and winter time
+  - Slack signatures and Block Kit
+  - the publish allowlist and readiness gate
+  - a scripted agent turn and the step limit
+  - the generated prompt matching the playbooks
+- The guard test fails on a deliberately broken path.
+- Netlify's bundler builds the three Slack functions, with `slack-agent-background` detected as a background function.
+- Lint, format, knip, typecheck and audit are clean.
+
+**Open (owner):**
+
+- Create the Slack app, the Sanity Editor token and the model API key, then set the environment variables (AUTOMATION.md).
+- Confirm Netlify Background Functions are available on the site's plan.
+- Try `pnpm agent` against `v2-preview`.

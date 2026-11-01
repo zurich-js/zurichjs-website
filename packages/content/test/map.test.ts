@@ -68,6 +68,36 @@ describe('mapEvent (production document shape)', () => {
   });
 });
 
+describe('mapSpeaker talks', () => {
+  it('lists each talk once with all its events, tags and description', () => {
+    const s = mapSpeaker({
+      id: 'faris',
+      name: 'Faris',
+      legacySlugs: ['Faris_Aziz', 'faris'],
+      talks: [
+        {
+          _id: 't1',
+          id: 'agentic',
+          title: 'Agentic Commerce',
+          type: 'talk',
+          durationMinutes: 25,
+          tags: ['AI', null],
+          description: 'D',
+          eventIds: ['2026-09-warmup', '2026-11-anniversary'],
+          legacyEventId: '2026-09-warmup',
+        },
+        { _id: 't2', title: 'Old talk', eventIds: [], legacyEventId: '2025-03-x' },
+      ],
+    });
+    expect(s.talks).toEqual([
+      expect.objectContaining({ id: 't1', slug: 'agentic', tags: ['AI'], description: 'D', durationMin: 25, eventSlugs: ['2026-09-warmup', '2026-11-anniversary'] }),
+      expect.objectContaining({ title: 'Old talk', eventSlugs: ['2025-03-x'] }),
+    ]);
+    // The current ID is never a redirect source.
+    expect(s.legacySlugs).toEqual(['Faris_Aziz']);
+  });
+});
+
 describe('helpers', () => {
   it('parses Swiss addresses and keeps unparseable ones', () => {
     expect(parseAddress('Bahnhofstrasse 1, 8001 Zürich, Switzerland')).toEqual({ street: 'Bahnhofstrasse 1', zip: '8001', city: 'Zürich' });
@@ -89,7 +119,7 @@ describe('helpers', () => {
     });
     expect(s.initials).toBe('AL');
     expect(s.links).toEqual([{ label: 'GitHub', url: 'https://github.com/ada' }]);
-    expect(s.talks).toEqual([{ eventId: 'e1', title: 'Typed forms', format: 'Talk' }]);
+    expect(s.talks).toEqual([expect.objectContaining({ eventSlugs: ['e1'], title: 'Typed forms', format: 'Talk', tags: [] })]);
     expect(JSON.stringify(s)).not.toContain('@');
   });
 });

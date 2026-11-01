@@ -26,11 +26,14 @@ const hay = (e: Event) =>
     e.description,
     e.venue?.name,
     ...e.agenda.map((a) => a.title),
-    ...e.agenda.flatMap((a) => (a.talk?.speakerIds ?? []).map((id) => byId.get(id))),
+    ...e.agenda.flatMap((a) => [...(a.talk?.tags ?? []), ...(a.talk?.speakerIds ?? []).map((id) => byId.get(id))]),
     ...(e.recap?.talks.flatMap((t) => [t.title, ...t.speakerIds.map((id) => byId.get(id))]) ?? []),
   ]
     .filter(Boolean)
     .join(' ')
+    // Case and accents ignored: "nicolo" finds "Nicolò".
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
 const TABS = [
@@ -106,6 +109,8 @@ const TABS = [
 </BaseLayout>
 
 <script>
+  import { normalizeSearch } from '@zurichjs/events';
+
   type Tab = 'upcoming' | 'past';
   const root = document.querySelector<HTMLElement>('[data-events]');
   if (root) {
@@ -128,7 +133,8 @@ const TABS = [
     };
 
     const render = () => {
-      const needle = q.trim().toLowerCase();
+      const tokens = normalizeSearch(q).split(' ').filter(Boolean);
+      const needle = tokens.join(' ');
       for (const t of tabs) {
         const on = t.dataset.tab === tab;
         t.setAttribute('aria-selected', String(on));
@@ -138,7 +144,8 @@ const TABS = [
         p.hidden = p.dataset.panel !== tab;
         let shown = 0;
         for (const row of p.querySelectorAll<HTMLElement>('[data-hay]')) {
-          const match = !needle || (row.dataset.hay ?? '').includes(needle);
+          const hay = row.dataset.hay ?? '';
+          const match = tokens.every((t) => hay.includes(t));
           row.hidden = !match;
           if (match) shown++;
         }

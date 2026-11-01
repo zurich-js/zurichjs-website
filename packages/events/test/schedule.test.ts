@@ -12,6 +12,9 @@ import {
   todayPhase,
   zoneLabel,
   zurichWallTime,
+  normalizeSearch,
+  speakerSearchText,
+  speakerTopics,
   type Event,
   type TalkRef,
 } from '../src';
@@ -164,5 +167,28 @@ describe('Tonight', () => {
       partners,
     );
     expect(list.map((s) => `${s.partner.name}:${s.role}`)).toEqual(['GetYourGuide:venue', 'GYFF:sponsor']);
+  });
+});
+
+describe('speaker search', () => {
+  const faris = {
+    name: 'Faris Example',
+    role: 'Staff engineer',
+    tagline: '',
+    bio: '',
+    topics: [],
+    talks: [
+      { title: 'Agentic Commerce', tags: ['AI', 'React'] },
+      { title: 'Resilient frontends', description: 'Error boundaries in React apps.', tags: ['TypeScript'] },
+    ],
+  };
+  it('indexes talk titles, descriptions and topics, without accents or case', () => {
+    const hay = speakerSearchText(faris);
+    for (const q of ['agentic', 'react', 'typescript', 'error boundaries']) expect(hay).toContain(normalizeSearch(q));
+    expect(normalizeSearch('  Nicolò   BABEL ')).toBe('nicolo babel');
+  });
+  it('lists topics from talk tags, counted once per speaker', () => {
+    const other = { talks: [{ tags: ['react', 'Testing'] }, { tags: ['React'] }] };
+    expect(speakerTopics([faris, other])).toEqual([{ topic: 'React', count: 2 }]);
   });
 });

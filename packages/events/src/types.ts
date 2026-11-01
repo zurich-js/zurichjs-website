@@ -119,10 +119,20 @@ export interface Event {
   updatedAt?: string;
 }
 
+/** A talk on a speaker's profile, once, with every event it was given at. */
 export interface SpeakerTalk {
-  eventId: string;
+  /** Sanity document id. */
+  id?: string;
+  /** Public talk ID, for the #talk-… anchor on event pages. */
+  slug?: string;
   title: string;
+  description?: string;
   format: 'Talk' | 'Lightning talk' | 'Deep dive';
+  durationMin?: number;
+  tags: string[];
+  slidesUrl?: string;
+  /** Slugs of the events this talk was given at. */
+  eventSlugs: string[];
 }
 
 export interface Speaker {
@@ -138,6 +148,8 @@ export interface Speaker {
   photo?: Photo;
   links: { label: string; url: string }[];
   talks: SpeakerTalk[];
+  /** Earlier URL segments; /speakers/<old> redirects here. */
+  legacySlugs?: string[];
   updatedAt?: string;
 }
 

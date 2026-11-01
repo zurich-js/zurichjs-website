@@ -1,6 +1,6 @@
 ---
 /** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
-import { eventHref, monthYear, presentEvent, resolveState, upcomingEvents, type Speaker } from '@zurichjs/events';
+import { dateLong, eventHref, eventTalks, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
 import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -18,7 +18,8 @@ export async function getStaticPaths() {
 
 const { s } = Astro.props as { s: Speaker };
 const { events } = await content();
-const byId = new Map(events.map((e) => [e.id, e]));
+// Speakers reference events by their public slug (not the Sanity _id).
+const bySlug = new Map(events.map((e) => [e.slug, e]));
 const roleLine = `${s.role}${s.company ? ` at ${s.company}` : ''}`;
 
 // Speaking next: the first upcoming (not cancelled) event whose agenda lists this speaker.
@@ -26,12 +27,28 @@ const upcoming = (() => {
   for (const ev of upcomingEvents(events, BUILD_TIME)) {
     if (resolveState(ev, BUILD_TIME) === 'cancelled') continue;
     const item = ev.agenda.find((a) => a.talk?.speakerIds.includes(s.id));
-    if (item) return { ev, item, p: presentEvent(ev, { now: BUILD_TIME, ticketing }) };
+    if (item) return { ev, item, talk: item.talk!, p: presentEvent(ev, { now: BUILD_TIME, ticketing }) };
   }
   return null;
 })();
 
-const history = s.talks.map((t) => ({ t, ev: byId.get(t.eventId) })).sort((a, b) => (b.ev?.startsAt ?? '').localeCompare(a.ev?.startsAt ?? ''));
+// Each talk once, with every event it was given at, newest first; split into upcoming and past.
+const upcomingIds = new Set(upcomingEvents(events, BUILD_TIME).map((e) => e.slug));
+const talks = s.talks.map((t) => {
+  const evs = t.eventSlugs
+    .map((x) => bySlug.get(x))
+    .filter((e) => !!e)
+    .sort((a, b) => (b.startsAt ?? '').localeCompare(a.startsAt ?? ''));
+  // The event page's anchor for this talk (same talk document, or the same title).
+  const anchorOn = (e: (typeof evs)[number]) => {
+    const ref = eventTalks(e).find((x) => (t.id && x.id === t.id) || x.title === t.title);
+    return ref ? `#${talkAnchor(ref)}` : '';
+  };
+  return { t, evs, anchorOn, latest: evs[0]?.startsAt ?? '', upcoming: evs.some((e) => upcomingIds.has(e.slug)) };
+});
+talks.sort((a, b) => b.latest.localeCompare(a.latest) || a.t.title.localeCompare(b.t.title));
+const nextTalks = talks.filter((x) => x.upcoming);
+const pastTalks = talks.filter((x) => !x.upcoming);
 
 const fallback = `${s.name}, ${roleLine}, has spoken at ZurichJS, the JavaScript meetup in Zurich.`;
 const description = clip(s.bio.length >= 50 ? s.bio : `${fallback} ${s.bio}`);
@@ -75,36 +92,75 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
       upcoming && (
         <Surface tone="yellow" class="py-6 px-7 flex flex-wrap gap-x-7 gap-y-4 items-center justify-between">
           <div class="flex flex-col gap-1 min-w-0">
-            <div class="text-[17px] font-bold">Speaking next: {upcoming.p.dateLineShort}</div>
+            <div class="text-[17px] font-bold">
+              Speaking next: {upcoming.ev.startsAt ? dateLong(upcoming.ev.startsAt) : upcoming.p.dateLineShort}
+              {upcoming.item.time ? `, talk at ${upcoming.item.time}` : ''} · {upcoming.ev.title}
+            </div>
             <div class="text-[22px] font-bold leading-tight">{upcoming.item.title}</div>
           </div>
-          <Button href={eventHref(upcoming.ev)} variant="black" class="text-[17px]">
+          <Button href={`${eventHref(upcoming.ev)}#${talkAnchor(upcoming.talk)}`} variant="black" class="text-[17px]">
             See the meetup
           </Button>
         </Surface>
       )
     }
 
-    <section class="flex flex-col gap-5" aria-labelledby="h-talks">
-      <h2 id="h-talks" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Talks at ZurichJS</h2>
-      {
-        history.map(({ t, ev }) => {
-          const meta = [ev?.startsAt ? monthYear(ev.startsAt) : null, ev?.title, t.format].filter(Boolean).join(' · ');
-          return ev ? (
-            <a href={eventHref(ev)} class="no-underline text-black rounded-[20px] bg-grey-soft hover:bg-grey flex flex-col gap-1.5 py-[18px] px-5">
-              <span class="text-[16px] text-ink-2">{meta}</span>
-              <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
-            </a>
-          ) : (
-            <Surface tone="soft" class="flex flex-col gap-1.5 py-[18px] px-5 rounded-[20px]!">
-              <div class="text-[16px] text-ink-2">{meta}</div>
-              <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
-            </Surface>
-          );
-        })
-      }
-      {history.length === 0 && <p class="m-0 text-[17px] text-ink-2">No past talks listed yet.</p>}
-    </section>
+    {
+      [
+        { id: 'h-next-talks', heading: 'Upcoming at ZurichJS', list: nextTalks },
+        { id: 'h-talks', heading: nextTalks.length ? 'Earlier talks at ZurichJS' : 'Talks at ZurichJS', list: pastTalks },
+      ]
+        .filter((g) => g.list.length > 0 || g.id === 'h-talks')
+        .map((g) => (
+          <section class="flex flex-col gap-4" aria-labelledby={g.id}>
+            <h2 id={g.id} class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+              {g.heading}
+            </h2>
+            {g.list.length === 0 && <p class="m-0 text-[17px] text-ink-2">No earlier talks listed yet.</p>}
+            {g.list.map(({ t, evs, anchorOn }) => (
+              <article class="rounded-[20px] bg-grey-soft flex flex-col gap-2.5 py-5 px-5">
+                <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+                <div class="text-[16px] text-ink-2">{[t.format, t.durationMin ? `${t.durationMin} min` : ''].filter(Boolean).join(' · ')}</div>
+                {t.description && <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[700px]">{t.description}</p>}
+                {t.tags.length > 0 && (
+                  <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
+                    {t.tags.map((tag) => (
+                      <li>
+                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-white text-black no-underline hover:bg-grey inline-flex">
+                          {tag}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {evs.length > 0 ? (
+                  <ul class="m-0 p-0 list-none flex flex-col gap-1">
+                    {evs.map((e) => (
+                      <li class="text-[16px]">
+                        <a href={`${eventHref(e)}${anchorOn(e)}`} class="font-bold underline underline-offset-[3px]">
+                          {e.title}
+                        </a>
+                        <span class="text-ink-2">
+                          {' · '}
+                          {e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}
+                          {upcomingIds.has(e.slug) ? ' · upcoming' : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p class="m-0 text-[15px] text-ink-2">The event for this talk isn’t linked yet.</p>
+                )}
+                {t.slidesUrl && (
+                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-[16px] font-bold underline underline-offset-[3px]">
+                    Slides (opens in a new tab)
+                  </a>
+                )}
+              </article>
+            ))}
+          </section>
+        ))
+    }
 
     <Surface class="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center py-6 px-7">
       <p class="m-0 text-[18px]">Want to give a talk like this? First-time speakers are welcome, and we’ll help you get ready.</p>

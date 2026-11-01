@@ -207,3 +207,80 @@ test.describe('donations and membership', () => {
     await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toHaveAttribute('href', /^mailto:hello@zurichjs\.com\?subject=Membership/);
   });
 });
+
+test.describe('speakers', () => {
+  const visible = (page: Page) => page.locator('[data-speaker-card]:visible');
+
+  test('search covers talk titles and topics, not only names and job titles', async ({ page }) => {
+    await page.goto('/speakers');
+    const q = page.getByRole('searchbox', { name: 'Search speakers, talks and topics' });
+    // A talk title word: Mia's role says nothing about it.
+    await q.fill('Agentic');
+    await expect(visible(page)).toHaveCount(1);
+    await expect(visible(page).first()).toContainText('Mia Entwurf');
+    // A topic from talk tags includes people whose job title doesn't mention it.
+    await q.fill('react');
+    await expect(visible(page).filter({ hasText: 'Mia Entwurf' })).toHaveCount(1);
+    await expect(visible(page).filter({ hasText: 'Lea Platzhalter' })).toHaveCount(1);
+    await q.fill('  TYPESCRIPT ');
+    await expect(visible(page).filter({ hasText: 'Anna Beispiel' })).toHaveCount(1);
+    await expect(page.locator('[data-count]')).toHaveText(/^\d+ of \d+ speakers$/);
+    // The query is in the URL and survives a reload.
+    await expect(page).toHaveURL(/q=\+\+TYPESCRIPT/);
+    await page.reload();
+    await expect(q).toHaveValue('  TYPESCRIPT ');
+    await expect(visible(page).filter({ hasText: 'Anna Beispiel' })).toHaveCount(1);
+  });
+
+  test('accents and case are ignored; name matches come first', async ({ page }) => {
+    await page.goto('/speakers?q=MAX');
+    await expect(visible(page).first()).toContainText('Max Muster');
+  });
+
+  test('empty state does not claim a topic was never covered, and clearing restores everyone', async ({ page }) => {
+    await page.goto('/speakers?q=cobol');
+    await expect(page.getByRole('heading', { name: 'No speakers match “cobol”.' })).toBeVisible();
+    await expect(page.getByText(/a topic can still have come up at a meetup/)).toBeVisible();
+    await expect(page.getByRole('link', { name: 'search past events' })).toHaveAttribute('href', '/events?tab=past&q=cobol');
+    await page.getByRole('button', { name: 'Clear search' }).click();
+    await expect(page.locator('[data-count]')).toHaveText(/^\d+ speakers$/);
+    await expect(page).toHaveURL(/\/speakers$/);
+  });
+
+  test('topic filter from real talk tags, with back and forward', async ({ page }) => {
+    await page.goto('/speakers');
+    await page.getByRole('link', { name: /^Testing \d+$/ }).click();
+    await expect(page).toHaveURL(/topic=Testing/);
+    await expect(page.getByRole('link', { name: /^Testing \d+$/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(visible(page).filter({ hasText: 'Jonas Test' })).toHaveCount(1);
+    await expect(visible(page).filter({ hasText: 'Max Muster' })).toHaveCount(0);
+    await page.goBack();
+    await expect(page.locator('[data-count]')).toHaveText(/^\d+ speakers$/);
+    await page.goForward();
+    await expect(visible(page).filter({ hasText: 'Max Muster' })).toHaveCount(0);
+  });
+
+  test('profiles list each talk with description, format, topics and a link to the talk on its event', async ({ page }) => {
+    await page.goto('/speakers/mia-entwurf');
+    const talk = page.locator('article', { hasText: 'Signals without the hype' });
+    await expect(talk).toContainText('Talk');
+    await expect(talk.getByRole('link', { name: 'Signals', exact: true })).toHaveAttribute('href', '/speakers?topic=Signals');
+    const ev = talk.getByRole('link', { name: 'Signals, streams and the state of state' });
+    await expect(ev).toHaveAttribute('href', /^\/events\/2026-09-signals-streams#talk-/);
+    await ev.click();
+    await expect(page.locator('li[id^="talk-"]:target, li[id^="talk-"]').first()).toBeVisible();
+  });
+
+  test('an old speaker URL redirects permanently to the current one', async ({ request }) => {
+    const res = await request.get('/speakers/Mia_Entwurf', { maxRedirects: 0 });
+    expect(res.status()).toBe(301);
+    expect(res.headers().location).toBe('/speakers/mia-entwurf');
+  });
+
+  test('event search still finds talks by speaker name, ignoring accents', async ({ page }) => {
+    await page.goto('/events?tab=past&q=noah%20probe');
+    await expect(page.locator('[data-panel="past"] [data-hay]:visible')).toHaveCount(1);
+    await page.goto('/events?tab=past&q=entwurf');
+    await expect(page.locator('[data-panel="past"] [data-hay]:visible').first()).toContainText('Signals');
+  });
+});

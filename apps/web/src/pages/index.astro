@@ -1,5 +1,5 @@
 ---
-import { eventHref, monthYear, nextMeetup, pastEvents } from '@zurichjs/events';
+import { eventHref, monthYear, nextMeetup, pastEvents, eventTalks, talkAnchor } from '@zurichjs/events';
 import { localBusinessSchema, organizationSchema, websiteSchema } from '@zurichjs/seo';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
@@ -27,11 +27,17 @@ const LIKE = [
   },
 ];
 
+// The latest past talks, each linking straight to the talk on its event page.
 const talks: TalkRowData[] = [];
 outer: for (const ev of pastEvents(events, BUILD_TIME)) {
-  const list = ev.recap?.talks.length ? ev.recap.talks : ev.agenda.flatMap((a) => (a.talk ? [{ title: a.talk.title, speakerIds: a.talk.speakerIds, format: a.talk.format === 'lightning' ? 'Lightning talk' : 'Talk' }] : []));
-  for (const t of list) {
-    talks.push({ title: t.title, speakers: t.speakerIds.map((id) => byId.get(id)).filter((s) => !!s), date: ev.startsAt ? monthYear(ev.startsAt) : '', format: t.format.split(' · ')[0] ?? 'Talk', href: eventHref(ev) });
+  for (const t of eventTalks(ev)) {
+    talks.push({
+      title: t.title,
+      speakers: t.speakerIds.map((id) => byId.get(id)).filter((s) => !!s),
+      date: ev.startsAt ? monthYear(ev.startsAt) : '',
+      format: t.format === 'lightning' ? 'Lightning talk' : t.format === 'deep-dive' ? 'Deep dive' : 'Talk',
+      href: `${eventHref(ev)}#${talkAnchor(t)}`,
+    });
     if (talks.length === 4) break outer;
   }
 }

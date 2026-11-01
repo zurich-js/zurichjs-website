@@ -125,3 +125,34 @@ export const directionsUrl = (v: { name: string; street?: string; zip?: string; 
 /** Google Maps Embed API (place mode). Only used after the visitor asks for the map. */
 export const mapEmbedUrl = (v: { name: string; street?: string; zip?: string; city: string }, key: string) =>
   `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${encodeURIComponent([v.name, venueAddress(v)].filter(Boolean).join(', '))}`;
+
+/** Lowercase, no accents, single spaces: "  Nicolò  BABEL " → "nicolo babel". */
+export const normalizeSearch = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+/** Everything a speaker search should find: name, profile text, talk titles, descriptions and topics. */
+export const speakerSearchText = (s: {
+  name: string;
+  role: string;
+  company?: string;
+  tagline: string;
+  bio: string;
+  topics: string[];
+  talks: { title: string; description?: string; tags: string[] }[];
+}) => normalizeSearch([s.name, s.role, s.company, s.tagline, s.bio, ...s.topics, ...s.talks.flatMap((t) => [t.title, t.description, ...t.tags])].filter(Boolean).join(' '));
+
+/** Topics people actually spoke about (talk tags), with counts, most common first, then A–Z. */
+export function speakerTopics(speakers: { talks: { tags: string[] }[] }[], min = 2): { topic: string; count: number }[] {
+  const counts = new Map<string, { topic: string; count: number }>();
+  for (const s of speakers) {
+    const seen = new Set<string>();
+    for (const t of s.talks.flatMap((x) => x.tags)) {
+      const k = normalizeSearch(t);
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      const c = counts.get(k) ?? { topic: t.trim(), count: 0 };
+      c.count++;
+      counts.set(k, c);
+    }
+  }
+  return [...counts.values()].filter((c) => c.count >= min).sort((a, b) => b.count - a.count || a.topic.localeCompare(b.topic));
+}

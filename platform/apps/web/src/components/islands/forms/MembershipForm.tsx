@@ -4,6 +4,7 @@ import { cx } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Check } from '@zurichjs/design/islands/Check';
 
 type Tier = 'basic' | 'supporter';
 type Cycle = 'monthly' | 'quarterly' | 'yearly';
@@ -114,7 +115,7 @@ export default function MembershipForm() {
                   {x.benefits.map((b) => (
                     <li key={b} class="flex gap-2.5 items-start text-[17px] leading-[1.45]">
                       <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white text-[12px] font-bold flex items-center justify-center">
-                        ✓
+                        <Check class="w-3 h-3" />
                       </span>
                       {b}
                     </li>

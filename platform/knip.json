@@ -7,8 +7,8 @@
       "entry": ["tools/**/*.mjs", "e2e/**/*.ts"]
     },
     "apps/web": {
-      "entry": ["src/pages/**/*.{astro,ts}", "test/**/*.ts"],
-      "project": ["src/**/*.{astro,ts,tsx,css}"]
+      "entry": ["src/pages/**/*.{astro,ts}", "netlify/functions/*.mts", "test/**/*.ts"],
+      "project": ["src/**/*.{astro,ts,tsx,css}", "netlify/**/*.mts"]
     },
     "packages/config": {
       "ignoreDependencies": ["preact"]

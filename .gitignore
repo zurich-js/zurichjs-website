@@ -50,5 +50,7 @@ next-env.d.ts
 /platform/node_modules
 /platform/test-results
 /platform/playwright-report
+/platform/.lighthouseci
+/platform/seo-report.json
 # Vendored package with a security fix (platform/vendor/deepmerge/README.md) ships its dist.
 !/platform/vendor/**/dist

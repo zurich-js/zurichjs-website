@@ -218,3 +218,43 @@ Plain-language status after each phase. Newest at the bottom.
 - `sanity deploy`, and run the additive migration on `production`.
 
 **Next:** Phase 4 (CI and Netlify).
+
+## Phase 4: CI and Netlify (2026-11-01)
+
+**Done**
+
+- **`V2 platform` workflow (`.github/workflows/v2.yml`), three jobs:**
+  - **checks:** lint, format, knip, types, unit tests, audit
+  - **site:** build, e2e and accessibility, visual regression, SEO parity, Lighthouse, with reports uploaded
+  - **reference:** the `v2/` reference site
+- **`Claude review` workflow:** pinned to a commit SHA, and skipped with a notice when there is no key.
+- **`platform/apps/web/netlify.toml`:**
+  - the build, with production required to read Sanity
+  - the scheduled function
+  - redirects from `/api/og/*` to the static images
+  - cache headers and security headers
+- **Rebuilds:**
+  - `/api/rebuild`, a signed Sanity webhook that records a pending build in Netlify Blobs
+  - `scheduled-rebuild`, every 2 minutes, with a debounced build hook and builds at doors and doors + 48 h
+  - `/state-changes.json`
+- **Removed:** no nightly rebuild (owner).
+- **Runbook:** [RUNBOOK.md](./RUNBOOK.md) covers setup, how rebuilds happen, rolling back, failures, CI and switchover. The Studio's `WEBHOOKS.md` was updated to match.
+- **Visual baselines made independent of installed fonts:** an SVG check icon, a plain hyphen, and Figtree for the gallery's code labels.
+
+**Verified how**
+
+- **Unit tests:** 109, including 9 new rebuild tests: debounce, doors, the signature with the `@sanity/webhook` scheme, webhook responses, and the scheduled tick with a failing hook.
+- **Playwright:** 79 tests. 4 visual baselines were refreshed: About and the gallery, at 390 and 1440 px.
+- **SEO parity gate:** OK.
+- **Lighthouse CI**, run locally with `lighthouserc.json`: every assertion passes.
+- **Netlify tooling, run locally:**
+  - `@netlify/config` resolves `netlify.toml` with base `platform/apps/web`
+  - `zip-it-and-ship-it` bundles `scheduled-rebuild` with schedule `*/2 * * * *`
+- **`v2/`:** typecheck and build pass.
+- **The workflows themselves run on this PR.**
+
+**Open (owner)**
+
+- Steps 1–7 of the RUNBOOK setup: the Netlify site or sites, environment variables, build hook, Sanity webhook or webhooks, the Twint QR, and `ANTHROPIC_API_KEY`.
+
+**Next:** Phase 5 (agentic workflow).

@@ -25,6 +25,7 @@ const PAGES: Record<string, { title: string; sub: string }> = {
   home: { title: 'JavaScript and TypeScript meetups in Zurich', sub: 'Free monthly talks, food and conversation. Run by volunteers.' },
   events: { title: 'Upcoming and past meetups', sub: 'Every ZurichJS evening, with its talks and speakers.' },
   speakers: { title: 'Speakers', sub: 'Everyone who has spoken at ZurichJS, with their talks.' },
+  cfv: { title: 'Volunteer with ZurichJS', sub: 'On the night, with photos, or with the website.' },
   cfp: { title: 'Give a talk at ZurichJS', sub: 'It doesn’t have to be about JavaScript. First-time speakers get help.' },
   contact: { title: 'Contact the organisers', sub: 'Questions, ideas, partnerships: hello@zurichjs.com' },
   partners: { title: 'Host or support a meetup', sub: 'Offer a room, food or a contribution to the community.' },

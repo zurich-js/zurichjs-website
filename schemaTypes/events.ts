@@ -16,7 +16,7 @@ export default defineType({
     {name: 'venue', title: 'Venue'},
     {name: 'programme', title: 'Programme'},
     {name: 'practical', title: 'Good to know'},
-    {name: 'tickets', title: 'Meetup and tickets'},
+    {name: 'tickets', title: 'Meetup'},
     {name: 'after', title: 'After the event'},
   ],
   fields: [
@@ -137,15 +137,26 @@ export default defineType({
     }),
 
     defineField({name: 'meetupUrl', title: 'Meetup event link', type: 'url', group: 'tickets', description: 'RSVPs happen on Meetup. The site links here; it does not register anyone.'}),
-    defineField({name: 'isProMeetup', title: 'Pro meetup (paid tickets on the site)', type: 'boolean', group: 'tickets', initialValue: false}),
+    // Pro meetups and paid tickets are gone: every meetup is free and RSVPs on Meetup.
+    // These fields stay declared, read-only and hidden when empty, so values on
+    // existing documents are kept and visible. Nothing is deleted.
+    defineField({
+      name: 'isProMeetup',
+      title: 'Pro meetup (deprecated)',
+      type: 'boolean',
+      group: 'tickets',
+      readOnly: true,
+      hidden: ({value}) => !value,
+      description: 'Not used by the site. Pro meetups no longer exist.',
+    }),
     defineField({
       name: 'stripePriceId',
-      title: 'Stripe price ID',
+      title: 'Stripe price ID (deprecated)',
       type: 'string',
       group: 'tickets',
-      description: 'The ticket price for pro meetups (price_…). The current site already reads this field.',
-      hidden: ({document}) => !document?.isProMeetup,
-      validation: (r) => r.custom((v, ctx) => ((ctx.document as EventDraft | undefined)?.isProMeetup && !v ? 'Pro meetups need a Stripe price.' : true)),
+      readOnly: true,
+      hidden: ({value}) => !value,
+      description: 'Not used by the site. Paid tickets were removed.',
     }),
     defineField({
       name: 'ticketSaleUrl',
@@ -154,7 +165,7 @@ export default defineType({
       group: 'tickets',
       readOnly: true,
       hidden: ({value}) => !value,
-      description: 'Not used by the site. Kept so existing values are not lost; use the Stripe price ID instead.',
+      description: 'Not used by the site. Kept so existing values are not lost.',
     }),
 
     defineField({name: 'image', title: 'Main image', type: 'image', group: 'after', options: {hotspot: true}, fields: [defineField({name: 'alt', title: 'Alt text', type: 'string'})]}),

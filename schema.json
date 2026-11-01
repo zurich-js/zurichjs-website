@@ -846,6 +846,13 @@
         },
         "optional": true
       },
+      "moreOf": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
       "improvements": {
         "type": "objectAttribute",
         "value": {
@@ -854,6 +861,20 @@
         "optional": true
       },
       "futureTopics": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "arrivalIssues": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
+      "describeToFriend": {
         "type": "objectAttribute",
         "value": {
           "type": "string"

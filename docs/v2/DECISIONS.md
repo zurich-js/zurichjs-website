@@ -184,6 +184,7 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - With base `platform/apps/web`, every path in `netlify.toml` resolves correctly, including the 11 redirects Astro writes to `dist/_redirects`.
 - **No HSTS `preload` header.** Production does not send one, Netlify already sends HSTS on HTTPS, and preload is hard to undo. The other security headers match production's `next.config.mjs`.
 - **New redirect:** `/api/og/cfv` (referenced in production but missing) → a new `/og/cfv.png` card, which `/cfv` now uses.
+- **Node 22.23.4 for the platform** (`platform/.nvmrc`, `engines`, `NODE_VERSION` in `netlify.toml`). Astro 7.4.4 requires at least 22.23.4. The repository root's `.nvmrc` (22.23.1) stays as it is for the production app. A test keeps `platform/.nvmrc` at or above Astro's minimum and equal to `netlify.toml`. The first CI run on the Phase 4 PR found this.
 - **CI runs on `ubuntu-latest` with Playwright's own Chromium**, the same Chromium build and Ubuntu 24.04 the baselines were made on. Text that system fonts would render was removed, so the screenshots do not depend on installed fonts:
   - Figtree has no ✓ and no non-breaking hyphen; there is now an SVG `Check` icon and a plain hyphen.
   - The gallery's `<code>` labels use Figtree instead of a system monospace.

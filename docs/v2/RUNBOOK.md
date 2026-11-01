@@ -9,6 +9,8 @@ How the V2 site (`platform/`) is built, deployed and rebuilt, and what the owner
    - **Package directory:** empty
    - **Build command, publish directory and functions:** come from `platform/apps/web/netlify.toml`. Leave them empty in the UI.
 
+   Node 22.23.4 is pinned in `netlify.toml` and in `platform/.nvmrc`, because Astro 7.4 requires at least 22.23.4.
+
    pnpm installs the whole `platform` workspace from the base directory. Do **not** use base `platform` with a package directory: Netlify then resolves `publish` and `functions` against `platform/` (checked with `@netlify/config`).
 
 2. **Environment variables.** Set these in Site configuration › Environment variables.

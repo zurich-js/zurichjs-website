@@ -1,11 +1,11 @@
 /**
  * Form intake (Netlify Function). Validates with the shared schema, then hands
  * the form to @zurichjs/integrations, which stores and sends it (Sanity, Resend,
- * Slack, Stripe) or logs a stub line when a secret is missing.
+ * Slack) or logs a stub line when a secret is missing.
  *
  * Contract (same as v2/src/pages/api/forms/[kind].ts):
  *   POST /api/forms/<kind>  JSON body
- *   200 { ok: true, id, url? }          url: Stripe Checkout for donations, null when Stripe is not configured
+ *   200 { ok: true, id }
  *   400 { ok: false, error, fields? }   invalid JSON or missing/invalid fields
  *   404 { ok: false, error }            unknown form kind
  *   405 { ok: false, error }            anything but POST (Allow: POST)
@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ params, request }) => {
   if (!v.ok) return json(400, { ok: false, error: v.error, fields: v.fields });
 
   try {
-    const r = await forwardForm(kind, v.data, { env: process.env, origin: new URL(request.url).origin });
+    const r = await forwardForm(kind, v.data, { env: process.env });
     if (!r.ok) return json(400, r);
     return json(200, { ok: true, id: r.id, ...('url' in r ? { url: r.url } : {}) });
   } catch (cause) {

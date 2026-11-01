@@ -57,7 +57,7 @@ Changing any of these needs the owner's approval.
 
 ## Surfaces
 
-`Surface` (tones: grey, soft, yellow, white, black, ink, danger) groups **related** content: an event's practical details, a donation option, a speaker's links. Do not wrap a single paragraph or a heading in a Surface. If there is nothing to group, use space.
+`Surface` (tones: grey, soft, yellow, white, black, ink, danger) groups **related** content: an event's practical details, a way to support, a speaker's links. Do not wrap a single paragraph or a heading in a Surface. If there is nothing to group, use space.
 
 ## Type
 

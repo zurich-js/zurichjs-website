@@ -14,13 +14,13 @@ describe('form schemas (V2 payload contract)', () => {
   it('rejects filled honeypots', () => {
     expect(validate('partners', { org: 'X', name: 'Ada', email: 'a@b.ch', way: 'host', [HONEYPOT]: 'spam' }).ok).toBe(false);
   });
-  it('coerces numbers for ratings and donations', () => {
+  it('coerces numbers for ratings', () => {
     expect(validate('rating', { eventId: 'e', target: 't1', stars: '4' }).ok).toBe(true);
     expect(validate('rating', { eventId: 'e', target: 't1', stars: 6 }).ok).toBe(false);
-    expect(validate('donate', { amountChf: '20', method: 'twint' }).ok).toBe(true);
   });
   it('does not accept the de-scoped workshop kinds', () => {
     expect(isFormKind('checkout')).toBe(false);
+    expect(isFormKind('donate')).toBe(false);
     expect(isFormKind('waitlist')).toBe(false);
     expect(isFormKind('feedback')).toBe(true);
   });

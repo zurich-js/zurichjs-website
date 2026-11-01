@@ -3,8 +3,8 @@
  * required fields and messages mirror `schemas` in index.ts; the server
  * validates again with zod (tested to agree in test/forms.test.ts).
  */
-export type FormKind = 'cfp' | 'partners' | 'contact' | 'feedback' | 'rating' | 'donate';
-export type FormResult = { ok: true; id?: string; url?: string | null } | { ok: false; error: string; fields?: Record<string, string> };
+export type FormKind = 'cfp' | 'partners' | 'contact' | 'feedback' | 'rating';
+export type FormResult = { ok: true; id?: string } | { ok: false; error: string; fields?: Record<string, string> };
 
 /** Hidden field bots fill in. Humans never see it, so any value means spam. */
 export const HONEYPOT = 'website_url';
@@ -16,7 +16,6 @@ export const REQUIRED: Record<FormKind, Record<string, string>> = {
   contact: { name: 'Enter your name.', email: EMAIL, topic: 'Choose a topic.', message: 'Write a message.' },
   feedback: { eventId: 'Missing event.', overall: 'Choose a score for the evening.' },
   rating: { eventId: 'Missing event.', target: 'Missing talk.', stars: 'Choose a rating from 1 to 5.' },
-  donate: { amountChf: 'Choose an amount.', method: 'Choose card or TWINT.' },
 };
 
 const isEmail = (v: unknown) => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());

@@ -127,3 +127,24 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - It renders from fixtures, so it is deterministic and shows every event state whatever is in Sanity.
 - **Visual baselines** are committed under `platform/e2e/__screenshots__` (8 pages × 2 widths, about 9 MB).
   - They come from Playwright 1.63 Chromium on Linux. CI must run them in the same environment; Phase 4 uses the Playwright container image.
+
+## No payments: pro meetups and Stripe removed (owner, 2026-11-01)
+
+- **Owner decision:** "No longer need the concept of pro meetups … get rid of all stripe stuff." Every meetup is free and RSVPs on Meetup.
+- **Removed from the V2 platform:**
+  - **Ticketing:** `stripeTicketing` and the `stripePriceId` field on `Event`, the ticket section on event pages, and the "Ticketed" labels. The event JSON-LD offer is now always free (`price: 0`, `CHF`, Meetup URL).
+  - **Functions:** `stripe/checkout-sessions`, `stripe/get-price` and `stripe/validate-coupon`.
+  - **Donation checkout:** the `donate` form kind and `donationCheckout`.
+  - **Dependency:** the `stripe` package.
+  - **Pages:** `/success` and `/checkout/success`.
+  - **Copy:** every mention of pro meetups on the landing pages, `/ai-context` and `llms.txt`.
+- **`/donate` becomes "Support ZurichJS" (owner choice).** The URL stays, as do the 301s from `/buy-us-a-coffee` and `/support`, so search ranking is kept.
+  - The page has no payment form. It lists becoming a member, hosting or sponsoring, speaking and volunteering.
+  - One-off contributions go by email to hello@zurichjs.com.
+  - The footer link reads "Support us". The `/today` card links to membership instead of "Donate with Twint" and the removed T-shirt shop.
+- **Old Stripe return URLs redirect with a 301:** `/success` → `/donate` and `/checkout/success` → `/events`. Both were noindex. The SEO parity gate treats them as redirects.
+- **Sanity:** no fields or documents are deleted.
+  - The Studio keeps `isProMeetup`, `stripePriceId` and `ticketSaleUrl` declared, read-only and hidden when empty, so existing values stay visible.
+  - Readiness no longer asks for a Stripe price.
+- **The Sane seam is unchanged.** `TicketingProvider` keeps its `buy` action kind, and `chainTicketing` stays for when Sane sells tickets.
+- **The production Next app at the repository root is untouched.** It is replaced at switchover.

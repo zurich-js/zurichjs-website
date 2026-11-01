@@ -1,6 +1,5 @@
 import { createClient, type SanityClient } from '@sanity/client';
 import type { FormData, FormKind, FormResult } from '@zurichjs/forms';
-import Stripe from 'stripe';
 
 /**
  * Where submitted forms go. Every channel reads its secret from the
@@ -111,30 +110,10 @@ const summary = (data: Record<string, unknown>) =>
     .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`)
     .join('\n');
 
-/* ------------------------------------------------------------------ payments */
-
-export async function donationCheckout(env: Env, amountChf: number, method: 'card' | 'twint', origin: string, log: Log = console.log): Promise<string | null> {
-  if (!env.STRIPE_SECRET_KEY) {
-    log(`[forms] STRIPE_SECRET_KEY missing; no checkout session for CHF ${amountChf} (${method})`);
-    return null;
-  }
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY);
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    payment_method_types: [method],
-    line_items: [{ quantity: 1, price_data: { currency: 'chf', unit_amount: Math.round(amountChf * 100), product_data: { name: 'Donation to ZurichJS' } } }],
-    success_url: `${origin}/success?type=donation`,
-    cancel_url: `${origin}/donate`,
-    metadata: { source: 'zurichjs-website', kind: 'donation' },
-  });
-  return session.url;
-}
-
 /* ------------------------------------------------------------------ dispatcher */
 
 export interface ForwardDeps {
   env: Env;
-  origin: string;
   sanity?: SanityClient | null;
   proposals?: TalkProposalSink;
   log?: Log;
@@ -143,7 +122,7 @@ export interface ForwardDeps {
 
 /** Sends a validated form to its destinations. Throws only when a configured channel fails. */
 export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>, deps: ForwardDeps): Promise<FormResult> {
-  const { env, origin, log = console.log, now = () => new Date() } = deps;
+  const { env, log = console.log, now = () => new Date() } = deps;
   const sanity = deps.sanity === undefined ? sanityWriteClient(env) : deps.sanity;
   const d = data as Record<string, unknown>;
   const id = `${kind}_${now().getTime().toString(36)}`;
@@ -210,10 +189,6 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         submittedAt: now().toISOString(),
       });
       return { ok: true, id: doc._id };
-    }
-    case 'donate': {
-      const url = await donationCheckout(env, Number(d.amountChf), d.method as 'card' | 'twint', origin, log);
-      return { ok: true, id, url };
     }
     default:
       return { ok: false, error: 'Unknown form' };

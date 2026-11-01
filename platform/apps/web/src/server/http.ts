@@ -49,11 +49,5 @@ export function text(value: unknown, max: number): string | undefined | false {
 
 export const isEmail = (v: string) => v.length <= 254 && /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(v);
 
-/** Same patterns as production src/lib/validation/input.ts. */
-export const STRIPE_ID = /^[A-Za-z0-9_]{1,120}$/;
-export const COUPON_CODE = /^[A-Za-z0-9_-]{1,80}$/;
-export const SLUG = /^[A-Za-z0-9_:/.-]{1,160}$/;
-export const CHECKOUT_SESSION_ID = /^cs_[A-Za-z0-9_]{1,200}$/;
-
 /** True when a bot filled the hidden honeypot field (`website_url`, see @zurichjs/forms). */
 export const isBot = (body: Record<string, unknown>) => typeof body.website_url === 'string' && body.website_url.trim() !== '';

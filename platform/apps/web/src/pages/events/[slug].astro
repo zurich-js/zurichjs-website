@@ -12,7 +12,6 @@ import EventActions from '~/components/islands/event/EventActions';
 import EventBanner from '~/components/islands/event/EventBanner';
 import EventSummary from '~/components/islands/event/EventSummary';
 import Programme from '~/components/islands/event/Programme';
-import ProMeetupTickets from '~/components/islands/tickets/ProMeetupTickets';
 import Button from '@zurichjs/design/components/Button.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
@@ -135,10 +134,6 @@ const image = ev.photos[0]?.src ?? `/og/event-${ev.slug}.png`;
             <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
             <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
           </section>
-
-          {ev.stripePriceId && (state === 'open' || state === 'notopen') && (
-            <ProMeetupTickets client:visible eventId={ev.id} slug={ev.slug} title={ev.title} stripePriceId={ev.stripePriceId} />
-          )}
 
           {ev.agenda.length > 0 && <Programme client:visible ev={ev} initial={state} speakers={progSpeakers} />}
 

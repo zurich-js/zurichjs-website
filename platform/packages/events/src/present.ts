@@ -41,11 +41,10 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
   const action = opts.ticketing?.actionFor(ev, state);
   const ctaFrom = (fallback: EventPresentation['cta'], fallbackNote: string) =>
     action ? { cta: { kind: action.kind, label: action.label, href: action.href, external: action.external }, ctaNote: action.note } : { cta: fallback, ctaNote: fallbackNote };
-  const paid = !!ev.stripePriceId;
 
   const base: EventPresentation = {
     state,
-    stateLabel: paid ? 'Tickets on sale' : 'RSVP open',
+    stateLabel: 'RSVP open',
     dateLineShort: dateKnown ? dateTime(ev.startsAt!) : tbcText,
     whenShort: dateKnown ? dateTimeRange(ev.startsAt!, ev.endsAt) : tbcText,
     crumb: dateKnown ? dateShort(ev.startsAt!) : (ev.dateText ?? 'Upcoming'),
@@ -54,7 +53,7 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
     venueSub,
     dateKnown,
     ...ctaFrom({ kind: 'rsvp', label: 'RSVP on Meetup', href: ev.meetupUrl, external: true }, 'Opens Meetup in a new tab. Your RSVP is confirmed there, not on this site.'),
-    pills: [{ text: TYPE_LABEL }, { text: paid ? 'Tickets on sale' : 'RSVP open', yellow: true }],
+    pills: [{ text: TYPE_LABEL }, { text: 'RSVP open', yellow: true }],
   };
 
   switch (state) {

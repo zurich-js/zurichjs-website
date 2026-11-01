@@ -12,8 +12,6 @@ describe('mapEvent (production document shape)', () => {
     address: 'Hardstrasse 201, 8005 Zürich',
     description: 'Two talks.',
     meetupUrl: 'https://www.meetup.com/zurich-js/events/1/',
-    isProMeetup: false,
-    stripePriceId: 'price_should_be_ignored',
     image: 'https://cdn.sanity.io/images/x/production/a.jpg',
     talks: [{ id: 't1', title: 'Typed forms', type: 'talk', durationMinutes: 25, speakerIds: ['ada', null] }],
   };
@@ -31,10 +29,6 @@ describe('mapEvent (production document shape)', () => {
   });
   it('uses the single event image as the first photo', () => {
     expect(ev.photos[0]?.src).toContain('cdn.sanity.io');
-  });
-  it('only keeps a Stripe price for pro meetups', () => {
-    expect(ev.stripePriceId).toBeUndefined();
-    expect(mapEvent({ ...raw, isProMeetup: true }).stripePriceId).toBe('price_should_be_ignored');
   });
 });
 

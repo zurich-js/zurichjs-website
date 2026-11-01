@@ -15,8 +15,7 @@ const upcoming = p.state !== 'past';
 const parts = ev.startsAt ? dateParts(ev.startsAt) : { mon: ev.dateText?.slice(0, 3) ?? 'TBC', day: '?', year: ev.dateText?.slice(-4) ?? '' };
 const status = upcoming ? p.stateLabel : ev.recap ? 'Recap' : 'Past';
 const n = talkCount(ev);
-const price = ev.stripePriceId ? 'Ticketed' : 'Free';
-const meta = upcoming ? `${n} talk${n === 1 ? '' : 's'} · ${p.venueShort} · ${price}` : `${n} talk${n === 1 ? '' : 's'}${ev.photos.length ? ' · Photos' : ''}`;
+const meta = upcoming ? `${n} talk${n === 1 ? '' : 's'} · ${p.venueShort} · Free` : `${n} talk${n === 1 ? '' : 's'}${ev.photos.length ? ' · Photos' : ''}`;
 ---
 
 <a

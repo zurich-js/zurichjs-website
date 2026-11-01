@@ -16,8 +16,17 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL: `http://localhost:${PORT}`,
-    // Local runs in sandboxes may have an HTTP proxy configured; never send localhost through it.
-    launchOptions: { args: ['--no-proxy-server'] },
+    launchOptions: {
+      args: [
+        // Local runs in sandboxes may have an HTTP proxy configured; never send localhost through it.
+        '--no-proxy-server',
+        // Render text the same on every Linux machine, so visual baselines made in one place match CI:
+        // greyscale antialiasing (no LCD subpixel colour), no hinting, sRGB colours.
+        '--disable-lcd-text',
+        '--font-render-hinting=none',
+        '--force-color-profile=srgb',
+      ],
+    },
     trace: 'retain-on-failure',
     video: process.env.E2E_VIDEO ? 'on' : 'off',
   },

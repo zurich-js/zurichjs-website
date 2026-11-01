@@ -33,7 +33,7 @@ Status values used below:
    - the speaker fields `company`, `location`, `interests`
    - the `talkSubmission.status` value `under_review` (`src/sanity/queries.ts:1043`). The schema lists `pending | approved | rejected | scheduled | completed`.
 
-   Phase 3 adds the missing declarations first, so that existing data shows up in the Studio. These additions only.
+   Phase 3 adds the missing declarations first, so that existing data shows up in the Studio. These additions only. **Done** on the Studio branch `v2/phase-3-sanity`.
 
 4. **Date and venue shape.**
    - V2 uses `startsAt`/`endsAt` and a structured `venue{}`. The current schema has one `datetime` and free-text `location` and `address`.
@@ -138,3 +138,12 @@ Status values used below:
 | `rating`               | eventId, target, stars      | `feedback`                            |
 | `waitlist`, `checkout` | (workshop only)             | **de-scoped**                         |
 | `donate`               | (none)                      | **removed** with Stripe (owner)       |
+
+## Status (Phase 3, 2026-11-01)
+
+- **Implemented** on the Studio branch `v2/phase-3-sanity`:
+  - every additive field and type above
+  - the deprecated ticket fields (kept, read-only)
+  - the `siteSettings` Twint QR fields for `/donate`
+- **Not run:** the migration and seed. They are owner steps, listed in the Studio PR.
+- **The website reads types generated from that schema** (`platform/packages/content/src/sanity.types.ts`). A mapper that reads a field the query does not return fails `tsc`.

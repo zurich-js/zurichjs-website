@@ -1,12 +1,20 @@
 import type { APIRoute } from 'astro';
+import { PREVIEW } from '~/lib/content';
 
 /**
  * Same policy as production public/robots.txt: everything public is crawlable,
  * AI crawlers are explicitly welcome, and the sitemap is the complete one.
  */
+const PREVIEW_ROBOTS = `# Draft preview of zurichjs.com: not for search engines.
+User-agent: *
+Disallow: /
+`;
+
 export const GET: APIRoute = () =>
   new Response(
-    `# Robots.txt for ZurichJS
+    PREVIEW
+      ? PREVIEW_ROBOTS
+      : `# Robots.txt for ZurichJS
 User-agent: *
 Allow: /
 Disallow: /api/

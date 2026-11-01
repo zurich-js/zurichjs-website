@@ -9,5 +9,5 @@
     "react/no-unknown-property": "off",
     "jsx-a11y/prefer-tag-over-role": "off"
   },
-  "ignorePatterns": ["**/dist/**", "**/.astro/**", "**/.netlify/**", "**/node_modules/**", "vendor/**"]
+  "ignorePatterns": ["**/dist/**", "**/.astro/**", "**/.netlify/**", "**/node_modules/**", "vendor/**", "packages/content/src/sanity.types.ts"]
 }

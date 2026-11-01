@@ -45,5 +45,8 @@ export const PARTNERS_QUERY = defineQuery(`
 export const SINGLETONS_QUERY = defineQuery(`{
   "rating": *[_type == "meetupRating"][0]{ score, scale, count, url, source, checkedAt },
   "conference": *[_type == "conference"][0]{ state, headline, body, cta, cfp, url },
-  "settings": *[_type == "siteSettings"][0]
+  "support": *[_type == "siteSettings"][0]{
+    "twintQr": twintQr{ alt, "src": asset->url, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },
+    twintNote
+  }
 }`);

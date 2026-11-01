@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { loadContent, mapEvent, mapSpeaker, parseAddress, resetContentCache, talkFormat } from '../src';
+import { isPreview, loadContent, mapEvent, mapRating, mapSpeaker, mapSupport, parseAddress, perspective, resetContentCache, talkFormat, type RawEvent } from '../src';
 
 describe('mapEvent (production document shape)', () => {
-  const raw = {
+  const raw: RawEvent = {
     _id: 'abc',
     _updatedAt: '2026-10-01T10:00:00Z',
     id: 'zurichjs-meetup-november-2026',
@@ -78,6 +78,44 @@ describe('loadContent', () => {
     console.warn = () => {};
     expect((await loadContent({ CONTEXT: 'deploy-preview' }, down)).source).toBe('sample');
     console.warn = warn;
+    resetContentCache();
+  });
+});
+
+describe('draft preview (SANITY_PERSPECTIVE)', () => {
+  it('reads published content unless drafts are asked for', () => {
+    expect(perspective({})).toBe('published');
+    expect(perspective({ SANITY_PERSPECTIVE: 'published' })).toBe('published');
+    expect(isPreview({})).toBe(false);
+  });
+  it('reads drafts with a token and marks the build as a preview', () => {
+    expect(perspective({ SANITY_PERSPECTIVE: 'drafts', SANITY_READ_TOKEN: 'sk' })).toBe('drafts');
+    expect(isPreview({ SANITY_PERSPECTIVE: 'drafts' })).toBe(true);
+  });
+  it('fails the build instead of falling back when drafts have no token', async () => {
+    expect(() => perspective({ SANITY_PERSPECTIVE: 'drafts' })).toThrow('SANITY_READ_TOKEN');
+    resetContentCache();
+    await expect(loadContent({ SANITY_PERSPECTIVE: 'drafts' }, () => Promise.reject(new Error('unreachable')))).rejects.toThrow('SANITY_READ_TOKEN');
+    resetContentCache();
+  });
+});
+
+describe('singletons', () => {
+  it('drops a rating without a score (the award sentence stays)', () => {
+    expect(mapRating({ score: null, count: 3, url: 'https://meetup.com', checkedAt: '2026-10-01' })).toBeNull();
+    expect(mapRating({ score: '4.9', count: 199, url: 'https://meetup.com', checkedAt: '2026-10-01' })).toMatchObject({ score: '4.9', scale: 5, source: 'Meetup' });
+  });
+  it('shows the Twint QR only when an image was uploaded', () => {
+    expect(mapSupport(null)).toEqual({ twintQr: undefined, twintNote: undefined });
+    expect(mapSupport({ twintQr: { alt: 'Twint', src: null } })).toEqual({ twintQr: undefined, twintNote: undefined });
+    expect(mapSupport({ twintQr: { alt: '', src: 'https://cdn.sanity.io/qr.png', width: 600, height: 600 }, twintNote: 'Any amount helps.' })).toEqual({
+      twintQr: { src: 'https://cdn.sanity.io/qr.png', alt: 'Twint QR code for a contribution to ZurichJS', width: 600, height: 600 },
+      twintNote: 'Any amount helps.',
+    });
+  });
+  it('never ships a sample payment code', async () => {
+    resetContentCache();
+    expect((await loadContent({ CONTENT_SOURCE: 'sample' })).support).toEqual({});
     resetContentCache();
   });
 });

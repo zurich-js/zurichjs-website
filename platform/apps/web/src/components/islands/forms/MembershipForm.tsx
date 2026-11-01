@@ -1,8 +1,8 @@
 import { useRef, useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
-import { cx } from '~/lib/ui';
-import { Button } from '../ui/Button';
-import { ChipGroup, TextArea, TextField, isEmail } from '../ui/Field';
+import { track } from '@zurichjs/design/analytics';
+import { cx } from '@zurichjs/design/recipes';
+import { Button } from '@zurichjs/design/islands/Button';
+import { ChipGroup, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
 
 type Tier = 'basic' | 'supporter';

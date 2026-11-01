@@ -2,7 +2,8 @@
 import netlify from '@astrojs/netlify';
 import preact from '@astrojs/preact';
 import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
+import { font } from '@zurichjs/design/tokens';
 
 import { LEGACY_REDIRECTS } from './src/lib/redirects.mjs';
 
@@ -17,6 +18,17 @@ export default defineConfig({
   build: { format: 'file', inlineStylesheets: 'always' },
   integrations: [preact({ compat: true })],
   vite: { plugins: [tailwindcss()] },
+  // Figtree (variable, 300–900) self-hosted from the design package through the Astro Fonts API:
+  // generates @font-face, a metric-matched fallback and the preload link (<Font> in BaseLayout).
+  fonts: [
+    {
+      provider: fontProviders.local(),
+      name: font.family,
+      cssVariable: font.cssVariable,
+      fallbacks: [...font.fallbacks],
+      options: { variants: [{ src: [`@zurichjs/design/fonts/${font.file}`], weight: font.weights, style: 'normal', display: 'swap' }] },
+    },
+  ],
   redirects: LEGACY_REDIRECTS,
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   devToolbar: { enabled: false },

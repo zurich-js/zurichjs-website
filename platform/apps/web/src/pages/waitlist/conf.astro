@@ -1,9 +1,12 @@
 ---
-import PageOpening from '~/components/layout/PageOpening.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import WaitlistForm from '~/components/islands/forms/WaitlistForm';
-import ConferenceModule from '~/components/site/ConferenceModule.astro';
+import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { confLink } from '~/lib/analytics';
+import { confLink } from '@zurichjs/design/analytics';
+import { content } from '~/lib/content';
+
+const { conference } = await content();
 
 const WHAT = [
   ['A focused day of JavaScript', 'One day of talks in Zurich from people who build with JavaScript every day.'],
@@ -44,6 +47,6 @@ const WHAT = [
         </p>
       </section>
     </div>
-    <ConferenceModule placement="waitlist" />
+    <ConferenceModule conference={conference} placement="waitlist" />
   </div>
 </BaseLayout>

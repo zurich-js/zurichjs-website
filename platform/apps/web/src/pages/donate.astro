@@ -1,9 +1,9 @@
 ---
-import PageOpening from '~/components/layout/PageOpening.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import DonateForm from '~/components/islands/forms/DonateForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { nextMeetupHref } from '~/lib/content';
-import { isExternal } from '~/lib/ui';
+import { isExternal } from '@zurichjs/design/recipes';
 
 const nextHref = await nextMeetupHref();
 const GOES = [
@@ -47,7 +47,7 @@ const OTHER = [
             <a
               href={o.href}
               {...(isExternal(o.href) ? { target: '_blank', rel: 'noopener' } : {})}
-              class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-grey hover:bg-[#E2E2E6]"
+              class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-grey hover:bg-grey-hover"
             >
               <span class="flex flex-col gap-[3px]">
                 <span class="text-[18px] font-bold">{o.h}</span>

@@ -7,12 +7,12 @@
  */
 import { pastEvents, upcomingEvents, type Event } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
-import PageOpening from '~/components/layout/PageOpening.astro';
-import EventRow from '~/components/site/EventRow.astro';
-import Button from '~/components/ui/Button.astro';
-import Surface from '~/components/ui/Surface.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import EventRow from '@zurichjs/design/components/EventRow.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { BUILD_TIME, SITE, content } from '~/lib/content';
+import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
 
 const { events, speakers } = await content();
 const byId = new Map(speakers.map((s) => [s.id, s.name]));
@@ -80,7 +80,7 @@ const TABS = [
         <div role="tabpanel" id={`panel-${t.k}`} aria-labelledby={`tab-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [[hidden]]:hidden">
           {t.list.map((e) => (
             <div data-hay={hay(e)}>
-              <EventRow ev={e} />
+              <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} />
             </div>
           ))}
           <Surface class="p-7 flex flex-col gap-3 [[hidden]]:hidden" data-empty hidden={t.list.length > 0}>

@@ -1,8 +1,8 @@
 import { presentEvent, type Event, type EventState } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
-import { track } from '~/lib/analytics';
+import { track } from '@zurichjs/design/analytics';
 import { ticketing } from '~/lib/ticketing';
-import { Button } from '../ui/Button';
+import { Button } from '@zurichjs/design/islands/Button';
 import { useEventState } from '../useEventState';
 
 /** Sticky summary panel: when, where, cost, status and the action for the current state. */

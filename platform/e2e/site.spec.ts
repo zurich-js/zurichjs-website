@@ -42,7 +42,8 @@ for (const route of ROUTES) {
     await page.evaluate(() => document.fonts.ready);
     const info = await page.evaluate(() => ({
       font: getComputedStyle(document.body).fontFamily,
-      loaded: [...document.fonts].some((f) => f.family.replace(/"/g, '') === 'Figtree' && f.status === 'loaded'),
+      // The Astro Fonts API names the face "Figtree-<hash>" (plus a metric-matched fallback face).
+      loaded: [...document.fonts].some((f) => /^Figtree(-[0-9a-f]+)?$/.test(f.family.replace(/"/g, '')) && f.status === 'loaded'),
       h1: document.querySelectorAll('h1').length,
       overflow: document.documentElement.scrollWidth > window.innerWidth,
     }));

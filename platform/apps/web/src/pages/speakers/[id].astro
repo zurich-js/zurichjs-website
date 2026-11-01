@@ -2,11 +2,11 @@
 /** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
 import { eventHref, monthYear, presentEvent, resolveState, upcomingEvents, type Speaker } from '@zurichjs/events';
 import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
-import PageOpening from '~/components/layout/PageOpening.astro';
-import Button from '~/components/ui/Button.astro';
-import Monogram from '~/components/ui/Monogram.astro';
-import Photo from '~/components/ui/Photo.astro';
-import Surface from '~/components/ui/Surface.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Monogram from '@zurichjs/design/components/Monogram.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, content, ticketing } from '~/lib/content';
 import { clip } from '~/lib/text';

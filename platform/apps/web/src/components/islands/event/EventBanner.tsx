@@ -1,5 +1,5 @@
 import { presentEvent, type Event, type EventState } from '@zurichjs/events';
-import { cx } from '~/lib/ui';
+import { cx } from '@zurichjs/design/recipes';
 import { useEventState } from '../useEventState';
 
 const TONE = { yellow: 'bg-yellow', grey: 'bg-grey', danger: 'bg-danger-soft' } as const;

@@ -1,18 +1,19 @@
 ---
 /** Landing page for "JavaScript meetups in Zurich" searches. Copy and FAQ from production; events from content. */
 import { faqSchema, organizationSchema } from '@zurichjs/seo';
-import LandingCta from '~/components/landing/LandingCta.astro';
-import LandingEvents from '~/components/landing/LandingEvents.astro';
-import LandingFaq from '~/components/landing/LandingFaq.astro';
-import PointList from '~/components/landing/PointList.astro';
-import TopicGroups from '~/components/landing/TopicGroups.astro';
-import PageOpening from '~/components/layout/PageOpening.astro';
-import Button from '~/components/ui/Button.astro';
-import Surface from '~/components/ui/Surface.astro';
+import LandingCta from '@zurichjs/design/components/landing/LandingCta.astro';
+import LandingEvents from '@zurichjs/design/components/landing/LandingEvents.astro';
+import LandingFaq from '@zurichjs/design/components/landing/LandingFaq.astro';
+import PointList from '@zurichjs/design/components/landing/PointList.astro';
+import TopicGroups from '@zurichjs/design/components/landing/TopicGroups.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { nextMeetupHref } from '~/lib/content';
+import { BUILD_TIME, SITE, content, nextMeetupHref, ticketing } from '~/lib/content';
 
 const nextHref = await nextMeetupHref();
+const { events } = await content();
 
 // Verbatim from production: these answers feed the FAQPage JSON-LD and the visible FAQ.
 const faqs = [
@@ -188,7 +189,7 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
       </div>
     </section>
 
-    <LandingEvents id="h-next" title="Next JavaScript meetups in Zurich" sub="Talks, food and conversation. Free to attend, in English, and fine to come alone." />
+    <LandingEvents events={events} now={BUILD_TIME} ticketing={ticketing} meetupGroupUrl={SITE.meetupGroupUrl} id="h-next" title="Next JavaScript meetups in Zurich" sub="Talks, food and conversation. Free to attend, in English, and fine to come alone." />
 
     <LandingFaq faqs={faqs} />
 

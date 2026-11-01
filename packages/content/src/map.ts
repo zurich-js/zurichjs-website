@@ -152,9 +152,19 @@ export function mapSpeaker(r: RawSpeaker): Speaker {
     r.linkedin && { label: 'LinkedIn', url: r.linkedin },
     r.twitter && { label: 'X', url: r.twitter },
   ].filter((l): l is { label: string; url: string } => !!l);
-  const talks: SpeakerTalk[] = (r.talks ?? []).flatMap((t) =>
-    (t.eventIds?.length ? t.eventIds : ['']).map((eventId) => ({ eventId: eventId ?? '', title: t.title ?? '', format: formatLabel[talkFormat(u(t.type), u(t.durationMinutes))] })),
-  );
+  // One entry per talk, with every event it was given at (events that list the
+  // talk, plus the old single `talk.events` reference).
+  const talks: SpeakerTalk[] = (r.talks ?? []).map((t) => ({
+    id: u(t._id),
+    slug: u(t.id),
+    title: t.title ?? 'Untitled talk',
+    description: u(t.description),
+    format: formatLabel[talkFormat(u(t.type), u(t.durationMinutes))],
+    durationMin: u(t.durationMinutes),
+    tags: (t.tags ?? []).filter((x): x is string => !!x),
+    slidesUrl: u(t.slidesUrl),
+    eventSlugs: [...new Set([...(t.eventIds ?? []), t.legacyEventId].filter((x): x is string => !!x))],
+  }));
   return {
     id: r.id,
     name,
@@ -167,6 +177,7 @@ export function mapSpeaker(r: RawSpeaker): Speaker {
     photo: r.image ? { src: r.image, alt: name } : undefined,
     links,
     talks,
+    legacySlugs: (r.legacySlugs ?? []).filter((x): x is string => !!x && x !== r.id),
     updatedAt: u(r._updatedAt),
   };
 }

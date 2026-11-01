@@ -125,8 +125,17 @@ export const SPEAKERS: Speaker[] = [
       { label: 'Website', url: 'https://example.com/' },
     ],
     talks: [
-      { eventId: 'p-nov-2025', title: 'Accessible comboboxes: the hard parts', format: 'Talk' },
-      { eventId: 'p-mar-2025', title: 'TypeScript at the edges of your app', format: 'Lightning talk' },
+      {
+        id: 'talk.retro',
+        slug: 'one-year-retro',
+        title: 'A year of ZurichJS, looking back',
+        format: 'Talk',
+        durationMin: 25,
+        tags: ['Community'],
+        eventSlugs: ['2025-11-anniversary'],
+      },
+      { title: 'Accessible comboboxes: the hard parts', format: 'Talk', tags: ['Accessibility', 'React'], eventSlugs: ['2025-11-anniversary'] },
+      { title: 'TypeScript at the edges of your app', format: 'Lightning talk', tags: ['TypeScript'], eventSlugs: ['2025-03-partnerships'] },
     ],
   },
   {
@@ -139,9 +148,10 @@ export const SPEAKERS: Speaker[] = [
     tagline: 'Design systems',
     links: [{ label: 'LinkedIn', url: 'https://www.linkedin.com/' }],
     talks: [
-      { eventId: 'p-nov-2025', title: 'Tokens that survive a rebrand', format: 'Talk' },
-      { eventId: 'p-mar-2025', title: 'CSS layers in a large codebase', format: 'Talk' },
-      { eventId: 'p-may-2026', title: 'Design systems nobody asked for', format: 'Lightning talk' },
+      { id: 'talk.next', slug: 'whats-next', title: 'What comes next', format: 'Lightning talk', durationMin: 10, tags: ['Community'], eventSlugs: ['2025-11-anniversary'] },
+      { title: 'Tokens that survive a rebrand', format: 'Talk', tags: ['Design systems', 'CSS'], eventSlugs: ['2025-11-anniversary'] },
+      { title: 'CSS layers in a large codebase', format: 'Talk', tags: ['CSS'], eventSlugs: ['2025-03-partnerships'] },
+      { title: 'Design systems nobody asked for', format: 'Lightning talk', tags: ['Design systems'], eventSlugs: ['2026-05-testing'] },
     ],
   },
   {
@@ -153,7 +163,7 @@ export const SPEAKERS: Speaker[] = [
     topics: ['design systems', 'react'],
     tagline: 'React at scale',
     links: [{ label: 'GitHub', url: 'https://github.com/' }],
-    talks: [{ eventId: 'p-may-2026', title: 'React at scale: what we measure', format: 'Talk' }],
+    talks: [{ title: 'React at scale: what we measure', format: 'Talk', tags: ['React', 'Performance'], eventSlugs: ['2026-05-testing'] }],
   },
   {
     id: 'jonas-test',
@@ -165,10 +175,10 @@ export const SPEAKERS: Speaker[] = [
     tagline: 'Testing',
     links: [{ label: 'Website', url: 'https://example.com/' }],
     talks: [
-      { eventId: 'p-may-2026', title: 'Testing what users actually do', format: 'Talk' },
-      { eventId: 'p-mar-2025', title: 'Flaky tests, honest fixes', format: 'Lightning talk' },
-      { eventId: 'p-nov-2025', title: 'Traces over screenshots', format: 'Talk' },
-      { eventId: 'p-jun-2026', title: 'Testing at the edge', format: 'Lightning talk' },
+      { title: 'Testing what users actually do', format: 'Talk', tags: ['Testing', 'Playwright'], eventSlugs: ['2026-05-testing'] },
+      { title: 'Flaky tests, honest fixes', format: 'Lightning talk', tags: ['Testing'], eventSlugs: ['2025-03-partnerships'] },
+      { title: 'Traces over screenshots', format: 'Talk', tags: ['Testing', 'Playwright'], eventSlugs: ['2025-11-anniversary'] },
+      { title: 'Testing at the edge', format: 'Lightning talk', tags: ['Testing', 'Edge'], eventSlugs: ['2026-06-edge-runtimes'] },
     ],
   },
   {
@@ -180,7 +190,7 @@ export const SPEAKERS: Speaker[] = [
     topics: ['edge runtimes'],
     tagline: 'Edge runtimes',
     links: [{ label: 'Website', url: 'https://example.com/' }],
-    talks: [{ eventId: 'p-jun-2026', title: 'Edge runtimes in practice: what actually changed in our deploys', format: 'Talk' }],
+    talks: [{ title: 'Edge runtimes in practice: what actually changed in our deploys', format: 'Talk', tags: ['Edge', 'Node.js'], eventSlugs: ['2026-06-edge-runtimes'] }],
   },
   {
     id: 'mia-entwurf',
@@ -191,9 +201,18 @@ export const SPEAKERS: Speaker[] = [
     topics: ['signals', 'state'],
     tagline: 'Signals',
     links: [{ label: 'LinkedIn', url: 'https://www.linkedin.com/' }],
+    // Sample of a speaker whose ID was cleaned up: the old URL keeps working (301).
+    legacySlugs: ['Mia_Entwurf'],
     talks: [
-      { eventId: 'p-sep-2026', title: 'Signals without the hype: what we kept after six months', format: 'Talk' },
-      { eventId: 'p-nov-2025', title: 'State that outlives the component', format: 'Lightning talk' },
+      { title: 'Signals without the hype: what we kept after six months', format: 'Talk', tags: ['Signals', 'State'], eventSlugs: ['2026-09-signals-streams'] },
+      { title: 'State that outlives the component', format: 'Lightning talk', tags: ['State', 'React'], eventSlugs: ['2025-11-anniversary'] },
+      {
+        title: 'Agentic checkout flows in the browser',
+        description: 'What changes when an AI agent, not a person, fills in your checkout.',
+        format: 'Talk',
+        tags: ['AI', 'React'],
+        eventSlugs: ['2025-11-anniversary'],
+      },
     ],
   },
   {
@@ -205,7 +224,7 @@ export const SPEAKERS: Speaker[] = [
     topics: ['streams', 'node'],
     tagline: 'Node streams',
     links: [{ label: 'GitHub', url: 'https://github.com/' }],
-    talks: [{ eventId: 'p-sep-2026', title: 'Streams in Node, explained with a coffee machine', format: 'Lightning talk' }],
+    talks: [{ title: 'Streams in Node, explained with a coffee machine', format: 'Lightning talk', tags: ['Node.js'], eventSlugs: ['2026-09-signals-streams'] }],
   },
   {
     id: 'sara-vorlage',
@@ -217,8 +236,8 @@ export const SPEAKERS: Speaker[] = [
     tagline: 'Accessibility',
     links: [{ label: 'Website', url: 'https://example.com/' }],
     talks: [
-      { eventId: 'p-may-2026', title: 'Testing what users actually do', format: 'Talk' },
-      { eventId: 'p-nov-2025', title: 'Screen reader testing in ten minutes', format: 'Lightning talk' },
+      { title: 'Testing what users actually do', format: 'Talk', tags: ['Testing', 'Playwright'], eventSlugs: ['2026-05-testing'] },
+      { title: 'Screen reader testing in ten minutes', format: 'Lightning talk', tags: [], eventSlugs: ['2025-11-anniversary'] },
     ],
   },
 ];

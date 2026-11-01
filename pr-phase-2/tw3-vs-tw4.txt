@@ -1,0 +1,7 @@
+Tailwind 3 (Phase 1b build) vs Tailwind 4 + @zurichjs/design (Phase 2 build)
+Same content (CONTENT_SOURCE=sample, BUILD_NOW=2026-11-01T12:00:00+01:00), every sitemap route + /success, /checkout/success, /404,
+full page at 1440 and 390, Playwright 1.63 Chromium, per-pixel difference threshold 25/255.
+
+80 / 82 screenshots pixel-identical.
+Differ: desktop + mobile /events/2026-11-forms-types — "Copy link" now underlined (design: text-decoration underline, offset 3px).
+Fixed during the comparison: input placeholder colour (Tailwind 4 preflight change) — kept via the grey-placeholder token.

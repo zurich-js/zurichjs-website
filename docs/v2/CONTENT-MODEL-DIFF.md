@@ -22,10 +22,9 @@ Status values used below:
    - The website never reads `ticketSaleUrl`. It reads `stripePriceId` (`src/sanity/queries.ts:104`, `:125`, `:252`) for pro-meetup Stripe tickets (`src/pages/events/[id].tsx:48`, `src/components/event/EventTickets.ts:7`).
    - So `stripePriceId` can only exist on documents written outside the Studio, or the deployed Studio differs from the repo.
    - V2 nests `stripePriceId` under `workshop{}`. Workshops are de-scoped.
-   - **Resolution:**
-     - Declare `stripePriceId` (string, hidden unless `isProMeetup`) on `events`. This makes the field the site already relies on editable.
-     - Mark `ticketSaleUrl` deprecated: read-only, hidden when empty. Do not delete it (no content deletion).
-     - Add no `workshop.stripePriceId`.
+   - **Resolution (updated 2026-11-01, owner: pro meetups and Stripe are removed):**
+     - V2 reads none of `isProMeetup`, `stripePriceId` or `ticketSaleUrl`.
+     - The Studio keeps all three declared but deprecated: read-only and hidden when empty, so values on existing documents are kept and visible. Nothing is deleted.
      - Implemented in Phase 3.
 2. **Type name is `events` (plural).** V2's `Event` maps to `_type == "events"`. Keep the name; renaming a type means migrating every document and reference.
 3. **The Studio repo is behind the data the site writes.** The site writes these, but the repo schema does not declare them:
@@ -66,7 +65,7 @@ Status values used below:
 | `workshop{…}`                                                                          | none (`src/data/workshops.ts`)                                                      | **de-scoped**    | Not added.                                                                                                            |
 | `hosts[]` (sponsor ids)                                                                | none (partners are static, `src/data/index.ts:37`; the Studio has a `partner` type) | new              | References to `partner`.                                                                                              |
 | (none)                                                                                 | `attendees`                                                                         | kept, not shown  | Used for stats.                                                                                                       |
-| (none)                                                                                 | `isProMeetup`, `stripePriceId`                                                      | kept             | Pro-meetup tickets (Phase 1b). `stripePriceId` gets declared in the schema (finding 1).                               |
+| (none)                                                                                 | `isProMeetup`, `stripePriceId`                                                      | not read         | Pro meetups removed (owner). Deprecated in the Studio, values kept (finding 1).                                       |
 | (none)                                                                                 | `ticketSaleUrl`                                                                     | deprecated       | Unused by the site; hidden, not deleted.                                                                              |
 | (none)                                                                                 | `excludeFromStats`                                                                  | kept             |                                                                                                                       |
 
@@ -137,5 +136,5 @@ Status values used below:
 | `contact`              | name, email, topic, message | Resend + Slack                        |
 | `feedback`             | eventId, overall            | `comprehensiveFeedback`               |
 | `rating`               | eventId, target, stars      | `feedback`                            |
-| `donate`               | amountChf, method           | Stripe Checkout (card, Twint)         |
 | `waitlist`, `checkout` | (workshop only)             | **de-scoped**                         |
+| `donate`               | (none)                      | **removed** with Stripe (owner)       |

@@ -40,8 +40,6 @@ export interface RawEvent {
   venueNote?: string;
   description?: string;
   meetupUrl?: string;
-  isProMeetup?: boolean;
-  stripePriceId?: string;
   image?: string;
   photos?: { src?: string; alt?: string; width?: number; height?: number }[] | null;
   practical?: { label?: string; value?: string }[] | null;
@@ -147,7 +145,6 @@ export function mapEvent(r: RawEvent): Event {
         }
       : undefined,
     hosts: (r.hosts ?? []).filter((h): h is string => !!h),
-    stripePriceId: r.isProMeetup && r.stripePriceId ? r.stripePriceId : undefined,
     updatedAt: r._updatedAt,
   };
 }

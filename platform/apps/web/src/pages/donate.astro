@@ -1,63 +1,69 @@
 ---
+/**
+ * Support ZurichJS. Kept at the production URL /donate (and its 301s from
+ * /buy-us-a-coffee and /support) for SEO, but there are no online payments:
+ * Stripe was removed (owner decision, docs/v2/DECISIONS.md). The page lists
+ * the ways to support the community instead.
+ */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
-import DonateForm from '~/components/islands/forms/DonateForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { nextMeetupHref } from '~/lib/content';
+import { SITE } from '~/lib/content';
 import { isExternal } from '@zurichjs/design/recipes';
 
-const nextHref = await nextMeetupHref();
 const GOES = [
   ['Venues', 'Room hire and equipment on nights without a host.'],
   ['Food and drinks', 'Evenings that no sponsor covers.'],
   ['Speakers', 'Travel for speakers from outside Zurich.'],
 ];
-const OTHER = [
-  { h: 'Become a member', d: 'Join the Swiss JavaScript Group association.', href: '/membership' },
-  { h: 'Host or sponsor a meetup', d: 'For companies.', href: '/partners' },
+const WAYS = [
+  { h: 'Become a member', d: 'Join the Swiss JavaScript Group, the association behind ZurichJS.', href: '/membership', yellow: true },
+  { h: 'Host or sponsor a meetup', d: 'For companies: a room, food and drinks, or a contribution.', href: '/partners' },
+  { h: 'Speak at a meetup', d: 'First-time speakers are welcome, and we help you prepare.', href: '/cfp' },
+  { h: 'Volunteer', d: 'Help on the night or behind the scenes.', href: '/cfv' },
 ];
 ---
 
 <BaseLayout
   image="/og/donate.png"
-  title="Donate"
-  fullTitle="Donate to ZurichJS · Support the JavaScript Community"
-  description="Donate to ZurichJS with Twint or card. Meetups are free to attend, and donations cover venues, food and speaker travel on evenings no sponsor does."
-  keywords={['donate ZurichJS', 'support ZurichJS', 'JavaScript community Zurich', 'buy us a coffee', 'non-profit meetup Switzerland']}
+  title="Support ZurichJS"
+  fullTitle="Support ZurichJS · Help the JavaScript Community in Zurich"
+  description="Ways to support ZurichJS: become a member, host or sponsor a meetup, speak or volunteer. Meetups are free, run by volunteers and funded by members and partners."
+  keywords={['support ZurichJS', 'sponsor ZurichJS', 'JavaScript community Zurich', 'ZurichJS membership', 'non-profit meetup Switzerland']}
 >
-  <PageOpening slot="opening" title="Support ZurichJS" sub="Meetups are free to attend. We started on personal savings; donations help cover the evenings no sponsor does." />
+  <PageOpening slot="opening" title="Support ZurichJS" sub="Meetups are free to attend. We started on personal savings; members and partners now cover the evenings." />
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(40px,5vw,80px)] items-start">
-    <DonateForm client:load nextHref={nextHref} />
+    <section aria-labelledby="h-ways" class="flex flex-col gap-3">
+      <h2 id="h-ways" class="m-0 mb-1 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Ways to help</h2>
+      {
+        WAYS.map((o) => (
+          <a
+            href={o.href}
+            {...(isExternal(o.href) ? { target: '_blank', rel: 'noopener' } : {})}
+            class={`no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center ${o.yellow ? 'bg-yellow hover:bg-yellow-hover' : 'bg-grey hover:bg-grey-hover'}`}
+          >
+            <span class="flex flex-col gap-[3px]">
+              <span class="text-[18px] font-bold">{o.h}</span>
+              <span class="text-[16px] leading-[1.45] text-ink-2">{o.d}</span>
+            </span>
+            <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-white">→</span>
+          </a>
+        ))
+      }
+      <p class="m-0 mt-2 text-[17px] leading-[1.55] text-ink-2">
+        We don’t take online payments. For a one-off contribution, write to <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a>.
+      </p>
+    </section>
 
-    <div class="flex flex-col gap-[clamp(40px,5vw,56px)]">
-      <section aria-labelledby="h-goes" class="flex flex-col gap-[18px]">
-        <h2 id="h-goes" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where the money goes</h2>
-        {
-          GOES.map(([h, d]) => (
-            <div class="flex flex-col gap-1">
-              <div class="text-[19px] font-bold">{h}</div>
-              <div class="text-[17px] leading-[1.55] text-ink-2">{d}</div>
-            </div>
-          ))
-        }
-      </section>
-      <section aria-labelledby="h-other" class="flex flex-col gap-3">
-        <h2 id="h-other" class="m-0 mb-1 text-[clamp(22px,2.2vw,28px)] leading-[1.2] font-bold">Other ways to help</h2>
-        {
-          OTHER.map((o) => (
-            <a
-              href={o.href}
-              {...(isExternal(o.href) ? { target: '_blank', rel: 'noopener' } : {})}
-              class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-grey hover:bg-grey-hover"
-            >
-              <span class="flex flex-col gap-[3px]">
-                <span class="text-[18px] font-bold">{o.h}</span>
-                <span class="text-[16px] leading-[1.45] text-ink-2">{o.d}</span>
-              </span>
-              <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-white">→</span>
-            </a>
-          ))
-        }
-      </section>
-    </div>
+    <section aria-labelledby="h-goes" class="flex flex-col gap-[18px]">
+      <h2 id="h-goes" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">What support pays for</h2>
+      {
+        GOES.map(([h, d]) => (
+          <div class="flex flex-col gap-1">
+            <div class="text-[19px] font-bold">{h}</div>
+            <div class="text-[17px] leading-[1.55] text-ink-2">{d}</div>
+          </div>
+        ))
+      }
+    </section>
   </div>
 </BaseLayout>

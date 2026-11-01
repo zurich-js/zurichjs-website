@@ -29,8 +29,6 @@ export const ROUTES = [
   '/ai-context',
   '/membership',
   '/waitlist/conf',
-  '/success',
-  '/checkout/success',
 ];
 
 for (const route of ROUTES) {
@@ -69,6 +67,8 @@ test('legacy URLs redirect permanently', async ({ request }) => {
     ['/partnerships', '/partners'],
     ['/buy-us-a-coffee', '/donate'],
     ['/support', '/donate'],
+    ['/success', '/donate'],
+    ['/checkout/success', '/events'],
     ['/event-feedback', '/feedback'],
     ['/cfp/form', '/cfp'],
     ['/policies/privacy', '/policies/privacy-policy'],

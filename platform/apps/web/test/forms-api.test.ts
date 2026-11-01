@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ALL, POST } from '../src/pages/api/forms/[kind]';
 
 type Ctx = Parameters<typeof POST>[0];
-const SECRETS = ['SANITY_WRITE_TOKEN', 'RESEND_API_KEY', 'SLACK_WEBHOOK_URL', 'STRIPE_SECRET_KEY'];
+const SECRETS = ['SANITY_WRITE_TOKEN', 'RESEND_API_KEY', 'SLACK_WEBHOOK_URL'];
 
 const call = async (handler: typeof POST, kind: string, init: RequestInit = {}) => {
   const request = new Request(`https://zurichjs.com/api/forms/${kind}`, init);
@@ -64,12 +64,6 @@ describe('/api/forms/[kind]', () => {
     expect(res.status).toBe(200);
     expect(body.ok).toBe(true);
     expect(String(body.id)).toMatch(/^contact_/);
-  });
-
-  it('returns url null for a donation when Stripe is not configured', async () => {
-    const { res, body } = await post('donate', { amountChf: 25, method: 'twint' });
-    expect(res.status).toBe(200);
-    expect(body).toMatchObject({ ok: true, url: null });
   });
 
   it('answers 502 when a configured channel fails', async () => {

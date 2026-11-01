@@ -90,8 +90,6 @@ export interface Event {
   recap?: { talks: RecapTalk[] };
   /** Partner ids that host the evening. */
   hosts?: string[];
-  /** Paid "pro meetup": Stripe price for the ticket. Free meetups RSVP on Meetup. */
-  stripePriceId?: string;
   /** ISO date the content was last edited (sitemap lastmod). */
   updatedAt?: string;
 }

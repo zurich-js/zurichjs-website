@@ -196,8 +196,9 @@ export function eventSchema(ev: Event, speakers: Speaker[], hosts: Partner[] = [
     ...(hosts.length ? { sponsor: hosts.map((h) => ({ '@type': 'Organization', name: h.name, ...(h.url ? { url: h.url } : {}) })) } : {}),
     offers: {
       '@type': 'Offer',
-      url: ev.stripePriceId ? url : (ev.meetupUrl ?? url),
-      ...(ev.stripePriceId ? {} : { price: 0, priceCurrency: 'CHF' }),
+      url: ev.meetupUrl ?? url,
+      price: 0,
+      priceCurrency: 'CHF',
       availability: ev.status === 'full' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock',
     },
   };
@@ -272,7 +273,7 @@ export function llmsTxt({ events, speakers, pages, now = new Date() }: LlmsInput
   const out = [
     '# ZurichJS',
     '',
-    '> ZurichJS is a non-profit JavaScript and TypeScript community in Zurich, Switzerland, run by the Swiss JavaScript Group association. It hosts free monthly meetups with talks, occasional paid pro meetups, and the yearly ZurichJS Conference. RSVPs happen on Meetup (https://www.meetup.com/zurich-js/). Talks are not recorded and slides are not published.',
+    '> ZurichJS is a non-profit JavaScript and TypeScript community in Zurich, Switzerland, run by the Swiss JavaScript Group association. It hosts free monthly meetups with talks and the yearly ZurichJS Conference. RSVPs happen on Meetup (https://www.meetup.com/zurich-js/). Talks are not recorded and slides are not published.',
     '',
     '## Pages',
     ...pages.map((p) => line(p.title, p.path, p.summary)),

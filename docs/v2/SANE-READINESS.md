@@ -34,9 +34,9 @@ Constraints that shape the seams:
 | ZurichJS meetups, ZurichJS Conf  | Series / brand (`ser_…`)                        |                                                                                                                   |
 | `events` document                | Event (`evt_…`, slug)                           | V2 status `scheduled/rsvp-soon/full/cancelled` ≈ Sane `registration.state` `open/not_open_yet/sold_out/cancelled` |
 | `meetupUrl` RSVP (outbound link) | Event page link or embed                        | "An outbound RSVP click is not a registration" holds for both                                                     |
-| `isProMeetup` + `stripePriceId`  | Ticket type with a price (paid tickets, future) |                                                                                                                   |
+| (none; pro meetups removed)      | Ticket type with a price (paid tickets, future) |                                                                                                                   |
 | `talkSubmission`                 | Submission (Sane's term; CFP not built yet)     |                                                                                                                   |
-| Donation via Stripe              | none                                            | Stays on Stripe                                                                                                   |
+| (none; online donations removed) | none                                            | Support page lists membership, hosting, speaking                                                                  |
 | /today check-in                  | Check-in (organiser side)                       | No public surface                                                                                                 |
 
 ## Seams built in the V2 platform (Phases 1 and 1b)
@@ -51,14 +51,15 @@ Constraints that shape the seams:
      note: string;
    }
    interface TicketingProvider {
-     id: "meetup" | "stripe" | "sane";
+     id: "meetup" | "sane";
      /** Called at build time for each event; must not need the browser. */
      actionFor(event: DomainEvent, state: EventState): TicketingAction;
    }
    ```
 
-   - Today: `meetupTicketing` (RSVP, waitlist and follow links to meetup.com) and `stripeTicketing` (pro meetups with `stripePriceId`), chained in `platform/apps/web/src/lib/ticketing.ts`.
-   - `presentEvent()` in `@zurichjs/events` takes the action as data and never branches on Meetup or Stripe itself.
+   - Today: `meetupTicketing` only (RSVP, waitlist and follow links to meetup.com), in `platform/apps/web/src/lib/ticketing.ts`. Every meetup is free; pro meetups and Stripe were removed (owner, 2026-11-01).
+   - `presentEvent()` in `@zurichjs/events` takes the action as data and never branches on the provider itself.
+   - Sane goes in front with `chainTicketing(saneTicketing, meetupTicketing(...))`; the first provider with an answer wins (tested in `packages/events/test/state.test.ts`).
    - A later `saneProvider` reads `GET /v1/public/events/{org}/{event}` at build time and returns a buy or registration link. Switching one event is a per-event field, added when Sane is adopted.
 
 2. **`TalkProposalSink`** in `@zurichjs/integrations` (`platform/packages/integrations/src/index.ts`):

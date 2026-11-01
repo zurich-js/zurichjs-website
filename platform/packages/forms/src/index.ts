@@ -6,7 +6,8 @@ import { z } from 'zod';
  * contract in v2/src/pages/api/forms/[kind].ts; extra fields pass through so
  * forms can add optional questions without a schema change.
  *
- * Workshop-only kinds (`checkout`, `waitlist`) are de-scoped and not accepted.
+ * Workshop-only kinds (`checkout`, `waitlist`) are de-scoped and not accepted;
+ * online donations (`donate`) were removed with Stripe.
  */
 const email = z.string().trim().email('Enter an email address like name@example.com.');
 const text = (msg: string) => z.string().trim().min(1, msg);
@@ -23,7 +24,6 @@ export const schemas = {
   contact: z.looseObject({ ...honeypot, name: text('Enter your name.'), email, topic: text('Choose a topic.'), message: text('Write a message.') }),
   feedback: z.looseObject({ ...honeypot, eventId: text('Missing event.'), overall: required('Choose a score for the evening.') }),
   rating: z.looseObject({ ...honeypot, eventId: text('Missing event.'), target: text('Missing talk.'), stars: z.coerce.number().int().min(1).max(5) }),
-  donate: z.looseObject({ ...honeypot, amountChf: z.coerce.number().positive('Choose an amount.').max(10_000), method: z.enum(['card', 'twint']) }),
 } as const;
 
 export type FormKind = keyof typeof schemas;

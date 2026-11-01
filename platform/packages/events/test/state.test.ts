@@ -9,7 +9,6 @@ import {
   presentEvent,
   resolveState,
   stateChangeTimes,
-  stripeTicketing,
   upcomingEvents,
   type Event,
 } from '../src';
@@ -83,17 +82,18 @@ describe('lists', () => {
 });
 
 describe('presentEvent', () => {
-  const ticketing = chainTicketing(stripeTicketing, meetupTicketing('https://www.meetup.com/zurich-js/'));
+  const ticketing = meetupTicketing('https://www.meetup.com/zurich-js/');
   it('offers the Meetup RSVP handoff while open', () => {
     const p = presentEvent(ev(), { now: at(doors - HOUR), ticketing });
     expect(p.cta).toMatchObject({ kind: 'rsvp', label: 'RSVP on Meetup', external: true });
     expect(p.pills).toEqual([{ text: 'Meetup' }, { text: 'RSVP open', yellow: true }]);
     expect(p.whenShort).toBe('Wed 18 Nov 2026, 18:30–21:30');
   });
-  it('sends paid pro meetups to the ticket section', () => {
-    const p = presentEvent(ev({ stripePriceId: 'price_1' }), { now: at(doors - HOUR), ticketing });
-    expect(p.cta).toMatchObject({ kind: 'buy', href: '#tickets' });
-    expect(p.stateLabel).toBe('Tickets on sale');
+  it('chains providers so a later one (Sane) can take over single events', () => {
+    const sane = { id: 'sane', actionFor: (e: Event) => (e.slug === 'paid' ? { kind: 'buy' as const, label: 'Get a ticket', href: 'https://example.com', note: '' } : undefined) };
+    const chained = chainTicketing(sane, ticketing);
+    expect(presentEvent(ev({ slug: 'paid' }), { now: at(doors - HOUR), ticketing: chained }).cta).toMatchObject({ kind: 'buy' });
+    expect(presentEvent(ev(), { now: at(doors - HOUR), ticketing: chained }).cta).toMatchObject({ kind: 'rsvp' });
   });
   it('switches to feedback mode during the window and names when it closes', () => {
     const p = presentEvent(ev(), { now: at(doors + HOUR), ticketing });

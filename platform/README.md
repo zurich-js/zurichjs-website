@@ -22,7 +22,7 @@ pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck
 | `packages/content`      | Sanity GROQ over plain `fetch`, mappers from production documents to domain types, sample fallback. |
 | `packages/seo`          | Meta tags, JSON-LD, sitemap and `llms.txt` builders.                                                |
 | `packages/forms`        | zod schemas shared by islands and the forms function, `submitForm`.                                 |
-| `packages/integrations` | Form forwarding: Sanity writes, Resend, Slack, Stripe Checkout; `TalkProposalSink`.                 |
+| `packages/integrations` | Form forwarding: Sanity writes, Resend, Slack, EmailOctopus; `TalkProposalSink`.                    |
 | `packages/config`       | Shared TypeScript config.                                                                           |
 | `tools/seo`             | Production SEO baseline, snapshot crawler and the parity gate.                                      |
 | `e2e`                   | Playwright smoke and accessibility checks.                                                          |

@@ -25,7 +25,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
       <div class="grid grid-cols-2 gap-3">
         <div>
           <div class="text-[15px] text-ink-2">Cost</div>
-          <div class="text-[19px] font-bold">{ev.stripePriceId ? 'Ticketed' : 'Free'}</div>
+          <div class="text-[19px] font-bold">Free</div>
         </div>
         <div>
           <div class="text-[15px] text-ink-2">Status</div>

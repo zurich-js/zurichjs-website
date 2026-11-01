@@ -2,7 +2,7 @@
 /**
  * Information for AI assistants and LLM crawlers: the facts about ZurichJS in
  * one page, every URL a real link, and the upcoming events from content.
- * Facts that V2 no longer offers (workshops for sale, free pro meetups) are not repeated here.
+ * Facts that V2 no longer offers (workshops for sale, ticketed pro meetups, online donations) are not repeated here.
  */
 import { eventHref, presentEvent, resolveState, upcomingEvents } from '@zurichjs/events';
 import { SITE_URL, organizationSchema } from '@zurichjs/seo';
@@ -34,7 +34,6 @@ const ASK_ABOUT = [
 
 const OFFERS = [
   { t: 'Free monthly meetups', d: 'Regular JavaScript and TypeScript meetups with two to four technical talks, then food, drinks and networking. Free to attend, in English. RSVP on Meetup.com.', href: '/events', link: 'Upcoming and past events' },
-  { t: 'Pro meetups', d: 'Occasional evenings with international speakers flown to Zurich. Some are ticketed; the event page states the price.', href: '/events', link: 'Events' },
   { t: 'ZurichJS Conf', d: 'The community’s yearly conference, one bigger day a year.', href: SITE.confUrl, link: 'conf.zurichjs.com' },
   { t: 'Speaker opportunities', d: 'Open call for proposals: anyone can speak, the talk doesn’t have to be about JavaScript, and first-time speakers get help preparing.', href: '/cfp', link: 'Propose a talk' },
   { t: 'Volunteering', d: 'Members help run the evenings, take photos and work on the website.', href: '/cfv', link: 'Volunteer' },
@@ -217,7 +216,7 @@ const linkCls = 'font-bold text-black underline underline-offset-[3px] wrap-anyw
                   {ev.title}
                 </a>
                 <span class="text-[16px] leading-[1.45] text-ink-2">
-                  {p.dateLineShort} · {p.venueShort} · {ev.stripePriceId ? 'Ticketed' : 'Free, RSVP on Meetup.com'}
+                  {p.dateLineShort} · {p.venueShort} · Free, RSVP on Meetup.com
                 </span>
                 <a href={eventHref(ev)} class="text-[15px] text-ink-2 wrap-anywhere">{abs(eventHref(ev))}</a>
               </li>
@@ -255,8 +254,7 @@ const linkCls = 'font-bold text-black underline underline-offset-[3px] wrap-anyw
     <section aria-labelledby="h-cost" class="flex flex-col gap-6 max-w-[880px]">
       <SectionHeading id="h-cost">Cost & accessibility</SectionHeading>
       <dl class="m-0 flex flex-col gap-4 text-[18px] leading-[1.55]">
-        <div><dt class="font-bold">Regular meetups</dt><dd class="m-0 text-ink-2">Free. RSVP on Meetup.com so the host can plan food and space.</dd></div>
-        <div><dt class="font-bold">Pro meetups</dt><dd class="m-0 text-ink-2">Some are ticketed. The price is on the event page; the list above marks them “Ticketed”.</dd></div>
+        <div><dt class="font-bold">Meetups</dt><dd class="m-0 text-ink-2">Every meetup is free. RSVP on Meetup.com so the host can plan food and space.</dd></div>
         <div>
           <dt class="font-bold">Non-profit status</dt>
           <dd class="m-0 text-ink-2">ZurichJS is a registered non-profit organization funded by community donations and sponsors. All revenue goes back into venues, speaker travel and the community.</dd>

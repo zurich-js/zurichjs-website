@@ -1,8 +1,8 @@
 import type { Event, EventState } from './types';
 
 /**
- * Seam for where people get a place at an event. Today: Meetup RSVP links for
- * free meetups and Stripe for paid "pro meetups". Later: Sane (see
+ * Seam for where people get a place at an event. Today: Meetup RSVP links
+ * (every meetup is free). Later: Sane (see
  * docs/v2/SANE-READINESS.md). Pages never branch on the provider; they render
  * the action.
  */
@@ -60,18 +60,6 @@ export const meetupTicketing = (groupUrl: string): TicketingProvider => ({
     }
   },
 });
-
-/** Paid "pro meetups" with a Stripe price: the ticket section on the event page handles checkout. */
-export const stripeTicketing: TicketingProvider = {
-  id: 'stripe',
-  actionFor(ev, state) {
-    if (!ev.stripePriceId) return undefined;
-    if (state === 'open' || state === 'notopen') {
-      return { kind: 'buy', label: 'Get a ticket', href: '#tickets', note: 'Pay through Stripe. An organiser emails your ticket.' };
-    }
-    return undefined;
-  },
-};
 
 /** First provider with an answer wins. */
 export const chainTicketing = (...providers: TicketingProvider[]): TicketingProvider => ({

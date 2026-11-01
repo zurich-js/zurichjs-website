@@ -164,3 +164,20 @@ Plain-language status after each phase. Newest at the bottom.
   The event page was 100 before. Its HTML grew by about 1 KB gzipped from the Tailwind 4 CSS, and the local server does not compress.
 
 **Next:** Phase 3 (Sanity: typed queries, draft preview, Studio PR).
+
+## Owner change: no payments (2026-11-01)
+
+**Done**
+
+- **Removed:** pro meetups and every Stripe path (ticketing, donation checkout, three functions, the success pages, the `stripe` dependency).
+- **`/donate` is now "Support ZurichJS"**, with no payments, at the same URL.
+- **Redirects:** `/success` → `/donate` and `/checkout/success` → `/events`, both 301.
+- **Studio:** the Phase 3 branch deprecates `isProMeetup` and `stripePriceId` instead of deleting them. Details: [DECISIONS](./DECISIONS.md#no-payments-pro-meetups-and-stripe-removed-owner-2026-11-01).
+
+**Verified how**
+
+- Unit tests: 92 (the ticket and donation tests are gone; a test for `chainTicketing`, the Sane seam, is new).
+- Playwright: 75 tests, including the new redirects. Visual baselines were refreshed because the footer label and the `/today` support card changed.
+- SEO parity gate: OK. The only new note is the `/donate` title change.
+- Static checks: knip, oxlint, oxfmt, `astro check` and `pnpm audit` are clean.
+- Studio: build and typegen pass.

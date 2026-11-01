@@ -4,7 +4,7 @@ import { nextMeetup } from '@zurichjs/events';
 
 export { ticketing } from './ticketing';
 
-export { PHOTOS, SITE } from '@zurichjs/content';
+export { PHOTOS, SITE, slackLink } from '@zurichjs/content';
 /** Draft preview build (SANITY_PERSPECTIVE=drafts): noindex everywhere, robots.txt disallows all. */
 export const PREVIEW = isPreview(process.env);
 export const content = () => loadContent(import.meta.env.MODE === 'test' ? { ...process.env, CONTENT_SOURCE: 'sample' } : process.env);
@@ -20,3 +20,6 @@ export async function nextMeetupHref() {
   const ev = nextMeetup(c.events, BUILD_TIME);
   return ev ? `/events/${ev.slug}` : '/events';
 }
+
+/** Public Google Maps Embed API key (restricted to zurichjs.com). Without it, event pages show directions only. */
+export const MAPS_EMBED_KEY: string | undefined = import.meta.env.PUBLIC_GOOGLE_MAPS_EMBED_KEY || process.env.PUBLIC_GOOGLE_MAPS_EMBED_KEY || undefined;

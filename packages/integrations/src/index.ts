@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { createClient, type SanityClient } from '@sanity/client';
 import type { FormData, FormKind, FormResult } from '@zurichjs/forms';
 
@@ -139,6 +140,31 @@ export interface ForwardDeps {
   proposals?: TalkProposalSink;
   log?: Log;
   now?: () => Date;
+  /** Who sent it, hashed before storing; used to refuse a second rating of the same talk. */
+  client?: { ip?: string; headers?: Record<string, string | undefined> };
+}
+
+const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
+
+/** Same hashes as the old site's /api/feedback, so earlier ratings still count for duplicate checks. */
+export function clientHashes(client: ForwardDeps['client'] = {}) {
+  const h = client.headers ?? {};
+  return {
+    ipHash: sha256(client.ip ?? ''),
+    browserFingerprint: sha256(
+      JSON.stringify({ userAgent: h['user-agent'] ?? '', accept: h.accept ?? '', acceptLanguage: h['accept-language'] ?? '', acceptEncoding: h['accept-encoding'] ?? '' }),
+    ),
+  };
+}
+
+/** A form that was understood but cannot be accepted (duplicate rating, unknown talk). Maps to 409 or 400. */
+export class FormRejected extends Error {
+  constructor(
+    message: string,
+    readonly status: 400 | 409,
+  ) {
+    super(message);
+  }
 }
 
 /** Sends a validated form to its destinations. Throws only when a configured channel fails. */
@@ -189,25 +215,54 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         arrivalIssues: d.first,
         describeToFriend: d.friend,
         quoteConsent: d.quote === true || d.quote === 'yes',
+        // Only kept when quoting is allowed.
+        quoteName: (d.quote === true || d.quote === 'yes') && typeof d.quoteName === 'string' && d.quoteName.trim() ? d.quoteName.trim().slice(0, 60) : undefined,
         email: d.email || undefined,
         submittedAt: now().toISOString(),
       });
       return { ok: true, id: doc._id };
     }
     case 'rating': {
+      // One rating per person per speaker per talk. The talk is a document id;
+      // the speaker arrives as their public ID and is resolved to a document.
+      const talkId = String(d.talkId ?? (d.target !== 'evening' ? String(d.target).split(':')[0] : ''));
+      const speakerSlug = d.speakerId ? String(d.speakerId) : '';
+      if (!talkId) throw new FormRejected('Choose a talk to rate.', 400);
       if (!sanity) {
-        log('[forms] SANITY_WRITE_TOKEN missing; talk rating not stored');
+        log(`[forms] SANITY_WRITE_TOKEN missing; rating for talk ${talkId}${speakerSlug ? ` / ${speakerSlug}` : ''} not stored`);
         return { ok: true, id };
       }
-      const target = String(d.target);
+      const eventId = String(d.eventId);
+      const found = await sanity.fetch<{ event?: string; talk?: string; inEvent?: boolean; speaker?: string; speakers?: string[] }>(
+        `{
+          "event": *[_id == $eventId][0]._id,
+          "talk": *[_id == $talkId][0]._id,
+          "inEvent": count(*[_id == $eventId && ($talkId in talks[]._ref || $talkId in agenda[].talk._ref || $talkId in recap.talks[].talk._ref)]) > 0,
+          "speaker": *[_type == "speaker" && id.current == $speakerSlug][0]._id,
+          "speakers": *[_id == $talkId][0].speakers[]._ref
+        }`,
+        { eventId, talkId, speakerSlug },
+      );
+      if (!found.event || !found.talk || !found.inEvent) throw new FormRejected('We couldn’t find that talk for this event. Reload the page and try again.', 400);
+      // A talk with one speaker may be rated without naming them.
+      const speaker = found.speaker ?? (found.speakers?.length === 1 ? found.speakers[0] : undefined);
+      if (!speaker || !(found.speakers ?? []).includes(speaker)) throw new FormRejected('We couldn’t find that speaker for this talk. Reload the page and try again.', 400);
+      const { ipHash, browserFingerprint } = clientHashes(deps.client);
+      const dup = await sanity.fetch<string | null>(
+        `*[_type == "feedback" && event._ref == $eventId && talk._ref == $talkId && speaker._ref == $speaker && (ipHash == $ipHash || browserFingerprint == $browserFingerprint)][0]._id`,
+        { eventId, talkId, speaker, ipHash, browserFingerprint },
+      );
+      if (dup) throw new FormRejected('You already rated this talk. Thanks!', 409);
       const doc = await sanity.create({
         _type: 'feedback',
-        event: { _type: 'reference', _ref: String(d.eventId) },
-        // "evening" rates the whole meetup; anything else is a talk document id.
-        ...(target === 'evening' ? {} : { talk: { _type: 'reference', _ref: target } }),
+        event: { _type: 'reference', _ref: eventId },
+        talk: { _type: 'reference', _ref: talkId },
+        speaker: { _type: 'reference', _ref: speaker },
         rating: Number(d.stars),
-        comment: (d.note as string | undefined) ?? '',
+        comment: typeof d.note === 'string' ? d.note.slice(0, 2000) : '',
         submittedAt: now().toISOString(),
+        ipHash,
+        browserFingerprint,
       });
       return { ok: true, id: doc._id };
     }

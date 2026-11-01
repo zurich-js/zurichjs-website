@@ -1,4 +1,4 @@
-import { presentEvent, type Event, type EventState } from '@zurichjs/events';
+import { presentEvent, timesLine, type Event, type EventState } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ticketing } from '~/lib/ticketing';
@@ -9,18 +9,25 @@ import { useEventState } from '../useEventState';
 export default function EventSummary({ ev, initial, url }: { ev: Event; initial: EventState; url: string }) {
   const state = useEventState(ev, initial);
   const p = presentEvent(ev, { override: state, ticketing });
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'' | 'ok' | 'fail'>('');
+  const times = p.dateKnown ? timesLine(ev) : '';
   const handoff = p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist';
   return (
     <aside aria-label="Event summary" class="md:sticky md:top-[72px] bg-grey rounded-card p-6 flex flex-col gap-[18px]">
       <div class="flex flex-col gap-0.5">
         <div class="text-[15px] text-ink-2">When</div>
         <div class="text-[19px] font-bold">{p.whenShort}</div>
+        {times && <div class="text-[16px] text-ink-2">{times}</div>}
       </div>
       <div class="flex flex-col gap-0.5">
         <div class="text-[15px] text-ink-2">Where</div>
         <div class="text-[19px] font-bold">{p.venueShort}</div>
         {p.venueSub && <div class="text-[16px] text-ink-2">{p.venueSub}</div>}
+        {ev.venue && (
+          <a href="#venue" class="text-[16px] font-bold underline underline-offset-[3px] self-start">
+            Directions
+          </a>
+        )}
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -47,15 +54,23 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
       <Button
         variant="link"
         class="self-start text-[16px]"
-        onClick={() =>
-          navigator.clipboard?.writeText(url).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          })
-        }
+        onClick={() => {
+          const done = (r: 'ok' | 'fail') => {
+            setCopied(r);
+            setTimeout(() => setCopied(''), 2500);
+          };
+          if (!navigator.clipboard) return done('fail');
+          navigator.clipboard.writeText(url).then(
+            () => done('ok'),
+            () => done('fail'),
+          );
+        }}
       >
-        {copied ? 'Link copied' : 'Copy link'}
+        Copy link
       </Button>
+      <div role="status" class="text-[15px] text-ink-2 min-h-[1lh] -mt-3">
+        {copied === 'ok' ? 'Link copied.' : copied === 'fail' ? `Couldn’t copy. The link is ${url}` : ''}
+      </div>
     </aside>
   );
 }

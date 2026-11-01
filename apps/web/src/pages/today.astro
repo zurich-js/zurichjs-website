@@ -1,133 +1,126 @@
 ---
 /**
- * /today: the phone-first page for the evening itself. The event is picked at
- * build time (the meetup within 36 hours of the build, or the next one);
- * scheduled rebuilds at doors refresh it. The now / next cards and the
- * programme's "Now" marker follow the browser clock (islands/today/Tonight).
+ * /today, "Tonight": the phone-first page for a meetup evening.
+ *
+ * The meetup is picked at build time (one whose 48-hour feedback window is
+ * open, else the next dated one); scheduled rebuilds at doors and doors + 48 h
+ * move it on. Whether it is upcoming, on the day, live or over is decided by
+ * the browser clock (islands/today/Tonight), so a future meetup is never
+ * called "tonight".
  */
-import { dateLong, eventHref, nextMeetup, presentEvent, resolveState, upcomingEvents } from '@zurichjs/events';
+import { dateLong, eventHref, eventSupporters, pickTodayEvent, presentEvent, resolveState, todayPhase, upcomingEvents } from '@zurichjs/events';
 import { SITE_URL } from '@zurichjs/seo';
-import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Tonight from '~/components/islands/today/Tonight';
+import VenueCard from '~/components/islands/event/VenueCard';
 import Button from '@zurichjs/design/components/Button.astro';
-import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
+import SupporterList from '~/components/SupporterList.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
+import { BUILD_TIME, MAPS_EMBED_KEY, SITE, content, slackLink } from '~/lib/content';
 
-const { events, speakers, partners } = await content();
-const upcoming = upcomingEvents(events, BUILD_TIME);
-const ev = upcoming.find((e) => e.startsAt && resolveState(e, BUILD_TIME) !== 'cancelled' && Math.abs(Date.parse(e.startsAt) - BUILD_TIME.getTime()) < 36 * 3600_000) ?? nextMeetup(events, BUILD_TIME);
-const hasDate = !!ev?.startsAt;
-const p = ev ? presentEvent(ev, { now: BUILD_TIME, ticketing }) : null;
+const { events, speakers, partners, settings } = await content();
+const slack = slackLink(settings);
+const ev = pickTodayEvent(events, BUILD_TIME);
+const phase = todayPhase(ev, BUILD_TIME);
 const names = Object.fromEntries(speakers.map((s) => [s.id, s.name]));
-const hosts = (ev?.hosts ? partners.filter((x) => ev.hosts!.includes(x.id)) : partners).slice(0, 4);
-const after = ev ? upcoming.find((e) => e.id !== ev.id && resolveState(e, BUILD_TIME) !== 'cancelled' && (!ev.startsAt || !e.startsAt || e.startsAt > ev.startsAt)) : undefined;
+const supporters = ev ? eventSupporters(ev, partners) : [];
+const after = ev
+  ? upcomingEvents(events, BUILD_TIME).find((e) => e.id !== ev.id && resolveState(e, BUILD_TIME) !== 'cancelled' && (!ev.startsAt || !e.startsAt || e.startsAt > ev.startsAt))
+  : undefined;
+const afterP = after ? presentEvent(after, { now: BUILD_TIME }) : undefined;
 const share = ev ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${SITE_URL}${eventHref(ev)}?utm_source=today`)}` : '';
-const description = 'Tonight at ZurichJS: what is on now, what is next, the full programme, and a quick way to rate each talk while it is still fresh.';
+const description = ev
+  ? `ZurichJS on the evening of a meetup: arrival and directions, the running order with times, and talk ratings. Next: ${ev.title}${ev.startsAt ? `, ${dateLong(ev.startsAt)}` : ''}.`
+  : 'ZurichJS on the evening of a meetup: arrival and directions, the running order with times, and talk ratings.';
 ---
 
-{
-  !ev || !hasDate || !p ? (
-    <BaseLayout title="Tonight" description={description}>
-      <PageOpening slot="opening" title="No meetup tonight" sub="The next one is being planned. It is announced on Meetup first." />
-      <div class="px-gut py-[clamp(40px,5vw,72px)]">
-        <Button href={SITE.meetupGroupUrl} variant="black">
-          Follow ZurichJS on Meetup
-        </Button>
-      </div>
-    </BaseLayout>
-  ) : (
-    <BaseLayout title="Tonight" description={description}>
-      <PageOpening slot="opening" title={ev.title}>
-        <div class="text-[clamp(18px,1.6vw,21px)] leading-normal">
-          <b class="text-yellow">{p.whenShort}</b>
-          <br />
-          <span class="text-grey-mid">{p.venueShort}</span>
-        </div>
-        <Tonight client:load part="opening" ev={ev} names={names} now={BUILD_TIME.toISOString()} venue={`${p.venueShort}${p.venueStreet}`} eventHref={eventHref(ev)} />
-      </PageOpening>
+<BaseLayout title="Tonight" description={description}>
+  <section slot="opening" class="px-gut flex flex-col gap-[18px] pt-[clamp(16px,3vw,40px)] pb-[clamp(36px,5vw,64px)]">
+    <Tonight client:load part="opening" ev={ev} names={names} now={BUILD_TIME.toISOString()} />
+  </section>
 
-      <div class="flex flex-col gap-[clamp(48px,6vw,88px)] pt-[clamp(40px,5vw,72px)] pb-[clamp(24px,4vw,56px)]">
-        <section aria-labelledby="h-prog" class="px-gut flex flex-col gap-5">
+  <div class="flex flex-col gap-[clamp(48px,6vw,88px)] pt-[clamp(40px,5vw,72px)] pb-[clamp(24px,4vw,56px)]">
+    {
+      ev && ev.agenda.length > 0 && (
+        <section id="programme" aria-labelledby="h-prog" class="px-gut flex flex-col gap-5 scroll-mt-6">
           <h2 id="h-prog" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
-            Tonight’s programme
+            {phase === 'upcoming' ? 'Programme' : 'Tonight’s programme'}
           </h2>
           <Tonight client:load part="programme" ev={ev} names={names} now={BUILD_TIME.toISOString()} />
         </section>
+      )
+    }
 
-        <section aria-labelledby="h-rate" class="mx-gut bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center">
-          <div class="flex flex-col gap-2.5">
-            <h2 id="h-rate" class="m-0 text-[clamp(26px,2.8vw,38px)] leading-[1.15] font-bold">
-              How was tonight?
+    {
+      ev?.venue && (
+        <div class="px-gut">
+          <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} heading="Venue and arrival" />
+        </div>
+      )
+    }
+
+    {ev && <Tonight client:load part="feedback" ev={ev} now={BUILD_TIME.toISOString()} />}
+
+    {
+      supporters.length > 0 && (
+        <section aria-labelledby="h-made" class="px-gut flex flex-col gap-5">
+          <div class="flex flex-col gap-2">
+            <h2 id="h-made" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
+              Thanks to
             </h2>
-            <p class="m-0 text-[18px] leading-[1.55]">One score and a few open questions. Speakers read every comment, and it’s how we make the next one better.</p>
+            <p class="m-0 text-[18px] text-ink-2">The companies supporting this meetup.</p>
           </div>
-          <div class="flex flex-wrap gap-2.5 justify-end">
-            <Button href={`/feedback?event=${ev.slug}`} variant="black" grow>
-              Rate the evening
-            </Button>
-          </div>
+          <SupporterList items={supporters} />
         </section>
+      )
+    }
 
-        {
-          hosts.length > 0 && (
-            <section aria-labelledby="h-made" class="px-gut flex flex-col gap-5">
-              <div class="flex flex-col gap-2">
-                <h2 id="h-made" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
-                  Tonight is made possible by
-                </h2>
-                <p class="m-0 text-[18px] text-ink-2">The venue host and partners cover the room, food and drinks.</p>
-              </div>
-              <LogoGrid partners={hosts} />
-            </section>
-          )
-        }
-
-        <section aria-labelledby="h-after" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
-          <h2 id="h-after" class="m-0 mb-1 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold col-span-full">
-            Before you head home
-          </h2>
-          <Surface class="p-6 flex flex-col gap-2.5">
-            <h3 class="m-0 text-[21px] font-bold">Keep in touch</h3>
-            <p class="m-0 text-[17px] leading-normal flex-1">Talk between meetups on Slack, or follow along on LinkedIn.</p>
-            <div class="flex flex-wrap gap-2 mt-1.5">
-              <Button href={SITE.slackInviteUrl} variant="black" size="sm">
-                Join Slack
-              </Button>
-              <Button href={SITE.linkedinUrl} variant="white" size="sm">
-                LinkedIn
-              </Button>
-            </div>
-          </Surface>
-          <Surface class="p-6 flex flex-col gap-2.5">
-            <h3 class="m-0 text-[21px] font-bold">Support the community</h3>
-            <p class="m-0 text-[17px] leading-normal flex-1">ZurichJS is a non-profit run by volunteers. Members and partners pay for the next one.</p>
-            <div class="flex flex-wrap gap-2 mt-1.5">
-              <Button href="/membership" variant="black" size="sm">
-                Become a member
-              </Button>
-              <Button href="/donate" variant="white" size="sm">
-                Other ways to help
-              </Button>
-            </div>
-          </Surface>
-          <Surface tone="black" class="p-6 flex flex-col gap-2.5">
-            <h3 class="m-0 text-[21px] font-bold">Coming up</h3>
-            <p class="m-0 text-[17px] leading-normal flex-1">
-              {after ? `${after.title}, the next meetup${after.startsAt ? ` on ${dateLong(after.startsAt)}` : ''}.` : 'The next meetup is being planned. It is announced on Meetup first.'}
-            </p>
-            <div class="flex flex-wrap gap-2 mt-1.5">
-              <Button href={after ? eventHref(after) : '/events'} variant="yellow" size="sm">
-                {after ? 'See the next meetup' : 'See all events'}
-              </Button>
+    <section aria-labelledby="h-after" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
+      <h2 id="h-after" class="m-0 mb-1 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold col-span-full">
+        {phase === 'upcoming' || phase === 'none' ? 'Meanwhile' : 'Before you head home'}
+      </h2>
+      <Surface class="p-6 flex flex-col gap-2.5">
+        <h3 class="m-0 text-[21px] font-bold">Keep in touch</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">Talk between meetups on Slack, or follow along on LinkedIn.</p>
+        <div class="flex flex-wrap gap-2 mt-1.5">
+          <Button href={slack.href} variant="black" size="sm">
+            {slack.label}
+          </Button>
+          <Button href={SITE.linkedinUrl} variant="white" size="sm">
+            LinkedIn
+          </Button>
+        </div>
+      </Surface>
+      <Surface class="p-6 flex flex-col gap-2.5">
+        <h3 class="m-0 text-[21px] font-bold">Support the community</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">ZurichJS is a non-profit run by volunteers. Members, donors and partners pay for the next one.</p>
+        <div class="flex flex-wrap gap-2 mt-1.5">
+          <Button href="/membership" variant="black" size="sm">
+            Become a member
+          </Button>
+          <Button href="/donate" variant="white" size="sm">
+            Donate
+          </Button>
+        </div>
+      </Surface>
+      <Surface tone="black" class="p-6 flex flex-col gap-2.5">
+        <h3 class="m-0 text-[21px] font-bold">Coming up</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">
+          {after && afterP ? `${after.title}: ${afterP.dateLineShort}.` : 'The meetup after this one is being planned. It is announced on Meetup first.'}
+        </p>
+        <div class="flex flex-wrap gap-2 mt-1.5">
+          <Button href={after ? eventHref(after) : '/events'} variant="yellow" size="sm">
+            {after ? 'See that meetup' : 'See all events'}
+          </Button>
+          {
+            ev && (
               <Button href={share} variant="outline-white" size="sm" class="border!">
-                Share tonight
+                Share on LinkedIn
               </Button>
-            </div>
-          </Surface>
-        </section>
-      </div>
-    </BaseLayout>
-  )
-}
+            )
+          }
+        </div>
+      </Surface>
+    </section>
+  </div>
+</BaseLayout>

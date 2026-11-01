@@ -1,13 +1,16 @@
 import {
+  buildSchedule,
   initials,
-  type AgendaItem,
   type Event,
   type EventStatus,
   type Partner,
+  type PartnerKind,
   type Photo,
   type RatingRecord,
   type Speaker,
   type SpeakerTalk,
+  type SponsorTier,
+  type SupporterRole,
   type TalkFormat,
   type TalkRef,
   type Venue,
@@ -51,12 +54,15 @@ export function mapTalk(t: RawTalk): TalkRef {
   return {
     // Document id, so ratings can reference the talk.
     id: u(t._id ?? t.id),
+    slug: u(t.id),
     title: t.title ?? 'Untitled talk',
     description: u(t.description),
     format: talkFormat(u(t.type), u(t.durationMinutes)),
     durationMin: t.durationMinutes ?? 0,
     level: u(t.level),
     language: u(t.language),
+    tags: (t.tags ?? []).filter((x): x is string => !!x),
+    slidesUrl: u(t.slidesUrl),
     speakerIds: (t.speakerIds ?? []).filter((s): s is string => !!s),
   };
 }
@@ -74,23 +80,33 @@ export function parseAddress(address?: string | null): Pick<Venue, 'street' | 'z
 
 function mapVenue(r: RawEvent): Venue | undefined {
   const v = r.venue;
-  if (v?.name) return { name: v.name, street: u(v.street), zip: u(v.zip), city: v.city || 'Zürich', directions: u(v.directions) };
+  if (v?.name)
+    return {
+      name: v.name,
+      street: u(v.street),
+      zip: u(v.zip),
+      city: v.city || 'Zürich',
+      directions: u(v.directions),
+      entrance: u(v.entrance),
+      transport: u(v.transport),
+      accessibility: u(v.accessibility),
+    };
   if (!r.location) return undefined;
   return { name: r.location, ...parseAddress(r.address) };
 }
 
-const ZURICH_TIME = (iso: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+const ROLES: SupporterRole[] = ['venue', 'food', 'sponsor', 'community'];
 
 export function mapEvent(r: RawEvent): Event {
   const talks = (r.talks ?? []).filter((t): t is RawTalk => !!t).map(mapTalk);
   const startsAt = u(r.datetime);
-  const agenda: AgendaItem[] = r.agenda?.length
-    ? r.agenda.map((a) => ({ time: a.time ?? '', title: a.title ?? a.talk?.title ?? '', note: u(a.note), talk: a.talk ? mapTalk(a.talk) : undefined }))
-    : talks.map((t) => ({ time: startsAt ? ZURICH_TIME(startsAt) : '', title: t.title, talk: t }));
-  const photos: Photo[] = [
-    ...(r.photos ?? []).filter((p) => p.src).map((p) => ({ src: p.src!, alt: p.alt ?? r.title ?? '', width: u(p.width), height: u(p.height) })),
-    ...(!r.photos?.length && r.image ? [{ src: r.image, alt: r.title ?? 'Meetup photo' }] : []),
-  ];
+  const agenda = buildSchedule({
+    agenda: (r.agenda ?? []).map((a) => ({ time: a.time, kind: a.kind, title: a.title, note: a.note, talk: a.talk ? mapTalk(a.talk) : undefined })),
+    talks,
+    startsAt,
+  });
+  // Photos taken at the event. The promotional artwork (`image`) is the cover, never a photo.
+  const photos: Photo[] = (r.photos ?? []).filter((p) => p.src).map((p) => ({ src: p.src!, alt: p.alt ?? r.title ?? '', width: u(p.width), height: u(p.height) }));
   return {
     id: r._id,
     slug: r.id,
@@ -117,6 +133,11 @@ export function mapEvent(r: RawEvent): Event {
         }
       : undefined,
     hosts: (r.hosts ?? []).filter((h): h is string => !!h),
+    supporters: (r.supporters ?? []).flatMap((x) =>
+      x?.partnerId ? [{ partnerId: x.partnerId, role: (ROLES as (string | null | undefined)[]).includes(x.role) ? (x.role as SupporterRole) : 'sponsor' }] : [],
+    ),
+    photoCredit: u(r.photoCredit),
+    cover: r.image ? { src: r.image, alt: r.title ?? 'Event artwork' } : undefined,
     updatedAt: u(r._updatedAt),
   };
 }
@@ -150,7 +171,23 @@ export function mapSpeaker(r: RawSpeaker): Speaker {
   };
 }
 
-export const mapPartner = (r: RawPartner): Partner => ({ id: r.id, name: r.name ?? r.id, url: u(r.url), logo: u(r.logo) });
+const KINDS: PartnerKind[] = ['sponsor', 'venue', 'food', 'community', 'conference', 'supporting'];
+const TIERS: SponsorTier[] = ['champion', 'builder', 'friend', 'supporter'];
+
+export const mapPartner = (r: RawPartner): Partner => ({
+  id: r.id,
+  name: r.name ?? r.id,
+  url: u(r.url),
+  logo: u(r.logo),
+  kinds: (r.kinds ?? []).filter((k): k is PartnerKind => (KINDS as (string | null | undefined)[]).includes(k)),
+  tier: (TIERS as (string | null | undefined)[]).includes(r.tier) ? (r.tier as SponsorTier) : undefined,
+  // Never "current" unless an organiser ticked it, and never after its end date.
+  current: r.current === true && !(r.until && Date.parse(r.until) < Date.now()),
+  since: u(r.since),
+  until: u(r.until),
+  description: u(r.description),
+  allowReferrer: r.allowReferrer === true,
+});
 
 /** A rating without a score hides the rating part of the proof sentence (the award stays). */
 export function mapRating(r: RawSingletons['rating']): RatingRecord | null {

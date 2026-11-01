@@ -79,6 +79,7 @@ export type SiteSettings = {
     _type: "image";
   };
   twintNote?: string;
+  conferenceMediaFolder?: string;
 };
 
 export type Conference = {
@@ -180,6 +181,7 @@ export type ComprehensiveFeedback = {
   };
   additionalComments?: string;
   quoteConsent?: boolean;
+  quoteName?: string;
   email?: string;
   submittedAt?: string;
   ipHash?: string;
@@ -249,28 +251,6 @@ export type TalkSubmission = {
   };
 };
 
-export type Partner = {
-  _id: string;
-  _type: "partner";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  id?: Slug;
-  name?: string;
-  logo?: {
-    asset?: {
-      _ref: string;
-      _type: "reference";
-      _weak?: boolean;
-      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
-    };
-    hotspot?: SanityImageHotspot;
-    crop?: SanityImageCrop;
-    _type: "image";
-  };
-  url?: string;
-};
-
 export type Stats = {
   _id: string;
   _type: "stats";
@@ -313,6 +293,7 @@ export type Speaker = {
   website?: string;
   talks?: number;
   isVisible?: boolean;
+  legacySlugs?: Array<string>;
   talkReferences?: Array<{
     _ref: string;
     _type: "reference";
@@ -341,6 +322,9 @@ export type Events = {
     zip?: string;
     city?: string;
     directions?: string;
+    entrance?: string;
+    transport?: string;
+    accessibility?: string;
   };
   venueNote?: string;
   location?: string;
@@ -352,6 +336,17 @@ export type Events = {
     _key: string;
     [internalGroqTypeReferenceTo]?: "partner";
   }>;
+  supporters?: Array<{
+    partner: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "partner";
+    };
+    role?: "venue" | "food" | "sponsor" | "community";
+    _type: "eventSupporter";
+    _key: string;
+  }>;
   talks?: Array<{
     _ref: string;
     _type: "reference";
@@ -361,6 +356,7 @@ export type Events = {
   }>;
   agenda?: Array<{
     time?: string;
+    kind?: "doors" | "intro" | "talk" | "break" | "networking" | "close" | "other";
     title?: string;
     talk?: {
       _ref: string;
@@ -382,6 +378,7 @@ export type Events = {
   isProMeetup?: boolean;
   stripePriceId?: string;
   ticketSaleUrl?: string;
+  photoCredit?: string;
   image?: {
     asset?: {
       _ref: string;
@@ -423,56 +420,6 @@ export type Events = {
   };
   attendees?: number;
   excludeFromStats?: boolean;
-};
-
-export type SanityImageCrop = {
-  _type: "sanity.imageCrop";
-  top?: number;
-  bottom?: number;
-  left?: number;
-  right?: number;
-};
-
-export type SanityImageHotspot = {
-  _type: "sanity.imageHotspot";
-  x?: number;
-  y?: number;
-  height?: number;
-  width?: number;
-};
-
-export type SanityImageAsset = {
-  _id: string;
-  _type: "sanity.imageAsset";
-  _createdAt: string;
-  _updatedAt: string;
-  _rev: string;
-  originalFilename?: string;
-  label?: string;
-  title?: string;
-  description?: string;
-  altText?: string;
-  sha1hash?: string;
-  extension?: string;
-  mimeType?: string;
-  size?: number;
-  assetId?: string;
-  uploadId?: string;
-  path?: string;
-  url?: string;
-  metadata?: SanityImageMetadata;
-  source?: SanityAssetSourceData;
-};
-
-export type SanityImageMetadata = {
-  _type: "sanity.imageMetadata";
-  location?: Geopoint;
-  dimensions?: SanityImageDimensions;
-  palette?: SanityImagePalette;
-  lqip?: string;
-  blurHash?: string;
-  hasAlpha?: boolean;
-  isOpaque?: boolean;
 };
 
 export type Talk = {
@@ -536,11 +483,90 @@ export type SanityFileAsset = {
   source?: SanityAssetSourceData;
 };
 
+export type Partner = {
+  _id: string;
+  _type: "partner";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  id?: Slug;
+  name?: string;
+  logo?: {
+    asset?: {
+      _ref: string;
+      _type: "reference";
+      _weak?: boolean;
+      [internalGroqTypeReferenceTo]?: "sanity.imageAsset";
+    };
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  url?: string;
+  kinds?: Array<string>;
+  tier?: "champion" | "builder" | "friend" | "supporter";
+  current?: boolean;
+  since?: string;
+  until?: string;
+  description?: string;
+  allowReferrer?: boolean;
+};
+
+export type SanityImageCrop = {
+  _type: "sanity.imageCrop";
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+};
+
+export type SanityImageHotspot = {
+  _type: "sanity.imageHotspot";
+  x?: number;
+  y?: number;
+  height?: number;
+  width?: number;
+};
+
+export type SanityImageAsset = {
+  _id: string;
+  _type: "sanity.imageAsset";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  originalFilename?: string;
+  label?: string;
+  title?: string;
+  description?: string;
+  altText?: string;
+  sha1hash?: string;
+  extension?: string;
+  mimeType?: string;
+  size?: number;
+  assetId?: string;
+  uploadId?: string;
+  path?: string;
+  url?: string;
+  metadata?: SanityImageMetadata;
+  source?: SanityAssetSourceData;
+};
+
 export type SanityAssetSourceData = {
   _type: "sanity.assetSourceData";
   name?: string;
   id?: string;
   url?: string;
+};
+
+export type SanityImageMetadata = {
+  _type: "sanity.imageMetadata";
+  location?: Geopoint;
+  dimensions?: SanityImageDimensions;
+  palette?: SanityImagePalette;
+  lqip?: string;
+  blurHash?: string;
+  hasAlpha?: boolean;
+  isOpaque?: boolean;
 };
 
 export type Slug = {
@@ -549,11 +575,11 @@ export type Slug = {
   source?: string;
 };
 
-export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | Geopoint | SiteSettings | Conference | MeetupRating | Announcement | ComprehensiveFeedback | Feedback | TalkSubmission | Partner | Stats | Speaker | Events | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityImageMetadata | Talk | SanityFileAsset | SanityAssetSourceData | Slug;
+export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | Geopoint | SiteSettings | Conference | MeetupRating | Announcement | ComprehensiveFeedback | Feedback | TalkSubmission | Stats | Speaker | Events | Talk | SanityFileAsset | Partner | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityAssetSourceData | SanityImageMetadata | Slug;
 export declare const internalGroqTypeReferenceTo: unique symbol;
 // Source: ../zurichjs-website/packages/content/src/queries.ts
 // Variable: EVENTS_QUERY
-// Query: *[_type == "events" && defined(id.current)] | order(datetime desc) {  _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,  location, address, venue, venueNote, description, meetupUrl,  "image": image.asset->url,  "photos": photos[]{ "src": asset->url, alt, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },  practical[]{ label, value },  "hosts": hosts[]->id.current,  agenda[]{ time, title, note, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "speakerIds": speakers[]->id.current } },  "talks": talks[]->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "speakerIds": speakers[]->id.current },  recap{ "talks": talks[]{ summary, format, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "speakerIds": speakers[]->id.current } } }}
+// Query: *[_type == "events" && defined(id.current)] | order(datetime desc) {  _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,  location, address, venue, venueNote, description, meetupUrl,  "image": image.asset->url,  "photos": photos[]{ "src": asset->url, alt, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },  practical[]{ label, value },  "hosts": hosts[]->id.current,  supporters[]{ role, "partnerId": partner->id.current },  photoCredit,  agenda[]{ time, kind, title, note, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } },  "talks": talks[]->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current },  recap{ "talks": talks[]{ summary, format, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } } }}
 export type EVENTS_QUERYResult = Array<{
   _id: string;
   _updatedAt: string;
@@ -571,6 +597,9 @@ export type EVENTS_QUERYResult = Array<{
     zip?: string;
     city?: string;
     directions?: string;
+    entrance?: string;
+    transport?: string;
+    accessibility?: string;
   } | null;
   venueNote: string | null;
   description: string | null;
@@ -587,8 +616,14 @@ export type EVENTS_QUERYResult = Array<{
     value: string | null;
   }> | null;
   hosts: Array<string | null> | null;
+  supporters: Array<{
+    role: "community" | "food" | "sponsor" | "venue" | null;
+    partnerId: string | null;
+  }> | null;
+  photoCredit: string | null;
   agenda: Array<{
     time: string | null;
+    kind: "break" | "close" | "doors" | "intro" | "networking" | "other" | "talk" | null;
     title: string | null;
     note: string | null;
     talk: {
@@ -601,6 +636,7 @@ export type EVENTS_QUERYResult = Array<{
       tags: Array<string> | null;
       level: "Advanced" | "All levels" | "Beginner" | "Intermediate" | null;
       language: string | null;
+      slidesUrl: string | null;
       speakerIds: Array<string | null> | null;
     } | null;
   }> | null;
@@ -614,6 +650,7 @@ export type EVENTS_QUERYResult = Array<{
     tags: Array<string> | null;
     level: "Advanced" | "All levels" | "Beginner" | "Intermediate" | null;
     language: string | null;
+    slidesUrl: string | null;
     speakerIds: Array<string | null> | null;
   }> | null;
   recap: {
@@ -630,13 +667,14 @@ export type EVENTS_QUERYResult = Array<{
         tags: Array<string> | null;
         level: "Advanced" | "All levels" | "Beginner" | "Intermediate" | null;
         language: string | null;
+        slidesUrl: string | null;
         speakerIds: Array<string | null> | null;
       } | null;
     }> | null;
   } | null;
 }>;
 // Variable: SPEAKERS_QUERY
-// Query: *[_type == "speaker" && defined(id.current) && isVisible != false] {    "id": id.current, name, title, company, bio, location, interests, tagline,  twitter, github, linkedin, website, isVisible, _updatedAt,  "image": image.asset->url,  "talks": *[_type == "talk" && references(^._id)]{    title, type, durationMinutes,    "eventIds": *[_type == "events" && references(^._id)].id.current  }}
+// Query: *[_type == "speaker" && defined(id.current) && isVisible != false] {    "id": id.current, name, title, company, bio, location, interests, tagline,  twitter, github, linkedin, website, isVisible, _updatedAt, legacySlugs,  "image": image.asset->url,  "talks": *[_type == "talk" && references(^._id)]{      _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current,    "eventIds": *[_type == "events" && references(^._id)].id.current,    "legacyEventId": events->id.current  }}
 export type SPEAKERS_QUERYResult = Array<{
   id: string | null;
   name: string | null;
@@ -652,24 +690,41 @@ export type SPEAKERS_QUERYResult = Array<{
   website: string | null;
   isVisible: boolean | null;
   _updatedAt: string;
+  legacySlugs: Array<string> | null;
   image: string | null;
   talks: Array<{
+    _id: string;
+    id: string | null;
     title: string | null;
+    description: string | null;
     type: "deep-dive" | "lightning" | "talk" | null;
     durationMinutes: number | null;
+    tags: Array<string> | null;
+    level: "Advanced" | "All levels" | "Beginner" | "Intermediate" | null;
+    language: string | null;
+    slidesUrl: string | null;
+    speakerIds: Array<string | null> | null;
     eventIds: Array<string>;
+    legacyEventId: string | null;
   }>;
 }>;
 // Variable: PARTNERS_QUERY
-// Query: *[_type == "partner" && defined(id.current)] { "id": id.current, name, url, "logo": logo.asset->url }
+// Query: *[_type == "partner" && defined(id.current)] | order(name asc) {  "id": id.current, name, url, "logo": logo.asset->url, kinds, tier, current, since, until, description, allowReferrer}
 export type PARTNERS_QUERYResult = Array<{
   id: string | null;
   name: string | null;
   url: string | null;
   logo: string | null;
+  kinds: Array<string> | null;
+  tier: "builder" | "champion" | "friend" | "supporter" | null;
+  current: boolean | null;
+  since: string | null;
+  until: string | null;
+  description: string | null;
+  allowReferrer: boolean | null;
 }>;
 // Variable: SINGLETONS_QUERY
-// Query: {  "rating": *[_type == "meetupRating"][0]{ score, scale, count, url, source, checkedAt },  "conference": *[_type == "conference"][0]{ state, headline, body, cta, cfp, url },  "support": *[_type == "siteSettings"][0]{    "twintQr": twintQr{ alt, "src": asset->url, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },    twintNote  }}
+// Query: {  "rating": *[_type == "meetupRating"][0]{ score, scale, count, url, source, checkedAt },  "conference": *[_type == "conference"][0]{ state, headline, body, cta, cfp, url },  "support": *[_type == "siteSettings"][0]{    "twintQr": twintQr{ alt, "src": asset->url, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },    twintNote  },  "site": *[_type == "siteSettings"][0]{ slackInviteUrl, conferenceMediaFolder }}
 export type SINGLETONS_QUERYResult = {
   rating: {
     score: string | null;
@@ -695,6 +750,10 @@ export type SINGLETONS_QUERYResult = {
       height: number | null;
     } | null;
     twintNote: string | null;
+  } | null;
+  site: {
+    slackInviteUrl: string | null;
+    conferenceMediaFolder: string | null;
   } | null;
 };
 

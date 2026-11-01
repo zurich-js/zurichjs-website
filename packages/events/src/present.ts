@@ -1,5 +1,5 @@
 import { dateShort, dateTime, dateTimeNoYear, dateTimeRange, dateLong } from './format';
-import { FEEDBACK_WINDOW_MS, resolveState } from './state';
+import { FEEDBACK_WINDOW_MS, resolveState, talkCount } from './state';
 import type { TicketingAction, TicketingProvider } from './ticketing';
 import type { Event, EventState } from './types';
 
@@ -142,10 +142,16 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
   }
 }
 
-/** "Sun 16 Sep 2026 · Venue AG, Zürich. Two talks and photos from the evening." */
-export function recapSummary(ev: Event): string {
-  const n = ev.recap?.talks.length ?? 0;
-  const words = ['No talks', 'One talk', 'Two talks', 'Three talks', 'Four talks'][n] ?? `${n} talks`;
-  const photos = ev.photos.length ? ' and photos from the evening' : '';
-  return `${ev.startsAt ? dateLong(ev.startsAt) : ''} · ${ev.venue ? `${ev.venue.name}, ${ev.venue.city}` : ''}. ${words}${photos}.`;
+/**
+ * "Sun 16 Sep 2026 · Venue AG, Zürich. Five talks and photos from the evening."
+ * Counts the talks of the programme (or the recap), so a populated programme
+ * never reads "No talks". Says nothing about talks or photos it does not have.
+ */
+export function recapSummary(ev: Event, opts: { photos?: number } = {}): string {
+  const n = talkCount(ev);
+  const words = n ? (['', 'One talk', 'Two talks', 'Three talks', 'Four talks', 'Five talks', 'Six talks'][n] ?? `${n} talks`) : '';
+  const hasPhotos = (opts.photos ?? ev.photos.length) > 0;
+  const tail = words && hasPhotos ? `${words} and photos from the evening.` : words ? `${words}.` : hasPhotos ? 'Photos from the evening.' : '';
+  const head = [ev.startsAt ? dateLong(ev.startsAt) : '', ev.venue ? `${ev.venue.name}, ${ev.venue.city}` : ''].filter(Boolean).join(' · ');
+  return [head ? `${head}.` : '', tail].filter(Boolean).join(' ');
 }

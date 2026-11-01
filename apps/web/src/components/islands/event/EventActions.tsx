@@ -1,4 +1,4 @@
-import { buildIcs, presentEvent, type Event, type EventState } from '@zurichjs/events';
+import { buildIcs, eventDisplayTitle, presentEvent, type Event, type EventState } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ticketing } from '~/lib/ticketing';
@@ -15,23 +15,28 @@ interface Props {
 export default function EventActions({ ev, initial, url }: Props) {
   const state = useEventState(ev, initial);
   const p = presentEvent(ev, { override: state, ticketing });
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState('');
+  const say = (msg: string) => {
+    setStatus(msg);
+    setTimeout(() => setStatus(''), 3000);
+  };
 
-  const copy = (text: string) =>
-    navigator.clipboard?.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
   const share = async () => {
     track('share_click', { eventId: ev.id });
-    const data = { title: `ZurichJS: ${ev.title}`, text: `${p.dateLineShort} · ${p.venueShort}`, url: `${url}?utm_source=share` };
+    const data = { title: eventDisplayTitle(ev.title), text: `${p.dateLineShort} · ${p.venueShort}`, url: `${url}?utm_source=share` };
     if (navigator.share) {
       try {
         await navigator.share(data);
-      } catch {
-        /* dismissed */
+        return;
+      } catch (e) {
+        if ((e as DOMException)?.name === 'AbortError') return; // dismissed
       }
-    } else copy(data.url);
+    }
+    if (!navigator.clipboard) return say(`Copy this link: ${url}`);
+    navigator.clipboard.writeText(data.url).then(
+      () => say('Link copied.'),
+      () => say(`Couldn’t copy. The link is ${url}`),
+    );
   };
   const addToCalendar = () => {
     const ics = buildIcs(ev, url);
@@ -41,7 +46,8 @@ export default function EventActions({ ev, initial, url }: Props) {
     a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
     a.download = `zurichjs-${ev.slug}.ics`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    say('Calendar file downloaded. Open it to add the meetup.');
   };
   const handoff = p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist';
 
@@ -70,8 +76,11 @@ export default function EventActions({ ev, initial, url }: Props) {
           </Button>
         )}
         <Button variant="outline-white" class="text-[17px] px-5" onClick={share}>
-          {copied ? 'Link copied' : 'Share'}
+          Share
         </Button>
+      </div>
+      <div role="status" class="text-[15px] text-grey-mid empty:hidden">
+        {status}
       </div>
       {state === 'past' && initial !== 'past' ? (
         <div class="text-[15px] text-grey-mid">This meetup has taken place. Reload the page for the recap.</div>

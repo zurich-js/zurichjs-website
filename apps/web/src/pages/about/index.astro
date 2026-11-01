@@ -9,10 +9,11 @@ import Photo from '@zurichjs/design/components/Photo.astro';
 import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
+import { PHOTOS, SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
 import { cx } from '@zurichjs/design/recipes';
 
-const { events, milestones, team, quotes } = await content();
+const { events, milestones, team, quotes, settings } = await content();
+const slack = slackLink(settings);
 const eventsById = new Map(events.map((e) => [e.id, e]));
 const nextHref = await nextMeetupHref();
 
@@ -30,14 +31,14 @@ const VALUES = [
 ] as const;
 
 const SUPPORT = [
-  { h: 'Become a member', d: 'Join the Swiss JavaScript Group association.', href: 'https://zurichjs.com/membership' },
+  { h: 'Become a member', d: 'Join the Swiss JavaScript Group association.', href: '/membership' },
   { h: 'Other ways to help', d: 'Speak, volunteer or support the association.', href: '/donate' },
   { h: 'Host or sponsor a meetup', d: 'Offer a room, food or a contribution.', href: '/partners' },
 ];
 
 const TOUCH = [
   { label: 'Meetup', bg: 'bg-[#ED1C40]', href: SITE.meetupGroupUrl },
-  { label: 'Slack', bg: 'bg-[#4A154B]', href: SITE.slackInviteUrl },
+  { label: slack.external ? 'Slack' : 'Slack (ask for an invite)', bg: 'bg-[#4A154B]', href: slack.href },
   { label: 'LinkedIn', bg: 'bg-[#0A66C2]', href: SITE.linkedinUrl },
   { label: 'Instagram', bg: 'bg-[linear-gradient(45deg,#F58529_0%,#DD2A7B_50%,#8134AF_100%)]', href: SITE.instagramUrl },
   { label: 'Bluesky', bg: 'bg-[#1185FE]', href: SITE.blueskyUrl },
@@ -257,9 +258,9 @@ const isExt = (href: string) => /^https?:/.test(href);
           TOUCH.map((t) => (
             <a
               href={t.href}
-              target="_blank"
+              {...(isExt(t.href) ? { target: '_blank' } : {})}
               rel="noopener"
-              aria-label={`ZurichJS on ${t.label} (opens in a new tab)`}
+              aria-label={isExt(t.href) ? `ZurichJS on ${t.label} (opens in a new tab)` : undefined}
               class={cx('no-underline min-h-[52px] px-[22px] rounded-pill text-white font-bold text-[19px] flex items-center justify-center hover:brightness-[0.92] flex-[1_1_100%] md:flex-[0_0_auto]', t.bg)}
             >
               {t.label}

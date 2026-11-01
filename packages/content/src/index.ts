@@ -21,6 +21,37 @@ export interface SiteContent {
   quotes: Quote[];
   /** One-off contributions on /donate. */
   support: SupportInfo;
+  /** Site settings editors change without a deploy. */
+  settings: SiteSettings;
+}
+
+export interface SiteSettings {
+  /** A verified Slack invite, or undefined: the site then offers "Ask us for a Slack invite". */
+  slackInviteUrl?: string;
+  /** ImageKit folder of the conference photos (the conference collection on /media). */
+  conferenceMediaFolder?: string;
+}
+
+/**
+ * Only a complete invite link counts. The old site shipped a truncated one
+ * (".../shared_invite/" with no token), which opens Slack's error page.
+ */
+export function validSlackInvite(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:') return undefined;
+    if (u.hostname === 'join.slack.com') return /^\/t\/[^/]+\/shared_invite\/[A-Za-z0-9_-]{8,}/.test(u.pathname) ? url : undefined;
+    return url;
+  } catch {
+    return undefined;
+  }
+}
+
+/** The Slack call to action: the invite when one is set, otherwise a way to ask for one. */
+export function slackLink(settings: SiteSettings): { href: string; label: string; external: boolean } {
+  const invite = validSlackInvite(settings.slackInviteUrl);
+  return invite ? { href: invite, label: 'Join our Slack', external: true } : { href: '/contact?topic=slack', label: 'Ask us for a Slack invite', external: false };
 }
 
 type Env = Record<string, string | undefined>;
@@ -84,6 +115,8 @@ function sampleContent(): SiteContent {
     quotes: sample.QUOTES,
     // Never a sample payment code: the Twint QR only ever comes from Sanity.
     support: {},
+    // No sample Slack invite either: an unverified link would ship.
+    settings: {},
   };
 }
 
@@ -113,6 +146,10 @@ async function sanityContent(env: Env): Promise<SiteContent> {
     milestones: fallback.milestones,
     quotes: fallback.quotes,
     support: mapSupport(singletons.support),
+    settings: {
+      slackInviteUrl: validSlackInvite(singletons.site?.slackInviteUrl),
+      conferenceMediaFolder: singletons.site?.conferenceMediaFolder ?? undefined,
+    },
   };
 }
 

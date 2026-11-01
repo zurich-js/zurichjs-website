@@ -181,3 +181,40 @@ Plain-language status after each phase. Newest at the bottom.
 - SEO parity gate: OK. The only new note is the `/donate` title change.
 - Static checks: knip, oxlint, oxfmt, `astro check` and `pnpm audit` are clean.
 - Studio: build and typegen pass.
+
+## Phase 3: Sanity (2026-11-01)
+
+**Done**
+
+- **Typed queries:**
+  - `@zurichjs/content` reads through types that `sanity typegen` generates from the Studio schema and the site's queries (`sanity.types.ts`).
+  - The raw shapes are derived from them, nullable throughout, because production documents predate the V2 schema.
+  - A test catches a query changed without re-running typegen.
+- **Draft preview:** `SANITY_PERSPECTIVE=drafts` (token required) builds the static site from drafts, with noindex everywhere, `robots.txt` disallowing everything and a "Draft preview" bar.
+- **`/donate`:** a "One-off contribution" section with email and a Twint QR code that appears once it is uploaded to Site settings.
+- **Studio branch `v2/phase-3-sanity`:**
+  - Twint fields on Site settings
+  - `npm run schema` and `npm run typegen` scripts
+  - the pro-meetup and Stripe fields deprecated
+  - PR opened, cross-linked with the website PR
+
+**Verified how**
+
+- **Tests:**
+  - Unit tests: 100, including perspective, rating, support mapping and types-in-sync.
+  - `astro check`: 0 errors.
+  - Playwright: 79 tests, including "no sample payment code" and "regular builds are indexable".
+- **Static checks:** knip, oxlint and oxfmt are clean.
+- **SEO parity gate:** OK.
+- **Preview builds:**
+  - Without a token, the build fails with a clear message.
+  - With a token, every page is `noindex,nofollow`, `robots.txt` is `Disallow: /`, and the bar shows. Sanity is blocked here, so that build ran on sample content.
+- **Studio:** `sanity build` and typegen pass.
+
+**Open (owner)**
+
+- Upload the Twint QR in Site settings, once the Studio is deployed.
+- Create the preview Netlify site, with `SANITY_PERSPECTIVE=drafts` and a Viewer token (Phase 4 RUNBOOK).
+- `sanity deploy`, and run the additive migration on `production`.
+
+**Next:** Phase 4 (CI and Netlify).

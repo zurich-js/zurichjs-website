@@ -7,7 +7,7 @@ import { buildMeta, type MetaInput } from '@zurichjs/seo';
 import Footer from '@zurichjs/design/components/Footer.astro';
 import Header from '@zurichjs/design/components/Header.astro';
 import { Font } from 'astro:assets';
-import { SITE, content, nextMeetupHref } from '~/lib/content';
+import { PREVIEW, SITE, content, nextMeetupHref } from '~/lib/content';
 import '~/styles/global.css';
 
 type Props = Omit<MetaInput, 'path' | 'title'> & {
@@ -22,7 +22,8 @@ type Props = Omit<MetaInput, 'path' | 'title'> & {
 const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '') || '/';
 const { title, fullTitle, path = cleanPath, jsonLd = [], ...meta } = Astro.props;
 const docTitle = fullTitle ?? (title === 'ZurichJS' ? 'ZurichJS · JavaScript meetups in Zurich' : `${title} · ZurichJS`);
-const head = buildMeta({ ...meta, title: docTitle, path });
+// Draft preview builds are never indexed, whatever the page says.
+const head = buildMeta({ ...meta, noindex: meta.noindex || PREVIEW, title: docTitle, path });
 const nextHref = await nextMeetupHref();
 const c = await content();
 const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY;
@@ -63,6 +64,13 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
   </head>
   <body class="min-h-screen flex flex-col bg-white text-black">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-3 focus:left-3 focus:bg-yellow focus:text-black focus:px-4 focus:py-2 focus:rounded-pill focus:font-bold">Skip to content</a>
+    {
+      PREVIEW && (
+        <div role="status" class="bg-yellow text-black text-center text-[15px] font-bold px-gut py-2">
+          Draft preview: unpublished changes from Sanity. Not the live site.
+        </div>
+      )
+    }
     <div class="on-black bg-black text-white">
       <Header nextHref={nextHref} confState={c.conference.state} />
       <slot name="opening" />

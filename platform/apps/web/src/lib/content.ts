@@ -1,10 +1,12 @@
 /** Build-time content access for pages. One fetch per build (see @zurichjs/content). */
-import { loadContent } from '@zurichjs/content';
+import { isPreview, loadContent } from '@zurichjs/content';
 import { nextMeetup } from '@zurichjs/events';
 
 export { ticketing } from './ticketing';
 
 export { PHOTOS, SITE } from '@zurichjs/content';
+/** Draft preview build (SANITY_PERSPECTIVE=drafts): noindex everywhere, robots.txt disallows all. */
+export const PREVIEW = isPreview(process.env);
 export const content = () => loadContent(import.meta.env.MODE === 'test' ? { ...process.env, CONTENT_SOURCE: 'sample' } : process.env);
 
 /**

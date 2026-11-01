@@ -3,12 +3,17 @@
  * Support ZurichJS. Kept at the production URL /donate (and its 301s from
  * /buy-us-a-coffee and /support) for SEO, but there are no online payments:
  * Stripe was removed (owner decision, docs/v2/DECISIONS.md). The page lists
- * the ways to support the community instead.
+ * the ways to support the community; one-off contributions go by email or,
+ * once uploaded in Sanity Site settings, by Twint QR code.
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { SITE } from '~/lib/content';
+import { SITE, content } from '~/lib/content';
 import { isExternal } from '@zurichjs/design/recipes';
+
+const { support } = await content();
+const qr = support.twintQr;
 
 const GOES = [
   ['Venues', 'Room hire and equipment on nights without a host.'],
@@ -49,8 +54,33 @@ const WAYS = [
           </a>
         ))
       }
-      <p class="m-0 mt-2 text-[17px] leading-[1.55] text-ink-2">
-        We don’t take online payments. For a one-off contribution, write to <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a>.
+    </section>
+
+    <section aria-labelledby="h-oneoff" class="flex flex-col gap-[18px]">
+      <h2 id="h-oneoff" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">One-off contribution</h2>
+      {
+        qr && (
+          <Surface class="p-6 flex flex-col md:flex-row gap-5 items-start md:items-center">
+            <img
+              src={`${qr.src}?w=480&fm=png`}
+              alt={qr.alt}
+              width="240"
+              height="240"
+              loading="eager"
+              decoding="async"
+              class="w-[240px] h-[240px] rounded-[16px] bg-white p-3 box-border shrink-0"
+              data-twint-qr
+            />
+            <div class="flex flex-col gap-1.5">
+              <div class="text-[19px] font-bold">Twint</div>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{support.twintNote ?? 'Scan with the Twint app. Any amount helps.'}</p>
+            </div>
+          </Surface>
+        )
+      }
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+        {qr ? 'Or write to ' : 'We don’t take online payments. For a one-off contribution, write to '}
+        <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a>.
       </p>
     </section>
 

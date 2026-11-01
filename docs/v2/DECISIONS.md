@@ -148,3 +148,23 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - Readiness no longer asks for a Stripe price.
 - **The Sane seam is unchanged.** `TicketingProvider` keeps its `buy` action kind, and `chainTicketing` stays for when Sane sells tickets.
 - **The production Next app at the repository root is untouched.** It is replaced at switchover.
+
+## Phase 3: Sanity (2026-11-01)
+
+- **Types are generated in the Studio repo and committed in the website.**
+  - `sanity-typegen.json` reads the website's `queries.ts` from a side-by-side checkout and writes `platform/packages/content/src/sanity.types.ts`.
+  - `npm run typegen` also extracts the schema offline (`scripts/extract-schema.ts`), so it needs no Sanity login or network.
+  - `overloadClientMethods` is off, because the content package uses plain `fetch`, not `@sanity/client`.
+  - CI cannot run typegen without the Studio repo. Instead, `types-in-sync.test.ts` fails when a query's text differs from the one its type was generated from.
+- **The generated types are wrapped in `Loose<>`** (every field optional and nullable), because production documents predate the V2 schema's required fields. The mappers stay defensive, and `tsc` still catches a mapper reading a field the query does not return.
+- **Draft preview is a separate static build, not server rendering.**
+  - `SANITY_PERSPECTIVE=drafts` with `SANITY_READ_TOKEN` builds the same static site from drafts.
+  - It runs as a second Netlify site or a branch-deploy context, rebuilt by the Phase 4 webhook.
+  - Preview builds are noindex on every page and disallow everything in `robots.txt`, and show a "Draft preview" bar.
+  - Drafts without a token fail the build instead of silently falling back to sample content.
+  - This keeps one rendering path (static) and needs no preview server or secrets in the browser.
+- **One-off contributions (owner, 2026-11-01): email, or a Twint QR code.**
+  - The QR is an image on Sanity Site settings (`twintQr`, with alt text, plus an optional `twintNote`). `/donate` shows it only when it exists.
+  - Sample content never contains a QR, so a placeholder payment code cannot ship.
+  - Stripe, including Apple Pay, stays out for now.
+- **Legal text stays as it is (owner):** the refund policy and the terms and conditions still describe paid tickets, in case payments come back.

@@ -101,3 +101,18 @@ test('the mobile menu opens and closes from the keyboard', async ({ page, isMobi
   await expect(page.locator('#mobile-nav')).toBeHidden();
   await expect(btn).toHaveText('Menu');
 });
+
+test('the support page never shows a sample payment code', async ({ page }) => {
+  // The Twint QR only comes from Sanity Site settings; sample content has none.
+  await page.goto('/donate');
+  await expect(page.locator('[data-twint-qr]')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'One-off contribution' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toBeVisible();
+});
+
+test('regular builds are indexable and show no preview bar', async ({ page, request }) => {
+  await page.goto('/');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /^index,follow/);
+  await expect(page.getByText('Draft preview')).toHaveCount(0);
+  expect(await (await request.get('/robots.txt')).text()).toContain('Allow: /');
+});

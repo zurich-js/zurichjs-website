@@ -30,7 +30,7 @@ export default function PartnersForm({ nextHref }: { nextHref: string }) {
 
   // The cards above preselect a way of helping.
   useEffect(() => {
-    const initial = asWay(window.__zjsPartnerWay);
+    const initial = asWay(window.__zjsPartnerWay) ?? asWay(new URLSearchParams(location.search).get('way'));
     if (initial) setF((p) => ({ ...p, way: initial }));
     const onWay = (e: Event) => {
       const w = asWay((e as CustomEvent<string>).detail);

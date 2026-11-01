@@ -3,15 +3,26 @@ import LogoGrid from './LogoGrid.astro';
 import type { Partner } from '@zurichjs/events';
 
 interface Props {
+  /** Current sponsors first, then venue hosts. Empty: the section is hidden. */
   partners: Partner[];
   heading?: string;
   link?: boolean;
 }
-const { partners, heading = '30+ companies have hosted or supported us', link = true } = Astro.props;
+const { partners, heading = 'Companies who host and support ZurichJS', link = true } = Astro.props;
 ---
 
-<section aria-labelledby="h-hosts" class="px-gut flex flex-col gap-[22px]">
-  <h2 id="h-hosts" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">{heading}</h2>
-  <LogoGrid partners={partners} />
-  {link && <a href="/partners" class="self-start font-bold text-[18px] underline underline-offset-4">Host a meetup or support the community</a>}
-</section>
+{
+  partners.length > 0 && (
+    <section aria-labelledby="h-hosts" class="px-gut flex flex-col gap-[22px]">
+      <h2 id="h-hosts" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
+        {heading}
+      </h2>
+      <LogoGrid partners={partners} />
+      {link && (
+        <a href="/partners" class="self-start font-bold text-[18px] underline underline-offset-4">
+          Host a meetup or support the community
+        </a>
+      )}
+    </section>
+  )
+}

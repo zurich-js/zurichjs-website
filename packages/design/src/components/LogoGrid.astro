@@ -1,24 +1,46 @@
 ---
+/**
+ * Partner logos. Each links to the partner (new tab) and the image's alt is
+ * the company name, so the link has an accessible name; without a logo the
+ * name is shown as text. Sponsors who asked for referral analytics
+ * (`allowReferrer`) get links without `noreferrer`. Renders nothing when empty.
+ */
 import type { Partner } from '@zurichjs/events';
 
 interface Props {
   partners: Partner[];
+  /** Shown under each logo, e.g. "Venue host" or the partner's own line. */
+  caption?: (p: Partner) => string | undefined;
 }
-const { partners } = Astro.props;
+const { partners, caption } = Astro.props;
+const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer');
 ---
 
-<ul class="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3 list-none m-0 p-0">
-  {
-    partners.map((p) => (
-      <li class="h-20 rounded-2xl bg-grey flex items-center justify-center text-[14px] text-ink-2 px-4">
-        {p.logo ? (
-          <a href={p.url} target="_blank" rel="noopener" class="flex items-center justify-center w-full h-full">
-            <img src={p.logo} alt={p.name} width="120" height="48" loading="lazy" class="max-h-12 w-auto object-contain" />
-          </a>
-        ) : (
-          <span>{p.name}</span>
-        )}
-      </li>
-    ))
-  }
-</ul>
+{
+  partners.length > 0 && (
+    <ul class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] gap-3 list-none m-0 p-0">
+      {partners.map((p) => (
+        <li class="flex flex-col gap-1.5">
+          {p.url ? (
+            <a href={p.url} target="_blank" rel={rel(p)} class="h-20 rounded-2xl bg-grey flex items-center justify-center px-4 no-underline text-black hover:bg-grey-soft">
+              {p.logo ? (
+                <img src={p.logo} alt={`${p.name} (opens in a new tab)`} width="120" height="48" loading="lazy" decoding="async" class="max-h-12 max-w-full w-auto object-contain" />
+              ) : (
+                <span class="font-bold text-[16px] text-center">{p.name}</span>
+              )}
+            </a>
+          ) : (
+            <div class="h-20 rounded-2xl bg-grey flex items-center justify-center px-4">
+              {p.logo ? (
+                <img src={p.logo} alt={p.name} width="120" height="48" loading="lazy" decoding="async" class="max-h-12 max-w-full w-auto object-contain" />
+              ) : (
+                <span class="font-bold text-[16px] text-center">{p.name}</span>
+              )}
+            </div>
+          )}
+          {caption?.(p) && <span class="text-[14px] text-ink-2 px-1 leading-snug">{caption(p)}</span>}
+        </li>
+      ))}
+    </ul>
+  )
+}

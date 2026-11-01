@@ -189,4 +189,4 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - Figtree has no ✓ and no non-breaking hyphen; there is now an SVG `Check` icon and a plain hyphen.
   - The gallery's `<code>` labels use Figtree instead of a system monospace.
 - **Lighthouse thresholds:** accessibility and SEO = 1, best practices ≥ 0.95, performance ≥ 0.9 as the median of 3 runs. Shared CI runners vary in speed, and local runs score 99–100.
-- **Claude review is pinned to a commit SHA** (`anthropics/claude-code-action` v1.0.266). Without `ANTHROPIC_API_KEY` it passes with a notice.
+- **No Claude review workflow (owner).** The owner does not want reviews that run on an Anthropic API key. The drafted `claude-review.yml` was removed; CodeRabbit and the CI checks remain.

@@ -227,7 +227,7 @@ Plain-language status after each phase. Newest at the bottom.
   - **checks:** lint, format, knip, types, unit tests, audit
   - **site:** build, e2e and accessibility, visual regression, SEO parity, Lighthouse, with reports uploaded
   - **reference:** the `v2/` reference site
-- **`Claude review` workflow:** pinned to a commit SHA, and skipped with a notice when there is no key.
+- **No Claude review workflow** (owner: no API-key reviews).
 - **`platform/apps/web/netlify.toml`:**
   - the build, with production required to read Sanity
   - the scheduled function
@@ -255,6 +255,6 @@ Plain-language status after each phase. Newest at the bottom.
 
 **Open (owner)**
 
-- Steps 1–7 of the RUNBOOK setup: the Netlify site or sites, environment variables, build hook, Sanity webhook or webhooks, the Twint QR, and `ANTHROPIC_API_KEY`.
+- Steps 1–7 of the RUNBOOK setup: the Netlify site or sites, environment variables, build hook, Sanity webhook or webhooks, and the Twint QR.
 
 **Next:** Phase 5 (agentic workflow).

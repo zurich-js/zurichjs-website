@@ -225,3 +225,28 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - The SEO gate has no routes left in a removed, descoped or pending state.
 
 - **The Studio's typegen** writes to `packages/content/src/sanity.types.ts`, the new path.
+
+## Phase 5: agents and the Slack content agent (owner, 2026-11-01)
+
+- **Agent-agnostic (owner).**
+  - `AGENTS.md` is the single set of instructions, and `CLAUDE.md` is only `@AGENTS.md`.
+  - Playbooks are plain Agent Skills markdown in `agents/skills/`, and Claude Code loads them through the `.claude/skills` symlink.
+  - Roles are in `agents/roles/`, with thin `.claude/agents/*` wrappers.
+- **`.mcp.json`:** Sanity, GitHub and Playwright, pinned, with tokens taken only from the environment. context7 and the Netlify MCP from the draft were dropped: one is a third-party docs service, and an agent should not hold a Netlify token.
+- **The Slack content agent is our own bot, model-agnostic (owner).** It runs as Netlify Functions in this repository, uses the Vercel AI SDK, and the provider is chosen by environment variables (`openai`, `anthropic`, `openai-compatible`). The owner chose this over Claude in Slack, which needs a Claude Team plan, is in beta, and works with Claude only.
+- **Drafts plus a Publish button (owner).**
+  - The model's tools write drafts only, and the store refuses any write that isn't a draft.
+  - Publishing is deterministic code behind a Slack button:
+    - only `SLACK_PUBLISHER_IDS` can publish
+    - the draft must pass the readiness check
+    - Discard removes only the draft
+  - There is no delete tool, and slugs cannot change.
+- **One private channel (owner).** Everyone in the channel can draft; only the allowlist can publish.
+- **Typed tools instead of handing the model the Sanity MCP.** This allows a field allowlist, draft-only writes, a before → after change log, and Zurich-time conversion. The legacy `location` and `address` fields stay in sync with the venue, as the Studio asks.
+- **Readiness rules live in `@zurichjs/events` too,** with shared test cases. They must match the Studio's `lib/readiness.ts`.
+- **First version handles events plus the Twint note.** Creating talks or speakers from Slack would need references to unpublished documents, and publishing those in the wrong order fails. Talks and speakers stay in the Studio for now; a programme can be written as agenda lines.
+- **Runtime:**
+  - `slack-events` answers Slack within 3 seconds and hands the work to `slack-agent-background`, a Netlify Background Function. Netlify's bundler detected it as `background`.
+  - `slack-interactivity` uses `waitUntil`.
+  - The handoff between functions is HMAC-signed with the Slack signing secret.
+- **No model in CI.** Tests use an in-memory Sanity and the AI SDK's scripted mock model.

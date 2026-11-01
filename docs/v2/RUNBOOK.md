@@ -93,6 +93,10 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
 1. In Netlify › Deploys, open the last deploy of the old app and click "Publish deploy". This is instant.
 2. To build the old app again, set the build settings back to their previous values (base `/`, the old build command) and revert the merge on `main`.
 
+## Slack content agent (optional)
+
+Organisers can update meetups from a private Slack channel. The agent writes drafts, and an organiser on the publish list presses **Publish**. Setup (the Slack app from `slack/manifest.yml`, a Sanity Editor token, a model API key) and the environment variables are in [AUTOMATION.md](./AUTOMATION.md).
+
 ## Draft preview site (optional, for editors)
 
 Create a second Netlify site with the same repository and build settings, plus:

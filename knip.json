@@ -1,10 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreExportsUsedInFile": true,
-  "ignore": ["vendor/**"],
+  "ignore": ["vendor/**", "tools/*.d.mts"],
   "workspaces": {
     ".": {
-      "entry": ["tools/**/*.mjs", "e2e/**/*.ts"]
+      "entry": ["tools/**/*.{mjs,ts}", "e2e/**/*.ts"]
     },
     "apps/web": {
       "entry": ["src/pages/**/*.{astro,ts}", "netlify/functions/*.mts", "test/**/*.ts"],

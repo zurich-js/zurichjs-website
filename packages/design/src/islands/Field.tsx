@@ -14,18 +14,30 @@ interface Wrap {
   labelSize?: 'md' | 'lg';
 }
 
-/** Ids for the hint and error, and the aria-describedby value that points at them. */
+/**
+ * Ids for the label, hint and error. The control is named by the label text
+ * alone (`aria-labelledby`) and described by the hint and error, so a screen
+ * reader does not read the hint and the error as part of the field's name.
+ */
 function useDescribedBy(hint: unknown, error: string | undefined) {
   const id = useId();
-  const ids = { hint: `${id}-hint`, error: `${id}-error` };
+  const ids = { label: `${id}-label`, hint: `${id}-hint`, error: `${id}-error` };
   const describedBy = [hint ? ids.hint : '', error ? ids.error : ''].filter(Boolean).join(' ') || undefined;
   return { ids, describedBy };
 }
 
-function Wrapper({ label, hint, error, class: className, labelSize = 'md', ids, children }: Wrap & { ids: { hint: string; error: string }; children: ComponentChildren }) {
+function Wrapper({
+  label,
+  hint,
+  error,
+  class: className,
+  labelSize = 'md',
+  ids,
+  children,
+}: Wrap & { ids: { label: string; hint: string; error: string }; children: ComponentChildren }) {
   return (
     <label class={cx('flex flex-col gap-1.5 font-bold', labelSize === 'lg' ? 'text-[clamp(19px,1.8vw,22px)] leading-[1.3]' : 'text-[16px]', className)}>
-      {label}
+      <span id={ids.label}>{label}</span>
       {hint && (
         <span id={ids.hint} class="text-[16px] font-normal text-grey-text leading-[1.45]">
           {hint}
@@ -45,7 +57,7 @@ export function TextField({ label, hint, error, class: className, labelSize, inv
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize} ids={ids}>
-      <input aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-[52px]', border(invalid))} {...rest} />
+      <input aria-labelledby={ids.label} aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-[52px]', border(invalid))} {...rest} />
     </Wrapper>
   );
 }
@@ -55,6 +67,7 @@ export function TextArea({ label, hint, error, class: className, labelSize, inva
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize} ids={ids}>
       <textarea
+        aria-labelledby={ids.label}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
         class={cx(control, 'py-3 resize-y leading-normal', border(invalid), labelSize === 'lg' && 'mt-1')}
@@ -68,7 +81,7 @@ export function SelectField({ label, hint, error, class: className, children, ..
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} ids={ids}>
-      <select aria-describedby={describedBy} class={cx(control, 'min-h-[52px] px-3', border(false))} {...rest}>
+      <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-[52px] px-3', border(false))} {...rest}>
         {children}
       </select>
     </Wrapper>

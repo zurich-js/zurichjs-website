@@ -1,5 +1,17 @@
 import type { AwardRecord, ConferenceCopy, ConferenceState, Event, Milestone, Partner, Quote, RatingRecord, Speaker, TeamMember } from '@zurichjs/events';
-import { mapEvent, mapPartner, mapRating, mapSpeaker, mapSupport, type RawEvent, type RawPartner, type RawSingletons, type RawSpeaker, type SupportInfo } from './map.ts';
+import {
+  mapEvent,
+  mapPartner,
+  mapRating,
+  mapSpeaker,
+  mapSupport,
+  visibleSpeakers,
+  type RawEvent,
+  type RawPartner,
+  type RawSingletons,
+  type RawSpeaker,
+  type SupportInfo,
+} from './map.ts';
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries.ts';
 import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
 import { loadMedia, type MediaCollection } from './media.ts';
@@ -143,7 +155,7 @@ async function sanityContent(env: Env): Promise<SiteContent> {
   return {
     source: 'sanity',
     events: mappedEvents,
-    speakers: speakers.map(mapSpeaker),
+    speakers: visibleSpeakers(speakers).map(mapSpeaker),
     partners: partners.map(mapPartner),
     // Until the meetupRating singleton exists (Phase 3), keep the sourced record from the design handoff.
     rating: singletons.rating ? mapRating(singletons.rating) : fallback.rating,

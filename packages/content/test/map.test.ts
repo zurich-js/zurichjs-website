@@ -11,6 +11,7 @@ import {
   perspective,
   resetContentCache,
   talkFormat,
+  visibleSpeakers,
   type RawEvent,
 } from '../src/index.ts';
 
@@ -121,6 +122,10 @@ describe('helpers', () => {
     expect(s.links).toEqual([{ label: 'GitHub', url: 'https://github.com/ada' }]);
     expect(s.talks).toEqual([expect.objectContaining({ eventSlugs: ['e1'], title: 'Typed forms', format: 'Talk', tags: [] })]);
     expect(JSON.stringify(s)).not.toContain('@');
+  });
+  it('keeps only speakers explicitly marked visible', () => {
+    const raw = [{ id: 'yes', isVisible: true }, { id: 'blank', isVisible: null }, { id: 'missing' }, { id: 'no', isVisible: false }];
+    expect(visibleSpeakers(raw).map((s) => s.id)).toEqual(['yes']);
   });
 });
 

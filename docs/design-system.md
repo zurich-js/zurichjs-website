@@ -36,7 +36,7 @@ Changing any of these needs the owner's approval.
 - **Shapes:** buttons, tags and status labels are rounded pills; cards are 24px; large blocks use `clamp(24px, 3vw, 40px)`.
 - **No kickers:** no small all-caps labels above headings.
 - **No decorative borders or dividers:** separate content with space and surfaces instead. Borders are allowed only where they do a job: form controls, outline buttons, and the white swatch in the gallery.
-- **No recordings or slides:** never promise or link talk recordings or slide decks.
+- **No recordings:** never promise or link talk recordings. Link slides only when the speaker shared them (owner, 2026-11-01).
 - **Rating and award:** always one sentence, for example "Rated 4.9 on Meetup from 199 ratings, and winner of …". Never print the scale ("/5"). If the rating has no score, drop the rating part and keep the award.
 
 ## Colour

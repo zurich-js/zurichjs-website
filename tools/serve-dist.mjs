@@ -58,12 +58,20 @@ const file = (p) => {
   const f = join(root, normalize(p));
   return existsSync(f) && statSync(f).isFile() ? f : null;
 };
+/** The redirect target with the request's query string merged in (before any #fragment), like Netlify. */
+const withQuery = (to, search) => {
+  if (!search) return to;
+  const [path, hash] = to.split('#');
+  const q = path.includes('?') ? `${path}&${search.slice(1)}` : `${path}${search}`;
+  return hash !== undefined ? `${q}#${hash}` : q;
+};
+
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', 'http://x');
   const path = decodeURIComponent(url.pathname);
   const r = redirects.get(path) ?? redirects.get(path.replace(/\/$/, ''));
   if (r) {
-    res.writeHead(r.code, { location: r.to + url.search });
+    res.writeHead(r.code, { location: withQuery(r.to, url.search) });
     return res.end();
   }
   const hit = file(path) ?? file(`${path}.html`) ?? file(join(path, 'index.html'));
@@ -73,7 +81,7 @@ createServer((req, res) => {
   }
   const t = tomlRedirect(path);
   if (t) {
-    res.writeHead(t.code, { location: t.to + url.search });
+    res.writeHead(t.code, { location: withQuery(t.to, url.search) });
     return res.end();
   }
   const nf = file('404.html');

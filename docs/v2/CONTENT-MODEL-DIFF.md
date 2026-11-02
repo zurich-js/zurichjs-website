@@ -40,7 +40,7 @@ Status values used below:
    - Mapping: `startsAt = datetime`; `venue = { name: location, street/zip/city parsed from address }`.
    - Migration: an additive `venue{}` object, backfilled by a script that parses `address`, with `location` and `address` kept.
 5. **Agenda.** V2 needs an `agenda[]` with times. The current model has only `talks[]` references, with no times. `agenda[]` is new; when empty, the mapper falls back to ordering `talks[]`.
-6. **Never rendered:** `talk.slides` (file) and `talk.videoUrl`. The brand rule is no recordings or slides. Both are kept in the schema and data, but V2 ignores them.
+6. **`talk.videoUrl` is never rendered** (no recordings). `talk.slides` is shown on the talk when present (owner, 2026-11-01).
 
 ## `events` → `Event`
 

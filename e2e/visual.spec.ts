@@ -18,10 +18,18 @@ const PAGES = [
   ['today', '/today'],
   ['cfp', '/cfp'],
   ['design-gallery', '/design'],
+  // Restored for launch
+  ['event-past-untimed', '/events/2025-11-anniversary'],
+  ['speakers', '/speakers'],
+  ['media-event', '/media/2026-09-signals-streams'],
+  ['partners', '/partners'],
+  ['donate', '/donate'],
+  ['membership', '/membership'],
 ] as const;
 
 test.describe('visual', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/sample/clip.mp4', (route) => route.fulfill({ path: 'e2e/fixtures/clip.mp4', contentType: 'video/mp4' }));
     await page.clock.setFixedTime(NOW);
     await page.emulateMedia({ reducedMotion: 'reduce' });
   });
@@ -33,6 +41,8 @@ test.describe('visual', () => {
         for (const img of document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')) img.loading = 'eager';
         await document.fonts.ready;
         await Promise.all([...document.images].map((i) => (i.complete ? null : new Promise((r) => i.addEventListener('load', r, { once: true })))));
+        // Long pages with many photos: wait until every image is decoded, not just loaded.
+        await Promise.all([...document.images].map((i) => i.decode().catch(() => null)));
       });
       await expect(page).toHaveScreenshot(`${name}.png`, { fullPage: true, animations: 'disabled', maxDiffPixelRatio: Number(process.env.VISUAL_MAX_DIFF ?? 0.01) });
     });

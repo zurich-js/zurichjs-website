@@ -33,25 +33,34 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
 
 2. **Netlify › Environment variables.** The site reads the production variable names that already exist, so most of these are already set:
 
-   | Variable                                              | Status                                                                                             | Used by                                                     |
-   | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-   | `SANITY_TOKEN`                                        | **already set**; also read as the read and write token                                             | build (if the dataset is private), forms, speaker feedback  |
-   | `JWT_SECRET`                                          | **already set**; keep the same value                                                               | speaker feedback links                                      |
-   | `EMAIL_OCTOPUS_API_KEY`, `EMAIL_OCTOPUS_LIST_ID`      | **already set**                                                                                    | conference waitlist                                         |
-   | `SLACK_BOT_TOKEN`, `SLACK_DEFAULT_CHANNEL`            | **already set**                                                                                    | form notifications. Alternatively, set `SLACK_WEBHOOK_URL`. |
-   | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | **already set**. `PUBLIC_POSTHOG_*` also work.                                                     | analytics                                                   |
-   | `SANITY_WEBHOOK_SECRET`                               | **add**: a long random string, also used in step 5                                                 | `/api/rebuild`                                              |
-   | `NETLIFY_BUILD_HOOK_URL`                              | **add after step 4**                                                                               | scheduled rebuilds                                          |
-   | `RESEND_API_KEY`, `FORMS_TO`, `FORMS_FROM`            | optional. Without them, contact and partner forms still reach Sanity and Slack, but send no email. | form emails                                                 |
-   | `SANITY_WRITE_TOKEN`, `SANITY_READ_TOKEN`             | optional                                                                                           | separate tokens instead of `SANITY_TOKEN`                   |
-   - **Leave the old app's variables for a week**, so a rollback to an old deploy keeps working: `CLERK_*`, `STRIPE_*`, `IMAGEKIT_*`, `PUSHOVER_*`, `GOOGLE_MAPS_API_KEY`, `INTERNAL_NOTIFICATION_SECRET`, `ZURICHJS_ADMIN_ORG_ID`, `NEXT_PUBLIC_BASE_URL`. Delete them afterwards.
+   | Variable                                              | Status                                                                                                                                        | Used by                                                                     |
+   | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+   | `SANITY_TOKEN`                                        | **already set**; also read as the read and write token                                                                                        | build (if the dataset is private), forms, speaker feedback                  |
+   | `JWT_SECRET`                                          | **already set**; keep the same value                                                                                                          | speaker feedback links                                                      |
+   | `EMAIL_OCTOPUS_API_KEY`, `EMAIL_OCTOPUS_LIST_ID`      | **already set**                                                                                                                               | conference waitlist                                                         |
+   | `SLACK_BOT_TOKEN`, `SLACK_DEFAULT_CHANNEL`            | **already set**                                                                                                                               | form notifications. Alternatively, set `SLACK_WEBHOOK_URL`.                 |
+   | `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` | **already set**. `PUBLIC_POSTHOG_*` also work.                                                                                                | analytics                                                                   |
+   | `SANITY_WEBHOOK_SECRET`                               | **add**: a long random string, also used in step 5                                                                                            | `/api/rebuild`                                                              |
+   | `NETLIFY_BUILD_HOOK_URL`                              | **add after step 4**                                                                                                                          | scheduled rebuilds                                                          |
+   | `RESEND_API_KEY`, `FORMS_TO`, `FORMS_FROM`            | optional. Without them, contact and partner forms still reach Sanity and Slack, but send no email.                                            | form emails                                                                 |
+   | `STRIPE_SECRET_KEY`, `STRIPE_SUPPORT_PRODUCT_ID`      | **already set** (the old site's names). Use `sk_test_…` on deploy previews.                                                                   | online donations (`/donate`). Without them the page offers Twint and email. |
+   | `PUBLIC_STRIPE_PORTAL_URL`                            | **add**: the Stripe customer-portal login link (Stripe › Settings › Billing › Customer portal)                                                | "Manage or cancel your monthly donation"                                    |
+   | `STRIPE_WEBHOOK_SECRET`                               | optional: Stripe › Webhooks › `https://zurichjs.com/api/donate/webhook`, events `checkout.session.completed`, `customer.subscription.deleted` | Slack message for new and cancelled donations                               |
+   | `IMAGEKIT_PRIVATE_KEY`                                | **already set**; keep it (build time only)                                                                                                    | the media archive and galleries                                             |
+   | `PUBLIC_GOOGLE_MAPS_EMBED_KEY`                        | optional: a Maps Embed API key restricted to `zurichjs.com/*`                                                                                 | "Show map" on event pages. Directions work without it.                      |
+   | `SANITY_WRITE_TOKEN`, `SANITY_READ_TOKEN`             | optional                                                                                                                                      | separate tokens instead of `SANITY_TOKEN`                                   |
+   - **Leave the old app's variables for a week**, so a rollback to an old deploy keeps working: `CLERK_*`, `PUSHOVER_*`, `GOOGLE_MAPS_API_KEY`, `INTERNAL_NOTIFICATION_SECRET`, `ZURICHJS_ADMIN_ORG_ID`, `NEXT_PUBLIC_BASE_URL`. Delete them afterwards. Keep `STRIPE_SECRET_KEY`, `STRIPE_SUPPORT_PRODUCT_ID` and `IMAGEKIT_PRIVATE_KEY`: V2 uses them.
    - **Production must read Sanity:** `netlify.toml` sets `CONTENT_REQUIRE_SANITY=1`, so a production build that cannot read Sanity fails instead of shipping sample content.
 
 3. **Sanity Studio** (zurich-js/zurich-js-website-sanity-studio#1):
    1. Merge the PR and run `sanity deploy`.
    2. Run the additive migration on `production`: a dry run first, then `--no-dry-run`.
 
-   Every change is additive, so the old site keeps working with the new schema.
+   Every change is additive, so the old site keeps working with the new schema. 3. Content restore (drafts only, dry run first; see the Studio's `scripts/lib/drafts.ts`):
+   - `npx sanity exec scripts/seed-partners.ts --with-user-token`: the production partner list with logos, kinds and "current". Confirm every "current" and add dates, then publish.
+   - `npx sanity exec scripts/backfill-agenda.ts --with-user-token`: proposed agendas for events with talks but no agenda, with the problems it found. Correct the times, then publish.
+   - `npx sanity exec scripts/clean-speaker-slugs.ts --with-user-token`: clean speaker IDs; old ones become 301s once published and rebuilt.
+   - Site settings: paste a checked Slack invite link.
 
 ### Merge and verify
 
@@ -77,6 +86,9 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
    - **Old URLs:** `/partnerships`, `/buy-us-a-coffee`, `/workshops/react-performance`, `/api/og/home` and `/api/sitemap.xml` must each return a 301.
    - **Search and LLM files:** `/sitemap.xml`, `/robots.txt` and `/llms.txt` must load.
    - **A form:** send a contact message with your own address. It should arrive in Sanity and Slack, and in email if Resend is set.
+   - **Donations, on a deploy preview with Stripe test keys:** a one-time and a monthly test donation with card 4242 4242 4242 4242; the thanks page shows the amount; cancel the test subscription in the Stripe dashboard. Never test with live keys.
+   - **Feedback:** open an event with `?feedback=true`, rate one talk, rate it again (refused), and check the `feedback` document in the Studio has event, talk and speaker. Delete test documents afterwards (owner).
+   - **Media:** `/media` lists the events from ImageKit; a gallery opens and plays a video.
    - **The webhook:** `curl -i -X POST https://zurichjs.com/api/rebuild` must answer `401`. Publishing any document in the Studio must lead to a deploy within about 4 minutes.
    - **The SEO gate against live content:**
      1. Run `CONTENT_REQUIRE_SANITY=1 pnpm build` with `SANITY_TOKEN` set.

@@ -124,3 +124,31 @@ describe('POST /api/donate/webhook', () => {
     expect(off.status).toBe(503);
   });
 });
+
+import { handleProfile } from '../src/pages/api/speaker-profile';
+import { profileLink, profileSpeaker } from '../src/server/profile-token';
+import { parseProfile } from '../src/server/speaker-profile';
+
+describe('speaker profile links', () => {
+  const env = { JWT_SECRET: 's3cret' };
+  const tokenOf = (link: string) => new URL(link).searchParams.get('token');
+  it('accepts a fresh link for that speaker only, and rejects expired or foreign tokens', () => {
+    const t = tokenOf(profileLink('anna-beispiel', env.JWT_SECRET, 'https://zurichjs.com', 30, Date.parse('2026-11-01')));
+    expect(profileSpeaker(t, env, Date.parse('2026-11-02'))).toBe('anna-beispiel');
+    expect(profileSpeaker(t, env, Date.parse('2026-12-15'))).toBeNull();
+    expect(profileSpeaker(t, { JWT_SECRET: 'other' }, Date.parse('2026-11-02'))).toBeNull();
+    expect(profileSpeaker(null, env)).toBeNull();
+  });
+  it('validates fields: name required, plain-text bio, links normalised, at most 8 topics', () => {
+    expect(parseProfile({ name: '' })).toMatchObject({ ok: false, field: 'name' });
+    expect(parseProfile({ name: 'Anna', bio: '<b>x</b>' })).toMatchObject({ ok: false, field: 'bio' });
+    const ok = parseProfile({ name: ' Anna ', github: 'github.com/anna', interests: 'a, b, c, d, e, f, g, h, i' });
+    expect(ok).toMatchObject({ ok: true, data: { name: 'Anna', github: 'https://github.com/anna' } });
+    expect(ok.ok && ok.data.interests).toHaveLength(8);
+  });
+  it('answers 401 without a valid token and 503 without a Sanity write token', async () => {
+    expect((await handleProfile(new Request('https://zurichjs.com/api/speaker-profile?token=x'), { env, client: null })).status).toBe(401);
+    const t = tokenOf(profileLink('anna-beispiel', env.JWT_SECRET));
+    expect((await handleProfile(new Request(`https://zurichjs.com/api/speaker-profile?token=${t}`), { env, client: null })).status).toBe(503);
+  });
+});

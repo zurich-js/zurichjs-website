@@ -250,3 +250,22 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - `slack-interactivity` uses `waitUntil`.
   - The handoff between functions is HMAC-signed with the Slack signing secret.
 - **No model in CI.** Tests use an in-memory Sanity and the AI SDK's scripted mock model.
+
+## Launch restoration after the V2 audit (owner, 2026-11-01)
+
+An audit of V2 against production found missing functionality and inaccurate content. The owner's brief kept workshops, T-shirt sales and accounts removed, and restored the rest.
+
+- **Donations are online again (reverses "No payments" above).** Stripe Checkout through a fetch-based function (`/api/donate/checkout`), one-time or monthly in CHF, presets CHF 10–50 as on production plus a custom amount (CHF 5–1000). Return pages say back only what Stripe confirmed. Monthly donors manage or cancel through `PUBLIC_STRIPE_PORTAL_URL` (Stripe customer portal) or by email. Twint and email stay. Membership requests still charge nothing. The legal pages are unchanged (owner); the refund policy does not mention donations yet.
+- **Slides are shown when a speaker shared them; talks are still never recorded** (owner). Videos in the media archive are shown as event clips, never as talk recordings.
+- **Schedules:** the event `agenda` is authoritative; without one, talks are listed in order without times. Production's times came from a fixed template (doors, 18:30 welcome, 18:50 first talk, talk lengths, a break after the second talk); the Studio's "Fill programme from talks" action and `scripts/backfill-agenda.ts` (drafts, dry run by default) write that template for organisers to check, so the site itself never guesses.
+- **Feedback:** legacy `/events/<slug>?feedback=true` opens per-talk ratings on any date. One rating per person, talk and speaker (production's check ignored the speaker, so a talk's second speaker could not be rated); ratings store event, talk and speaker references.
+- **Tonight** decides upcoming, on the day, live, after or nothing planned from the browser clock in Zurich; it never calls a future meetup "tonight".
+- **Maps load only on request** (owner): directions links always, the Google Maps Embed API after "Show map" when `PUBLIC_GOOGLE_MAPS_EMBED_KEY` is set.
+- **Media:** one collection from ImageKit (build time, `IMAGEKIT_PRIVATE_KEY`, one folder per event slug as production) and Sanity event photos. Editorial picks and relationships are ImageKit tags (`featured-home`, `featured-partners`, `speaker:<id>`, `talk:<id>`, `milestone:<date>`, `promo`, `hidden`). Without the key the build continues with Sanity photos.
+- **Partners:** Sanity partner documents gain kinds, tier, current, dates and `allowReferrer`; events gain `supporters`. Only partners an organiser marks current are called current sponsors; current sponsors appear on every upcoming meetup page and on Tonight, as `/partners` promises. Studio `scripts/seed-partners.ts` writes the production partner list as drafts to confirm.
+- **Speakers:** search covers talk titles, descriptions and topics; profiles list each talk once with all its events. Old speaker IDs (`speaker.legacySlugs`) become 301s at build time.
+- **Supporter tier keeps "Free or discounted workshops"** as on production (owner), although V2 lists no workshops.
+- **Slack:** only a complete invite link from Site settings is used; otherwise "Ask us for a Slack invite" (owner).
+- **Community history and team** live in `packages/content/src/community.ts` with their sources (`docs/v2/CONTENT-SOURCES.md`).
+- **Retired URLs:** `/workshops(/*)` → `/events?from=workshops` and `/tshirt` → `/donate?from=tshirt`, each with a one-line note; `/checkout/*` → `/donate`; `/cfp/form` → `/cfp#proposal`.
+- **Speaker profiles are collected progressively:** the CFP stays short; accepted speakers get a private link (`pnpm speaker-link <id>`, JWT, 30 days) to add a photo, bio, role, links and topics, saved as a Sanity draft for organisers to publish.

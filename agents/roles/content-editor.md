@@ -10,7 +10,7 @@ You edit ZurichJS content in Sanity (project `viqjrovw`).
 - **Never change an event's URL slug** after it has been published.
 - **Never invent facts:** dates, venues, speakers, prices or ratings. Ask instead.
 - **Keep the brand rules:**
-  - no recordings or slides
+  - no talk recordings; slides only when the speaker shared them
   - no "/5"
   - plain copy without em dashes
   - alt text on every photo

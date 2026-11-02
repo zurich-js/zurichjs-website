@@ -9,14 +9,16 @@ export const LEGACY_REDIRECTS = {
   '/support': { status: 301, destination: '/donate' },
   '/event-feedback': { status: 301, destination: '/feedback' },
   '/community': { status: 301, destination: '/about' },
-  '/cfp/form': { status: 301, destination: '/cfp' },
+  // Opens the proposal form directly (CfpForm reads #proposal).
+  '/cfp/form': { status: 301, destination: '/cfp#proposal' },
   // Stripe return pages; online payments were removed (owner decision).
   '/success': { status: 301, destination: '/donate' },
   '/checkout/success': { status: 301, destination: '/events' },
   // Production pages that V2 does not have (owner decisions, docs/v2/DECISIONS.md): send visitors and
   // search ranking to the closest page. Sub-paths (/workshops/*, /admin/*, ...) are in apps/web/netlify.toml.
-  '/workshops': { status: 301, destination: '/events' },
-  '/tshirt': { status: 301, destination: '/donate' },
+  // ?from= shows a one-line note that workshops and T-shirt sales have ended (owner decisions).
+  '/workshops': { status: 301, destination: '/events?from=workshops' },
+  '/tshirt': { status: 301, destination: '/donate?from=tshirt' },
   '/media-demo': { status: 301, destination: '/media' },
   '/admin': { status: 301, destination: '/' },
   '/profile': { status: 301, destination: '/' },

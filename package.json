@@ -16,9 +16,11 @@
     "seo:snapshot": "node tools/seo/snapshot.mjs",
     "seo:check": "node tools/seo/compare.mjs",
     "e2e": "playwright test",
-    "agent": "tsx tools/agent-cli.ts"
+    "agent": "tsx tools/agent-cli.ts",
+    "speaker-link": "tsx tools/speaker-profile-link.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.63.0",
     "@types/node": "22.15.3",
     "@zurichjs/agent": "workspace:*",

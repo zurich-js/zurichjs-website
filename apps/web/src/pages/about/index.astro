@@ -13,6 +13,7 @@ import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { PHOTOS, SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
 import { cx } from '@zurichjs/design/recipes';
+import { RichText } from '~/components/RichText';
 
 const { events, milestones, team, volunteers, quotes, settings, speakers, media } = await content();
 const slack = slackLink(settings);
@@ -46,11 +47,13 @@ const SECTIONS = [
 ] as const;
 const nextHref = await nextMeetupHref();
 
+// The usual evening (owner, 2nd November 2026): doors around 17:30, close around 21:30; the rest follows in order.
 const FIRST_STEPS = [
-  ['18:30', 'Doors open', 'Grab a drink and a name tag. Plenty of people come alone. Find us in yellow T-shirts if you’d like an introduction.'],
-  ['19:00', 'Talks', 'Two to four talks: full-length slots and quick lightning talks, some on what’s new, some on ideas that last. In English, and not always about JavaScript.'],
-  ['20:15', 'Food and conversation', 'The part many people come for. Nobody minds if you just listen.'],
-  ['21:30', 'Close', 'Free to attend. RSVP on Meetup so the host can plan food and space.'],
+  ['17:30', 'Doors open', 'Doors open around 17:30. Grab a drink and a name tag. Plenty of people come alone. Find us in yellow T-shirts if you’d like an introduction.'],
+  ['Then', 'Welcome', 'A short welcome and opening remarks from the organisers.'],
+  ['Then', 'Talks', 'Two or three talks: full-length slots and quick lightning talks, some on what’s new, some on ideas that last. In English, and not always about JavaScript.'],
+  ['Then', 'Networking', 'Time to meet the speakers and each other. Nobody minds if you just listen.'],
+  ['21:30', 'Close', 'We wrap up around 21:30. Some of us head out for a drink, others call it a night. Free to attend: RSVP on Meetup so the host can plan food and space.'],
 ] as const;
 
 const VALUES = [
@@ -244,20 +247,20 @@ const isExt = (href: string) => /^https?:/.test(href);
           return (
             <div class="flex flex-col gap-4">
               <h3 class="m-0 text-[22px] font-bold">{g.h}</h3>
-              <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-7">
+              <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-7 items-start">
                 {people.map((m) => {
                   const sp = speakerFor(m);
                   // No team photo: reuse the person's speaker photo when they have one.
                   const pic = m.photo ?? (sp?.photo ? { ...sp.photo, alt: m.name } : undefined);
                   return (
-                    <li class="flex flex-col gap-3">
-                      {pic ? <Photo photo={pic} class="aspect-square w-full" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
-                      <div class="flex flex-col gap-1.5">
-                        <h4 class="m-0 text-[20px] font-bold">{m.name}</h4>
-                        <div class="text-[16px] text-ink-2">{m.role}</div>
-                        {m.bio && <p class="m-0 text-[15px] leading-[1.5] text-ink-2">{m.bio}</p>}
-                        {((m.links?.length ?? 0) > 0 || sp) && (
-                          <ul class="m-0 p-0 list-none flex flex-wrap gap-x-3 gap-y-1 text-[15px]" aria-label={`${m.name}: links`}>
+                    // Subgrid: photo, name, role, bio and links each share a row across the cards, so they line up.
+                    <li class="grid grid-rows-subgrid row-span-5 gap-y-1.5">
+                      {pic ? <Photo photo={pic} class="aspect-square w-full mb-1.5" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
+                      <h4 class="m-0 text-[20px] font-bold self-end">{m.name}</h4>
+                      <div class="text-[16px] text-ink-2">{m.role}</div>
+                      {m.bio ? <RichText client:visible text={m.bio} clampLines={3} moreLabels={['See more', 'See less']} class="text-[15px] leading-[1.5] text-ink-2" /> : <span />}
+                        {(m.links?.length ?? 0) > 0 || sp ? (
+                          <ul class="m-0 p-0 list-none flex flex-wrap gap-x-3 gap-y-1 text-[15px] self-start" aria-label={`${m.name}: links`}>
                             {sp && (
                               <li>
                                 <a href={`/speakers/${sp.id}`} class="font-bold underline underline-offset-[3px]">
@@ -273,8 +276,9 @@ const isExt = (href: string) => /^https?:/.test(href);
                               </li>
                             ))}
                           </ul>
+                        ) : (
+                          <span />
                         )}
-                      </div>
                     </li>
                   );
                 })}

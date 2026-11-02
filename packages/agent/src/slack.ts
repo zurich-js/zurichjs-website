@@ -89,7 +89,7 @@ export function threadToMessages(thread: SlackMessage[], botUserId: string): Mod
 const LABELS: Record<string, string> = {
   title: 'Title',
   status: 'Status',
-  datetime: 'Doors',
+  datetime: 'Starts',
   endsAt: 'Ends',
   dateText: 'Month',
   venue: 'Venue',

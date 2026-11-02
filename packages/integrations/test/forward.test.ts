@@ -94,6 +94,25 @@ describe('talk ratings (one per person, talk and speaker)', () => {
     const s = fakeSanity(null, { ...lookup, inEvent: false });
     await expect(forwardForm('rating', rating, { env: {}, sanity: s.client, now, client })).rejects.toMatchObject({ status: 400 });
   });
+  it('resolves a single-speaker talk without a speaker, but never guesses between two speakers', async () => {
+    const solo = fakeSanity(null, { ...lookup, speaker: undefined, speakers: ['sp-ada'] });
+    await forwardForm('rating', { ...rating, speakerId: undefined }, { env: {}, sanity: solo.client, now, client });
+    expect(solo.create.mock.calls[0]![0]).toMatchObject({ speaker: { _ref: 'sp-ada' } });
+    const pair = fakeSanity(null, { ...lookup, speaker: undefined });
+    await expect(forwardForm('rating', { ...rating, speakerId: undefined }, { env: {}, sanity: pair.client, now, client })).rejects.toMatchObject({ status: 400 });
+    expect(pair.create).not.toHaveBeenCalled();
+  });
+  it('rejects a speaker who is not on the talk, and a rating without a talk (400)', async () => {
+    const s = fakeSanity(null, { ...lookup, speaker: 'sp-linus' });
+    await expect(forwardForm('rating', rating, { env: {}, sanity: s.client, now, client })).rejects.toMatchObject({ status: 400 });
+    await expect(forwardForm('rating', { eventId: 'ev1', target: 'evening', stars: 4 }, { env: {}, sanity: s.client, now, client })).rejects.toMatchObject({ status: 400 });
+    expect(s.create).not.toHaveBeenCalled();
+  });
+  it('keeps the talk id from the target when talkId is missing (legacy payloads)', async () => {
+    const s = fakeSanity(null);
+    await forwardForm('rating', { eventId: 'ev1', target: 't1:ada', speakerId: 'ada', stars: 3 }, { env: {}, sanity: s.client, now, client });
+    expect(s.create.mock.calls[0]![0]).toMatchObject({ event: { _ref: 'ev1' }, talk: { _ref: 't1' }, rating: 3, comment: '' });
+  });
   it('logs and accepts without a Sanity token (nothing is written)', async () => {
     const log = vi.fn();
     const r = await forwardForm('rating', rating, { env: {}, sanity: null, now, log });

@@ -114,16 +114,21 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
       };
     case 'live': {
       const closes = ev.startsAt ? new Date(Date.parse(ev.startsAt) + FEEDBACK_WINDOW_MS).toISOString() : undefined;
+      const talks = talkCount(ev) > 0;
       return {
         ...base,
         stateLabel: 'Happening now',
         banner: {
           tone: 'yellow',
-          title: `Thanks for coming. Feedback is open until ${closes ? dateTimeNoYear(closes) : 'two days after doors'}.`,
-          body: 'Rate each talk while it’s fresh; speakers see their ratings and comments. Then tell us about the evening as a whole.',
+          title: `Thanks for coming. Feedback is open until ${closes ? dateTimeNoYear(closes) : 'two days after the start'}.`,
+          body: talks
+            ? 'Rate each talk while it’s fresh; speakers see their ratings and comments. Then tell us about the evening as a whole.'
+            : 'Tell us about the evening in a few open questions. Only the organisers read your answers.',
         },
-        cta: { kind: 'feedback', label: 'Rate the talks', href: '#programme' },
-        ctaNote: 'Rating closes 48 hours after doors. After that, this page becomes the recap.',
+        cta: talks ? { kind: 'feedback', label: 'Rate the talks', href: '#programme' } : { kind: 'feedback', label: 'Feedback on the evening', href: `/feedback?event=${ev.slug}` },
+        ctaNote: talks
+          ? 'Rating closes 48 hours after the start. After that, this page becomes the recap.'
+          : 'Feedback closes 48 hours after the start. After that, this page becomes the recap.',
         feedbackCloses: closes,
         pills: [{ text: TYPE_LABEL }, { text: 'Feedback open', yellow: true }],
       };

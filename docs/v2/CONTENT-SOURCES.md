@@ -53,3 +53,9 @@ Nobody was removed. Photos: Faris, Bogdan and Enrique were already in V2; Nadja'
 ## Partners
 
 All partners come from old-partners. The seed script marks as **current** what the old site presented as active: the four tiered sponsors (Vercel, Stripe, GYFF, FIN) and the community, conference and supporting partners. Venue hosts are listed as hosts, never as current sponsors. **Confirm** every "current" flag and add start and end dates in the Studio before publishing the partner drafts.
+
+## Event times (2026-11-02)
+
+- **confirm** that an event's `datetime` is the start shown on Meetup, and that the site may call it "Starts" (not "Doors"). See DECISIONS.md, "Schedule fields and feedback availability". If organisers mean doors, say so and the label changes in one place (`timesLine` in `packages/events/src/schedule.ts`).
+- **confirm** the real programmes: no production event has an `agenda`, so doors, welcome, breaks, networking and talk times show nowhere. Organisers add them per event (Studio "Fill programme from talks" writes the old template as a draft to check). The anniversary (12 Nov 2026) currently reads "Starts 17:30 CET" with untimed talks.
+- **confirm** that feedback should open at the start time (before doors would be unusual) rather than earlier for legacy links.

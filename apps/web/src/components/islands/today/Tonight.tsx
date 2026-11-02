@@ -1,4 +1,4 @@
-import { dateLong, directionsUrl, itemStartsAt, timesLine, todayPhase, venueAddress, type Event, type TodayPhase } from '@zurichjs/events';
+import { dateLong, directionsUrl, itemStartsAt, scheduleFacts, timesLine, todayPhase, untimedNote, venueAddress, type Event, type TodayPhase } from '@zurichjs/events';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
 import { cx } from '@zurichjs/design/recipes';
@@ -11,7 +11,7 @@ import { Check } from '@zurichjs/design/islands/Check';
  * tiny store and the clock:
  *   part="opening"   heading, now / next cards and actions, on black
  *   part="programme" the running order with a "Now" marker and per-talk rating
- *   part="feedback"  "How was tonight?", only from doors until feedback closes
+ *   part="feedback"  "How was tonight?", only from the start until feedback closes
  * They server-render as of the build, then follow the browser clock every
  * minute, so the wording is right on the day even without a rebuild.
  * In development, `?at=2026-11-18T19:40` previews a moment.
@@ -96,8 +96,9 @@ export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
             {phase === 'live' ? 'How is tonight going?' : `How was ${ev.title}?`}
           </h2>
           <p class="m-0 text-[18px] leading-[1.55]">
-            Rate the talks in the programme above: each speaker reads the ratings and comments for their own talk. For the evening as a whole, answer a few open questions for the
-            organisers.
+            {ev.agenda.some((a) => a.talk)
+              ? 'Rate the talks in the programme above: each speaker reads the ratings and comments for their own talk. For the evening as a whole, answer a few open questions for the organisers.'
+              : 'Tell the organisers how the evening went in a few open questions. Only the organisers read your answers.'}
           </p>
         </div>
         <div class="flex flex-wrap gap-2.5 justify-end">
@@ -121,11 +122,12 @@ export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
   const pending = all.filter((x) => !rated[x.key] && x.key !== target?.key);
   const who = (it: { talk?: { speakerIds: string[] }; note?: string }) => (it.talk ? it.talk.speakerIds.map((id) => names[id] ?? id).join(', ') : (it.note ?? ''));
 
+  const note = untimedNote(ev, phase === 'upcoming' ? 'future' : 'now');
+  const anyTime = items.some((it) => it.time);
+
   return (
     <div class="flex flex-col gap-2">
-      {!items.some((it) => it.talk && it.time) && items.some((it) => it.talk) && (
-        <p class="m-0 mb-2 text-[16px] text-ink-2">Talks in running order. Exact talk times follow closer to the day.</p>
-      )}
+      {note && <p class="m-0 mb-2 text-[16px] text-ink-2">{note}</p>}
       <ol class="m-0 p-0 list-none flex flex-col gap-2">
         {items.map((r) => {
           const isNow = phase === 'live' && r.i === cur;
@@ -137,14 +139,17 @@ export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
               key={r.i}
               aria-current={isNow ? 'time' : undefined}
               class={cx(
-                'grid grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[72px_minmax(0,1fr)_auto] gap-x-3.5 gap-y-2.5 md:gap-[18px] items-center py-4 px-[18px] rounded-[20px]',
+                'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-center py-4 px-[18px] rounded-[20px]',
+                anyTime ? 'grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[72px_minmax(0,1fr)_auto]' : 'grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_auto]',
                 isNow ? 'bg-yellow' : done ? 'bg-white' : 'bg-grey-soft',
               )}
             >
-              <div class="flex flex-col gap-1 items-start">
-                <span class={cx('text-[18px] font-bold tabular-nums', done && 'text-grey-text')}>{r.time || <span class="sr-only">Time not fixed yet</span>}</span>
-                {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-yellow">Now</span>}
-              </div>
+              {anyTime && (
+                <div class="flex flex-col gap-1 items-start">
+                  {r.time && <span class={cx('text-[18px] font-bold tabular-nums', done && 'text-grey-text')}>{r.time}</span>}
+                  {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-yellow">Now</span>}
+                </div>
+              )}
               <div class="flex flex-col gap-[3px] min-w-0">
                 <span class={cx('font-bold leading-[1.3] text-pretty', r.talk ? 'text-[19px]' : 'text-[17px]', done && 'text-grey-text')}>{r.title}</span>
                 {(r.talk || r.note) && <span class={cx('text-[16px]', done ? 'text-grey-text' : 'text-ink-2')}>{who(r)}</span>}
@@ -255,7 +260,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   const nowItem = cur >= 0 ? items[cur] : undefined;
   const nextItem = phase === 'live' ? items.slice(cur + 1).find((it) => it.at) : items.find((it) => it.kind !== 'doors' && it.at);
   const who = (it: { talk?: { speakerIds: string[] }; note?: string }) => (it.talk ? it.talk.speakerIds.map((id) => names[id] ?? id).join(', ') : (it.note ?? ''));
-  const doors = timesLine(ev).match(/Doors (\d{2}:\d{2})/)?.[1];
+  const { doors, starts } = scheduleFacts(ev);
   const lastTalk = items.filter((it) => it.talk && (phase === 'after' || it.i <= cur)).pop();
   const unratedLast = !!lastTalk && !Object.keys(rated).some((k) => k.startsWith(`${lastTalk.talk!.id ?? lastTalk.title}:`));
 
@@ -273,18 +278,30 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
             {phase === 'today'
               ? doors
                 ? `Doors open at ${doors}`
-                : 'Arriving'
+                : starts
+                  ? `Starts at ${starts}`
+                  : 'Arriving'
               : phase === 'after'
                 ? 'That’s a wrap'
                 : nowItem
                   ? `Now${nowItem.time ? ` · since ${nowItem.time}` : ''}`
-                  : 'Doors are open'}
+                  : starts
+                    ? `Started at ${starts}`
+                    : 'Under way'}
           </div>
           <div class="text-[22px] leading-tight font-bold text-pretty">
             {phase === 'today' ? 'Find the venue' : phase === 'after' ? 'Thanks for coming' : nowItem ? nowItem.title : 'Find a seat'}
           </div>
           <div class="text-[16px] text-grey-light">
-            {phase === 'today' ? findVenue : phase === 'after' ? 'Rate the talks while they are fresh.' : nowItem ? who(nowItem) : findVenue}
+            {phase === 'today'
+              ? findVenue
+              : phase === 'after'
+                ? ev.agenda.some((a) => a.talk)
+                  ? 'Rate the talks while they are fresh.'
+                  : 'Tell us how the evening went.'
+                : nowItem
+                  ? who(nowItem)
+                  : findVenue}
           </div>
           {phase === 'today' && ev.venue && (
             <a href={directionsUrl(ev.venue)} target="_blank" rel="noopener" class="text-[16px] font-bold text-yellow underline underline-offset-[3px] mt-1 self-start">

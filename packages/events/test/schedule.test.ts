@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildSchedule,
   directionsUrl,
+  eventEndsAt,
   eventSupporters,
   itemStartsAt,
   pickTodayEvent,
@@ -10,6 +11,7 @@ import {
   talkAnchor,
   timesLine,
   todayPhase,
+  untimedNote,
   zoneLabel,
   zurichWallTime,
   normalizeSearch,
@@ -45,10 +47,17 @@ const ev = (over: Partial<Event> = {}): Event => ({
 });
 
 describe('buildSchedule', () => {
-  it('never gives every talk the doors time (regression): talks without an agenda have no time', () => {
-    const items = buildSchedule({ talks: [talk('Retro'), talk('Babel'), talk('Signals')], startsAt: '2026-09-10T16:00:00.000Z' });
-    expect(items[0]).toEqual({ time: '18:00', kind: 'doors', title: 'Doors open' });
-    expect(items.slice(1).map((i) => i.time)).toEqual(['', '', '']);
+  it('never gives every talk the start time (regression): talks without an agenda have no time', () => {
+    const items = buildSchedule({ talks: [talk('Retro'), talk('Babel'), talk('Signals')] });
+    expect(items.map((i) => [i.kind, i.time])).toEqual([
+      ['talk', ''],
+      ['talk', ''],
+      ['talk', ''],
+    ]);
+  });
+  it('never synthesises doors, welcome, break or networking without an agenda', () => {
+    expect(buildSchedule({ talks: [talk('A'), talk('B'), talk('C')] }).every((i) => i.kind === 'talk')).toBe(true);
+    expect(buildSchedule({ talks: [] })).toEqual([]);
   });
   it('keeps the organisers’ order, times and non-talk lines', () => {
     const items = buildSchedule({
@@ -82,6 +91,19 @@ describe('times in Zurich', () => {
     expect(zoneLabel('2026-11-12T17:00:00.000Z')).toBe('CET');
     expect(zoneLabel('2026-09-10T16:00:00.000Z')).toBe('CEST');
   });
+  it('switches CET/CEST on the right side of each summer-time change', () => {
+    // Summer time starts on Sun 29 Mar 2026 and ends on Sun 25 Oct 2026.
+    const at = (startsAt: string) => ev({ startsAt });
+    expect(timesLine(at('2026-03-26T17:00:00.000Z'))).toBe('Starts 18:00 CET');
+    expect(timesLine(at('2026-03-30T16:00:00.000Z'))).toBe('Starts 18:00 CEST');
+    expect(timesLine(at('2026-10-24T16:00:00.000Z'))).toBe('Starts 18:00 CEST');
+    expect(timesLine(at('2026-10-26T17:00:00.000Z'))).toBe('Starts 18:00 CET');
+    // The same agenda time maps to different UTC instants on either side.
+    expect(zurichWallTime('2026-03-26', '18:50').toISOString()).toBe('2026-03-26T17:50:00.000Z');
+    expect(zurichWallTime('2026-03-30', '18:50').toISOString()).toBe('2026-03-30T16:50:00.000Z');
+    expect(zurichWallTime('2026-10-24', '18:50').toISOString()).toBe('2026-10-24T16:50:00.000Z');
+    expect(zurichWallTime('2026-10-26', '18:50').toISOString()).toBe('2026-10-26T17:50:00.000Z');
+  });
   it('turns an agenda time into the right instant across the summer-time change', () => {
     expect(zurichWallTime('2026-11-12', '18:50').toISOString()).toBe('2026-11-12T17:50:00.000Z');
     expect(zurichWallTime('2026-09-10', '18:50').toISOString()).toBe('2026-09-10T16:50:00.000Z');
@@ -100,15 +122,58 @@ describe('times in Zurich', () => {
         talks: [],
       }),
     });
-    expect(scheduleFacts(e)).toEqual({ doors: '18:00', programmeStarts: '18:30', firstTalk: '18:50', zone: 'CET' });
+    expect(scheduleFacts(e)).toEqual({ starts: '18:00', doors: '18:00', programmeStarts: '18:30', firstTalk: '18:50', ends: undefined, zone: 'CET' });
     expect(timesLine(e)).toBe('Doors 18:00 · Talks from 18:50 CET');
-    expect(timesLine(ev({ agenda: buildSchedule({ talks: [talk('Retro')], startsAt: ev().startsAt }) }))).toBe('Doors 18:00 CET');
+  });
+  it('calls datetime the start, never doors, when the agenda has no doors line', () => {
+    const e = ev({ agenda: buildSchedule({ talks: [talk('Retro')] }) });
+    expect(scheduleFacts(e).doors).toBeUndefined();
+    expect(timesLine(e)).toBe('Starts 18:00 CET');
+    // September: datetime 15:00Z is 17:00 in summer time.
+    expect(timesLine(ev({ startsAt: '2026-09-10T15:00:00.000Z' }))).toBe('Starts 17:00 CEST');
+    // Doors from the agenda win over the Meetup start, and the first talk is shown.
+    const timed = ev({
+      agenda: buildSchedule({
+        agenda: [
+          { time: '17:30', kind: 'doors', title: 'Doors' },
+          { time: '18:50', talk: talk('A') },
+        ],
+        talks: [],
+      }),
+    });
+    expect(timesLine(timed)).toBe('Doors 17:30 · Talks from 18:50 CET');
+    const startThenTalks = ev({
+      agenda: buildSchedule({
+        agenda: [
+          { time: '18:30', title: 'Welcome' },
+          { time: '18:50', talk: talk('A') },
+        ],
+        talks: [],
+      }),
+    });
+    expect(timesLine(startThenTalks)).toBe('Starts 18:00 · Talks from 18:50 CET');
+  });
+  it('knows the end only from endsAt or a timed close line', () => {
+    expect(eventEndsAt(ev())).toBeUndefined();
+    expect(eventEndsAt(ev({ endsAt: '2026-11-12T20:30:00.000Z' }))?.toISOString()).toBe('2026-11-12T20:30:00.000Z');
+    const closing = ev({ agenda: buildSchedule({ agenda: [{ time: '21:00', title: 'Close' }], talks: [] }) });
+    expect(eventEndsAt(closing)?.toISOString()).toBe('2026-11-12T20:00:00.000Z');
+    expect(scheduleFacts(closing).ends).toBe('21:00');
+  });
+  it('shows one truthful note for untimed talks, by moment', () => {
+    const untimed = ev({ agenda: buildSchedule({ talks: [talk('A'), talk('B')] }) });
+    expect(untimedNote(untimed, 'past')).toBe('Talks in running order. Talk times weren’t recorded.');
+    expect(untimedNote(untimed, 'future')).toBe('Talks in running order. Talk times follow closer to the day.');
+    expect(untimedNote(untimed, 'now')).toBe('Talks in running order.');
+    const timed = ev({ agenda: buildSchedule({ agenda: [{ time: '18:50', talk: talk('A') }], talks: [] }) });
+    expect(untimedNote(timed, 'past')).toBeUndefined();
+    expect(untimedNote(ev(), 'future')).toBeUndefined();
   });
 });
 
 describe('recapSummary', () => {
   it('counts the programme’s talks, so a full programme never says "No talks"', () => {
-    const e = ev({ agenda: buildSchedule({ talks: ['A', 'B', 'C', 'D', 'E'].map((t) => talk(t)), startsAt: ev().startsAt }) });
+    const e = ev({ agenda: buildSchedule({ talks: ['A', 'B', 'C', 'D', 'E'].map((t) => talk(t)) }) });
     expect(recapSummary(e)).toBe('Thu 12 Nov 2026 · Venue AG, Zürich. Five talks.');
     expect(recapSummary(e, { photos: 12 })).toContain('Five talks and photos from the evening.');
     expect(recapSummary(ev())).toBe('Thu 12 Nov 2026 · Venue AG, Zürich.');

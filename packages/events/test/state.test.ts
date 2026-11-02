@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   FEEDBACK_WINDOW_MS,
   buildIcs,
+  buildSchedule,
   chainTicketing,
+  feedbackAvailability,
+  feedbackNotice,
   meetupTicketing,
   nextMeetup,
   pastEvents,
@@ -149,5 +152,51 @@ describe('buildIcs', () => {
   });
   it('returns null without a date', () => {
     expect(buildIcs(ev({ startsAt: undefined }), 'u')).toBeNull();
+  });
+  const unfold = (ics: string) => ics.replace(/\r\n /g, '');
+  it('ends at endsAt, else the agenda close line, else blocks three hours and says the end is not fixed', () => {
+    const known = unfold(buildIcs(ev(), 'u', at(0))!);
+    expect(known).toContain('DTEND:20261118T203000Z');
+    expect(known).not.toContain('End time not fixed');
+    const close = buildSchedule({ agenda: [{ time: '21:00', title: 'Close' }], talks: [] });
+    expect(unfold(buildIcs(ev({ endsAt: undefined, agenda: close }), 'u', at(0))!)).toContain('DTEND:20261118T200000Z');
+    const unknown = unfold(buildIcs(ev({ endsAt: undefined }), 'u', at(0))!);
+    expect(unknown).toContain('DTEND:20261118T203000Z');
+    expect(unknown).toContain('Starts 18:30 CET. End time not fixed\\; this entry blocks three hours.');
+  });
+  it('labels the start the same way as the event page, never "Doors" without an agenda doors line', () => {
+    const ics = unfold(buildIcs(ev({ endsAt: undefined, startsAt: '2026-09-10T15:00:00.000Z' }), 'u', at(0))!);
+    expect(ics).toContain('Starts 17:00 CEST.');
+    expect(ics).not.toContain('Doors');
+  });
+});
+
+describe('feedback availability', () => {
+  const withTalk = ev({ agenda: buildSchedule({ talks: [{ id: 't1', title: 'A', speakerIds: ['ada'], format: 'talk', durationMin: 25 }] }) });
+  it('opens at the start and stays open for legacy links after the window', () => {
+    expect(feedbackAvailability(withTalk, at(doors - 1))).toEqual({ open: false, reason: 'before', opensAt: DOORS });
+    expect(feedbackAvailability(withTalk, at(doors))).toEqual({ open: true, talks: true });
+    expect(feedbackAvailability(withTalk, at(doors + FEEDBACK_WINDOW_MS + HOUR))).toEqual({ open: true, talks: true });
+  });
+  it('explains an early legacy link with the date and time in Zurich', () => {
+    const n = feedbackNotice(withTalk, feedbackAvailability(withTalk, at(doors - HOUR)))!;
+    expect(n.title).toBe('Feedback isn’t open yet');
+    expect(n.body).toContain('opens when the meetup starts: Wed 18 Nov 2026, 18:30 CET');
+    expect(feedbackNotice(withTalk, feedbackAvailability(withTalk, at(doors + HOUR)))).toBeUndefined();
+  });
+  it('cancelled, postponed and undated events say why', () => {
+    expect(feedbackNotice(ev({ status: 'cancelled' }), feedbackAvailability(ev({ status: 'cancelled' }), at(doors + HOUR)))?.title).toBe('This meetup was cancelled');
+    expect(feedbackAvailability(ev({ status: 'postponed' }), at(doors + HOUR))).toEqual({ open: false, reason: 'postponed' });
+    expect(feedbackAvailability(ev({ status: 'tbc', startsAt: undefined }), at(doors))).toEqual({ open: false, reason: 'tbc' });
+  });
+  it('a social without talks only asks about the evening', () => {
+    const social = ev();
+    const n = feedbackNotice(social, feedbackAvailability(social, at(doors + HOUR)))!;
+    expect(n.evening).toBe(true);
+    expect(n.body).not.toMatch(/rate the talks|speaker/i);
+    const live = presentEvent(social, { now: at(doors + HOUR) });
+    expect(live.cta).toMatchObject({ kind: 'feedback', label: 'Feedback on the evening', href: '/feedback?event=forms-types' });
+    expect(live.banner?.body).not.toMatch(/talk|speaker/i);
+    expect(presentEvent(withTalk, { now: at(doors + HOUR) }).cta).toMatchObject({ label: 'Rate the talks' });
   });
 });

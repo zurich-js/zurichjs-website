@@ -13,12 +13,11 @@ interface Props {
 
 /**
  * Where the meetup is: name, full address, how to get in, and directions.
- * The directions link always works. The map loads only when asked for
- * (no Google request or cookie before that): the Maps Embed API with a key,
- * otherwise Google Maps' keyless embed of the address (see mapEmbedUrl).
+ * The directions link always works. The map is always shown (owner, 2nd
+ * November 2026) and loads lazily as it scrolls near: the Maps Embed API with a
+ * key, otherwise Google Maps' keyless embed of the address (see mapEmbedUrl).
  */
 export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLevel = 2, past }: Props) {
-  const [showMap, setShowMap] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
   const H = `h${headingLevel}` as 'h2' | 'h3';
   const address = venueAddress(venue);
@@ -53,11 +52,8 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
           <Button href={directionsUrl(venue)} variant="black" external>
             Get directions
           </Button>
-          <Button variant="outline-black" onClick={() => setShowMap(!showMap)} aria-controls="venue-map" aria-expanded={showMap}>
-            {showMap ? 'Hide map' : 'Show map'}
-          </Button>
         </div>
-        {showMap && (
+        {
           <div id="venue-map" class="flex flex-col gap-2">
             {mapFailed ? (
               <p class="m-0 text-[16px] text-ink-2">The map didn’t load. The directions link above still works.</p>
@@ -72,9 +68,9 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
                 allowFullScreen
               />
             )}
-            <p class="m-0 text-[14px] text-ink-2">Map by Google. Loading it shares your IP address with Google. If it stays blank, use Get directions.</p>
+            <p class="m-0 text-[14px] text-ink-2">Map by Google. If it stays blank, use Get directions.</p>
           </div>
-        )}
+        }
         {past && <p class="m-0 text-[15px] text-ink-2">Where this meetup took place. Venues change between meetups; check the next event for its address.</p>}
       </div>
     </section>

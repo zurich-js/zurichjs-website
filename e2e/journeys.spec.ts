@@ -53,22 +53,14 @@ test.describe('event schedule and venue', () => {
     await expect(venue).toContainText('Musterstrasse 1, 8005 Zürich');
     const link = venue.getByRole('link', { name: /Get directions/ });
     await expect(link).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=Sample%20Venue%20AG/);
-    // No Maps key in this build: the map is Google's keyless embed, loaded only on request.
-    const google: string[] = [];
-    page.on('request', (r) => {
-      if (/^https:\/\/www\.google\.com\/maps(\?|\/embed)/.test(r.url())) google.push(r.url());
-    });
+    // No Maps key in this build: the map is Google's keyless embed, always shown (owner), loaded lazily.
     await page.route(/^https:\/\/www\.google\.com\/maps/, (route) => route.fulfill({ body: '<!doctype html><title>map</title>', contentType: 'text/html' }));
-    const show = venue.getByRole('button', { name: 'Show map' });
-    await expect(show).toHaveAttribute('aria-expanded', 'false');
-    expect(google).toHaveLength(0);
-    // The card is a client:visible island: let it hydrate once in view.
+    await expect(venue.getByRole('button', { name: /show map|hide map/i })).toHaveCount(0);
     await venue.scrollIntoViewIfNeeded();
-    await expect(page.locator('astro-island[ssr]', { has: venue })).toHaveCount(0);
-    await show.click();
-    await expect(venue.locator('iframe')).toHaveAttribute('src', 'https://www.google.com/maps?q=Musterstrasse%201%2C%208005%20Z%C3%BCrich&output=embed');
-    await expect(venue.getByRole('button', { name: 'Hide map' })).toHaveAttribute('aria-expanded', 'true');
-    await expect(venue).toContainText('Loading it shares your IP address with Google.');
+    const map = venue.locator('iframe');
+    await expect(map).toHaveAttribute('src', 'https://www.google.com/maps?q=Musterstrasse%201%2C%208005%20Z%C3%BCrich&output=embed');
+    await expect(map).toHaveAttribute('loading', 'lazy');
+    await expect(map).toHaveAttribute('title', /^Map of Sample Venue AG/);
     // Directions stay next to the map.
     await expect(link).toBeVisible();
     // Past events keep their venue too.

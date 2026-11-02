@@ -39,11 +39,8 @@ describe('mapEvent (production document shape)', () => {
   it('builds a venue from location and address', () => {
     expect(ev.venue).toEqual({ name: 'Venue AG', street: 'Hardstrasse 201', zip: '8005', city: 'Zürich' });
   });
-  it('lists the talks without inventing times when there is no agenda: only doors (from datetime) has a time', () => {
-    expect(ev.agenda).toEqual([
-      { time: '18:30', kind: 'doors', title: 'Doors open' },
-      { time: '', kind: 'talk', title: 'Typed forms', talk: expect.objectContaining({ speakerIds: ['ada'], format: 'talk' }) },
-    ]);
+  it('lists the talks without inventing times when there is no agenda, and never turns datetime into a doors line', () => {
+    expect(ev.agenda).toEqual([{ time: '', kind: 'talk', title: 'Typed forms', talk: expect.objectContaining({ speakerIds: ['ada'], format: 'talk' }) }]);
   });
   it('keeps the agenda times and order as organisers wrote them, including non-talk lines', () => {
     const withAgenda = mapEvent({

@@ -367,6 +367,20 @@ const SAMPLE_EVENTS: SampleEvent[] = [
     },
   },
   {
+    // A social evening without talks (production: /events/june-2026). Only evening feedback, no talk ratings.
+    // No agenda and no end time: the page says "Starts 18:00" and nothing more.
+    id: 'p-jul-2026',
+    slug: '2026-07-summer-social',
+    title: 'Summer social',
+    status: 'scheduled',
+    startsAt: '2026-07-08T18:00:00+02:00',
+    venue: SAMPLE_VENUE,
+    description: 'An evening without talks: drinks, food and time to meet the community.',
+    agenda: [],
+    practical: PRACTICAL_MEETUP,
+    photos: [],
+  },
+  {
     id: 'p-jun-2026',
     slug: '2026-06-edge-runtimes',
     title: 'Edge runtimes in practice: what actually changed in our deploys',
@@ -491,7 +505,7 @@ const SAMPLE_EVENTS: SampleEvent[] = [
 export const EVENTS: Event[] = SAMPLE_EVENTS.map(({ talks, ...e }) => ({
   ...e,
   recap: e.recap?.talks.length ? e.recap : undefined,
-  agenda: buildSchedule({ agenda: e.agenda, talks: talks ?? [], startsAt: e.startsAt }),
+  agenda: buildSchedule({ agenda: e.agenda, talks: talks ?? [] }),
 }));
 
 /* -------------------------------------------------------------------------- */

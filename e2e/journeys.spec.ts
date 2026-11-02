@@ -30,7 +30,10 @@ test.describe('event schedule and venue', () => {
     const talks = page.locator('#programme li[id^="talk-"]');
     await expect(talks).toHaveCount(2);
     await expect(talks.first().locator('time')).toHaveCount(0);
-    await expect(page.getByText('Talks in running order.')).toBeVisible();
+    // One note for the whole programme, no per-talk placeholder and no synthesised doors, welcome, break or networking.
+    await expect(page.getByText('Talks in running order. Talk times weren’t recorded.')).toBeVisible();
+    await expect(page.locator('#programme > ol > li')).toHaveCount(2);
+    await expect(page.locator('#programme')).not.toContainText(/Time not|Doors|Welcome|Break|Networking/);
     // The summary counts the programme's talks.
     await expect(page.getByText('Two talks.').first()).toBeVisible();
   });
@@ -63,6 +66,52 @@ test.describe('event schedule and venue', () => {
 });
 
 test.describe('feedback', () => {
+  test('a legacy ?feedback=true link before the start says when feedback opens, and rates nothing', async ({ page }) => {
+    await at(page, '2026-11-01T12:00:00+01:00');
+    await page.goto('/events/2026-11-forms-types?feedback=true');
+    const gate = page.locator('#feedback');
+    await expect(gate.getByRole('heading', { name: 'Feedback isn’t open yet' })).toBeVisible();
+    await expect(gate).toContainText('opens when the meetup starts: Wed 18 Nov 2026, 18:30 CET');
+    await expect(page.getByRole('button', { name: /^Rate / })).toHaveCount(0);
+    // The same link opens the ratings once the meetup has started.
+    await at(page, '2026-11-18T18:45:00+01:00');
+    await page.goto('/events/2026-11-forms-types?feedback=true');
+    await expect(page.getByRole('heading', { name: 'Feedback isn’t open yet' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Rate this talk' })).toHaveCount(1);
+  });
+
+  test('a social evening without talks only asks about the evening', async ({ page }) => {
+    await at(page, '2026-11-01T12:00:00+01:00');
+    await page.goto('/events/2026-07-summer-social?feedback=true');
+    await hydrated(page);
+    const gate = page.locator('#feedback');
+    await expect(gate).toContainText('This evening had no talks to rate.');
+    await expect(gate.getByRole('link', { name: 'Feedback on the evening' })).toHaveAttribute('href', '/feedback?event=2026-07-summer-social');
+    await expect(page.locator('main')).not.toContainText(/Rate the talks|each speaker reads/);
+    await expect(page.locator('#programme')).toHaveCount(0);
+    // The evening form does not point to talk ratings either.
+    await page.goto('/feedback?event=2026-07-summer-social');
+    await hydrated(page);
+    await expect(page.getByRole('link', { name: 'Rate the talks' })).toHaveCount(0);
+  });
+
+  test('rating needs a score, and a failed send says so without losing the rating', async ({ page }) => {
+    await at(page, '2026-11-01T12:00:00+01:00');
+    let calls = 0;
+    await page.route('**/api/forms/rating', async (route) => {
+      calls++;
+      await route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now. Please try again or email hello@zurichjs.com.' } });
+    });
+    await page.goto('/events/2026-09-signals-streams?feedback=true');
+    await page.getByRole('button', { name: 'Rate this talk' }).first().click();
+    await expect(page.getByRole('button', { name: 'Send rating' })).toBeDisabled();
+    expect(calls).toBe(0);
+    await page.getByRole('radio', { name: /3/ }).first().click();
+    await page.getByRole('button', { name: 'Send rating' }).click();
+    await expect(page.getByRole('alert')).toContainText('We couldn’t send that right now');
+    expect(calls).toBe(1);
+  });
+
   test('legacy ?feedback=true opens per-talk rating on a past event, one button per speaker', async ({ page }) => {
     await at(page, '2026-11-01T12:00:00+01:00');
     await page.goto('/events/2026-09-signals-streams?feedback=true');
@@ -87,6 +136,7 @@ test.describe('feedback', () => {
     await expect(page.getByText('Thanks, that helps.')).toBeVisible();
     expect(sent[0]).toMatchObject({ speakerId: 'max-muster', stars: 4 });
     expect(sent[0]!.eventId).toBe('u-nov-2026');
+    expect(String(sent[0]!.target)).toMatch(/:max-muster$/);
     // Rating again is refused, and the reason is shown.
     await page.getByRole('button', { name: /Rate the next talk|Rate the other talk|Done/ }).click();
     if (await page.getByRole('button', { name: 'Later' }).isVisible()) await page.getByRole('button', { name: 'Later' }).click();

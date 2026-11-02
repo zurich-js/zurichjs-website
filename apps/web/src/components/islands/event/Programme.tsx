@@ -1,4 +1,4 @@
-import { isTimed, talkAnchor, talkFormatLine, type AgendaItem, type Event, type EventState } from '@zurichjs/events';
+import { feedbackAvailability, talkAnchor, talkFormatLine, untimedNote, type AgendaItem, type Event, type EventState, type ProgrammeMoment } from '@zurichjs/events';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
 import { cx, monogramClass } from '@zurichjs/design/recipes';
@@ -22,9 +22,14 @@ const KIND_LABEL: Partial<Record<AgendaItem['kind'], string>> = { doors: 'Doors'
  * own time, breaks and networking. Server-rendered in full for search
  * engines. Each talk has a stable #talk-… anchor.
  *
+ * Times come only from the agenda. Without them the talks are listed in
+ * order under one note, with no per-talk placeholder.
+ *
  * Ratings: one per speaker per talk (a talk with two speakers gets two),
- * offered during the 48-hour feedback window, and on any date when the page
- * is opened with the legacy `?feedback=true` link.
+ * offered during the 48-hour feedback window, and afterwards when the page
+ * is opened with the legacy `?feedback=true` link. Before the start the
+ * link opens nothing here: FeedbackGate explains when feedback opens. A
+ * draft preview build (`preview`) opens the ratings early for organisers.
  */
 export default function Programme({
   ev,
@@ -32,6 +37,7 @@ export default function Programme({
   speakers,
   summaries = {},
   heading = 'Programme',
+  preview = false,
 }: {
   ev: Event;
   initial: EventState;
@@ -39,14 +45,16 @@ export default function Programme({
   /** Recap summaries by talk title, shown under each talk after the event. */
   summaries?: Record<string, string>;
   heading?: string;
+  /** Draft preview build: `?feedback=true` opens the ratings on any date, so organisers can check them. */
+  preview?: boolean;
 }) {
   const state = useEventState(ev, initial);
-  const [forced, setForced] = useState(false);
+  const [requested, setRequested] = useState(false);
+  useEffect(() => setRequested(feedbackRequested(location)), []);
+  const forced = requested && (preview || feedbackAvailability(ev, state).open);
   useEffect(() => {
-    if (!feedbackRequested(location)) return;
-    setForced(true);
-    requestAnimationFrame(() => document.getElementById('programme')?.scrollIntoView());
-  }, []);
+    if (forced) requestAnimationFrame(() => document.getElementById('programme')?.scrollIntoView());
+  }, [forced]);
   const rating = state === 'live' || forced;
   const [rated, setRated] = useState<Record<string, number>>({});
   const [target, setTarget] = useState<RateTarget | null>(null);
@@ -65,7 +73,10 @@ export default function Programme({
     }));
   });
   const pending = targets.filter((t) => !rated[t.key] && t.key !== target?.key);
-  const timed = isTimed(ev);
+  const moment: ProgrammeMoment = state === 'past' ? 'past' : state === 'live' ? 'now' : 'future';
+  const note = untimedNote(ev, moment);
+  // Without any time the programme is a plain ordered list: no empty time column.
+  const anyTime = ev.agenda.some((a) => a.time);
 
   return (
     <section id="programme" aria-labelledby="h-programme" class="flex flex-col gap-6 scroll-mt-6">
@@ -73,9 +84,7 @@ export default function Programme({
         <h2 id="h-programme" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
           {heading}
         </h2>
-        {!timed && ev.agenda.some((a) => a.talk) && (
-          <p class="m-0 text-[16px] text-ink-2">{state === 'past' ? 'Talks in running order.' : 'Talks in running order. Exact talk times follow closer to the day.'}</p>
-        )}
+        {note && <p class="m-0 text-[16px] text-ink-2">{note}</p>}
       </div>
       {forced && state !== 'live' && (
         <div id="feedback" class="bg-yellow rounded-card p-5 flex flex-col gap-2 scroll-mt-6">
@@ -93,10 +102,8 @@ export default function Programme({
           const anchor = a.talk ? talkAnchor(a.talk) : undefined;
           const summary = a.talk ? summaries[a.talk.title] : undefined;
           return (
-            <li key={i} id={anchor} class="grid grid-cols-[64px_minmax(0,1fr)] gap-[18px] scroll-mt-24">
-              <div class="text-[18px] font-bold pt-px tabular-nums">
-                {a.time ? <time>{a.time}</time> : <span class="sr-only">{state === 'past' ? 'Time not recorded' : 'Time not fixed yet'}</span>}
-              </div>
+            <li key={i} id={anchor} class={cx('grid gap-[18px] scroll-mt-24', anyTime ? 'grid-cols-[64px_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)]')}>
+              {anyTime && <div class="text-[18px] font-bold pt-px tabular-nums">{a.time && <time>{a.time}</time>}</div>}
               <div class="flex flex-col gap-2 min-w-0">
                 {!a.talk && KIND_LABEL[a.kind] && !a.title.toLowerCase().includes(KIND_LABEL[a.kind]!.toLowerCase()) && (
                   <div class="text-[15px] text-ink-2">{KIND_LABEL[a.kind]}</div>

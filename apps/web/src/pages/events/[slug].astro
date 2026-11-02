@@ -11,6 +11,7 @@ import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventActions from '~/components/islands/event/EventActions';
 import EventBanner from '~/components/islands/event/EventBanner';
 import EventSummary from '~/components/islands/event/EventSummary';
+import FeedbackGate from '~/components/islands/event/FeedbackGate';
 import Programme from '~/components/islands/event/Programme';
 import VenueCard from '~/components/islands/event/VenueCard';
 import SupporterList from '~/components/SupporterList.astro';
@@ -21,7 +22,7 @@ import { mediaForEvent } from '@zurichjs/content';
 import { countLabel, mediaHref, toGallery } from '~/lib/media';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { BUILD_TIME, MAPS_EMBED_KEY, SITE, content, ticketing } from '~/lib/content';
+import { BUILD_TIME, MAPS_EMBED_KEY, PREVIEW, SITE, content, ticketing } from '~/lib/content';
 import { clip } from '~/lib/text';
 
 export async function getStaticPaths() {
@@ -85,6 +86,8 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
   {
     isPast ? (
       <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+        <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
+
         {ev.description && (
           <section class="flex flex-col gap-3.5">
             <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
@@ -92,7 +95,7 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
           </section>
         )}
 
-        {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} summaries={summaries} />}
+        {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} summaries={summaries} preview={PREVIEW} />}
 
         {recapOnly.length > 0 && (
           <section class="flex flex-col gap-6">
@@ -154,7 +157,9 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
           <Surface class="p-7 flex flex-col gap-2.5">
             <h2 class="m-0 text-[24px] font-bold">Were you there?</h2>
             <p class="m-0 text-[17px] leading-normal text-ink-2">
-              Rate the talks: each speaker reads the ratings and comments for their own talk. Or tell the organisers about the evening in a few open questions.
+              {hasTalks
+                ? 'Rate the talks: each speaker reads the ratings and comments for their own talk. Or tell the organisers about the evening in a few open questions.'
+                : 'Tell the organisers about the evening in a few open questions. Only the organisers read your answers.'}
             </p>
             <div class="flex flex-wrap gap-2.5">
               {hasTalks && (
@@ -162,7 +167,7 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
                   Rate the talks
                 </Button>
               )}
-              <Button href={`/feedback?event=${ev.slug}`} variant="outline-black" class="text-[17px]">
+              <Button href={`/feedback?event=${ev.slug}`} variant={hasTalks ? 'outline-black' : 'black'} class="text-[17px]">
                 Feedback on the evening
               </Button>
             </div>
@@ -179,6 +184,8 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
     ) : (
       <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(40px,5vw,72px)] items-start">
         <div class="flex flex-col gap-[clamp(40px,5vw,64px)] col-span-full md:col-[1/-2] min-w-0">
+          <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
+
           <EventBanner client:load ev={ev} initial={state} />
 
           <section class="flex flex-col gap-3.5">
@@ -186,7 +193,7 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
             <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
           </section>
 
-          {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} />}
+          {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} preview={PREVIEW} />}
 
           {speakingOpen && (
             <Surface class="p-6 flex flex-col gap-2.5">

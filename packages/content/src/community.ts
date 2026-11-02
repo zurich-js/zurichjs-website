@@ -63,28 +63,6 @@ export const TEAM: TeamMember[] = [
       { label: 'LinkedIn', url: 'https://www.linkedin.com/in/nadja-r%C3%B8mer-hesselbjerg-47002a12b/' },
     ],
   },
-  {
-    name: 'Enrique Ruiz Durazo',
-    role: 'Official photographer',
-    group: 'contributors',
-    initials: initials('Enrique Ruiz Durazo'),
-    photo: photo('enrique', 'Enrique Ruiz Durazo'),
-    // [old-about]
-    bio: 'Software engineer, product designer and content creator, obsessed with crafting great websites, apps and quality content.',
-    links: [
-      { label: 'Website', url: 'https://ruizdurazo.com' },
-      { label: 'GitHub', url: 'https://github.com/ruizdurazo' },
-      { label: 'LinkedIn', url: 'https://linkedin.com/in/ruizdurazo' },
-      { label: 'X', url: 'https://x.com/ruizdurazo' },
-    ],
-  },
-  {
-    name: 'Colin Schwarz',
-    // [conf-about]: listed in the ZurichJS Conf team.
-    role: 'ZurichJS Conf team',
-    group: 'conference',
-    initials: initials('Colin Schwarz'),
-  },
 ];
 
 /** ZurichJS Conf 2026 volunteers, as thanked on conf.zurichjs.com [conf-about]. */
@@ -108,6 +86,7 @@ export const VOLUNTEERS: string[] = [
 const h = (name: string, alt: string) => ({ src: `/images/photos/${name}.webp`, alt });
 
 /** Oldest first. Event links are resolved by date at build time (an event on that day). */
+// Milestones only: routine meetups live on /events (owner, 2nd November 2026).
 export const MILESTONES: Milestone[] = [
   {
     date: 'July 2024',
@@ -169,52 +148,12 @@ export const MILESTONES: Milestone[] = [
     source: 'old-about',
   },
   {
-    date: 'May 2025',
-    iso: '2025-05-15',
-    title: 'May the Code be with you',
-    text: 'Local speakers on the way of a founder, and a deep dive into performance testing.',
-    photo: { src: '/images/photos/may-the-force.webp', alt: 'May the Code be with you, May 2025' },
-    source: 'old-about',
-  },
-  {
     date: '18th June 2025',
     iso: '2025-06-18',
     title: 'ZurichJS becomes a Swiss nonprofit',
     text: 'ZurichJS becomes official through the Swiss JavaScript Group, a registered Swiss nonprofit association (Verein).',
     link: { label: 'Membership', href: '/membership' },
     source: 'conf-blog',
-  },
-  {
-    date: 'June 2025',
-    iso: '2025-06-19',
-    title: 'JavaScript on the server',
-    text: 'A meetup and a workshop all about server-side JavaScript and Node.js.',
-    photo: h('history-june-2025', 'The June 2025 meetup and Node.js workshop'),
-    source: 'old-about',
-  },
-  {
-    date: 'July 2025',
-    iso: '2025-07-24',
-    title: 'Sizzling hot JavaScript in July',
-    text: 'Astro and PHP, with friends from Belgium joining for a summer meetup.',
-    photo: h('history-july-2025', 'The July 2025 summer meetup'),
-    source: 'old-about',
-  },
-  {
-    date: 'September 2025',
-    iso: '2025-09-10',
-    title: 'Flare up your performance',
-    text: 'Cloudflare shares insights on web performance and security.',
-    photo: { src: '/images/photos/cloudflare.webp', alt: 'Flare up your performance with Cloudflare, September 2025' },
-    source: 'old-about',
-  },
-  {
-    date: 'October 2025',
-    iso: '2025-10-28',
-    title: '(H)aunt the gaps in your apps',
-    text: 'A Halloween meetup on finding and fixing performance gaps and bugs, with the support of Dynatrace.',
-    photo: h('history-october-2025', 'The October 2025 meetup'),
-    source: 'old-about',
   },
   {
     date: 'November 2025',
@@ -233,13 +172,6 @@ export const MILESTONES: Milestone[] = [
     source: 'conf-timeline',
   },
   {
-    date: 'January 2026',
-    iso: '2026-01-22',
-    title: 'Vue x Stripe',
-    text: 'A Vue.js meetup with Stripe and GetYourGuide.',
-    source: 'old-about',
-  },
-  {
     date: 'June 2026',
     iso: '2026-06',
     title: 'Open Source Award at JSNation',
@@ -247,14 +179,6 @@ export const MILESTONES: Milestone[] = [
     photo: { src: '/images/photos/open-source-award-winner.webp', alt: 'Faris Aziz receiving the JS Open Source Award for ZurichJS' },
     link: { label: 'Read the story', href: 'https://conf.zurichjs.com/blog/how-zurichjs-got-here' },
     source: 'conf-blog',
-  },
-  {
-    date: 'September 2026',
-    iso: '2026-09',
-    title: 'Conference warm-up meetup',
-    text: 'The warm-up meetup for ZurichJS Conf, hosted by GetYourGuide, with GYFF and FIN as supporters.',
-    eventSlug: 'sep-2026',
-    source: 'old-today',
   },
   {
     // [conf-home]: Community Day 9 Sept, Zurich Engineering Day 10 Sept, Conference Day 11 Sept 2026, Technopark Zurich.

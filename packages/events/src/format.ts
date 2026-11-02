@@ -13,10 +13,10 @@ export function ordinal(n: number | string): string {
 }
 const dayOrd = (iso: string) => ordinal(part(iso, { day: 'numeric' }));
 
-/** "Wed 18 Nov 2026" */
+/** "Wed 18th Nov 2026" */
 export const dateLong = (iso: string) => `${part(iso, { weekday: 'short' })} ${dayOrd(iso)} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
 
-/** "18 Nov 2026" */
+/** "18th Nov 2026" */
 export const dateShort = (iso: string) => `${dayOrd(iso)} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
 
 /** "Nov 2026" */
@@ -75,13 +75,13 @@ export const dateParts = (iso: string) => {
   return { mon: part(iso, { month: 'short' }), day, suffix: ordinal(day).slice(day.length), year: part(iso, { year: 'numeric' }) };
 };
 
-/** "Wed 18 Nov 2026, 18:30–21:30" */
+/** "Wed 18th Nov 2026, 18:30–21:30" */
 export const dateTimeRange = (startIso: string, endIso?: string) => `${dateLong(startIso)}, ${time(startIso)}${endIso ? `–${time(endIso)}` : ''}`;
 
-/** "Wed 18 Nov 2026, 18:30" */
+/** "Wed 18th Nov 2026, 18:30" */
 export const dateTime = (startIso: string) => `${dateLong(startIso)}, ${time(startIso)}`;
 
-/** "Fri 20 Nov, 21:30" (no year, for deadlines close to the event) */
+/** "Fri 20th Nov, 21:30" (no year, for deadlines close to the event) */
 export const dateTimeNoYear = (iso: string) => `${part(iso, { weekday: 'short' })} ${dayOrd(iso)} ${part(iso, { month: 'short' })}, ${time(iso)}`;
 
 export const chf = (n: number) => `CHF ${n}`;

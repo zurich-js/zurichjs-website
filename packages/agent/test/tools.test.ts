@@ -44,12 +44,20 @@ describe('agent tools write drafts only', () => {
     expect(f.draftOf('evt-nov')).toMatchObject({ status: 'cancelled' });
   });
 
-  it('converts Zurich doors time to UTC (winter and summer time)', async () => {
+  it('converts the Zurich start time to UTC (winter and summer time)', async () => {
     expect(zurichToUtcIso('2026-12-09', '18:30')).toBe('2026-12-09T17:30:00.000Z');
     expect(zurichToUtcIso('2026-06-17', '18:30')).toBe('2026-06-17T16:30:00.000Z');
     const f = fakeStore([NOV]);
     await run(buildTools(f.store, new ChangeLog(), now), 'updateEventDraft', { slug: 'zurichjs-meetup-november-2026', doorsTime: '19:00' });
     expect(f.draftOf('evt-nov')).toMatchObject({ datetime: '2026-11-18T18:00:00.000Z' });
+  });
+
+  it('never invents a start time when only a date is given for a new event', async () => {
+    const f = fakeStore([NOV]);
+    await expect(
+      run(buildTools(f.store, new ChangeLog(), now), 'createEventDraft', { slug: 'zurichjs-meetup-january-2027', title: 'January meetup', date: '2027-01-20' }),
+    ).rejects.toThrow(/start time/);
+    expect(f.draftOf('zurichjs-meetup-january-2027')).toBeUndefined();
   });
 
   it('creates a new event as a draft with a fresh id, and says what the page still needs', async () => {

@@ -2,10 +2,15 @@
  * The evening's programme, in one place. Event pages, the Tonight page,
  * speaker pages and calendar files all read it from here.
  *
- * Sanity has no per-talk time: times live only in the event's `agenda`
- * (HH:MM in Zurich). When the agenda is empty, the programme is doors (the
- * event's `datetime`, titled "Doors" in the Studio) plus the talks in
- * running order without times. Nothing is guessed.
+ * What each field means (docs/v2/DECISIONS.md, 2026-11-02):
+ *   - `datetime` (startsAt) is the start time listed on Meetup. It is not
+ *     called "doors": production never used it consistently as doors, so the
+ *     site says "Starts 18:00".
+ *   - Doors, the welcome, each talk, breaks, networking and the close have a
+ *     time only when the event's `agenda` gives one (HH:MM in Zurich).
+ *   - The end is `endsAt`, or the agenda's close line; otherwise unknown.
+ * Without an agenda the programme is the talks in running order, with no
+ * times and no doors, welcome, break or networking lines. Nothing is guessed.
  */
 import { time, zoneLabel, zurichDay, zurichWallTime } from './format.ts';
 import type { AgendaItem, Event, ScheduleKind, TalkRef } from './types.ts';
@@ -28,14 +33,13 @@ export function inferKind(item: { kind?: string | null; title?: string | null; t
 export interface ScheduleInput {
   agenda?: { time?: string | null; kind?: string | null; title?: string | null; note?: string | null; talk?: TalkRef }[];
   talks: TalkRef[];
-  startsAt?: string;
 }
 
 const HHMM = /^\d{1,2}:\d{2}$/;
 const cleanTime = (t?: string | null) => (t && HHMM.test(t.trim()) ? t.trim().padStart(5, '0') : '');
 
 /** Builds the ordered programme from what Sanity has. Used by the content mappers. */
-export function buildSchedule({ agenda, talks, startsAt }: ScheduleInput): AgendaItem[] {
+export function buildSchedule({ agenda, talks }: ScheduleInput): AgendaItem[] {
   if (agenda?.length) {
     const items = agenda.map((a) => {
       const kind = inferKind(a);
@@ -52,18 +56,12 @@ export function buildSchedule({ agenda, talks, startsAt }: ScheduleInput): Agend
     const missing = talks.filter((t) => t.id && !listed.has(t.id)).map((t) => ({ time: '', kind: 'talk' as const, title: t.title, talk: t }));
     return [...items, ...missing];
   }
-  if (!talks.length) return [];
-  return [
-    ...(startsAt ? [{ time: time(startsAt), kind: 'doors' as const, title: 'Doors open' }] : []),
-    ...talks.map((t) => ({ time: '', kind: 'talk' as const, title: t.title, talk: t })),
-  ];
+  // The event's `datetime` is the Meetup start, not doors: it never becomes a programme line.
+  return talks.map((t) => ({ time: '', kind: 'talk' as const, title: t.title, talk: t }));
 }
 
 /** The talks of an event, in running order. */
 export const eventTalks = (ev: Pick<Event, 'agenda'>): TalkRef[] => ev.agenda.flatMap((a) => (a.talk ? [a.talk] : []));
-
-/** True when the programme has a time for every talk. */
-export const isTimed = (ev: Pick<Event, 'agenda'>) => ev.agenda.some((a) => a.talk) && ev.agenda.every((a) => a.kind !== 'talk' || !!a.time);
 
 /** The instant a programme line starts, on the event's day in Zurich; undefined without a time. */
 export function itemStartsAt(ev: Pick<Event, 'startsAt'>, item: Pick<AgendaItem, 'time'>): Date | undefined {
@@ -72,31 +70,72 @@ export function itemStartsAt(ev: Pick<Event, 'startsAt'>, item: Pick<AgendaItem,
 }
 
 export interface ScheduleFacts {
-  /** "18:00": the event's doors. */
+  /** "18:00": the event's start as listed on Meetup (`datetime`). */
+  starts?: string;
+  /** "17:30": doors, only when the agenda has a timed doors line. */
   doors?: string;
-  /** "18:30": the first line after doors (welcome or the first talk). */
+  /** "18:30": the first timed line after doors (welcome or the first talk). */
   programmeStarts?: string;
   /** "18:50": the first talk, when the agenda gives it a time. */
   firstTalk?: string;
+  /** "21:30": `endsAt`, else the agenda's timed close line; undefined when not known. */
+  ends?: string;
   /** "CET" or "CEST" on the event's date. */
   zone?: string;
 }
 
-export function scheduleFacts(ev: Pick<Event, 'agenda' | 'startsAt'>): ScheduleFacts {
-  const doorsItem = ev.agenda.find((a) => a.kind === 'doors' && a.time);
-  const doors = doorsItem?.time || (ev.startsAt ? time(ev.startsAt) : undefined);
-  const programmeStarts = ev.agenda.find((a) => a.kind !== 'doors' && a.time)?.time;
-  const firstTalk = ev.agenda.find((a) => a.kind === 'talk')?.time || undefined;
-  return { doors, programmeStarts, firstTalk, zone: ev.startsAt ? zoneLabel(ev.startsAt) : undefined };
+/** The instant the evening ends: `endsAt`, else the agenda's timed close line. Undefined when nobody said. */
+export function eventEndsAt(ev: Pick<Event, 'agenda' | 'startsAt' | 'endsAt'>): Date | undefined {
+  if (ev.endsAt) return new Date(ev.endsAt);
+  const close = ev.agenda.find((a) => a.kind === 'close' && a.time);
+  return close ? itemStartsAt(ev, close) : undefined;
 }
 
-/** "Doors 18:00 · Talks from 18:50 CET", or "Doors 18:00 CET" when the talk times are not fixed. */
-export function timesLine(ev: Pick<Event, 'agenda' | 'startsAt'>): string {
+export function scheduleFacts(ev: Pick<Event, 'agenda' | 'startsAt'> & { endsAt?: string }): ScheduleFacts {
+  const doors = ev.agenda.find((a) => a.kind === 'doors' && a.time)?.time;
+  const programmeStarts = ev.agenda.find((a) => a.kind !== 'doors' && a.time)?.time;
+  const firstTalk = ev.agenda.find((a) => a.kind === 'talk')?.time || undefined;
+  const end = eventEndsAt(ev);
+  return {
+    starts: ev.startsAt ? time(ev.startsAt) : undefined,
+    doors,
+    programmeStarts,
+    firstTalk,
+    ends: end ? time(end.toISOString()) : undefined,
+    zone: ev.startsAt ? zoneLabel(ev.startsAt) : undefined,
+  };
+}
+
+/**
+ * "Doors 17:30 · Talks from 18:50 CET" when the agenda says so, else
+ * "Starts 18:00 CET" (the Meetup start). Never claims a doors time that only
+ * the event's `datetime` implies.
+ */
+export function timesLine(ev: Pick<Event, 'agenda' | 'startsAt'> & { endsAt?: string }): string {
   const f = scheduleFacts(ev);
-  if (!f.doors) return '';
-  const parts = [`Doors ${f.doors}`];
-  if (f.firstTalk && f.firstTalk !== f.doors) parts.push(`Talks from ${f.firstTalk}`);
+  const lead = f.doors ? `Doors ${f.doors}` : f.starts ? `Starts ${f.starts}` : '';
+  if (!lead) return '';
+  const parts = [lead];
+  const first = f.doors ?? f.starts;
+  if (f.firstTalk && f.firstTalk !== first) parts.push(`Talks from ${f.firstTalk}`);
   return `${parts.join(' · ')} ${f.zone ?? ''}`.trim();
+}
+
+/** When the visitor reads the programme: before the event's day, on it, or after it. */
+export type ProgrammeMoment = 'future' | 'now' | 'past';
+
+/**
+ * The one note shown above a programme whose talks have no times, or
+ * undefined when every talk has a time (or there are no talks).
+ * Replaces a per-talk "time not fixed" placeholder.
+ */
+export function untimedNote(ev: Pick<Event, 'agenda'>, moment: ProgrammeMoment): string | undefined {
+  const talks = ev.agenda.filter((a) => a.talk);
+  if (!talks.length || talks.every((a) => a.time)) return undefined;
+  const some = talks.some((a) => a.time);
+  if (moment === 'past') return some ? 'Talks in running order. Some talk times weren’t recorded.' : 'Talks in running order. Talk times weren’t recorded.';
+  if (moment === 'now') return 'Talks in running order.';
+  return 'Talks in running order. Talk times follow closer to the day.';
 }
 
 const slugify = (s: string) =>

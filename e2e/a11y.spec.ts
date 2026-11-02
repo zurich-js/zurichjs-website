@@ -13,6 +13,8 @@ const PAGES = [
   '/events/2026-11-forms-types',
   '/events/2026-09-signals-streams?feedback=true',
   '/events/2025-11-anniversary',
+  '/events/2026-11-forms-types?feedback=true',
+  '/events/2026-07-summer-social?feedback=true',
   '/today',
   '/speakers',
   '/speakers/mia-entwurf',

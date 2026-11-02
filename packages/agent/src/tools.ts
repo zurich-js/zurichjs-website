@@ -60,7 +60,11 @@ const eventFields = z.object({
   title: z.string().min(3).optional(),
   status: STATUS.optional().describe('scheduled = RSVP open on Meetup; rsvp-soon; tbc = month known only; full; postponed; cancelled'),
   date: z.string().regex(DAY).optional().describe('Local date in Zurich, YYYY-MM-DD'),
-  doorsTime: z.string().regex(HHMM).optional().describe('Doors time in Zurich, HH:MM (usually 18:00 or 18:30)'),
+  doorsTime: z
+    .string()
+    .regex(HHMM)
+    .optional()
+    .describe('Start time in Zurich, HH:MM, exactly as the organiser gave it: the event datetime, which Meetup shows as the start. Never guess it.'),
   endTime: z.string().regex(HHMM).optional().describe('End time in Zurich, HH:MM'),
   dateText: z.string().optional().describe('For tbc events only, e.g. "January 2027"'),
   venue: venueSchema.optional(),
@@ -94,8 +98,10 @@ function toSanityFields(input: EventFields, current: EventDoc | null): Record<st
     const day = input.date ?? (current?.datetime ? new Date(current.datetime).toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' }) : undefined);
     const time =
       input.doorsTime ??
-      (current?.datetime ? new Date(current.datetime).toLocaleTimeString('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : '18:30');
-    if (!day) throw new Error('A date (YYYY-MM-DD) is needed to set the doors time');
+      (current?.datetime ? new Date(current.datetime).toLocaleTimeString('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : undefined);
+    if (!day) throw new Error('A date (YYYY-MM-DD) is needed to set the start time');
+    // Never invent a time (AGENTS.md): ask the organiser instead.
+    if (!time) throw new Error('A start time (HH:MM in Zurich) is needed with the date. Ask the organiser; never guess it.');
     set.datetime = zurichToUtcIso(day, time);
     if (input.endTime) set.endsAt = zurichToUtcIso(day, input.endTime);
   } else if (input.endTime) {
@@ -224,7 +230,7 @@ export function buildTools(store: ContentStore, log: ChangeLog, now: () => Date 
 
     updateEventDraft: tool({
       description:
-        'Change an existing meetup (venue, date, doors time, status like full/postponed/cancelled, description, Meetup link, "good to know", programme). Writes a DRAFT; the live page changes only after an organiser publishes. Only pass the fields that change.',
+        'Change an existing meetup (venue, date, start time, status like full/postponed/cancelled, description, Meetup link, "good to know", programme). Writes a DRAFT; the live page changes only after an organiser publishes. Only pass the fields that change.',
       inputSchema: eventFields.extend({ slug: z.string().describe('The event URL slug (from findEvents)') }),
       execute: async ({ slug, ...fields }) => {
         const hit = await eventBySlug(store, slug);

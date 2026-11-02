@@ -1,4 +1,4 @@
-import { scheduleFacts } from './schedule.ts';
+import { eventEndsAt, timesLine } from './schedule.ts';
 import type { Event } from './types.ts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -26,21 +26,28 @@ const fold = (line: string) => {
   return out.join('\r\n');
 };
 
+/** How long a calendar entry blocks when nobody recorded an end time. Said so in the entry. */
+const ASSUMED_LENGTH_MS = 3 * 3600_000;
+
 /**
  * RFC 5545 calendar file for one event, or null when the date is not fixed.
  * Times are UTC (the instant is exact in every calendar, in summer and winter).
+ * DTSTART is the event's `datetime` (the Meetup start). DTEND is `endsAt` or
+ * the agenda's close line; when neither exists the entry blocks three hours
+ * and its description says the end time is not fixed.
  * The UID is the public URL segment, so downloading again updates the same
  * calendar entry instead of adding a second one; SEQUENCE follows the last edit.
  */
 export function buildIcs(ev: Event, url: string, stamp: Date = new Date()): string | null {
   if (!ev.startsAt) return null;
-  const end = ev.endsAt ?? new Date(Date.parse(ev.startsAt) + 3 * 3600_000).toISOString();
+  const knownEnd = eventEndsAt(ev);
+  const end = (knownEnd ?? new Date(Date.parse(ev.startsAt) + ASSUMED_LENGTH_MS)).toISOString();
   const loc = ev.venue ? [ev.venue.name, ev.venue.street, [ev.venue.zip, ev.venue.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '';
-  const f = scheduleFacts(ev);
+  const times = timesLine(ev);
   const programme = ev.agenda.map((a) => `${a.time ? `${a.time} ` : ''}${a.title}`).join('\n');
   const description = [
     ev.description,
-    f.doors ? `Doors ${f.doors} (${f.zone}).` : '',
+    times ? `${times}.${knownEnd ? '' : ' End time not fixed; this entry blocks three hours.'}` : '',
     programme ? `Programme:\n${programme}` : '',
     'RSVP on Meetup; details on the event page:',
     url,

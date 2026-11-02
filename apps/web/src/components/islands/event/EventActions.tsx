@@ -55,14 +55,20 @@ export default function EventActions({ ev, initial, url }: Props) {
     <div class="flex flex-col gap-[18px]">
       <div class="flex flex-wrap gap-3 items-center">
         {p.cta.kind === 'feedback' ? (
-          <>
-            <Button href="#programme" variant="yellow">
-              Rate the talks
-            </Button>
-            <Button href={`/feedback?event=${ev.slug}`} variant="outline-white">
+          ev.agenda.some((a) => a.talk) ? (
+            <>
+              <Button href="#programme" variant="yellow">
+                Rate the talks
+              </Button>
+              <Button href={`/feedback?event=${ev.slug}`} variant="outline-white">
+                Feedback on the evening
+              </Button>
+            </>
+          ) : (
+            <Button href={`/feedback?event=${ev.slug}`} variant="yellow">
               Feedback on the evening
             </Button>
-          </>
+          )
         ) : (
           p.cta.href && (
             <Button href={p.cta.href} variant="yellow" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>

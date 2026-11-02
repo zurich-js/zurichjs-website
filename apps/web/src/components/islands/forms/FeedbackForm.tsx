@@ -13,6 +13,8 @@ export interface FeedbackEvent {
   slug: string;
   title: string;
   startsAt?: string;
+  /** False for a social evening: no "Rate the talks" link. */
+  hasTalks?: boolean;
 }
 
 const OPEN = [
@@ -112,14 +114,18 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
         {ev && (
           <div class={surfaceClass('grey', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
             <div class="text-[24px] font-bold leading-[1.2]">Photos from the evening</div>
-            <p class="m-0 text-[17px] leading-[1.55] text-ink-2">The event page has the programme, photos once they are online, and the talk ratings.</p>
+            <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+              {ev.hasTalks === false ? 'The event page has photos once they are online.' : 'The event page has the programme, photos once they are online, and the talk ratings.'}
+            </p>
             <div class="flex flex-wrap gap-2.5 mt-1.5">
               <Button href={eventHref(ev)} variant="white" class="text-[17px]">
                 Open the event page
               </Button>
-              <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="outline-black" class="text-[17px]">
-                Rate the talks
-              </Button>
+              {ev.hasTalks !== false && (
+                <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="outline-black" class="text-[17px]">
+                  Rate the talks
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -133,7 +139,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
         <legend class="text-[clamp(24px,2.4vw,30px)] font-bold mb-3 p-0">Overall, how was the evening?</legend>
         <p class="m-0 mb-1 text-[17px] leading-[1.55] text-ink-2">
           The only required question. The open ones below matter more.
-          {ev && (
+          {ev && ev.hasTalks !== false && (
             <>
               {' '}
               To rate individual talks, use{' '}

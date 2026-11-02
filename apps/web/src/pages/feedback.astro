@@ -1,5 +1,5 @@
 ---
-import { byStartDesc, eventHref, pastEvents } from '@zurichjs/events';
+import { byStartDesc, eventHref, pastEvents, type Event } from '@zurichjs/events';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import FeedbackForm, { feedbackSub, feedbackTitle, type FeedbackEvent } from '~/components/islands/forms/FeedbackForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -7,7 +7,7 @@ import { BUILD_TIME, content, nextMeetupHref } from '~/lib/content';
 
 const { events } = await content();
 const nextHref = await nextMeetupHref();
-const pick = ({ id, slug, title, startsAt }: FeedbackEvent): FeedbackEvent => ({ id, slug, title, startsAt });
+const pick = ({ id, slug, title, startsAt, agenda }: Event): FeedbackEvent => ({ id, slug, title, startsAt, hasTalks: agenda.some((a) => a.talk) });
 // Default: the most recent past event as of the build. The island may switch to
 // `?event=<slug>`, so it also gets events that were still upcoming or live at build
 // time (the event page links here from doors on).

@@ -258,7 +258,7 @@ An audit of V2 against production found missing functionality and inaccurate con
 - **Donations are online again (reverses "No payments" above).** Stripe Checkout through a fetch-based function (`/api/donate/checkout`), one-time or monthly in CHF, presets CHF 10–50 as on production plus a custom amount (CHF 5–1000). Return pages say back only what Stripe confirmed. Monthly donors manage or cancel through `PUBLIC_STRIPE_PORTAL_URL` (Stripe customer portal) or by email. Twint and email stay. Membership requests still charge nothing. The legal pages are unchanged (owner); the refund policy does not mention donations yet.
 - **Slides are shown when a speaker shared them; talks are still never recorded** (owner). Videos in the media archive are shown as event clips, never as talk recordings.
 - **Schedules:** the event `agenda` is authoritative; without one, talks are listed in order without times. Production's times came from a fixed template (doors, 18:30 welcome, 18:50 first talk, talk lengths, a break after the second talk); the Studio's "Fill programme from talks" action and `scripts/backfill-agenda.ts` (drafts, dry run by default) write that template for organisers to check, so the site itself never guesses.
-- **Feedback:** legacy `/events/<slug>?feedback=true` opens per-talk ratings on any date. One rating per person, talk and speaker (production's check ignored the speaker, so a talk's second speaker could not be rated); ratings store event, talk and speaker references.
+- **Feedback:** legacy `/events/<slug>?feedback=true` opens per-talk ratings on any date after the start (narrowed on 2026-11-02, below). One rating per person, talk and speaker (production's check ignored the speaker, so a talk's second speaker could not be rated); ratings store event, talk and speaker references.
 - **Tonight** decides upcoming, on the day, live, after or nothing planned from the browser clock in Zurich; it never calls a future meetup "tonight".
 - **Maps load only on request** (owner): directions links always, the Google Maps Embed API after "Show map" when `PUBLIC_GOOGLE_MAPS_EMBED_KEY` is set.
 - **Media:** one collection from ImageKit (build time, `IMAGEKIT_PRIVATE_KEY`, one folder per event slug as production) and Sanity event photos. Editorial picks and relationships are ImageKit tags (`featured-home`, `featured-partners`, `speaker:<id>`, `talk:<id>`, `milestone:<date>`, `promo`, `hidden`). Without the key the build continues with Sanity photos.
@@ -278,3 +278,22 @@ An audit of V2 against production found missing functionality and inaccurate con
 - **No invoice creation.** Checkout's `invoice_creation` costs extra per invoice (spending needs the owner); receipts rely on Stripe's "Successful payments" email setting (RUNBOOK).
 - **Membership is in the footer** ("Take part › Membership"), as in the header. This changes the footer on every page, so visual baselines need an intended update.
 - **"Free or discounted workshops" stays without a note.** No source says what it covers since workshops were retired; it is a confirm item in `CONTENT-SOURCES.md`.
+
+## Schedule fields and feedback availability (2026-11-02)
+
+Audit items 4 and 5. Production Sanity events have only `datetime`, `location`, `address` and `talks`; no event has an `agenda` yet.
+
+- **`datetime` is the start time listed on Meetup, not "doors".** Evidence from `origin/main`:
+  - the event page header showed `datetime` as an unlabelled clock time (always suffixed "CEST", wrong in winter);
+  - the event page programme ignored `datetime` and hardcoded doors at 17:30 with `setHours` in the browser's timezone, then 18:30 welcome and 18:50 first talk;
+  - `/today` (`ScheduleCard.tsx`) instead called `datetime` "Doors open & early conference badge pickup";
+  - the calendar file started at `datetime` and assumed 180 minutes.
+
+  So September showed 17:00 in the header and 17:30 as doors. Neither is stored truth, and "Doors" for `datetime` is not supported. V2 says **"Starts 18:00 CET"** everywhere `datetime` is shown with a label: event opening and summary panel, Tonight ("Starts at …", "Started at …"), the calendar file description, and the Slack agent's change log ("Starts"). "Doors" appears only when the agenda has a timed doors line. Older docs that say "doors" for the state machine (live from doors for 48 h, rebuilds at doors) mean `datetime`.
+
+- **Doors, welcome, talks, breaks, networking and close** have times only from the `agenda`. Without one the programme lists the talks in order with no time column, no per-talk placeholder and no synthesised lines (V2 used to add a "Doors open" line at `datetime`; removed). One note replaces the placeholder: past "Talk times weren’t recorded", future "Talk times follow closer to the day", during the evening "Talks in running order."
+- **End** is `endsAt`, else the agenda's timed close line, else unknown. The calendar file still needs a DTEND, so it blocks three hours and its description says "End time not fixed; this entry blocks three hours." JSON-LD gives `endDate` only from `endsAt`.
+- **Zone:** all times are Europe/Zurich with CET/CEST from the event's own date (tests on both sides of the March and October 2026 switches).
+- **The Slack agent no longer defaults a missing time to 18:30;** it asks for the start time.
+- **Feedback availability follows the event state:** per-talk ratings open at `datetime` (state `live`) and stay available for legacy links once `past`. Before the start, `?feedback=true` shows "Feedback isn’t open yet … opens when the meetup starts: Thu 12 Nov 2026, 17:30 CET. Keep this link; it works from then on." Cancelled, postponed and undated events say why. A draft preview build (`SANITY_PERSPECTIVE=drafts`) opens the ratings early for organisers to check; no accounts.
+- **Social evenings without talks** only offer evening feedback: no "Rate the talks" wording on the event page, live banner, Tonight or `/feedback`.

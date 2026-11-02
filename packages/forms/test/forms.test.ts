@@ -18,6 +18,12 @@ describe('form schemas (V2 payload contract)', () => {
     expect(validate('rating', { eventId: 'e', target: 't1', stars: '4' }).ok).toBe(true);
     expect(validate('rating', { eventId: 'e', target: 't1', stars: 6 }).ok).toBe(false);
   });
+  it('requires a rating from 1 to 5 and the event and talk', () => {
+    for (const stars of [undefined, 0, 2.5, '']) expect(validate('rating', { eventId: 'e', target: 't1', stars }).ok).toBe(false);
+    expect(validate('rating', { target: 't1', stars: 4 }).ok).toBe(false);
+    expect(validate('rating', { eventId: 'e', stars: 4 }).ok).toBe(false);
+    expect(validate('feedback', { eventId: 'e' }).ok).toBe(false);
+  });
   it('does not accept the de-scoped workshop kinds', () => {
     expect(isFormKind('checkout')).toBe(false);
     expect(isFormKind('donate')).toBe(false);

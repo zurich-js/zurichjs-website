@@ -17,7 +17,7 @@ interface Props {
 const SWIPE = 80; // px of travel that counts as a swipe
 const FLY = 700; // px a dismissed card travels (phones)
 const SPREAD = 2; // cards each side of the centre on desktop
-const AUTO_MS = 3800; // desktop rotation interval
+const AUTO_MS = 2600; // desktop rotation interval
 
 /** Phones: a stack. k = 0 is the top card, 1 and 2 peek out underneath; the rest wait hidden. */
 function stackTransform(o: number) {
@@ -134,7 +134,7 @@ export function SpeakerDeck({ speakers }: Props) {
     if (o > n / 2) o -= n;
     return o;
   };
-  const ease = 'transform 420ms cubic-bezier(.2,.7,.2,1), opacity 320ms';
+  const ease = 'transform 360ms cubic-bezier(.2,.7,.2,1), opacity 320ms';
 
   const card = (sp: DeckSpeaker, i: number, o: number, isLeaving = false) => {
     const isTop = o === 0 && !isLeaving;

@@ -93,7 +93,7 @@ export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
       >
         <div class="flex flex-col gap-2.5">
           <h2 id="h-rate" class="m-0 text-[clamp(26px,2.8vw,38px)] leading-[1.15] font-bold">
-            {phase === 'live' ? 'How is tonight going?' : `How was ${ev.title}?`}
+            {phase === 'live' ? 'How is today’s meetup going?' : `How was ${ev.title}?`}
           </h2>
           <p class="m-0 text-[18px] leading-[1.55]">
             {ev.agenda.some((a) => a.talk)
@@ -266,7 +266,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
 
   return (
     <div class="flex flex-col gap-[18px]">
-      <div class="text-[16px] font-bold text-yellow">{phase === 'after' ? 'Thanks for coming' : 'Tonight'}</div>
+      <div class="text-[16px] font-bold text-yellow">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
       <h1 class={h1}>{ev.title}</h1>
       <p class={sub}>
         <b class="text-yellow">{date}</b>

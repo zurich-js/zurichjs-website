@@ -57,7 +57,7 @@ const STATES: { label: string; ev: Event; now: Date }[] = [
   { label: 'To be confirmed', ev: { ...base, status: 'tbc', startsAt: undefined, dateText: 'December 2026' }, now: NOW },
   { label: 'Postponed', ev: { ...base, status: 'postponed' }, now: NOW },
   { label: 'Cancelled', ev: { ...base, status: 'cancelled' }, now: NOW },
-  { label: 'Tonight (live)', ev: base, now: new Date('2026-11-19T19:00:00+01:00') },
+  { label: 'Today (live)', ev: base, now: new Date('2026-11-19T19:00:00+01:00') },
   { label: 'Past', ev: base, now: new Date('2026-12-01T12:00:00+01:00') },
 ];
 

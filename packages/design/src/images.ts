@@ -25,8 +25,8 @@ export function avatarSrc(src: string, px: number): string {
 }
 
 export function srcsetFor(src: string): string | undefined {
-  if (isImageKit(src)) return [480, 960, 1600].map((w) => `${ik(src, w)} ${w}w`).join(', ');
-  if (src.startsWith('https://cdn.sanity.io/')) return [480, 960, 1600].map((w) => `${src}?w=${w}&auto=format&fit=max ${w}w`).join(', ');
+  if (isImageKit(src)) return [480, 960, 1600, 2400].map((w) => `${ik(src, w)} ${w}w`).join(', ');
+  if (src.startsWith('https://cdn.sanity.io/')) return [480, 960, 1600, 2400].map((w) => `${src}?w=${w}&auto=format&fit=max ${w}w`).join(', ');
   const m = src.match(/^(\/images\/photos\/[\w-]+)\.webp$/);
   if (!m) return undefined;
   return [...WIDTHS.map((w) => `${m[1]}-${w}.webp ${w}w`), `${src} 1600w`].join(', ');

@@ -1,6 +1,7 @@
 # Netlify config for zurichjs.com (docs/v2/RUNBOOK.md).
 #
-# Netlify site settings: Base directory `apps/web`, Package directory empty. Every path
+# Netlify site settings: Base directory `apps/web` (also set by the root netlify.toml, so deploy previews
+# work before the UI changes), Package directory empty. Every path
 # below is relative to that folder, and pnpm installs the whole workspace from there
 # (checked with @netlify/config's resolveConfig).
 
@@ -11,6 +12,9 @@ publish = "dist"
 [build.environment]
 # Astro 7.4 needs Node >= 22.23.4 (same as .nvmrc).
 NODE_VERSION = "22.23.4"
+# The site still has the old app's Next.js plugin installed from the Netlify UI; it fails on an Astro build.
+# The plugin honours this switch (checked in @netlify/plugin-nextjs 5.16.3). Remove the plugin at go-live.
+NETLIFY_NEXT_PLUGIN_SKIP = "true"
 # Production builds must read Sanity; a build that would fall back to sample content fails instead.
 CONTENT_REQUIRE_SANITY = "1"
 # Production builds must list the ImageKit photo archive (IMAGEKIT_PRIVATE_KEY); without it the build fails

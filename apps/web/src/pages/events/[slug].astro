@@ -19,7 +19,7 @@ import SupporterList from '~/components/SupporterList.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import { Gallery } from '@zurichjs/design/islands/Gallery';
 import { sizedSrc } from '@zurichjs/design/images';
-import { mediaForEvent } from '@zurichjs/content';
+import { eventPhotoState, mediaForEvent } from '@zurichjs/content';
 import { countLabel, mediaHref, toGallery } from '~/lib/media';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -45,6 +45,9 @@ const supporters = eventSupporters(ev, c.partners);
 // Current sponsors appear on every upcoming meetup page (the /partners promise), after the event's own supporters.
 const seasonSponsors = groupPartners(c.partners).currentSponsors.filter((p) => !supporters.some((x) => x.partner.id === p.id));
 const gallery = mediaForEvent(c.media.items, ev.slug);
+// Honest about missing photos: "unavailable" when this build could not read the archive, never "coming soon".
+const evEnd = ev.endsAt ?? ev.startsAt;
+const photoState = eventPhotoState(gallery.length, c.media, evEnd ? new Date(evEnd) : undefined, BUILD_TIME);
 const isPast = state === 'past';
 const next = nextMeetup(c.events, BUILD_TIME);
 const nextP = next ? presentEvent(next, { now: BUILD_TIME, ticketing }) : null;
@@ -150,7 +153,16 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
               {ev.photoCredit && <p class="m-0 text-[15px] text-ink-2">{ev.photoCredit}</p>}
             </>
           ) : (
-            <Surface class="p-6 text-[17px] text-ink-2">Photos from this evening aren’t online yet. They usually follow within a week.</Surface>
+            <Surface class="p-6 text-[17px] leading-[1.55] text-ink-2" data-photos={photoState}>
+              {photoState === 'unavailable' && 'The photo archive could not be loaded for this version of the site, so photos from this evening are not shown here.'}
+              {photoState === 'pending' && 'Photos from this evening aren’t online yet. They usually follow within a week.'}
+              {photoState === 'none' && 'There are no photos from this evening in our archive.'}{' '}
+              {photoState !== 'pending' && (
+                <a href="/media" class="font-bold text-black">
+                  See photos from other meetups
+                </a>
+              )}
+            </Surface>
           )}
         </section>
 

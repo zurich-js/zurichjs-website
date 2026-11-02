@@ -15,7 +15,7 @@ import {
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries.ts';
 import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
 import { withPartnerFallback } from './partners.ts';
-import { loadMedia, type MediaCollection } from './media.ts';
+import { loadMedia, MediaUnavailableError, type MediaCollection } from './media.ts';
 import * as sample from './sample.ts';
 
 export * from './map.ts';
@@ -177,7 +177,7 @@ async function sanityContent(env: Env): Promise<SiteContent> {
       slackInviteUrl: validSlackInvite(singletons.site?.slackInviteUrl),
       conferenceMediaFolder: singletons.site?.conferenceMediaFolder ?? undefined,
     },
-    media: await loadMedia(env, mappedEvents),
+    media: await loadMedia(env, mappedEvents, { collections: [singletons.site?.conferenceMediaFolder ?? undefined] }),
   };
 }
 
@@ -190,6 +190,10 @@ let cached: Promise<SiteContent> | undefined;
  * - Otherwise Sanity is read. If that fails, the build falls back to sample
  *   content with a loud warning, EXCEPT on Netlify production deploys
  *   (`CONTEXT=production`) or when `CONTENT_REQUIRE_SANITY=1`, where it fails.
+ * - The ImageKit photo archive (media.ts) is required on production deploys
+ *   (or with `MEDIA_REQUIRE_IMAGEKIT=1`): without the key, or when the listing
+ *   fails, the build fails. Elsewhere it continues and pages say the archive
+ *   is unavailable.
  * - `SANITY_PERSPECTIVE=drafts` reads drafts (preview site) and requires
  *   `SANITY_READ_TOKEN`; without it the build fails.
  */
@@ -201,7 +205,8 @@ export function loadContent(env: Env = process.env, fetchSanity: (env: Env) => P
     try {
       return await fetchSanity(env);
     } catch (err) {
-      if (env.CONTEXT === 'production' || env.CONTENT_REQUIRE_SANITY === '1') throw err;
+      // A build that needs the photo archive and cannot read it fails too (sample content would not help).
+      if (err instanceof MediaUnavailableError || env.CONTEXT === 'production' || env.CONTENT_REQUIRE_SANITY === '1') throw err;
       console.warn(`\n[content] Sanity is not reachable (${(err as Error).message}). USING SAMPLE CONTENT. Do not deploy this build.\n`);
       return sampleContent();
     }

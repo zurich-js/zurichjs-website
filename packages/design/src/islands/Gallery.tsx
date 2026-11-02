@@ -37,6 +37,9 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   const [open, setOpen] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  // Pages such as /media have several galleries (separate islands, so useId would repeat):
+  // each viewer's caption id comes from the gallery's own label.
+  const captionId = `gallery-caption-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   const shown = max ? items.slice(0, max) : items;
   const cur = open === null ? null : items[open];
 
@@ -74,6 +77,8 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
     if (!d) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      // In the video player the arrow keys seek; they page only from elsewhere in the viewer.
+      if (e.target instanceof HTMLMediaElement) return;
       e.preventDefault();
       const delta = e.key === 'ArrowRight' ? 1 : -1;
       setOpen((o) => (o === null ? o : (o + delta + items.length) % items.length));
@@ -109,11 +114,11 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
               type="button"
               onClick={(e) => show(i, e.currentTarget)}
               class="group relative block w-full aspect-4/3 overflow-hidden rounded-2xl bg-grey p-0 border-0 cursor-zoom-in"
-              aria-label={`${m.kind === 'video' ? 'Play video' : 'Open photo'}: ${m.alt}`}
+              aria-label={`${m.kind === 'video' ? 'Play clip' : 'Open photo'}: ${m.alt}`}
             >
               <img
                 src={sizedSrc(m.kind === 'video' ? (m.poster ?? '') : m.src, 480)}
-                srcset={m.kind === 'video' ? undefined : srcsetFor(m.src)}
+                srcset={srcsetFor(m.kind === 'video' ? (m.poster ?? '') : m.src)}
                 sizes={sizes}
                 alt=""
                 loading="lazy"
@@ -135,7 +140,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
       <dialog
         ref={dialog}
         onClose={onClose}
-        aria-labelledby="gallery-caption"
+        aria-labelledby={captionId}
         class="m-auto p-0 border-0 bg-ink rounded-card max-w-[min(1200px,100vw)] w-full max-h-dvh backdrop:bg-black/85 text-white"
       >
         {cur && open !== null && (
@@ -153,18 +158,34 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                 // Captions are added when editors provide a WebVTT file (ImageKit custom metadata "captions");
                 // until then the clip's caption text is shown below the player.
                 // oxlint-disable-next-line jsx-a11y/media-has-caption
-                <video key={cur.id} controls preload="none" poster={cur.poster} class="max-h-[70vh] max-w-full rounded-2xl bg-black" aria-label={cur.alt}>
+                <video
+                  key={cur.id}
+                  controls
+                  playsInline
+                  preload="none"
+                  poster={cur.poster ? sizedSrc(cur.poster, 1600) : undefined}
+                  class="max-h-[70vh] max-w-full rounded-2xl bg-black"
+                  aria-label={cur.alt}
+                >
                   <source src={cur.src} />
                   {cur.captions && <track kind="captions" src={cur.captions} srcLang="en" label="English" default />}
                   <a href={cur.src} class="text-white">
-                    Download the video
+                    Download the clip
                   </a>
                 </video>
               ) : (
-                <img key={cur.id} src={sizedSrc(cur.src, 1600)} alt={cur.alt} class="max-h-[70vh] max-w-full rounded-2xl object-contain" decoding="async" />
+                <img
+                  key={cur.id}
+                  src={sizedSrc(cur.src, 1600)}
+                  srcset={srcsetFor(cur.src)}
+                  sizes="(min-width: 1200px) 1152px, 100vw"
+                  alt={cur.alt}
+                  class="max-h-[70vh] max-w-full rounded-2xl object-contain"
+                  decoding="async"
+                />
               )}
             </div>
-            <figcaption id="gallery-caption" class="flex flex-col gap-1 text-[16px] leading-normal">
+            <figcaption id={captionId} class="flex flex-col gap-1 text-[16px] leading-normal">
               {cur.caption ? <span>{cur.caption}</span> : <span class="sr-only">{cur.alt}</span>}
               <span class="text-grey-light">
                 {cur.credit}

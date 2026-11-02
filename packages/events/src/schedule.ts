@@ -161,9 +161,16 @@ export const venueAddress = (v: { street?: string; zip?: string; city: string })
 export const directionsUrl = (v: { name: string; street?: string; zip?: string; city: string }) =>
   `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent([v.name, venueAddress(v)].filter(Boolean).join(', '))}`;
 
-/** Google Maps Embed API (place mode). Only used after the visitor asks for the map. */
-export const mapEmbedUrl = (v: { name: string; street?: string; zip?: string; city: string }, key: string) =>
-  `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${encodeURIComponent([v.name, venueAddress(v)].filter(Boolean).join(', '))}`;
+/**
+ * The map shown after the visitor asks for it. With a key: the official Google
+ * Maps Embed API (place mode, name and address). Without one: Google Maps'
+ * keyless embed of the address (`output=embed`), which needs no account but
+ * has no usage guarantee, so the directions link stays next to it.
+ */
+export const mapEmbedUrl = (v: { name: string; street?: string; zip?: string; city: string }, key?: string) =>
+  key
+    ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(key)}&q=${encodeURIComponent([v.name, venueAddress(v)].filter(Boolean).join(', '))}`
+    : `https://www.google.com/maps?q=${encodeURIComponent(venueAddress(v) || v.name)}&output=embed`;
 
 /** Lowercase, no accents, single spaces: "  Nicolò  BABEL " → "nicolo babel". */
 export const normalizeSearch = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();

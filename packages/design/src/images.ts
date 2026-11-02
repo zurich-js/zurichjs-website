@@ -5,6 +5,7 @@
 const WIDTHS = [480, 960] as const;
 
 const isImageKit = (src: string) => src.startsWith('https://ik.imagekit.io/');
+// f-auto also turns HEIC originals (phone photos in the archive) into a format browsers show.
 const ik = (src: string, w: number) => `${src}${src.includes('?') ? '&' : '?'}tr=w-${w},q-80,f-auto`;
 
 /** A resized URL for one width (ImageKit and Sanity CDNs; local files as they are). */
@@ -22,9 +23,6 @@ export function avatarSrc(src: string, px: number): string {
   const m = src.match(/^(\/images\/photos\/[\w-]+)\.webp$/);
   return m ? `${m[1]}-480.webp` : src;
 }
-
-/** First frame of an ImageKit video as a poster image. */
-export const videoPoster = (src: string, w = 960) => (isImageKit(src) ? `${src.split('?')[0]}/ik-thumbnail.jpg?tr=w-${w}` : undefined);
 
 export function srcsetFor(src: string): string | undefined {
   if (isImageKit(src)) return [480, 960, 1600].map((w) => `${ik(src, w)} ${w}w`).join(', ');

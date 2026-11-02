@@ -13,12 +13,18 @@ publish = "dist"
 NODE_VERSION = "22.23.4"
 # Production builds must read Sanity; a build that would fall back to sample content fails instead.
 CONTENT_REQUIRE_SANITY = "1"
+# Production builds must list the ImageKit photo archive (IMAGEKIT_PRIVATE_KEY); without it the build fails
+# and the previous deploy stays live. The draft preview site is exempt (packages/content/src/media.ts).
+MEDIA_REQUIRE_IMAGEKIT = "1"
 
-# Deploy previews and branch deploys may fall back to sample content (with a warning) when Sanity is down.
+# Deploy previews and branch deploys may fall back to sample content (with a warning) when Sanity is down,
+# and build without the photo archive (pages then say it is unavailable).
 [context.deploy-preview.environment]
 CONTENT_REQUIRE_SANITY = "0"
+MEDIA_REQUIRE_IMAGEKIT = "0"
 [context.branch-deploy.environment]
 CONTENT_REQUIRE_SANITY = "0"
+MEDIA_REQUIRE_IMAGEKIT = "0"
 
 # The scheduled rebuild (every 2 minutes). The webhook is an Astro endpoint, /api/rebuild.
 [functions]

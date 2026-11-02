@@ -6,6 +6,7 @@ import {
   eventSupporters,
   groupPartners,
   itemStartsAt,
+  mapEmbedUrl,
   pickTodayEvent,
   recapSummary,
   scheduleFacts,
@@ -188,6 +189,11 @@ describe('talk anchors and directions', () => {
   });
   it('links directions without an API key', () => {
     expect(directionsUrl(ev().venue!)).toBe('https://www.google.com/maps/dir/?api=1&destination=Venue%20AG%2C%20Hardstrasse%20201%2C%208005%20Z%C3%BCrich');
+  });
+  it('embeds the map with the Embed API when there is a key, and keyless by address otherwise', () => {
+    expect(mapEmbedUrl(ev().venue!, 'k&1')).toBe('https://www.google.com/maps/embed/v1/place?key=k%261&q=Venue%20AG%2C%20Hardstrasse%20201%2C%208005%20Z%C3%BCrich');
+    expect(mapEmbedUrl(ev().venue!)).toBe('https://www.google.com/maps?q=Hardstrasse%20201%2C%208005%20Z%C3%BCrich&output=embed');
+    expect(mapEmbedUrl({ name: 'Somewhere', city: '' })).toBe('https://www.google.com/maps?q=Somewhere&output=embed');
   });
 });
 

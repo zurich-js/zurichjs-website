@@ -4,16 +4,55 @@ import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { buttonClass, type ButtonSize, type ButtonVariant } from '@zurichjs/design/recipes';
 
-/** Hidden field that bots fill in and people never see. The server rejects any value. */
+/**
+ * Hidden field that bots fill in and people never see. The server rejects any
+ * value. Off screen, hidden from assistive tech (`aria-hidden`), out of the tab
+ * order (`tabIndex -1`) and `inert`, so it cannot be focused at all.
+ */
 export function Honeypot() {
   return (
-    <div aria-hidden="true" class="absolute left-[-10000px] top-auto w-px h-px overflow-hidden">
+    <div aria-hidden="true" inert class="absolute left-[-10000px] top-auto w-px h-px overflow-hidden">
       <label>
         Leave this field empty
         <input type="text" name={HONEYPOT} tabIndex={-1} autoComplete="off" aria-hidden="true" defaultValue="" />
       </label>
     </div>
   );
+}
+
+/** A label with "(optional)" after it. Forms that use it say once that every other field is required. */
+export function optional(label: ComponentChildren) {
+  return (
+    <>
+      {label} <span class="font-normal text-ink-2">(optional)</span>
+    </>
+  );
+}
+
+/** The one line that explains the convention above. */
+export function RequiredNote({ class: extra }: { class?: string }) {
+  return <p class={`m-0 text-[16px] leading-[1.5] text-ink-2${extra ? ` ${extra}` : ''}`}>All fields are required unless marked optional.</p>;
+}
+
+/**
+ * Runs one submission at a time. `busy` drives the button; a second submit
+ * (a double click, Enter pressed twice) is ignored until the first settles.
+ */
+export function useSubmitOnce() {
+  const [busy, setBusy] = useState(false);
+  const running = useRef(false);
+  const run = async (fn: () => Promise<void>) => {
+    if (running.current) return;
+    running.current = true;
+    setBusy(true);
+    try {
+      await fn();
+    } finally {
+      running.current = false;
+      setBusy(false);
+    }
+  };
+  return { busy, run };
 }
 
 /** The honeypot value, read from the nearest form at submit time. */

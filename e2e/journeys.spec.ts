@@ -371,11 +371,62 @@ test.describe('partners and sponsors', () => {
     for (const img of await page.locator('#partners-current img').all()) expect(await img.getAttribute('alt')).toMatch(/\w/);
   });
 
+  test('the sponsorship tiers show production’s prices, and choosing one preselects it in the form', async ({ page }) => {
+    await page.goto('/partners');
+    const tiers = page.locator('#sponsorship-tiers');
+    for (const name of ['Community Champion', 'Community Builder', 'Community Friend', 'Community Supporter', 'Community Host']) {
+      await expect(tiers.getByRole('heading', { name, exact: true })).toBeVisible();
+    }
+    await expect(tiers.getByText('CHF 7’500')).toBeVisible();
+    await expect(tiers.getByText('CHF 150', { exact: true })).toBeVisible();
+    await page.getByRole('link', { name: 'Become a sponsor: Community Builder' }).click();
+    await expect(page).toHaveURL(/[?&]tier=builder.*#partner-form$/);
+    await expect(page.locator('#partner-form [role="radio"][aria-checked="true"]')).toHaveText(/community partner/i);
+    await expect(page.getByLabel('Sponsorship tier (optional)')).toHaveValue('builder');
+  });
+
+  test('a tier link works before scripts load', async ({ page }) => {
+    await page.goto('/partners?way=partner&tier=champion#partner-form');
+    await expect(page.getByLabel('Sponsorship tier (optional)')).toHaveValue('champion');
+  });
+
+  test('the prospectus is requested by email, as on the old site', async ({ page }) => {
+    await page.goto('/partners');
+    await expect(page.getByRole('link', { name: 'Request the prospectus' }).first()).toHaveAttribute(
+      'href',
+      /^mailto:hello@zurichjs\.com\?subject=ZurichJS%20Sponsorship%20Prospectus%20Request$/,
+    );
+  });
+
+  test('the anchors other pages link to exist: venues, community, previous supporters', async ({ page }) => {
+    await page.goto('/partners#partners-venues');
+    await expect(page.locator('#partners-venues').getByRole('heading', { name: 'Venue partners' })).toBeVisible();
+    await expect(page.locator('#partners-community').getByRole('heading', { name: 'Community partners', exact: true }).first()).toBeVisible();
+    await expect(page.locator('#partners-communities').getByRole('link', { name: /Web Zurich/ })).toBeVisible();
+    await expect(page.locator('#partners-conferences').getByRole('link', { name: /CityJS/ })).toBeVisible();
+    await expect(page.locator('#partners-past').getByRole('img', { name: 'Dynatrace' })).toBeVisible();
+    // The About timeline links here.
+    for (const href of ['/partners#partners-venues', '/partners#partners-community']) {
+      await page.goto('/about');
+      await expect(page.locator(`a[href="${href}"]`).first()).toBeAttached();
+      await page.goto(href);
+      await expect(page.locator(href.slice(href.indexOf('#')))).toBeVisible();
+    }
+  });
+
   test('home shows current sponsors and hosts; upcoming event pages thank this season’s sponsors', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Companies who host and support ZurichJS' })).toBeVisible();
+    await expect(page.locator('section[aria-labelledby="h-hosts"]').getByRole('link', { name: /Vercel/ })).toHaveAttribute('href', 'https://vercel.com');
     await page.goto('/events/2026-11-forms-types');
     await expect(page.getByText('Supporting ZurichJS this season.')).toBeVisible();
+  });
+
+  test('the Tonight page thanks the evening’s supporters and this season’s sponsors', async ({ page }) => {
+    await page.goto('/today');
+    const thanks = page.locator('section[aria-labelledby="h-made"]');
+    await expect(thanks.getByRole('heading', { name: 'Thanks to' })).toBeVisible();
+    await expect(thanks.getByRole('link', { name: /Vercel/ })).toBeVisible();
   });
 });
 

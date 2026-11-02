@@ -47,7 +47,7 @@ const teaser = speakers.slice(0, 4);
 const featured = pickFeatured(media.items, 'featured-home', 3);
 const asPhoto = (m?: (typeof featured)[number]) => (m ? { src: m.src, alt: m.alt, width: m.width, height: m.height } : undefined);
 const heroPhotos = { audience: asPhoto(featured[0]) ?? PHOTOS.audience, speaker: asPhoto(featured[1]) ?? PHOTOS.speaker, conversation: asPhoto(featured[2]) ?? PHOTOS.conversation };
-// Current sponsors (only those an organiser marked current), then the venues that hosted us.
+// Current sponsors (only those marked current) at their tier's logo size, then venue hosts and current partners.
 const partnerGroups = groupPartners(partners);
 ---
 
@@ -114,6 +114,6 @@ const partnerGroups = groupPartners(partners);
       <SpeakCta />
     </section>
 
-    <HostsSection partners={[...partnerGroups.currentSponsors, ...partnerGroups.venues]} />
+    <HostsSection sponsors={partnerGroups.currentSponsors} partners={[...partnerGroups.venues, ...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]} />
   </div>
 </BaseLayout>

@@ -2,24 +2,34 @@ import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
-import { ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
+import { ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 export type Way = 'host' | 'food' | 'partner' | 'unsure';
 const WAYS: Way[] = ['host', 'food', 'partner', 'unsure'];
+/** The sponsorship tiers on /partners. Choosing one means the "partner" way. */
+type Tier = 'champion' | 'builder' | 'friend' | 'supporter';
+const TIERS: { value: Tier; label: string }[] = [
+  { value: 'champion', label: 'Community Champion' },
+  { value: 'builder', label: 'Community Builder' },
+  { value: 'friend', label: 'Community Friend' },
+  { value: 'supporter', label: 'Community Supporter' },
+];
 const MESSAGES = { org: 'Add your company or organisation.', name: 'Add your name so we know who to reply to.', email: 'Enter an email like name@company.com.' };
 
 /** Set by the "Choose this" links on /partners (see partners.astro), possibly before this island hydrates. */
 declare global {
   interface Window {
     __zjsPartnerWay?: string;
+    __zjsPartnerTier?: string;
   }
 }
 const asWay = (v: unknown): Way | null => ((WAYS as unknown[]).includes(v) ? (v as Way) : null);
+const asTier = (v: unknown): Tier | '' => (TIERS.some((t) => t.value === v) ? (v as Tier) : '');
 
 /** Partner inquiry on /partners. */
 export default function PartnersForm({ nextHref }: { nextHref: string }) {
-  const [f, setF] = useState({ org: '', name: '', email: '', way: 'host' as Way, msg: '' });
+  const [f, setF] = useState({ org: '', name: '', email: '', way: 'host' as Way, tier: '' as Tier | '', msg: '' });
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -28,13 +38,15 @@ export default function PartnersForm({ nextHref }: { nextHref: string }) {
   const focusError = useFocusFirstError(formRef);
   const doneRef = useFocusWhen<HTMLDivElement>(sent);
 
-  // The cards above preselect a way of helping.
+  // The tiers and cards above preselect a way of helping (and a sponsorship tier).
   useEffect(() => {
-    const initial = asWay(window.__zjsPartnerWay) ?? asWay(new URLSearchParams(location.search).get('way'));
-    if (initial) setF((p) => ({ ...p, way: initial }));
+    const q = new URLSearchParams(location.search);
+    const initial = asWay(window.__zjsPartnerWay) ?? asWay(q.get('way'));
+    const tier = asTier(window.__zjsPartnerTier ?? q.get('tier'));
+    if (initial) setF((p) => ({ ...p, way: initial, tier: initial === 'partner' ? tier : '' }));
     const onWay = (e: Event) => {
       const w = asWay((e as CustomEvent<string>).detail);
-      if (w) setF((p) => ({ ...p, way: w }));
+      if (w) setF((p) => ({ ...p, way: w, tier: w === 'partner' ? asTier(window.__zjsPartnerTier) : '' }));
     };
     document.addEventListener('zjs:partner-way', onWay);
     return () => document.removeEventListener('zjs:partner-way', onWay);
@@ -53,7 +65,12 @@ export default function PartnersForm({ nextHref }: { nextHref: string }) {
     }
     setBusy(true);
     setServerError('');
-    const r = await submitForm('partners', { ...f, website_url: honeypotValue(formRef.current) });
+    const { tier, ...rest } = f;
+    const r = await submitForm('partners', {
+      ...rest,
+      ...(rest.way === 'partner' && tier ? { tier: TIERS.find((t) => t.value === tier)?.label } : {}),
+      website_url: honeypotValue(formRef.current),
+    });
     setBusy(false);
     if (!r.ok) return setServerError(r.error);
     track('form_submit', { form: 'partners' });
@@ -116,10 +133,20 @@ export default function PartnersForm({ nextHref }: { nextHref: string }) {
         options={[
           { value: 'host', label: 'Host a meetup' },
           { value: 'food', label: 'Food and drinks' },
-          { value: 'partner', label: 'Community partner' },
+          { value: 'partner', label: 'Sponsor or community partner' },
           { value: 'unsure', label: 'Not sure yet' },
         ]}
       />
+      {f.way === 'partner' && (
+        <SelectField label="Sponsorship tier (optional)" name="tier" value={f.tier} onChange={(e) => setF({ ...f, tier: asTier(e.currentTarget.value) })}>
+          <option value="">Not decided yet</option>
+          {TIERS.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </SelectField>
+      )}
       <TextArea
         label="Anything we should know? (optional)"
         name="msg"

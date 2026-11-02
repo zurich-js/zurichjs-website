@@ -14,12 +14,14 @@ import {
 } from './map.ts';
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries.ts';
 import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
+import { withPartnerFallback } from './partners.ts';
 import { loadMedia, type MediaCollection } from './media.ts';
 import * as sample from './sample.ts';
 
 export * from './map.ts';
 export * from './media.ts';
 export * from './queries.ts';
+export * from './partners.ts';
 export { PHOTOS, SITE } from './sample.ts';
 
 export interface SiteContent {
@@ -151,12 +153,14 @@ async function sanityContent(env: Env): Promise<SiteContent> {
   ]);
   const fallback = sampleContent();
   const conf = singletons.conference;
-  const mappedEvents = events.map(mapEvent);
+  // Until Sanity has partner documents, production's sourced partner list (partners.ts) is used.
+  const withPartners = withPartnerFallback(partners.map(mapPartner), events.map(mapEvent));
+  const mappedEvents = withPartners.events;
   return {
     source: 'sanity',
     events: mappedEvents,
     speakers: visibleSpeakers(speakers).map(mapSpeaker),
-    partners: partners.map(mapPartner),
+    partners: withPartners.partners,
     // Until the meetupRating singleton exists (Phase 3), keep the sourced record from the design handoff.
     rating: singletons.rating ? mapRating(singletons.rating) : fallback.rating,
     award: fallback.award,

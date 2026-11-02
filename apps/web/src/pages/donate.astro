@@ -27,6 +27,16 @@ const GOES = [
   ['Speakers', 'Travel for speakers from outside Zurich.'],
   ['Tools', 'Storage, the website and the tools volunteers use to run meetups.'],
 ];
+/**
+ * Supporters production thanked by name on /buy-us-a-coffee ("Recent
+ * Supporters", origin/main getStaticProps), with the links they gave. Listed
+ * by hand, never from Stripe: a donation does not publish anyone's name.
+ */
+const THANKS = [
+  { name: 'MountainAsh', href: 'https://mountainash.id.au/' },
+  { name: 'Patrick Stillhart', href: 'https://stillh.art/' },
+  { name: 'Mario Vasile', href: 'https://www.linkedin.com/in/mariovasile/' },
+];
 const WAYS = [
   { h: 'Become a member', d: 'Join the Swiss JavaScript Group, the association behind ZurichJS.', href: '/membership', yellow: true },
   { h: 'Host or sponsor a meetup', d: 'For companies: a room, food and drinks, or a contribution.', href: '/partners' },
@@ -129,6 +139,52 @@ const WAYS = [
           </div>
         ))
       }
+    </section>
+
+    <section aria-labelledby="h-faq" class="flex flex-col gap-[18px]">
+      <h2 id="h-faq" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Questions</h2>
+      <div class="flex flex-col gap-1">
+        <h3 class="m-0 text-[19px] font-bold">Do I get a receipt?</h3>
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Yes. Stripe emails it to the address you give, here or on the payment page.</p>
+      </div>
+      <div class="flex flex-col gap-1" data-faq-cancel>
+        <h3 class="m-0 text-[19px] font-bold">How do I cancel a monthly donation?</h3>
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+          {
+            portalUrl ? (
+              <>
+                At any time, <a href={portalUrl} class="font-bold text-black">in the Stripe customer portal</a>, or by writing to{' '}
+              </>
+            ) : (
+              <>At any time: write to </>
+            )
+          }
+          <a href={`mailto:${SITE.email}?subject=${encodeURIComponent('Cancel my monthly donation')}`} class="font-bold text-black">{SITE.email}</a> from the address you used,
+          and we cancel it. No questions asked.
+        </p>
+      </div>
+      <div class="flex flex-col gap-1">
+        <h3 class="m-0 text-[19px] font-bold">My company wants to sponsor. Is this the right place?</h3>
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+          This page is for individual donations. Sponsorship, with logo placement and other benefits, is on <a href="/partners" class="font-bold text-black">Host or sponsor</a>.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-thanks" class="flex flex-col gap-[18px]">
+      <h2 id="h-thanks" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Thank you</h2>
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2">To everyone who has given so far, including:</p>
+      <ul class="m-0 p-0 list-none flex flex-col gap-2">
+        {
+          THANKS.map((t) => (
+            <li class="text-[18px] font-bold">
+              <a href={t.href} target="_blank" rel="noopener" class="text-black">
+                {t.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </section>
   </div>
 </BaseLayout>

@@ -27,7 +27,9 @@ const PAGES = [
   '/membership',
   '/feedback',
   '/cfp',
+  '/cfp#proposal',
   '/contact',
+  '/contact?topic=conduct',
   '/speakers/profile',
 ];
 

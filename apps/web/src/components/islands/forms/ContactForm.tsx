@@ -3,49 +3,58 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
+import { Honeypot, RequiredNote, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
 const TOPICS = ['General question', 'Slack invite', 'Speaking', 'Hosting or sponsoring', 'Press or media', 'Problem with the website'];
 /** ?topic= presets the topic, e.g. "Ask us for a Slack invite" links to /contact?topic=slack. */
-const PRESETS: Record<string, { topic: string; message: string }> = {
+const PRESETS: Record<string, { topic: string; message?: string }> = {
   slack: { topic: 'Slack invite', message: 'Hi, could you send me an invite to the ZurichJS Slack?' },
+  speaking: { topic: 'Speaking' },
+  hosting: { topic: 'Hosting or sponsoring' },
+  press: { topic: 'Press or media' },
+  website: { topic: 'Problem with the website' },
 };
+/** Code of conduct concerns never go through this form (it also posts to the organisers' Slack): ?topic=conduct points to the private route. */
+const CONDUCT = 'conduct';
 const MESSAGES = { name: 'Add your name.', email: 'Enter an email like name@example.com.', message: 'Write a short message.' };
 
 /** Contact form on /contact. */
 export default function ContactForm() {
   const [f, setF] = useState({ name: '', email: '', topic: TOPICS[0]!, message: '' });
   const [tried, setTried] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const { busy, run } = useSubmitOnce();
   const [sent, setSent] = useState(false);
+  const [conduct, setConduct] = useState(false);
   const [serverError, setServerError] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
   const focusError = useFocusFirstError(formRef);
   const doneRef = useFocusWhen<HTMLDivElement>(sent);
 
   useEffect(() => {
-    const preset = PRESETS[new URLSearchParams(location.search).get('topic') ?? ''];
-    if (preset) setF((p) => ({ ...p, topic: preset.topic, message: p.message || preset.message }));
+    const q = new URLSearchParams(location.search).get('topic') ?? '';
+    if (q === CONDUCT) return setConduct(true);
+    const preset = PRESETS[q];
+    if (preset) setF((p) => ({ ...p, topic: preset.topic, message: p.message || preset.message || '' }));
   }, []);
 
   const errs = fieldErrors('contact', f, MESSAGES);
   const valid = Object.keys(errs).length === 0;
   const bad = (k: keyof typeof MESSAGES) => tried && !!errs[k];
 
-  const submit = async (e: Event) => {
+  const submit = (e: Event) => {
     e.preventDefault();
     if (!valid) {
       setTried(true);
       focusError();
       return;
     }
-    setBusy(true);
-    setServerError('');
-    const r = await submitForm('contact', { ...f, website_url: honeypotValue(formRef.current) });
-    setBusy(false);
-    if (!r.ok) return setServerError(r.error);
-    track('form_submit', { form: 'contact' });
-    setSent(true);
+    void run(async () => {
+      setServerError('');
+      const r = await submitForm('contact', { ...f, website_url: honeypotValue(formRef.current) });
+      if (!r.ok) return setServerError(r.error);
+      track('form_submit', { form: 'contact' });
+      setSent(true);
+    });
   };
 
   if (sent)
@@ -70,11 +79,25 @@ export default function ContactForm() {
   return (
     <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-4">
       <Honeypot />
+      {conduct && (
+        <div role="note" class="bg-yellow rounded-[20px] p-5 flex flex-col gap-1.5">
+          <strong class="text-[18px]">Reporting a code of conduct concern?</strong>
+          <span class="text-[17px] leading-[1.5]">
+            Please don’t use this form.{' '}
+            <a href="#conduct" class="font-bold text-black">
+              Use the private route
+            </a>{' '}
+            instead: email hello@zurichjs.com or speak to a team member at an event.
+          </span>
+        </div>
+      )}
+      <RequiredNote />
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-3.5">
         <TextField
           label="Name"
           name="name"
           autoComplete="name"
+          required
           value={f.name}
           onInput={(e) => setF({ ...f, name: e.currentTarget.value })}
           invalid={bad('name')}
@@ -84,7 +107,9 @@ export default function ContactForm() {
           label="Email"
           name="email"
           type="email"
+          inputMode="email"
           autoComplete="email"
+          required
           value={f.email}
           onInput={(e) => setF({ ...f, email: e.currentTarget.value })}
           invalid={bad('email')}
@@ -100,6 +125,7 @@ export default function ContactForm() {
         label="Message"
         name="message"
         rows={6}
+        required
         value={f.message}
         onInput={(e) => setF({ ...f, message: e.currentTarget.value })}
         invalid={bad('message')}
@@ -112,7 +138,23 @@ export default function ContactForm() {
         <span role="alert" class="text-[15px] text-danger">
           {tried && !valid ? 'Fix the highlighted fields.' : serverError}
         </span>
+        {serverError && (
+          <span class="text-[15px] text-ink-2 basis-full">
+            Your message is still here. Try again, or email it to{' '}
+            <a href={`mailto:hello@zurichjs.com?subject=${encodeURIComponent(`${f.topic} from ${f.name}`)}&body=${encodeURIComponent(f.message)}`} class="font-bold text-black">
+              hello@zurichjs.com
+            </a>
+            .
+          </span>
+        )}
       </div>
+      <p class="m-0 text-[15px] leading-normal text-ink-2">
+        Messages reach the organisers by email and in their team chat. For a code of conduct concern, use the{' '}
+        <a href="#conduct" class="font-bold text-black">
+          private route
+        </a>{' '}
+        instead.
+      </p>
     </form>
   );
 }

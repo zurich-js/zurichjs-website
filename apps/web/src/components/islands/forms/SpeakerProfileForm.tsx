@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { SubmitButton, useFocusWhen } from './shared.tsx';
+import { SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 interface Profile {
   name?: string;
@@ -32,9 +32,11 @@ export default function SpeakerProfileForm() {
   const [p, setP] = useState<Profile>({});
   const [interests, setInterests] = useState('');
   const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
   const [preview, setPreview] = useState<string | undefined>();
   const formRef = useRef<HTMLFormElement>(null);
   const doneRef = useFocusWhen<HTMLDivElement>(state === 'saved');
+  const focusError = useFocusFirstError(formRef);
 
   useEffect(() => {
     const t = new URLSearchParams(location.search).get('token') ?? '';
@@ -60,7 +62,14 @@ export default function SpeakerProfileForm() {
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (!p.name?.trim()) return setError('Add your name as it should appear on the site.');
+    if (state === 'saving') return;
+    if (!p.name?.trim()) {
+      setNameError('Add your name as it should appear on the site.');
+      setError('Fix the highlighted field.');
+      focusError();
+      return;
+    }
+    setNameError('');
     const fd = new FormData(formRef.current!);
     setState('saving');
     setError('');
@@ -130,6 +139,14 @@ export default function SpeakerProfileForm() {
           label={f.label}
           name={f.k}
           type={f.type ?? 'text'}
+          {...(f.type === 'url' ? { inputMode: 'url' as const, autoCapitalize: 'none' } : {})}
+          {...(f.k === 'name'
+            ? { required: true, autoComplete: 'name', invalid: !!nameError, error: nameError }
+            : f.k === 'title'
+              ? { autoComplete: 'organization-title' }
+              : f.k === 'company'
+                ? { autoComplete: 'organization' }
+                : {})}
           value={(p[f.k] as string | undefined) ?? ''}
           onInput={(e) => setP({ ...p, [f.k]: e.currentTarget.value })}
         />

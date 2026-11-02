@@ -19,8 +19,17 @@ export interface TalkProposal {
   format: string;
   abstract?: string;
   level?: string;
+  /** Stored as `talkSubmission.tags`. */
+  topics?: string[];
   target?: string;
+  /** Speaker profile, as on production's CFP. Written only to a NEW speaker document. */
+  jobTitle?: string;
   bio?: string;
+  linkedin?: string;
+  github?: string;
+  twitter?: string;
+  /** The person says they have spoken at ZurichJS before. */
+  returning?: boolean;
   /** The person has not given a talk before: organisers offer help preparing. */
   firstTalk?: boolean;
 }
@@ -41,6 +50,50 @@ const slug = (s: string) =>
     .replace(/\s+/g, '-')
     .slice(0, 80);
 
+/**
+ * A profile link as an absolute https URL (the speaker schema's url fields).
+ * Accepts a full link, a link without "https://" or a handle ("ada", "@ada"),
+ * as production did for GitHub and X.
+ */
+export function profileUrl(v: string | undefined, base: string): string | undefined {
+  const s = v?.trim();
+  if (!s) return undefined;
+  const raw = /^https?:\/\//i.test(s) ? s : /^([\w-]+\.)+[a-z]{2,}(\/|$)/i.test(s) ? `https://${s}` : /^@?[\w.-]+$/.test(s) ? `${base}${s.replace(/^@/, '')}` : '';
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return undefined;
+    u.protocol = 'https:';
+    return u.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+/** The profile fields of a proposal, as speaker document fields (empty ones left out). */
+export function speakerFields(p: TalkProposal): { title?: string; bio?: string; linkedin?: string; github?: string; twitter?: string } {
+  const out = {
+    title: p.jobTitle?.trim() || undefined,
+    bio: p.bio?.trim() || undefined,
+    linkedin: profileUrl(p.linkedin, 'https://www.linkedin.com/in/'),
+    github: profileUrl(p.github, 'https://github.com/'),
+    twitter: profileUrl(p.twitter, 'https://x.com/'),
+  };
+  return Object.fromEntries(Object.entries(out).filter(([, v]) => v));
+}
+
+/** Notes for the organisers on the submission (the Studio's internal "Review Notes"). */
+function reviewNotes(p: TalkProposal, matched: boolean): string | undefined {
+  const lines: string[] = [];
+  if (p.firstTalk) lines.push('First talk: offer help preparing.');
+  if (p.returning && !matched) lines.push('Says they have spoken at ZurichJS before, but no speaker has this email. Check for a duplicate speaker.');
+  const f = speakerFields(p);
+  if (matched && Object.keys(f).length) {
+    lines.push('Profile details sent with this proposal. The speaker page was NOT changed: update it, or send a profile link (pnpm speaker-link).');
+    for (const [k, v] of Object.entries(f)) lines.push(`${k === 'title' ? 'job title' : k}: ${v}`);
+  }
+  return lines.length ? lines.join('\n') : undefined;
+}
+
 /** Write token. SANITY_TOKEN is the production site's existing variable (one token for reads and writes). */
 const sanityWriteToken = (env: Env) => env.SANITY_WRITE_TOKEN || env.SANITY_TOKEN || undefined;
 
@@ -55,7 +108,13 @@ export const sanityWriteClient = (env: Env): SanityClient | null =>
       })
     : null;
 
-/** Same documents as the production /api/submit-talk: a speaker (matched by email) and a pending talkSubmission. */
+/**
+ * Same documents as the production /api/submit-talk: a speaker (matched by
+ * email) and a pending talkSubmission. Unlike production, this public form
+ * never patches an existing speaker's page: what they sent goes into the
+ * submission's review notes, and the page changes through their private
+ * profile link or an organiser.
+ */
 export const sanityTalkProposals = (client: SanityClient, now = () => new Date()): TalkProposalSink => ({
   async submit(p) {
     const existing = await client.fetch<string | null>(`*[_type == "speaker" && lower(email) == lower($email)][0]._id`, { email: p.email });
@@ -67,10 +126,12 @@ export const sanityTalkProposals = (client: SanityClient, now = () => new Date()
           id: { _type: 'slug', current: `${slug(p.name)}-${now().getTime().toString(36)}` },
           name: p.name,
           email: p.email,
-          bio: p.bio ?? '',
+          bio: '',
+          ...speakerFields(p),
           isVisible: false,
         })
       )._id;
+    const notes = reviewNotes(p, !!existing);
     const doc = await client.create({
       _type: 'talkSubmission',
       id: { _type: 'slug', current: `${slug(p.title)}-${now().getTime().toString(36)}` },
@@ -78,9 +139,11 @@ export const sanityTalkProposals = (client: SanityClient, now = () => new Date()
       description: p.abstract ?? '',
       durationMinutes: minutesFor(p.format),
       level: p.level,
+      tags: p.topics ?? [],
       speakers: [{ _type: 'reference', _ref: speakerId, _key: speakerId.slice(0, 12) }],
       status: 'pending',
       firstTalk: p.firstTalk === true,
+      ...(notes ? { reviewNotes: notes } : {}),
       submittedAt: now().toISOString(),
     });
     return { id: doc._id };
@@ -147,6 +210,7 @@ export interface ForwardDeps {
   client?: { ip?: string; headers?: Record<string, string | undefined> };
 }
 
+const flag = (v: unknown) => v === true || v === 'true' || v === 'on';
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 
 /** Same hashes as the old site's /api/feedback, so earlier ratings still count for duplicate checks. */
@@ -187,14 +251,21 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         format: String(d.format),
         abstract: d.abstract as string | undefined,
         level: d.level as string | undefined,
+        topics: Array.isArray(d.topics) ? d.topics.map(String) : undefined,
         target: d.target as string | undefined,
+        jobTitle: d.jobTitle as string | undefined,
         bio: d.bio as string | undefined,
-        firstTalk: d.firstTalk === true || d.firstTalk === 'true' || d.firstTalk === 'on',
+        linkedin: d.linkedin as string | undefined,
+        github: d.github as string | undefined,
+        twitter: d.twitter as string | undefined,
+        returning: flag(d.returning),
+        firstTalk: flag(d.firstTalk),
       };
       const saved = sink ? await sink.submit(proposal) : (log('[forms] SANITY_WRITE_TOKEN missing; talk proposal not stored'), { id });
+      const facts = [`${minutesFor(proposal.format)} min`, proposal.level, proposal.topics?.join(', ')].filter(Boolean).join(', ');
       await postSlack(
         env,
-        `New talk proposal: “${proposal.title}” by ${proposal.name} (${proposal.format})${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}`,
+        `New talk proposal: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}`,
         log,
       );
       return { ok: true, id: saved.id };

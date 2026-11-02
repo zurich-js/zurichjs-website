@@ -1,10 +1,60 @@
 import { describe, expect, it } from 'vitest';
 import { HONEYPOT, isFormKind, validate } from '../src/index.ts';
 
+const proposal = {
+  name: 'Ada Lovelace',
+  email: 'ada@example.com',
+  jobTitle: 'Engineer',
+  bio: 'Writes programs.',
+  linkedin: 'https://www.linkedin.com/in/ada',
+  title: 'Typed forms',
+  abstract: 'What you learn',
+  format: 'Standard',
+  level: 'beginner',
+  topics: ['TypeScript', 'Testing'],
+};
+
+describe('talk proposals (production fields)', () => {
+  it('requires a description, a length, a level and at least one topic', () => {
+    const r = validate('cfp', { ...proposal, abstract: '', format: 'Deep dive', level: 'expert', topics: [] });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(Object.keys(r.fields).sort()).toEqual(['abstract', 'format', 'level', 'topics']);
+  });
+  it('offers 5 and 25 minutes, as production does', async () => {
+    const { TALK_LENGTHS } = await import('../src/client.ts');
+    expect(TALK_LENGTHS.map((l) => l.minutes)).toEqual([5, 25]);
+    expect(validate('cfp', { ...proposal, format: 'Lightning' }).ok).toBe(true);
+  });
+  it('accepts only topics from the list, at most eight', () => {
+    expect(validate('cfp', { ...proposal, topics: ['Cooking'] }).ok).toBe(false);
+    const nine = ['React', 'Vue', 'Angular', 'Svelte', 'Node.js', 'TypeScript', 'Testing', 'Tooling', 'DevOps'];
+    const r = validate('cfp', { ...proposal, topics: nine });
+    expect(!r.ok && r.fields.topics).toBe('Choose up to 8 topics.');
+  });
+  it('asks new speakers for job title, bio and a LinkedIn link', () => {
+    const r = validate('cfp', { ...proposal, jobTitle: '', bio: ' ', linkedin: 'ada' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(Object.keys(r.fields).sort()).toEqual(['bio', 'jobTitle', 'linkedin']);
+    expect(validate('cfp', { ...proposal, linkedin: 'linkedin.com/in/ada' }).ok).toBe(true);
+  });
+  it('lets returning speakers leave their profile out (their speaker page is matched by email)', () => {
+    expect(validate('cfp', { ...proposal, returning: true, jobTitle: '', bio: '', linkedin: '' }).ok).toBe(true);
+    // A LinkedIn link they do give must still be one.
+    expect(validate('cfp', { ...proposal, returning: true, linkedin: 'not a link' }).ok).toBe(false);
+  });
+  it('the browser validator gives the same answers', async () => {
+    const { fieldErrors } = await import('../src/client.ts');
+    expect(fieldErrors('cfp', proposal)).toEqual({});
+    expect(Object.keys(fieldErrors('cfp', { ...proposal, jobTitle: '', topics: [] })).sort()).toEqual(['jobTitle', 'topics']);
+    expect(fieldErrors('cfp', { ...proposal, returning: true, jobTitle: '', bio: '', linkedin: '' })).toEqual({});
+  });
+});
+
 describe('form schemas (V2 payload contract)', () => {
-  it('accepts the V2 required fields and keeps extra fields', () => {
-    const r = validate('cfp', { name: 'Ada', email: 'ada@example.com', title: 'Typed forms', format: 'Standard talk', abstract: 'More' });
-    expect(r.ok && r.data.abstract).toBe('More');
+  it('accepts a complete talk proposal and keeps extra fields', () => {
+    const r = validate('cfp', { ...proposal, note: 'extra' });
+    expect(r.ok && r.data.abstract).toBe('What you learn');
+    expect(r.ok && (r.data as Record<string, unknown>).note).toBe('extra');
   });
   it('reports each missing field once, for inline errors', () => {
     const r = validate('contact', { name: 'Ada', email: 'nope' });

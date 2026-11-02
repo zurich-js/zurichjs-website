@@ -4,7 +4,7 @@ import { Button } from '@zurichjs/design/islands/Button';
 
 interface Props {
   venue: Venue;
-  /** Public Google Maps Embed API key, restricted to zurichjs.com. Without it there is no map, only directions. */
+  /** Public Google Maps Embed API key, restricted to zurichjs.com. Without it the map is Google's keyless embed. */
   mapsKey?: string;
   heading?: string;
   headingLevel?: 2 | 3;
@@ -14,7 +14,8 @@ interface Props {
 /**
  * Where the meetup is: name, full address, how to get in, and directions.
  * The directions link always works. The map loads only when asked for
- * (no Google request or cookie before that), and only when a key is set.
+ * (no Google request or cookie before that): the Maps Embed API with a key,
+ * otherwise Google Maps' keyless embed of the address (see mapEmbedUrl).
  */
 export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLevel = 2, past }: Props) {
   const [showMap, setShowMap] = useState(false);
@@ -52,13 +53,11 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
           <Button href={directionsUrl(venue)} variant="black" external>
             Get directions
           </Button>
-          {mapsKey && !showMap && (
-            <Button variant="outline-black" onClick={() => setShowMap(true)} aria-controls="venue-map" aria-expanded={false}>
-              Show map
-            </Button>
-          )}
+          <Button variant="outline-black" onClick={() => setShowMap(!showMap)} aria-controls="venue-map" aria-expanded={showMap}>
+            {showMap ? 'Hide map' : 'Show map'}
+          </Button>
         </div>
-        {mapsKey && showMap && (
+        {showMap && (
           <div id="venue-map" class="flex flex-col gap-2">
             {mapFailed ? (
               <p class="m-0 text-[16px] text-ink-2">The map didn’t load. The directions link above still works.</p>
@@ -73,7 +72,7 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
                 allowFullScreen
               />
             )}
-            <p class="m-0 text-[14px] text-ink-2">Map by Google. Loading it shares your IP address with Google.</p>
+            <p class="m-0 text-[14px] text-ink-2">Map by Google. Loading it shares your IP address with Google. If it stays blank, use Get directions.</p>
           </div>
         )}
         {past && <p class="m-0 text-[15px] text-ink-2">Where this meetup took place. Venues change between meetups; check the next event for its address.</p>}

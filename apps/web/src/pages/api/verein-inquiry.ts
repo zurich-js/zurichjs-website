@@ -1,7 +1,8 @@
 /**
  * Membership request from /membership (Netlify Function). Nothing is charged:
  * the organisers get an email (reply goes to the person) and a Slack message,
- * then reply with how to join and pay. Same fields as production.
+ * then reply with how to join and pay. Same fields as production; the email
+ * also states the fee the page showed for that tier and billing cycle.
  *
  * POST /api/verein-inquiry  JSON { name, email, message?, tier?, billingCycle?, website_url? }
  *   200 { ok: true }
@@ -15,18 +16,19 @@ import { postSlack, sendEmail } from '@zurichjs/integrations';
 import type { APIRoute } from 'astro';
 import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http.ts';
 import { clientKey, rateLimited } from '../../server/rateLimit.ts';
+import { CYCLES, TIERS as TIER_TABLE, feeLabel, tierByName, type Cycle, type TierName } from '../../lib/membership.ts';
 
 export const prerender = false;
 
-export const TIERS = ['Basic Member', 'Supporter'] as const;
-export const BILLING_CYCLES = ['monthly', 'quarterly', 'yearly'] as const;
+export const TIERS: TierName[] = Object.values(TIER_TABLE).map((t) => t.name);
+export const BILLING_CYCLES: Cycle[] = CYCLES.map((c) => c.value);
 
 export interface VereinInquiry {
   name: string;
   email: string;
   message?: string;
-  tier?: (typeof TIERS)[number];
-  billingCycle?: (typeof BILLING_CYCLES)[number];
+  tier?: TierName;
+  billingCycle?: Cycle;
 }
 
 export function parseInquiry(body: Record<string, unknown>): { ok: true; data: VereinInquiry } | { ok: false; error: string; field: string } {
@@ -57,11 +59,14 @@ export async function handleInquiry(request: Request, deps: { env?: Env; log?: (
   if (!parsed.ok) return fail(400, parsed.error, { field: parsed.field });
   const d = parsed.data;
   const subject = `Membership request${d.tier ? ` (${d.tier})` : ''} from ${d.name}`;
+  const tier = d.tier ? tierByName(d.tier) : undefined;
   const lines = [
     `Name: ${d.name}`,
     `Email: ${d.email}`,
     ...(d.tier ? [`Tier: ${d.tier}`] : []),
     ...(d.billingCycle ? [`Billing: ${d.billingCycle}`] : []),
+    // The fee the person saw on /membership, from the same table. Nothing is charged.
+    ...(tier && d.billingCycle ? [`Fee shown: ${feeLabel(tier, d.billingCycle)}`] : []),
     `Message: ${d.message ?? 'No message'}`,
   ];
   try {

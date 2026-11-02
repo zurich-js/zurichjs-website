@@ -79,7 +79,7 @@ describe('POST /api/verein-inquiry', () => {
     expect(calls.map((c) => c.url).sort()).toEqual(['https://api.resend.com/emails', 'https://hooks.slack.test/x']);
     const mail = calls.find((c) => c.url.includes('resend'))!.body;
     expect(mail).toMatchObject({ to: ['hello@zurichjs.com'], reply_to: 'anna@example.com', subject: 'Membership request (Supporter) from Anna' });
-    expect(mail.text).toBe('Name: Anna\nEmail: anna@example.com\nTier: Supporter\nBilling: yearly\nMessage: Hi');
+    expect(mail.text).toBe('Name: Anna\nEmail: anna@example.com\nTier: Supporter\nBilling: yearly\nFee shown: CHF 250 a year\nMessage: Hi');
     expect(String(calls.find((c) => c.url.includes('slack'))!.body.text)).toContain('Billing: yearly');
     expect(calls.some((c) => /stripe|tiun/i.test(c.url))).toBe(false);
   });

@@ -46,6 +46,15 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
     if (q.get('canceled') === '1' || q.get('canceled') === 'true') setNotice('canceled');
     // Old success links (/buy-us-a-coffee?success=true…) land here: send them to the thanks page.
     if (q.get('success') === 'true') location.replace('/donate/thanks');
+    // The browser's Back button from Stripe can restore this page from the
+    // back-forward cache with the button still "Opening the payment page…".
+    const restored = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      setBusy(false);
+      attempt.current = Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+    };
+    addEventListener('pageshow', restored);
+    return () => removeEventListener('pageshow', restored);
   }, []);
 
   const customNum = custom.trim() ? Number(custom.replace(',', '.')) : NaN;
@@ -57,8 +66,15 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
   const submit = async (e: Event) => {
     e.preventDefault();
     setOfferOther(false);
-    if (amountBad) return setError(`Choose an amount from CHF ${MIN} to CHF ${MAX}.`);
-    if (emailBad) return setError('Check the email, or leave it empty.');
+    const focusField = (name: string) => formRef.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.focus();
+    if (amountBad) {
+      focusField('amount');
+      return setError(`Choose an amount from CHF ${MIN} to CHF ${MAX}.`);
+    }
+    if (emailBad) {
+      focusField('email');
+      return setError('Check the email, or leave it empty.');
+    }
     setBusy(true);
     setError('');
     try {

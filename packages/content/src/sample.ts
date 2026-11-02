@@ -4,6 +4,7 @@
  * reachable; the build logs loudly when it is used. Never presented as real.
  */
 import type { MediaItem } from './media.ts';
+import { PARTNERS as PRODUCTION_PARTNERS } from './partners.ts';
 import {
   buildSchedule,
   type AwardRecord,
@@ -495,161 +496,15 @@ export const EVENTS: Event[] = SAMPLE_EVENTS.map(({ talks, ...e }) => ({
 }));
 
 /* -------------------------------------------------------------------------- */
-/* Sponsors / hosts (logos are placeholders until the real set is wired up)     */
+/* Sponsors and hosts                                                           */
 /* -------------------------------------------------------------------------- */
 
 /**
- * The partner list the old site hardcoded (origin/main: src/data/index.ts),
- * with its logos. In production these come from Sanity partner documents
- * (Studio scripts/seed-partners.ts writes them as drafts for organisers to
- * confirm). "current" mirrors what the old site showed; organisers confirm it.
+ * The same sourced partner list real builds use until Sanity has partner
+ * documents (partners.ts), so sample and production builds show the same
+ * recognition. Sample events reference these ids.
  */
-const logo = (f: string) => `/images/partners/${f}`;
-export const PARTNERS: Partner[] = [
-  {
-    id: 'vercel',
-    name: 'Vercel',
-    url: 'https://vercel.com',
-    logo: logo('vercel-black.webp'),
-    kinds: ['sponsor'],
-    tier: 'champion',
-    current: true,
-    description: 'The AI Cloud for building and deploying web applications',
-  },
-  {
-    id: 'stripe',
-    name: 'Stripe',
-    url: 'https://stripe.com',
-    logo: logo('stripe.webp'),
-    kinds: ['sponsor'],
-    tier: 'builder',
-    current: true,
-    description: 'Financial infrastructure for the internet',
-  },
-  {
-    id: 'gyff',
-    name: 'GYFF',
-    url: 'https://www.gyffted.com',
-    logo: logo('gyff-logo-square.webp'),
-    kinds: ['sponsor'],
-    tier: 'supporter',
-    current: true,
-    description: 'IT recruitment in Switzerland',
-    allowReferrer: true,
-  },
-  {
-    id: 'fin',
-    name: 'FIN',
-    url: 'https://trust-fin.ch/tax-return-switzerland/',
-    logo: logo('fin.webp'),
-    kinds: ['sponsor'],
-    tier: 'supporter',
-    current: true,
-    description: 'Tax advice in Switzerland',
-    allowReferrer: true,
-  },
-  { id: 'ginetta', name: 'Ginetta', url: 'https://ginetta.net', logo: logo('ginetta.webp'), kinds: ['venue'], current: false, description: 'Hosted ZurichJS meetups' },
-  {
-    id: 'novu',
-    name: 'novu AG',
-    url: 'https://novu.ch/',
-    logo: logo('novu.webp'),
-    kinds: ['venue'],
-    current: false,
-    description: 'Hosted ZurichJS meetups, including the first one',
-  },
-  {
-    id: 'getyourguide',
-    name: 'GetYourGuide',
-    url: 'https://qrco.de/bgTBWh',
-    logo: logo('get-your-guide.webp'),
-    kinds: ['venue'],
-    current: false,
-    description: 'Hosted Vue Zurich and ZurichJS meetups',
-  },
-  { id: 'smallpdf', name: 'Smallpdf', url: 'https://smallpdf.com', logo: logo('smallpdf.webp'), kinds: ['venue'], current: false, description: 'Hosted ZurichJS meetups' },
-  {
-    id: 'orbiz-josef',
-    name: 'Orbiz Josef Zurich',
-    url: 'https://orbiz-flex.ch/standort/josef',
-    logo: logo('orbiz.webp'),
-    kinds: ['venue'],
-    current: false,
-    description: 'Hosted ZurichJS meetups',
-  },
-  {
-    id: 'code-blossom',
-    name: 'Code Blossom',
-    url: 'https://www.code-blossom.com/',
-    logo: logo('code-blossom.webp'),
-    kinds: ['community'],
-    current: true,
-    description: 'Regional JavaScript community partner',
-  },
-  {
-    id: 'web-zurich',
-    name: 'Web Zurich',
-    url: 'https://webzurich.ch/',
-    logo: logo('webzurich.webp'),
-    kinds: ['community'],
-    current: true,
-    description: 'Regional web development community partner',
-  },
-  {
-    id: 'whatthestack',
-    name: 'WhatTheStack',
-    url: 'https://wts.sh',
-    logo: logo('wts.webp'),
-    kinds: ['conference'],
-    current: true,
-    description: 'Conference perks for ZurichJS members',
-  },
-  {
-    id: 'cityjs',
-    name: 'CityJS',
-    url: 'https://cityjsconf.org/',
-    logo: logo('city-js.webp'),
-    kinds: ['conference'],
-    current: true,
-    description: 'Conference perks for ZurichJS members',
-  },
-  {
-    id: 'ijs-munich',
-    name: 'iJS Munich',
-    url: 'https://javascript-conference.com/munich/',
-    logo: logo('ijs-munich.webp'),
-    kinds: ['conference'],
-    current: true,
-    description: 'The conference for full-stack JavaScript in Munich',
-  },
-  {
-    id: 'grusp',
-    name: 'Grusp',
-    url: 'https://www.grusp.org/',
-    logo: logo('grusp.webp'),
-    kinds: ['conference'],
-    current: true,
-    description: 'JavaScript community and conference partner',
-  },
-  {
-    id: 'swiss-dev-jobs',
-    name: 'Swiss Dev Jobs',
-    url: 'https://swissdevjobs.ch/jobs/JavaScript/all',
-    logo: logo('sdj-rectangle.webp'),
-    kinds: ['supporting'],
-    current: true,
-    description: 'Job board access for ZurichJS members',
-  },
-  {
-    id: 'jetbrains',
-    name: 'JetBrains',
-    url: 'https://www.jetbrains.com/',
-    logo: logo('jetbrains.webp'),
-    kinds: ['supporting'],
-    current: true,
-    description: 'Software licences for ZurichJS',
-  },
-];
+export const PARTNERS: Partner[] = PRODUCTION_PARTNERS;
 
 /* -------------------------------------------------------------------------- */
 /* About page content                                                           */

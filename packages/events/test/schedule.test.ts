@@ -3,6 +3,7 @@ import {
   buildSchedule,
   directionsUrl,
   eventSupporters,
+  groupPartners,
   itemStartsAt,
   pickTodayEvent,
   recapSummary,
@@ -167,6 +168,29 @@ describe('Tonight', () => {
       partners,
     );
     expect(list.map((s) => `${s.partner.name}:${s.role}`)).toEqual(['GetYourGuide:venue', 'GYFF:sponsor']);
+  });
+  it('groups partners: tiered sponsors once, current-only categories, past supporters apart', () => {
+    const g = groupPartners([
+      { id: 'a', name: 'A', kinds: ['sponsor', 'supporting'], tier: 'supporter', current: true },
+      { id: 'b', name: 'B', kinds: ['sponsor'], tier: 'champion', current: true },
+      { id: 'c', name: 'C', kinds: ['sponsor'], current: true },
+      { id: 'd', name: 'D', kinds: ['sponsor'], tier: 'builder', current: false },
+      { id: 'e', name: 'E', kinds: ['conference'], current: true },
+      { id: 'f', name: 'F', kinds: ['conference'], current: false },
+      { id: 'g', name: 'G', kinds: ['community'], current: true },
+      { id: 'h', name: 'H', kinds: ['venue'], current: false },
+    ]);
+    expect(g.sponsorsByTier.map((t) => [t.tier, t.partners.map((p) => p.id)])).toEqual([
+      ['champion', ['b']],
+      ['supporter', ['a']],
+      [undefined, ['c']],
+    ]);
+    expect(g.supporting).toEqual([]);
+    expect(g.conferences.map((p) => p.id)).toEqual(['e']);
+    expect(g.communities.map((p) => p.id)).toEqual(['g']);
+    expect(g.venues.map((p) => p.id)).toEqual(['h']);
+    expect(g.pastSponsors.map((p) => p.id)).toEqual(['d']);
+    expect(g.pastPartners.map((p) => p.id)).toEqual(['f']);
   });
 });
 

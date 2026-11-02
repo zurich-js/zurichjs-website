@@ -6,14 +6,17 @@ The community page's timeline and team (`packages/content/src/community.ts`), th
 
 ## Sources
 
-| Key           | Source                                                                                                                                              |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| old-about     | The production site's `/about` page: `zurichjs-website` `origin/main`, `src/pages/about.tsx` (team bios, social links, milestones to January 2026). |
-| old-today     | The production site's `/today` sponsors: `origin/main` `src/data/index.ts`, `getTodaysSponsors` (the September 2026 warm-up).                       |
-| old-partners  | The production site's partner list: `origin/main` `src/data/index.ts`, `getPartners`, with logos from `public/images/partners`.                     |
-| conf-about    | conf.zurichjs.com about page: `zurichjs-conf` `src/data/about-us.ts` (conference team, 14 volunteers).                                              |
-| conf-blog     | "How ZurichJS got here", conf.zurichjs.com blog, 26 June 2026: `zurichjs-conf` `src/content/blog/how-zurichjs-got-here.mdx`.                        |
-| conf-timeline | conf.zurichjs.com timeline: `zurichjs-conf` `src/data/timeline.ts`.                                                                                 |
+| Key           | Source                                                                                                                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| old-about     | The production site's `/about` page: `zurichjs-website` `origin/main`, `src/pages/about.tsx` (team bios, social links, milestones to January 2026).                                        |
+| old-today     | The production site's `/today` sponsors: `origin/main` `src/data/index.ts`, `getTodaysSponsors` (the September 2026 warm-up).                                                              |
+| old-partners  | The production site's partner list: `origin/main` `src/data/index.ts`, `getPartners`, with logos from `public/images/partners`.                                                            |
+| old-previous  | The production `/partnerships` page, "Previous Partners and Sponsors": `origin/main` `src/pages/partnerships.tsx` (Voxxed Days Zurich, Stripe, DotJS, React Paris, Dynatrace; logos only). |
+| old-tiers     | The production `/partnerships` page, `partnershipTiers`: tiers, prices, billing options, benefits, the prospectus email.                                                                   |
+| old-stats     | The production `/partnerships` page, "The Numbers Speak" (added 26 October 2025).                                                                                                          |
+| conf-about    | conf.zurichjs.com about page: `zurichjs-conf` `src/data/about-us.ts` (conference team, 14 volunteers).                                                                                     |
+| conf-blog     | "How ZurichJS got here", conf.zurichjs.com blog, 26 June 2026: `zurichjs-conf` `src/content/blog/how-zurichjs-got-here.mdx`.                                                               |
+| conf-timeline | conf.zurichjs.com timeline: `zurichjs-conf` `src/data/timeline.ts`.                                                                                                                        |
 
 ## Timeline
 
@@ -66,3 +69,23 @@ All partners come from old-partners. The seed script marks as **current** what t
 - **confirm** that an event's `datetime` is the start shown on Meetup, and that the site may call it "Starts" (not "Doors"). See DECISIONS.md, "Schedule fields and feedback availability". If organisers mean doors, say so and the label changes in one place (`timesLine` in `packages/events/src/schedule.ts`).
 - **confirm** the real programmes: no production event has an `agenda`, so doors, welcome, breaks, networking and talk times show nowhere. Organisers add them per event (Studio "Fill programme from talks" writes the old template as a draft to check). The anniversary (12 Nov 2026) currently reads "Starts 17:30 CET" with untimed talks.
 - **confirm** that feedback should open at the start time (before doors would be unusual) rather than earlier for legacy links.
+
+### The code-side partner record (2026-11-02)
+
+Real builds use `packages/content/src/partners.ts` until Sanity has partner documents. It follows production exactly; these points could not be verified as current:
+
+| Item                                                                                                                     | What the site shows                                          | Source                                                                             | Status                                                    |
+| ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Vercel (Champion), Stripe (Builder), GYFF and FIN (Supporters)                                                           | Current sponsors, by tier                                    | old-partners (last changed 20 May 2026)                                            | **confirm** each is still sponsoring after the conference |
+| Stripe                                                                                                                   | Current Builder sponsor                                      | old-partners lists it as Builder; old-previous also lists it as a previous sponsor | **confirm** which is right                                |
+| WhatTheStack, CityJS, iJS Munich, Grusp                                                                                  | Current conference partners with member perks                | old-partners                                                                       | **confirm** the perks still run                           |
+| Code Blossom, Web Zurich                                                                                                 | Current community partners                                   | old-partners                                                                       | **confirm**                                               |
+| Swiss Dev Jobs, JetBrains                                                                                                | Current supporting partners                                  | old-partners                                                                       | **confirm**                                               |
+| Ginetta, novu, GetYourGuide, Smallpdf, Orbiz Josef                                                                       | Venue partners ("have hosted"), never called current         | old-partners                                                                       |                                                           |
+| Voxxed Days Zurich, DotJS, React Paris, Dynatrace                                                                        | Previous partners and sponsors, no links                     | old-previous                                                                       |                                                           |
+| Event hosts on past event pages                                                                                          | The venue partner named in the event's Sanity `location`     | production Sanity                                                                  |                                                           |
+| Supporters of `sep-2026` (GetYourGuide venue, GYFF, FIN) and `pro-zurichjs-meetup-9` (Dynatrace)                         | "Thanks to" on those event pages                             | old-today, old-about                                                               |                                                           |
+| Reach figures (900 members, 50–100 RSVPs, 15'000+ views, 525+ LinkedIn followers, 35% repeat, 114 peak RSVPs, countries) | Shown as "published on zurichjs.com in October 2025"         | old-stats                                                                          | **confirm** or replace with current numbers               |
+| Tier prices and benefits                                                                                                 | As production, with one thousands separator and no em dashes | old-tiers                                                                          | **confirm** still valid for 2027                          |
+
+Not added, because production gives no role or logo: Stripe for `jan-2026` (named in the title), Digitec Galaxus for the first anniversary ("presented by"), Cloudflare for September 2025, and Sentry, Supabase and Remotion (removed from the production list in May 2026).

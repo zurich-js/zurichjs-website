@@ -169,6 +169,8 @@ export interface Partner {
   since?: string;
   until?: string;
   description?: string;
+  /** A few sentences in the sponsor's own words, shown with tiered sponsors. */
+  blurb?: string;
   /** Sponsors who asked to see referrals: links omit `noreferrer`. */
   allowReferrer?: boolean;
 }

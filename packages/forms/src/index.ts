@@ -13,9 +13,9 @@ const email = z.string().trim().email('Enter an email address like name@example.
 const text = (msg: string) => z.string().trim().min(1, msg);
 const required = (msg: string) => z.union([z.string().trim().min(1, msg), z.number()]);
 
-import { HONEYPOT } from './client';
+import { HONEYPOT } from './client.ts';
 
-export { HONEYPOT, REQUIRED, fieldErrors, submitForm } from './client';
+export { HONEYPOT, REQUIRED, fieldErrors, submitForm } from './client.ts';
 const honeypot = { [HONEYPOT]: z.string().max(0).optional() };
 
 export const schemas = {
@@ -30,7 +30,7 @@ export type FormKind = keyof typeof schemas;
 export type FormData<K extends FormKind> = z.infer<(typeof schemas)[K]>;
 export const isFormKind = (k: string): k is FormKind => k in schemas;
 
-export type { FormResult } from './client';
+export type { FormResult } from './client.ts';
 
 /** Validates a payload. Returns field-level messages for inline errors. */
 export function validate<K extends FormKind>(kind: K, data: unknown): { ok: true; data: FormData<K> } | { ok: false; error: string; fields: Record<string, string> } {

@@ -12,7 +12,7 @@ import {
   resetContentCache,
   talkFormat,
   type RawEvent,
-} from '../src';
+} from '../src/index.ts';
 
 describe('mapEvent (production document shape)', () => {
   const raw: RawEvent = {

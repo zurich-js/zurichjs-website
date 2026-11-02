@@ -9,9 +9,9 @@
  *   502 { ok: false, error }    Stripe failed
  */
 import type { APIRoute } from 'astro';
-import { fail, isBot, json, methodNotAllowed, readJsonObject, type Env } from '../../../server/http';
-import { clientKey, rateLimited } from '../../../server/rateLimit';
-import { StripeUnavailable, createDonationCheckout, parseDonation } from '../../../server/stripe';
+import { fail, isBot, json, methodNotAllowed, readJsonObject, type Env } from '../../../server/http.ts';
+import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
+import { StripeUnavailable, createDonationCheckout, parseDonation } from '../../../server/stripe.ts';
 
 export const prerender = false;
 

@@ -13,8 +13,8 @@
  */
 import { postSlack, sendEmail } from '@zurichjs/integrations';
 import type { APIRoute } from 'astro';
-import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http';
-import { clientKey, rateLimited } from '../../server/rateLimit';
+import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http.ts';
+import { clientKey, rateLimited } from '../../server/rateLimit.ts';
 
 export const prerender = false;
 

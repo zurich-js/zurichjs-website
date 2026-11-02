@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ALL, GET } from '../src/pages/api/speaker-feedback/[token]';
-import { signHs256, verifyHs256 } from '../src/server/jwt';
-import { INVALID_LINK, loadSpeakerFeedback, summarise } from '../src/server/speaker-feedback';
+import { ALL, GET } from '../src/pages/api/speaker-feedback/[token].ts';
+import { signHs256, verifyHs256 } from '../src/server/jwt.ts';
+import { INVALID_LINK, loadSpeakerFeedback, summarise } from '../src/server/speaker-feedback.ts';
 
 const SECRET = 'test-secret';
 const NOW = Date.parse('2026-11-01T12:00:00Z');

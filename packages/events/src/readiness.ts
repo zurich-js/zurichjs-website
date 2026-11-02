@@ -4,7 +4,7 @@
  * keep both in step (test/readiness.test.ts holds the shared cases). Works on the raw Sanity
  * document shape, so the Slack agent can check a draft before anyone publishes it.
  */
-import type { EventStatus } from './types';
+import type { EventStatus } from './types.ts';
 
 export interface EventDocumentForReadiness {
   title?: string | null;

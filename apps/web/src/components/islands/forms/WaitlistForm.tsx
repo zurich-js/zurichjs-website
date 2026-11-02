@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
 
 type Done = { email: string; outcome: 'added' | 'already' | 'off' };
 

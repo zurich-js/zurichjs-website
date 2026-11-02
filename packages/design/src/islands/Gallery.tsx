@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { sizedSrc, srcsetFor } from '../images';
-import { cx } from '../recipes';
+import { sizedSrc, srcsetFor } from '../images.ts';
+import { cx } from '../recipes.ts';
 
 export interface GalleryItem {
   id: string;

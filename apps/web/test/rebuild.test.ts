@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DEBOUNCE_MS, acceptPublish, decide, emptyState, recordPublish, tick, validSanitySignature, type RebuildState, type StateStore } from '../src/server/rebuild';
+import { DEBOUNCE_MS, acceptPublish, decide, emptyState, recordPublish, tick, validSanitySignature, type RebuildState, type StateStore } from '../src/server/rebuild.ts';
 
 const t0 = new Date('2026-11-18T10:00:00Z');
 const plus = (ms: number) => new Date(t0.getTime() + ms);

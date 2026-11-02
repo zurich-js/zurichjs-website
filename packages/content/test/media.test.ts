@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fromImageKit, loadMedia, mediaCounts, pickFeatured, type ImageKitFile } from '../src';
+import { fromImageKit, loadMedia, mediaCounts, pickFeatured, type ImageKitFile } from '../src/index.ts';
 import type { Event } from '@zurichjs/events';
 
 const ev = (slug: string, over: Partial<Event> = {}): Event => ({

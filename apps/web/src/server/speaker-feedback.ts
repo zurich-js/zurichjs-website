@@ -6,10 +6,10 @@
  * Ratings are Sanity `feedback` documents: production ones reference the
  * speaker, V2 ones (the rating sheet) reference the talk, so both are read.
  */
-import type { Env } from './http';
-import { verifyHs256 } from './jwt';
+import type { Env } from './http.ts';
+import { verifyHs256 } from './jwt.ts';
 import { sanityReadToken } from '@zurichjs/content';
-import { groqQuery } from './sanity';
+import { groqQuery } from './sanity.ts';
 
 export const INVALID_LINK = 'This link is not valid or has expired.';
 export const UNAVAILABLE = 'Feedback can’t be loaded right now. Please try again in a few minutes.';

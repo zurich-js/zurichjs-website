@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fontsCss, themeCss } from '../scripts/build-theme.mjs';
-import { breakpoints, colors, font, radii } from '../src/tokens';
+import { breakpoints, colors, font, radii } from '../src/tokens.ts';
 
 const read = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
 
@@ -38,8 +38,8 @@ describe('tokens', () => {
 
 describe('heading recipes follow the tokens', () => {
   it('SectionHeading sizes use the h2, h2Medium and h3 tokens', async () => {
-    const { headingSizes } = await import('../src/recipes');
-    const { headings } = await import('../src/tokens');
+    const { headingSizes } = await import('../src/recipes.ts');
+    const { headings } = await import('../src/tokens.ts');
     const strip = (s: string) => s.replace(/\s/g, '');
     expect(headingSizes.lg).toContain(`text-[${strip(headings.h2)}]`);
     expect(headingSizes.md).toContain(`text-[${strip(headings.h2Medium)}]`);

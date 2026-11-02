@@ -1,14 +1,14 @@
 import type { AwardRecord, ConferenceCopy, ConferenceState, Event, Milestone, Partner, Quote, RatingRecord, Speaker, TeamMember } from '@zurichjs/events';
-import { mapEvent, mapPartner, mapRating, mapSpeaker, mapSupport, type RawEvent, type RawPartner, type RawSingletons, type RawSpeaker, type SupportInfo } from './map';
-import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries';
-import { MILESTONES, TEAM, VOLUNTEERS } from './community';
-import { loadMedia, type MediaCollection } from './media';
-import * as sample from './sample';
+import { mapEvent, mapPartner, mapRating, mapSpeaker, mapSupport, type RawEvent, type RawPartner, type RawSingletons, type RawSpeaker, type SupportInfo } from './map.ts';
+import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries.ts';
+import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
+import { loadMedia, type MediaCollection } from './media.ts';
+import * as sample from './sample.ts';
 
-export * from './map';
-export * from './media';
-export * from './queries';
-export { PHOTOS, SITE } from './sample';
+export * from './map.ts';
+export * from './media.ts';
+export * from './queries.ts';
+export { PHOTOS, SITE } from './sample.ts';
 
 export interface SiteContent {
   /** Where the content came from. "sample" is placeholder content and must never ship to production. */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isReady, readiness, type EventDocumentForReadiness } from '../src';
+import { isReady, readiness, type EventDocumentForReadiness } from '../src/index.ts';
 
 /** Shared cases: the Studio's lib/readiness.ts must give the same missing labels for each. */
 const CASES: { name: string; ev: EventDocumentForReadiness; missing: string[] }[] = [

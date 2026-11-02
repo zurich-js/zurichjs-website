@@ -1,5 +1,5 @@
 import type { ComponentChildren, JSX } from 'preact';
-import { buttonClass, isExternal, type ButtonSize, type ButtonVariant } from '../recipes';
+import { buttonClass, isExternal, type ButtonSize, type ButtonVariant } from '../recipes.ts';
 
 interface Props {
   variant?: ButtonVariant;

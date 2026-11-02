@@ -16,7 +16,7 @@ import {
   type Venue,
 } from '@zurichjs/events';
 
-import type { EVENTS_QUERYResult, PARTNERS_QUERYResult, SINGLETONS_QUERYResult, SPEAKERS_QUERYResult } from './sanity.types';
+import type { EVENTS_QUERYResult, PARTNERS_QUERYResult, SINGLETONS_QUERYResult, SPEAKERS_QUERYResult } from './sanity.types.ts';
 
 /**
  * Raw shapes returned by queries.ts, derived from the types `sanity typegen` generates

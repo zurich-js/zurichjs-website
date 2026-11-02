@@ -9,8 +9,8 @@
 import { tool, type ToolSet } from 'ai';
 import { z } from 'zod';
 import { readiness, type EventDocumentForReadiness } from '@zurichjs/events';
-import { draftIdOf, publishedIdOf, type ContentStore, type SanityDoc } from './store';
-import { formatZurich, zurichToUtcIso } from './time';
+import { draftIdOf, publishedIdOf, type ContentStore, type SanityDoc } from './store.ts';
+import { formatZurich, zurichToUtcIso } from './time.ts';
 
 export interface FieldChange {
   field: string;

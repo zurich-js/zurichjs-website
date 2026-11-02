@@ -7,7 +7,7 @@
  * document; an organiser reviews and publishes it in the Studio.
  */
 import { sanityWriteClient } from '@zurichjs/integrations';
-import type { Env } from './http';
+import type { Env } from './http.ts';
 
 type SanityClient = NonNullable<ReturnType<typeof sanityWriteClient>>;
 

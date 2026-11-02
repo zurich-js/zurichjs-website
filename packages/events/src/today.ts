@@ -7,9 +7,9 @@
  *   after     after the evening, until doors + 48 h          thanks, feedback
  *   none      nothing dated is coming up                     what to do meanwhile
  */
-import { zurichDay } from './format';
-import { FEEDBACK_WINDOW_MS } from './state';
-import type { Event, Partner, SupporterRole } from './types';
+import { zurichDay } from './format.ts';
+import { FEEDBACK_WINDOW_MS } from './state.ts';
+import type { Event, Partner, SupporterRole } from './types.ts';
 
 export type TodayPhase = 'upcoming' | 'today' | 'live' | 'after' | 'none';
 

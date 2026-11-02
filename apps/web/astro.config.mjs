@@ -33,7 +33,8 @@ const contentRedirects = () => ({
 export default defineConfig({
   site: 'https://zurichjs.com',
   output: 'static',
-  adapter: netlify(),
+  // No edge functions here, and their dev emulation needs Deno.
+  adapter: netlify({ devFeatures: { images: true, environmentVariables: false, edgeFunctions: false } }),
   trailingSlash: 'never',
   // Inline CSS: removes the render-blocking stylesheet request (one Tailwind sheet, small).
   build: { format: 'file', inlineStylesheets: 'always' },

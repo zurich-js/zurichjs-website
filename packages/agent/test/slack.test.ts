@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { allowlist, changeBlocks, signInternal, threadToMessages, verifyInternal, verifySlackRequest } from '../src';
+import { allowlist, changeBlocks, signInternal, threadToMessages, verifyInternal, verifySlackRequest } from '../src/index.ts';
 
 const sign = (secret: string, ts: number, body: string) => `v0=${createHmac('sha256', secret).update(`v0:${ts}:${body}`).digest('hex')}`;
 

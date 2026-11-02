@@ -1,4 +1,4 @@
-import type { Event, EventState } from './types';
+import type { Event, EventState } from './types.ts';
 
 /** Feedback and rating stay open for 48 hours after doors. */
 export const FEEDBACK_WINDOW_MS = 48 * 60 * 60 * 1000;

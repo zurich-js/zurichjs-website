@@ -3,8 +3,8 @@
  * thread → model messages, and Block Kit for the "here is what I changed" reply.
  */
 import type { ModelMessage } from 'ai';
-import { formatZurich } from './time';
-import type { DraftChange } from './tools';
+import { formatZurich } from './time.ts';
+import type { DraftChange } from './tools.ts';
 
 type Env = Record<string, string | undefined>;
 

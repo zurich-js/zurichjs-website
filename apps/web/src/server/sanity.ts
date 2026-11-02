@@ -4,7 +4,7 @@
  * shorter timeout (a person is waiting on the response).
  */
 import { sanityConfig } from '@zurichjs/content';
-import type { Env } from './http';
+import type { Env } from './http.ts';
 
 export function groqQuery(env: Env, fetchImpl: typeof fetch = fetch) {
   const { projectId, dataset, apiVersion, token } = sanityConfig(env);

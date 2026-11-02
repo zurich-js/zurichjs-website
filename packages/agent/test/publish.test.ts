@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { handleButton } from '../src';
-import { NOV, fakeStore } from './fake-store';
+import { handleButton } from '../src/index.ts';
+import { NOV, fakeStore } from './fake-store.ts';
 
 const publishers = new Set(['UORG']);
 

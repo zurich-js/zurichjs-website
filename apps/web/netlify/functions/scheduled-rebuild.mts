@@ -5,7 +5,7 @@
  * missing). Netlify sets URL to the site's own address.
  */
 import { getStore } from '@netlify/blobs';
-import { tick, type RebuildState } from '../../src/server/rebuild';
+import { tick, type RebuildState } from '../../src/server/rebuild.ts';
 
 export default async () => {
   const blobs = getStore('rebuild');

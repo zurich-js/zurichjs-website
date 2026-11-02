@@ -3,7 +3,7 @@ import { track } from '@zurichjs/design/analytics';
 import { cx } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 import { Check } from '@zurichjs/design/islands/Check';
 
 type Tier = 'basic' | 'supporter';

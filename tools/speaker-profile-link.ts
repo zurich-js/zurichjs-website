@@ -4,7 +4,7 @@
  * The speaker adds photo, bio, links and topics; it is saved as a draft for
  * an organiser to publish in the Studio.
  */
-import { profileLink } from '../apps/web/src/server/profile-token';
+import { profileLink } from '../apps/web/src/server/profile-token.ts';
 
 const [id, origin = 'https://zurichjs.com'] = process.argv.slice(2);
 if (!id || !process.env.JWT_SECRET) {

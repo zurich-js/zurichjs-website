@@ -3,7 +3,7 @@ import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 type Way = 'night' | 'photos' | 'website' | 'unsure';
 const MESSAGES = { name: 'Add your name.', email: 'Enter an email like name@example.com.' };

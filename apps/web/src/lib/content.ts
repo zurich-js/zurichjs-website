@@ -2,7 +2,7 @@
 import { isPreview, loadContent } from '@zurichjs/content';
 import { nextMeetup } from '@zurichjs/events';
 
-export { ticketing } from './ticketing';
+export { ticketing } from './ticketing.ts';
 
 export { PHOTOS, SITE, slackLink } from '@zurichjs/content';
 /** Draft preview build (SANITY_PERSPECTIVE=drafts): noindex everywhere, robots.txt disallows all. */

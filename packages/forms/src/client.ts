@@ -3,11 +3,40 @@
  * required fields and messages mirror `schemas` in index.ts; the server
  * validates again with zod (tested to agree in test/forms.test.ts).
  */
-export type FormKind = 'cfp' | 'partners' | 'contact' | 'feedback' | 'rating';
+export type FormKind = 'cfp' | 'partners' | 'contact' | 'feedback' | 'rating' | 'volunteer';
 export type FormResult = { ok: true; id?: string } | { ok: false; error: string; fields?: Record<string, string> };
 
 /** Hidden field bots fill in. Humans never see it, so any value means spam. */
 export const HONEYPOT = 'website_url';
+
+/**
+ * Volunteer areas, as on production's /cfv (origin/main src/pages/cfv.tsx) without
+ * workshop organisation, plus photography and video from V2. The label is what organisers read.
+ */
+export const VOLUNTEER_INTERESTS = [
+  'Community management',
+  'Social media',
+  'Partnership and speaker outreach',
+  'Event organisation',
+  'Platform development',
+  'Content creation',
+  'Graphic design',
+  'Photography and video',
+] as const;
+
+/** Availability values and labels, the same values as production's /api/submit-volunteer. */
+export const VOLUNTEER_AVAILABILITY = {
+  weekly: 'A few hours weekly',
+  monthly: 'A few hours monthly',
+  events: 'Only during events',
+  other: 'Other',
+} as const;
+export type VolunteerAvailability = keyof typeof VOLUNTEER_AVAILABILITY;
+
+/** Production's LinkedIn check (origin/main src/lib/validation/input.ts), also allowing country subdomains. */
+export const LINKEDIN_URL = /^(https?:\/\/)?([\w-]+\.)?linkedin\.com\/.+/i;
+/** A GitHub username (with or without @) or a github.com profile link. */
+export const GITHUB_PROFILE = /^(@?[A-Za-z0-9-]{1,39}|(https?:\/\/)?(www\.)?github\.com\/[A-Za-z0-9-]{1,39}\/?)$/i;
 
 const EMAIL = 'Enter an email address like name@example.com.';
 export const REQUIRED: Record<FormKind, Record<string, string>> = {
@@ -16,10 +45,43 @@ export const REQUIRED: Record<FormKind, Record<string, string>> = {
   contact: { name: 'Enter your name.', email: EMAIL, topic: 'Choose a topic.', message: 'Write a message.' },
   feedback: { eventId: 'Missing event.', overall: 'Choose a score for the evening.' },
   rating: { eventId: 'Missing event.', target: 'Missing talk.', stars: 'Choose a rating from 1 to 5.' },
+  volunteer: {
+    name: 'Enter your name.',
+    email: EMAIL,
+    linkedinProfile: 'Enter your LinkedIn profile link.',
+    availability: 'Choose how much time you have.',
+    interests: 'Choose at least one area.',
+    message: 'Tell us why you’d like to volunteer.',
+  },
 };
 
+const VOLUNTEER_FORMAT: Record<string, string> = {
+  linkedinProfile: 'Enter a linkedin.com link, like https://www.linkedin.com/in/your-name.',
+  githubProfile: 'Enter a GitHub username or a github.com link.',
+  availability: 'Choose how much time you have.',
+  availabilityOther: 'Say briefly how much time you have.',
+  interests: 'Choose from the areas listed.',
+};
+
+/**
+ * Format checks on filled fields, beyond "is it filled in". The "Other"
+ * availability text is checked only once everything else is valid, as the
+ * server's object-level refinement is.
+ */
+function formatErrors(kind: FormKind, d: Record<string, unknown>, out: Record<string, string>): Record<string, string> {
+  if (kind !== 'volunteer') return out;
+  const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
+  const set = (k: string) => (out[k] ??= VOLUNTEER_FORMAT[k]!);
+  if (str(d.linkedinProfile) && !LINKEDIN_URL.test(str(d.linkedinProfile))) set('linkedinProfile');
+  if (str(d.githubProfile) && !GITHUB_PROFILE.test(str(d.githubProfile))) set('githubProfile');
+  if (str(d.availability) && !(str(d.availability) in VOLUNTEER_AVAILABILITY)) set('availability');
+  if (!empty(d.interests) && (!Array.isArray(d.interests) || d.interests.some((i) => !(VOLUNTEER_INTERESTS as readonly unknown[]).includes(i)))) set('interests');
+  if (!Object.keys(out).length && d.availability === 'other' && !str(d.availabilityOther)) set('availabilityOther');
+  return out;
+}
+
 const isEmail = (v: unknown) => typeof v === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
-const empty = (v: unknown) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
+const empty = (v: unknown) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0);
 
 /** Field-level messages for inline errors; empty object when valid. */
 export function fieldErrors(kind: FormKind, data: object): Record<string, string> {
@@ -29,7 +91,7 @@ export function fieldErrors(kind: FormKind, data: object): Record<string, string
     const v = d[field];
     if (empty(v) || (field === 'email' && !isEmail(v))) out[field] = msg;
   }
-  return out;
+  return formatErrors(kind, d, out);
 }
 
 /** Same shape as the server-side `validate`, for islands. */

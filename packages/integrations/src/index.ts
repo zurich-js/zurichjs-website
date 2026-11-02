@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createClient, type SanityClient } from '@sanity/client';
-import type { FormData, FormKind, FormResult } from '@zurichjs/forms';
+import { VOLUNTEER_AVAILABILITY, type FormData, type FormKind, type FormResult } from '@zurichjs/forms';
 
 /**
  * Where submitted forms go. Every channel reads its secret from the
@@ -135,6 +135,28 @@ const summary = (data: Record<string, unknown>) =>
     .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`)
     .join('\n');
 
+/**
+ * The organisers' copy of a volunteer application, in the order production's
+ * /api/submit-volunteer sent it. Every field the form collects is in it.
+ */
+export function volunteerMessage(d: Record<string, unknown>): { subject: string; text: string } {
+  const availability = VOLUNTEER_AVAILABILITY[d.availability as keyof typeof VOLUNTEER_AVAILABILITY] ?? String(d.availability);
+  const other = d.availability === 'other' && d.availabilityOther ? `: ${String(d.availabilityOther)}` : '';
+  const interests = Array.isArray(d.interests) ? d.interests.map(String).join(', ') : String(d.interests ?? '');
+  const lines = [
+    `Volunteer application from: ${String(d.name)}`,
+    `Email: ${String(d.email)}`,
+    `LinkedIn: ${String(d.linkedinProfile)}`,
+    `GitHub: ${d.githubProfile ? String(d.githubProfile) : 'not given'}`,
+    `Availability: ${availability}${other}`,
+    `Interests: ${interests}`,
+    '',
+    'Why they want to volunteer:',
+    String(d.message),
+  ];
+  return { subject: `New volunteer application from ${String(d.name)}`, text: lines.join('\n') };
+}
+
 /* ------------------------------------------------------------------ dispatcher */
 
 export interface ForwardDeps {
@@ -203,6 +225,12 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
     case 'contact': {
       const subject = kind === 'partners' ? `Partner inquiry from ${String(d.org)}` : `Contact: ${String(d.topic)} from ${String(d.name)}`;
       await Promise.all([sendEmail(env, subject, summary(d), String(d.email), log), postSlack(env, `${subject}\n${summary(d)}`, log)]);
+      return { ok: true, id };
+    }
+    case 'volunteer': {
+      // Production kept no Sanity record for volunteers (notification only), so neither does V2.
+      const { subject, text } = volunteerMessage(d);
+      await Promise.all([sendEmail(env, subject, text, String(d.email), log), postSlack(env, `${subject}\n${text}`, log)]);
       return { ok: true, id };
     }
     case 'feedback': {

@@ -253,6 +253,18 @@ test.describe('donations and membership', () => {
     await expect(page.getByText('Enter an amount from 5 to 1000.')).toBeVisible();
   });
 
+  test('donate: questions, cancellation and thanks from production; no tax claim; a bad amount moves focus to it', async ({ page }) => {
+    await page.goto('/donate');
+    await hydrated(page);
+    await expect(page.getByRole('heading', { name: 'Questions' })).toBeVisible();
+    await expect(page.locator('[data-faq-cancel]')).toContainText('No questions asked.');
+    await expect(page.getByRole('link', { name: 'Patrick Stillhart' })).toHaveAttribute('href', 'https://stillh.art/');
+    await expect(page.getByText(/tax/i)).toHaveCount(0);
+    await page.getByLabel(/Or another amount/).fill('3');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await expect(page.getByLabel(/Or another amount/)).toBeFocused();
+  });
+
   test('coming back from Stripe without paying says so; old /buy-us-a-coffee links reach the donation form', async ({ page }) => {
     await page.goto('/buy-us-a-coffee?canceled=true');
     await expect(page).toHaveURL(/\/donate\?canceled=true/);
@@ -316,6 +328,40 @@ test.describe('donations and membership', () => {
     await page.getByRole('button', { name: /Send request/ }).click();
     await expect(page.getByText('An organiser will reply to test@example.com about joining as Supporter (CHF 250 a year). Nothing has been charged.')).toBeVisible();
     expect(calls).toBe(1);
+  });
+
+  test('membership: every tier and billing cycle submits its own values (stubbed API), with each price and the per-year totals shown', async ({ page }) => {
+    const sent: Record<string, unknown>[] = [];
+    await page.route('**/api/verein-inquiry', async (route) => {
+      sent.push(route.request().postDataJSON());
+      await route.fulfill({ json: { ok: true } });
+    });
+    await page.goto('/membership');
+    await hydrated(page);
+    await expect(page.getByText('Over a year: CHF 174 paid monthly, CHF 200 paid quarterly, CHF 175 paid yearly.')).toBeVisible();
+    await expect(page.getByText('Over a year: CHF 252 paid monthly, CHF 300 paid quarterly, CHF 250 paid yearly.')).toBeVisible();
+    await expect(page.getByText('Basic Members vote on small decisions; Supporters have voting rights.', { exact: false })).toBeVisible();
+    await expect(page.locator('input[name="name"]')).toHaveAttribute('required', '');
+    await expect(page.locator('input[name="email"]')).toHaveAttribute('required', '');
+    const COMBOS = [
+      ['Basic Member', 'Monthly', 'monthly', 'CHF 14.50 a month'],
+      ['Basic Member', 'Quarterly', 'quarterly', 'CHF 50 a quarter'],
+      ['Basic Member', 'Yearly', 'yearly', 'CHF 175 a year'],
+      ['Supporter', 'Monthly', 'monthly', 'CHF 21 a month'],
+      ['Supporter', 'Quarterly', 'quarterly', 'CHF 75 a quarter'],
+      ['Supporter', 'Yearly', 'yearly', 'CHF 250 a year'],
+    ] as const;
+    for (const [tier, label, cycle, fee] of COMBOS) {
+      await page.getByRole('radio', { name: tier, exact: true }).click();
+      await page.getByRole('radio', { name: new RegExp(`^${label}, `) }).click();
+      await page.locator('input[name="name"]').fill('Test Person');
+      await page.locator('input[name="email"]').fill('test@example.com');
+      await page.getByRole('button', { name: `Send request: ${tier}, ${fee}` }).click();
+      await expect(page.getByText(`An organiser will reply to test@example.com about joining as ${tier} (${fee}). Nothing has been charged.`)).toBeVisible();
+      expect(sent.at(-1)).toMatchObject({ name: 'Test Person', email: 'test@example.com', tier, billingCycle: cycle, website_url: '' });
+      await page.getByRole('button', { name: 'Send another request' }).click();
+    }
+    expect(sent).toHaveLength(6);
   });
 
   test('membership is linked from the footer on every page', async ({ page }) => {

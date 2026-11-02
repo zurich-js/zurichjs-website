@@ -168,39 +168,48 @@ const isExt = (href: string) => /^https?:/.test(href);
       </SectionHeading>
       <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-x-4 gap-y-8">
         {
-          timeline.map(({ m, ev, photo, gallery }) => (
-            <li id={`story-${m.iso}`} class="flex flex-col gap-3 scroll-mt-6">
-              {photo ? (
-                <Photo photo={photo} class="aspect-4/3 w-full rounded-[20px]!" sizes="(min-width: 800px) 33vw, 100vw" />
-              ) : (
-                <span class="w-full aspect-4/3 rounded-[20px] bg-yellow flex items-end p-[18px] box-border text-[26px] font-bold leading-[1.1]" aria-hidden="true">
-                  {m.title}
-                </span>
-              )}
-              <div class="flex flex-col gap-1.5">
-                <span class="text-[16px] text-ink-2">{m.date}</span>
-                <h3 class="m-0 text-[20px] font-bold leading-tight text-pretty">{m.title}</h3>
-                {m.text && <p class="m-0 text-[16px] leading-[1.5] text-ink-2">{m.text}</p>}
-                <div class="flex flex-wrap gap-x-4 gap-y-1 text-[16px]">
-                  {ev && (
-                    <a href={eventHref(ev)} class="font-bold underline underline-offset-[3px]">
-                      The event
-                    </a>
-                  )}
-                  {gallery && (
-                    <a href={gallery} class="font-bold underline underline-offset-[3px]">
-                      Photos
-                    </a>
-                  )}
-                  {m.link && (
-                    <a href={m.link.href} class="font-bold underline underline-offset-[3px]" {...(isExt(m.link.href) ? { target: '_blank', rel: 'noopener' } : {})}>
-                      {m.link.label}
-                    </a>
-                  )}
-                </div>
+          timeline.map(({ m, ev, photo, gallery }) => {
+            const links = (
+              <div class="flex flex-wrap gap-x-4 gap-y-1 text-[16px]">
+                {ev && (
+                  <a href={eventHref(ev)} class="font-bold underline underline-offset-[3px]">
+                    The event
+                  </a>
+                )}
+                {gallery && (
+                  <a href={gallery} class="font-bold underline underline-offset-[3px]">
+                    Photos
+                  </a>
+                )}
+                {m.link && (
+                  <a href={m.link.href} class="font-bold underline underline-offset-[3px]" {...(isExt(m.link.href) ? { target: '_blank', rel: 'noopener' } : {})}>
+                    {m.link.label}
+                  </a>
+                )}
               </div>
-            </li>
-          ))
+            );
+            // Without a photo, the milestone is one yellow card (no repeated title).
+            return photo ? (
+              <li id={`story-${m.iso}`} class="flex flex-col gap-3 scroll-mt-6">
+                <Photo photo={photo} class="aspect-4/3 w-full rounded-[20px]!" sizes="(min-width: 800px) 33vw, 100vw" />
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-[16px] text-ink-2">{m.date}</span>
+                  <h3 class="m-0 text-[20px] font-bold leading-tight text-pretty">{m.title}</h3>
+                  {m.text && <p class="m-0 text-[16px] leading-[1.5] text-ink-2">{m.text}</p>}
+                  {links}
+                </div>
+              </li>
+            ) : (
+              <li id={`story-${m.iso}`} class="scroll-mt-6">
+                <div class="h-full rounded-[20px] bg-yellow p-[22px] flex flex-col gap-2 box-border">
+                  <span class="text-[16px] font-bold">{m.date}</span>
+                  <h3 class="m-0 text-[24px] font-bold leading-[1.15] text-pretty">{m.title}</h3>
+                  {m.text && <p class="m-0 text-[16px] leading-[1.5]">{m.text}</p>}
+                  <div class="mt-auto pt-1">{links}</div>
+                </div>
+              </li>
+            );
+          })
         }
       </ol>
     </section>

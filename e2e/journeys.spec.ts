@@ -46,8 +46,24 @@ test.describe('event schedule and venue', () => {
     await expect(venue).toContainText('Musterstrasse 1, 8005 Zürich');
     const link = venue.getByRole('link', { name: /Get directions/ });
     await expect(link).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=Sample%20Venue%20AG/);
-    // No Maps key in this build: no map button, no Google request.
-    await expect(venue.getByRole('button', { name: 'Show map' })).toHaveCount(0);
+    // No Maps key in this build: the map is Google's keyless embed, loaded only on request.
+    const google: string[] = [];
+    page.on('request', (r) => {
+      if (/^https:\/\/www\.google\.com\/maps(\?|\/embed)/.test(r.url())) google.push(r.url());
+    });
+    await page.route(/^https:\/\/www\.google\.com\/maps/, (route) => route.fulfill({ body: '<!doctype html><title>map</title>', contentType: 'text/html' }));
+    const show = venue.getByRole('button', { name: 'Show map' });
+    await expect(show).toHaveAttribute('aria-expanded', 'false');
+    expect(google).toHaveLength(0);
+    // The card is a client:visible island: let it hydrate once in view.
+    await venue.scrollIntoViewIfNeeded();
+    await expect(page.locator('astro-island[ssr]', { has: venue })).toHaveCount(0);
+    await show.click();
+    await expect(venue.locator('iframe')).toHaveAttribute('src', 'https://www.google.com/maps?q=Musterstrasse%201%2C%208005%20Z%C3%BCrich&output=embed');
+    await expect(venue.getByRole('button', { name: 'Hide map' })).toHaveAttribute('aria-expanded', 'true');
+    await expect(venue).toContainText('Loading it shares your IP address with Google.');
+    // Directions stay next to the map.
+    await expect(link).toBeVisible();
     // Past events keep their venue too.
     await page.goto('/events/2026-09-signals-streams');
     await expect(page.locator('#venue')).toContainText('Sample Venue AG');
@@ -339,8 +355,29 @@ test.describe('media archive', () => {
   test('event pages show their own gallery and "All photos" goes to it; promo artwork is not a photo', async ({ page }) => {
     await page.goto('/events/2026-09-signals-streams');
     await expect(page.getByRole('link', { name: 'All 4 photos and 1 video' })).toHaveAttribute('href', '/media/2026-09-signals-streams');
+    // A year-old event without photos says so plainly (not "coming soon") and points to the archive.
     await page.goto('/events/2025-11-anniversary');
-    await expect(page.getByText('Photos from this evening aren’t online yet.')).toBeVisible();
+    const photos = page.locator('#photos');
+    await expect(photos).toContainText('There are no photos from this evening in our archive.');
+    await expect(photos).not.toContainText('aren’t online yet');
+    await expect(photos.getByRole('link', { name: 'See photos from other meetups' })).toHaveAttribute('href', '/media');
+  });
+
+  test('archive: jump to an event, and all clips in one place (never presented as talk recordings)', async ({ page }) => {
+    await page.goto('/media');
+    const nav = page.getByRole('navigation', { name: 'Events in the archive' });
+    await nav.getByRole('link', { name: /Signals, streams and the state of state, 4 photos and 1 video$/ }).click();
+    await expect(page).toHaveURL(/#event-2026-09-signals-streams$/);
+    await expect(page.getByRole('heading', { name: 'Signals, streams and the state of state' })).toBeInViewport();
+    await nav.getByRole('link', { name: 'All clips (1)' }).click();
+    const clips = page.locator('#clips');
+    await expect(clips).toContainText('We don’t record the talks.');
+    await clips.getByRole('button', { name: /^Play clip:/ }).click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.locator('video')).toBeVisible();
+    // The clip links back to its event, since this gallery mixes events.
+    await expect(dialog.getByRole('link', { name: /Signals, streams and the state of state/ })).toHaveAttribute('href', '/events/2026-09-signals-streams');
+    await expect(page).toHaveURL(/#media-clip-sample-clip$/);
   });
 });
 

@@ -17,6 +17,8 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
 
 1. **Netlify › the zurichjs.com site › Site configuration › Build & deploy › Build settings**
 
+   Not needed for the merge itself: the root `netlify.toml` sets the base directory to `apps/web`, and `apps/web/netlify.toml` sets `NETLIFY_NEXT_PLUGIN_SKIP` so the old app's Next.js plugin skips itself. That is what lets deploy previews of the switchover branch build while production (`main`) still uses the old settings. Don't change these settings before merging (they apply to every deploy, so production builds of the old app would break); make them right after, as cleanup:
+
    | Setting             | New value                                   |
    | ------------------- | ------------------------------------------- |
    | Base directory      | `apps/web`                                  |
@@ -25,7 +27,7 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
    | Publish directory   | empty (`netlify.toml`: `dist`)              |
    | Functions directory | empty (`netlify.toml`: `netlify/functions`) |
 
-   Under Integrations › Build plugins, remove any Next.js plugin installed in the UI. Astro's own Netlify adapter takes over.
+   Under Integrations › Build plugins, remove the Next.js plugin installed in the UI (until then it skips itself). Astro's own Netlify adapter takes over. Then `NETLIFY_NEXT_PLUGIN_SKIP` can go.
 
    Node 22.23.4 is pinned in `netlify.toml` and `.nvmrc`, because Astro 7.4 needs at least 22.23.4. pnpm installs the whole workspace from `apps/web`.
 

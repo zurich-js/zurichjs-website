@@ -1,0 +1,5 @@
+# The V2 site lives in apps/web. Setting the base directory here lets deploy previews of this branch build
+# it while the Netlify UI still has the old Next.js settings that production (main) uses. Netlify then reads
+# apps/web/netlify.toml for everything else (checked with @netlify/config resolveConfig). See docs/v2/RUNBOOK.md.
+[build]
+base = "apps/web"

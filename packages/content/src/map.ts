@@ -144,6 +144,11 @@ export function mapEvent(r: RawEvent): Event {
 
 const firstSentence = (s?: string | null) => (s ? (s.split(/(?<=[.!?])\s/)[0] ?? s).slice(0, 80) : '');
 
+/** Only speakers an editor marked visible get a profile and a directory card; a blank flag is not a yes. */
+export function visibleSpeakers(raw: RawSpeaker[]): RawSpeaker[] {
+  return raw.filter((r) => r.isVisible === true);
+}
+
 export function mapSpeaker(r: RawSpeaker): Speaker {
   const name = r.name ?? r.id;
   const links = [

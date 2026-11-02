@@ -84,12 +84,46 @@ export default defineType({
         defineField({name: 'zip', title: 'Postcode', type: 'string'}),
         defineField({name: 'city', title: 'City', type: 'string', initialValue: 'Zürich'}),
         defineField({name: 'directions', title: 'How to get there', type: 'text', rows: 3}),
+        defineField({name: 'entrance', title: 'Entrance and floor', type: 'string', description: 'e.g. "Side entrance on Hardstrasse, 3rd floor, ring ZurichJS".'}),
+        defineField({name: 'transport', title: 'Public transport', type: 'string', description: 'e.g. "Tram 4 or 13 to Escher-Wyss-Platz, 3 minutes on foot".'}),
+        defineField({name: 'accessibility', title: 'Accessibility', type: 'string', description: 'Step-free access, lift, toilets. Only what you have checked.'}),
       ],
     }),
     defineField({name: 'venueNote', title: 'Venue note', type: 'string', group: 'venue', description: 'Shown when the venue is not confirmed yet.'}),
     defineField({name: 'location', title: 'Location (legacy)', type: 'string', group: 'venue', description: 'Used by the current site. Keep in sync with Venue › Name until the switch to V2.'}),
     defineField({name: 'address', title: 'Address (legacy)', type: 'string', group: 'venue', description: 'Used by the current site, e.g. "Hardstrasse 201, 8005 Zürich".'}),
     defineField({name: 'hosts', title: 'Hosts', type: 'array', group: 'venue', of: [defineArrayMember({type: 'reference', to: [{type: 'partner'}]})]}),
+    defineField({
+      name: 'supporters',
+      title: 'Supporters of this event',
+      type: 'array',
+      group: 'venue',
+      description: 'Shown as "Thanks to" on the event page and on the Tonight page. Hosts above are shown too; add them here only to give a more specific role.',
+      of: [
+        defineArrayMember({
+          type: 'object',
+          name: 'eventSupporter',
+          fields: [
+            defineField({name: 'partner', title: 'Partner', type: 'reference', to: [{type: 'partner'}], validation: (r) => r.required()}),
+            defineField({
+              name: 'role',
+              title: 'Role',
+              type: 'string',
+              options: {
+                list: [
+                  {title: 'Venue host', value: 'venue'},
+                  {title: 'Food and drinks', value: 'food'},
+                  {title: 'Sponsor', value: 'sponsor'},
+                  {title: 'Community partner', value: 'community'},
+                ],
+              },
+              initialValue: 'sponsor',
+            }),
+          ],
+          preview: {select: {title: 'partner.name', subtitle: 'role', media: 'partner.logo'}},
+        }),
+      ],
+    }),
 
     defineField({
       name: 'talks',
@@ -104,13 +138,31 @@ export default defineType({
       title: 'Agenda',
       type: 'array',
       group: 'programme',
-      description: 'Optional: the evening with times (doors, talks, food). Leave empty to list the talks above at doors time.',
+      description:
+        'The evening in running order, with times: doors, welcome, talks, breaks, networking. Use "Fill programme from talks" to start from the usual evening. When empty, the site lists the talks without times.',
       of: [
         defineArrayMember({
           type: 'object',
           name: 'agendaItem',
           fields: [
-            defineField({name: 'time', title: 'Time', type: 'string', description: 'e.g. 18:30', validation: (r) => r.regex(/^\d{2}:\d{2}$/, {name: 'HH:MM'})}),
+            defineField({name: 'time', title: 'Time', type: 'string', description: 'e.g. 18:30. Leave empty if not fixed yet; the site never guesses a time.', validation: (r) => r.regex(/^\d{2}:\d{2}$/, {name: 'HH:MM'})}),
+            defineField({
+              name: 'kind',
+              title: 'Kind',
+              type: 'string',
+              description: 'Optional. The site infers it from the title or the talk when empty.',
+              options: {
+                list: [
+                  {title: 'Doors', value: 'doors'},
+                  {title: 'Welcome / intro', value: 'intro'},
+                  {title: 'Talk', value: 'talk'},
+                  {title: 'Break / food', value: 'break'},
+                  {title: 'Networking', value: 'networking'},
+                  {title: 'Close', value: 'close'},
+                  {title: 'Other', value: 'other'},
+                ],
+              },
+            }),
             defineField({name: 'title', title: 'Title', type: 'string'}),
             defineField({name: 'talk', title: 'Talk', type: 'reference', to: [{type: 'talk'}]}),
             defineField({name: 'note', title: 'Note', type: 'string'}),
@@ -168,7 +220,14 @@ export default defineType({
       description: 'Not used by the site. Kept so existing values are not lost.',
     }),
 
-    defineField({name: 'image', title: 'Main image', type: 'image', group: 'after', options: {hotspot: true}, fields: [defineField({name: 'alt', title: 'Alt text', type: 'string'})]}),
+    defineField({
+      name: 'photoCredit',
+      title: 'Photo credit',
+      type: 'string',
+      group: 'after',
+      description: 'Shown with this event\'s gallery, e.g. "Photos: Enrique Ruiz Durazo". Leave empty if unknown.',
+    }),
+    defineField({name: 'image', title: 'Main image (promotional artwork)', type: 'image', group: 'after', options: {hotspot: true}, fields: [defineField({name: 'alt', title: 'Alt text', type: 'string'})]}),
     defineField({
       name: 'photos',
       title: 'Photos from the evening',
@@ -182,7 +241,7 @@ export default defineType({
       title: 'Recap',
       type: 'object',
       group: 'after',
-      description: 'Shown on the same URL once the feedback window has closed. Talks only; no recordings or slides.',
+      description: 'Shown on the same URL once the feedback window has closed. Talks only; ZurichJS does not record talks. Slides, when a speaker shares them, go on the talk.',
       fields: [
         defineField({
           name: 'talks',

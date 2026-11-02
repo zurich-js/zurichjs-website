@@ -19,6 +19,9 @@
  *   [old-stats]     origin/main src/pages/partnerships.tsx, "The Numbers Speak" (added 2025-10-26)
  *   [old-about]     origin/main src/pages/about.tsx (the timeline)
  *   [sanity-event]  the event's own `location` in production Sanity
+ *   [owner-2026-11] owner decision, 2nd November 2026: Vercel, Ginetta and Code Blossom are no longer promoted
+ *   [conf-sponsor]  conf.zurichjs.com/sponsorship, "Our typical Audience" (undated; "the meetup attendee profile")
+ *   [meetup-export] owner-provided Meetup export: RSVPs (not check-ins) for 18 meetups, November 2024 to September 2026
  */
 import type { Event, Partner, SponsorTier, SupporterRole } from '@zurichjs/events';
 
@@ -28,17 +31,16 @@ const logo = (f: string) => `/images/partners/${f}`;
 
 export const PARTNER_RECORDS: Sourced<Partner>[] = [
   // Current sponsors: production lists these under "Our Sponsors" with a tier.
+  // Vercel was production's Community Champion; withdrawn from promotion [owner-2026-11]. Kept only as history.
   {
     id: 'vercel',
     name: 'Vercel',
     url: 'https://vercel.com',
     logo: logo('vercel-black.webp'),
     kinds: ['sponsor'],
-    tier: 'champion',
-    current: true,
-    description: 'The AI Cloud for building and deploying modern web applications',
-    blurb: 'Vercel is a unified platform to build, deploy, and scale web applications, from static sites and full-stack apps to AI-powered experiences.',
-    source: 'old-partners',
+    current: false,
+    delisted: true,
+    source: 'old-partners, owner-2026-11',
   },
   {
     id: 'stripe',
@@ -91,8 +93,10 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     logo: logo('ginetta.webp'),
     kinds: ['venue'],
     current: false,
+    // Hosted early meetups (factual history on those event pages); not listed as a venue partner [owner-2026-11].
+    delisted: true,
     description: 'Hosting venue for ZurichJS meetups',
-    source: 'old-partners',
+    source: 'old-partners, owner-2026-11',
   },
   {
     id: 'novu',
@@ -179,15 +183,16 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
   },
 
   // Community partners: "Fellow tech communities we collaborate with".
+  // Code Blossom: a March 2025 partnership (About timeline); withdrawn from promotion [owner-2026-11].
   {
     id: 'code-blossom',
     name: 'Code Blossom',
     url: 'https://www.code-blossom.com/',
     logo: logo('code-blossom.webp'),
     kinds: ['community'],
-    current: true,
-    description: 'Regional JavaScript community partner',
-    source: 'old-partners',
+    current: false,
+    delisted: true,
+    source: 'old-partners, owner-2026-11',
   },
   {
     id: 'web-zurich',
@@ -230,6 +235,20 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
   { id: 'dynatrace', name: 'Dynatrace', logo: logo('dynatrace.webp'), kinds: ['sponsor'], current: false, source: 'old-previous' },
 ];
 
+/**
+ * Partners the owner withdrew from all promotion (2nd November 2026), by id or
+ * name. Applied to Sanity partners too, so a seeded or re-imported document
+ * cannot bring them back onto partner lists, logo walls or upcoming event pages.
+ */
+export const DELISTED_PARTNERS: readonly string[] = ['vercel', 'ginetta', 'code-blossom'];
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+export const isDelisted = (p: Pick<Partner, 'id' | 'name' | 'delisted'>) =>
+  p.delisted === true || DELISTED_PARTNERS.includes(norm(p.id)) || DELISTED_PARTNERS.includes(norm(p.name));
+
 /** The partner list without the source notes. */
 export const PARTNERS: Partner[] = PARTNER_RECORDS.map(({ source: _source, ...p }) => p);
 
@@ -269,7 +288,7 @@ export function venueHost(venueName: string | undefined, partners: Partner[]): s
  * where Sanity has none. Sanity's own event hosts and supporters always win.
  */
 export function withPartnerFallback(partners: Partner[], events: Event[]): { partners: Partner[]; events: Event[]; source: 'sanity' | 'code' } {
-  if (partners.length > 0) return { partners, events, source: 'sanity' };
+  if (partners.length > 0) return { partners: partners.map((p) => (isDelisted(p) ? { ...p, current: false, delisted: true } : p)), events, source: 'sanity' };
   const fallback = PARTNERS;
   return {
     partners: fallback,
@@ -298,7 +317,11 @@ export interface SponsorshipTierOffer {
   description?: string;
 }
 
-/** Production's tiers, prices and benefits, verbatim apart from punctuation (no em dashes, one thousands separator). */
+/**
+ * Production's tiers, prices and benefits, verbatim apart from punctuation (no
+ * em dashes, one thousands separator), minus the discontinued workshop perk.
+ * Yearly is ten times monthly ("2 months free"), as production states.
+ */
 export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
   {
     id: 'champion',
@@ -316,7 +339,7 @@ export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
       'Featured mention in event announcements',
       'Direct access to recruit from our talent pool',
       'Priority input on future meetup topics',
-      'Co-host one exclusive workshop per year',
+      // Production also listed "Co-host one exclusive workshop per year". Workshops are discontinued, so it is not offered.
       'Swag distribution at events',
     ],
   },
@@ -360,17 +383,17 @@ export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
   {
     id: 'host',
     name: 'Community Host',
-    description: 'Host our meetup at your venue. Covering speaker travel (about CHF 1’500–2’500) automatically qualifies you as a Community Friend sponsor.',
+    description: 'Host our meetup at your venue. Covering speaker travel (about CHF 1’500 to 2’500) automatically qualifies you as a Community Friend sponsor.',
     prices: [
       { label: 'Venue only', amount: 'Free', note: 'when hosting' },
-      { label: 'Venue + speaker travel', amount: 'CHF 1’500–2’500', note: 'becomes Community Friend' },
+      { label: 'Venue and speaker travel', amount: 'CHF 1’500 to 2’500', note: 'becomes Community Friend' },
     ],
     perks: [
       'Logo recognition for the event',
       'Company introduction at the hosted event',
       'Social media mentions',
       'Cover speaker travel costs and automatically qualify as Community Friend',
-      'Food & beverage welcome but does not replace partnership tier',
+      'Food and drinks are welcome, but do not replace a sponsorship package',
     ],
   },
 ];
@@ -378,15 +401,46 @@ export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
 /** "Request the Prospectus" on production: an email to the organisers with this subject. */
 export const PROSPECTUS_MAILTO = 'mailto:hello@zurichjs.com?subject=ZurichJS%20Sponsorship%20Prospectus%20Request';
 
-/** Production's reach figures, as published in October 2025 [old-stats]. Shown with that date; confirm before updating. */
+/**
+ * What each payment option means, from what production states. Production does
+ * not say how long one-time benefits last, nor whether monthly has a minimum
+ * term: both are owner decisions (docs/v2/DECISIONS.md), so the wording stays neutral.
+ */
+export const PAYMENT_OPTIONS: { label: string; text: string }[] = [
+  { label: 'Yearly', text: 'Twelve months of the tier’s benefits for the price of ten (2 months free).' },
+  { label: 'Monthly', text: 'The same benefits, paid month by month while you sponsor.' },
+  { label: 'One-time', text: 'A single contribution. Ask us what it covers when we plan it together.' },
+];
+
+/** Production's reach figures, as published in October 2025 [old-stats]. Shown with that date, never as current. */
 export const REACH_STATS: { value: string; label: string }[] = [
   { value: '900', label: 'members across ZurichJS and Vue Zurich' },
-  { value: '50–100', label: 'RSVPs per meetup, 70–80% confirmed participation' },
+  { value: '50 to 100', label: 'RSVPs per meetup, 70 to 80% confirmed participation' },
   { value: '15’000+', label: 'website views in 6 months' },
   { value: '525+', label: 'LinkedIn followers' },
   { value: '35%', label: 'repeat attendees' },
-  { value: '114', label: 'peak RSVP rate' },
+  // Production said "peak RSVP rate"; it is a count of RSVPs.
+  { value: '114', label: 'RSVPs for a single meetup, the highest at the time' },
 ];
+export const REACH_AS_OF = 'October 2025';
+
+/** RSVPs across 18 meetups, November 2024 to September 2026 [meetup-export]. RSVPs, not check-ins. */
+export const RSVP_STATS: { value: string; label: string }[] = [
+  { value: '520', label: 'people RSVP’d yes to at least one meetup' },
+  { value: '36%', label: 'of them RSVP’d yes to 2 or more meetups' },
+];
+export const RSVP_SOURCE = 'Organisers’ Meetup export: yes RSVPs to 18 meetups, November 2024 to September 2026. RSVPs, not check-ins.';
+
+/**
+ * "Our typical Audience" on conf.zurichjs.com/sponsorship [conf-sponsor], which
+ * calls it "the meetup attendee profile". Undated, no method stated.
+ */
+export const AUDIENCE_PROFILE: { value: string; label: string }[] = [
+  { value: '75%+', label: 'full-stack or frontend engineers' },
+  { value: '40%', label: 'in senior roles' },
+  { value: '60%+', label: 'with five or more years of experience' },
+];
+export const AUDIENCE_INTERESTS = ['TypeScript', 'React', 'Node.js', 'Next.js', 'Performance', 'AI integration', 'Testing', 'GraphQL', 'DevOps'];
 
 /** [old-stats] "International reach", without the flags. */
 export const REACH_COUNTRIES = 'Attendees and speakers have travelled in for the meetup from the Swiss French side, Germany, France, Belgium, Italy, Greece, and Albania.';

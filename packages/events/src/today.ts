@@ -53,6 +53,20 @@ export function eventSupporters(ev: Pick<Event, 'hosts' | 'supporters'>, partner
   return [...out.values()].sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
 }
 
+/**
+ * Who an event page (or Tonight) thanks.
+ *   own     the event's own hosts and supporters. On a past event this is history,
+ *           so a partner withdrawn from promotion may still be named; on an
+ *           upcoming one it is left out.
+ *   season  current sponsors, only while the event is not past: a past event never
+ *           implies that today's sponsors supported it.
+ */
+export function eventThanks(ev: Pick<Event, 'hosts' | 'supporters'>, partners: Partner[], { past }: { past: boolean }) {
+  const own = eventSupporters(ev, partners).filter((s) => past || !s.partner.delisted);
+  const season = past ? [] : groupPartners(partners).currentSponsors.filter((p) => !own.some((x) => x.partner.id === p.id));
+  return { own, season };
+}
+
 const TIERS: SponsorTier[] = ['champion', 'builder', 'friend', 'supporter'];
 const TIER_ORDER = [...TIERS, undefined];
 export const TIER_LABEL: Record<SponsorTier, string> = {
@@ -63,13 +77,15 @@ export const TIER_LABEL: Record<SponsorTier, string> = {
 };
 
 /**
- * Partners grouped for display. Only partners marked current are ever called
+ * Partners grouped for display (/partners, the home page). Only partners marked current are ever called
  * current sponsors or partners; venues are "have hosted us", so they need no flag.
  * A tiered sponsor appears only with the sponsors, never again in a category.
  */
 export function groupPartners(partners: Partner[]) {
   const byTier = (a: Partner, b: Partner) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier) || a.name.localeCompare(b.name);
   const byName = (a: Partner, b: Partner) => a.name.localeCompare(b.name);
+  // Partners withdrawn from promotion never appear in any list, current or previous.
+  partners = partners.filter((p) => !p.delisted);
   const has = (p: Partner, k: Partner['kinds'][number]) => p.kinds.includes(k);
   const sponsor = (p: Partner) => has(p, 'sponsor');
   const currentSponsors = partners.filter((p) => sponsor(p) && p.current).sort(byTier);

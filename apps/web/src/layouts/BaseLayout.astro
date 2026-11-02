@@ -73,7 +73,7 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
       )
     }
     <div class="on-black bg-black text-white">
-      <Header nextHref={nextHref} confState={c.conference.state} />
+      <Header nextHref={nextHref} />
       <slot name="opening" />
     </div>
     <main id="main" class="flex-1"><slot /></main>

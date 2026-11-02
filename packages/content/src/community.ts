@@ -11,6 +11,7 @@
  *   [conf-blog]  "How ZurichJS got here", conf.zurichjs.com blog, 26 June 2026 (zurichjs-conf src/content/blog/how-zurichjs-got-here.mdx)
  *   [conf-timeline] conf.zurichjs.com timeline (zurichjs-conf src/data/timeline.ts)
  *   [old-today]  the production site's /today sponsors (origin/main src/data/index.ts, getTodaysSponsors)
+ *   [owner]      Faris, in the V2 work session (2nd November 2026)
  */
 import { initials, type Milestone, type TeamMember } from '@zurichjs/events';
 
@@ -51,7 +52,7 @@ export const TEAM: TeamMember[] = [
   },
   {
     name: 'Nadja Hesselbjerg',
-    // [conf-blog]: joined the core team after the fourth meetup. [old-about] listed her as "Community Supporter".
+    // [conf-blog]: joined the core team after the fourth meetup; [owner]: in May 2025. [old-about] listed her as "Community Supporter".
     role: 'Core team',
     group: 'organisers',
     initials: initials('Nadja Hesselbjerg'),
@@ -146,6 +147,16 @@ export const MILESTONES: Milestone[] = [
     photo: h('history-smallpdf', 'The fourth ZurichJS meetup at Smallpdf, April 2025'),
     link: { label: 'Venue hosts', href: '/partners#partners-venues' },
     source: 'old-about',
+  },
+  {
+    // [owner]: May 2025. [conf-blog]: she joined the core team after the fourth meetup (April 2025).
+    date: 'May 2025',
+    iso: '2025-05',
+    title: 'Nadja joins the core team',
+    text: 'Nadja Hesselbjerg joins Faris and Bogdan in organising ZurichJS.',
+    photo: { src: '/images/photos/nadja.webp', alt: 'Nadja Hesselbjerg', position: '25% 30%' },
+    link: { label: 'Meet the team', href: '/about#team' },
+    source: 'owner',
   },
   {
     date: '18th June 2025',

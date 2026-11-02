@@ -109,9 +109,9 @@ describe('times in Zurich', () => {
 describe('recapSummary', () => {
   it('counts the programme’s talks, so a full programme never says "No talks"', () => {
     const e = ev({ agenda: buildSchedule({ talks: ['A', 'B', 'C', 'D', 'E'].map((t) => talk(t)), startsAt: ev().startsAt }) });
-    expect(recapSummary(e)).toBe('Thu 12 Nov 2026 · Venue AG, Zürich. Five talks.');
+    expect(recapSummary(e)).toBe('Thu 12th Nov 2026 · Venue AG, Zürich. Five talks.');
     expect(recapSummary(e, { photos: 12 })).toContain('Five talks and photos from the evening.');
-    expect(recapSummary(ev())).toBe('Thu 12 Nov 2026 · Venue AG, Zürich.');
+    expect(recapSummary(ev())).toBe('Thu 12th Nov 2026 · Venue AG, Zürich.');
   });
 });
 

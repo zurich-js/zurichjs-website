@@ -7,3 +7,4 @@ export * from './present.ts';
 export * from './ticketing.ts';
 export * from './ics.ts';
 export * from './readiness.ts';
+export * from './text.ts';

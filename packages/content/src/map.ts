@@ -63,7 +63,7 @@ export function mapTalk(t: RawTalk): TalkRef {
     language: u(t.language),
     tags: (t.tags ?? []).filter((x): x is string => !!x),
     slidesUrl: u(t.slidesUrl),
-    speakerIds: (t.speakerIds ?? []).filter((s): s is string => !!s),
+    speakerIds: (t.speakerIds ?? []).filter((s): s is string => !!s?.trim()).map(cleanId),
   };
 }
 
@@ -126,7 +126,7 @@ export function mapEvent(r: RawEvent): Event {
       ? {
           talks: r.recap.talks.map((t) => ({
             title: t.talk?.title ?? '',
-            speakerIds: (t.talk?.speakerIds ?? []).filter((s): s is string => !!s),
+            speakerIds: (t.talk?.speakerIds ?? []).filter((s): s is string => !!s?.trim()).map(cleanId),
             summary: t.summary ?? '',
             format: t.format ?? `${formatLabel[talkFormat(u(t.talk?.type), u(t.talk?.durationMinutes))]}${t.talk?.durationMinutes ? ` · ${t.talk.durationMinutes} min` : ''}`,
           })),
@@ -154,8 +154,24 @@ export function speakersWithTalks<T extends Pick<Speaker, 'talks'>>(speakers: T[
   return speakers.filter((s) => s.talks.some((t) => t.eventSlugs.length > 0));
 }
 
+/** Speaker IDs are URL segments; a few stored ones carry stray spaces (" nicolò-ribaudo"). */
+export const cleanId = (id: string) => id.trim();
+
+/** "Lukas Spirig Product Owner at SBB" → "Product Owner at SBB": a role that repeats the name drops it. */
+export function cleanRole(role: string | null | undefined, name: string): string {
+  const r = (role ?? '').replace(/\s+/g, ' ').trim();
+  const n = name.replace(/\s+/g, ' ').trim();
+  if (n && r.toLowerCase().startsWith(n.toLowerCase()))
+    return r
+      .slice(n.length)
+      .replace(/^[\s,|·:-]+/, '')
+      .trim();
+  return r;
+}
+
 export function mapSpeaker(r: RawSpeaker): Speaker {
-  const name = r.name ?? r.id;
+  const id = cleanId(r.id);
+  const name = (r.name ?? r.id).replace(/\s+/g, ' ').trim();
   const links = [
     r.website && { label: 'Website', url: r.website },
     r.github && { label: 'GitHub', url: r.github },
@@ -176,9 +192,9 @@ export function mapSpeaker(r: RawSpeaker): Speaker {
     eventSlugs: [...new Set([...(t.eventIds ?? []), t.legacyEventId].filter((x): x is string => !!x))],
   }));
   return {
-    id: r.id,
+    id,
     name,
-    role: r.title ?? '',
+    role: cleanRole(r.title, name),
     company: u(r.company),
     initials: initials(name),
     bio: r.bio ?? '',
@@ -187,7 +203,8 @@ export function mapSpeaker(r: RawSpeaker): Speaker {
     photo: r.image ? { src: r.image, alt: name } : undefined,
     links,
     talks,
-    legacySlugs: (r.legacySlugs ?? []).filter((x): x is string => !!x && x !== r.id),
+    // The stored ID stays a legacy slug when trimming changed it, so the old URL redirects.
+    legacySlugs: [...new Set([...(r.legacySlugs ?? []), r.id])].filter((x): x is string => !!x && x !== id),
     updatedAt: u(r._updatedAt),
   };
 }

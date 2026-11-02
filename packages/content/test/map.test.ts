@@ -11,6 +11,7 @@ import {
   perspective,
   resetContentCache,
   talkFormat,
+  cleanRole,
   speakersWithTalks,
   visibleSpeakers,
   type RawEvent,
@@ -127,6 +128,18 @@ describe('helpers', () => {
   it('keeps only speakers explicitly marked visible', () => {
     const raw = [{ id: 'yes', isVisible: true }, { id: 'blank', isVisible: null }, { id: 'missing' }, { id: 'no', isVisible: false }];
     expect(visibleSpeakers(raw).map((s) => s.id)).toEqual(['yes']);
+  });
+  it('trims stored speaker IDs and names, and keeps the stored ID as a legacy slug', () => {
+    const s = mapSpeaker({ id: ' nicolò-ribaudo', name: ' Nicolò Ribaudo', talks: [] } as never);
+    expect(s.id).toBe('nicolò-ribaudo');
+    expect(s.name).toBe('Nicolò Ribaudo');
+    expect(s.legacySlugs).toEqual([' nicolò-ribaudo']);
+    expect(mapSpeaker({ id: 'clean', name: 'Clean', talks: [] } as never).legacySlugs).toEqual([]);
+  });
+  it('drops a name repeated at the start of the role', () => {
+    expect(cleanRole(' Lukas Spirig  Product Owner/Senior Engineer at SBB', 'Lukas Spirig')).toBe('Product Owner/Senior Engineer at SBB');
+    expect(cleanRole('Engineer at Lukas Spirig GmbH', 'Lukas Spirig')).toBe('Engineer at Lukas Spirig GmbH');
+    expect(cleanRole(null, 'X')).toBe('');
   });
   it('lists only speakers with a talk at an event', () => {
     const talk = (eventSlugs: string[]) => ({ id: 't', title: 'T', eventSlugs }) as never;

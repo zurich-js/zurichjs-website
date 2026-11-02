@@ -4,7 +4,7 @@
  * one page, every URL a real link, and the upcoming events from content.
  * Facts that V2 no longer offers (workshops for sale, ticketed pro meetups, online donations) are not repeated here.
  */
-import { eventHref, presentEvent, resolveState, upcomingEvents } from '@zurichjs/events';
+import { eventHref, ordinal, presentEvent, resolveState, upcomingEvents } from '@zurichjs/events';
 import { SITE_URL, organizationSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
@@ -18,7 +18,8 @@ const upcoming = upcomingEvents(events, BUILD_TIME)
   .slice(0, 5)
   .map((ev) => ({ ev, p: presentEvent(ev, { now: BUILD_TIME, ticketing }) }));
 
-const updated = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' }).format(BUILD_TIME);
+const updatedPart = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', ...o }).format(BUILD_TIME);
+const updated = `${ordinal(updatedPart({ day: 'numeric' }))} ${updatedPart({ month: 'long' })} ${updatedPart({ year: 'numeric' })}`;
 const abs = (path: string) => `${SITE_URL}${path === '/' ? '' : path}`;
 
 const ASK_ABOUT = [
@@ -156,7 +157,7 @@ const linkCls = 'font-bold text-black underline underline-offset-[3px] wrap-anyw
             </div>
             <div>
               <dt class="font-bold">Organisation</dt>
-              <dd class="m-0 text-ink-2">Registered Swiss non-profit association: {SITE.association} ({SITE.uid}), run by volunteers. First meetup on 14 November 2024.</dd>
+              <dd class="m-0 text-ink-2">Registered Swiss non-profit association: {SITE.association} ({SITE.uid}), run by volunteers. First meetup on 14th November 2024.</dd>
             </div>
             <div>
               <dt class="font-bold">Language</dt>
@@ -274,13 +275,13 @@ const linkCls = 'font-bold text-black underline underline-offset-[3px] wrap-anyw
         <Surface class="p-6 flex flex-col gap-2">
           <h3 class="m-0 text-[20px] font-bold">Official partner: FrontConf Zurich</h3>
           <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
-            ZurichJS was the official warm-up event partner for FrontConf 2026 (27 February 2026). We complement the annual conference with free monthly meetups year-round, keeping the frontend community connected between conferences.
+            ZurichJS was the official warm-up event partner for FrontConf 2026 (27th February 2026). We complement the annual conference with free monthly meetups year-round, keeping the frontend community connected between conferences.
           </p>
         </Surface>
         <Surface class="p-6 flex flex-col gap-2">
           <h3 class="m-0 text-[20px] font-bold">Official partner: Voxxed Days Zurich</h3>
           <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
-            ZurichJS was the official warm-up event for Voxxed Days Zurich 2026 (24 March 2026). Our JavaScript track complements Voxxed Days’ multi-track program with monthly community events.
+            ZurichJS was the official warm-up event for Voxxed Days Zurich 2026 (24th March 2026). Our JavaScript track complements Voxxed Days’ multi-track program with monthly community events.
           </p>
         </Surface>
         <Surface class="p-6 flex flex-col gap-2">

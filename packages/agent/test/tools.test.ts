@@ -87,7 +87,7 @@ describe('agent tools write drafts only', () => {
       missingBeforePublishing: string[];
       when: string;
     };
-    expect(out.when).toBe('Wed, 18 Nov 2026, 18:30');
+    expect(out.when).toBe('Wed 18th Nov 2026, 18:30');
     expect(out.missingBeforePublishing).toEqual([expect.stringContaining('Meetup event link')]);
   });
 });

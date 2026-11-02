@@ -69,7 +69,8 @@ const withQuery = (to, search) => {
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', 'http://x');
   const path = decodeURIComponent(url.pathname);
-  const r = redirects.get(path) ?? redirects.get(path.replace(/\/$/, ''));
+  // Rules may be written encoded or decoded; try both, like a host would.
+  const r = redirects.get(path) ?? redirects.get(path.replace(/\/$/, '')) ?? redirects.get(url.pathname) ?? redirects.get(path.replace(/\s/g, '%20'));
   if (r) {
     res.writeHead(r.code, { location: withQuery(r.to, url.search) });
     return res.end();

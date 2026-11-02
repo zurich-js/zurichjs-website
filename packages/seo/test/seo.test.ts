@@ -37,6 +37,6 @@ describe('seo', () => {
   it('writes llms.txt with upcoming events', () => {
     const t = llmsTxt({ events: [ev], speakers: [], pages: [{ title: 'Events', path: '/events', summary: 'All meetups' }], now: new Date('2026-11-01') });
     expect(t.startsWith('# ZurichJS\n')).toBe(true);
-    expect(t).toContain('- [Forms & types](https://zurichjs.com/events/forms-types): Wed 18 Nov 2026 · Venue AG, Zürich');
+    expect(t).toContain('- [Forms & types](https://zurichjs.com/events/forms-types): Wed 18th Nov 2026 · Venue AG, Zürich');
   });
 });

@@ -1,6 +1,7 @@
 ---
 /** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
-import { dateLong, eventHref, eventTalks, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
+import { dateLong, eventHref, eventTalks, plainText, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
+import { RichText } from '~/components/RichText';
 import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -56,7 +57,8 @@ const nextTalks = talks.filter((x) => x.upcoming);
 const pastTalks = talks.filter((x) => !x.upcoming);
 
 const fallback = `${s.name}, ${roleLine}, has spoken at ZurichJS, the JavaScript meetup in Zurich.`;
-const description = clip(s.bio.length >= 50 ? s.bio : `${fallback} ${s.bio}`);
+const bio = plainText(s.bio);
+const description = clip(bio.length >= 50 ? bio : `${fallback} ${bio}`);
 const [firstName, ...rest] = s.name.split(' ');
 const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/speakers' }, { name: s.name, path: `/speakers/${s.id}` }])];
 ---
@@ -78,7 +80,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
     <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-14 gap-y-7 items-start">
       {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] text-[88px]!" />}
       <div class="flex flex-col gap-[18px] col-span-full md:col-span-2 min-w-0">
-        <p class="m-0 text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty">{s.bio}</p>
+        <RichText text={s.bio} class="text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty" />
         {
           s.links.length > 0 && (
             <div class="flex flex-wrap gap-2">
@@ -126,7 +128,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
               <article class="rounded-[20px] bg-grey-soft flex flex-col gap-2.5 py-5 px-5">
                 <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
                 <div class="text-[16px] text-ink-2">{[t.format, t.durationMin ? `${t.durationMin} min` : ''].filter(Boolean).join(' · ')}</div>
-                {t.description && <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[700px]">{t.description}</p>}
+                <RichText text={t.description} class="text-[17px] leading-[1.55] text-ink-2 max-w-[700px]" />
                 {t.tags.length > 0 && (
                   <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                     {t.tags.map((tag) => (

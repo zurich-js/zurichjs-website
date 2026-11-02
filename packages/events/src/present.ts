@@ -1,7 +1,7 @@
-import { dateShort, dateTime, dateTimeNoYear, dateTimeRange, dateLong } from './format';
-import { FEEDBACK_WINDOW_MS, resolveState, talkCount } from './state';
-import type { TicketingAction, TicketingProvider } from './ticketing';
-import type { Event, EventState } from './types';
+import { dateShort, dateTime, dateTimeNoYear, dateTimeRange, dateLong } from './format.ts';
+import { FEEDBACK_WINDOW_MS, resolveState, talkCount } from './state.ts';
+import type { TicketingAction, TicketingProvider } from './ticketing.ts';
+import type { Event, EventState } from './types.ts';
 
 /** Everything the opening, hero and summary panel need, in words. */
 export interface EventPresentation {

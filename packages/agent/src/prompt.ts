@@ -1,5 +1,5 @@
 /** The Slack agent's instructions: who it is, the house rules, and the content playbooks. */
-import { PLAYBOOKS } from './playbooks.generated';
+import { PLAYBOOKS } from './playbooks.generated.ts';
 
 export function systemPrompt(now: Date): string {
   const today = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Zurich', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(now);

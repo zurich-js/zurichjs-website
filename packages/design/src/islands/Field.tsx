@@ -1,7 +1,7 @@
 /** Form controls for islands (Preact). Labels wrap controls; errors are announced politely. */
 import type { ComponentChildren, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'preact';
 import { useId } from 'preact/hooks';
-import { cx } from '../recipes';
+import { cx } from '../recipes.ts';
 
 const control = 'rounded-[14px] border px-3.5 text-[17px] font-normal bg-white text-black w-full box-border';
 const border = (bad?: boolean) => (bad ? 'border-danger' : 'border-grey-line');

@@ -4,9 +4,9 @@ import { useEffect, useState } from 'preact/hooks';
 import { cx, monogramClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
-import { useEventState } from '../useEventState';
+import { useEventState } from '../useEventState.ts';
 import { Check } from '@zurichjs/design/islands/Check';
-import { feedbackRequested } from './feedbackMode';
+import { feedbackRequested } from './feedbackMode.ts';
 
 export interface ProgrammeSpeaker {
   id: string;

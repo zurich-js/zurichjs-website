@@ -4,8 +4,8 @@
  * Returns no personal data.
  */
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed, type Env } from '../../../server/http';
-import { StripeUnavailable, getDonationSession } from '../../../server/stripe';
+import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
+import { StripeUnavailable, getDonationSession } from '../../../server/stripe.ts';
 
 export const prerender = false;
 

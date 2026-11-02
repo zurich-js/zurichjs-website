@@ -3,7 +3,7 @@
  * Venue AG, placeholder logos). Used only when Sanity is not configured or not
  * reachable; the build logs loudly when it is used. Never presented as real.
  */
-import type { MediaItem } from './media';
+import type { MediaItem } from './media.ts';
 import {
   buildSchedule,
   type AwardRecord,

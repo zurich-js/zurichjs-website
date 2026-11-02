@@ -1,5 +1,5 @@
-import { scheduleFacts } from './schedule';
-import type { Event } from './types';
+import { scheduleFacts } from './schedule.ts';
+import type { Event } from './types.ts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const utc = (iso: string) => {

@@ -7,8 +7,8 @@
  * event's `datetime`, titled "Doors" in the Studio) plus the talks in
  * running order without times. Nothing is guessed.
  */
-import { time, zoneLabel, zurichDay, zurichWallTime } from './format';
-import type { AgendaItem, Event, ScheduleKind, TalkRef } from './types';
+import { time, zoneLabel, zurichDay, zurichWallTime } from './format.ts';
+import type { AgendaItem, Event, ScheduleKind, TalkRef } from './types.ts';
 
 const KINDS: ScheduleKind[] = ['doors', 'intro', 'talk', 'break', 'networking', 'close', 'other'];
 

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { cx } from '@zurichjs/design/recipes';
 import { ChipGroup, TextField, isEmail } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
 
 type Recurrence = 'once' | 'monthly';
 

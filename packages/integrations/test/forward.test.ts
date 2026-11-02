@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { forwardForm, postSlack, sanityWriteClient, type TalkProposalSink } from '../src';
+import { forwardForm, postSlack, sanityWriteClient, type TalkProposalSink } from '../src/index.ts';
 
 const now = () => new Date('2026-11-01T10:00:00Z');
 

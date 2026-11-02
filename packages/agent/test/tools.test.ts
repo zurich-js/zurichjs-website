@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeLog, buildTools, zurichToUtcIso } from '../src';
-import { NOV, SEP, fakeStore } from './fake-store';
+import { ChangeLog, buildTools, zurichToUtcIso } from '../src/index.ts';
+import { NOV, SEP, fakeStore } from './fake-store.ts';
 
 const now = () => new Date('2026-11-01T10:00:00Z');
 const run = async (tools: ReturnType<typeof buildTools>, name: string, input: unknown) =>

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { handleSubscribe } from '../src/pages/api/subscribe';
-import { ALL as vereinAll, handleInquiry, parseInquiry } from '../src/pages/api/verein-inquiry';
-import { resetRateLimits } from '../src/server/rateLimit';
+import { handleSubscribe } from '../src/pages/api/subscribe.ts';
+import { ALL as vereinAll, handleInquiry, parseInquiry } from '../src/pages/api/verein-inquiry.ts';
+import { resetRateLimits } from '../src/server/rateLimit.ts';
 
 const req = (data: unknown) =>
   new Request('https://zurichjs.com/api/x', { method: 'POST', headers: { 'content-type': 'application/json' }, body: typeof data === 'string' ? data : JSON.stringify(data) });

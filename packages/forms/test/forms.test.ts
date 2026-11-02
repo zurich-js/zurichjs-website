@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HONEYPOT, isFormKind, validate } from '../src';
+import { HONEYPOT, isFormKind, validate } from '../src/index.ts';
 
 describe('form schemas (V2 payload contract)', () => {
   it('accepts the V2 required fields and keeps extra fields', () => {
@@ -27,7 +27,7 @@ describe('form schemas (V2 payload contract)', () => {
 });
 
 describe('browser validator agrees with the server schemas', async () => {
-  const { fieldErrors, REQUIRED } = await import('../src/client');
+  const { fieldErrors, REQUIRED } = await import('../src/client.ts');
   it('requires the same fields', () => {
     for (const kind of Object.keys(REQUIRED) as (keyof typeof REQUIRED)[]) {
       const server = validate(kind, {});

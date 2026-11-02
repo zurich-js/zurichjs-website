@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buttonClass, cx, isExternal, monogramClass, surfaceClass } from '../src/recipes';
+import { buttonClass, cx, isExternal, monogramClass, surfaceClass } from '../src/recipes.ts';
 
 describe('recipes', () => {
   it('cx drops falsy parts', () => {

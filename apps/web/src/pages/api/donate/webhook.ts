@@ -7,8 +7,8 @@
  */
 import { postSlack } from '@zurichjs/integrations';
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed, type Env } from '../../../server/http';
-import { verifyStripeSignature } from '../../../server/stripe';
+import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
+import { verifyStripeSignature } from '../../../server/stripe.ts';
 
 export const prerender = false;
 

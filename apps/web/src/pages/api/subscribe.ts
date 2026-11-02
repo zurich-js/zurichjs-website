@@ -10,7 +10,7 @@
  *   502 { ok: false, error }                           EmailOctopus failed
  */
 import type { APIRoute } from 'astro';
-import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http';
+import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http.ts';
 
 export const prerender = false;
 

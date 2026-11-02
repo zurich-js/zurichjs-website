@@ -11,7 +11,7 @@ import {
   stateChangeTimes,
   upcomingEvents,
   type Event,
-} from '../src';
+} from '../src/index.ts';
 
 const DOORS = '2026-11-18T18:30:00+01:00';
 const doors = Date.parse(DOORS);

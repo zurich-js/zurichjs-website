@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ticketing } from '~/lib/ticketing';
 import { Button } from '@zurichjs/design/islands/Button';
-import { useEventState } from '../useEventState';
+import { useEventState } from '../useEventState.ts';
 
 interface Props {
   ev: Event;

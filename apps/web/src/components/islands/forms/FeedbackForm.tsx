@@ -6,7 +6,7 @@ import { surfaceClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { StarRating } from '@zurichjs/design/islands/StarRating';
-import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 export interface FeedbackEvent {
   id: string;

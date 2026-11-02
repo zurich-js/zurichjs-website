@@ -17,7 +17,7 @@ import {
   speakerTopics,
   type Event,
   type TalkRef,
-} from '../src';
+} from '../src/index.ts';
 
 const talk = (title: string, over: Partial<TalkRef> = {}): TalkRef => ({
   id: `t-${title}`,

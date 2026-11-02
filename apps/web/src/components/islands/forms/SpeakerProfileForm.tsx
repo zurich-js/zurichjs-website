@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { SubmitButton, useFocusWhen } from './shared';
+import { SubmitButton, useFocusWhen } from './shared.tsx';
 
 interface Profile {
   name?: string;

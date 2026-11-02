@@ -1,4 +1,4 @@
-import { cx } from '../recipes';
+import { cx } from '../recipes.ts';
 
 interface Props {
   value: number;

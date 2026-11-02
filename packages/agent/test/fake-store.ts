@@ -1,4 +1,4 @@
-import { isDraftId, publishedIdOf, type ContentStore, type SanityDoc } from '../src/store';
+import { isDraftId, publishedIdOf, type ContentStore, type SanityDoc } from '../src/store.ts';
 
 /** In-memory Sanity with just enough GROQ for the agent's queries. Records every call. */
 export function fakeStore(docs: SanityDoc[] = []) {

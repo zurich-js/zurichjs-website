@@ -1,7 +1,7 @@
 import { MockLanguageModelV4 } from 'ai/test';
 import { describe, expect, it } from 'vitest';
-import { runTurn, systemPrompt } from '../src';
-import { NOV, fakeStore } from './fake-store';
+import { runTurn, systemPrompt } from '../src/index.ts';
+import { NOV, fakeStore } from './fake-store.ts';
 
 const usage = { inputTokens: { total: 10, noCache: 10, cacheRead: undefined, cacheWrite: undefined }, outputTokens: { total: 5, text: 5, reasoning: undefined } };
 const step = (content: unknown[], finish: 'tool-calls' | 'stop') => ({ content, finishReason: { unified: finish, raw: finish }, usage, warnings: [] });

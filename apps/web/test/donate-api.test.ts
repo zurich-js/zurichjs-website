@@ -1,10 +1,10 @@
 import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { handleCheckout, trustedOrigin } from '../src/pages/api/donate/checkout';
-import { handleSession } from '../src/pages/api/donate/session';
-import { handleWebhook } from '../src/pages/api/donate/webhook';
-import { resetRateLimits } from '../src/server/rateLimit';
-import { parseDonation, stripeForm, verifyStripeSignature } from '../src/server/stripe';
+import { handleCheckout, trustedOrigin } from '../src/pages/api/donate/checkout.ts';
+import { handleSession } from '../src/pages/api/donate/session.ts';
+import { handleWebhook } from '../src/pages/api/donate/webhook.ts';
+import { resetRateLimits } from '../src/server/rateLimit.ts';
+import { parseDonation, stripeForm, verifyStripeSignature } from '../src/server/stripe.ts';
 
 const req = (data: unknown, headers: Record<string, string> = {}) =>
   new Request('https://zurichjs.com/api/donate/checkout', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(data) });
@@ -125,9 +125,9 @@ describe('POST /api/donate/webhook', () => {
   });
 });
 
-import { handleProfile } from '../src/pages/api/speaker-profile';
-import { profileLink, profileSpeaker } from '../src/server/profile-token';
-import { parseProfile } from '../src/server/speaker-profile';
+import { handleProfile } from '../src/pages/api/speaker-profile.ts';
+import { profileLink, profileSpeaker } from '../src/server/profile-token.ts';
+import { parseProfile } from '../src/server/speaker-profile.ts';
 
 describe('speaker profile links', () => {
   const env = { JWT_SECRET: 's3cret' };

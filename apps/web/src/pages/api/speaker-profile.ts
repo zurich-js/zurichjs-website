@@ -6,10 +6,10 @@
  *   401 invalid or expired link · 400 invalid field · 503 not configured · 502 Sanity failed
  */
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed, type Env } from '../../server/http';
-import { clientKey, rateLimited } from '../../server/rateLimit';
-import { profileSpeaker } from '../../server/profile-token';
-import { MAX_PHOTO_BYTES, PHOTO_TYPES, loadProfile, parseProfile, profileClient, saveProfileDraft } from '../../server/speaker-profile';
+import { fail, json, methodNotAllowed, type Env } from '../../server/http.ts';
+import { clientKey, rateLimited } from '../../server/rateLimit.ts';
+import { profileSpeaker } from '../../server/profile-token.ts';
+import { MAX_PHOTO_BYTES, PHOTO_TYPES, loadProfile, parseProfile, profileClient, saveProfileDraft } from '../../server/speaker-profile.ts';
 
 export const prerender = false;
 

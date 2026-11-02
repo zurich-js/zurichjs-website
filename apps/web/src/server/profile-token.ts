@@ -1,6 +1,6 @@
 /** Private profile links for accepted speakers (no Sanity imports, so the CLI stays light). */
-import type { Env } from './http';
-import { signHs256, verifyHs256 } from './jwt';
+import type { Env } from './http.ts';
+import { signHs256, verifyHs256 } from './jwt.ts';
 
 export const PROFILE_TOKEN_TYPE = 'speaker-profile';
 

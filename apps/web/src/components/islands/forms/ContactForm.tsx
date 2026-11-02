@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 const TOPICS = ['General question', 'Slack invite', 'Speaking', 'Hosting or sponsoring', 'Press or media', 'Problem with the website'];
 /** ?topic= presets the topic, e.g. "Ask us for a Slack invite" links to /contact?topic=slack. */

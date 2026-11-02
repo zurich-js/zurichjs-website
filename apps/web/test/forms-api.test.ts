@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ALL, POST } from '../src/pages/api/forms/[kind]';
+import { ALL, POST } from '../src/pages/api/forms/[kind].ts';
 
 type Ctx = Parameters<typeof POST>[0];
 const SECRETS = ['SANITY_WRITE_TOKEN', 'RESEND_API_KEY', 'SLACK_WEBHOOK_URL'];

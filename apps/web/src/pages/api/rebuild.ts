@@ -5,7 +5,7 @@
  */
 import type { APIRoute } from 'astro';
 import { getStore } from '@netlify/blobs';
-import { acceptPublish, type RebuildState, type StateStore } from '../../server/rebuild';
+import { acceptPublish, type RebuildState, type StateStore } from '../../server/rebuild.ts';
 
 export const prerender = false;
 

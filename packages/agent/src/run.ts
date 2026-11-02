@@ -1,8 +1,8 @@
 /** One agent turn: thread so far → model with the tools → reply text and the drafts it changed. */
 import { generateText, stepCountIs, type LanguageModel, type ModelMessage } from 'ai';
-import { systemPrompt } from './prompt';
-import type { ContentStore } from './store';
-import { ChangeLog, buildTools, type DraftChange } from './tools';
+import { systemPrompt } from './prompt.ts';
+import type { ContentStore } from './store.ts';
+import { ChangeLog, buildTools, type DraftChange } from './tools.ts';
 
 export interface TurnInput {
   model: LanguageModel;

@@ -1,8 +1,8 @@
 import { useState } from 'preact/hooks';
-import { track } from '../analytics';
-import { Button } from './Button';
-import { Modal } from './Modal';
-import { StarRating } from './StarRating';
+import { track } from '../analytics.ts';
+import { Button } from './Button.tsx';
+import { Modal } from './Modal.tsx';
+import { StarRating } from './StarRating.tsx';
 
 export interface RateTarget {
   /** Unique per rating: "<talk id>:<speaker id>", or "evening". */

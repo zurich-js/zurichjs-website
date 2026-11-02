@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 export type Way = 'host' | 'food' | 'partner' | 'unsure';
 const WAYS: Way[] = ['host', 'food', 'partner', 'unsure'];

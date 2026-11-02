@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Event } from '@zurichjs/events';
-import { buildMeta, canonicalUrl, eventSchema, llmsTxt, sitemapXml } from '../src';
+import { buildMeta, canonicalUrl, eventSchema, llmsTxt, sitemapXml } from '../src/index.ts';
 
 const ev: Event = {
   id: 'e1',

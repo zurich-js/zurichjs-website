@@ -9,8 +9,8 @@
  *   502 { ok: false, error }   Sanity failed
  */
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed } from '../../../server/http';
-import { loadSpeakerFeedback } from '../../../server/speaker-feedback';
+import { fail, json, methodNotAllowed } from '../../../server/http.ts';
+import { loadSpeakerFeedback } from '../../../server/speaker-feedback.ts';
 
 export const prerender = false;
 

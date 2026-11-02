@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import * as queries from '../src/queries';
+import * as queries from '../src/queries.ts';
 
 /**
  * src/sanity.types.ts is generated in the Studio repo (`npm run typegen`, both repos

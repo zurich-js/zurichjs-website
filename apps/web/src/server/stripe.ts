@@ -11,7 +11,7 @@
  *                                ("Manage or cancel your monthly support")
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { Env } from './http';
+import type { Env } from './http.ts';
 
 export const MIN_CHF = 5;
 export const MAX_CHF = 1000;

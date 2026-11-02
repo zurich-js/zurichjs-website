@@ -4,7 +4,7 @@
  * Publishing fires the normal Sanity webhook → debounced Netlify rebuild (src/server/rebuild.ts).
  */
 import { readiness, type EventDocumentForReadiness } from '@zurichjs/events';
-import { draftIdOf, type ContentStore } from './store';
+import { draftIdOf, type ContentStore } from './store.ts';
 
 export type ButtonAction = 'publish' | 'discard';
 export interface ButtonValue {

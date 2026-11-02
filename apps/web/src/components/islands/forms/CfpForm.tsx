@@ -4,7 +4,7 @@ import { track } from '@zurichjs/design/analytics';
 import { cx, surfaceClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared';
+import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 const FORMATS = [
   { v: 5, label: 'Lightning', min: '5 min' },

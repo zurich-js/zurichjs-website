@@ -1,4 +1,4 @@
-import type { Event, EventState } from './types';
+import type { Event, EventState } from './types.ts';
 
 /**
  * Seam for where people get a place at an event. Today: Meetup RSVP links

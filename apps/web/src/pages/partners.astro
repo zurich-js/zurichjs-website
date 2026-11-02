@@ -1,4 +1,10 @@
 ---
+/**
+ * /partners: who you reach, the ways to partner, the sponsorship packages, the
+ * partners who already support us, then the inquiry form. Hosting and food are
+ * ways to help, never paid packages. Conference sponsorship is separate
+ * (conf.zurichjs.com/sponsorship). Sources: packages/content/src/partners.ts.
+ */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import PartnersForm from '~/components/islands/forms/PartnersForm';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -9,7 +15,19 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink, trackAttrs } from '@zurichjs/design/analytics';
 import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
 import SponsorTiers from '~/components/SponsorTiers.astro';
-import { PROSPECTUS_MAILTO, REACH_COUNTRIES, REACH_STATS, SPONSORSHIP_TIERS, mediaTagged } from '@zurichjs/content';
+import {
+  AUDIENCE_INTERESTS,
+  AUDIENCE_PROFILE,
+  PAYMENT_OPTIONS,
+  PROSPECTUS_MAILTO,
+  REACH_AS_OF,
+  REACH_COUNTRIES,
+  REACH_STATS,
+  RSVP_SOURCE,
+  RSVP_STATS,
+  SPONSORSHIP_TIERS,
+  mediaTagged,
+} from '@zurichjs/content';
 import { groupPartners, partnerPeriod } from '@zurichjs/events';
 
 const { partners, conference, media } = await content();
@@ -19,40 +37,63 @@ const nextHref = await nextMeetupHref();
 
 const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host');
 const hostTier = SPONSORSHIP_TIERS.find((t) => t.id === 'host')!;
+const travel = hostTier.prices.find((p) => p.label.includes('travel'));
 const CATEGORIES = [
   {
     id: 'venues',
     h: 'Venue partners',
-    sub: 'Our venue partners generously provide their spaces for ZurichJS meetups, helping us create memorable events for our community.',
+    sub: 'Companies that have opened their spaces for ZurichJS meetups.',
     list: groups.venues,
   },
-  { id: 'conferences', h: 'Conference partners', sub: 'Our conference partners offer exclusive discounts and special access to ZurichJS members for their events.', list: groups.conferences },
+  { id: 'conferences', h: 'Conference partners', sub: 'Conferences that offer ZurichJS members discounts and special access to their events.', list: groups.conferences },
   {
     id: 'communities',
     h: 'Community partners',
-    sub: 'Our community partners are fellow tech communities that we collaborate with to strengthen the JavaScript ecosystem in our region.',
+    sub: 'Fellow tech communities we collaborate with to strengthen the JavaScript ecosystem in our region.',
     list: groups.communities,
   },
   {
     id: 'supporting',
     h: 'Supporting partners',
-    sub: 'Our supporting partners provide valuable resources, tools, and services that help us run ZurichJS more effectively.',
+    sub: 'Companies that provide resources, tools and services that help us run ZurichJS.',
     list: groups.supporting,
   },
 ];
 const previous = [...groups.pastSponsors, ...groups.pastPartners];
-const AUDIENCE = [
-  ['75%+', 'full-stack or frontend engineers'],
-  ['40%', 'in senior roles'],
-  ['60%+', 'with five or more years of experience'],
-];
-const INTERESTS = ['TypeScript', 'React', 'Node.js', 'Next.js', 'Performance', 'AI integration', 'Testing', 'GraphQL', 'DevOps'];
 const HANDLE = [
   ['Speakers and programme', 'We find the speakers and support each one individually, from mentoring and preparation to travel, accommodation and technical checks.'],
   ['Promotion', 'We announce on Meetup, LinkedIn and Slack, and credit you everywhere the event appears.'],
   ['The evening itself', 'Organisers welcome people, run the stage, and look after the code of conduct.'],
   ['Photos afterwards', 'Our photographer shares pictures you can use on your own channels.'],
 ];
+// The four ways to partner. Hosting and food are not packages; production: "Food & beverage welcome but does not replace partnership tier".
+const WAYS = [
+  {
+    id: 'ways-sponsorship',
+    h: 'Sponsorship',
+    d: 'A package with your logo, sponsor slides and mentions at our meetups. Pay yearly, monthly or once.',
+    cta: { label: 'See the packages', href: '#sponsorship-tiers' },
+  },
+  {
+    id: 'ways-host',
+    h: 'Host a meetup',
+    d: 'Open your space for an evening. Hosting is free and is not a sponsorship package.',
+    cta: { label: 'Host a meetup', way: 'host' },
+  },
+  {
+    id: 'ways-food',
+    h: 'Food and drinks',
+    d: 'Cover food and drinks for an evening. Always welcome, and separate from the sponsorship packages.',
+    cta: { label: 'Cover food and drinks', way: 'food' },
+  },
+  {
+    id: 'ways-community',
+    h: 'Community collaboration',
+    d: 'For fellow tech communities and conferences that want to work with us for the JavaScript ecosystem in the region.',
+    cta: { label: 'Community collaboration', way: 'community' },
+  },
+] as const;
+const link = 'text-black underline underline-offset-[3px]';
 ---
 
 <BaseLayout
@@ -68,129 +109,56 @@ const HANDLE = [
     sub="By sponsoring, you help us keep events accessible, bring in international expertise, and create opportunities for developers at all levels."
   >
     <div class="flex flex-wrap gap-3 pt-1.5">
-      <Button href="#sponsorship-tiers" variant="yellow" grow>Become a sponsor</Button>
+      <Button href="#ways" variant="yellow" grow>Ways to partner</Button>
       <Button href={PROSPECTUS_MAILTO} variant="outline-white" grow>Request the prospectus</Button>
       <Button href="#partner-form" variant="outline-white" grow>Send an inquiry</Button>
     </div>
   </PageOpening>
 
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[760px]">
-        <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Choose your partnership level</h2>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
-          Transparent pricing, clear benefits and flexible commitment: yearly, monthly or one-time. Not sure which tier fits? <a href="#partner-form" class="text-black underline underline-offset-[3px]">Start a conversation</a> and we’ll help you find the right match, or <a href={PROSPECTUS_MAILTO} class="text-black underline underline-offset-[3px]">request the prospectus</a>.
-        </p>
-      </div>
-      <ul class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4 list-none m-0 p-0">
-        {
-          sponsorTiers.map((t) => (
-            <Surface as="li" tone={t.id === 'champion' ? 'yellow' : 'grey'} class="p-7 flex flex-col gap-5">
-              <h3 class="m-0 text-[24px] font-bold">{t.name}</h3>
-              <dl class="m-0 flex flex-col gap-1.5">
-                {t.prices.map((pr) => (
-                  <div class="flex justify-between items-baseline gap-3 flex-wrap">
-                    <dt class="text-[16px] text-ink-2">{pr.label}</dt>
-                    <dd class="m-0 ml-auto text-[20px] font-bold text-right">
-                      {pr.amount}
-                      {pr.note && <span class="block text-[14px] font-normal text-ink-2">{pr.note}</span>}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-              <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal flex-1">
-                {t.perks.map((perk) => (
-                  <li>{perk}</li>
-                ))}
-              </ul>
-              <Button
-                href={`/partners?way=partner&tier=${t.id}#partner-form`}
-                variant={t.id === 'champion' ? 'black' : 'white'}
-                size="sm"
-                class="self-start"
-                data-partner-way="partner"
-                data-partner-tier={t.id}
-                aria-label={`Become a sponsor: ${t.name}`}
-              >
-                Become a sponsor
-              </Button>
-            </Surface>
-          ))
-        }
-      </ul>
-      <Surface tone="grey" class="p-7 grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5">
-        <div class="flex flex-col gap-4">
-          <h3 class="m-0 text-[24px] font-bold">{hostTier.name}</h3>
-          {hostTier.description && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{hostTier.description}</p>}
-          <dl class="m-0 flex flex-col gap-1.5">
-            {
-              hostTier.prices.map((pr) => (
-                <div class="flex justify-between items-baseline gap-3 flex-wrap">
-                  <dt class="text-[16px] text-ink-2">{pr.label}</dt>
-                  <dd class="m-0 ml-auto text-[20px] font-bold text-right">
-                    {pr.amount}
-                    {pr.note && <span class="block text-[14px] font-normal text-ink-2">{pr.note}</span>}
-                  </dd>
-                </div>
-              ))
-            }
-          </dl>
-        </div>
-        <div class="flex flex-col gap-5">
-          <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal">
-            {hostTier.perks.map((perk) => <li>{perk}</li>)}
-          </ul>
-          <div class="flex flex-wrap gap-2.5">
-            <Button href="/partners?way=host#partner-form" variant="black" size="sm" data-partner-way="host" aria-label="Choose this: Host a meetup">Host a meetup</Button>
-            <Button href="/partners?way=food#partner-form" variant="white" size="sm" data-partner-way="food" aria-label="Choose this: Cover food and drinks">Cover food and drinks</Button>
-          </div>
-        </div>
-      </Surface>
-    </section>
-
-    <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">
-      <div class="flex flex-col gap-1.5">
-        <h2 id="h-p-current" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Our sponsors</h2>
-        <p class="m-0 text-[18px] text-ink-2">These sponsors make ZurichJS possible. Join them in supporting our community.</p>
-      </div>
-      {
-        groups.sponsorsByTier.length > 0 ? (
-          <SponsorTiers groups={groups.sponsorsByTier} />
-        ) : (
-          <p class="m-0 text-[17px]">
-            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the partnership levels</a>.
-          </p>
-        )
-      }
-    </section>
-
-    <section aria-labelledby="h-aud" class="on-black bg-black text-white rounded-block p-[clamp(24px,4vw,56px)] flex flex-col gap-[clamp(24px,3vw,36px)]">
+    <section id="audience" aria-labelledby="h-aud" class="on-black bg-black text-white rounded-block p-[clamp(24px,4vw,56px)] flex flex-col gap-[clamp(24px,3vw,36px)] scroll-mt-6">
       <div class="flex flex-col gap-2.5 max-w-[720px]">
-        <h2 id="h-aud" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Who comes to our meetups</h2>
+        <h2 id="h-aud" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Who you reach</h2>
         <p class="m-0 text-[18px] leading-[1.55]">Mostly engineers who shape the products they work on.</p>
       </div>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+      <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
         {
-          AUDIENCE.map(([v, l]) => (
-            <div class="flex flex-col gap-1.5">
-              <div class="text-[clamp(44px,5vw,64px)] leading-none font-bold text-yellow">{v}</div>
-              <div class="text-[18px] leading-[1.4]">{l}</div>
+          AUDIENCE_PROFILE.map((a) => (
+            <div class="flex flex-col-reverse justify-end gap-1.5">
+              <dt class="text-[18px] leading-[1.4]">{a.label}</dt>
+              <dd class="m-0 text-[clamp(44px,5vw,64px)] leading-none font-bold text-yellow">{a.value}</dd>
             </div>
           ))
         }
-      </div>
+      </dl>
       <div class="flex flex-col gap-2.5">
         <div class="text-[17px] font-bold">What they work with</div>
         <div class="flex flex-wrap gap-2">
-          {INTERESTS.map((i) => <span class="text-[16px] font-bold py-2 px-4 rounded-pill bg-ink">{i}</span>)}
+          {AUDIENCE_INTERESTS.map((i) => <span class="text-[16px] font-bold py-2 px-4 rounded-pill bg-ink">{i}</span>)}
         </div>
       </div>
-      <div class="text-[15px] leading-normal text-grey-mid">
-        Meetup attendee profile, as published on <a href={SITE.confSponsorshipUrl} target="_blank" rel="noopener" class="text-white underline underline-offset-[3px]">conf.zurichjs.com/sponsorship</a>.
-      </div>
+      <p class="m-0 text-[15px] leading-normal text-grey-mid">
+        Meetup attendee profile as published on <a href={SITE.confSponsorshipUrl} target="_blank" rel="noopener" class="text-white underline underline-offset-[3px]">conf.zurichjs.com/sponsorship</a>, undated and without a stated method.
+      </p>
+
       <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach</h3>
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Meetup RSVPs, November 2024 to September 2026</h3>
         <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+          {
+            RSVP_STATS.map((r) => (
+              <div class="flex flex-col-reverse justify-end gap-1.5">
+                <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
+                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold text-yellow">{r.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <p class="m-0 text-[15px] leading-normal text-grey-mid">{RSVP_SOURCE}</p>
+      </div>
+
+      <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach in {REACH_AS_OF}</h3>
+        <dl class="m-0 grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-6">
           {
             REACH_STATS.map((r) => (
               <div class="flex flex-col-reverse justify-end gap-1.5">
@@ -201,7 +169,7 @@ const HANDLE = [
           }
         </dl>
         <p class="m-0 text-[18px] leading-[1.55] max-w-[760px]">{REACH_COUNTRIES}</p>
-        <div class="text-[15px] leading-normal text-grey-mid">Reach figures as published on zurichjs.com in October 2025.</div>
+        <p class="m-0 text-[15px] leading-normal text-grey-mid">Figures as published on zurichjs.com in {REACH_AS_OF}, not updated since.</p>
       </div>
     </section>
 
@@ -220,60 +188,150 @@ const HANDLE = [
             </div>
           ))
         }
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+          We only work with partners we know and trust. When we recommend a sponsor’s product, service or image, it’s because we believe in it ourselves.
+        </p>
       </div>
     </section>
 
-    <section aria-labelledby="h-trust" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start">
-      <div class="flex flex-col gap-3.5">
-        <h2 id="h-trust" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">We only work with partners we know and trust</h2>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
-          When we recommend and propagate a sponsor’s product, service, or image, it’s because we believe in it ourselves. That’s what makes promotion more effective, because it’s genuine and relevant to the community.
-        </p>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
-          Our role as organizers is to connect people. Sponsors meet developers, speakers meet new audiences, and attendees meet peers they wouldn’t otherwise cross paths with.
-        </p>
+    <section id="ways" aria-labelledby="h-ways" class="flex flex-col gap-7 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <h2 id="h-ways" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Four ways to partner</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Sponsorship is the only paid option. Hosting an evening or covering its food and drinks are separate ways to help, and you can combine them.</p>
       </div>
-      <Surface as="figure" tone="yellow" class="m-0 p-7 flex flex-col gap-4 justify-between">
-        <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">
-          “Organizing a workshop and a meetup with the ZurichJS team was a great experience. They took care of everything and are very supportive. The community they are building is truly amazing.”
-        </blockquote>
-        <figcaption class="text-[16px] leading-[1.4]">
-          <b>Harshil Agrawal</b>
-          <br />
-          <span class="text-ink-2">Dev Educator, Cloudflare</span>
-        </figcaption>
+      <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 list-none m-0 p-0">
+        {
+          WAYS.map((w) => (
+            <Surface as="li" tone="grey" id={w.id} class="p-7 flex flex-col gap-4 scroll-mt-6">
+              <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 flex-1">{w.d}</p>
+              {'way' in w.cta ? (
+                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="black" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
+                  {w.cta.label}
+                </Button>
+              ) : (
+                <Button href={w.cta.href} variant="black" size="sm" class="self-start">
+                  {w.cta.label}
+                </Button>
+              )}
+            </Surface>
+          ))
+        }
+      </ul>
+      <Surface id="hosting" tone="grey" class="p-7 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 scroll-mt-6">
+        <div class="flex flex-col gap-3">
+          <h3 class="m-0 text-[24px] font-bold">Hosting an evening</h3>
+          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Hosting is free. In return, your company is recognised at the meetup you host.</p>
+          {
+            travel && (
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+                If you also cover the speakers’ travel for that evening (about {travel.amount}), you are recognised as a Community Friend sponsor.
+              </p>
+            )
+          }
+        </div>
+        <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal self-start">
+          {hostTier.perks.filter((perk) => !/travel/i.test(perk)).map((perk) => <li>{perk}</li>)}
+        </ul>
       </Surface>
     </section>
 
-    <span id="inquiry-form" aria-hidden="true"></span>
-    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
-      <div class="flex flex-col gap-3">
-        <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">An organiser replies from {SITE.email} to plan a date and the details. Nothing is agreed until you confirm.</p>
+    <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Sponsorship packages</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
+          Four packages, each with a yearly, monthly and one-time price. Not sure which fits? <a href="#partner-form" class={link}>Start a conversation</a> or <a href={PROSPECTUS_MAILTO} class={link}>request the prospectus</a>.
+        </p>
       </div>
-      <PartnersForm client:load nextHref={nextHref} />
+      <dl class="m-0 grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 max-w-[1100px]">
+        {
+          PAYMENT_OPTIONS.map((o) => (
+            <div class="flex flex-col gap-1">
+              <dt class="text-[18px] font-bold">{o.label}</dt>
+              <dd class="m-0 text-[17px] leading-[1.5] text-ink-2">{o.text}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start list-none m-0 p-0">
+        {
+          sponsorTiers.map((t) => (
+            <Surface as="li" tone={t.id === 'champion' ? 'yellow' : 'grey'} class="p-6 flex flex-col gap-5" aria-labelledby={`h-tier-${t.id}`}>
+              <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
+                {t.name}
+              </h3>
+              <dl class="m-0 flex flex-col gap-2.5">
+                {t.prices.map((pr) => (
+                  <div class="flex flex-col">
+                    <dt class="text-[15px] text-ink-2">{pr.label}</dt>
+                    <dd class="m-0 text-[20px] font-bold">
+                      {pr.amount}
+                      {pr.note && <span class="text-[15px] font-normal text-ink-2"> ({pr.note})</span>}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <div class="flex flex-col gap-2">
+                <div class="text-[16px] font-bold">Included</div>
+                <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal">
+                  {t.perks.map((perk) => (
+                    <li>{perk}</li>
+                  ))}
+                </ul>
+              </div>
+              <Button
+                href={`/partners?way=partner&tier=${t.id}#partner-form`}
+                variant={t.id === 'champion' ? 'black' : 'white'}
+                size="sm"
+                class="self-start"
+                data-partner-way="partner"
+                data-partner-tier={t.id}
+                aria-label={`Become a sponsor: ${t.name}`}
+              >
+                Become a sponsor
+              </Button>
+            </Surface>
+          ))
+        }
+      </ul>
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
+        Hosting a meetup or covering food and drinks is not a package: see <a href="#ways" class={link}>the ways to partner</a>.
+      </p>
     </section>
 
-    <section aria-labelledby="h-confsp" class="bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center">
+    <section aria-labelledby="h-confsp" class="bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 items-center">
       <div class="flex flex-col gap-2.5">
         <img src="/images/logo/wordmark-conf.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-[26px] w-auto max-w-full self-start" />
-        <h2 id="h-confsp" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Reach a European audience too</h2>
-        <p class="m-0 text-[18px] leading-[1.55]">The conference has its own sponsorship packages, from Supporter to Diamond. You can combine them with meetup support.</p>
+        <h2 id="h-confsp" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Sponsoring the conference is separate</h2>
+        <p class="m-0 text-[18px] leading-[1.55]">ZurichJS Conf has its own sponsorship packages, from Supporter to Diamond. The meetup packages above do not include the conference, and you can combine both.</p>
       </div>
-      <div class="flex justify-end">
+      <div class="flex md:justify-end">
         <Button href={confLink('/sponsorship', 'partners')} variant="black" grow {...trackAttrs('conf_outbound_click', { placement: 'partners', confstate: conference.state })}>
           See conference packages ↗
         </Button>
       </div>
     </section>
 
+    <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">
+      <div class="flex flex-col gap-1.5">
+        <h2 id="h-p-current" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Our sponsors</h2>
+        <p class="m-0 text-[18px] text-ink-2">These sponsors make ZurichJS possible. Join them in supporting our community.</p>
+      </div>
+      {
+        groups.sponsorsByTier.length > 0 ? (
+          <SponsorTiers groups={groups.sponsorsByTier} />
+        ) : (
+          <p class="m-0 text-[17px]">
+            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the packages</a>.
+          </p>
+        )
+      }
+    </section>
+
     <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-[clamp(28px,3vw,40px)] scroll-mt-6">
-      <div class="flex justify-between items-end gap-4 flex-wrap">
-        <div class="flex flex-col gap-1.5 max-w-[720px]">
-          <h2 id="h-p-community" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Community partners</h2>
-          <p class="m-0 text-[18px] text-ink-2">Collaborating to strengthen the European tech ecosystem.</p>
-        </div>
-        <Button href="/partners?way=partner#partner-form" variant="outline-black" size="sm" data-partner-way="partner" aria-label="Choose this: Community partner inquiry">Community partner inquiry</Button>
+      <div class="flex flex-col gap-1.5 max-w-[720px]">
+        <h2 id="h-p-community" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Hosts and partners</h2>
+        <p class="m-0 text-[18px] text-ink-2">The venues, conferences, communities and companies we work with.</p>
       </div>
       {
         CATEGORIES.map((g) => (
@@ -294,6 +352,17 @@ const HANDLE = [
       }
     </section>
 
+    <Surface as="figure" tone="grey" class="m-0 p-7 flex flex-col gap-4 max-w-[860px]">
+      <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">
+        “Organizing a workshop and a meetup with the ZurichJS team was a great experience. They took care of everything and are very supportive. The community they are building is truly amazing.”
+      </blockquote>
+      <figcaption class="text-[16px] leading-[1.4]">
+        <b>Harshil Agrawal</b>
+        <br />
+        <span class="text-ink-2">Dev Educator, Cloudflare</span>
+      </figcaption>
+    </Surface>
+
     {
       previous.length > 0 && (
         <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-[18px] scroll-mt-6">
@@ -307,6 +376,15 @@ const HANDLE = [
         </section>
       )
     }
+
+    <span id="inquiry-form" aria-hidden="true"></span>
+    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-1 md:grid-cols-2 gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
+      <div class="flex flex-col gap-3">
+        <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Choose what you’d like to talk about, and change it any time before you send. An organiser replies from {SITE.email} to plan the details.</p>
+      </div>
+      <PartnersForm client:load nextHref={nextHref} email={SITE.email} />
+    </section>
   </div>
 </BaseLayout>
 

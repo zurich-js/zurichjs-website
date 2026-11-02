@@ -135,6 +135,27 @@ const summary = (data: Record<string, unknown>) =>
     .map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`)
     .join('\n');
 
+/** The partner form's fields, labelled for organisers, in the form's order; any other field follows as is. */
+const PARTNER_FIELDS: [string, string][] = [
+  ['interest', 'Interested in'],
+  ['org', 'Organisation'],
+  ['name', 'Name'],
+  ['email', 'Email'],
+  ['phone', 'Phone'],
+  ['tier', 'Package'],
+  ['capacity', 'Space holds'],
+  ['msg', 'Message'],
+  ['way', 'Way (form value)'],
+];
+export function partnerSummary(data: Record<string, unknown>): string {
+  const known = new Set(PARTNER_FIELDS.map(([k]) => k));
+  const shown = (v: unknown) => v !== undefined && v !== null && v !== '';
+  const lines = PARTNER_FIELDS.filter(([k]) => shown(data[k])).map(([k, label]) => `${label}: ${String(data[k])}`);
+  const rest = Object.fromEntries(Object.entries(data).filter(([k]) => !known.has(k)));
+  const extra = summary(rest);
+  return extra ? `${lines.join('\n')}\n${extra}` : lines.join('\n');
+}
+
 /* ------------------------------------------------------------------ dispatcher */
 
 export interface ForwardDeps {
@@ -199,9 +220,14 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
       );
       return { ok: true, id: saved.id };
     }
-    case 'partners':
+    case 'partners': {
+      const subject = `Partner inquiry (${String(d.interest ?? d.way)}) from ${String(d.org)}`;
+      const body = partnerSummary(d);
+      await Promise.all([sendEmail(env, subject, body, String(d.email), log), postSlack(env, `${subject}\n${body}`, log)]);
+      return { ok: true, id };
+    }
     case 'contact': {
-      const subject = kind === 'partners' ? `Partner inquiry from ${String(d.org)}` : `Contact: ${String(d.topic)} from ${String(d.name)}`;
+      const subject = `Contact: ${String(d.topic)} from ${String(d.name)}`;
       await Promise.all([sendEmail(env, subject, summary(d), String(d.email), log), postSlack(env, `${subject}\n${summary(d)}`, log)]);
       return { ok: true, id };
     }

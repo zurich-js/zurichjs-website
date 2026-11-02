@@ -5,7 +5,7 @@
  * prerendered as of the build; islands follow the clock in the browser, and
  * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
  */
-import { dateLong, eventHref, eventSupporters, groupPartners, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
+import { dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventActions from '~/components/islands/event/EventActions';
@@ -40,15 +40,17 @@ const byId = new Map(c.speakers.map((s) => [s.id, s]));
 const speakerIds = [...new Set([...eventTalks(ev).flatMap((t) => t.speakerIds), ...(ev.recap?.talks.flatMap((t) => t.speakerIds) ?? [])])];
 const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
 const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 36) : undefined }));
-const hosts = c.partners.filter((h) => ev.hosts?.includes(h.id));
-const supporters = eventSupporters(ev, c.partners);
-// Current sponsors appear on every upcoming meetup page (the /partners promise), after the event's own supporters.
-const seasonSponsors = groupPartners(c.partners).currentSponsors.filter((p) => !supporters.some((x) => x.partner.id === p.id));
 const gallery = mediaForEvent(c.media.items, ev.slug);
 // Honest about missing photos: "unavailable" when this build could not read the archive, never "coming soon".
 const evEnd = ev.endsAt ?? ev.startsAt;
 const photoState = eventPhotoState(gallery.length, c.media, evEnd ? new Date(evEnd) : undefined, BUILD_TIME);
 const isPast = state === 'past';
+// The event's own hosts and supporters. Current sponsors are added only while the meetup is upcoming:
+// a past event thanks only who supported that evening, never today's sponsors.
+// A cancelled or postponed meetup whose date has gone by counts as past here too.
+const historic = isPast || (!!ev.startsAt && Date.parse(ev.startsAt) < BUILD_TIME.getTime());
+const { own: supporters, season: seasonSponsors } = eventThanks(ev, c.partners, { past: historic });
+const hosts = c.partners.filter((h) => ev.hosts?.includes(h.id) && (historic || !h.delisted));
 const next = nextMeetup(c.events, BUILD_TIME);
 const nextP = next ? presentEvent(next, { now: BUILD_TIME, ticketing }) : null;
 const description = clip(isPast ? `${recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} ${ev.description}` : `${p.dateLineShort} · ${p.venueShort}. ${ev.description}`);

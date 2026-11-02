@@ -166,6 +166,12 @@ export interface Partner {
   tier?: SponsorTier;
   /** Only an organiser marks a partner current; everyone else is a past supporter. */
   current: boolean;
+  /**
+   * Withdrawn from promotion by the owner: never in partner lists, logo walls,
+   * the home page, upcoming event pages, Tonight or generated content. The
+   * record stays only so a past event can still name it as its host or supporter.
+   */
+  delisted?: boolean;
   since?: string;
   until?: string;
   description?: string;

@@ -599,49 +599,148 @@ test.describe('media archive', () => {
 });
 
 test.describe('partners and sponsors', () => {
-  for (const [name, label] of [
-    ['Host a meetup', 'Host a meetup'],
-    ['Cover food and drinks', 'Food and drinks'],
-    ['Community partner', 'Community partner'],
+  const intent = (page: Page) => page.getByTestId('partner-intent');
+  const chosen = (page: Page) => page.locator('#partner-form [role="radio"][aria-checked="true"]');
+
+  test('the page runs from audience to ways, packages, proof and the form', async ({ page }) => {
+    await page.goto('/partners');
+    const order = await page.locator('main h2').allTextContents();
+    const at = (t: string) => order.findIndex((h) => h.includes(t));
+    expect(at('Who you reach')).toBeGreaterThanOrEqual(0);
+    expect(at('Who you reach')).toBeLessThan(at('Four ways to partner'));
+    expect(at('Four ways to partner')).toBeLessThan(at('Sponsorship packages'));
+    expect(at('Sponsorship packages')).toBeLessThan(at('Our sponsors'));
+    expect(at('Our sponsors')).toBeLessThan(at('Tell us how you’d like to help'));
+    // One umbrella name, distinct from the "Community partners" group under it.
+    await expect(page.locator('#partners-community').getByRole('heading', { level: 2 })).toHaveText('Hosts and partners');
+    await expect(page.locator('#partners-communities').getByRole('heading', { name: 'Community partners' })).toBeVisible();
+    // Figures are dated and labelled with their source.
+    await expect(page.getByRole('heading', { name: 'Our reach in October 2025' })).toBeVisible();
+    await expect(page.getByText('RSVPs for a single meetup, the highest at the time')).toBeVisible();
+    await expect(page.getByText(/RSVPs, not check-ins/)).toBeVisible();
+    await expect(page.getByText('peak RSVP rate')).toHaveCount(0);
+    await expect(page.locator('#sponsorship-tiers').getByText(/workshop/i)).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'See conference packages ↗' })).toHaveAttribute('href', /conf\.zurichjs\.com\/sponsorship/);
+  });
+
+  for (const [name, way, label] of [
+    ['Host a meetup', 'host', 'Host a meetup'],
+    ['Cover food and drinks', 'food', 'Food and drinks'],
+    ['Community collaboration', 'community', 'Community collaboration'],
   ] as const) {
-    test(`"Choose this: ${name}" selects that option in the form`, async ({ page }) => {
+    test(`"Choose this: ${name}" selects it, keeps it in the URL and after a reload`, async ({ page }) => {
       await page.goto('/partners');
       await page.getByRole('link', { name: `Choose this: ${name}` }).click();
-      await expect(page).toHaveURL(/#partner-form$/);
-      await expect(page.locator('#partner-form [role="radio"][aria-checked="true"]')).toHaveText(new RegExp(label, 'i'));
+      await expect(page).toHaveURL(new RegExp(`[?&]way=${way}.*#partner-form$`));
+      await expect(chosen(page)).toHaveText(label);
+      await expect(intent(page)).toContainText(label);
+      await page.reload();
+      await expect(chosen(page)).toHaveText(label);
+      await page.goto(`/partners?way=${way}#inquiry-form`);
+      await expect(chosen(page)).toHaveText(label);
     });
   }
 
-  test('the choice also works from the link alone (before scripts load)', async ({ page }) => {
-    await page.goto('/partners?way=food#partner-form');
-    await expect(page.locator('#partner-form [role="radio"][aria-checked="true"]')).toHaveText(/food/i);
+  for (const [id, name] of [
+    ['champion', 'Community Champion'],
+    ['builder', 'Community Builder'],
+    ['friend', 'Community Friend'],
+    ['supporter', 'Community Supporter'],
+  ] as const) {
+    test(`${name}: the button, a direct link and a reload all select sponsorship and the package`, async ({ page }) => {
+      await page.goto('/partners');
+      await page.getByRole('link', { name: `Become a sponsor: ${name}` }).click();
+      await expect(page).toHaveURL(new RegExp(`[?&]tier=${id}.*#partner-form$`));
+      await expect(chosen(page)).toHaveText('Sponsorship');
+      await expect(page.getByLabel('Sponsorship package (optional)')).toHaveValue(id);
+      await expect(intent(page)).toHaveText(`You’re asking about: Sponsorship: ${name}`);
+      await page.reload();
+      await expect(page.getByLabel('Sponsorship package (optional)')).toHaveValue(id);
+      await page.goto(`/partners?way=partner&tier=${id}#inquiry-form`);
+      await expect(page.getByLabel('Sponsorship package (optional)')).toHaveValue(id);
+    });
+  }
+
+  test('the intent stays editable, and an edit is kept on reload', async ({ page }) => {
+    await page.goto('/partners?way=partner&tier=builder#partner-form');
+    await page.getByLabel('Sponsorship package (optional)').selectOption('friend');
+    await expect(page).toHaveURL(/tier=friend/);
+    await page.locator('#partner-form').getByRole('radio', { name: 'Food and drinks' }).click();
+    await expect(page.getByLabel('Sponsorship package (optional)')).toHaveCount(0);
+    await expect(page).toHaveURL(/way=food/);
+    expect(page.url()).not.toContain('tier=');
+    await page.reload();
+    await expect(chosen(page)).toHaveText('Food and drinks');
+  });
+
+  test('the inquiry sends every field once, keeps values on failure and explains what happens next', async ({ page }) => {
+    const sent: Record<string, unknown>[] = [];
+    let fail = true;
+    await page.route('**/api/forms/partners', async (route) => {
+      sent.push(route.request().postDataJSON());
+      if (fail) return route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now.' } });
+      await new Promise((r) => setTimeout(r, 300));
+      return route.fulfill({ json: { ok: true, id: 'partners_test' } });
+    });
+    await page.goto('/partners?way=host#partner-form');
+    const form = page.locator('#partner-form');
+    await form.getByRole('button', { name: 'Send inquiry' }).click();
+    await expect(form.getByText('Fix the highlighted fields.')).toBeVisible();
+    await expect(form.getByLabel('Organisation')).toBeFocused();
+    await form.getByLabel('Organisation').fill('Acme AG');
+    await form.getByLabel('Your name').fill('Ada');
+    await form.getByLabel('Work email').fill('ada@acme.example');
+    await expect(form.getByLabel('Phone (optional)')).toHaveAttribute('type', 'tel');
+    await form.getByLabel('Phone (optional)').fill('+41 44 000 00 00');
+    await form.getByLabel('How many people your space holds (optional)').fill('80');
+    await form.getByLabel('Anything we should know? (optional)').fill('Spring works');
+    await expect(form.getByText(/how many people it holds/)).toBeVisible();
+    await expect(form.getByText(/Nothing is agreed until you confirm/)).toBeVisible();
+    await form.getByRole('button', { name: 'Send inquiry' }).click();
+    await expect(form.getByText('We couldn’t send that right now.')).toBeVisible();
+    await expect(form.getByLabel('Organisation')).toHaveValue('Acme AG');
+    await expect(form.getByLabel('Phone (optional)')).toHaveValue('+41 44 000 00 00');
+    fail = false;
+    await form.getByRole('button', { name: 'Send inquiry' }).dblclick();
+    await expect(page.getByRole('status').filter({ hasText: 'You asked about' })).toContainText('You asked about: Host a meetup');
+    expect(sent).toHaveLength(2);
+    expect(sent[1]).toEqual({
+      org: 'Acme AG',
+      name: 'Ada',
+      email: 'ada@acme.example',
+      phone: '+41 44 000 00 00',
+      way: 'host',
+      interest: 'Host a meetup',
+      capacity: '80',
+      msg: 'Spring works',
+      website_url: '',
+    });
+  });
+
+  test('the honeypot is hidden from assistive technology', async ({ page }) => {
+    await page.goto('/partners');
+    const trap = page.locator('#partner-form input[name="website_url"]');
+    await expect(trap).toHaveAttribute('tabindex', '-1');
+    await expect(page.locator('#partner-form div[aria-hidden="true"]:has(input[name="website_url"])')).toHaveCount(1);
   });
 
   test('current sponsors and past supporters are separate, logos are named links', async ({ page }) => {
     await page.goto('/partners');
     const current = page.locator('#partners-current');
-    await expect(current.getByRole('link', { name: /Vercel/ })).toHaveAttribute('href', 'https://vercel.com');
+    await expect(current.getByRole('link', { name: /Stripe/ })).toHaveAttribute('href', 'https://stripe.com');
     await expect(page.locator('#partners-venues').getByRole('link', { name: /novu AG/ })).toBeVisible();
     for (const img of await page.locator('#partners-current img').all()) expect(await img.getAttribute('alt')).toMatch(/\w/);
   });
 
-  test('the sponsorship tiers show production’s prices, and choosing one preselects it in the form', async ({ page }) => {
+  test('the packages show production’s prices', async ({ page }) => {
     await page.goto('/partners');
     const tiers = page.locator('#sponsorship-tiers');
-    for (const name of ['Community Champion', 'Community Builder', 'Community Friend', 'Community Supporter', 'Community Host']) {
+    for (const name of ['Community Champion', 'Community Builder', 'Community Friend', 'Community Supporter']) {
       await expect(tiers.getByRole('heading', { name, exact: true })).toBeVisible();
     }
     await expect(tiers.getByText('CHF 7’500')).toBeVisible();
     await expect(tiers.getByText('CHF 150', { exact: true })).toBeVisible();
-    await page.getByRole('link', { name: 'Become a sponsor: Community Builder' }).click();
-    await expect(page).toHaveURL(/[?&]tier=builder.*#partner-form$/);
-    await expect(page.locator('#partner-form [role="radio"][aria-checked="true"]')).toHaveText(/community partner/i);
-    await expect(page.getByLabel('Sponsorship tier (optional)')).toHaveValue('builder');
-  });
-
-  test('a tier link works before scripts load', async ({ page }) => {
-    await page.goto('/partners?way=partner&tier=champion#partner-form');
-    await expect(page.getByLabel('Sponsorship tier (optional)')).toHaveValue('champion');
+    await expect(page.locator('#hosting')).toContainText('Community Friend');
   });
 
   test('the prospectus is requested by email, as on the old site', async ({ page }) => {
@@ -655,7 +754,6 @@ test.describe('partners and sponsors', () => {
   test('the anchors other pages link to exist: venues, community, previous supporters', async ({ page }) => {
     await page.goto('/partners#partners-venues');
     await expect(page.locator('#partners-venues').getByRole('heading', { name: 'Venue partners' })).toBeVisible();
-    await expect(page.locator('#partners-community').getByRole('heading', { name: 'Community partners', exact: true }).first()).toBeVisible();
     await expect(page.locator('#partners-communities').getByRole('link', { name: /Web Zurich/ })).toBeVisible();
     await expect(page.locator('#partners-conferences').getByRole('link', { name: /CityJS/ })).toBeVisible();
     await expect(page.locator('#partners-past').getByRole('img', { name: 'Dynatrace' })).toBeVisible();
@@ -668,19 +766,34 @@ test.describe('partners and sponsors', () => {
     }
   });
 
-  test('home shows current sponsors and hosts; upcoming event pages thank this season’s sponsors', async ({ page }) => {
+  test('Vercel, Ginetta and Code Blossom are not promoted on active pages (owner, 2nd November 2026)', async ({ page }) => {
+    for (const path of ['/', '/partners', '/events/2026-11-forms-types', '/today']) {
+      await page.goto(path);
+      const text = await page.locator('body').innerText();
+      expect(text, path).not.toMatch(/vercel|ginetta|code\s?blossom/i);
+      for (const host of ['vercel.com', 'ginetta.net', 'code-blossom.com']) await expect(page.locator(`a[href*="${host}"]`), `${path} ${host}`).toHaveCount(0);
+      await expect(page.getByRole('img', { name: /vercel|ginetta|code blossom/i })).toHaveCount(0);
+    }
+  });
+
+  test('home shows current sponsors and hosts; upcoming event pages thank this season’s sponsors, past ones do not', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Companies who host and support ZurichJS' })).toBeVisible();
-    await expect(page.locator('section[aria-labelledby="h-hosts"]').getByRole('link', { name: /Vercel/ })).toHaveAttribute('href', 'https://vercel.com');
+    await expect(page.locator('section[aria-labelledby="h-hosts"]').getByRole('link', { name: /Stripe/ })).toHaveAttribute('href', 'https://stripe.com');
     await page.goto('/events/2026-11-forms-types');
     await expect(page.getByText('Supporting ZurichJS this season.')).toBeVisible();
+    for (const past of ['/events/2026-09-signals-streams', '/events/2025-03-partnerships']) {
+      await page.goto(past);
+      await expect(page.getByText(/this season/)).toHaveCount(0);
+      await expect(page.getByRole('link', { name: /Stripe/ })).toHaveCount(0);
+    }
   });
 
   test('the Tonight page thanks the evening’s supporters and this season’s sponsors', async ({ page }) => {
     await page.goto('/today');
     const thanks = page.locator('section[aria-labelledby="h-made"]');
     await expect(thanks.getByRole('heading', { name: 'Thanks to' })).toBeVisible();
-    await expect(thanks.getByRole('link', { name: /Vercel/ })).toBeVisible();
+    await expect(thanks.getByRole('link', { name: /Stripe/ })).toBeVisible();
   });
 });
 

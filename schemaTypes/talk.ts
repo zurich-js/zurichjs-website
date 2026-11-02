@@ -43,7 +43,7 @@ export default defineType({
     },
     {
       name: 'slides',
-      description: 'Kept for the archive. Not shown on the website: ZurichJS does not publish slides.',
+      description: 'Shown on the talk (speaker page and event page) when the speaker shares slides.',
       title: 'Slides',
       type: 'file',
       options: {

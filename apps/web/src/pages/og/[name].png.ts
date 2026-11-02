@@ -123,7 +123,7 @@ function tree(card: Card, wordmark: string): Node {
   }
   if (card.kind === 'event') {
     const { ev } = card;
-    const parts = ev.startsAt ? dateParts(ev.startsAt) : { mon: 'TBC', day: '?', year: ev.dateText?.slice(-4) ?? '' };
+    const parts = ev.startsAt ? dateParts(ev.startsAt) : { mon: 'TBC', day: '?', suffix: '', year: ev.dateText?.slice(-4) ?? '' };
     const t = clamp(ev.title, 80);
     const where = [ev.startsAt ? dateLong(ev.startsAt) : ev.dateText, ev.venue?.name].filter(Boolean).join(' · ');
     return frame(
@@ -135,7 +135,7 @@ function tree(card: Card, wordmark: string): Node {
           'div',
           { flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: 190, height: 210, flexShrink: 0, background: YELLOW, color: '#000', borderRadius: 32 },
           h('div', { fontSize: 34, fontWeight: 700 }, parts.mon),
-          h('div', { fontSize: 92, fontWeight: 700, lineHeight: 1 }, parts.day),
+          h('div', { alignItems: 'flex-start', fontWeight: 700, lineHeight: 1 }, h('div', { fontSize: 92 }, parts.day), h('div', { fontSize: 40, marginTop: 6 }, parts.suffix)),
           h('div', { fontSize: 30 }, parts.year),
         ),
         h(

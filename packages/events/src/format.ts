@@ -69,11 +69,11 @@ export function zurichWallTime(day: string, hhmm: string): Date {
 }
 
 /** Parts for the date tile in event lists. */
-export const dateParts = (iso: string) => ({
-  mon: part(iso, { month: 'short' }),
-  day: part(iso, { day: 'numeric' }),
-  year: part(iso, { year: 'numeric' }),
-});
+export const dateParts = (iso: string) => {
+  const day = part(iso, { day: 'numeric' });
+  // The tile shows "12" with a smaller "th" (owner: dates always use ordinals).
+  return { mon: part(iso, { month: 'short' }), day, suffix: ordinal(day).slice(day.length), year: part(iso, { year: 'numeric' }) };
+};
 
 /** "Wed 18 Nov 2026, 18:30–21:30" */
 export const dateTimeRange = (startIso: string, endIso?: string) => `${dateLong(startIso)}, ${time(startIso)}${endIso ? `–${time(endIso)}` : ''}`;

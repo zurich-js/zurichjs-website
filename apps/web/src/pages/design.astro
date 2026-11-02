@@ -226,7 +226,7 @@ const TYPE = [
     <section aria-labelledby="d-proof" class="px-gut flex flex-col gap-6">
       <SectionHeading id="d-proof">ProofSentence and LogoGrid<Fragment slot="sub">Rating and award in one sentence. No "/5".</Fragment></SectionHeading>
       <div class="bg-black text-white rounded-block p-[clamp(24px,3vw,40px)]"><ProofSentence rating={rating} award={award} /></div>
-      <LogoGrid partners={partners.slice(0, 6)} />
+      <LogoGrid partners={partners.filter((p) => !p.delisted).slice(0, 6)} />
     </section>
 
     <section aria-labelledby="d-islands" class="px-gut flex flex-col gap-6">

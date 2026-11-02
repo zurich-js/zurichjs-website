@@ -181,3 +181,50 @@ describe('evening feedback', () => {
     expect(create.mock.calls[1]![0].quoteName).toBeUndefined();
   });
 });
+
+describe('partner inquiries (stubbed delivery)', () => {
+  it('every field reaches the organisers by email and Slack, labelled', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ ok: true }));
+    const data = {
+      org: 'Acme AG',
+      name: 'Ada',
+      email: 'ada@acme.example',
+      phone: '+41 44 000 00 00',
+      way: 'partner',
+      interest: 'Sponsorship: Community Builder',
+      tier: 'Community Builder',
+      msg: 'Monthly, from January',
+      extra: 'kept',
+      website_url: '',
+    };
+    const r = await forwardForm('partners', data, { env: { RESEND_API_KEY: 're_test', SLACK_WEBHOOK_URL: 'https://hooks.slack.invalid/x' }, log: () => {}, now, sanity: null });
+    expect(r).toEqual({ ok: true, id: expect.stringMatching(/^partners_/) });
+    const bodies = fetchMock.mock.calls.map(([, init]) => JSON.parse(String(init!.body)) as { text: string; subject?: string; reply_to?: string });
+    const email = bodies.find((b) => b.subject)!;
+    const slack = bodies.find((b) => !b.subject)!;
+    expect(email.subject).toBe('Partner inquiry (Sponsorship: Community Builder) from Acme AG');
+    expect(email.reply_to).toBe('ada@acme.example');
+    for (const text of [email.text, slack.text]) {
+      for (const line of [
+        'Interested in: Sponsorship: Community Builder',
+        'Organisation: Acme AG',
+        'Name: Ada',
+        'Email: ada@acme.example',
+        'Phone: +41 44 000 00 00',
+        'Package: Community Builder',
+        'Message: Monthly, from January',
+        'Way (form value): partner',
+        'extra: kept',
+      ])
+        expect(text).toContain(line);
+      expect(text).not.toContain('website_url');
+    }
+    fetchMock.mockRestore();
+  });
+
+  it('a host inquiry carries the room size, and stubs when no secret is set', async () => {
+    const log = vi.fn();
+    await forwardForm('partners', { org: 'Acme', name: 'Ada', email: 'a@b.ch', way: 'host', interest: 'Host a meetup', capacity: '80' }, { env: {}, log, now, sanity: null });
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('Partner inquiry (Host a meetup) from Acme'));
+  });
+});

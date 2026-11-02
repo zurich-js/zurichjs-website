@@ -8,7 +8,7 @@
  * the browser clock (islands/today/Tonight), so a future meetup is never
  * called "tonight".
  */
-import { dateLong, eventHref, eventSupporters, groupPartners, pickTodayEvent, presentEvent, resolveState, todayPhase, upcomingEvents } from '@zurichjs/events';
+import { dateLong, eventHref, eventThanks, pickTodayEvent, presentEvent, resolveState, todayPhase, upcomingEvents } from '@zurichjs/events';
 import { SITE_URL } from '@zurichjs/seo';
 import Tonight from '~/components/islands/today/Tonight';
 import VenueCard from '~/components/islands/event/VenueCard';
@@ -23,8 +23,8 @@ const slack = slackLink(settings);
 const ev = pickTodayEvent(events, BUILD_TIME);
 const phase = todayPhase(ev, BUILD_TIME);
 const names = Object.fromEntries(speakers.map((s) => [s.id, s.name]));
-const supporters = ev ? eventSupporters(ev, partners) : [];
-const seasonSponsors = groupPartners(partners).currentSponsors.filter((p) => !supporters.some((x) => x.partner.id === p.id));
+// Tonight is about an evening that has not ended its feedback window, so this season's sponsors are current for it.
+const { own: supporters, season: seasonSponsors } = eventThanks(ev ?? {}, partners, { past: false });
 const after = ev
   ? upcomingEvents(events, BUILD_TIME).find((e) => e.id !== ev.id && resolveState(e, BUILD_TIME) !== 'cancelled' && (!ev.startsAt || !e.startsAt || e.startsAt > ev.startsAt))
   : undefined;

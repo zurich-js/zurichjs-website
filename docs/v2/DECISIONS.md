@@ -279,6 +279,22 @@ An audit of V2 against production found missing functionality and inaccurate con
 - **Membership is in the footer** ("Take part › Membership"), as in the header. This changes the footer on every page, so visual baselines need an intended update.
 - **"Free or discounted workshops" stays without a note.** No source says what it covers since workshops were retired; it is a confirm item in `CONTENT-SOURCES.md`.
 
+## Donate and membership, second pass (2nd November 2026)
+
+Re-checked against the current build, production (`origin/main`: `buy-us-a-coffee.tsx`, `donate.tsx`, `membership.tsx`) and the mock Stripe API. Nothing real was charged or sent.
+
+- **Donate keeps** one-time and monthly, presets CHF 10 to 50 plus a custom CHF 5 to 1000, the optional receipt email (or Stripe asks on its page), the live amount and frequency summary, cancellation instructions, "What support pays for" and the line that a donation is not a membership.
+- **Unavailable state re-verified.** With no key the function answers 503 and the form says nothing was charged and names only what the page shows: email, plus Twint only when a Twint QR is set in Site settings. With the mock, the browser goes to the mock session URL.
+- **Back from Stripe with the browser's Back button** no longer leaves the button stuck on "Opening the payment page…" (back-forward cache); a new attempt key is made. An invalid amount or email now moves focus to that field.
+- **Restored from production:** a "Questions" section (receipts; cancelling a monthly donation, "No questions asked"; companies go to Host or sponsor) and "Thank you" naming the three supporters production thanked, with their links (no photos, no dates). Supporters are listed by hand; Stripe never publishes a name.
+- **Not restored:** production's tax answer ("not yet tax-deductible … actively pursuing"). No current source confirms the association's tax status, so the page says nothing about deductibility (owner decision). Production's `/donate` "Feed the Box" cash box at meetups is also left out until an organiser confirms it still exists. "Events hosted" and "100% volunteer-driven" counters were not brought back.
+- **Membership fees are one table** (`apps/web/src/lib/membership.ts`) used by the page and `/api/verein-inquiry`. Each card shows the monthly, quarterly and yearly price side by side, and one line with the per-year totals, which follow from production's prices (Basic CHF 174, 200, 175; Supporter CHF 252, 300, 250). The page says quarterly costs the most over a year; a unit test keeps that true. Production's "That's CHF 14.5/month" comparisons were not restored.
+- **The organisers' email states the fee shown** ("Fee shown: CHF 250 a year") next to tier and billing cycle.
+- **Voting:** production's words only, "Stay informed and vote on small decisions" (Basic) and "Voting rights" (Supporter), with a line pointing questions to hello@zurichjs.com. No statutes are in any repository; the owner should confirm what each covers.
+- **Workshops:** "Free or discounted workshops" stays unchanged (owner). The standalone workshops are retired, and the conference workshop day on 10th September 2026 had no member discount; nothing was added. Owner decision recorded in `CONTENT-SOURCES.md`.
+- **Form details:** the billing chips are labelled "Billing cycle" (was "Pay"), name and email carry `required`, and the email fallback after a failed request includes the email and fee.
+- **Discoverability verified, not changed:** the header's "Get involved" menu lists Membership and Donate; the footer lists Membership and "Support us".
+
 ## Schedule fields and feedback availability (2026-11-02)
 
 Audit items 4 and 5. Production Sanity events have only `datetime`, `location`, `address` and `talks`; no event has an `agenda` yet.

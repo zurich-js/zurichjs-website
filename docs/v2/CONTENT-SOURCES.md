@@ -49,7 +49,7 @@ Left out because no source confirms them: attendance at the conference (the conf
 | Nadja Hesselbjerg | Core team                     | conf-blog ("joined the core team"); old-about said "Community Supporter"; joined in May 2025 (owner, 2nd November 2026) | **confirm** the role |
 | 14 volunteers     | ZurichJS Conf 2026            | conf-about                                                                                                              |                      |
 
-Removed at the owner's request (2nd November 2026): Enrique Ruiz Durazo (contributors) and Colin Schwarz (ZurichJS Conf team). Photos: Faris and Bogdan were already in V2; Nadja's comes from the production site (`public/images/team/nadja.png`).
+Removed at the owner's request (2nd November 2026): Enrique Ruiz Durazo (contributors) and Colin Schwarz (ZurichJS Conf team). Photos: Faris and Bogdan were already in V2; Nadja's comes from conf.zurichjs.com/about (`/images/team/nadja.png`, on black), chosen by the owner on 2nd November 2026.
 
 ## Partners
 

@@ -288,7 +288,14 @@ const isExt = (href: string) => /^https?:/.test(href);
           <div class="flex flex-col gap-2.5">
             <h3 class="m-0 text-[22px] font-bold">Volunteers</h3>
             <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
-              ZurichJS Conf 2026 happened thanks to {volunteers.length} volunteers: {volunteers.join(', ')}. And after almost every meetup, someone new offers to help.
+              ZurichJS Conf 2026 happened thanks to {volunteers.length} volunteers:{' '}
+              {volunteers.map((v, i) => (
+                <Fragment>
+                  {i > 0 && ', '}
+                  <strong class="font-bold text-black whitespace-nowrap">{v}</strong>
+                </Fragment>
+              ))}
+              . And after almost every meetup, someone new offers to help.
             </p>
           </div>
         )

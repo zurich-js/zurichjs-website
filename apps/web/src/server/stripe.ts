@@ -8,7 +8,9 @@
  *   STRIPE_SUPPORT_PRODUCT_ID    the "Support ZurichJS" product
  *   STRIPE_WEBHOOK_SECRET        optional: posts new donations to Slack
  *   PUBLIC_STRIPE_PORTAL_URL     optional: Stripe customer-portal login link
- *                                ("Manage or cancel your monthly support")
+ *                                ("Manage or cancel your monthly support"); read at build time
+ *   STRIPE_API_BASE              local tests only: a mock Stripe API (e.g. http://localhost:4533).
+ *                                Ignored in production, so the secret key only ever goes to Stripe.
  */
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Env } from './http.ts';
@@ -52,10 +54,19 @@ export function parseDonation(body: Record<string, unknown>): { ok: true; data: 
 
 export class StripeUnavailable extends Error {}
 
+const STRIPE_API = 'https://api.stripe.com';
+
+/** Stripe's API, or a local mock outside production (STRIPE_API_BASE). */
+export function stripeApiBase(env: Env): string {
+  const override = env.STRIPE_API_BASE?.replace(/\/+$/, '');
+  if (!override || env.CONTEXT === 'production') return STRIPE_API;
+  return /^https?:\/\/[^\s/]+$/.test(override) ? override : STRIPE_API;
+}
+
 async function stripe<T>(env: Env, fetchImpl: Fetch, method: 'GET' | 'POST', path: string, params?: URLSearchParams, idempotencyKey?: string): Promise<T> {
   const key = env.STRIPE_SECRET_KEY;
   if (!key) throw new StripeUnavailable('STRIPE_SECRET_KEY is not set');
-  const url = `https://api.stripe.com/v1/${path}${method === 'GET' && params ? `?${params}` : ''}`;
+  const url = `${stripeApiBase(env)}/v1/${path}${method === 'GET' && params ? `?${params}` : ''}`;
   const res = await fetchImpl(url, {
     method,
     headers: {

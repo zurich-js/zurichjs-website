@@ -22,14 +22,19 @@ const chf = (n: number) => `CHF ${Number.isInteger(n) ? n : n.toFixed(2)}`;
  * Online donation on /donate: one-time or monthly, in Swiss francs, paid on
  * Stripe's hosted page. Nothing is charged here; the button hands over to
  * Stripe, which confirms the payment. Separate from membership.
+ *
+ * When Stripe can't be reached, the error names only the alternatives the
+ * page really shows: Twint when `twint` (a QR in Site settings), always email.
  */
-export default function DonateForm({ portalUrl, email: contactEmail }: { portalUrl?: string; email: string }) {
+export default function DonateForm({ portalUrl, email: contactEmail, twint = false }: { portalUrl?: string; email: string; twint?: boolean }) {
   const [recurrence, setRecurrence] = useState<Recurrence>('once');
   const [preset, setPreset] = useState<number | null>(20);
   const [custom, setCustom] = useState('');
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  /** The payment couldn't start (server or network): offer the other ways to give. */
+  const [offerOther, setOfferOther] = useState(false);
   const [notice, setNotice] = useState<'canceled' | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const noticeRef = useFocusWhen<HTMLDivElement>(!!notice);
@@ -51,6 +56,7 @@ export default function DonateForm({ portalUrl, email: contactEmail }: { portalU
 
   const submit = async (e: Event) => {
     e.preventDefault();
+    setOfferOther(false);
     if (amountBad) return setError(`Choose an amount from CHF ${MIN} to CHF ${MAX}.`);
     if (emailBad) return setError('Check the email, or leave it empty.');
     setBusy(true);
@@ -66,7 +72,9 @@ export default function DonateForm({ portalUrl, email: contactEmail }: { portalU
       track('donate_checkout', { recurrence, amount });
       location.assign(body.url);
     } catch (err) {
-      setError((err as Error).message || 'We couldn’t reach the server. Nothing was charged. Please try again.');
+      const message = (err as Error).message;
+      setError(!message || err instanceof TypeError ? 'We couldn’t reach the server. Nothing was charged. Please try again.' : message);
+      setOfferOther(true);
       attempt.current = Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
       setBusy(false);
     }
@@ -148,6 +156,28 @@ export default function DonateForm({ portalUrl, email: contactEmail }: { portalU
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">
           {error}
+          {error && offerOther && (
+            <>
+              {' '}
+              {twint ? (
+                <>
+                  You can still give by Twint or by email, under{' '}
+                  <a href="#other-ways" class="font-bold text-black">
+                    Other ways to give
+                  </a>
+                  .
+                </>
+              ) : (
+                <>
+                  To give another way, write to{' '}
+                  <a href={`mailto:${contactEmail}?subject=${encodeURIComponent('Donation to ZurichJS')}`} class="font-bold text-black">
+                    {contactEmail}
+                  </a>
+                  .
+                </>
+              )}
+            </>
+          )}
         </span>
       </div>
       <p class="m-0 text-[15px] leading-[1.55] text-ink-2">

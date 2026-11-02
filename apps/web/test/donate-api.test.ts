@@ -1,10 +1,11 @@
 import { createHmac } from 'node:crypto';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleCheckout, trustedOrigin } from '../src/pages/api/donate/checkout.ts';
 import { handleSession } from '../src/pages/api/donate/session.ts';
 import { handleWebhook } from '../src/pages/api/donate/webhook.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
-import { parseDonation, stripeForm, verifyStripeSignature } from '../src/server/stripe.ts';
+import { parseDonation, stripeApiBase, stripeForm, verifyStripeSignature } from '../src/server/stripe.ts';
+import { startMockStripe, type MockStripe } from '../../../tools/mock-stripe.mjs';
 
 const req = (data: unknown, headers: Record<string, string> = {}) =>
   new Request('https://zurichjs.com/api/donate/checkout', { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(data) });
@@ -57,15 +58,44 @@ describe('POST /api/donate/checkout', () => {
     expect(p.get('mode')).toBe('payment');
     expect(p.get('line_items[0][price_data][recurring][interval]')).toBeNull();
   });
-  it('answers 503 without a Stripe key, so the page can offer Twint and email', async () => {
-    const res = await handleCheckout(req({ amount: 20 }), { env: {}, fetch: vi.fn() });
+  it('one-time donations say "Donate" on Stripe and pass the receipt email', async () => {
+    const fetchMock = vi.fn(async () => Response.json({ id: 'cs_test_2', url: 'https://checkout.stripe.com/x' }));
+    await handleCheckout(req({ amount: 12.5, recurrence: 'once', email: 'anna@example.com' }), { env, fetch: fetchMock });
+    const p = new URLSearchParams(String((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+    expect(p.get('submit_type')).toBe('donate');
+    expect(p.get('customer_email')).toBe('anna@example.com');
+    expect(p.get('line_items[0][price_data][unit_amount]')).toBe('1250');
+    expect(p.get('metadata[source]')).toBe('zurichjs.com/donate');
+  });
+  it('monthly donations send no submit_type (Stripe allows it only for payments) and tag the subscription', async () => {
+    const fetchMock = vi.fn(async () => Response.json({ id: 'cs_test_2', url: 'https://checkout.stripe.com/x' }));
+    await handleCheckout(req({ amount: 20, recurrence: 'monthly' }), { env, fetch: fetchMock });
+    const p = new URLSearchParams(String((fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1].body));
+    expect(p.get('submit_type')).toBeNull();
+    expect(p.get('customer_email')).toBeNull();
+    expect(p.get('subscription_data[metadata][source]')).toBe('zurichjs.com/donate');
+  });
+  it.each([
+    ['no secret key', { STRIPE_SUPPORT_PRODUCT_ID: 'prod_support' }],
+    ['no product', { STRIPE_SECRET_KEY: 'sk_test_123' }],
+    ['nothing', {}],
+  ])('answers 503 with %s, and names no alternative (the page adds the ones it shows)', async (_, e) => {
+    const f = vi.fn();
+    const res = await handleCheckout(req({ amount: 20 }), { env: e, fetch: f });
     expect(res.status).toBe(503);
-    expect(((await res.json()) as { error: string }).error).toContain('Twint');
+    const b = (await res.json()) as { error: string; reason: string };
+    expect(b).toMatchObject({ ok: false, reason: 'unavailable' });
+    expect(b.error).toContain('Nothing was charged');
+    expect(b.error).not.toMatch(/Twint|email/i);
+    expect(f).not.toHaveBeenCalled();
   });
   it('answers 502 and says nothing was charged when Stripe fails', async () => {
     const res = await handleCheckout(req({ amount: 20 }), { env, fetch: vi.fn(async () => Response.json({ error: { message: 'boom' } }, { status: 500 })) });
     expect(res.status).toBe(502);
-    expect(((await res.json()) as { error: string }).error).toContain('Nothing was charged');
+    const b = (await res.json()) as { error: string; reason: string };
+    expect(b.reason).toBe('stripe');
+    expect(b.error).toContain('Nothing was charged');
+    expect(b.error).not.toMatch(/Twint/);
   });
   it('rejects bad input and bots, and rate-limits', async () => {
     expect((await handleCheckout(req({ amount: 1 }), { env, fetch: vi.fn() })).status).toBe(400);
@@ -150,5 +180,49 @@ describe('speaker profile links', () => {
     expect((await handleProfile(new Request('https://zurichjs.com/api/speaker-profile?token=x'), { env, client: null })).status).toBe(401);
     const t = tokenOf(profileLink('anna-beispiel', env.JWT_SECRET));
     expect((await handleProfile(new Request(`https://zurichjs.com/api/speaker-profile?token=${t}`), { env, client: null })).status).toBe(503);
+  });
+});
+
+describe('STRIPE_API_BASE: a local mock Stripe over HTTP', () => {
+  let mock: MockStripe;
+  const local = () => ({ STRIPE_SECRET_KEY: 'sk_test_mock', STRIPE_SUPPORT_PRODUCT_ID: 'prod_mock', STRIPE_API_BASE: mock.url });
+  beforeAll(async () => {
+    mock = await startMockStripe(0);
+  });
+  afterAll(() => mock.close());
+  beforeEach(() => resetRateLimits());
+
+  it('is used only outside production, and only as a plain origin', () => {
+    expect(stripeApiBase({})).toBe('https://api.stripe.com');
+    expect(stripeApiBase({ STRIPE_API_BASE: 'http://localhost:4533/' })).toBe('http://localhost:4533');
+    expect(stripeApiBase({ STRIPE_API_BASE: 'http://localhost:4533', CONTEXT: 'production' })).toBe('https://api.stripe.com');
+    expect(stripeApiBase({ STRIPE_API_BASE: 'javascript:alert(1)' })).toBe('https://api.stripe.com');
+  });
+
+  it.each([
+    ['once', 30, 'payment', 3000],
+    ['monthly', 14.5, 'subscription', 1450],
+  ] as const)('%s CHF %s: checkout, payment, then the thanks page reads it back', async (recurrence, amount, mode, cents) => {
+    const res = await handleCheckout(new Request('http://localhost:4531/api/donate/checkout', { method: 'POST', body: JSON.stringify({ amount, recurrence }) }), { env: local() });
+    expect(res.status).toBe(200);
+    const { url } = (await res.json()) as { url: string };
+    const id = url.split('/').pop()!;
+    const created = mock.requests.at(-1)!;
+    expect(created).toMatchObject({ method: 'POST', path: '/v1/checkout/sessions', auth: 'Bearer sk_test_mock', version: '2025-08-27.basil' });
+    expect(created.form).toMatchObject({ mode, 'line_items[0][price_data][currency]': 'chf', 'line_items[0][price_data][unit_amount]': String(cents) });
+    expect(created.form.success_url).toBe('http://localhost:4531/donate/thanks?session_id={CHECKOUT_SESSION_ID}');
+    expect(created.form.cancel_url).toBe('http://localhost:4531/donate?canceled=1#donate');
+
+    const lookup = () => handleSession(new Request(`http://localhost:4531/api/donate/session?session_id=${id}`), { env: local() });
+    expect(await (await lookup()).json()).toMatchObject({ ok: true, status: 'open', amount, recurrence });
+    const paid = await fetch(`${mock.url}/pay/${id}/complete`, { redirect: 'manual' });
+    expect(paid.headers.get('location')).toBe(`http://localhost:4531/donate/thanks?session_id=${id}`);
+    expect(await (await lookup()).json()).toEqual({ ok: true, status: 'paid', amount, currency: 'CHF', recurrence });
+  });
+
+  it('a Stripe error becomes 502, and an unknown session 404', async () => {
+    const res = await handleCheckout(new Request('http://localhost:4531/api/donate/checkout', { method: 'POST', body: JSON.stringify({ amount: 999 }) }), { env: local() });
+    expect(res.status).toBe(502);
+    expect((await handleSession(new Request('http://localhost:4531/api/donate/session?session_id=cs_test_nope'), { env: local() })).status).toBe(404);
   });
 });

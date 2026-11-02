@@ -269,3 +269,12 @@ An audit of V2 against production found missing functionality and inaccurate con
 - **Community history and team** live in `packages/content/src/community.ts` with their sources (`docs/v2/CONTENT-SOURCES.md`).
 - **Retired URLs:** `/workshops(/*)` → `/events?from=workshops` and `/tshirt` → `/donate?from=tshirt`, each with a one-line note; `/checkout/*` → `/donate`; `/cfp/form` → `/cfp#proposal`.
 - **Speaker profiles are collected progressively:** the CFP stays short; accepted speakers get a private link (`pnpm speaker-link <id>`, JWT, 30 days) to add a photo, bio, role, links and topics, saved as a Sanity draft for organisers to publish.
+
+## Donate and membership audit (2026-11-02)
+
+- **"Online payments are not available" on localhost is the missing configuration, not a code bug.** `STRIPE_SECRET_KEY` and `STRIPE_SUPPORT_PRODUCT_ID` are absent locally; the function answers 503. Compared with production's `checkout-support.ts`, the names, the product, CHF, `mode` (`payment` or `subscription` with a monthly `recurring` price), the API version and `customer_email` match. V2 always sends `price_data` on the support product (production also reused preset Price IDs); both end up on the same product. `submit_type=donate` goes only with one-time payments, as Stripe requires.
+- **The fallback names only what the page shows.** The API error no longer mentions Twint. The form adds "Twint or email, under Other ways to give" when a Twint QR is set in Site settings, otherwise "write to hello@zurichjs.com". Production showed a Twint QR (`public/images/twint-code.png`); upload it in Site settings to show Twint again.
+- **`STRIPE_API_BASE`** points the Stripe calls at a local mock (`tools/mock-stripe.mjs`) for development and e2e. It is ignored in production, so the secret key only goes to `api.stripe.com`.
+- **No invoice creation.** Checkout's `invoice_creation` costs extra per invoice (spending needs the owner); receipts rely on Stripe's "Successful payments" email setting (RUNBOOK).
+- **Membership is in the footer** ("Take part › Membership"), as in the header. This changes the footer on every page, so visual baselines need an intended update.
+- **"Free or discounted workshops" stays without a note.** No source says what it covers since workshops were retired; it is a confirm item in `CONTENT-SOURCES.md`.

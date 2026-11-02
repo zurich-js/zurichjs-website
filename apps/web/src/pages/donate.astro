@@ -57,7 +57,7 @@ const WAYS = [
           A donation is a gift to ZurichJS; it doesn’t make you a member. To join the association with a vote, see <a href="/membership" class="font-bold text-black">membership</a>.
         </p>
       </div>
-      <DonateForm client:load portalUrl={portalUrl} email={SITE.email} />
+      <DonateForm client:load portalUrl={portalUrl} email={SITE.email} twint={!!qr} />
     </section>
 
     <section aria-labelledby="h-ways" class="flex flex-col gap-3">
@@ -79,7 +79,7 @@ const WAYS = [
       }
     </section>
 
-    <section aria-labelledby="h-oneoff" class="flex flex-col gap-[18px]">
+    <section id="other-ways" aria-labelledby="h-oneoff" class="flex flex-col gap-[18px] scroll-mt-6">
       <h2 id="h-oneoff" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Other ways to give</h2>
       {
         qr && (

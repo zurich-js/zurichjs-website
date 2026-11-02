@@ -1,4 +1,8 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
+import { handleCheckout } from '../apps/web/src/pages/api/donate/checkout.ts';
+import { handleSession } from '../apps/web/src/pages/api/donate/session.ts';
+import { resetRateLimits } from '../apps/web/src/server/rateLimit.ts';
+import { startMockStripe, type MockStripe } from '../tools/mock-stripe.mjs';
 
 /**
  * Critical visitor journeys on the sample content (CONTENT_SOURCE=sample,
@@ -162,7 +166,7 @@ test.describe('donations and membership', () => {
 
   test('donate: a custom amount is validated, and a server failure is explained', async ({ page }) => {
     await page.route('**/api/donate/checkout', (route) =>
-      route.fulfill({ status: 503, json: { ok: false, error: 'Online payments are not available right now. You can still give by Twint or by email below.' } }),
+      route.fulfill({ status: 503, json: { ok: false, reason: 'unavailable', error: 'Online payments are not available right now. Nothing was charged.' } }),
     );
     await page.goto('/donate');
     await hydrated(page);
@@ -173,7 +177,14 @@ test.describe('donations and membership', () => {
     await page.getByLabel(/Or another amount/).fill('25');
     await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 25 once.');
     await page.getByRole('button', { name: 'Continue to secure payment' }).click();
-    await expect(page.getByRole('alert').filter({ hasText: 'Online payments are not available' })).toBeVisible();
+    const alert = page.getByRole('alert').filter({ hasText: 'Online payments are not available' });
+    await expect(alert).toBeVisible();
+    // The sample content has no Twint QR, so the fallback names only what the page shows: email.
+    await expect(page.locator('[data-twint-qr]')).toHaveCount(0);
+    await expect(alert).not.toContainText('Twint');
+    await expect(alert.getByRole('link', { name: 'hello@zurichjs.com' })).toHaveAttribute('href', /^mailto:hello@zurichjs\.com/);
+    await page.getByLabel(/Or another amount/).fill('1001');
+    await expect(page.getByText('Enter an amount from 5 to 1000.')).toBeVisible();
   });
 
   test('coming back from Stripe without paying says so; old /buy-us-a-coffee links reach the donation form', async ({ page }) => {
@@ -202,6 +213,50 @@ test.describe('donations and membership', () => {
     expect(sent).toMatchObject({ tier: 'Supporter', billingCycle: 'yearly' });
   });
 
+  test('membership: production prices for every tier and billing choice, validation, and a request that charges nothing', async ({ page }) => {
+    await page.goto('/membership');
+    await hydrated(page);
+    // Fees as on production (origin/main src/pages/membership.tsx).
+    const PRICES = {
+      'Basic Member': { Monthly: 'CHF 14.50', Quarterly: 'CHF 50', Yearly: 'CHF 175' },
+      Supporter: { Monthly: 'CHF 21', Quarterly: 'CHF 75', Yearly: 'CHF 250' },
+    };
+    const UNIT = { Monthly: 'month', Quarterly: 'quarter', Yearly: 'year' };
+    await expect(page.getByRole('button', { name: 'Send request: Basic Member, CHF 50 a quarter' })).toBeVisible();
+    for (const [tier, cycles] of Object.entries(PRICES)) {
+      await page.getByRole('radio', { name: tier, exact: true }).click();
+      for (const [cycle, price] of Object.entries(cycles)) {
+        await page.getByRole('radio', { name: `${cycle}, ${price}`, exact: true }).click();
+        await expect(page.getByRole('button', { name: `Send request: ${tier}, ${price} a ${UNIT[cycle as keyof typeof UNIT]}` })).toBeVisible();
+      }
+    }
+    let calls = 0;
+    await page.route('**/api/verein-inquiry', async (route) => {
+      calls++;
+      await route.fulfill({ json: { ok: true } });
+    });
+    await page.getByRole('button', { name: /Send request/ }).click();
+    await expect(page.getByText('Fix the highlighted fields.')).toBeVisible();
+    await expect(page.getByText('Add your name.')).toBeVisible();
+    const name = page.locator('input[name="name"]');
+    const email = page.locator('input[name="email"]');
+    await expect(name).toBeFocused();
+    await name.fill('Test Person');
+    await email.fill('not-an-email');
+    await page.getByRole('button', { name: /Send request/ }).click();
+    await expect(page.getByText('Enter an email like name@example.com.')).toBeVisible();
+    expect(calls).toBe(0);
+    await email.fill('test@example.com');
+    await page.getByRole('button', { name: /Send request/ }).click();
+    await expect(page.getByText('An organiser will reply to test@example.com about joining as Supporter (CHF 250 a year). Nothing has been charged.')).toBeVisible();
+    expect(calls).toBe(1);
+  });
+
+  test('membership is linked from the footer on every page', async ({ page }) => {
+    await page.goto('/events');
+    await expect(page.locator('footer').getByRole('link', { name: 'Membership' })).toHaveAttribute('href', '/membership');
+  });
+
   test('membership: a failed request keeps the answers and offers email', async ({ page }) => {
     await page.route('**/api/verein-inquiry', (route) => route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now.' } }));
     await page.goto('/membership');
@@ -212,6 +267,118 @@ test.describe('donations and membership', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'We couldn’t send that' })).toBeVisible();
     await expect(page.getByLabel('Name')).toHaveValue('Test Person');
     await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toHaveAttribute('href', /^mailto:hello@zurichjs\.com\?subject=Membership/);
+  });
+});
+
+/**
+ * The donation flow end to end against a local mock of Stripe's API
+ * (tools/mock-stripe.mjs): the real /api/donate handlers run in the test
+ * process with STRIPE_API_BASE pointing at the mock, because the static
+ * server does not run Netlify Functions. Nothing reaches Stripe.
+ */
+test.describe('donations through a mock Stripe', () => {
+  let mock: MockStripe;
+  test.beforeAll(async () => {
+    mock = await startMockStripe(0);
+  });
+  test.afterAll(() => mock.close());
+
+  const wire = async (page: Page, extra: Record<string, string> = {}) => {
+    resetRateLimits();
+    const env = { STRIPE_SECRET_KEY: 'sk_test_mock', STRIPE_SUPPORT_PRODUCT_ID: 'prod_mock', STRIPE_API_BASE: mock.url, ...extra };
+    const toFetch = (r: Request) => ({ url: r.url(), method: r.method(), headers: r.headers(), body: r.postData() ?? undefined });
+    await page.route('**/api/donate/checkout', async (route) => {
+      const r = toFetch(route.request());
+      const res = await handleCheckout(new globalThis.Request(r.url, { method: r.method, headers: r.headers, body: r.body }), { env });
+      await route.fulfill({ status: res.status, json: await res.json() });
+    });
+    await page.route('**/api/donate/session?*', async (route) => {
+      const res = await handleSession(new globalThis.Request(route.request().url()), { env });
+      await route.fulfill({ status: res.status, json: await res.json() });
+    });
+  };
+
+  test('one-time preset: Stripe page, payment, thanks page confirms the amount', async ({ page }) => {
+    await wire(page);
+    await page.goto('/donate');
+    await hydrated(page);
+    await page.getByRole('button', { name: 'CHF 40' }).click();
+    await page.getByLabel('Email for the receipt (optional)').fill('anna@example.com');
+    await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 40 once.');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await page.waitForURL(`${mock.url}/pay/**`);
+    expect(mock.requests.at(-1)!.form).toMatchObject({
+      mode: 'payment',
+      submit_type: 'donate',
+      customer_email: 'anna@example.com',
+      'line_items[0][price_data][currency]': 'chf',
+      'line_items[0][price_data][unit_amount]': '4000',
+      'line_items[0][price_data][product]': 'prod_mock',
+    });
+    await expect(page.locator('[data-mock-amount]')).toHaveText('CHF 40.00');
+    await page.getByRole('link', { name: 'Pay' }).click();
+    await page.waitForURL(/\/donate\/thanks\?session_id=cs_test_mock\d+$/);
+    await expect(page.getByText('Stripe confirmed your donation of CHF 40.')).toBeVisible();
+    await expect(page.getByText(/change or cancel your monthly donation/)).toHaveCount(0);
+  });
+
+  test('monthly custom amount: subscription, thanks page says monthly and how to change or cancel', async ({ page }) => {
+    await wire(page);
+    await page.goto('/donate');
+    await hydrated(page);
+    await page.getByRole('radio', { name: 'Monthly' }).click();
+    await page.getByLabel(/Or another amount/).fill('12,50');
+    await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 12.50 every month until you cancel.');
+    // No portal URL in this build: cancelling is by email.
+    await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toHaveAttribute('href', /subject=Cancel%20my%20monthly%20donation/);
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await page.waitForURL(`${mock.url}/pay/**`);
+    expect(mock.requests.at(-1)!.form).toMatchObject({
+      mode: 'subscription',
+      'line_items[0][price_data][unit_amount]': '1250',
+      'line_items[0][price_data][recurring][interval]': 'month',
+    });
+    expect(mock.requests.at(-1)!.form.submit_type).toBeUndefined();
+    await page.getByRole('link', { name: 'Pay' }).click();
+    await page.waitForURL(/\/donate\/thanks\?session_id=/);
+    await expect(page.getByText('Stripe confirmed your donation of CHF 12.50 every month.')).toBeVisible();
+    const manage = page.getByText(/You can change or cancel your monthly donation at any time/);
+    await expect(manage).toBeVisible();
+    await expect(manage.getByRole('link', { name: 'hello@zurichjs.com' })).toHaveAttribute('href', /^mailto:hello@zurichjs\.com\?subject=My%20monthly%20donation/);
+  });
+
+  test('leaving Stripe without paying returns to /donate and says nothing was charged', async ({ page }) => {
+    await wire(page);
+    await page.goto('/donate');
+    await hydrated(page);
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await page.waitForURL(`${mock.url}/pay/**`);
+    await page.getByRole('link', { name: 'Back' }).click();
+    await page.waitForURL(/\/donate\?canceled=1#donate$/);
+    await expect(page.getByText('No payment was made.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Continue to secure payment' })).toBeEnabled();
+  });
+
+  test('a Stripe failure or missing configuration keeps the visitor on /donate with what still works', async ({ page }) => {
+    await wire(page);
+    await page.goto('/donate');
+    await hydrated(page);
+    await page.getByLabel(/Or another amount/).fill('999');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await expect(page.getByRole('alert')).toContainText('We couldn’t start the payment. Nothing was charged. Please try again. To give another way, write to hello@zurichjs.com.');
+    await expect(page).toHaveURL(/\/donate$/);
+
+    await page.unrouteAll();
+    await wire(page, { STRIPE_SECRET_KEY: '' });
+    await page.getByLabel(/Or another amount/).fill('20');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+    await expect(page.getByRole('alert')).toContainText('Online payments are not available right now. Nothing was charged. To give another way, write to hello@zurichjs.com.');
+  });
+
+  test('the thanks page claims nothing for an unknown or unpaid session', async ({ page }) => {
+    await wire(page);
+    await page.goto('/donate/thanks?session_id=cs_test_unknown');
+    await expect(page.getByText('If you completed the payment, Stripe emails you a receipt. If you didn’t, nothing was charged.')).toBeVisible();
   });
 });
 

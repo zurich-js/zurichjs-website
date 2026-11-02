@@ -6,7 +6,9 @@ import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro
 import HomeHero from '@zurichjs/design/components/HomeHero.astro';
 import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
-import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
+import { SpeakerDeck, type DeckSpeaker } from '~/components/islands/home/SpeakerDeck';
+import { sizedSrc, srcsetFor } from '@zurichjs/design/images';
+import { speakersWithTalks } from '@zurichjs/content';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import { BUILD_TIME, PHOTOS, SITE, content, ticketing } from '~/lib/content';
@@ -42,7 +44,18 @@ outer: for (const ev of pastEvents(events, BUILD_TIME)) {
     if (talks.length === 4) break outer;
   }
 }
-const teaser = speakers.slice(0, 4);
+// The deck: speakers who gave a talk at an event, most recent first, photos sized for the card.
+const lastTalk = (s: (typeof speakers)[number]) => s.talks.flatMap((t) => t.eventSlugs.map((x) => events.find((e) => e.slug === x)?.startsAt ?? '')).sort().pop() ?? '';
+const deck: DeckSpeaker[] = speakersWithTalks(speakers)
+  .sort((a, b) => lastTalk(b).localeCompare(lastTalk(a)) || a.name.localeCompare(b.name))
+  .slice(0, 24)
+  .map((s) => ({
+    id: s.id,
+    name: s.name,
+    meta: s.tagline || s.role,
+    initials: s.initials,
+    photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), alt: s.photo.alt, position: s.photo.position } : undefined,
+  }));
 // Home photos: editors pick them in ImageKit (tag "featured-home"); the defaults fill any gap. No repeats.
 const featured = pickFeatured(media.items, 'featured-home', 3);
 const asPhoto = (m?: (typeof featured)[number]) => (m ? { src: m.src, alt: m.alt, width: m.width, height: m.height } : undefined);
@@ -108,9 +121,7 @@ const partnerGroups = groupPartners(partners);
         <h2 id="h-speakers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Meet the speakers</h2>
         <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All speakers</a>
       </div>
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-6">
-        {teaser.map((s) => <SpeakerCard speaker={s} meta={s.tagline} />)}
-      </div>
+      <SpeakerDeck client:visible speakers={deck} />
       <SpeakCta />
     </section>
 

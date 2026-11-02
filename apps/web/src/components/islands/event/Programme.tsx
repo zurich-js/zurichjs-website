@@ -14,6 +14,8 @@ export interface ProgrammeSpeaker {
   name: string;
   role: string;
   initials: string;
+  /** Square avatar URL when the speaker has a photo. */
+  avatar?: string;
 }
 
 const KIND_LABEL: Partial<Record<AgendaItem['kind'], string>> = { doors: 'Doors', intro: 'Welcome', break: 'Break', networking: 'Networking', close: 'Close' };
@@ -119,9 +121,13 @@ export default function Programme({
                         if (!s) return null;
                         return (
                           <a key={id} href={`/speakers/${id}`} class="no-underline flex items-center gap-2.5 text-[17px] font-bold text-left">
-                            <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'w-9 h-9 flex-none text-[13px]')}>
-                              {s.initials}
-                            </span>
+                            {s.avatar ? (
+                              <img src={s.avatar} alt="" width={36} height={36} loading="lazy" decoding="async" class="w-9 h-9 flex-none rounded-full object-cover bg-grey" />
+                            ) : (
+                              <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'w-9 h-9 flex-none text-[13px]')}>
+                                {s.initials}
+                              </span>
+                            )}
                             <span>
                               <span class="underline underline-offset-[3px]">{s.name}</span> <span class="font-normal text-ink-2">{s.role}</span>
                             </span>

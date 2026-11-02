@@ -14,6 +14,15 @@ export function sizedSrc(src: string, w: number): string {
   return srcFor(src);
 }
 
+/** A square crop around the face, for speaker avatars (CSS size × 2 for sharp screens). */
+export function avatarSrc(src: string, px: number): string {
+  const w = px * 2;
+  if (isImageKit(src)) return `${src}${src.includes('?') ? '&' : '?'}tr=w-${w},h-${w},fo-face,q-80,f-auto`;
+  if (src.startsWith('https://cdn.sanity.io/')) return `${src}?w=${w}&h=${w}&fit=crop&crop=focalpoint&fp-x=0.5&fp-y=0.35&auto=format`;
+  const m = src.match(/^(\/images\/photos\/[\w-]+)\.webp$/);
+  return m ? `${m[1]}-480.webp` : src;
+}
+
 /** First frame of an ImageKit video as a poster image. */
 export const videoPoster = (src: string, w = 960) => (isImageKit(src) ? `${src.split('?')[0]}/ik-thumbnail.jpg?tr=w-${w}` : undefined);
 

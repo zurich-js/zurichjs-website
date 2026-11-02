@@ -12,6 +12,7 @@ import EventActions from '~/components/islands/event/EventActions';
 import EventBanner from '~/components/islands/event/EventBanner';
 import EventSummary from '~/components/islands/event/EventSummary';
 import Programme from '~/components/islands/event/Programme';
+import { avatarSrc } from '@zurichjs/design/images';
 import VenueCard from '~/components/islands/event/VenueCard';
 import SupporterList from '~/components/SupporterList.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -37,7 +38,7 @@ const url = canonicalUrl(eventHref(ev));
 const byId = new Map(c.speakers.map((s) => [s.id, s]));
 const speakerIds = [...new Set([...eventTalks(ev).flatMap((t) => t.speakerIds), ...(ev.recap?.talks.flatMap((t) => t.speakerIds) ?? [])])];
 const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
-const progSpeakers = speakers.map(({ id, name, role, initials }) => ({ id, name, role, initials }));
+const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 36) : undefined }));
 const hosts = c.partners.filter((h) => ev.hosts?.includes(h.id));
 const supporters = eventSupporters(ev, c.partners);
 // Current sponsors appear on every upcoming meetup page (the /partners promise), after the event's own supporters.

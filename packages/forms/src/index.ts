@@ -13,10 +13,30 @@ const email = z.string().trim().email('Enter an email address like name@example.
 const text = (msg: string) => z.string().trim().min(1, msg);
 const required = (msg: string) => z.union([z.string().trim().min(1, msg), z.number()]);
 
-import { HONEYPOT } from './client.ts';
+import { GITHUB_PROFILE, HONEYPOT, LINKEDIN_URL, REQUIRED, VOLUNTEER_AVAILABILITY, VOLUNTEER_INTERESTS, type VolunteerAvailability } from './client.ts';
 
-export { HONEYPOT, REQUIRED, fieldErrors, submitForm } from './client.ts';
+export { HONEYPOT, REQUIRED, VOLUNTEER_AVAILABILITY, fieldErrors, submitForm } from './client.ts';
 const honeypot = { [HONEYPOT]: z.string().max(0).optional() };
+
+/**
+ * Volunteer application. Field names are production's (/api/submit-volunteer):
+ * linkedinProfile, githubProfile, availability, interests, message (why they
+ * want to volunteer). V2 adds availabilityOther for the "Other" choice.
+ */
+const V = REQUIRED.volunteer;
+const volunteer = z
+  .looseObject({
+    ...honeypot,
+    name: text(V.name!).max(160),
+    email,
+    linkedinProfile: text(V.linkedinProfile!).max(300).regex(LINKEDIN_URL, 'Enter a linkedin.com link, like https://www.linkedin.com/in/your-name.'),
+    githubProfile: z.string().trim().max(120).regex(GITHUB_PROFILE, 'Enter a GitHub username or a github.com link.').optional().or(z.literal('')),
+    availability: z.enum(Object.keys(VOLUNTEER_AVAILABILITY) as [VolunteerAvailability, ...VolunteerAvailability[]], V.availability!),
+    availabilityOther: z.string().trim().max(300).optional(),
+    interests: z.array(z.enum(VOLUNTEER_INTERESTS, 'Choose from the areas listed.'), V.interests!).min(1, V.interests!).max(VOLUNTEER_INTERESTS.length),
+    message: text(V.message!).max(3000),
+  })
+  .refine((d) => d.availability !== 'other' || !!d.availabilityOther, { path: ['availabilityOther'], message: 'Say briefly how much time you have.' });
 
 export const schemas = {
   cfp: z.looseObject({ ...honeypot, name: text('Enter your name.'), email, title: text('Give your talk a working title.'), format: text('Choose a format.') }),
@@ -24,6 +44,7 @@ export const schemas = {
   contact: z.looseObject({ ...honeypot, name: text('Enter your name.'), email, topic: text('Choose a topic.'), message: text('Write a message.') }),
   feedback: z.looseObject({ ...honeypot, eventId: text('Missing event.'), overall: required('Choose a score for the evening.') }),
   rating: z.looseObject({ ...honeypot, eventId: text('Missing event.'), target: text('Missing talk.'), stars: z.coerce.number().int().min(1).max(5) }),
+  volunteer,
 } as const;
 
 export type FormKind = keyof typeof schemas;

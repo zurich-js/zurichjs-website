@@ -64,6 +64,26 @@ describe('POST /api/verein-inquiry', () => {
     expect(lines.some((l) => l.includes('SLACK_WEBHOOK_URL (or SLACK_BOT_TOKEN + SLACK_DEFAULT_CHANNEL) missing'))).toBe(true);
   });
 
+  it('delivers to email (reply goes to the person) and Slack, with tier and billing, and charges nothing', async () => {
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: RequestInit) => {
+        calls.push({ url, body: JSON.parse(String(init.body)) as Record<string, unknown> });
+        return new Response('{"ok":true}', { status: 200 });
+      }),
+    );
+    const env = { RESEND_API_KEY: 're_test', SLACK_WEBHOOK_URL: 'https://hooks.slack.test/x' };
+    const res = await handleInquiry(req({ name: 'Anna', email: 'Anna@Example.com', tier: 'Supporter', billingCycle: 'yearly', message: 'Hi' }), { env, log: () => {} });
+    expect(await body(res)).toEqual({ ok: true });
+    expect(calls.map((c) => c.url).sort()).toEqual(['https://api.resend.com/emails', 'https://hooks.slack.test/x']);
+    const mail = calls.find((c) => c.url.includes('resend'))!.body;
+    expect(mail).toMatchObject({ to: ['hello@zurichjs.com'], reply_to: 'anna@example.com', subject: 'Membership request (Supporter) from Anna' });
+    expect(mail.text).toBe('Name: Anna\nEmail: anna@example.com\nTier: Supporter\nBilling: yearly\nMessage: Hi');
+    expect(String(calls.find((c) => c.url.includes('slack'))!.body.text)).toContain('Billing: yearly');
+    expect(calls.some((c) => /stripe|tiun/i.test(c.url))).toBe(false);
+  });
+
   it('answers 502 when a configured channel fails', async () => {
     vi.stubGlobal(
       'fetch',

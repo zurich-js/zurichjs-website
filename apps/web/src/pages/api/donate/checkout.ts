@@ -5,8 +5,11 @@
  *   200 { ok: true, url }       redirect the browser to url (Stripe-hosted page)
  *   400 { ok: false, error, field }
  *   429 { ok: false, error }    too many attempts
- *   503 { ok: false, error }    payments not configured (no Stripe key): the page offers Twint and email
- *   502 { ok: false, error }    Stripe failed
+ *   503 { ok: false, error, reason: 'unavailable' }  payments not configured (no Stripe key or product)
+ *   502 { ok: false, error, reason: 'stripe' }       Stripe failed
+ *
+ * The error never names an alternative: the page knows which ones it shows
+ * (email always, Twint only when a QR is in Site settings) and adds them.
  */
 import type { APIRoute } from 'astro';
 import { fail, isBot, json, methodNotAllowed, readJsonObject, type Env } from '../../../server/http.ts';
@@ -38,10 +41,10 @@ export async function handleCheckout(request: Request, deps: { env?: Env; fetch?
   } catch (cause) {
     if (cause instanceof StripeUnavailable) {
       console.log(`[donate] ${cause.message}; online payments are off`);
-      return fail(503, 'Online payments are not available right now. You can still give by Twint or by email below.');
+      return fail(503, 'Online payments are not available right now. Nothing was charged.', { reason: 'unavailable' });
     }
     console.error('[donate] checkout failed', cause);
-    return fail(502, 'We couldn’t start the payment. Nothing was charged. Please try again, or give by Twint or email below.');
+    return fail(502, 'We couldn’t start the payment. Nothing was charged. Please try again.', { reason: 'stripe' });
   }
 }
 

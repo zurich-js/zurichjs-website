@@ -1,5 +1,55 @@
 import { describe, expect, it, vi } from 'vitest';
-import { forwardForm, postSlack, sanityWriteClient, type TalkProposalSink } from '../src/index.ts';
+import { forwardForm, postSlack, sanityWriteClient, volunteerMessage, type TalkProposalSink } from '../src/index.ts';
+
+describe('volunteer applications', () => {
+  const now = () => new Date('2026-11-02T10:00:00Z');
+  const application = {
+    name: 'Ada Lovelace',
+    email: 'ada@example.com',
+    linkedinProfile: 'https://www.linkedin.com/in/ada',
+    githubProfile: 'ada-l',
+    availability: 'events' as const,
+    availabilityOther: '',
+    interests: ['Partnership and speaker outreach' as const, 'Platform development' as const],
+    message: 'I want to help the community grow.',
+  };
+  const every = [
+    'Ada Lovelace',
+    'Email: ada@example.com',
+    'LinkedIn: https://www.linkedin.com/in/ada',
+    'GitHub: ada-l',
+    'Availability: Only during events',
+    'Interests: Partnership and speaker outreach, Platform development',
+    'I want to help the community grow.',
+  ];
+
+  it('send every field to the organisers by email and Slack (stubbed fetch)', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => Response.json({ ok: true }));
+    const env = { RESEND_API_KEY: 're_test', SLACK_BOT_TOKEN: 'xoxb-1', SLACK_DEFAULT_CHANNEL: 'C1' };
+    const r = await forwardForm('volunteer', application, { env, now, sanity: null });
+    expect(r).toEqual({ ok: true, id: expect.stringMatching(/^volunteer_/) });
+    const bodies = Object.fromEntries(fetchMock.mock.calls.map(([url, init]) => [String(url), JSON.parse(String(init!.body)) as Record<string, unknown>]));
+    const email = bodies['https://api.resend.com/emails']!;
+    const slack = bodies['https://slack.com/api/chat.postMessage']!;
+    expect(email).toMatchObject({ subject: 'New volunteer application from Ada Lovelace', reply_to: 'ada@example.com' });
+    for (const part of every) {
+      expect(String(email.text), part).toContain(part);
+      expect(String(slack.text), part).toContain(part);
+    }
+    fetchMock.mockRestore();
+  });
+  it('include the "Other" availability text and say when GitHub was left out', () => {
+    const { text } = volunteerMessage({ ...application, githubProfile: '', availability: 'other', availabilityOther: 'Two Saturdays a month' });
+    expect(text).toContain('Availability: Other: Two Saturdays a month');
+    expect(text).toContain('GitHub: not given');
+  });
+  it('log stub lines without secrets and store nothing in Sanity', async () => {
+    const log = vi.fn();
+    const r = await forwardForm('volunteer', application, { env: {}, log, now, sanity: null });
+    expect(r.ok).toBe(true);
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('RESEND_API_KEY missing'));
+  });
+});
 
 const now = () => new Date('2026-11-01T10:00:00Z');
 

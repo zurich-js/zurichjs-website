@@ -5,6 +5,17 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import { nextMeetupHref } from '~/lib/content';
 
 const nextHref = await nextMeetupHref();
+
+// Production's /cfv wording (origin/main src/pages/cfv.tsx), shortened.
+const GAINS = [
+  {
+    h: 'Professional growth',
+    d: 'Develop new skills in tech, marketing or event management, build your portfolio with real projects, and gain leadership experience in community initiatives.',
+  },
+  { h: 'Networking', d: 'Connect with tech leaders, build relationships with local tech companies and become part of a supportive community of peers.' },
+  { h: 'Community impact', d: 'Help shape the local tech ecosystem, contribute to educational initiatives and create opportunities for others in tech.' },
+];
+const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
 ---
 
 <BaseLayout
@@ -13,8 +24,41 @@ const nextHref = await nextMeetupHref();
   description="Volunteer with ZurichJS on meetup nights, with photos and video, or with the website. Help us grow the JavaScript community in Zurich."
   keywords={['volunteer Zurich', 'ZurichJS volunteer', 'JavaScript community Zurich', 'tech meetup volunteer']}
 >
-  <PageOpening slot="opening" title="Volunteer with us" sub="On the night, with photos, or with the website. A couple of hours around a meetup is already a lot." />
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
-    <VolunteerForm client:load nextHref={nextHref} />
+  <PageOpening
+    slot="opening"
+    title="Volunteer with us"
+    sub="ZurichJS is community-driven and run entirely by volunteers. Help with the evenings, outreach, design, content or the website."
+  />
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,88px)]">
+    <section aria-labelledby="h-gain" class="flex flex-col gap-[18px]">
+      <h2 id="h-gain" class={h2}>What you get</h2>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4">
+        {
+          GAINS.map((g) => (
+            <div class="bg-grey rounded-card p-6 flex flex-col gap-2">
+              <h3 class="m-0 text-[20px] font-bold">{g.h}</h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{g.d}</p>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-how" class="flex flex-col gap-3 max-w-[720px]">
+      <h2 id="h-how" class={h2}>Before you apply</h2>
+      <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        Volunteering is unpaid. ZurichJS is run by volunteers and can’t offer financial compensation. We try to make it an experience that helps you grow professionally
+        and personally.
+      </p>
+      <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        You choose how much time you give: a few hours a week, a few hours a month, or only during events. After you apply, someone from the organising team emails you within 7
+        days to talk about the next steps.
+      </p>
+    </section>
+
+    <section aria-labelledby="h-apply" class="flex flex-col gap-[18px]">
+      <h2 id="h-apply" class={h2}>Apply to volunteer</h2>
+      <VolunteerForm client:load nextHref={nextHref} />
+    </section>
   </div>
 </BaseLayout>

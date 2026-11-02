@@ -9,7 +9,7 @@
  */
 import { zurichDay } from './format.ts';
 import { FEEDBACK_WINDOW_MS } from './state.ts';
-import type { Event, Partner, SupporterRole } from './types.ts';
+import type { Event, Partner, SponsorTier, SupporterRole } from './types.ts';
 
 export type TodayPhase = 'upcoming' | 'today' | 'live' | 'after' | 'none';
 
@@ -53,20 +53,37 @@ export function eventSupporters(ev: Pick<Event, 'hosts' | 'supporters'>, partner
   return [...out.values()].sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
 }
 
-const TIER_ORDER = ['champion', 'builder', 'friend', 'supporter', undefined];
+const TIERS: SponsorTier[] = ['champion', 'builder', 'friend', 'supporter'];
+const TIER_ORDER = [...TIERS, undefined];
+export const TIER_LABEL: Record<SponsorTier, string> = {
+  champion: 'Community Champions',
+  builder: 'Community Builders',
+  friend: 'Community Friends',
+  supporter: 'Community Supporters',
+};
 
-/** Partners grouped for display. Only partners marked current are ever called current sponsors. */
+/**
+ * Partners grouped for display. Only partners marked current are ever called
+ * current sponsors or partners; venues are "have hosted us", so they need no flag.
+ * A tiered sponsor appears only with the sponsors, never again in a category.
+ */
 export function groupPartners(partners: Partner[]) {
   const byTier = (a: Partner, b: Partner) => TIER_ORDER.indexOf(a.tier) - TIER_ORDER.indexOf(b.tier) || a.name.localeCompare(b.name);
+  const byName = (a: Partner, b: Partner) => a.name.localeCompare(b.name);
   const has = (p: Partner, k: Partner['kinds'][number]) => p.kinds.includes(k);
-  const sponsors = partners.filter((p) => has(p, 'sponsor'));
+  const sponsor = (p: Partner) => has(p, 'sponsor');
+  const currentSponsors = partners.filter((p) => sponsor(p) && p.current).sort(byTier);
+  const current = (k: Partner['kinds'][number]) => partners.filter((p) => p.current && !sponsor(p) && has(p, k)).sort(byName);
   return {
-    currentSponsors: sponsors.filter((p) => p.current).sort(byTier),
-    pastSponsors: sponsors.filter((p) => !p.current).sort(byTier),
-    venues: partners.filter((p) => has(p, 'venue') || has(p, 'food')).sort((a, b) => a.name.localeCompare(b.name)),
-    community: partners.filter((p) => p.current && (has(p, 'community') || has(p, 'conference'))).sort((a, b) => a.name.localeCompare(b.name)),
-    supporting: partners.filter((p) => p.current && has(p, 'supporting')).sort((a, b) => a.name.localeCompare(b.name)),
-    pastPartners: partners.filter((p) => !p.current && !has(p, 'sponsor') && !has(p, 'venue') && !has(p, 'food')).sort((a, b) => a.name.localeCompare(b.name)),
+    currentSponsors,
+    /** Current sponsors by tier, highest first; sponsors without a tier last. Empty tiers are left out. */
+    sponsorsByTier: [...TIERS, undefined].map((tier) => ({ tier, partners: currentSponsors.filter((p) => p.tier === tier) })).filter((g) => g.partners.length > 0),
+    pastSponsors: partners.filter((p) => sponsor(p) && !p.current).sort(byTier),
+    venues: partners.filter((p) => has(p, 'venue') || has(p, 'food')).sort(byName),
+    conferences: current('conference'),
+    communities: current('community').filter((p) => !has(p, 'conference')),
+    supporting: current('supporting').filter((p) => !has(p, 'conference') && !has(p, 'community')),
+    pastPartners: partners.filter((p) => !p.current && !sponsor(p) && !has(p, 'venue') && !has(p, 'food')).sort(byName),
   };
 }
 

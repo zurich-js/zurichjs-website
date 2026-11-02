@@ -8,7 +8,8 @@ import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink, trackAttrs } from '@zurichjs/design/analytics';
 import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
-import { mediaTagged } from '@zurichjs/content';
+import SponsorTiers from '~/components/SponsorTiers.astro';
+import { PROSPECTUS_MAILTO, REACH_COUNTRIES, REACH_STATS, SPONSORSHIP_TIERS, mediaTagged } from '@zurichjs/content';
 import { groupPartners, partnerPeriod } from '@zurichjs/events';
 
 const { partners, conference, media } = await content();
@@ -16,11 +17,30 @@ const groups = groupPartners(partners);
 const hostedPhoto = mediaTagged(media.items, 'featured-partners').find((m) => m.kind === 'photo');
 const nextHref = await nextMeetupHref();
 
-const WAYS = [
-  { k: 'host', h: 'Host a meetup', give: 'A room with seating, a screen and sound for one evening.', get: 'Your team in the room, a short welcome from the stage, and your logo on the event page and Meetup listing.', yellow: true },
-  { k: 'food', h: 'Cover food and drinks', give: 'Pizza, drinks or both for one evening.', get: 'Thanks from the stage and your logo on the event page and on the Tonight page during the meetup.', yellow: false },
-  { k: 'partner', h: 'Community partner', give: 'A contribution toward the season’s meetups and speaker travel.', get: 'Your logo on the home page and on every meetup page while you support us, and first pick of hosting dates.', yellow: false },
+const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host');
+const hostTier = SPONSORSHIP_TIERS.find((t) => t.id === 'host')!;
+const CATEGORIES = [
+  {
+    id: 'venues',
+    h: 'Venue partners',
+    sub: 'Our venue partners generously provide their spaces for ZurichJS meetups, helping us create memorable events for our community.',
+    list: groups.venues,
+  },
+  { id: 'conferences', h: 'Conference partners', sub: 'Our conference partners offer exclusive discounts and special access to ZurichJS members for their events.', list: groups.conferences },
+  {
+    id: 'communities',
+    h: 'Community partners',
+    sub: 'Our community partners are fellow tech communities that we collaborate with to strengthen the JavaScript ecosystem in our region.',
+    list: groups.communities,
+  },
+  {
+    id: 'supporting',
+    h: 'Supporting partners',
+    sub: 'Our supporting partners provide valuable resources, tools, and services that help us run ZurichJS more effectively.',
+    list: groups.supporting,
+  },
 ];
+const previous = [...groups.pastSponsors, ...groups.pastPartners];
 const AUDIENCE = [
   ['75%+', 'full-stack or frontend engineers'],
   ['40%', 'in senior roles'],
@@ -48,34 +68,100 @@ const HANDLE = [
     sub="By sponsoring, you help us keep events accessible, bring in international expertise, and create opportunities for developers at all levels."
   >
     <div class="flex flex-wrap gap-3 pt-1.5">
-      <Button href="#partner-form" variant="yellow" grow>Send an inquiry</Button>
-      <Button href={`mailto:${SITE.email}`} variant="outline-white" grow>Email the organisers</Button>
+      <Button href="#sponsorship-tiers" variant="yellow" grow>Become a sponsor</Button>
+      <Button href={PROSPECTUS_MAILTO} variant="outline-white" grow>Request the prospectus</Button>
+      <Button href="#partner-form" variant="outline-white" grow>Send an inquiry</Button>
     </div>
   </PageOpening>
 
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <section aria-labelledby="h-ways" class="flex flex-col gap-7">
-      <h2 id="h-ways" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Three ways to support a meetup</h2>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4">
+    <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Choose your partnership level</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
+          Transparent pricing, clear benefits and flexible commitment: yearly, monthly or one-time. Not sure which tier fits? <a href="#partner-form" class="text-black underline underline-offset-[3px]">Start a conversation</a> and we’ll help you find the right match, or <a href={PROSPECTUS_MAILTO} class="text-black underline underline-offset-[3px]">request the prospectus</a>.
+        </p>
+      </div>
+      <ul class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4 list-none m-0 p-0">
         {
-          WAYS.map((w) => (
-            <Surface tone={w.yellow ? 'yellow' : 'grey'} class="p-7 flex flex-col gap-3.5">
-              <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
-              <div class="flex flex-col gap-1">
-                <div class="text-[16px] font-bold">You provide</div>
-                <div class="text-[17px] leading-normal text-ink-2">{w.give}</div>
-              </div>
-              <div class="flex flex-col gap-1 flex-1">
-                <div class="text-[16px] font-bold">You get</div>
-                <div class="text-[17px] leading-normal text-ink-2">{w.get}</div>
-              </div>
-              <Button href={`/partners?way=${w.k}#partner-form`} variant={w.yellow ? 'black' : 'white'} size="sm" class="self-start" data-partner-way={w.k} aria-label={`Choose this: ${w.h}`}>
-                Choose this
+          sponsorTiers.map((t) => (
+            <Surface as="li" tone={t.id === 'champion' ? 'yellow' : 'grey'} class="p-7 flex flex-col gap-5">
+              <h3 class="m-0 text-[24px] font-bold">{t.name}</h3>
+              <dl class="m-0 flex flex-col gap-1.5">
+                {t.prices.map((pr) => (
+                  <div class="flex justify-between items-baseline gap-3 flex-wrap">
+                    <dt class="text-[16px] text-ink-2">{pr.label}</dt>
+                    <dd class="m-0 ml-auto text-[20px] font-bold text-right">
+                      {pr.amount}
+                      {pr.note && <span class="block text-[14px] font-normal text-ink-2">{pr.note}</span>}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal flex-1">
+                {t.perks.map((perk) => (
+                  <li>{perk}</li>
+                ))}
+              </ul>
+              <Button
+                href={`/partners?way=partner&tier=${t.id}#partner-form`}
+                variant={t.id === 'champion' ? 'black' : 'white'}
+                size="sm"
+                class="self-start"
+                data-partner-way="partner"
+                data-partner-tier={t.id}
+                aria-label={`Become a sponsor: ${t.name}`}
+              >
+                Become a sponsor
               </Button>
             </Surface>
           ))
         }
+      </ul>
+      <Surface tone="grey" class="p-7 grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5">
+        <div class="flex flex-col gap-4">
+          <h3 class="m-0 text-[24px] font-bold">{hostTier.name}</h3>
+          {hostTier.description && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{hostTier.description}</p>}
+          <dl class="m-0 flex flex-col gap-1.5">
+            {
+              hostTier.prices.map((pr) => (
+                <div class="flex justify-between items-baseline gap-3 flex-wrap">
+                  <dt class="text-[16px] text-ink-2">{pr.label}</dt>
+                  <dd class="m-0 ml-auto text-[20px] font-bold text-right">
+                    {pr.amount}
+                    {pr.note && <span class="block text-[14px] font-normal text-ink-2">{pr.note}</span>}
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+        <div class="flex flex-col gap-5">
+          <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal">
+            {hostTier.perks.map((perk) => <li>{perk}</li>)}
+          </ul>
+          <div class="flex flex-wrap gap-2.5">
+            <Button href="/partners?way=host#partner-form" variant="black" size="sm" data-partner-way="host" aria-label="Choose this: Host a meetup">Host a meetup</Button>
+            <Button href="/partners?way=food#partner-form" variant="white" size="sm" data-partner-way="food" aria-label="Choose this: Cover food and drinks">Cover food and drinks</Button>
+          </div>
+        </div>
+      </Surface>
+    </section>
+
+    <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">
+      <div class="flex flex-col gap-1.5">
+        <h2 id="h-p-current" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Our sponsors</h2>
+        <p class="m-0 text-[18px] text-ink-2">These sponsors make ZurichJS possible. Join them in supporting our community.</p>
       </div>
+      {
+        groups.sponsorsByTier.length > 0 ? (
+          <SponsorTiers groups={groups.sponsorsByTier} />
+        ) : (
+          <p class="m-0 text-[17px]">
+            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the partnership levels</a>.
+          </p>
+        )
+      }
     </section>
 
     <section aria-labelledby="h-aud" class="on-black bg-black text-white rounded-block p-[clamp(24px,4vw,56px)] flex flex-col gap-[clamp(24px,3vw,36px)]">
@@ -101,6 +187,21 @@ const HANDLE = [
       </div>
       <div class="text-[15px] leading-normal text-grey-mid">
         Meetup attendee profile, as published on <a href={SITE.confSponsorshipUrl} target="_blank" rel="noopener" class="text-white underline underline-offset-[3px]">conf.zurichjs.com/sponsorship</a>.
+      </div>
+      <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach</h3>
+        <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+          {
+            REACH_STATS.map((r) => (
+              <div class="flex flex-col-reverse justify-end gap-1.5">
+                <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
+                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold text-yellow">{r.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <p class="m-0 text-[18px] leading-[1.55] max-w-[760px]">{REACH_COUNTRIES}</p>
+        <div class="text-[15px] leading-normal text-grey-mid">Reach figures as published on zurichjs.com in October 2025.</div>
       </div>
     </section>
 
@@ -144,6 +245,7 @@ const HANDLE = [
       </Surface>
     </section>
 
+    <span id="inquiry-form" aria-hidden="true"></span>
     <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
       <div class="flex flex-col gap-3">
         <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
@@ -165,44 +267,67 @@ const HANDLE = [
       </div>
     </section>
 
-    {
-      [
-        { id: 'current', h: 'Supporting ZurichJS now', sub: 'Our current sponsors.', list: groups.currentSponsors },
-        { id: 'venues', h: 'Companies who have hosted our meetups', sub: 'Rooms, food and drinks for an evening.', list: groups.venues },
-        { id: 'community', h: 'Community and conference partners', sub: 'Communities and conferences we work with.', list: groups.community },
-        { id: 'supporting', h: 'Tools and perks', sub: 'Companies supporting the organisers and members.', list: groups.supporting },
-        { id: 'past', h: 'Past supporters', sub: 'Thank you for supporting ZurichJS in earlier seasons.', list: [...groups.pastSponsors, ...groups.pastPartners] },
-      ]
-        .filter((g) => g.list.length > 0)
-        .map((g) => (
+    <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-[clamp(28px,3vw,40px)] scroll-mt-6">
+      <div class="flex justify-between items-end gap-4 flex-wrap">
+        <div class="flex flex-col gap-1.5 max-w-[720px]">
+          <h2 id="h-p-community" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Community partners</h2>
+          <p class="m-0 text-[18px] text-ink-2">Collaborating to strengthen the European tech ecosystem.</p>
+        </div>
+        <Button href="/partners?way=partner#partner-form" variant="outline-black" size="sm" data-partner-way="partner" aria-label="Choose this: Community partner inquiry">Community partner inquiry</Button>
+      </div>
+      {
+        CATEGORIES.map((g) => (
           <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-[18px] scroll-mt-6">
             <div class="flex flex-col gap-1.5">
-              <h2 id={`h-p-${g.id}`} class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+              <h3 id={`h-p-${g.id}`} class="m-0 text-[clamp(22px,2.2vw,28px)] leading-[1.2] font-bold">
                 {g.h}
-              </h2>
-              <p class="m-0 text-[17px] text-ink-2">{g.sub}</p>
+              </h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">{g.sub}</p>
             </div>
-            <LogoGrid partners={g.list} caption={(p) => [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined} />
+            {g.list.length > 0 ? (
+              <LogoGrid partners={g.list} caption={(p) => [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined} />
+            ) : (
+              <p class="m-0 text-[17px]">None listed right now.</p>
+            )}
           </section>
         ))
+      }
+    </section>
+
+    {
+      previous.length > 0 && (
+        <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-[18px] scroll-mt-6">
+          <div class="flex flex-col gap-1.5">
+            <h2 id="h-p-past" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+              Previous partners and sponsors
+            </h2>
+            <p class="m-0 text-[17px] text-ink-2">We’re grateful to all the companies and organisations that have supported ZurichJS over the years.</p>
+          </div>
+          <LogoGrid partners={previous} size="sm" caption={(p) => partnerPeriod(p)} />
+        </section>
+      )
     }
   </div>
 </BaseLayout>
 
 <script>
   // "Choose this" selects the matching option in the form. The choice is in the link
-  // (?way=…#partner-form), so it also works when this script or the form island has not
-  // loaded yet: the page then reloads with ?way= and the island reads it. Once loaded, the
-  // URL is updated in place and the form is told directly.
+  // (?way=…&tier=…#partner-form), so it also works when this script or the form island has
+  // not loaded yet: the page then reloads with ?way= and the island reads it. Once loaded,
+  // the URL is updated in place and the form is told directly.
   document.addEventListener('click', (e) => {
     const el = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[data-partner-way]');
     const way = el?.dataset.partnerWay;
     if (!el || !way) return;
     e.preventDefault();
+    const tier = el.dataset.partnerTier ?? '';
     const u = new URL(location.href);
     u.searchParams.set('way', way);
+    if (tier) u.searchParams.set('tier', tier);
+    else u.searchParams.delete('tier');
     u.hash = 'partner-form';
     history.replaceState(history.state, '', u);
+    window.__zjsPartnerTier = tier;
     window.__zjsPartnerWay = way;
     document.dispatchEvent(new CustomEvent('zjs:partner-way', { detail: way }));
     const form = document.getElementById('partner-form');

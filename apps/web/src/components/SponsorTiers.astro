@@ -1,0 +1,60 @@
+---
+/**
+ * Current sponsors by tier, each with its logo at the size the tier promises
+ * (XL, large, medium, small), its name and its own words. The logo is the only
+ * link, so each sponsor has one named link. Sponsors who asked for referral
+ * analytics (`allowReferrer`) get links without `noreferrer`.
+ */
+import { TIER_LABEL, type Partner, type SponsorTier } from '@zurichjs/events';
+import Surface from '@zurichjs/design/components/Surface.astro';
+
+interface Props {
+  groups: { tier?: SponsorTier; partners: Partner[] }[];
+}
+const { groups } = Astro.props;
+const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer');
+const LOGO: Record<SponsorTier | 'none', { box: string; img: string; cols: string }> = {
+  champion: { box: 'h-40 w-full md:w-[320px]', img: 'max-h-24', cols: 'grid-cols-1' },
+  builder: { box: 'h-32 w-full md:w-[260px]', img: 'max-h-16', cols: 'grid-cols-1' },
+  friend: { box: 'h-24 w-full', img: 'max-h-14', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
+  supporter: { box: 'h-20 w-full', img: 'max-h-12', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
+  none: { box: 'h-20 w-full', img: 'max-h-12', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
+};
+---
+
+<div class="flex flex-col gap-[clamp(28px,3vw,40px)]">
+  {
+    groups.map((g) => {
+      const z = LOGO[g.tier ?? 'none'];
+      const wide = g.tier === 'champion' || g.tier === 'builder';
+      return (
+        <div class="flex flex-col gap-4">
+          <h3 class="m-0 text-[24px] font-bold">{g.tier ? TIER_LABEL[g.tier] : 'Sponsors'}</h3>
+          <ul class={`grid ${z.cols} gap-4 list-none m-0 p-0`}>
+            {g.partners.map((p) => (
+              <Surface as="li" tone={g.tier === 'champion' ? 'yellow' : 'grey'} class={`p-[clamp(20px,2.4vw,28px)] flex gap-5 ${wide ? 'flex-col md:flex-row md:items-center' : 'flex-col'}`}>
+                {p.url ? (
+                  <a href={p.url} target="_blank" rel={rel(p)} class={`${z.box} flex-none rounded-2xl bg-white flex items-center justify-center px-6 no-underline text-black`}>
+                    {p.logo ? (
+                      <img src={p.logo} alt={`${p.name} (opens in a new tab)`} width="240" height="96" loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} />
+                    ) : (
+                      <span class="font-bold text-[20px]">{p.name}</span>
+                    )}
+                  </a>
+                ) : (
+                  <div class={`${z.box} flex-none rounded-2xl bg-white flex items-center justify-center px-6`}>
+                    {p.logo ? <img src={p.logo} alt={p.name} width="240" height="96" loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} /> : <span class="font-bold text-[20px]">{p.name}</span>}
+                  </div>
+                )}
+                <div class="flex flex-col gap-1.5">
+                  <div class="text-[20px] font-bold">{p.name}</div>
+                  {(p.blurb || p.description) && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{p.blurb ?? p.description}</p>}
+                </div>
+              </Surface>
+            ))}
+          </ul>
+        </div>
+      );
+    })
+  }
+</div>

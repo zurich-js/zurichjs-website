@@ -8,6 +8,7 @@
  */
 import { normalizeSearch, speakerTopics } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
+import { speakersWithTalks } from '@zurichjs/content';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -15,7 +16,8 @@ import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { content } from '~/lib/content';
 
-const { speakers, events } = await content();
+const { speakers: all, events } = await content();
+const speakers = speakersWithTalks(all);
 // Deterministic order: most recent talk first, then name.
 const dateOf = new Map(events.map((e) => [e.slug, e.startsAt ?? '']));
 const latest = (s: (typeof speakers)[number]) =>

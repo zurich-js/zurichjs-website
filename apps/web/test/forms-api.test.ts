@@ -76,4 +76,40 @@ describe('/api/forms/[kind]', () => {
     expect(err).toHaveBeenCalled();
     delete process.env.SLACK_WEBHOOK_URL;
   });
+
+  it('accepts a full volunteer application and sends every field to Slack (stubbed)', async () => {
+    process.env.SLACK_WEBHOOK_URL = 'https://hooks.slack.invalid/x';
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok'));
+    const { res, body } = await post('volunteer', {
+      name: 'Anna Beispiel',
+      email: 'anna@example.com',
+      linkedinProfile: 'https://www.linkedin.com/in/anna',
+      githubProfile: 'anna-b',
+      availability: 'other',
+      availabilityOther: 'Two evenings a month',
+      interests: ['Event organisation', 'Graphic design'],
+      message: 'I like the meetups.',
+      website_url: '',
+    });
+    expect(res.status).toBe(200);
+    expect(String(body.id)).toMatch(/^volunteer_/);
+    const text = String(JSON.parse(String(fetchMock.mock.calls[0]![1]!.body)).text);
+    for (const part of [
+      'Anna Beispiel',
+      'anna@example.com',
+      'https://www.linkedin.com/in/anna',
+      'anna-b',
+      'Other: Two evenings a month',
+      'Event organisation, Graphic design',
+      'I like the meetups.',
+    ])
+      expect(text).toContain(part);
+    delete process.env.SLACK_WEBHOOK_URL;
+  });
+
+  it('answers 400 for a volunteer application without LinkedIn, interests or motivation', async () => {
+    const { res, body } = await post('volunteer', { name: 'Anna', email: 'anna@example.com', availability: 'monthly', interests: [] });
+    expect(res.status).toBe(400);
+    expect(Object.keys(body.fields as object).sort()).toEqual(['interests', 'linkedinProfile', 'message']);
+  });
 });

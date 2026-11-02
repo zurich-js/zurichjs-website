@@ -731,3 +731,106 @@ test.describe('community page', () => {
     await expect(page.getByRole('link', { name: 'Ask us for a Slack invite' })).toHaveAttribute('href', '/contact?topic=slack');
   });
 });
+
+test.describe('volunteering (/cfv)', () => {
+  const fillRequired = async (page: Page) => {
+    await page.getByLabel(/^Name/).fill('Test Person');
+    await page.getByLabel(/^Email/).fill('test@example.com');
+    await page.getByLabel('LinkedIn profile').fill('https://www.linkedin.com/in/test-person');
+    await page.getByRole('radio', { name: 'A few hours monthly' }).check();
+    await page.getByRole('checkbox', { name: 'Event organisation' }).check();
+    await page.getByLabel('Why do you want to volunteer with ZurichJS?').fill('I enjoy the meetups.');
+  };
+
+  test('explains what volunteering involves, and offers production’s areas without workshops', async ({ page }) => {
+    await page.goto('/cfv');
+    for (const h of ['Professional growth', 'Networking', 'Community impact']) await expect(page.getByRole('heading', { name: h })).toBeVisible();
+    await expect(page.getByText(/Volunteering is unpaid/)).toBeVisible();
+    await expect(page.getByText(/a few hours a week, a few hours a month, or only during events/)).toBeVisible();
+    await hydrated(page);
+    const areas = page.getByRole('group', { name: 'What would you like to help with?' }).getByRole('checkbox');
+    await expect(areas).toHaveCount(8);
+    for (const box of await areas.all()) await expect(box).not.toBeChecked();
+    await expect(page.getByRole('checkbox', { name: /workshop/i })).toHaveCount(0);
+    await expect(page.getByRole('checkbox', { name: 'Photography and video' })).toBeVisible();
+    await expect(page.getByLabel('LinkedIn profile')).toHaveAttribute('type', 'url');
+    await expect(page.getByLabel(/^Email/)).toHaveAttribute('type', 'email');
+  });
+
+  test('validation, several areas, "Other" availability, and a send with every answer', async ({ page }) => {
+    let sent: Record<string, unknown> | undefined;
+    await page.route('**/api/forms/volunteer', async (route) => {
+      sent = route.request().postDataJSON() as Record<string, unknown>;
+      await route.fulfill({ json: { ok: true, id: 'volunteer_test' } });
+    });
+    await page.goto('/cfv');
+    await hydrated(page);
+    const send = page.getByRole('button', { name: 'Send application' });
+    await send.click();
+    await expect(page.getByText('Fix the highlighted fields.')).toBeVisible();
+    await expect(page.getByLabel(/^Name/)).toBeFocused();
+    await expect(page.getByLabel(/^Name/)).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByText('Choose at least one area.')).toBeVisible();
+    const firstArea = page.getByRole('checkbox', { name: 'Community management' });
+    await expect(firstArea).toHaveAttribute('aria-describedby', /interests/);
+    await fillRequired(page);
+    await page.getByLabel('LinkedIn profile').fill('https://example.com/me');
+    await send.click();
+    await expect(page.getByText('Enter a linkedin.com link, like https://www.linkedin.com/in/your-name.')).toBeVisible();
+    await expect(page.getByLabel('LinkedIn profile')).toBeFocused();
+    await page.getByLabel('LinkedIn profile').fill('https://www.linkedin.com/in/test-person');
+    await page.getByRole('checkbox', { name: 'Graphic design' }).check();
+    await page.getByRole('radio', { name: 'Other' }).check();
+    await send.click();
+    await expect(page.getByLabel('Tell us how much time you have')).toBeFocused();
+    await page.getByLabel('Tell us how much time you have').fill('Two Saturdays a month');
+    await page.getByLabel(/GitHub username or link/).fill('test-person');
+    expect(sent).toBeUndefined();
+    await send.click();
+    await expect(page.getByRole('status').getByText('Thanks. Your application is in.')).toBeVisible();
+    expect(sent).toMatchObject({
+      name: 'Test Person',
+      email: 'test@example.com',
+      linkedinProfile: 'https://www.linkedin.com/in/test-person',
+      githubProfile: 'test-person',
+      availability: 'other',
+      availabilityOther: 'Two Saturdays a month',
+      interests: ['Event organisation', 'Graphic design'],
+      message: 'I enjoy the meetups.',
+      website_url: '',
+    });
+  });
+
+  test('a failed send keeps every answer, sends once while pending, and offers email', async ({ page }) => {
+    let calls = 0;
+    let release!: () => void;
+    const held = new Promise<void>((r) => (release = r));
+    await page.route('**/api/forms/volunteer', async (route) => {
+      calls++;
+      await held;
+      await route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now.' } });
+    });
+    await page.goto('/cfv');
+    await hydrated(page);
+    await fillRequired(page);
+    await page.getByRole('checkbox', { name: 'Social media' }).check();
+    await page.getByRole('button', { name: 'Send application' }).click();
+    const pending = page.getByRole('button', { name: 'Sending…' });
+    await expect(pending).toBeDisabled();
+    await pending.click({ force: true });
+    release();
+    await expect(page.getByRole('alert').filter({ hasText: 'We couldn’t send that' })).toBeVisible();
+    expect(calls).toBe(1);
+    await expect(page.getByText('Thanks. Your application is in.')).toHaveCount(0);
+    await expect(page.getByLabel(/^Name/)).toHaveValue('Test Person');
+    await expect(page.getByLabel('LinkedIn profile')).toHaveValue('https://www.linkedin.com/in/test-person');
+    await expect(page.getByRole('radio', { name: 'A few hours monthly' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Event organisation' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Social media' })).toBeChecked();
+    await expect(page.getByLabel('Why do you want to volunteer with ZurichJS?')).toHaveValue('I enjoy the meetups.');
+    await expect(page.getByRole('form', { name: 'Volunteer application' }).getByRole('link', { name: 'hello@zurichjs.com' })).toHaveAttribute(
+      'href',
+      /^mailto:hello@zurichjs\.com\?subject=Volunteer%20application/,
+    );
+  });
+});

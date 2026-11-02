@@ -13,7 +13,7 @@ Check these in order, and report each finding as `severity · file:line · probl
    - yellow as the only accent
    - pills and 24px cards
    - no kickers and no decorative borders
-   - no recordings or slides
+   - no talk recordings; slides only when the speaker shared them
    - the rating sentence without "/5"
    - no invented facts
    - no em dashes in copy

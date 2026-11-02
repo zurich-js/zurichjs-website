@@ -23,7 +23,8 @@
     },
     "/cfp/form": {
       "status": "redirect",
-      "to": "/cfp"
+      "to": "/cfp#proposal",
+      "reason": "Opens the proposal form directly (launch restoration, 2026-11-01)."
     },
     "/cfv": {
       "status": "ported"
@@ -95,42 +96,51 @@
     },
     "/tshirt": {
       "status": "redirect",
-      "to": "/donate"
+      "to": "/donate?from=tshirt",
+      "reason": "T-shirt sales ended (owner); the donate page explains it (?from=tshirt)."
     },
     "/waitlist/conf": {
       "status": "ported"
     },
     "/workshops": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/accessibility-fundamentals": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/ai-security-snyk-2026": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/astro-zero-to-hero": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/observability-dynatrace": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/react-architecture": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/react-performance": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/workshops/reliable-ai-agents": {
       "status": "redirect",
-      "to": "/events"
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/admin": {
       "status": "redirect",

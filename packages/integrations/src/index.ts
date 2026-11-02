@@ -21,6 +21,8 @@ export interface TalkProposal {
   level?: string;
   target?: string;
   bio?: string;
+  /** The person has not given a talk before: organisers offer help preparing. */
+  firstTalk?: boolean;
 }
 
 /** Seam for talk proposals. Today: Sanity `talkSubmission`. Later: Sane (docs/v2/SANE-READINESS.md). */
@@ -78,6 +80,7 @@ export const sanityTalkProposals = (client: SanityClient, now = () => new Date()
       level: p.level,
       speakers: [{ _type: 'reference', _ref: speakerId, _key: speakerId.slice(0, 12) }],
       status: 'pending',
+      firstTalk: p.firstTalk === true,
       submittedAt: now().toISOString(),
     });
     return { id: doc._id };
@@ -186,9 +189,14 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         level: d.level as string | undefined,
         target: d.target as string | undefined,
         bio: d.bio as string | undefined,
+        firstTalk: d.firstTalk === true || d.firstTalk === 'true' || d.firstTalk === 'on',
       };
       const saved = sink ? await sink.submit(proposal) : (log('[forms] SANITY_WRITE_TOKEN missing; talk proposal not stored'), { id });
-      await postSlack(env, `New talk proposal: “${proposal.title}” by ${proposal.name} (${proposal.format})`, log);
+      await postSlack(
+        env,
+        `New talk proposal: “${proposal.title}” by ${proposal.name} (${proposal.format})${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}`,
+        log,
+      );
       return { ok: true, id: saved.id };
     }
     case 'partners':

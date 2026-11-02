@@ -258,7 +258,7 @@ test.describe('speakers', () => {
     await page.goto('/speakers');
     await page.getByRole('link', { name: /^Testing \d+$/ }).click();
     await expect(page).toHaveURL(/topic=Testing/);
-    await expect(page.getByRole('link', { name: /^Testing \d+$/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('link', { name: /^Testing \d+$/ })).toHaveAttribute('aria-current', 'true');
     await expect(visible(page).filter({ hasText: 'Jonas Test' })).toHaveCount(1);
     await expect(visible(page).filter({ hasText: 'Max Muster' })).toHaveCount(0);
     await page.goBack();

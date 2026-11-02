@@ -238,6 +238,7 @@ export type TalkSubmission = {
     _key: string;
     [internalGroqTypeReferenceTo]?: "speaker";
   }>;
+  firstTalk?: boolean;
   status?: "pending" | "under_review" | "approved" | "scheduled" | "completed" | "rejected";
   reviewNotes?: string;
   submittedAt?: string;

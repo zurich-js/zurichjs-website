@@ -255,10 +255,22 @@ export default function CfpForm({ nextHref, confHref, confCfp, confState }: Prop
           <Button variant="link" class="text-[17px]" onClick={() => setStep(0)}>
             Back
           </Button>
-          <span class="text-[15px] text-ink-2">Your draft is kept in this browser.</span>
+          <span class="text-[15px] text-ink-2">Your answers, including name and email, are saved in this browser until you send the proposal.</span>
           <span role="alert" class="text-[15px] text-danger">
             {tried && !valid ? 'Fix the highlighted fields.' : serverError}
           </span>
+          {serverError && (
+            <span class="text-[15px] text-ink-2 basis-full">
+              Your proposal is still here. You can also email it to{' '}
+              <a
+                href={`mailto:hello@zurichjs.com?subject=${encodeURIComponent(`Talk proposal: ${d.title}`)}&body=${encodeURIComponent(`${d.title}\n\n${d.abstract}\n\nFormat: ${d.format} min\n${d.name}`)}`}
+                class="font-bold text-black"
+              >
+                hello@zurichjs.com
+              </a>
+              .
+            </span>
+          )}
         </div>
       </form>
 

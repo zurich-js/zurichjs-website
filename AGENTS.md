@@ -42,7 +42,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 - **Colour:** `#F1E271` is the only accent. `#268BCC` is used only for focus rings and the logo.
 - **Shapes and layout:** rounded pills for buttons and tags, 24px cards, one breakpoint at 800px.
 - **No decoration:** no kickers or eyebrow labels, no decorative borders, dividers or gradients.
-- **No recordings or slides:** ZurichJS does not record talks or publish slides.
+- **No recordings:** ZurichJS does not record talks. Slides are shown on a talk only when the speaker shared them (owner, 2026-11-01). Short clips from the evening may appear in the media archive, never presented as talk recordings.
 - **Rating and award:** one plain sentence, never "/5". The rating comes from the `meetupRating` record, updated by hand and never scraped.
 - **No invented facts:** dates, prices, attendee numbers, speakers and venues come from content or from a person, never from the agent.
 - **Copy:** plain, specific, no em dashes. Say "talk proposals" (explain "call for papers (CFP)" once).
@@ -61,13 +61,14 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 
 - **Queries** live in `packages/content/src/queries.ts` and are typed by `sanity typegen` into `sanity.types.ts`. After changing a query or the schema, run `npm run typegen` in the Studio repo, with both repos checked out side by side. A test catches a forgotten run.
 - **Sample content** (`packages/content/src/sample.ts`) is used only offline or in CI. Production builds fail rather than ship it.
+- **Schedules** (`packages/events/src/schedule.ts`): the event's `agenda` is the programme, with times in Zurich. Without an agenda, talks are listed without times. Never invent a time.
 - **Event state** (`packages/events/src/state.ts`) comes from the editorial status plus the clock. Cancelled and postponed override the clock. An event is "live" (feedback mode) from doors for 48 hours, then "past" (the recap on the same URL).
 - **Rebuilds:**
   - A Sanity publish calls a signed webhook (`/api/rebuild`).
   - A scheduled function builds once publishing has paused for 2 minutes, and at each event's doors and doors + 48 h.
   - There is no nightly rebuild.
 - **Draft preview:** a build with `SANITY_PERSPECTIVE=drafts` shows unpublished changes. It is noindex.
-- **No payments:** pro meetups, Stripe and online donations were removed. One-off contributions go by email, or by the Twint QR from Site settings.
+- **Payments:** only donations, through Stripe Checkout on `/donate` (one-time or monthly, owner decision 2026-11-01). Pro meetups, tickets and merchandise stay removed. Twint (QR from Site settings) and email remain. Membership requests never charge anything.
 
 ## Environment variables
 

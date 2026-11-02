@@ -12,6 +12,7 @@ import EventRow from '@zurichjs/design/components/EventRow.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import RetiredNotice from '~/components/RetiredNotice.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
 
 const { events, speakers } = await content();
@@ -51,6 +52,7 @@ const TABS = [
   jsonLd={[breadcrumbSchema([{ name: 'Events', path: '/events' }])]}
 >
   <PageOpening slot="opening" title="Events" sub="JavaScript meetups in Zurich. Every past event keeps its page, speakers and photos, so the talks live on long after the night." compact />
+  <RetiredNotice />
 
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-7" data-events>
     <div class="flex flex-wrap gap-3 items-center">

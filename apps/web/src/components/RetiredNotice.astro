@@ -1,0 +1,25 @@
+---
+/**
+ * One line for visitors arriving from a page that no longer exists
+ * (/workshops → /events?from=workshops, /tshirt → /donate?from=tshirt).
+ * Hidden unless ?from= matches, so the static page stays clean.
+ */
+import { SITE } from '~/lib/content';
+
+const NOTES = {
+  workshops: `Workshops have ended; ZurichJS now runs free meetups. If you booked a workshop and have a question about it, write to ${SITE.email}.`,
+  tshirt: `T-shirt sales have ended. If you have a question about an earlier order, write to ${SITE.email}.`,
+} as const;
+---
+
+<div class="px-gut pt-6 [[hidden]]:hidden" data-retired hidden>
+  <p role="status" class="m-0 bg-grey rounded-[20px] px-5 py-4 text-[17px] leading-normal max-w-[880px]" data-retired-text></p>
+</div>
+<script define:vars={{ NOTES }}>
+  const from = new URLSearchParams(location.search).get('from');
+  const box = document.querySelector('[data-retired]');
+  if (box && from && NOTES[from]) {
+    box.querySelector('[data-retired-text]').textContent = NOTES[from];
+    box.hidden = false;
+  }
+</script>

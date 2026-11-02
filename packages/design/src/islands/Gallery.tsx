@@ -43,12 +43,17 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   const show = (i: number, from?: HTMLElement | null) => {
     if (from) opener.current = from;
     setOpen(i);
-    history.replaceState(history.state, '', `#media-${items[i]!.id}`);
   };
   const close = () => {
     dialog.current?.close();
   };
-  const step = (d: number) => open !== null && show((open + d + items.length) % items.length);
+  // Functional update: fast key presses never read a stale position.
+  const step = (d: number) => setOpen((o) => (o === null ? o : (o + d + items.length) % items.length));
+
+  // The open item is in the URL (#media-<id>) so it can be shared.
+  useEffect(() => {
+    if (open !== null) history.replaceState(history.state, '', `#media-${items[open]!.id}`);
+  }, [open, items]);
 
   useEffect(() => {
     const d = dialog.current;
@@ -66,14 +71,12 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   // ← and → page through while the viewer is open; a click on the backdrop closes it.
   useEffect(() => {
     const d = dialog.current;
-    if (open === null || !d) return;
+    if (!d) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        const next = (open + (e.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length;
-        setOpen(next);
-        history.replaceState(history.state, '', `#media-${items[next]!.id}`);
-      }
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      const delta = e.key === 'ArrowRight' ? 1 : -1;
+      setOpen((o) => (o === null ? o : (o + delta + items.length) % items.length));
     };
     const onClick = (e: MouseEvent) => {
       if (e.target === d) d.close();
@@ -84,7 +87,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
       d.removeEventListener('keydown', onKey);
       d.removeEventListener('click', onClick);
     };
-  }, [open, items]);
+  }, [items]);
 
   const onClose = () => {
     setOpen(null);
@@ -133,7 +136,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
         ref={dialog}
         onClose={onClose}
         aria-labelledby="gallery-caption"
-        class="m-auto p-0 border-0 bg-transparent max-w-[min(1200px,100vw)] w-full max-h-dvh backdrop:bg-black/85 text-white"
+        class="m-auto p-0 border-0 bg-ink rounded-card max-w-[min(1200px,100vw)] w-full max-h-dvh backdrop:bg-black/85 text-white"
       >
         {cur && open !== null && (
           <figure class="m-0 flex flex-col gap-3 p-3 md:p-6">

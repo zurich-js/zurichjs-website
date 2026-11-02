@@ -72,8 +72,7 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
                 <a
                   href={`/speakers?topic=${encodeURIComponent(t.topic)}`}
                   data-topic={normalizeSearch(t.topic)}
-                  aria-pressed="false"
-                  class="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-pill border border-black text-[16px] font-bold no-underline text-black bg-white hover:bg-grey aria-pressed:bg-black aria-pressed:text-white"
+                  class="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-pill border border-black text-[16px] font-bold no-underline text-black bg-white hover:bg-grey aria-[current=true]:bg-black aria-[current=true]:text-white"
                 >
                   {t.topic}
                   <span class="font-normal opacity-70">{t.count}</span>
@@ -136,7 +135,11 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
         c.style.display = match ? '' : 'none';
         if (match) shown++;
       }
-      for (const chip of chips) chip.setAttribute('aria-pressed', String(chip.dataset.topic === topic));
+      // The selected topic is the current filter (aria-current on links; aria-pressed is for buttons).
+      for (const chip of chips) {
+        if (chip.dataset.topic === topic) chip.setAttribute('aria-current', 'true');
+        else chip.removeAttribute('aria-current');
+      }
       const filtered = tokens.length > 0 || !!topic;
       clear.hidden = !filtered;
       empty.hidden = shown > 0;

@@ -29,6 +29,9 @@ export const ROUTES = [
   '/ai-context',
   '/membership',
   '/waitlist/conf',
+  // Restored for launch
+  '/media/2026-09-signals-streams',
+  '/events/2025-11-anniversary',
 ];
 
 for (const route of ROUTES) {
@@ -69,9 +72,10 @@ test('legacy URLs redirect permanently', async ({ request }) => {
     ['/support', '/donate'],
     ['/success', '/donate'],
     ['/checkout/success', '/events'],
-    ['/workshops', '/events'],
-    ['/workshops/react-performance', '/events'],
-    ['/tshirt', '/donate'],
+    ['/workshops', '/events?from=workshops'],
+    ['/workshops/react-performance', '/events?from=workshops'],
+    ['/tshirt', '/donate?from=tshirt'],
+    ['/checkout/cancel', '/donate'],
     ['/media-demo', '/media'],
     ['/admin/events', '/'],
     ['/profile/settings', '/'],
@@ -79,13 +83,27 @@ test('legacy URLs redirect permanently', async ({ request }) => {
     ['/api/sitemap.xml', '/sitemap.xml'],
     ['/api/og/home', '/og/home.png'],
     ['/event-feedback', '/feedback'],
-    ['/cfp/form', '/cfp'],
+    ['/cfp/form', '/cfp#proposal'],
     ['/policies/privacy', '/policies/privacy-policy'],
   ]) {
     const res = await request.get(from!, { maxRedirects: 0 });
     expect(res.status(), from).toBe(301);
     expect(res.headers().location, from).toBe(to);
   }
+});
+
+test('redirects keep the query string (old Stripe return links, legacy feedback links)', async ({ request }) => {
+  const res = await request.get('/buy-us-a-coffee?canceled=true', { maxRedirects: 0 });
+  expect(res.headers().location).toBe('/donate?canceled=true');
+});
+
+test('retired pages explain themselves where they land', async ({ page }) => {
+  await page.goto('/workshops/react-performance');
+  await expect(page.getByText(/Workshops have ended/)).toBeVisible();
+  await page.goto('/tshirt');
+  await expect(page.getByText(/T-shirt sales have ended/)).toBeVisible();
+  await page.goto('/cfp/form');
+  await expect(page).toHaveURL(/\/cfp#proposal$/);
 });
 
 test('keyboard users see a focus ring and can skip to content', async ({ page }) => {
@@ -115,7 +133,7 @@ test('the support page never shows a sample payment code', async ({ page }) => {
   // The Twint QR only comes from Sanity Site settings; sample content has none.
   await page.goto('/donate');
   await expect(page.locator('[data-twint-qr]')).toHaveCount(0);
-  await expect(page.getByRole('heading', { name: 'One-off contribution' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Other ways to give' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toBeVisible();
 });
 

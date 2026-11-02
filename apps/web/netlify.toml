@@ -27,7 +27,12 @@ directory = "netlify/functions"
 # Sub-pages of production sections V2 does not have (the section roots are in src/lib/redirects.mjs).
 [[redirects]]
 from = "/workshops/*"
-to = "/events"
+to = "/events?from=workshops"
+status = 301
+# Old Stripe checkout pages (other than /checkout/success, in src/lib/redirects.mjs).
+[[redirects]]
+from = "/checkout/*"
+to = "/donate"
 status = 301
 [[redirects]]
 from = "/admin/*"

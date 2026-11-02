@@ -13,6 +13,7 @@ import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
+import RetiredNotice from '~/components/RetiredNotice.astro';
 import { SITE, content } from '~/lib/content';
 import { isExternal } from '@zurichjs/design/recipes';
 
@@ -38,7 +39,7 @@ const WAYS = [
   image="/og/donate.png"
   title="Support ZurichJS"
   fullTitle="Support ZurichJS · Help the JavaScript Community in Zurich"
-  description="Donate to ZurichJS once or monthly, or support it as a member, host, sponsor, speaker or volunteer. Meetups are free, run by volunteers and funded by donations, members and partners."
+  description="Donate to ZurichJS once or monthly, or support it as a member, host, sponsor, speaker or volunteer. Meetups are free and run by volunteers."
   keywords={['donate ZurichJS', 'support ZurichJS', 'sponsor ZurichJS', 'JavaScript community Zurich', 'ZurichJS membership', 'non-profit meetup Switzerland']}
 >
   <PageOpening slot="opening" title="Support ZurichJS" sub="Meetups are free to attend. We started on personal savings; donations, members and partners now cover the evenings.">
@@ -47,6 +48,7 @@ const WAYS = [
       <Button href="/membership" variant="outline-white" grow>Become a member</Button>
     </div>
   </PageOpening>
+  <RetiredNotice />
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(40px,5vw,80px)] items-start">
     <section id="donate" aria-labelledby="h-donate" class="flex flex-col gap-[18px] scroll-mt-6 col-span-full md:col-span-2">
       <div class="flex flex-col gap-2">

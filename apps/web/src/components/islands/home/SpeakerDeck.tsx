@@ -17,7 +17,7 @@ interface Props {
 const SWIPE = 80; // px of travel that counts as a swipe
 const FLY = 700; // px a dismissed card travels (phones)
 const SPREAD = 2; // cards each side of the centre on desktop
-const AUTO_MS = 2600; // desktop rotation interval
+const AUTO_MS = 2600; // auto-advance interval
 
 /** Phones: a stack. k = 0 is the top card, 1 and 2 peek out underneath; the rest wait hidden. */
 function stackTransform(o: number) {
@@ -36,9 +36,9 @@ function fanTransform(o: number) {
 /**
  * "Meet the speakers" as a deck of cards.
  * Phones: a stack; swipe the top card in any direction to send it to the back.
- * Desktop: five cards fanned out that rotate on their own (paused on hover, on
- * focus, with the Pause button, or under reduced motion); drag sideways or click
- * a side card to turn the fan. Previous, Next and the arrow keys work everywhere.
+ * Desktop: five cards fanned out; drag sideways or click a side card to turn the fan.
+ * Both advance on their own while visible (paused on hover, on focus, with the
+ * Pause button, or under reduced motion). Previous, Next and the arrow keys work everywhere.
  * Both layouts come from the same markup through CSS variables, so nothing jumps
  * when the island hydrates. Cards are told apart by colour, not shadows.
  */
@@ -73,11 +73,14 @@ export function SpeakerDeck({ speakers }: Props) {
 
   const step = (d: number) => setTop((t) => (((t + d) % n) + n) % n);
 
+  // Auto-advance on every screen while the deck is visible. The timer restarts after each change
+  // (a swipe, a click, a button), so a card never moves while someone has just interacted with it.
+  const nextRef = useRef<() => void>(() => {});
   useEffect(() => {
-    if (!desktop || paused || hold || !inView || n < 2) return;
-    const id = window.setInterval(() => setTop((t) => (t + 1) % n), AUTO_MS);
-    return () => window.clearInterval(id);
-  }, [desktop, paused, hold, inView, n]);
+    if (paused || hold || drag || !inView || n < 2) return;
+    const id = window.setTimeout(() => nextRef.current(), AUTO_MS);
+    return () => window.clearTimeout(id);
+  }, [paused, hold, drag, inView, n, top]);
 
   if (!n) return null;
   const idx = (k: number) => (((top + k) % n) + n) % n;
@@ -90,6 +93,7 @@ export function SpeakerDeck({ speakers }: Props) {
     step(1);
     window.setTimeout(() => setLeaving(null), 320);
   };
+  nextRef.current = () => next();
   const prev = () => {
     if (!leaving) step(-1);
   };
@@ -264,12 +268,12 @@ export function SpeakerDeck({ speakers }: Props) {
             type="button"
             onClick={() => setPaused((p) => !p)}
             aria-pressed={paused}
-            class="hidden md:inline-flex items-center min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[17px] cursor-pointer"
+            class="inline-flex items-center min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[17px] cursor-pointer"
           >
             {paused ? 'Play' : 'Pause'}
           </button>
         </div>
-        <p class="m-0 text-[15px] text-ink-2" aria-live={desktop && !paused && !hold && inView ? 'off' : 'polite'}>
+        <p class="m-0 text-[15px] text-ink-2" aria-live={!paused && !hold && inView ? 'off' : 'polite'}>
           {`${top + 1} of ${n}: ${current.name}`}
         </p>
       </div>

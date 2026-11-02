@@ -1,6 +1,6 @@
 ---
 /**
- * /today, "Tonight": the phone-first page for a meetup evening.
+ * /today, "Today": the phone-first page for a meetup evening.
  *
  * The meetup is picked at build time (one whose 48-hour feedback window is
  * open, else the next dated one); scheduled rebuilds at doors and doors + 48 h
@@ -35,7 +35,7 @@ const description = ev
   : 'ZurichJS on the evening of a meetup: arrival and directions, the running order with times, and talk ratings.';
 ---
 
-<BaseLayout title="Tonight" description={description}>
+<BaseLayout title="Today" description={description}>
   <section slot="opening" class="px-gut flex flex-col gap-[18px] pt-[clamp(16px,3vw,40px)] pb-[clamp(36px,5vw,64px)]">
     <Tonight client:load part="opening" ev={ev} names={names} now={BUILD_TIME.toISOString()} />
   </section>
@@ -45,7 +45,7 @@ const description = ev
       ev && ev.agenda.length > 0 && (
         <section id="programme" aria-labelledby="h-prog" class="px-gut flex flex-col gap-5 scroll-mt-6">
           <h2 id="h-prog" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
-            {phase === 'upcoming' ? 'Programme' : 'Tonight’s programme'}
+            {phase === 'upcoming' ? 'Programme' : 'Today’s programme'}
           </h2>
           <Tonight client:load part="programme" ev={ev} names={names} now={BUILD_TIME.toISOString()} />
         </section>

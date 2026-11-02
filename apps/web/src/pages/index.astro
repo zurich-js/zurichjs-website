@@ -7,7 +7,7 @@ import HomeHero from '@zurichjs/design/components/HomeHero.astro';
 import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
 import { SpeakerDeck, type DeckSpeaker } from '~/components/islands/home/SpeakerDeck';
-import { sizedSrc, srcsetFor } from '@zurichjs/design/images';
+import { avatarSrc, sizedSrc, srcsetFor } from '@zurichjs/design/images';
 import { speakersWithTalks } from '@zurichjs/content';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
@@ -17,16 +17,20 @@ import { pickFeatured } from '@zurichjs/content';
 const { events, speakers, rating, award, conference, partners, media } = await content();
 const next = nextMeetup(events, BUILD_TIME);
 const byId = new Map(speakers.map((s) => [s.id, s]));
+const harshil = speakers.find((s) => s.name === 'Harshil Agrawal');
 
 const LIKE = [
   {
     t: 'Talks, then time to talk',
-    d: 'Two or three talks, a mix of full-length and lightning, on what’s new and on ideas that stand the test of time. Not always about JavaScript, and always open to everyone. Then food, drinks and meeting who else is building things in your city.',
+    d: 'Doors open around 17:30. After a short welcome there are two or three talks, some full-length, some lightning, on what’s new and on ideas that last. Then everyone hangs around to meet the speakers and each other until about 21:30.',
   },
-  { t: 'Every framework, every level', d: 'Juniors to CTOs, frontend to infrastructure. JavaScript is the common ground, and the banner is wide enough for everyone.' },
+  {
+    t: 'Every framework, every level',
+    d: 'You’ll meet juniors and CTOs, frontend and infrastructure people, and plenty of first-timers who came on their own. JavaScript is what we have in common, and that’s a wide enough banner for everyone.',
+  },
   {
     t: 'A mini-conference in a meetup room',
-    d: 'Speakers from Zurich and well beyond, and every practical detail on the event page before you go: cost, language, how to get there, who to ask.',
+    d: 'Speakers come from Zurich and from much further away. Every meetup costs nothing and is in English, and the event page has the address and directions.',
   },
 ];
 
@@ -59,7 +63,18 @@ const deck: DeckSpeaker[] = speakersWithTalks(speakers)
 // Home photos: editors pick them in ImageKit (tag "featured-home"); the defaults fill any gap. No repeats.
 const featured = pickFeatured(media.items, 'featured-home', 3);
 const asPhoto = (m?: (typeof featured)[number]) => (m ? { src: m.src, alt: m.alt, width: m.width, height: m.height } : undefined);
-const heroPhotos = { audience: asPhoto(featured[0]) ?? PHOTOS.audience, speaker: asPhoto(featured[1]) ?? PHOTOS.speaker, conversation: asPhoto(featured[2]) ?? PHOTOS.conversation };
+// Defaults: high-resolution archive photos (February and January 2026) when the archive is available,
+// otherwise the bundled photos. No photo appears twice on the page.
+const archive = (path: string, alt: string, position?: string) => {
+  const m = media.items.find((x) => x.kind === 'photo' && (x.src.split('?')[0] ?? '').endsWith(path));
+  return m ? { src: m.src, alt, width: m.width, height: m.height, position } : undefined;
+};
+const heroPhotos = {
+  audience: asPhoto(featured[0]) ?? archive('/feb-2026/IMG_0125.jpg', 'The audience listening to a talk at the February 2026 meetup') ?? PHOTOS.audience,
+  speaker: asPhoto(featured[1]) ?? archive('/feb-2026/IMG_0091.jpg', 'A speaker presenting at the February 2026 meetup', 'center') ?? PHOTOS.speaker,
+  conversation: asPhoto(featured[2]) ?? archive('/feb-2026/IMG_0196.jpg', 'Attendees talking after the talks at the February 2026 meetup') ?? PHOTOS.conversation,
+};
+const likePhoto = archive('/jan-2026/2026-01-22-export-017.png', 'A full room at ZurichJS x Stripe, January 2026') ?? PHOTOS.community3;
 // Current sponsors (only those marked current) at their tier's logo size, then venue hosts and current partners.
 const partnerGroups = groupPartners(partners);
 ---
@@ -76,7 +91,7 @@ const partnerGroups = groupPartners(partners);
   <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={heroPhotos} rating={rating} award={award} meetupGroupUrl={SITE.meetupGroupUrl} />
   <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
     <section aria-labelledby="h-like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
-      <Photo photo={PHOTOS.speaker} class="aspect-4/3 w-full" />
+      <Photo photo={likePhoto} class="aspect-4/3 w-full" />
       <div class="flex flex-col gap-7">
         <h2 id="h-like" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What happens at a meetup</h2>
         {
@@ -87,9 +102,22 @@ const partnerGroups = groupPartners(partners);
             </div>
           ))
         }
-        <figure class="m-0 flex flex-col gap-2.5">
-          <blockquote class="m-0 text-[clamp(20px,1.9vw,24px)] leading-[1.45] font-bold text-pretty">“It felt like a large group of friends because folks knew each other, and were also very welcoming.”</blockquote>
-          <figcaption class="text-[16px] text-ink-2">Harshil Agrawal, Dev Educator at Cloudflare</figcaption>
+        {/* The quote stands apart: a yellow card, larger type, the speaker's photo and profile. */}
+        <figure class="m-0 rounded-card bg-yellow p-[clamp(22px,3vw,32px)] flex flex-col gap-5">
+          <blockquote class="m-0 text-[clamp(22px,2.2vw,28px)] leading-[1.35] font-bold text-pretty">“It felt like a large group of friends because folks knew each other, and were also very welcoming.”</blockquote>
+          <figcaption class="flex items-center gap-3 text-[16px]">
+            {harshil?.photo && <img src={avatarSrc(harshil.photo.src, 44)} alt="" width="44" height="44" loading="lazy" decoding="async" class="w-11 h-11 rounded-full object-cover bg-white flex-none" />}
+            <span class="flex flex-col">
+              {harshil ? (
+                <a href={`/speakers/${harshil.id}`} class="font-bold text-black underline underline-offset-[3px]">
+                  Harshil Agrawal
+                </a>
+              ) : (
+                <span class="font-bold">Harshil Agrawal</span>
+              )}
+              <span>Dev Educator at Cloudflare</span>
+            </span>
+          </figcaption>
         </figure>
       </div>
     </section>

@@ -175,7 +175,7 @@ test.describe('Tonight page', () => {
     await page.goto('/today');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Forms, types and design systems');
     await expect(page.locator('div').filter({ hasText: /^Next meetup$/ })).toBeVisible();
-    await expect(page.getByText(/How (was|is) tonight/)).toHaveCount(0);
+    await expect(page.getByText(/How (was|is) today/)).toHaveCount(0);
     await expect(page.getByText('Wed 18th Nov 2026').first()).toBeVisible();
   });
 
@@ -191,7 +191,7 @@ test.describe('Tonight page', () => {
     await at(page, '2026-11-18T19:40:00+01:00');
     await page.goto('/today');
     await expect(page.locator('[aria-current="time"]')).toContainText('What we learned shipping a design system');
-    await expect(page.getByRole('heading', { name: 'How is tonight going?' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'How is today’s meetup going?' })).toBeVisible();
   });
 
   test('after the feedback window with nothing planned: a helpful state', async ({ page }) => {

@@ -10,7 +10,7 @@ export const STATIC_ROUTES: (SitemapEntry & { title: string; summary: string })[
   { path: '/events', priority: 0.9, changefreq: 'daily', title: 'Events', summary: 'Upcoming and past ZurichJS meetups.' },
   { path: '/speakers', priority: 0.8, changefreq: 'weekly', title: 'Speakers', summary: 'Everyone who has spoken at ZurichJS, with their talks.' },
   { path: '/cfp', priority: 0.8, changefreq: 'weekly', title: 'Speak at a meetup', summary: 'Propose a talk; first-time speakers welcome.' },
-  { path: '/today', priority: 0.6, changefreq: 'daily', title: 'Tonight', summary: 'The programme of tonight’s meetup, now and next.' },
+  { path: '/today', priority: 0.6, changefreq: 'daily', title: 'Today', summary: 'The programme of today’s meetup, now and next.' },
   { path: '/about', priority: 0.7, changefreq: 'monthly', title: 'About', summary: 'Who runs ZurichJS, the association behind it and its history.' },
   { path: '/about/why-zurichjs', priority: 0.4, changefreq: 'yearly', title: 'Why it’s called ZurichJS', summary: 'The story behind the name.' },
   { path: '/partners', priority: 0.7, changefreq: 'monthly', title: 'Host or support a meetup', summary: 'Ways for companies to host, sponsor or support ZurichJS.' },

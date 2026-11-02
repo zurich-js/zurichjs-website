@@ -149,6 +149,11 @@ export function visibleSpeakers(raw: RawSpeaker[]): RawSpeaker[] {
   return raw.filter((r) => r.isVisible === true);
 }
 
+/** The /speakers directory lists only people who gave a talk at a ZurichJS event; their profiles stay up either way. */
+export function speakersWithTalks<T extends Pick<Speaker, 'talks'>>(speakers: T[]): T[] {
+  return speakers.filter((s) => s.talks.some((t) => t.eventSlugs.length > 0));
+}
+
 export function mapSpeaker(r: RawSpeaker): Speaker {
   const name = r.name ?? r.id;
   const links = [

@@ -11,6 +11,7 @@ import {
   perspective,
   resetContentCache,
   talkFormat,
+  speakersWithTalks,
   visibleSpeakers,
   type RawEvent,
 } from '../src/index.ts';
@@ -126,6 +127,15 @@ describe('helpers', () => {
   it('keeps only speakers explicitly marked visible', () => {
     const raw = [{ id: 'yes', isVisible: true }, { id: 'blank', isVisible: null }, { id: 'missing' }, { id: 'no', isVisible: false }];
     expect(visibleSpeakers(raw).map((s) => s.id)).toEqual(['yes']);
+  });
+  it('lists only speakers with a talk at an event', () => {
+    const talk = (eventSlugs: string[]) => ({ id: 't', title: 'T', eventSlugs }) as never;
+    const list = [
+      { id: 'spoke', talks: [talk(['jan-2026'])] },
+      { id: 'none', talks: [] },
+      { id: 'unscheduled', talks: [talk([])] },
+    ];
+    expect(speakersWithTalks(list).map((s) => s.id)).toEqual(['spoke']);
   });
 });
 

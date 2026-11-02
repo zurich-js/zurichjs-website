@@ -77,6 +77,92 @@ describe('talk proposals', () => {
   });
 });
 
+describe('talk proposals in Sanity (stubbed client, nothing is written)', () => {
+  const full = {
+    name: 'Ada Lovelace',
+    email: 'Ada@Example.com',
+    jobTitle: 'Engineer',
+    bio: 'Writes programs.',
+    linkedin: 'linkedin.com/in/ada',
+    github: '@ada',
+    twitter: 'https://twitter.com/ada',
+    title: 'Typed forms',
+    abstract: 'What you learn',
+    format: 'Lightning',
+    level: 'beginner',
+    topics: ['TypeScript', 'Testing'],
+    firstTalk: true,
+  };
+  const fake = (existing: string | null) => {
+    const create = vi.fn(async (doc: Record<string, unknown>) => ({ _id: doc._type === 'speaker' ? 'sp-new' : 'sub-1', ...doc }));
+    const fetch = vi.fn(async () => existing);
+    const patch = vi.fn();
+    return { client: { create, fetch, patch } as never, create, fetch, patch };
+  };
+
+  it('creates a hidden speaker with the profile and a pending submission with length, level and topics', async () => {
+    const s = fake(null);
+    const r = await forwardForm('cfp', full, { env: {}, sanity: s.client, now, log: () => {} });
+    expect(r).toEqual({ ok: true, id: 'sub-1' });
+    const [speaker, submission] = s.create.mock.calls.map((c) => c[0]);
+    expect(speaker).toMatchObject({
+      _type: 'speaker',
+      name: 'Ada Lovelace',
+      email: 'Ada@Example.com',
+      title: 'Engineer',
+      bio: 'Writes programs.',
+      linkedin: 'https://linkedin.com/in/ada',
+      github: 'https://github.com/ada',
+      twitter: 'https://twitter.com/ada',
+      isVisible: false,
+    });
+    expect(submission).toMatchObject({
+      _type: 'talkSubmission',
+      title: 'Typed forms',
+      description: 'What you learn',
+      durationMinutes: 5,
+      level: 'beginner',
+      tags: ['TypeScript', 'Testing'],
+      speakers: [{ _type: 'reference', _ref: 'sp-new' }],
+      status: 'pending',
+      firstTalk: true,
+      reviewNotes: 'First talk: offer help preparing.',
+    });
+  });
+  it('never changes an existing speaker: what they sent goes into the review notes', async () => {
+    const s = fake('sp-ada');
+    await forwardForm('cfp', { ...full, firstTalk: false, returning: true }, { env: {}, sanity: s.client, now, log: () => {} });
+    expect(s.create).toHaveBeenCalledTimes(1);
+    expect(s.patch).not.toHaveBeenCalled();
+    const submission = s.create.mock.calls[0]![0];
+    expect(submission.speakers).toEqual([expect.objectContaining({ _ref: 'sp-ada' })]);
+    expect(submission.reviewNotes).toContain('The speaker page was NOT changed');
+    expect(submission.reviewNotes).toContain('job title: Engineer');
+  });
+  it('flags a returning speaker whose email matches no speaker', async () => {
+    const s = fake(null);
+    await forwardForm('cfp', { ...full, firstTalk: false, returning: true }, { env: {}, sanity: s.client, now, log: () => {} });
+    expect(s.create.mock.calls[1]![0].reviewNotes).toContain('no speaker has this email');
+  });
+  it('tells Slack the length, level and topics (Slack stubbed)', async () => {
+    const log = vi.fn();
+    await forwardForm('cfp', full, { env: {}, sanity: null, now, log });
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('5 min, beginner, TypeScript, Testing'));
+  });
+});
+
+describe('profile links', () => {
+  it('turns handles and bare links into https URLs, and drops what is not a link', async () => {
+    const { profileUrl } = await import('../src/index.ts');
+    expect(profileUrl('@ada', 'https://x.com/')).toBe('https://x.com/ada');
+    expect(profileUrl('github.com/ada', 'https://github.com/')).toBe('https://github.com/ada');
+    expect(profileUrl('http://example.com/ada', 'https://github.com/')).toBe('https://example.com/ada');
+    expect(profileUrl('javascript:alert(1)', 'https://github.com/')).toBeUndefined();
+    expect(profileUrl('two words', 'https://github.com/')).toBeUndefined();
+    expect(profileUrl('  ', 'https://github.com/')).toBeUndefined();
+  });
+});
+
 describe('Slack (webhook or the production bot token)', () => {
   it('posts through the bot API with SLACK_BOT_TOKEN and SLACK_DEFAULT_CHANNEL', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(Response.json({ ok: true }));

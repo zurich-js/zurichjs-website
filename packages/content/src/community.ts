@@ -57,7 +57,7 @@ export const TEAM: TeamMember[] = [
     group: 'organisers',
     initials: initials('Nadja Hesselbjerg'),
     // Photo from conf.zurichjs.com/about (owner's choice), on black.
-    photo: photo('nadja', 'Nadja Hesselbjerg', '45% 30%'),
+    photo: photo('nadja-conf', 'Nadja Hesselbjerg', '45% 30%'),
     // [old-about]
     bio: 'Zurich-based frontend developer with a flair for sleek, user-friendly web experiences. She turns complex ideas into intuitive interfaces, and brings a multicultural perspective to her work.',
     links: [
@@ -155,7 +155,7 @@ export const MILESTONES: Milestone[] = [
     iso: '2025-05',
     title: 'Nadja joins the core team',
     text: 'Nadja Hesselbjerg joins Faris and Bogdan in organising ZurichJS.',
-    photo: { src: '/images/photos/nadja.webp', alt: 'Nadja Hesselbjerg', position: '45% 30%' },
+    photo: { src: '/images/photos/nadja-conf.webp', alt: 'Nadja Hesselbjerg', position: '45% 30%' },
     link: { label: 'Meet the team', href: '/about#team' },
     source: 'owner',
   },

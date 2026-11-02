@@ -246,10 +246,11 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
           "event": *[_id == $eventId][0]._id,
           "talk": *[_id == $talkId][0]._id,
           "inEvent": count(*[_id == $eventId && ($talkId in talks[]._ref || $talkId in agenda[].talk._ref || $talkId in recap.talks[].talk._ref)]) > 0,
-          "speaker": *[_type == "speaker" && id.current == $speakerSlug][0]._id,
+          "speaker": *[_type == "speaker" && id.current in $speakerSlugs][0]._id,
           "speakers": *[_id == $talkId][0].speakers[]._ref
         }`,
-        { eventId, talkId, speakerSlug },
+        // The site trims speaker IDs; a few stored IDs still carry stray spaces (Studio scripts/clean-speaker-slugs.ts).
+        { eventId, talkId, speakerSlugs: speakerSlug ? [speakerSlug, ` ${speakerSlug}`, `${speakerSlug} `] : [] },
       );
       if (!found.event || !found.talk || !found.inEvent) throw new FormRejected('We couldn’t find that talk for this event. Reload the page and try again.', 400);
       // A talk with one speaker may be rated without naming them.

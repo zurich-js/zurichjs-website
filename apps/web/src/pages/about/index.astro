@@ -28,7 +28,9 @@ const timeline = [...milestones]
     return { m, ev, photo, gallery: ev && mediaForEvent(media.items, ev.slug).length > 0 ? mediaHref(ev.slug) : undefined };
   });
 // Organisers who have spoken at ZurichJS link to their speaker profile.
-const speakerFor = (name: string) => speakers.find((x) => normalizeSearch(x.name) === normalizeSearch(name));
+// An explicit speakerId wins (Bogdan's profile is "Bogdan Ilie"); otherwise match by name.
+const speakerFor = (m: { name: string; speakerId?: string }) =>
+  (m.speakerId && speakers.find((x) => x.id === m.speakerId)) || speakers.find((x) => normalizeSearch(x.name) === normalizeSearch(m.name));
 const GROUPS = [
   { k: 'organisers', h: 'Meetup organisers' },
   { k: 'conference', h: 'ZurichJS Conf team' },
@@ -92,7 +94,7 @@ const isExt = (href: string) => /^https?:/.test(href);
   <PageOpening
     slot="opening"
     title="JavaScript is the common ground that brought us together"
-    sub="On 14 November 2024, we hosted our very first event, powered only by personal savings, donated time, and a lot of late nights. People showed up not just for the tech, but for the chance to connect face-to-face, across backgrounds, languages, and experience levels."
+    sub="On 14th November 2024, we hosted our very first event, powered only by personal savings, donated time, and a lot of late nights. People showed up not just for the tech, but for the chance to connect face-to-face, across backgrounds, languages, and experience levels."
   >
     <div class="flex flex-wrap gap-3 pt-1.5">
       <Button href={nextHref} variant="yellow" grow>See the next meetup</Button>
@@ -235,10 +237,12 @@ const isExt = (href: string) => /^https?:/.test(href);
               <h3 class="m-0 text-[22px] font-bold">{g.h}</h3>
               <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-x-4 gap-y-7">
                 {people.map((m) => {
-                  const sp = speakerFor(m.name);
+                  const sp = speakerFor(m);
+                  // No team photo: reuse the person's speaker photo when they have one.
+                  const pic = m.photo ?? (sp?.photo ? { ...sp.photo, alt: m.name } : undefined);
                   return (
                     <li class="flex flex-col gap-3">
-                      {m.photo ? <Photo photo={m.photo} class="aspect-square w-full" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
+                      {pic ? <Photo photo={pic} class="aspect-square w-full" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
                       <div class="flex flex-col gap-1.5">
                         <h4 class="m-0 text-[20px] font-bold">{m.name}</h4>
                         <div class="text-[16px] text-ink-2">{m.role}</div>

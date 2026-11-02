@@ -38,6 +38,8 @@ export const TEAM: TeamMember[] = [
     group: 'organisers',
     initials: initials('Bogdan Mihai Ilie'),
     photo: photo('bogdan', 'Bogdan Mihai Ilie'),
+    // His speaker profile is listed as "Bogdan Ilie".
+    speakerId: 'bogdan-ilie',
     // [old-about]
     bio: 'Frontend specialist with a knack for making everyone feel welcome. Passionate about inclusive tech communities and Vue.',
     links: [
@@ -116,7 +118,7 @@ export const MILESTONES: Milestone[] = [
     source: 'conf-blog',
   },
   {
-    date: '14 November 2024',
+    date: '14th November 2024',
     iso: '2024-11-14',
     title: 'The first ZurichJS meetup',
     text: '34 developers at novu, with Nico Martin, a Google Developer Expert in AI, as the first speaker.',
@@ -175,7 +177,7 @@ export const MILESTONES: Milestone[] = [
     source: 'old-about',
   },
   {
-    date: '18 June 2025',
+    date: '18th June 2025',
     iso: '2025-06-18',
     title: 'ZurichJS becomes a Swiss nonprofit',
     text: 'ZurichJS becomes official through the Swiss JavaScript Group, a registered Swiss nonprofit association (Verein).',
@@ -255,10 +257,11 @@ export const MILESTONES: Milestone[] = [
     source: 'old-today',
   },
   {
-    date: '9–12 September 2026',
-    iso: '2026-09-09',
+    // [conf-home]: Community Day 9 Sept, Zurich Engineering Day 10 Sept, Conference Day 11 Sept 2026, Technopark Zurich.
+    date: '9th–11th September 2026',
+    iso: '2026-09-11',
     title: 'The first ZurichJS Conf',
-    text: 'Our first annual conference at Technopark Zürich, with community events and workshops around it, run with a team of volunteers.',
+    text: 'Our first annual conference on 11th September at Technopark Zürich, after a Community Day on 9th September and the Zurich Engineering Day on 10th September, run with a team of volunteers.',
     link: { label: 'conf.zurichjs.com', href: 'https://conf.zurichjs.com' },
     source: 'conf-timeline',
   },

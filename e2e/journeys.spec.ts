@@ -114,7 +114,7 @@ test.describe('Tonight page', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Forms, types and design systems');
     await expect(page.locator('div').filter({ hasText: /^Next meetup$/ })).toBeVisible();
     await expect(page.getByText(/How (was|is) tonight/)).toHaveCount(0);
-    await expect(page.getByText('Wed 18 Nov 2026').first()).toBeVisible();
+    await expect(page.getByText('Wed 18th Nov 2026').first()).toBeVisible();
   });
 
   test('on the day: arrival first, and "Find the venue" is a working link', async ({ page }) => {

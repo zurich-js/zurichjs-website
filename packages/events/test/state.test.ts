@@ -87,7 +87,7 @@ describe('presentEvent', () => {
     const p = presentEvent(ev(), { now: at(doors - HOUR), ticketing });
     expect(p.cta).toMatchObject({ kind: 'rsvp', label: 'RSVP on Meetup', external: true });
     expect(p.pills).toEqual([{ text: 'Meetup' }, { text: 'RSVP open', yellow: true }]);
-    expect(p.whenShort).toBe('Wed 18 Nov 2026, 18:30–21:30');
+    expect(p.whenShort).toBe('Wed 18th Nov 2026, 18:30–21:30');
   });
   it('chains providers so a later one (Sane) can take over single events', () => {
     const sane = { id: 'sane', actionFor: (e: Event) => (e.slug === 'paid' ? { kind: 'buy' as const, label: 'Get a ticket', href: 'https://example.com', note: '' } : undefined) };
@@ -99,7 +99,7 @@ describe('presentEvent', () => {
     const p = presentEvent(ev(), { now: at(doors + HOUR), ticketing });
     expect(p.state).toBe('live');
     expect(p.cta.kind).toBe('feedback');
-    expect(p.banner?.title).toContain('Fri 20 Nov, 18:30');
+    expect(p.banner?.title).toContain('Fri 20th Nov, 18:30');
   });
   it('shows the cancelled banner and points to upcoming events', () => {
     const p = presentEvent(ev({ status: 'cancelled' }), { now: at(doors - HOUR), ticketing });

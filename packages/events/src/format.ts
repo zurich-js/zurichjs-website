@@ -4,11 +4,20 @@ const TZ = 'Europe/Zurich';
 const fmt = (opts: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-GB', { timeZone: TZ, ...opts });
 const part = (iso: string, opts: Intl.DateTimeFormatOptions) => fmt(opts).format(new Date(iso));
 
+/** 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd, 23rd… (owner: dates always use ordinals). */
+export function ordinal(n: number | string): string {
+  const v = Number(n);
+  const mod100 = v % 100;
+  const suffix = mod100 >= 11 && mod100 <= 13 ? 'th' : (({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[v % 10] ?? 'th');
+  return `${v}${suffix}`;
+}
+const dayOrd = (iso: string) => ordinal(part(iso, { day: 'numeric' }));
+
 /** "Wed 18 Nov 2026" */
-export const dateLong = (iso: string) => `${part(iso, { weekday: 'short' })} ${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
+export const dateLong = (iso: string) => `${part(iso, { weekday: 'short' })} ${dayOrd(iso)} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
 
 /** "18 Nov 2026" */
-export const dateShort = (iso: string) => `${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
+export const dateShort = (iso: string) => `${dayOrd(iso)} ${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
 
 /** "Nov 2026" */
 export const monthYear = (iso: string) => `${part(iso, { month: 'short' })} ${part(iso, { year: 'numeric' })}`;
@@ -73,7 +82,7 @@ export const dateTimeRange = (startIso: string, endIso?: string) => `${dateLong(
 export const dateTime = (startIso: string) => `${dateLong(startIso)}, ${time(startIso)}`;
 
 /** "Fri 20 Nov, 21:30" (no year, for deadlines close to the event) */
-export const dateTimeNoYear = (iso: string) => `${part(iso, { weekday: 'short' })} ${part(iso, { day: 'numeric' })} ${part(iso, { month: 'short' })}, ${time(iso)}`;
+export const dateTimeNoYear = (iso: string) => `${part(iso, { weekday: 'short' })} ${dayOrd(iso)} ${part(iso, { month: 'short' })}, ${time(iso)}`;
 
 export const chf = (n: number) => `CHF ${n}`;
 

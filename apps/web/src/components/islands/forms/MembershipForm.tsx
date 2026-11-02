@@ -14,6 +14,7 @@ export default function MembershipForm() {
   const [f, setF] = useState({ name: '', email: '', message: '' });
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   const [sent, setSent] = useState(false);
   const [serverError, setServerError] = useState('');
   const formRef = useRef<HTMLFormElement>(null);
@@ -33,11 +34,14 @@ export default function MembershipForm() {
 
   const submit = async (e: Event) => {
     e.preventDefault();
+    // One request at a time, even if Enter or the button is pressed twice before the re-render.
+    if (inFlight.current) return;
     if (!valid) {
       setTried(true);
       focusError();
       return;
     }
+    inFlight.current = true;
     setBusy(true);
     setServerError('');
     try {
@@ -53,6 +57,7 @@ export default function MembershipForm() {
     } catch (err) {
       setServerError((err as Error).message || 'We couldn’t send that right now. Please try again or email hello@zurichjs.com.');
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };

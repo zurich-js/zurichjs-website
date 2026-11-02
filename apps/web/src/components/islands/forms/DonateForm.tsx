@@ -32,6 +32,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
   const [custom, setCustom] = useState('');
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   const [error, setError] = useState('');
   /** The payment couldn't start (server or network): offer the other ways to give. */
   const [offerOther, setOfferOther] = useState(false);
@@ -50,6 +51,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
     // back-forward cache with the button still "Opening the payment page…".
     const restored = (e: PageTransitionEvent) => {
       if (!e.persisted) return;
+      inFlight.current = false;
       setBusy(false);
       attempt.current = Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
     };
@@ -65,6 +67,8 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
 
   const submit = async (e: Event) => {
     e.preventDefault();
+    // One request at a time, even if Enter or the button is pressed twice before the re-render.
+    if (inFlight.current) return;
     setOfferOther(false);
     const focusField = (name: string) => formRef.current?.querySelector<HTMLInputElement>(`input[name="${name}"]`)?.focus();
     if (amountBad) {
@@ -75,6 +79,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
       focusField('email');
       return setError('Check the email, or leave it empty.');
     }
+    inFlight.current = true;
     setBusy(true);
     setError('');
     try {
@@ -92,6 +97,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
       setError(!message || err instanceof TypeError ? 'We couldn’t reach the server. Nothing was charged. Please try again.' : message);
       setOfferOther(true);
       attempt.current = Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+      inFlight.current = false;
       setBusy(false);
     }
   };

@@ -50,6 +50,8 @@ export function SpeakerDeck({ speakers }: Props) {
   const [desktop, setDesktop] = useState(false);
   const [paused, setPaused] = useState(false);
   const [hold, setHold] = useState(false); // hover or focus inside
+  const [inView, setInView] = useState(false); // rotate only while someone can see it
+  const root = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number; id: number } | null>(null);
   const moved = useRef(false);
   const reduce = useRef(false);
@@ -61,16 +63,21 @@ export function SpeakerDeck({ speakers }: Props) {
     const on = () => setDesktop(mq.matches);
     on();
     mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
+    const io = new IntersectionObserver(([e]) => setInView(!!e?.isIntersecting), { threshold: 0.5 });
+    if (root.current) io.observe(root.current);
+    return () => {
+      mq.removeEventListener('change', on);
+      io.disconnect();
+    };
   }, []);
 
   const step = (d: number) => setTop((t) => (((t + d) % n) + n) % n);
 
   useEffect(() => {
-    if (!desktop || paused || hold || n < 2) return;
+    if (!desktop || paused || hold || !inView || n < 2) return;
     const id = window.setInterval(() => setTop((t) => (t + 1) % n), AUTO_MS);
     return () => window.clearInterval(id);
-  }, [desktop, paused, hold, n]);
+  }, [desktop, paused, hold, inView, n]);
 
   if (!n) return null;
   const idx = (k: number) => (((top + k) % n) + n) % n;
@@ -211,6 +218,7 @@ export function SpeakerDeck({ speakers }: Props) {
 
   return (
     <div
+      ref={root}
       class="flex flex-col items-center gap-6 md:gap-8"
       data-speaker-deck
       onMouseEnter={() => setHold(true)}
@@ -261,7 +269,7 @@ export function SpeakerDeck({ speakers }: Props) {
             {paused ? 'Play' : 'Pause'}
           </button>
         </div>
-        <p class="m-0 text-[15px] text-ink-2" aria-live={desktop && !paused && !hold ? 'off' : 'polite'}>
+        <p class="m-0 text-[15px] text-ink-2" aria-live={desktop && !paused && !hold && inView ? 'off' : 'polite'}>
           {`${top + 1} of ${n}: ${current.name}`}
         </p>
       </div>

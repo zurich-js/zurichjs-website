@@ -317,3 +317,8 @@ The audit found no sponsor recognition on the home page, `/partners` or event pa
 - **Event pages say what is true:** photos and clips when there are any; "not online yet" only in the two weeks after an event; afterwards "There are no photos from this evening in our archive", with a link to `/media`.
 - **`/media`:** a list of event dates to jump to (with the day, since some months had two meetups) and all clips gathered in one section that says the talks are not recorded.
 - **Maps:** "Show map" always loads a map on request. With `PUBLIC_GOOGLE_MAPS_EMBED_KEY` it is the Maps Embed API; without it, Google Maps' keyless embed of the address (`https://www.google.com/maps?q=<address>&output=embed`), which has no usage guarantee. No Google request before the click, the privacy note stays, and "Get directions" stays next to the map.
+
+## Owner changes, 2nd November 2026 (evening)
+
+- **Venue maps are always shown** (owner), replacing "load on request": the Google map sits under the address on every event page and loads lazily as it scrolls into view; "Get directions" stays next to it. With `PUBLIC_GOOGLE_MAPS_EMBED_KEY` it is the Maps Embed API, otherwise the keyless embed.
+- **Long talk descriptions are truncated on event pages** (owner): five lines, ending in "…", with a "Read more" / "Show less" button. The full text stays in the page for search engines and screen readers. Speaker profiles keep the full text.

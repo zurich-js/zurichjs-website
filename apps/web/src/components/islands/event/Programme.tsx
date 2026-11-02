@@ -143,7 +143,7 @@ export default function Programme({
                       })}
                     </div>
                     {summary && <p class="m-0 text-[17px] leading-[1.55] max-w-[640px]">{summary}</p>}
-                    <RichText text={a.talk.description} class="text-[17px] leading-[1.55] text-ink-2 max-w-[640px]" />
+                    <RichText text={a.talk.description} clampLines={5} class="text-[17px] leading-[1.55] text-ink-2 max-w-[640px]" />
                     <div class="text-[15px] text-ink-2">{[talkFormatLine(a.talk), a.talk.level, a.talk.language ?? 'English'].filter(Boolean).join(' · ')}</div>
                     {!!a.talk.tags?.length && (
                       <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">

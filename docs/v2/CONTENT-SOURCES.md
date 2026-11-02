@@ -42,16 +42,14 @@ Left out because no source confirms them: attendance at the conference (the conf
 
 ## Team
 
-| Person              | Role shown                    | Source                                                                   | Status                                                                               |
-| ------------------- | ----------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| Faris Aziz          | Co-founder and lead organiser | old-about, conf-blog                                                     |                                                                                      |
-| Bogdan Mihai Ilie   | Co-founder and lead organiser | old-about, conf-blog                                                     |                                                                                      |
-| Nadja Hesselbjerg   | Core team                     | conf-blog ("joined the core team"); old-about said "Community Supporter" | **confirm** the role                                                                 |
-| Enrique Ruiz Durazo | Official photographer         | old-about                                                                | **confirm** still current                                                            |
-| Colin Schwarz       | ZurichJS Conf team            | conf-about                                                               | **confirm** role and a photo (the conference repo's photo could not be read offline) |
-| 14 volunteers       | ZurichJS Conf 2026            | conf-about                                                               |                                                                                      |
+| Person            | Role shown                    | Source                                                                   | Status               |
+| ----------------- | ----------------------------- | ------------------------------------------------------------------------ | -------------------- |
+| Faris Aziz        | Co-founder and lead organiser | old-about, conf-blog                                                     |                      |
+| Bogdan Mihai Ilie | Co-founder and lead organiser | old-about, conf-blog                                                     |                      |
+| Nadja Hesselbjerg | Core team                     | conf-blog ("joined the core team"); old-about said "Community Supporter" | **confirm** the role |
+| 14 volunteers     | ZurichJS Conf 2026            | conf-about                                                               |                      |
 
-Nobody was removed. Photos: Faris, Bogdan and Enrique were already in V2; Nadja's comes from the production site (`public/images/team/nadja.png`).
+Removed at the owner's request (2nd November 2026): Enrique Ruiz Durazo (contributors) and Colin Schwarz (ZurichJS Conf team). Photos: Faris and Bogdan were already in V2; Nadja's comes from the production site (`public/images/team/nadja.png`).
 
 ## Partners
 

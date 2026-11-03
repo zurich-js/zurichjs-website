@@ -607,7 +607,7 @@ export default function CfpForm({ nextHref }: Props) {
             </div>
           </fieldset>
           <div class="flex flex-wrap gap-4 items-center">
-            <SubmitButton variant="black" size="lg" busy={busy}>
+            <SubmitButton variant="yellow" size="lg" busy={busy}>
               {busy ? 'Sending…' : 'Send proposal'}
             </SubmitButton>
             <span role="alert" class="text-[15px] text-danger">

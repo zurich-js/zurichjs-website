@@ -132,7 +132,7 @@ export default function ContactForm() {
         error={bad('message') ? errs.message : ''}
       />
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="black" size="lg" grow busy={busy}>
+        <SubmitButton variant="yellow" size="lg" grow busy={busy}>
           {busy ? 'Sending…' : 'Send message'}
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">

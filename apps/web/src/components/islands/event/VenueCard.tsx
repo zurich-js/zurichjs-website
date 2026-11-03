@@ -51,7 +51,7 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
           </dl>
         )}
         <div class="flex flex-wrap gap-3 items-center">
-          <Button href={directionsUrl(venue)} variant="black" size={compact ? 'sm' : 'md'} external>
+          <Button href={directionsUrl(venue)} variant="yellow" size={compact ? 'sm' : 'md'} external>
             Get directions
           </Button>
         </div>

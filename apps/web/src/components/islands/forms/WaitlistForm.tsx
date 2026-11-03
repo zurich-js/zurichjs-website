@@ -72,7 +72,7 @@ export default function WaitlistForm() {
           error={bad ? 'Enter an email like name@example.com.' : ''}
         />
       </div>
-      <SubmitButton variant="black" size="lg" busy={busy} class="w-full">
+      <SubmitButton variant="yellow" size="lg" busy={busy} class="w-full">
         {busy ? 'Adding you…' : 'Join the waitlist'}
       </SubmitButton>
       <span role="alert" class="text-[15px] text-danger empty:hidden">

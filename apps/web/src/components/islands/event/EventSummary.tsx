@@ -41,12 +41,12 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
         </div>
       </div>
       {p.cta.kind === 'feedback' ? (
-        <Button href={`/feedback?event=${ev.slug}`} variant="black" size="lg">
+        <Button href={`/feedback?event=${ev.slug}`} variant="yellow" size="lg">
           Feedback on the evening
         </Button>
       ) : (
         p.cta.href && (
-          <Button href={p.cta.href} variant="black" size="lg" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>
+          <Button href={p.cta.href} variant="yellow" size="lg" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>
             {p.cta.label}
           </Button>
         )

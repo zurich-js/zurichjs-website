@@ -19,7 +19,7 @@ const portalUrl = import.meta.env.PUBLIC_STRIPE_PORTAL_URL || process.env.PUBLIC
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-6 max-w-[760px]">
     <DonateThanks client:load portalUrl={portalUrl} email={SITE.email} />
     <div class="flex flex-wrap gap-3">
-      <Button href={nextHref} variant="black">See the next meetup</Button>
+      <Button href={nextHref} variant="yellow">See the next meetup</Button>
       <Button href="/donate" variant="outline-black">Back to Support</Button>
     </div>
   </div>

@@ -92,7 +92,7 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
             <Button variant="white" class="flex-1" onClick={close}>
               Later
             </Button>
-            <Button variant="black" class="flex-1" onClick={submit} disabled={!stars || phase === 'sending'}>
+            <Button variant="yellow" class="flex-1" onClick={submit} disabled={!stars || phase === 'sending'}>
               {phase === 'sending' ? 'Sending…' : 'Send rating'}
             </Button>
           </div>
@@ -107,7 +107,7 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
             {target.key === 'evening' ? 'The organisers read every rating.' : 'The speaker and the organisers can read your rating and comment. Nothing is published.'}
           </p>
           <Button
-            variant="black"
+            variant="yellow"
             onClick={() => {
               const next = pending[0];
               reset();

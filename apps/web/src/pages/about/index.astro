@@ -139,7 +139,7 @@ const isExt = (href: string) => /^https?:/.test(href);
           }
         </div>
         <div class="flex flex-wrap gap-3">
-          <Button href={nextHref} variant="black" grow>See the next meetup</Button>
+          <Button href={nextHref} variant="yellow" grow>See the next meetup</Button>
           <Button href="/policies/code-of-conduct" variant="grey" grow>Read the code of conduct</Button>
         </div>
       </div>
@@ -239,7 +239,7 @@ const isExt = (href: string) => /^https?:/.test(href);
       <SectionHeading id="h-team">
         The people who run it
         <Fragment slot="sub">We’ve built everything by volunteering our time and effort. Say hello at the next meetup; we’re the ones in yellow T-shirts.</Fragment>
-        <Button slot="action" href="/cfv" variant="black">Volunteer with us</Button>
+        <Button slot="action" href="/cfv" variant="yellow">Volunteer with us</Button>
       </SectionHeading>
       {
         GROUPS.map((g) => {

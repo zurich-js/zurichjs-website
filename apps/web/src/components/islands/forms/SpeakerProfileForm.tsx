@@ -170,7 +170,7 @@ export default function SpeakerProfileForm() {
         onInput={(e) => setInterests(e.currentTarget.value)}
       />
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="black" size="lg" busy={state === 'saving'}>
+        <SubmitButton variant="yellow" size="lg" busy={state === 'saving'}>
           {state === 'saving' ? 'Saving…' : 'Save for review'}
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">

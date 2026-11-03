@@ -107,7 +107,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
           <p class="m-0 text-[18px] leading-[1.55]">
             The organisers read every answer and use it to plan the next programme.{quote ? ' We may quote what you wrote on the website, as you allowed.' : ''}
           </p>
-          <Button href={nextHref} variant="black" class="self-start mt-1.5 text-[17px]">
+          <Button href={nextHref} variant="yellow" class="self-start mt-1.5 text-[17px]">
             See the next meetup
           </Button>
         </div>
@@ -197,7 +197,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
       </div>
 
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="black" size="lg" grow busy={busy}>
+        <SubmitButton variant="yellow" size="lg" grow busy={busy}>
           {busy ? 'Sending…' : 'Send feedback'}
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">

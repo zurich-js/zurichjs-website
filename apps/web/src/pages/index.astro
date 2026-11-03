@@ -67,6 +67,8 @@ const deck: DeckSpeaker[] = speakersWithTalks(speakers)
 // The section photos are set by hand too (~/lib/photos.ts).
 // Current sponsors (only those marked current) at their tier's logo size, then venue hosts and current partners.
 const partnerGroups = groupPartners(partners);
+// Everyone who supported ZurichJS before (sponsors, hosts and partners), by name; delisted partners never appear.
+const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.filter((p) => !p.current), ...partnerGroups.pastPartners].sort((a, b) => a.name.localeCompare(b.name));
 ---
 
 <BaseLayout
@@ -149,6 +151,10 @@ const partnerGroups = groupPartners(partners);
       <SpeakCta />
     </section>
 
-    <HostsSection sponsors={partnerGroups.currentSponsors} partners={[...partnerGroups.venues, ...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]} />
+    <HostsSection
+      sponsors={partnerGroups.currentSponsors}
+      partners={[...partnerGroups.venues.filter((p) => p.current), ...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]}
+      past={pastSupporters}
+    />
   </div>
 </BaseLayout>

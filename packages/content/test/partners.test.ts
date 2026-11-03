@@ -23,7 +23,8 @@ describe('production partner record', () => {
   it('every entry has a source and a logo that exists', () => {
     const pub = fileURLToPath(new URL('../../../apps/web/public', import.meta.url));
     for (const p of PARTNER_RECORDS) {
-      expect(p.source, p.id).toMatch(/^old-/);
+      // Documented sources only: the old site, or the sponsor banners on the owner's event photos.
+      expect(p.source, p.id).toMatch(/^(old-|photo-banners$)/);
       expect(p.logo && existsSync(`${pub}${p.logo}`), `${p.id} logo ${p.logo}`).toBe(true);
     }
   });
@@ -119,12 +120,12 @@ describe('groupPartners on the production record', () => {
   });
   it('separates venues, conference, community and supporting partners as production does', () => {
     expect(names(g.venues)).toEqual(['GetYourGuide', 'novu AG', 'Orbiz Josef Zurich', 'Smallpdf'].sort((a, b) => a.localeCompare(b)));
-    expect(names(g.conferences)).toEqual(['CityJS', 'Grusp', 'iJS Munich', 'WhatTheStack']);
+    expect(names(g.conferences)).toEqual(['CityJS', 'Grusp', 'iJS Munich', 'Voxxed Days Zurich', 'WhatTheStack']);
     expect(names(g.communities)).toEqual(['Web Zurich']);
     expect(names(g.supporting)).toEqual(['JetBrains', 'Swiss Dev Jobs']);
   });
   it('keeps previous supporters out of the current lists', () => {
-    expect(names([...g.pastSponsors, ...g.pastPartners])).toEqual(['Dynatrace', 'DotJS', 'React Paris', 'Voxxed Days Zurich']);
+    expect(names([...g.pastSponsors, ...g.pastPartners])).toEqual(['Cloudflare', 'Digitec Galaxus', 'Dynatrace', 'ImageKit', 'OnlyDust', 'Platformatic', 'Storyblok']);
     expect(names(g.currentSponsors)).not.toContain('Dynatrace');
   });
 });

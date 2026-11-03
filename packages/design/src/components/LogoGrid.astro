@@ -13,9 +13,12 @@ interface Props {
   caption?: (p: Partner) => string | undefined;
   /** Logo size; sponsorship tiers promise XL, large, medium and small logos. */
   size?: LogoSize;
+  /** Past supporters: logos in grey, in colour on hover or keyboard focus. */
+  muted?: boolean;
 }
 type LogoSize = 'xl' | 'lg' | 'md' | 'sm';
-const { partners, caption, size = 'md' } = Astro.props;
+const { partners, caption, size = 'md', muted = false } = Astro.props;
+const tone = muted ? 'grayscale opacity-60 transition-[filter,opacity] duration-200 group-hover:grayscale-0 group-hover:opacity-100 group-focus-within:grayscale-0 group-focus-within:opacity-100' : '';
 const SIZES: Record<LogoSize, { grid: string; box: string; img: string; w: number; h: number }> = {
   xl: { grid: 'grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))]', box: 'h-36 px-8', img: 'max-h-24', w: 240, h: 96 },
   lg: { grid: 'grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))]', box: 'h-28 px-6', img: 'max-h-16', w: 180, h: 64 },
@@ -30,11 +33,11 @@ const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer
   partners.length > 0 && (
     <ul class={`grid ${z.grid} gap-3 list-none m-0 p-0`}>
       {partners.map((p) => (
-        <li class="flex flex-col gap-1.5">
+        <li class="group flex flex-col gap-1.5">
           {p.url ? (
             <a href={p.url} target="_blank" rel={rel(p)} class={`${z.box} rounded-2xl bg-grey flex items-center justify-center no-underline text-black hover:bg-grey-soft`}>
               {p.logo ? (
-                <img src={p.logo} alt={`${p.name} (opens in a new tab)`} width={z.w} height={z.h} loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} />
+                <img src={p.logo} alt={`${p.name} (opens in a new tab)`} width={z.w} height={z.h} loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain ${tone}`} />
               ) : (
                 <span class="font-bold text-[16px] text-center">{p.name}</span>
               )}
@@ -42,7 +45,7 @@ const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer
           ) : (
             <div class={`${z.box} rounded-2xl bg-grey flex items-center justify-center`}>
               {p.logo ? (
-                <img src={p.logo} alt={p.name} width={z.w} height={z.h} loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} />
+                <img src={p.logo} alt={p.name} width={z.w} height={z.h} loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain ${tone}`} />
               ) : (
                 <span class="font-bold text-[16px] text-center">{p.name}</span>
               )}

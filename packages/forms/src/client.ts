@@ -89,7 +89,7 @@ export const REQUIRED: Record<FormKind, Record<string, string>> = {
   cfp: {
     name: 'Enter your name.',
     email: EMAIL,
-    title: 'Give your talk a working title.',
+    title: 'Add a title for your talk.',
     abstract: 'Describe your talk in a few sentences.',
     format: 'Choose a length.',
     level: 'Choose a level.',

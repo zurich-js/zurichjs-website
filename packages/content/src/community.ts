@@ -208,7 +208,7 @@ export const MILESTONES: Milestone[] = [
  * Each logo is the company's own full-colour SVG in apps/web/public/images/speaker-logos/
  * (from Wikimedia Commons or the company's website), with its width-to-height `ratio` (of the drawn logo; the files are trimmed to it)
  * so the row can size every logo to about the same visual weight.
- * `label` shows the name beside a logo that is only a symbol.
+ * `label` shows the name beside a logo that is only a symbol (Simple Icons, CC0, in the brand's colour).
  */
 export interface SpeakerCompany {
   name: string;
@@ -233,10 +233,11 @@ export const SPEAKER_COMPANIES: SpeakerCompany[] = [
   company('Chromatic', 'chromatic', 5),
   company('Astro', 'astro', 3.805),
   company('Unity', 'unity', 2.721),
+  company('Sentry', 'sentry', 1, true),
   company('Dynatrace', 'dynatrace', 5.657),
   company('GetYourGuide', 'getyourguide', 1.264),
   company('Smallpdf', 'smallpdf', 3.647),
-  company('Digitec Galaxus', 'digitec-galaxus', 9.592),
+  company('Digitec Galaxus', 'galaxus', 1, true),
   company('SBB', 'sbb', 8.889),
   company('SIX', 'six', 3.604),
   company('AXA', 'axa', 1),

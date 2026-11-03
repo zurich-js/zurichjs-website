@@ -68,7 +68,7 @@ export const schemas = {
     ...honeypot,
     name: text('Enter your name.').max(120),
     email,
-    title: text('Give your talk a working title.').max(180),
+    title: text('Add a title for your talk.').max(180),
     abstract: text('Describe your talk in a few sentences.').max(5000),
     format: z.enum(
       TALK_LENGTHS.map((l) => l.value),

@@ -283,16 +283,21 @@ test.describe('donations and membership', () => {
     expect(sent).toMatchObject({ tier: 'Supporter', billingCycle: 'yearly' });
   });
 
-  test('membership: production prices for every tier and billing choice, validation, and a request that charges nothing', async ({ page }) => {
+  test('membership: production quarterly and yearly prices, a billing switch, validation, and a request that charges nothing', async ({ page }) => {
     await page.goto('/membership');
     await hydrated(page);
     // Fees as on production (origin/main src/pages/membership.tsx).
     const PRICES = {
-      'Basic Member': { Monthly: 'CHF 14.50', Quarterly: 'CHF 50', Yearly: 'CHF 175' },
-      Supporter: { Monthly: 'CHF 21', Quarterly: 'CHF 75', Yearly: 'CHF 250' },
+      'Basic Member': { Quarterly: 'CHF 50', Yearly: 'CHF 175' },
+      Supporter: { Quarterly: 'CHF 75', Yearly: 'CHF 250' },
     };
-    const UNIT = { Monthly: 'month', Quarterly: 'quarter', Yearly: 'year' };
-    await expect(page.getByRole('button', { name: 'Send request: Basic Member, CHF 50 a quarter' })).toBeVisible();
+    const UNIT = { Quarterly: 'quarter', Yearly: 'year' };
+    // Supporter and yearly are the defaults; the switch above the cards changes what every card shows.
+    await expect(page.getByRole('button', { name: 'Send request: Supporter, CHF 250 a year' })).toBeVisible();
+    await expect(page.getByText('Save CHF 25 compared with paying quarterly.')).toBeVisible();
+    await page.getByRole('radio', { name: 'Quarterly', exact: true }).click();
+    await expect(page.getByText('CHF 200 over a year.')).toBeVisible();
+    await page.getByRole('radio', { name: 'Yearly', exact: true }).click();
     for (const [tier, cycles] of Object.entries(PRICES)) {
       await page.getByRole('radio', { name: tier, exact: true }).click();
       for (const [cycle, price] of Object.entries(cycles)) {
@@ -322,7 +327,7 @@ test.describe('donations and membership', () => {
     expect(calls).toBe(1);
   });
 
-  test('membership: every tier and billing cycle submits its own values (stubbed API), with each price and the per-year totals shown', async ({ page }) => {
+  test('membership: quarterly and yearly only, each tier and cycle submits its own values (stubbed API), with the monthly comparison shown', async ({ page }) => {
     const sent: Record<string, unknown>[] = [];
     await page.route('**/api/verein-inquiry', async (route) => {
       sent.push(route.request().postDataJSON());
@@ -330,16 +335,15 @@ test.describe('donations and membership', () => {
     });
     await page.goto('/membership');
     await hydrated(page);
-    await expect(page.getByText('Over a year: CHF 174 paid monthly, CHF 200 paid quarterly, CHF 175 paid yearly.')).toBeVisible();
-    await expect(page.getByText('Over a year: CHF 252 paid monthly, CHF 300 paid quarterly, CHF 250 paid yearly.')).toBeVisible();
-    await expect(page.getByText('Basic Members vote on small decisions; Supporters have voting rights.', { exact: false })).toBeVisible();
+    await expect(page.getByText('That’s CHF 14.50 a month, about')).toBeVisible();
+    await expect(page.getByText('That’s CHF 21 a month, about')).toBeVisible();
+    await expect(page.getByText('… a simple bouquet of tulips')).toBeVisible();
+    await expect(page.getByRole('radio', { name: /^Monthly, / })).toHaveCount(0);
     await expect(page.locator('input[name="name"]')).toHaveAttribute('required', '');
     await expect(page.locator('input[name="email"]')).toHaveAttribute('required', '');
     const COMBOS = [
-      ['Basic Member', 'Monthly', 'monthly', 'CHF 14.50 a month'],
       ['Basic Member', 'Quarterly', 'quarterly', 'CHF 50 a quarter'],
       ['Basic Member', 'Yearly', 'yearly', 'CHF 175 a year'],
-      ['Supporter', 'Monthly', 'monthly', 'CHF 21 a month'],
       ['Supporter', 'Quarterly', 'quarterly', 'CHF 75 a quarter'],
       ['Supporter', 'Yearly', 'yearly', 'CHF 250 a year'],
     ] as const;
@@ -353,7 +357,7 @@ test.describe('donations and membership', () => {
       expect(sent.at(-1)).toMatchObject({ name: 'Test Person', email: 'test@example.com', tier, billingCycle: cycle, website_url: '' });
       await page.getByRole('button', { name: 'Send another request' }).click();
     }
-    expect(sent).toHaveLength(6);
+    expect(sent).toHaveLength(4);
   });
 
   test('membership is linked from the footer on every page', async ({ page }) => {

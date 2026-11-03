@@ -3,10 +3,10 @@ import { CYCLES, TIERS, TIER_KEYS, feeLabel, perYear, tierByName, type Cycle } f
 import { handleInquiry, parseInquiry } from '../src/pages/api/verein-inquiry.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
 
-/** Production's fees (origin/main src/pages/membership.tsx). */
+/** Production's quarterly and yearly fees (origin/main src/pages/membership.tsx); monthly is no longer offered (owner, 3rd November 2026). */
 const PRODUCTION = {
-  'Basic Member': { monthly: 14.5, quarterly: 50, yearly: 175 },
-  Supporter: { monthly: 21, quarterly: 75, yearly: 250 },
+  'Basic Member': { quarterly: 50, yearly: 175 },
+  Supporter: { quarterly: 75, yearly: 250 },
 } as const;
 
 const combos = TIER_KEYS.flatMap((k) => CYCLES.map((c) => [TIERS[k].name, c.value] as const));
@@ -14,23 +14,24 @@ const combos = TIER_KEYS.flatMap((k) => CYCLES.map((c) => [TIERS[k].name, c.valu
 describe('membership fees', () => {
   it('match production for every tier and billing cycle', () => {
     for (const [name, cycle] of combos) expect(tierByName(name)!.fees[cycle]).toBe(PRODUCTION[name][cycle]);
-    expect(combos).toHaveLength(6);
+    expect(combos).toHaveLength(4);
   });
 
   it('labels each fee as its own price', () => {
-    expect(feeLabel(TIERS.basic, 'monthly')).toBe('CHF 14.50 a month');
     expect(feeLabel(TIERS.basic, 'quarterly')).toBe('CHF 50 a quarter');
     expect(feeLabel(TIERS.supporter, 'yearly')).toBe('CHF 250 a year');
   });
 
-  it('per-year totals are plain arithmetic, and quarterly costs the most (the page says so)', () => {
+  it('per-year totals are plain arithmetic, and paying yearly costs less', () => {
     const totals = (k: 'basic' | 'supporter') => Object.fromEntries(CYCLES.map((c) => [c.value, perYear(TIERS[k], c.value)])) as Record<Cycle, number>;
-    expect(totals('basic')).toEqual({ monthly: 174, quarterly: 200, yearly: 175 });
-    expect(totals('supporter')).toEqual({ monthly: 252, quarterly: 300, yearly: 250 });
-    for (const k of TIER_KEYS) {
-      const t = totals(k);
-      expect(t.quarterly).toBeGreaterThan(Math.max(t.monthly, t.yearly));
-    }
+    expect(totals('basic')).toEqual({ quarterly: 200, yearly: 175 });
+    expect(totals('supporter')).toEqual({ quarterly: 300, yearly: 250 });
+  });
+
+  it('only quarterly and yearly are offered; the monthly figure is the comparison line only', () => {
+    expect(CYCLES.map((c) => c.value)).toEqual(['quarterly', 'yearly']);
+    expect(TIERS.basic.perMonth).toBe(14.5);
+    expect(TIERS.supporter.perMonth).toBe(21);
   });
 
   it('keeps production benefits, including the workshop line and the voting wording', () => {

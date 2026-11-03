@@ -7,10 +7,13 @@ import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen
 import { Check } from '@zurichjs/design/islands/Check';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, perYear, type Cycle, type TierKey } from '../../../lib/membership.ts';
 
+/** The billing switch: yearly first, as it costs less. */
+const BILLING = [...CYCLES].reverse();
+
 /** Tier cards plus the membership request form on /membership. Posts to /api/verein-inquiry; nothing is charged. */
 export default function MembershipForm() {
-  const [tier, setTier] = useState<TierKey>('basic');
-  const [cycle, setCycle] = useState<Cycle>('quarterly');
+  const [tier, setTier] = useState<TierKey>('supporter');
+  const [cycle, setCycle] = useState<Cycle>('yearly');
   const [f, setF] = useState({ name: '', email: '', message: '' });
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -26,6 +29,7 @@ export default function MembershipForm() {
   const valid = !errs.name && !errs.email;
   const t = TIERS[tier];
   const fee = feeLabel(t, cycle);
+  const unit = CYCLES.find((c) => c.value === cycle)!.unit;
 
   const choose = (k: TierKey) => {
     setTier(k);
@@ -66,52 +70,77 @@ export default function MembershipForm() {
     <div class="flex flex-col gap-[clamp(48px,6vw,80px)]">
       <section aria-labelledby="h-tiers" class="flex flex-col gap-6">
         <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
-          Two ways to be a member
+          Choose your membership
         </h2>
-        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-4">
+        {/* One billing choice for the cards and the form below: a single pill with a segment per cycle. */}
+        <div role="radiogroup" aria-label="Billing" class="self-center inline-flex p-1 rounded-pill bg-grey">
+          {BILLING.map((c) => {
+            const on = c.value === cycle;
+            return (
+              <button
+                key={c.value}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setCycle(c.value)}
+                class={cx(
+                  'min-h-[44px] min-w-[120px] px-6 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors',
+                  on ? 'bg-black text-white' : 'bg-transparent text-black hover:bg-grey-hover',
+                )}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-4 items-stretch">
           {TIER_KEYS.map((k) => {
             const x = TIERS[k];
+            const featured = k === 'supporter';
             return (
-              <article key={k} class={cx('rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5', k === 'supporter' ? 'bg-yellow' : 'bg-grey')}>
-                <div class="flex flex-col gap-1.5">
-                  <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">{x.name}</h3>
+              <article key={k} class={cx('rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-6', featured ? 'bg-yellow' : 'bg-grey')}>
+                <div class="flex flex-col gap-1">
+                  <h3 class="m-0 text-[clamp(26px,2.6vw,34px)] leading-[1.15] font-bold">{x.name}</h3>
                   <p class="m-0 text-[17px] leading-normal text-ink-2">{x.tagline}</p>
                 </div>
-                <dl class="m-0 flex flex-wrap gap-x-8 gap-y-3">
-                  {CYCLES.map((c) => (
-                    <div key={c.value} class="flex flex-col">
-                      <dt class="order-2 text-[15px] text-ink-2 pt-1">a {c.unit}</dt>
-                      <dd class="order-1 m-0 text-[clamp(30px,3.2vw,40px)] leading-none font-bold">{chf(x.fees[c.value])}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <p class="m-0 text-[16px] leading-[1.5] text-ink-2">Over a year: {CYCLES.map((c) => `${chf(perYear(x, c.value))} paid ${c.label.toLowerCase()}`).join(', ')}.</p>
-                <ul class="m-0 p-0 list-none flex flex-col gap-2">
-                  {x.benefits.map((b) => (
-                    <li key={b} class="flex gap-2.5 items-start text-[17px] leading-[1.45]">
-                      <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white text-[12px] font-bold flex items-center justify-center">
-                        <Check class="w-3 h-3" />
-                      </span>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <Button variant={k === 'supporter' ? 'black' : 'outline-black'} class="self-start mt-auto" onClick={() => choose(k)} aria-controls="membership-form">
+                <div class="flex flex-col gap-1.5" aria-live="polite">
+                  <p class="m-0 flex items-baseline gap-2 flex-wrap">
+                    <span class="text-[clamp(40px,4.4vw,56px)] leading-none font-bold">{chf(x.fees[cycle])}</span>
+                    <span class="text-[18px] text-ink-2">per {unit}</span>
+                  </p>
+                  <p class="m-0 text-[16px] text-ink-2 min-h-[1.5em]">
+                    {cycle === 'yearly'
+                      ? `Save ${chf(perYear(x, 'quarterly') - perYear(x, 'yearly'))} compared with paying quarterly.`
+                      : `${chf(perYear(x, 'quarterly'))} over a year.`}
+                  </p>
+                </div>
+                <div class="flex flex-col gap-2">
+                  <p class="m-0 text-[18px] font-bold">That’s {chf(x.perMonth)} a month, about</p>
+                  <ul class="m-0 p-0 list-none flex flex-col gap-1 text-[17px] leading-[1.45] text-ink-2">
+                    {x.comparisons.map((c) => (
+                      <li key={c}>… {c}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div class="flex flex-col gap-2.5">
+                  {x.benefitsTitle && <p class="m-0 text-[17px] font-bold">{x.benefitsTitle}</p>}
+                  <ul class="m-0 p-0 list-none flex flex-col gap-2">
+                    {x.benefits.map((b) => (
+                      <li key={b} class="flex gap-2.5 items-start text-[17px] leading-[1.45]">
+                        <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center">
+                          <Check class="w-3 h-3" />
+                        </span>
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Button variant={featured ? 'black' : 'outline-black'} class="self-start mt-auto" onClick={() => choose(k)} aria-controls="membership-form">
                   Choose {x.name}
                 </Button>
               </article>
             );
           })}
-        </div>
-        <div class="flex flex-col gap-2 max-w-[760px] text-[17px] leading-[1.55] text-ink-2">
-          <p class="m-0">Each billing cycle is its own price, so paying quarterly costs more over a year than paying monthly or yearly. You pick one when you ask to join.</p>
-          <p class="m-0">
-            Voting: Basic Members vote on small decisions; Supporters have voting rights. For what that covers in practice, write to{' '}
-            <a href="mailto:hello@zurichjs.com?subject=Membership%20voting" class="font-bold text-black">
-              hello@zurichjs.com
-            </a>
-            .
-          </p>
         </div>
       </section>
 
@@ -125,10 +154,7 @@ export default function MembershipForm() {
           <h2 id="h-join" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
             Ask to join
           </h2>
-          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-            This sends a membership request; it doesn’t sign you up or charge anything. The organisers get it by email, and one of them replies with the next steps and how to pay
-            the fee.
-          </p>
+          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Nothing is charged here. An organiser replies by email with the next steps and how to pay.</p>
         </div>
 
         {sent ? (

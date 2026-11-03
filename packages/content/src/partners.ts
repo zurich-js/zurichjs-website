@@ -445,13 +445,6 @@ export const REACH_STATS: { value: string; label: string }[] = [
 ];
 export const REACH_AS_OF = 'October 2025';
 
-/** RSVPs across 18 meetups, November 2024 to September 2026 [meetup-export]. RSVPs, not check-ins. */
-export const RSVP_STATS: { value: string; label: string }[] = [
-  { value: '520', label: 'people RSVP’d yes to at least one meetup' },
-  { value: '36%', label: 'of them RSVP’d yes to 2 or more meetups' },
-];
-export const RSVP_SOURCE = 'Organisers’ Meetup export: yes RSVPs to 18 meetups, November 2024 to September 2026. RSVPs, not check-ins.';
-
 /**
  * "Our typical Audience" on conf.zurichjs.com/sponsorship [conf-sponsor], which
  * calls it "the meetup attendee profile". Undated, no method stated.

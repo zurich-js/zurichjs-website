@@ -23,8 +23,6 @@ import {
   REACH_AS_OF,
   REACH_COUNTRIES,
   REACH_STATS,
-  RSVP_SOURCE,
-  RSVP_STATS,
   SPONSORSHIP_TIERS,
 } from '@zurichjs/content';
 import { PAGE_PHOTOS } from '~/lib/photos';
@@ -136,24 +134,6 @@ const link = 'text-black underline underline-offset-[3px]';
           {AUDIENCE_INTERESTS.map((i) => <span class="text-[16px] font-bold py-2 px-4 rounded-pill bg-ink">{i}</span>)}
         </div>
       </div>
-      <p class="m-0 text-[15px] leading-normal text-grey-mid">
-        Meetup attendee profile as published on <a href={SITE.confSponsorshipUrl} target="_blank" rel="noopener" class="text-white underline underline-offset-[3px]">conf.zurichjs.com/sponsorship</a>, undated and without a stated method.
-      </p>
-
-      <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Meetup RSVPs, November 2024 to September 2026</h3>
-        <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
-          {
-            RSVP_STATS.map((r) => (
-              <div class="flex flex-col-reverse justify-end gap-1.5">
-                <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
-                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold text-yellow">{r.value}</dd>
-              </div>
-            ))
-          }
-        </dl>
-        <p class="m-0 text-[15px] leading-normal text-grey-mid">{RSVP_SOURCE}</p>
-      </div>
 
       <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
         <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach in {REACH_AS_OF}</h3>
@@ -168,7 +148,6 @@ const link = 'text-black underline underline-offset-[3px]';
           }
         </dl>
         <p class="m-0 text-[18px] leading-[1.55] max-w-[760px]">{REACH_COUNTRIES}</p>
-        <p class="m-0 text-[15px] leading-normal text-grey-mid">Figures as published on zurichjs.com in {REACH_AS_OF}, not updated since.</p>
       </div>
     </section>
 

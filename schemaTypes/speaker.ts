@@ -98,6 +98,14 @@ export default defineType({
       initialValue: false
     },
     {
+      name: 'legacySlugs',
+      title: 'Old URLs (IDs)',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: { layout: 'tags' },
+      description: 'Earlier IDs of this speaker. zurichjs.com/speakers/<old ID> redirects to the current page. Add the old ID here whenever you change the ID above.',
+    },
+    {
       name: 'talkReferences',
       title: 'Talks',
       type: 'array',

@@ -28,9 +28,9 @@ export const HERO_PHOTOS: { audience: Photo; speaker: Photo; conversation: Photo
   },
   // Bottom left (square).
   conversation: {
-    src: '/images/hero/after-meetup-table.webp',
-    srcset: '/images/hero/after-meetup-table-1200.webp 1200w, /images/hero/after-meetup-table.webp 1600w',
-    alt: 'Laughing round a table after a ZurichJS meetup',
-    position: '60% center',
+    src: '/images/hero/drinks-after-talks.webp',
+    srcset: '/images/hero/drinks-after-talks-960.webp 960w, /images/hero/drinks-after-talks.webp 1317w',
+    alt: 'Two attendees with drinks after the talks at a ZurichJS meetup',
+    position: 'center 30%',
   },
 };

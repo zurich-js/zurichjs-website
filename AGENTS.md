@@ -4,10 +4,11 @@ These are the instructions for any coding or content agent working in this repos
 
 ## What this is
 
-zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It is a static-first Astro 7 site on Netlify, with content in Sanity (project `viqjrovw`, dataset `production`). The Studio lives in `zurich-js/zurich-js-website-sanity-studio`.
+zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It is a static-first Astro 7 site on Netlify, with content in Sanity (project `viqjrovw`, dataset `production`). The Sanity Studio lives in this repo at `apps/studio` (imported from `zurich-js/zurich-js-website-sanity-studio`, history kept).
 
 | Path                                      | What                                                                                                                                             |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/studio`                             | The Sanity Studio: schema, desk, actions, migrations and content scripts. Deployed by hand with `sanity deploy`.                                 |
 | `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`. |
 | `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                  |
 | `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                              |
@@ -59,7 +60,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 
 ## Content, state and rebuilds
 
-- **Queries** live in `packages/content/src/queries.ts` and are typed by `sanity typegen` into `sanity.types.ts`. After changing a query or the schema, run `npm run typegen` in the Studio repo, with both repos checked out side by side. A test catches a forgotten run.
+- **Queries** live in `packages/content/src/queries.ts` and are typed by `sanity typegen` into `sanity.types.ts`. After changing a query or the schema, run `pnpm --filter @zurichjs/studio typegen` and commit `sanity.types.ts` and `apps/studio/schema.json`. CI regenerates them and fails when they differ.
 - **Sample content** (`packages/content/src/sample.ts`) is used only offline or in CI. Production builds fail rather than ship it.
 - **Schedules** (`packages/events/src/schedule.ts`): the event's `agenda` is the programme, with times in Zurich. Without an agenda, talks are listed without times. Never invent a time.
 - **Event state** (`packages/events/src/state.ts`) comes from the editorial status plus the clock. Cancelled and postponed override the clock. An event is "live" (feedback mode) from doors for 48 hours, then "past" (the recap on the same URL).

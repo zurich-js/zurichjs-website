@@ -16,6 +16,7 @@
     "**/node_modules/**",
     "vendor/**",
     "packages/content/src/sanity.types.ts",
-    "packages/agent/src/playbooks.generated.ts"
+    "packages/agent/src/playbooks.generated.ts",
+    "apps/studio/**"
   ]
 }

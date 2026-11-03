@@ -20,5 +20,6 @@
     "packages/*": {
       "entry": ["test/**/*.ts"]
     }
-  }
+  },
+  "ignoreWorkspaces": ["apps/studio"]
 }

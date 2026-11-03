@@ -15,6 +15,7 @@ import { SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
 import { PAGE_PHOTOS } from '~/lib/photos';
 import { cx } from '@zurichjs/design/recipes';
 import { RichText } from '~/components/RichText';
+import { SocialIcon, socialKind } from '~/components/islands/forms/SocialLabel';
 
 const { events, milestones, team, volunteers, quotes, settings, speakers, media } = await content();
 const slack = slackLink(settings);
@@ -259,23 +260,45 @@ const isExt = (href: string) => /^https?:/.test(href);
                       {pic ? <Photo photo={pic} class="aspect-square w-full mb-1.5" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
                       <h4 class="m-0 text-[20px] font-bold self-end">{m.name}</h4>
                       <div class="text-[16px] text-ink-2">{m.role}</div>
-                      {m.bio ? <RichText client:visible text={m.bio} clampLines={3} moreLabels={['See more', 'See less']} class="text-[15px] leading-[1.5] text-ink-2" /> : <span />}
+                      {m.bio ? (
+                        <RichText
+                          client:visible
+                          text={m.bio}
+                          clampLines={3}
+                          moreLabels={['See more ↓', 'See less ↑']}
+                          moreClass="p-0 bg-transparent border-0 text-[14px] font-bold text-grey-text hover:text-black cursor-pointer"
+                          class="text-[15px] leading-[1.5] text-ink-2"
+                        />
+                      ) : (
+                        <span />
+                      )}
                         {(m.links?.length ?? 0) > 0 || sp ? (
-                          <ul class="m-0 p-0 list-none flex flex-wrap gap-x-3 gap-y-1 text-[15px] self-start" aria-label={`${m.name}: links`}>
+                          // Speaker profile as a pill, then one round button per social link: clearly apart from the bio and its See more.
+                          <ul class="m-0 mt-2 p-0 list-none flex flex-wrap items-center gap-2 self-start" aria-label={`${m.name}: links`}>
                             {sp && (
                               <li>
-                                <a href={`/speakers/${sp.id}`} class="font-bold underline underline-offset-[3px]">
+                                <a href={`/speakers/${sp.id}`} class="inline-flex items-center min-h-[36px] px-3.5 rounded-pill border-2 border-black text-[14px] font-bold text-black no-underline hover:bg-black hover:text-white">
                                   Speaker profile
                                 </a>
                               </li>
                             )}
-                            {m.links?.map((l) => (
-                              <li>
-                                <a href={l.url} target="_blank" rel="noopener" class="underline underline-offset-[3px]">
-                                  {l.label}
-                                </a>
-                              </li>
-                            ))}
+                            {m.links?.map((l) => {
+                              const kind = socialKind(l.label);
+                              return (
+                                <li>
+                                  <a
+                                    href={l.url}
+                                    target="_blank"
+                                    rel="noopener"
+                                    title={l.label}
+                                    aria-label={`${m.name} on ${l.label} (opens in a new tab)`}
+                                    class={kind ? 'w-9 h-9 rounded-full bg-grey hover:bg-grey-hover flex items-center justify-center' : 'inline-flex items-center min-h-[36px] px-3.5 rounded-pill bg-grey hover:bg-grey-hover text-[14px] font-bold text-black no-underline'}
+                                  >
+                                    {kind ? <SocialIcon kind={kind} size={17} /> : l.label}
+                                  </a>
+                                </li>
+                              );
+                            })}
                           </ul>
                         ) : (
                           <span />
@@ -293,15 +316,13 @@ const isExt = (href: string) => /^https?:/.test(href);
           <div class="flex flex-col gap-2.5">
             <h3 class="m-0 text-[22px] font-bold">Volunteers</h3>
             <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
-              ZurichJS Conf 2026 happened thanks to {volunteers.length} volunteers:{' '}
-              {volunteers.map((v, i) => (
-                <Fragment>
-                  {i > 0 && ', '}
-                  <strong class="font-bold text-black whitespace-nowrap">{v}</strong>
-                </Fragment>
-              ))}
-              . And after almost every meetup, someone new offers to help.
+              ZurichJS Conf 2026 happened thanks to {volunteers.length} volunteers. And after almost every meetup, someone new offers to help.
             </p>
+            <ul class="m-0 p-0 list-none flex flex-wrap gap-2 max-w-[960px]" aria-label="Volunteers at ZurichJS Conf 2026">
+              {volunteers.map((v) => (
+                <li class="px-3.5 py-1.5 rounded-pill bg-grey text-[15px] font-bold text-black">{v}</li>
+              ))}
+            </ul>
           </div>
         )
       }

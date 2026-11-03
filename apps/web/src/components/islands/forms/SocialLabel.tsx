@@ -57,6 +57,20 @@ const ICONS = {
 
 export type Social = keyof typeof ICONS;
 
+/** Which icon a link label maps to ("GitHub" → github), or undefined for labels without one. */
+const KINDS: Record<string, Social> = { linkedin: 'linkedin', github: 'github', x: 'x', twitter: 'x', bluesky: 'bluesky', website: 'website' };
+export const socialKind = (label: string): Social | undefined => KINDS[label.trim().toLowerCase()];
+
+/** The brand mark alone (decorative: the link around it carries the name). */
+export function SocialIcon({ kind, size = 18 }: { kind: Social; size?: number }) {
+  const icon = ICONS[kind];
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{ color: icon.color }} class="flex-none">
+      {icon.body}
+    </svg>
+  );
+}
+
 /** A social field's label: the brand mark, then the text. */
 export function SocialLabel({ kind, text }: { kind: Social; text: ComponentChildren }) {
   const icon = ICONS[kind];

@@ -100,14 +100,14 @@ Changing any of these needs the owner's approval.
 
 ## Buttons
 
-| Variant                           | Use                                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------ |
-| `yellow`                          | The one primary action                                                         |
-| `black`                           | The primary action inside a yellow or grey block, or a strong secondary action |
-| `outline-black` / `outline-white` | Secondary actions on white or black                                            |
-| `white`, `grey`                   | Tertiary actions, filters                                                      |
-| `danger`                          | Destructive or irreversible actions only                                       |
-| `link`                            | Underlined text button ("Copy link", "Back")                                   |
+| Variant                           | Use                                                                         |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `yellow`                          | The one primary action                                                      |
+| `black`                           | The primary action on a yellow block only (a yellow button would disappear) |
+| `outline-black` / `outline-white` | Secondary actions on white or black                                         |
+| `white`, `grey`                   | Tertiary actions, filters                                                   |
+| `danger`                          | Destructive or irreversible actions only                                    |
+| `link`                            | Underlined text button ("Copy link", "Back")                                |
 
 External links get `target="_blank"` and `rel="noopener"` automatically (`external`, or detected from the `href`).
 

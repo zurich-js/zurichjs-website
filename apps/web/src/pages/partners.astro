@@ -205,11 +205,11 @@ const link = 'text-black underline underline-offset-[3px]';
               <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
               <p class="m-0 text-[17px] leading-[1.55] text-ink-2 flex-1">{w.d}</p>
               {'way' in w.cta ? (
-                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="black" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
+                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="yellow" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
                   {w.cta.label}
                 </Button>
               ) : (
-                <Button href={w.cta.href} variant="black" size="sm" class="self-start">
+                <Button href={w.cta.href} variant="yellow" size="sm" class="self-start">
                   {w.cta.label}
                 </Button>
               )}

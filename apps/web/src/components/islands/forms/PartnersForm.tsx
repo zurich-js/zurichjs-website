@@ -101,7 +101,7 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
           until you confirm.
         </p>
         <div class="flex flex-wrap gap-2.5 mt-1.5">
-          <Button href={nextHref} variant="black" class="text-[17px]">
+          <Button href={nextHref} variant="yellow" class="text-[17px]">
             See the next meetup
           </Button>
           <Button href="/about" variant="outline-black" class="text-[17px] border!">
@@ -166,7 +166,7 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
         Sending passes your inquiry to the organisers. One of us replies from {email} to talk it through. Nothing is agreed until you confirm.
       </p>
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="black" size="lg" grow busy={busy}>
+        <SubmitButton variant="yellow" size="lg" grow busy={busy}>
           {busy ? 'Sending…' : 'Send inquiry'}
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">

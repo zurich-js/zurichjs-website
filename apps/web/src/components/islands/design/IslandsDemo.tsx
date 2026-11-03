@@ -38,7 +38,7 @@ export default function IslandsDemo() {
             A modal
           </h2>
           <p class="m-0 text-[18px] leading-[1.55]">Focus moves inside, Escape closes it, and focus returns to the button.</p>
-          <Button variant="black" onClick={() => setOpen(false)}>
+          <Button variant="yellow" onClick={() => setOpen(false)}>
             Close
           </Button>
         </div>

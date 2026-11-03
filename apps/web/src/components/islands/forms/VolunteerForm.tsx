@@ -105,7 +105,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
       <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-hidden">
         <h2 class="m-0 text-[28px] font-bold leading-[1.15]">Thanks. Your application is in.</h2>
         <p class="m-0 text-[18px] leading-[1.55]">Someone from the organising team will email you at {f.email} within 7 days to talk about the next steps.</p>
-        <Button href={nextHref} variant="black" class="self-start mt-1.5 text-[17px]">
+        <Button href={nextHref} variant="yellow" class="self-start mt-1.5 text-[17px]">
           See the next meetup
         </Button>
       </div>
@@ -245,7 +245,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
       />
 
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="black" size="lg" class="self-start" busy={busy}>
+        <SubmitButton variant="yellow" size="lg" class="self-start" busy={busy}>
           {busy ? 'Sending…' : 'Send application'}
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">

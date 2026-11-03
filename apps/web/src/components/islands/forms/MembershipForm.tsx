@@ -204,7 +204,7 @@ export default function MembershipForm() {
               />
             </div>
             <TextArea label="Message (optional)" name="message" rows={3} maxLength={2000} value={f.message} onInput={(e) => setF({ ...f, message: e.currentTarget.value })} />
-            <SubmitButton variant="black" size="lg" busy={busy} class="w-full">
+            <SubmitButton variant="yellow" size="lg" busy={busy} class="w-full">
               {busy ? 'Sending…' : `Send request: ${t.name}, ${fee}`}
             </SubmitButton>
             <span role="alert" class="text-[15px] text-danger empty:hidden">

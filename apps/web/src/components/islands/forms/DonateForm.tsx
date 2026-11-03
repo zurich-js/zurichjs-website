@@ -173,7 +173,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
         {summary}
       </p>
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="black" size="lg" busy={busy}>
+        <SubmitButton variant="yellow" size="lg" busy={busy}>
           {busy ? 'Opening the payment page…' : 'Continue to secure payment'}
         </SubmitButton>
         <span role="alert" class="text-[15px] text-danger">

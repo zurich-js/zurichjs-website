@@ -26,6 +26,31 @@ export default defineType({
       title: 'Job Title', 
       type: 'string' 
     },
+    {
+      name: 'company',
+      title: 'Company',
+      type: 'string',
+      description: 'Already written by the talk proposal form on the current site.',
+    },
+    {
+      name: 'location',
+      title: 'Location',
+      type: 'string',
+    },
+    {
+      name: 'tagline',
+      title: 'Tagline',
+      type: 'string',
+      description: 'One short line for teaser cards on the home page, e.g. "Forms and TypeScript".',
+      validation: (Rule) => Rule.max(60),
+    },
+    {
+      name: 'interests',
+      title: 'Topics',
+      type: 'array',
+      of: [{ type: 'string' }],
+      options: { layout: 'tags' },
+    },
     { 
       name: 'image', 
       title: 'Image', 

@@ -71,11 +71,14 @@ export default defineType({
       type: 'string',
       options: {
         list: [
-          {title: 'Pending Review', value: 'pending'},
-          {title: 'Approved', value: 'approved'},
-          {title: 'Rejected', value: 'rejected'},
+          // Stored values are unchanged so existing documents and the current site keep working;
+          // the titles follow the V2 review stages (received, accepted, scheduled, given).
+          {title: 'Received', value: 'pending'},
+          {title: 'Under review', value: 'under_review'},
+          {title: 'Accepted', value: 'approved'},
           {title: 'Scheduled', value: 'scheduled'},
-          {title: 'Completed', value: 'completed'}
+          {title: 'Given', value: 'completed'},
+          {title: 'Not this time', value: 'rejected'}
         ],
         layout: 'radio'
       },

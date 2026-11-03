@@ -19,9 +19,13 @@
  *   [old-stats]     origin/main src/pages/partnerships.tsx, "The Numbers Speak" (added 2025-10-26)
  *   [old-about]     origin/main src/pages/about.tsx (the timeline)
  *   [sanity-event]  the event's own `location` in production Sanity
- *   [owner-2026-11] owner decision, 2nd November 2026: Vercel, Ginetta and Code Blossom are no longer promoted
+ *   [owner-2026-11] owner decision, 2nd November 2026: Vercel, Ginetta and Code Blossom are no longer promoted;
+ *                   3rd November 2026: DotJS and React Paris are no longer shown, Voxxed Days Zurich is a current partner
  *   [conf-sponsor]  conf.zurichjs.com/sponsorship, "Our typical Audience" (undated; "the meetup attendee profile")
  *   [meetup-export] owner-provided Meetup export: RSVPs (not check-ins) for 18 meetups, November 2024 to September 2026
+ *   [photo-banners] the sponsor banners on the owner's event photos (ImageKit archive, shared 3rd November 2026), and the
+ *                   old site's unused logo files (origin/main public/images/partners): Cloudflare and OnlyDust (September 2025),
+ *                   ImageKit and Storyblok (2025 meetups), Platformatic (the June 2025 workshop), Digitec Galaxus (the anniversary)
  */
 import type { Event, Partner, SponsorTier, SupporterRole } from '@zurichjs/events';
 
@@ -229,18 +233,35 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
 
   // Previous partners and sponsors. Production shows logos only, without links or roles.
   // Kinds follow production's own wording elsewhere: Dynatrace "supported" the October 2025 meetup [old-about].
-  { id: 'voxxed-days-zurich', name: 'Voxxed Days Zurich', logo: logo('voxxed-days-zurich.webp'), kinds: ['conference'], current: false, source: 'old-previous' },
-  { id: 'dotjs', name: 'DotJS', logo: logo('dotjs.webp'), kinds: ['conference'], current: false, source: 'old-previous' },
-  { id: 'react-paris', name: 'React Paris', logo: logo('react-paris.webp'), kinds: ['conference'], current: false, source: 'old-previous' },
+  // Voxxed Days Zurich is current again; DotJS and React Paris are no longer shown [owner-2026-11].
+  { id: 'voxxed-days-zurich', name: 'Voxxed Days Zurich', logo: logo('voxxed-days-zurich.webp'), kinds: ['conference'], current: true, source: 'old-previous' },
+  { id: 'dotjs', name: 'DotJS', logo: logo('dotjs.webp'), kinds: ['conference'], current: false, delisted: true, source: 'old-previous' },
+  { id: 'react-paris', name: 'React Paris', logo: logo('react-paris.webp'), kinds: ['conference'], current: false, delisted: true, source: 'old-previous' },
   { id: 'dynatrace', name: 'Dynatrace', logo: logo('dynatrace.webp'), kinds: ['sponsor'], current: false, source: 'old-previous' },
+
+  // Past sponsors named on the event photos' sponsor banners [photo-banners].
+  { id: 'cloudflare', name: 'Cloudflare', url: 'https://www.cloudflare.com', logo: logo('cloudflare.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
+  { id: 'imagekit', name: 'ImageKit', url: 'https://imagekit.io', logo: logo('imagekit.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
+  { id: 'storyblok', name: 'Storyblok', url: 'https://www.storyblok.com', logo: logo('storyblok.webp'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
+  { id: 'onlydust', name: 'OnlyDust', url: 'https://www.onlydust.com', logo: logo('only-dust.webp'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
+  { id: 'platformatic', name: 'Platformatic', url: 'https://platformatic.dev', logo: logo('platformatic.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
+  {
+    id: 'digitec-galaxus',
+    name: 'Digitec Galaxus',
+    url: 'https://www.galaxus.ch',
+    logo: logo('digitec-galaxus.webp'),
+    kinds: ['sponsor'],
+    current: false,
+    source: 'photo-banners',
+  },
 ];
 
 /**
- * Partners the owner withdrew from all promotion (2nd November 2026), by id or
+ * Partners the owner withdrew from all promotion (2nd and 3rd November 2026), by id or
  * name. Applied to Sanity partners too, so a seeded or re-imported document
  * cannot bring them back onto partner lists, logo walls or upcoming event pages.
  */
-export const DELISTED_PARTNERS: readonly string[] = ['vercel', 'ginetta', 'code-blossom'];
+export const DELISTED_PARTNERS: readonly string[] = ['vercel', 'ginetta', 'code-blossom', 'dotjs', 'react-paris'];
 const norm = (s: string) =>
   s
     .toLowerCase()

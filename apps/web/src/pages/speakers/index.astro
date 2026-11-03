@@ -42,7 +42,9 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
     title="Speakers"
     sub="Half of our speakers travel in from outside Zurich. We’ve hosted contributors from Node.js, Astro and Qwik, alongside Microsoft MVPs and Google Developer Experts. Here they all are, with what they talked about."
     compact
-  />
+  >
+    <Button href="/cfp" variant="yellow" class="self-start text-[17px]">Speak at a meetup</Button>
+  </PageOpening>
 
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-6" data-speakers>
     <form role="search" class="flex flex-wrap gap-3 items-center" action="/speakers" method="get" data-search-form>
@@ -59,7 +61,6 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
         />
       </label>
       <button type="button" data-clear hidden class="min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer [[hidden]]:hidden">Clear search</button>
-      <Button href="/cfp" variant="black" class="text-[17px]">Speak at a meetup</Button>
     </form>
 
     {

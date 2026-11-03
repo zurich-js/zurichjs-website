@@ -218,7 +218,7 @@ export interface SpeakerCompany {
 }
 const company = (name: string, file: string, ratio: number, label = false): SpeakerCompany => ({
   name,
-  logo: `/images/speaker-logos/${file}.svg`,
+  logo: `/images/speaker-logos/${file.includes('.') ? file : `${file}.svg`}`,
   ratio,
   ...(label ? { label } : {}),
 });
@@ -237,7 +237,7 @@ export const SPEAKER_COMPANIES: SpeakerCompany[] = [
   company('Dynatrace', 'dynatrace', 5.657),
   company('GetYourGuide', 'getyourguide', 1.264),
   company('Smallpdf', 'smallpdf', 3.647),
-  company('Digitec Galaxus', 'galaxus', 1, true),
+  company('Digitec Galaxus', 'digitec-galaxus.webp', 685 / 352),
   company('SBB', 'sbb', 8.889),
   company('SIX', 'six', 3.604),
   company('AXA', 'axa', 1),

@@ -36,6 +36,8 @@ test.describe('visual', () => {
 
   for (const [name, path] of PAGES) {
     test(name, async ({ page }) => {
+      // Reduced motion: the hero loop stays on its still photo, so the screenshot is the same every run.
+      await page.emulateMedia({ reducedMotion: 'reduce' });
       await page.goto(path, { waitUntil: 'networkidle' });
       await page.evaluate(async () => {
         for (const img of document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]')) img.loading = 'eager';

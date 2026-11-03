@@ -164,7 +164,7 @@ describe('times in Zurich', () => {
   });
   it('shows one truthful note for untimed talks, by moment', () => {
     const untimed = ev({ agenda: buildSchedule({ talks: [talk('A'), talk('B')] }) });
-    expect(untimedNote(untimed, 'past')).toBe('Talks in running order. Talk times weren’t recorded.');
+    expect(untimedNote(untimed, 'past')).toBeUndefined();
     expect(untimedNote(untimed, 'future')).toBe('Talks in running order. Talk times follow closer to the day.');
     expect(untimedNote(untimed, 'now')).toBe('Talks in running order.');
     const timed = ev({ agenda: buildSchedule({ agenda: [{ time: '18:50', talk: talk('A') }], talks: [] }) });

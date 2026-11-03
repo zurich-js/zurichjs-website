@@ -126,14 +126,14 @@ export type ProgrammeMoment = 'future' | 'now' | 'past';
 
 /**
  * The one note shown above a programme whose talks have no times, or
- * undefined when every talk has a time (or there are no talks).
+ * undefined when every talk has a time (or there are no talks). Past events
+ * show no note: the talks simply appear in order (owner, 3rd November 2026).
  * Replaces a per-talk "time not fixed" placeholder.
  */
 export function untimedNote(ev: Pick<Event, 'agenda'>, moment: ProgrammeMoment): string | undefined {
   const talks = ev.agenda.filter((a) => a.talk);
   if (!talks.length || talks.every((a) => a.time)) return undefined;
-  const some = talks.some((a) => a.time);
-  if (moment === 'past') return some ? 'Talks in running order. Some talk times weren’t recorded.' : 'Talks in running order. Talk times weren’t recorded.';
+  if (moment === 'past') return undefined;
   if (moment === 'now') return 'Talks in running order.';
   return 'Talks in running order. Talk times follow closer to the day.';
 }

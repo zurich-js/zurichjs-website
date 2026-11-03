@@ -63,6 +63,8 @@ const summaries = Object.fromEntries((ev.recap?.talks ?? []).filter((t) => t.sum
 const recapOnly = (ev.recap?.talks ?? []).filter((t) => !eventTalks(ev).some((x) => x.title === t.title));
 const hasTalks = eventTalks(ev).length > 0;
 const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda.some((a) => /\b(tba|tbc|to be announced|open slot)\b/i.test(a.title)));
+// About this meetup on the left and the venue on the right on wide screens; stacked on phones.
+const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] items-start';
 ---
 
 <BaseLayout title={ev.title} description={description} image={image} jsonLd={jsonLd}>
@@ -94,11 +96,16 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
       <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
         <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
-        {ev.description && (
-          <section class="flex flex-col gap-3.5">
-            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
-            <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
-          </section>
+        {(ev.description || ev.venue) && (
+          <div class={ABOUT_GRID}>
+            {ev.description && (
+              <section class="flex flex-col gap-3.5">
+                <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
+                <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
+              </section>
+            )}
+            {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} />}
+          </div>
         )}
 
         {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} summaries={summaries} preview={PREVIEW} />}
@@ -125,8 +132,6 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
             ))}
           </section>
         )}
-
-        {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} past />}
 
         {supporters.length > 0 && (
           <section aria-labelledby="h-thanks" class="flex flex-col gap-4">
@@ -203,10 +208,13 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
 
           <EventBanner client:load ev={ev} initial={state} />
 
-          <section class="flex flex-col gap-3.5">
-            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
-            <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
-          </section>
+          <div class={ABOUT_GRID}>
+            <section class="flex flex-col gap-3.5">
+              <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
+              <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
+            </section>
+            {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} />}
+          </div>
 
           {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} preview={PREVIEW} />}
 
@@ -219,8 +227,6 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
               </Button>
             </Surface>
           )}
-
-          {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} />}
 
           {(supporters.length > 0 || seasonSponsors.length > 0) && (
             <section aria-labelledby="h-thanks" class="flex flex-col gap-4">

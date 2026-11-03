@@ -34,8 +34,8 @@ test.describe('event schedule and venue', () => {
     const talks = page.locator('#programme li[id^="talk-"]');
     await expect(talks).toHaveCount(2);
     await expect(talks.first().locator('time')).toHaveCount(0);
-    // One note for the whole programme, no per-talk placeholder and no synthesised doors, welcome, break or networking.
-    await expect(page.getByText('Talks in running order. Talk times weren’t recorded.')).toBeVisible();
+    // No note and no per-talk placeholder for a past event, and no synthesised doors, welcome, break or networking.
+    await expect(page.getByText(/Talks in running order/)).toHaveCount(0);
     await expect(page.locator('#programme > ol > li')).toHaveCount(2);
     await expect(page.locator('#programme')).not.toContainText(/Time not|Doors|Welcome|Break|Networking/);
     // The summary counts the programme's talks.

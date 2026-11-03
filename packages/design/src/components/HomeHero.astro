@@ -86,7 +86,7 @@ const mosaic: { photo: Photo; cls: string; sizes: string }[] = [
     {
       mosaic.map(({ photo, cls, sizes }, i) => (
         <span class={`relative block min-h-0 rounded-[20px] overflow-hidden bg-ink ${cls}`}>
-          <img src={srcFor(photo.src)} srcset={srcsetFor(photo.src)} sizes={sizes} alt={photo.alt} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: photo.position ?? 'center' }} />
+          <img src={srcFor(photo.src)} srcset={photo.srcset ?? srcsetFor(photo.src)} sizes={sizes} alt={photo.alt} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: photo.position ?? 'center' }} />
         </span>
       ))
     }

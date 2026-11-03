@@ -12,7 +12,7 @@ import { speakersWithTalks } from '@zurichjs/content';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import { BUILD_TIME, PHOTOS, SITE, content, ticketing } from '~/lib/content';
-import { pickFeatured } from '@zurichjs/content';
+import { HERO_PHOTOS } from '~/lib/hero';
 
 const { events, speakers, rating, award, conference, partners, media } = await content();
 const next = nextMeetup(events, BUILD_TIME);
@@ -60,19 +60,11 @@ const deck: DeckSpeaker[] = speakersWithTalks(speakers)
     initials: s.initials,
     photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), alt: s.photo.alt, position: s.photo.position } : undefined,
   }));
-// Home photos: editors pick them in ImageKit (tag "featured-home"); the defaults fill any gap. No repeats.
-const featured = pickFeatured(media.items, 'featured-home', 3);
-const asPhoto = (m?: (typeof featured)[number]) => (m ? { src: m.src, alt: m.alt, width: m.width, height: m.height } : undefined);
-// Defaults: high-resolution archive photos (February and January 2026) when the archive is available,
-// otherwise the bundled photos. No photo appears twice on the page.
+// The hero photos are set by hand in ~/lib/hero.ts (owner), never picked from ImageKit.
+// The section photo below comes from the archive when available (high resolution), otherwise a bundled one.
 const archive = (path: string, alt: string, position?: string) => {
   const m = media.items.find((x) => x.kind === 'photo' && (x.src.split('?')[0] ?? '').endsWith(path));
   return m ? { src: m.src, alt, width: m.width, height: m.height, position } : undefined;
-};
-const heroPhotos = {
-  audience: asPhoto(featured[0]) ?? archive('/feb-2026/IMG_0125.jpg', 'The audience listening to a talk at the February 2026 meetup') ?? PHOTOS.audience,
-  speaker: asPhoto(featured[1]) ?? archive('/feb-2026/IMG_0091.jpg', 'A speaker presenting at the February 2026 meetup', 'center') ?? PHOTOS.speaker,
-  conversation: asPhoto(featured[2]) ?? archive('/feb-2026/IMG_0196.jpg', 'Attendees talking after the talks at the February 2026 meetup') ?? PHOTOS.conversation,
 };
 const likePhoto = archive('/jan-2026/2026-01-22-export-017.png', 'A full room at ZurichJS x Stripe, January 2026') ?? PHOTOS.community3;
 // Current sponsors (only those marked current) at their tier's logo size, then venue hosts and current partners.
@@ -88,7 +80,7 @@ const partnerGroups = groupPartners(partners);
   image="/og/home.png"
   jsonLd={[organizationSchema(), websiteSchema(), localBusinessSchema()]}
 >
-  <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={heroPhotos} rating={rating} award={award} meetupGroupUrl={SITE.meetupGroupUrl} />
+  <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={HERO_PHOTOS} rating={rating} award={award} meetupGroupUrl={SITE.meetupGroupUrl} />
   <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
     <section aria-labelledby="h-like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
       <Photo photo={likePhoto} class="aspect-4/3 w-full" />

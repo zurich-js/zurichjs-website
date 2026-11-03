@@ -362,7 +362,7 @@ const isExt = (href: string) => /^https?:/.test(href);
             <Surface tone={w.tone} class="p-[26px] flex flex-col gap-2.5">
               <h3 class="m-0 text-[22px] font-bold">{w.h}</h3>
               <p class="m-0 text-[17px] leading-normal text-ink-2 flex-1">{w.d}</p>
-              <Button href={w.href} variant={w.tone === 'yellow' ? 'black' : 'white'} size="sm" class="self-start mt-2">
+              <Button href={w.href} variant={w.tone === 'yellow' ? 'black' : w.href === '/cfp' ? 'yellow' : 'white'} size="sm" class="self-start mt-2">
                 {w.cta}
               </Button>
             </Surface>

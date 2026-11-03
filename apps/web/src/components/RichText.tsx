@@ -13,6 +13,8 @@ interface Props {
   clampLines?: number;
   /** Button labels for the clamp, e.g. ['See more', 'See less']. */
   moreLabels?: [string, string];
+  /** Classes for the More/Less toggle, when it should look different from the default underlined text. */
+  moreClass?: string;
 }
 
 const line = (parts: Inline[]) =>
@@ -30,7 +32,7 @@ const line = (parts: Inline[]) =>
  * Talk descriptions and bios as written: paragraphs, line breaks and "- " lists.
  * Works in islands and statically in Astro pages. Text is rendered as text nodes, never as HTML.
  */
-export function RichText({ text, class: cls, clampLines, moreLabels = ['Read more', 'Show less'] }: Props) {
+export function RichText({ text, class: cls, clampLines, moreLabels = ['Read more', 'Show less'], moreClass }: Props) {
   const blocks = textBlocks(text);
   const id = useId();
   const box = useRef<HTMLDivElement>(null);
@@ -87,7 +89,7 @@ export function RichText({ text, class: cls, clampLines, moreLabels = ['Read mor
           aria-expanded={expanded}
           aria-controls={id}
           onClick={() => setExpanded((e) => !e)}
-          class="p-0 bg-transparent border-0 font-bold text-[16px] text-black underline underline-offset-[3px] cursor-pointer"
+          class={moreClass ?? 'p-0 bg-transparent border-0 font-bold text-[16px] text-black underline underline-offset-[3px] cursor-pointer'}
         >
           {expanded ? moreLabels[1] : moreLabels[0]}
         </button>

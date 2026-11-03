@@ -1,8 +1,10 @@
 ---
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
 import VolunteerForm from '~/components/islands/forms/VolunteerForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { nextMeetupHref } from '~/lib/content';
+import { PAGE_PHOTOS } from '~/lib/photos';
 
 const nextHref = await nextMeetupHref();
 
@@ -44,7 +46,8 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
       </div>
     </section>
 
-    <section aria-labelledby="h-how" class="flex flex-col gap-3 max-w-[720px]">
+    <section aria-labelledby="h-how" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+      <div class="flex flex-col gap-3">
       <h2 id="h-how" class={h2}>Before you apply</h2>
       <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
         Volunteering is unpaid. ZurichJS is run by volunteers and can’t offer financial compensation. We try to make it an experience that helps you grow professionally
@@ -54,6 +57,8 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
         You choose how much time you give: a few hours a week, a few hours a month, or only during events. After you apply, someone from the organising team emails you within 7
         days to talk about the next steps.
       </p>
+      </div>
+      <Photo photo={PAGE_PHOTOS.team} class="aspect-4/3 w-full" />
     </section>
 
     <section aria-labelledby="h-apply" class="flex flex-col gap-[18px]">

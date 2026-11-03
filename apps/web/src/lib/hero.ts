@@ -16,19 +16,20 @@ export const HERO_PHOTOS: { audience: Photo; speaker: Photo; conversation: Photo
   audience: {
     src: '/images/hero/audience.webp',
     srcset: '/images/hero/audience-1200.webp 1200w, /images/hero/audience.webp 1600w',
-    alt: 'The audience listening to a talk at the February 2026 meetup',
+    alt: 'A full room listening to a talk at a ZurichJS meetup',
   },
   // Right (tall, spans both rows).
   speaker: {
     src: '/images/hero/speaker.webp',
     srcset: '/images/hero/speaker-1200.webp 1200w, /images/hero/speaker.webp 2400w',
-    alt: 'A speaker presenting at the February 2026 meetup',
-    position: '38% center',
+    alt: 'Matteo Collina running his Node.js workshop for ZurichJS in June 2025',
+    position: 'center 35%',
   },
   // Bottom left (square).
   conversation: {
     src: '/images/hero/conversation.webp',
     srcset: '/images/hero/conversation-1200.webp 1200w, /images/hero/conversation.webp 1600w',
-    alt: 'Attendees talking after the talks at the February 2026 meetup',
+    alt: 'Laughing round a table after a ZurichJS meetup',
+    position: '60% center',
   },
 };

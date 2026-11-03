@@ -13,7 +13,7 @@ import Photo from '@zurichjs/design/components/Photo.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink, trackAttrs } from '@zurichjs/design/analytics';
-import { PHOTOS, SITE, content, nextMeetupHref } from '~/lib/content';
+import { SITE, content, nextMeetupHref } from '~/lib/content';
 import SponsorTiers from '~/components/SponsorTiers.astro';
 import {
   AUDIENCE_INTERESTS,
@@ -26,13 +26,12 @@ import {
   RSVP_SOURCE,
   RSVP_STATS,
   SPONSORSHIP_TIERS,
-  mediaTagged,
 } from '@zurichjs/content';
+import { PAGE_PHOTOS } from '~/lib/photos';
 import { groupPartners, partnerPeriod } from '@zurichjs/events';
 
-const { partners, conference, media } = await content();
+const { partners, conference } = await content();
 const groups = groupPartners(partners);
-const hostedPhoto = mediaTagged(media.items, 'featured-partners').find((m) => m.kind === 'photo');
 const nextHref = await nextMeetupHref();
 
 const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host');
@@ -175,7 +174,7 @@ const link = 'text-black underline underline-offset-[3px]';
 
     <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
       <Photo
-        photo={hostedPhoto ? { src: hostedPhoto.src, alt: hostedPhoto.alt, width: hostedPhoto.width, height: hostedPhoto.height } : { ...PHOTOS.conversation, alt: 'Attendees talking after the talks at a hosted ZurichJS meetup' }}
+        photo={PAGE_PHOTOS.hosted}
         class="aspect-4/3 w-full"
       />
       <div class="flex flex-col gap-[22px]">

@@ -11,7 +11,8 @@ import Photo from '@zurichjs/design/components/Photo.astro';
 import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { PHOTOS, SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
+import { SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
+import { PAGE_PHOTOS } from '~/lib/photos';
 import { cx } from '@zurichjs/design/recipes';
 import { RichText } from '~/components/RichText';
 
@@ -91,7 +92,7 @@ const isExt = (href: string) => /^https?:/.test(href);
   fullTitle="About ZurichJS · JavaScript community in Zurich"
   description="ZurichJS is the volunteer-run JavaScript community in Zurich since 2024. Who runs it, how it started on personal savings, and how you can take part."
   keywords={['ZurichJS', 'JavaScript community Zurich', 'developer community Switzerland', 'Swiss JavaScript Group', 'JavaScript meetup Zurich']}
-  image={PHOTOS.community3.src}
+  image={PAGE_PHOTOS.firstVisit.src}
   jsonLd={[organizationSchema(), breadcrumbSchema([{ name: 'About', path: '/about' }])]}
 >
   <PageOpening
@@ -142,7 +143,7 @@ const isExt = (href: string) => /^https?:/.test(href);
           <Button href="/policies/code-of-conduct" variant="grey" grow>Read the code of conduct</Button>
         </div>
       </div>
-      <Photo photo={PHOTOS.community3} class="aspect-4/3 w-full" />
+      <Photo photo={PAGE_PHOTOS.firstVisit} class="aspect-4/3 w-full" />
     </section>
 
     <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">

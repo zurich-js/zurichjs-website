@@ -34,6 +34,10 @@ const KIND_LABEL: Partial<Record<AgendaItem['kind'], string>> = { doors: 'Doors'
  * link opens nothing here: FeedbackGate explains when feedback opens. A
  * draft preview build (`preview`) opens the ratings early for organisers.
  */
+/** Talk card padding, and the matching top offset for the time beside it. */
+const CARD_PAD = 'p-[clamp(18px,2.4vw,28px)]';
+const CARD_TOP = 'pt-[clamp(18px,2.4vw,28px)]';
+
 export default function Programme({
   ev,
   initial,
@@ -106,8 +110,9 @@ export default function Programme({
           const summary = a.talk ? summaries[a.talk.title] : undefined;
           return (
             <li key={i} id={anchor} class={cx('grid gap-[18px] scroll-mt-24', anyTime ? 'grid-cols-[64px_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)]')}>
-              {anyTime && <div class="text-[18px] font-bold pt-px tabular-nums">{a.time && <time>{a.time}</time>}</div>}
-              <div class="flex flex-col gap-2 min-w-0">
+              {anyTime && <div class={cx('text-[18px] font-bold tabular-nums', a.talk ? CARD_TOP : 'pt-px')}>{a.time && <time>{a.time}</time>}</div>}
+              {/* Talks sit on their own card; doors, breaks and the rest stay plain between them. */}
+              <div class={cx('flex flex-col gap-2 min-w-0', a.talk && `rounded-card bg-grey-soft ${CARD_PAD}`)}>
                 {!a.talk && KIND_LABEL[a.kind] && !a.title.toLowerCase().includes(KIND_LABEL[a.kind]!.toLowerCase()) && (
                   <div class="text-[15px] text-ink-2">{KIND_LABEL[a.kind]}</div>
                 )}

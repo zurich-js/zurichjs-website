@@ -148,7 +148,7 @@ export default function Programme({
                     {!!a.talk.tags?.length && (
                       <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                         {a.talk.tags.map((t) => (
-                          <li key={t} class="text-[14px] px-2.5 py-0.5 rounded-pill bg-grey">
+                          <li key={t} class="text-[14px] px-2.5 py-0.5 rounded-pill bg-yellow">
                             {t}
                           </li>
                         ))}

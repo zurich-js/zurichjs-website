@@ -202,11 +202,11 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
         <h1 class={h1}>No meetup on the calendar right now</h1>
         <p class={sub}>The next one is being planned and is announced on Meetup first. Meanwhile, look back at past meetups, propose a talk or offer to host one.</p>
         <div class="flex flex-wrap gap-3 pt-1">
-          <Button href="/events?tab=past" variant="yellow" grow>
-            Past meetups
-          </Button>
-          <Button href="/cfp" variant="outline-white" grow>
+          <Button href="/cfp" variant="yellow" grow>
             Propose a talk
+          </Button>
+          <Button href="/events?tab=past" variant="outline-white" grow>
+            Past meetups
           </Button>
           <Button href="/partners" variant="outline-white" grow>
             Host a meetup

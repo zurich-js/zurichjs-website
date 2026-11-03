@@ -133,7 +133,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                   <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                     {t.tags.map((tag) => (
                       <li>
-                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-white text-black no-underline hover:bg-grey inline-flex">
+                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-yellow text-black no-underline hover:bg-yellow-hover inline-flex">
                           {tag}
                         </a>
                       </li>
@@ -182,7 +182,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
 
     <Surface class="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center py-6 px-7">
       <p class="m-0 text-[18px]">Want to give a talk like this? First-time speakers are welcome, and we’ll help you get ready.</p>
-      <Button href="/cfp" variant="black" class="text-[17px]">Propose a talk</Button>
+      <Button href="/cfp" variant="yellow" class="text-[17px]">Propose a talk</Button>
     </Surface>
   </div>
 </BaseLayout>

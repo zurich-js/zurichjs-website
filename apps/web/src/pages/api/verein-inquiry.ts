@@ -42,7 +42,7 @@ export function parseInquiry(body: Record<string, unknown>): { ok: true; data: V
   const tier = body.tier === undefined || body.tier === '' ? undefined : body.tier;
   if (tier !== undefined && !TIERS.includes(tier as never)) return { ok: false, error: 'Choose Basic Member or Supporter.', field: 'tier' };
   const cycle = body.billingCycle === undefined || body.billingCycle === '' ? undefined : body.billingCycle;
-  if (cycle !== undefined && !BILLING_CYCLES.includes(cycle as never)) return { ok: false, error: 'Choose monthly, quarterly or yearly.', field: 'billingCycle' };
+  if (cycle !== undefined && !BILLING_CYCLES.includes(cycle as never)) return { ok: false, error: 'Choose quarterly or yearly.', field: 'billingCycle' };
   return {
     ok: true,
     data: { name, email: email.toLowerCase(), message: message || undefined, tier: tier as VereinInquiry['tier'], billingCycle: cycle as VereinInquiry['billingCycle'] },

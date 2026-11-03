@@ -22,7 +22,7 @@ const MESSAGES = {
   jobTitle: 'Add your job title, for example Frontend developer.',
   bio: 'Add a short bio. Two or three sentences is enough.',
   linkedin: 'Paste your LinkedIn profile link, like https://www.linkedin.com/in/your-name.',
-  title: 'Add a working title. You can change it later.',
+  title: 'Add a title for your talk.',
   abstract: 'Tell us what people will learn, in a few sentences.',
   format: '',
   level: 'Choose who the talk is for.',
@@ -188,44 +188,54 @@ async function shrinkPhoto(file: File): Promise<Blob> {
   }
 }
 
-/** The optional speaker photo: a file picker with a round preview, like the speaker pages show it. */
+/** How a speaker photo appears on the site (same crops: cover, centred). */
+const PREVIEWS = [
+  { label: 'Speaker page', cls: 'w-[112px] aspect-square rounded-[16px]' },
+  { label: 'Home page card', cls: 'w-[92px] aspect-[4/5.2] rounded-[14px]' },
+  { label: 'Talk listings', cls: 'w-11 h-11 rounded-full' },
+] as const;
+
+/** The optional speaker photo: a file picker, then previews of how the site will show it. */
 function PhotoField({ photo, error, onChange }: { photo: { file: Blob; url: string } | null; error: string; onChange: (f: File | null) => void }) {
   return (
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-3">
       <span id="cfp-photo-label" class="text-[16px] font-bold">
         {optional('Photo')}
       </span>
+      {photo && (
+        <ul class="m-0 p-0 list-none flex flex-wrap items-end gap-5" aria-label="How your photo will look on the site">
+          {PREVIEWS.map((v, i) => (
+            <li key={v.label} class="flex flex-col gap-1.5">
+              <span class={cx('block overflow-hidden bg-grey', v.cls)}>
+                <img src={photo.url} alt={i === 0 ? 'Preview of your upload' : ''} class="w-full h-full object-cover" />
+              </span>
+              <span class="text-[14px] text-grey-text">{v.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <div class="flex items-center gap-4 flex-wrap">
-        <span class="w-20 h-20 rounded-full bg-grey overflow-hidden flex-none flex items-center justify-center text-grey-text text-[14px]">
-          {photo ? <img src={photo.url} alt="Preview of your upload" class="w-full h-full object-cover" /> : 'No photo'}
-        </span>
-        <div class="flex flex-col gap-1.5">
-          <label class="inline-flex self-start items-center min-h-[44px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer hover:bg-grey has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2">
-            {photo ? 'Choose another photo' : 'Choose a photo'}
-            <input
-              type="file"
-              name="photo"
-              accept="image/jpeg,image/png,image/webp"
-              aria-labelledby="cfp-photo-label"
-              aria-describedby="cfp-photo-hint"
-              aria-invalid={!!error || undefined}
-              class="sr-only"
-              onChange={(e) => onChange(e.currentTarget.files?.[0] ?? null)}
-            />
-          </label>
-          {photo && (
-            <button
-              type="button"
-              onClick={() => onChange(null)}
-              class="self-start p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-[15px]"
-            >
-              Remove photo
-            </button>
-          )}
-        </div>
+        <label class="inline-flex items-center min-h-[44px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer hover:bg-grey has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2">
+          {photo ? 'Choose another photo' : 'Choose a photo'}
+          <input
+            type="file"
+            name="photo"
+            accept="image/jpeg,image/png,image/webp"
+            aria-labelledby="cfp-photo-label"
+            aria-describedby="cfp-photo-hint"
+            aria-invalid={!!error || undefined}
+            class="sr-only"
+            onChange={(e) => onChange(e.currentTarget.files?.[0] ?? null)}
+          />
+        </label>
+        {photo && (
+          <button type="button" onClick={() => onChange(null)} class="p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-[15px]">
+            Remove photo
+          </button>
+        )}
       </div>
       <span id="cfp-photo-hint" class="text-[16px] text-grey-text leading-[1.45]">
-        A square photo of your face works best: JPEG, PNG or WebP.
+        A photo of your face, centred, works best in every shape: JPEG, PNG or WebP.
       </span>
       {error && (
         <span role="alert" class="text-[14px] text-danger">

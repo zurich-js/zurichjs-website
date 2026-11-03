@@ -35,6 +35,7 @@ export default defineType({
     defineField({name: 'dealOfDay', title: 'Deal of the day', type: 'object', fields: [defineField({name: 'rating', type: 'number'}), defineField({name: 'comments', type: 'text'})]}),
     defineField({name: 'additionalComments', title: 'Other comments', type: 'text'}),
     defineField({name: 'quoteConsent', title: 'May quote on the website', type: 'boolean'}),
+    defineField({name: 'quoteName', title: 'Name to show with a quote', type: 'string', description: 'Optional, given by the person when they allowed quoting. Empty: quote anonymously.'}),
     defineField({name: 'email', title: 'Email (optional)', type: 'string'}),
     defineField({name: 'submittedAt', title: 'Submitted', type: 'datetime'}),
     defineField({name: 'ipHash', type: 'string', hidden: true}),

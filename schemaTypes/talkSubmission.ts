@@ -66,6 +66,13 @@ export default defineType({
       validation: Rule => Rule.required()
     },
     {
+      name: 'firstTalk',
+      title: 'First talk',
+      type: 'boolean',
+      description: 'The speaker has not given a talk before. Offer help preparing.',
+      readOnly: true,
+    },
+    {
       name: 'status',
       title: 'Status',
       type: 'string',

@@ -3,6 +3,7 @@ import {defineConfig} from 'sanity'
 import {defineLocations, presentationTool} from 'sanity/presentation'
 import {structureTool} from 'sanity/structure'
 import ConvertSubmissionToTalkAction from './actions/convertSubmissionToTalk'
+import FillProgrammeAction from './actions/fillProgramme'
 import {ReadinessBadge} from './components/ReadinessBadge'
 import {defaultDocumentNode, structure} from './deskStructure'
 import {PREVIEW_ORIGIN} from './lib/preview'
@@ -44,6 +45,7 @@ export default defineConfig({
     actions: (prev, context) => {
       if (singletons.has(context.schemaType)) return prev.filter(({action}) => action && ['publish', 'discardChanges', 'restore'].includes(action))
       if (context.schemaType === 'talkSubmission') return [...prev, ConvertSubmissionToTalkAction]
+      if (context.schemaType === 'events') return [...prev, FillProgrammeAction]
       return prev
     },
     badges: (prev, context) => (context.schemaType === 'events' ? [...prev, ReadinessBadge] : prev),

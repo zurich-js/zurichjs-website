@@ -24,7 +24,7 @@ const docs = [
     _id: 'conference',
     _type: 'conference',
     state: 'unannounced',
-    headline: 'The community’s conference, one bigger day a year.',
+    headline: 'Our annual conference, with community events and workshops around it.',
     body: 'The next edition hasn’t been announced yet. The conference site has the latest.',
     cta: 'Visit conf.zurichjs.com',
     cfp: 'It opens when the next edition is announced.',

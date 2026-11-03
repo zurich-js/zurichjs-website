@@ -13,6 +13,7 @@ export default defineType({
     {name: 'association', title: 'Association'},
     {name: 'award', title: 'Award'},
     {name: 'support', title: 'Support page'},
+    {name: 'media', title: 'Media'},
   ],
   fields: [
     defineField({name: 'email', title: 'Main email', type: 'string', group: 'contact', initialValue: 'hello@zurichjs.com', validation: (r) => r.required().email()}),
@@ -21,7 +22,13 @@ export default defineType({
     defineField({name: 'linkedinUrl', title: 'LinkedIn', type: 'url', group: 'social'}),
     defineField({name: 'blueskyUrl', title: 'Bluesky', type: 'url', group: 'social'}),
     defineField({name: 'instagramUrl', title: 'Instagram', type: 'url', group: 'social'}),
-    defineField({name: 'slackInviteUrl', title: 'Slack invite', type: 'url', group: 'social'}),
+    defineField({
+      name: 'slackInviteUrl',
+      title: 'Slack invite',
+      type: 'url',
+      group: 'social',
+      description: 'The full invite link (https://join.slack.com/t/zurichjs/shared_invite/zt-…). Check it in a private window first: Slack invite links expire. When empty, the site offers "Ask us for a Slack invite" instead.',
+    }),
     defineField({name: 'association', title: 'Association name', type: 'string', group: 'association', initialValue: 'Swiss JavaScript Group'}),
     defineField({name: 'uid', title: 'UID', type: 'string', group: 'association', initialValue: 'CHE-255.581.547'}),
     defineField({
@@ -59,6 +66,13 @@ export default defineType({
       group: 'support',
       description: 'Optional, one short sentence, e.g. "Scan with the Twint app. Any amount helps."',
       validation: (r) => r.max(120),
+    }),
+    defineField({
+      name: 'conferenceMediaFolder',
+      title: 'Conference photo folder (ImageKit)',
+      type: 'string',
+      group: 'media',
+      description: 'The top-level ImageKit folder with ZurichJS Conf photos, e.g. "zurichjs-conf-2026". Shown as the conference collection on /media. Leave empty to hide it.',
     }),
   ],
   preview: {prepare: () => ({title: 'Site settings'})},

@@ -1,6 +1,6 @@
 ---
 /** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
-import { dateLong, eventHref, eventTalks, plainText, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
+import { dateLong, dateParts, eventHref, eventTalks, plainText, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
 import { RichText } from '~/components/RichText';
 import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
@@ -141,19 +141,34 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                   </ul>
                 )}
                 {evs.length > 0 ? (
-                  <ul class="m-0 p-0 list-none flex flex-col gap-1">
-                    {evs.map((e) => (
-                      <li class="text-[16px]">
-                        <a href={`${eventHref(e)}${anchorOn(e)}`} class="font-bold underline underline-offset-[3px]">
-                          {e.title}
-                        </a>
-                        <span class="text-ink-2">
-                          {' · '}
-                          {e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}
-                          {upcomingIds.has(e.slug) ? ' · upcoming' : ''}
-                        </span>
-                      </li>
-                    ))}
+                  <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-2.5 mt-1" aria-label="Where this talk was given">
+                    {evs.map((e) => {
+                      const soon = upcomingIds.has(e.slug);
+                      const d = e.startsAt ? dateParts(e.startsAt) : undefined;
+                      return (
+                        <li>
+                          <a
+                            href={`${eventHref(e)}${anchorOn(e)}`}
+                            class="group no-underline text-black rounded-2xl bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
+                          >
+                            <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-yellow' : 'bg-grey'}`} aria-hidden="true">
+                              <span class="text-[12px] font-bold leading-none">{d?.mon ?? 'TBC'}</span>
+                              <span class="text-[21px] font-bold leading-tight">
+                                {d?.day ?? '?'}
+                                <span class="text-[11px] align-top">{d?.suffix}</span>
+                              </span>
+                              <span class="text-[11px] leading-none">{d?.year}</span>
+                            </span>
+                            <span class="flex flex-col gap-0.5 min-w-0">
+                              <span class="text-[13px] font-bold text-ink-2">{soon ? 'Coming up at' : 'Given at'}</span>
+                              <span class="text-[16px] font-bold leading-snug text-pretty">{e.title}</span>
+                              <span class="text-[14px] text-ink-2">{e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}</span>
+                            </span>
+                            <span aria-hidden="true" class="text-[20px] font-bold transition-transform group-hover:translate-x-0.5">→</span>
+                          </a>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p class="m-0 text-[15px] text-ink-2">The event for this talk isn’t linked yet.</p>

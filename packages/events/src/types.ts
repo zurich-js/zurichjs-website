@@ -75,6 +75,8 @@ export interface PracticalInfo {
 export interface Photo {
   src: string;
   alt: string;
+  /** Explicit responsive sources ("a.webp 1200w, b.webp 2400w"), when the files aren't in a known layout. */
+  srcset?: string;
   position?: string;
   width?: number;
   height?: number;

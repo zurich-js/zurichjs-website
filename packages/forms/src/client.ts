@@ -42,8 +42,8 @@ export const GITHUB_PROFILE = /^(@?[A-Za-z0-9-]{1,39}|(https?:\/\/)?(www\.)?gith
  * Talk proposal choices. Lengths and levels match the deployed Sanity
  * `talkSubmission` (`durationMinutes` 5 | 25 | 35, `level`); the meetup CFP
  * offers 5 and 25 minutes, as production does (its 35-minute deep dive sits
- * behind a feature flag that is off). Topics are production's list
- * (origin/main src/components/cfp/constants.ts), stored as `tags`.
+ * behind a feature flag that is off). Topics are the reconciled set used on
+ * every talk in Sanity (owner, 3rd November 2026), stored as `tags`.
  */
 export const TALK_LENGTHS = [
   { value: 'Lightning', minutes: 5, label: 'Lightning talk', hint: '5 minutes' },
@@ -56,34 +56,32 @@ export const TALK_LEVELS = [
 ] as const;
 export const MAX_TOPICS = 8;
 export const TALK_TOPICS = [
-  'JavaScript Fundamentals',
-  'React',
-  'Angular',
-  'Vue',
-  'Svelte',
-  'Node.js',
+  'JavaScript',
   'TypeScript',
-  'Testing',
-  'Web Performance',
-  'JavaScript Frameworks',
-  'Frontend Development',
-  'Backend Development',
-  'Web3',
-  'AI in JavaScript',
+  'Node.js',
+  'Frontend',
+  'Backend',
+  'Full stack',
+  'Frameworks',
+  'React',
+  'Vue',
+  'Angular',
+  'Svelte',
+  'Astro',
+  'Qwik',
+  'Next.js',
+  'Performance',
+  'AI',
   'Tooling',
   'DevOps',
-  'Monetization',
-  'Growth Hacking',
-  'Product Management',
-  'User Experience',
-  'Analytics & Metrics',
-  'A/B Testing',
-  'Conversion Optimization',
-  'Business Strategy',
-  'Startup Journey',
-  'Team Leadership',
-  'Remote Work',
-  'Career Development',
+  'Testing',
+  'Accessibility',
+  'Security',
+  'UX',
+  'Forms and validation',
+  'Payments',
+  'Product and business',
+  'Career and teams',
 ] as const;
 
 const EMAIL = 'Enter an email address like name@example.com.';

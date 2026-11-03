@@ -279,6 +279,7 @@ export type Speaker = {
   };
   bio?: string;
   twitter?: string;
+  bluesky?: string;
   linkedin?: string;
   github?: string;
   website?: string;
@@ -695,7 +696,7 @@ export type EVENTS_QUERY_RESULT = Array<{
 
 // Source: ../../packages/content/src/queries.ts
 // Variable: SPEAKERS_QUERY
-// Query: *[_type == "speaker" && defined(id.current) && isVisible != false] {    "id": id.current, name, title, company, bio, location, interests, tagline,  twitter, github, linkedin, website, isVisible, _updatedAt, legacySlugs,  "image": image.asset->url,  "talks": *[_type == "talk" && references(^._id)]{      _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current,    "eventIds": *[_type == "events" && references(^._id)].id.current,    "legacyEventId": events->id.current  }}
+// Query: *[_type == "speaker" && defined(id.current) && isVisible != false] {    "id": id.current, name, title, company, bio, location, interests, tagline,  twitter, bluesky, github, linkedin, website, isVisible, _updatedAt, legacySlugs,  "image": image.asset->url,  "talks": *[_type == "talk" && references(^._id)]{      _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current,    "eventIds": *[_type == "events" && references(^._id)].id.current,    "legacyEventId": events->id.current  }}
 export type SPEAKERS_QUERY_RESULT = Array<{
   id: string | null;
   name: string | null;
@@ -706,6 +707,7 @@ export type SPEAKERS_QUERY_RESULT = Array<{
   interests: Array<string> | null;
   tagline: string | null;
   twitter: string | null;
+  bluesky: string | null;
   github: string | null;
   linkedin: string | null;
   website: string | null;

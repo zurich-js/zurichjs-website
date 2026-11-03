@@ -205,7 +205,7 @@ export const MILESTONES: Milestone[] = [
 
 /**
  * Companies and organisations our speakers have worked at [owner, 3rd November 2026].
- * Each logo is the company's own full-colour SVG in apps/web/public/images/companies/
+ * Each logo is the company's own full-colour SVG in apps/web/public/images/speaker-logos/
  * (from Wikimedia Commons or the company's website), with its width-to-height `ratio` (of the drawn logo; the files are trimmed to it)
  * so the row can size every logo to about the same visual weight.
  * `label` shows the name beside a logo that is only a symbol.
@@ -216,7 +216,12 @@ export interface SpeakerCompany {
   ratio: number;
   label?: boolean;
 }
-const company = (name: string, file: string, ratio: number, label = false): SpeakerCompany => ({ name, logo: `/images/companies/${file}.svg`, ratio, ...(label ? { label } : {}) });
+const company = (name: string, file: string, ratio: number, label = false): SpeakerCompany => ({
+  name,
+  logo: `/images/speaker-logos/${file}.svg`,
+  ratio,
+  ...(label ? { label } : {}),
+});
 export const SPEAKER_COMPANIES: SpeakerCompany[] = [
   company('Google', 'google', 3.036),
   company('Cloudflare', 'cloudflare', 3.03),

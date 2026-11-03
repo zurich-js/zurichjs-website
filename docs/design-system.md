@@ -54,10 +54,11 @@ Changing any of these needs the owner's approval.
 - **Surfaces on black** use `ink` and `ink-2`. **Supporting light surfaces** use `grey` and `grey-soft`.
 - **Text colours:** `ink-2` for secondary text on white, `grey-text` for hints, and `grey-light` for secondary text on black.
 - **Errors** use `danger`, with `danger-soft` as the background. Never signal an error by colour alone: always add a message.
+- **Success** uses `success` (text) and `success-soft` (panel background): confirmations after a form is sent or an action is done, nothing else (owner, 3rd November 2026).
 
 ## Surfaces
 
-`Surface` (tones: grey, soft, yellow, white, black, ink, danger) groups **related** content: an event's practical details, a way to support, a speaker's links. Do not wrap a single paragraph or a heading in a Surface. If there is nothing to group, use space.
+`Surface` (tones: grey, soft, yellow, white, black, ink, danger, success) groups **related** content: an event's practical details, a way to support, a speaker's links. Do not wrap a single paragraph or a heading in a Surface. If there is nothing to group, use space.
 
 ## Type
 

@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ticketing } from '~/lib/ticketing';
 import { Button } from '@zurichjs/design/islands/Button';
+import { cx } from '@zurichjs/design/recipes';
 import { useEventState } from '../useEventState.ts';
 
 /** Sticky summary panel: when, where, cost, status and the action for the current state. */
@@ -68,7 +69,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
       >
         Copy link
       </Button>
-      <div role="status" class="text-[15px] text-ink-2 min-h-[1lh] -mt-3">
+      <div role="status" class={cx('text-[15px] min-h-[1lh] -mt-3', copied === 'ok' ? 'font-bold text-success' : 'text-ink-2')}>
         {copied === 'ok' ? 'Link copied.' : copied === 'fail' ? `Couldn’t copy. The link is ${url}` : ''}
       </div>
     </aside>

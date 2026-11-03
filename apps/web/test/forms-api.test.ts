@@ -39,6 +39,37 @@ describe('/api/forms/[kind]', () => {
     expect(body).toEqual({ ok: false, error: 'Unknown form' });
   });
 
+  it('takes a talk proposal with a photo as multipart, and refuses other file types and other forms', async () => {
+    const proposal = {
+      name: 'Ada',
+      email: 'ada@example.com',
+      title: 'Typed forms',
+      abstract: 'What you learn',
+      format: 'Standard',
+      level: 'beginner',
+      topics: ['TypeScript'],
+      jobTitle: 'Engineer',
+      bio: 'Writes programs.',
+      linkedin: 'https://www.linkedin.com/in/ada',
+      agree: true,
+    };
+    const multipart = (kind: string, file: File) => {
+      const body = new FormData();
+      body.set('data', JSON.stringify(proposal));
+      body.set('photo', file);
+      return call(POST, kind, { method: 'POST', body });
+    };
+    const ok = await multipart('cfp', new File([new Uint8Array([1, 2, 3])], 'ada.jpg', { type: 'image/jpeg' }));
+    expect(ok.res.status).toBe(200);
+    const gif = await multipart('cfp', new File([new Uint8Array([1])], 'ada.gif', { type: 'image/gif' }));
+    expect(gif.res.status).toBe(400);
+    expect(gif.body.fields).toEqual({ photo: 'Use a JPEG, PNG or WebP photo.' });
+    const big = await multipart('cfp', new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'big.jpg', { type: 'image/jpeg' }));
+    expect(big.res.status).toBe(400);
+    const contact = await multipart('contact', new File([new Uint8Array([1])], 'a.jpg', { type: 'image/jpeg' }));
+    expect(contact.res.status).toBe(400);
+  });
+
   it('answers 400 for invalid JSON', async () => {
     const { res, body } = await post('contact', '{not json');
     expect(res.status).toBe(400);

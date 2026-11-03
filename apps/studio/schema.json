@@ -1575,6 +1575,13 @@
         },
         "optional": true
       },
+      "bluesky": {
+        "type": "objectAttribute",
+        "value": {
+          "type": "string"
+        },
+        "optional": true
+      },
       "linkedin": {
         "type": "objectAttribute",
         "value": {

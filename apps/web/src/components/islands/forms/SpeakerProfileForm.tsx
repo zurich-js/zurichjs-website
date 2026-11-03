@@ -11,6 +11,7 @@ interface Profile {
   github?: string;
   linkedin?: string;
   twitter?: string;
+  bluesky?: string;
   interests?: string[];
   image?: string;
 }
@@ -23,6 +24,7 @@ const FIELDS: { k: keyof Profile; label: string; hint?: string; type?: string }[
   { k: 'github', label: 'GitHub (optional)', type: 'url' },
   { k: 'linkedin', label: 'LinkedIn (optional)', type: 'url' },
   { k: 'twitter', label: 'X (optional)', type: 'url' },
+  { k: 'bluesky', label: 'Bluesky (optional)', type: 'url' },
 ];
 
 /** Profile completion for accepted speakers. Reads ?token=, saves a draft for the organisers to publish. */
@@ -97,7 +99,7 @@ export default function SpeakerProfileForm() {
     );
   if (state === 'saved')
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-2 max-w-[720px] outline-hidden">
+      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-2 max-w-[720px] outline-hidden">
         <div class="text-[26px] font-bold">Saved for review.</div>
         <p class="m-0 text-[18px] leading-[1.55]">An organiser checks your profile and publishes it. You can use the same link to change it again until it expires.</p>
       </div>

@@ -33,6 +33,9 @@ export const colors = {
   danger: '#b3261e',
   'danger-hover': '#8f1d17',
   'danger-soft': '#f6d8d3',
+  /** Success messages only: confirmations after a form is sent or an action is done (owner, 3rd November 2026). */
+  success: '#1e7a3c',
+  'success-soft': '#dcf0e1',
 } as const;
 
 export const radii = {

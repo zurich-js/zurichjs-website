@@ -45,7 +45,7 @@ export default function WaitlistForm() {
 
   if (done)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
+      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
         <div class="text-[28px] font-bold leading-[1.15]">
           {done.outcome === 'off' ? 'Not saved yet.' : done.outcome === 'already' ? 'You’re already on the list.' : 'You’re on the list.'}
         </div>

@@ -8,7 +8,7 @@ import { defineQuery } from 'groq';
 
 const speakerFields = /* groq */ `
   "id": id.current, name, title, company, bio, location, interests, tagline,
-  twitter, github, linkedin, website, isVisible, _updatedAt, legacySlugs,
+  twitter, bluesky, github, linkedin, website, isVisible, _updatedAt, legacySlugs,
   "image": image.asset->url
 `;
 

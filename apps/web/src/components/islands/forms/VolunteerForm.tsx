@@ -56,7 +56,7 @@ function Choice({
         onChange={onChange}
         aria-invalid={invalid || undefined}
         aria-describedby={describedBy}
-        class={cx('w-[18px] h-[18px] m-0 flex-none', checked ? 'accent-yellow' : 'accent-black')}
+        class={cx('w-[18px] h-[18px] m-0 flex-none cursor-pointer', checked ? 'accent-yellow' : 'accent-black')}
       />
       {label}
     </label>
@@ -102,7 +102,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-hidden">
+      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-hidden">
         <h2 class="m-0 text-[28px] font-bold leading-[1.15]">Thanks. Your application is in.</h2>
         <p class="m-0 text-[18px] leading-[1.55]">Someone from the organising team will email you at {f.email} within 7 days to talk about the next steps.</p>
         <Button href={nextHref} variant="black" class="self-start mt-1.5 text-[17px]">

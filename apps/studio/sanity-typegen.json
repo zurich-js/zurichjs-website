@@ -1,0 +1,6 @@
+{
+  "path": "../zurichjs-website/packages/content/src/**/*.ts",
+  "schema": "schema.json",
+  "generates": "../zurichjs-website/packages/content/src/sanity.types.ts",
+  "overloadClientMethods": false
+}

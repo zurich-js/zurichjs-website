@@ -536,6 +536,13 @@ export const QUOTES: Quote[] = [
     name: 'Harshil Agrawal',
     role: 'Dev Educator, Cloudflare',
   },
+  {
+    // His LinkedIn post, shared by the owner (3rd November 2026).
+    text: 'Discovering ZurichJS was the best thing that ever happened to me in terms of discovering tech communities in Zurich, Switzerland. 100% recommended for good vibes and latest in JS + AI World!',
+    name: 'Saurav Tiru',
+    role: 'Attendee',
+    url: 'https://www.linkedin.com/posts/saurav-tiru-796041119_discovering-zurichjs-was-the-best-thing-that-share-7518963682052255747-A-2L/',
+  },
 ];
 
 /* -------------------------------------------------------------------------- */

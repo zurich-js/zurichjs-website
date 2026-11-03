@@ -245,4 +245,6 @@ export interface Quote {
   text: string;
   name: string;
   role: string;
+  /** Where it was said publicly, e.g. a LinkedIn post. */
+  url?: string;
 }

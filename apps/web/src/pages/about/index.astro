@@ -369,6 +369,14 @@ const isExt = (href: string) => /^https?:/.test(href);
                 <b>{q.name}</b>
                 <br />
                 <span class="text-ink-2">{q.role}</span>
+                {q.url && (
+                  <>
+                    <br />
+                    <a href={q.url} target="_blank" rel="noopener" class="inline-block mt-1.5 text-[15px] font-bold underline underline-offset-[3px]">
+                      Read the post on LinkedIn ↗
+                    </a>
+                  </>
+                )}
               </figcaption>
             </Surface>
           ))

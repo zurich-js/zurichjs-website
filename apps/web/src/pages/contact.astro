@@ -4,40 +4,46 @@ import Surface from '@zurichjs/design/components/Surface.astro';
 import ContactForm from '~/components/islands/forms/ContactForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink } from '@zurichjs/design/analytics';
-import { SITE } from '~/lib/content';
+import { SITE, content } from '~/lib/content';
+import Photo from '@zurichjs/design/components/Photo.astro';
+import LineIcon from '~/components/LineIcon.astro';
+import Monogram from '@zurichjs/design/components/Monogram.astro';
+import { SocialIcon, socialKind } from '~/components/islands/forms/SocialLabel';
 import { isExternal } from '@zurichjs/design/recipes';
 import { faqSchema, organizationSchema } from '@zurichjs/seo';
 
+/** Simple line icons (24 px grid, drawn here), one per kind of question. */
+const ICON = {
+  talk: 'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M8 21h8',
+  host: 'M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 9h5a1 1 0 0 1 1 1v11M3 21h18M8 8h2M8 12h2M8 16h2',
+  volunteer: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z',
+  conference: 'M3 7h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4zM15 7v10',
+  mail: 'M3 6h18v12H3zM3 7l9 7 9-7',
+  meetup: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+  conduct: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
+} as const;
+
 const ROUTES = [
-  { h: 'Give a talk', d: 'Send a talk proposal for a meetup.', href: '/cfp' },
-  { h: 'Host or sponsor', d: 'Rooms, food and community partnerships.', href: '/partners' },
-  { h: 'Volunteer', d: 'On meetup nights, with photos, or with the website.', href: '/cfv' },
-  { h: 'Conference questions', d: 'Tickets, invoices and the conference talk proposals.', href: confLink('/contact', 'contact') },
+  { h: 'Give a talk', d: 'Send a talk proposal for a meetup.', href: '/cfp', icon: ICON.talk },
+  { h: 'Host or sponsor', d: 'Rooms, food and community partnerships.', href: '/partners', icon: ICON.host },
+  { h: 'Volunteer', d: 'On meetup nights, with photos, or with the website.', href: '/cfv', icon: ICON.volunteer },
+  { h: 'Conference questions', d: 'Tickets, invoices and the conference talk proposals.', href: confLink('/contact', 'contact'), icon: ICON.conference },
 ];
 
-/** Production's /contact (origin/main src/pages/contact.tsx): organisers, their emails and what to ask them about. Confirm they are still current. */
-const ORGANISERS = [
-  {
-    name: 'Faris Aziz',
-    role: 'Co-founder and lead organiser',
-    about: 'Speaking, sponsorship and general questions about ZurichJS.',
-    email: 'faris@zurichjs.com',
-    linkedin: 'https://linkedin.com/in/farisaziz12',
-  },
-  {
-    name: 'Bogdan Mihai Ilie',
-    role: 'Co-founder and lead organiser',
-    about: 'Community partnerships, event collaborations and technical questions.',
-    email: 'bogdan@zurichjs.com',
-    linkedin: 'https://linkedin.com/in/ilie-bogdan',
-  },
-];
+// The organisers come from the team on /about (photo, role, links). Production's /contact
+// (origin/main src/pages/contact.tsx) gave Faris's and Bogdan's emails; Nadja's is from the owner (3rd November 2026).
+const EMAIL: Record<string, string> = {
+  'Faris Aziz': 'faris@zurichjs.com',
+  'Bogdan Mihai Ilie': 'bogdan@zurichjs.com',
+  'Nadja Hesselbjerg': 'nadja@zurichjs.com',
+};
+const { team } = await content();
+const ORGANISERS = team.filter((m) => m.group === 'organisers');
 
 /**
- * Production's FAQ, in plain words. Travel matches /cfp. Production
- * said meetup travel is not covered (contact FAQ, CFPNotice), while partners.ts and
- * /donate say sponsors and donations pay for speaker travel, so nothing is promised.
- * `link` is shown after the answer; the JSON-LD uses the answer text only.
+ * Production's FAQ, in plain words. Travel: meetup speakers' travel and accommodation are not covered
+ * (owner, 3rd November 2026), as the /cfp checkbox says. `link` is shown after the answer; the JSON-LD
+ * uses the answer text only.
  */
 const FAQS: { question: string; answer: string; link?: { label: string; href: string } }[] = [
   {
@@ -49,7 +55,7 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
   {
     question: 'Do you cover travel and accommodation for speakers?',
     answer:
-      'ZurichJS is run by volunteers and can’t promise to cover travel or accommodation for meetup speakers. If you would travel in, say so in your proposal and we’ll tell you what we can offer for that meetup. Either way, we’re happy to help with travel tips and local recommendations.',
+      'No. Our meetups are free, so we can’t cover travel or accommodation for meetup speakers. We’re happy to help with travel tips and local recommendations.',
   },
   {
     question: 'Are ZurichJS meetups suitable for beginners?',
@@ -98,9 +104,12 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
                 {...(isExternal(r.href) ? { target: '_blank', rel: 'noopener' } : {})}
                 class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-grey hover:bg-grey-hover"
               >
-                <span class="flex flex-col gap-[3px]">
-                  <span class="text-[18px] font-bold">{r.h}</span>
-                  <span class="text-[16px] leading-[1.45] text-ink-2">{r.d}</span>
+                <span class="flex items-center gap-4 min-w-0">
+                  <LineIcon d={r.icon} />
+                  <span class="flex flex-col gap-[3px] min-w-0">
+                    <span class="text-[18px] font-bold">{r.h}</span>
+                    <span class="text-[16px] leading-[1.45] text-ink-2">{r.d}</span>
+                  </span>
                 </span>
                 <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-white">
                   →
@@ -110,7 +119,10 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
           }
         </div>
         <section id="conduct" aria-labelledby="h-conduct" class="scroll-mt-6 rounded-[20px] bg-yellow p-[clamp(20px,2.5vw,28px)] flex flex-col gap-2.5">
-          <h3 id="h-conduct" class="m-0 text-[22px] leading-[1.25] font-bold">Report a code of conduct concern</h3>
+          <div class="flex items-center gap-3">
+            <LineIcon d={ICON.conduct} tone="white" />
+            <h3 id="h-conduct" class="m-0 text-[22px] leading-[1.25] font-bold">Report a code of conduct concern</h3>
+          </div>
           <p class="m-0 text-[17px] leading-[1.55]">
             Please don’t use the form for this. Email <a href={`mailto:${SITE.email}?subject=${encodeURIComponent('Code of conduct concern')}`} class="font-bold"
               >{SITE.email}</a
@@ -128,40 +140,90 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
     <section aria-labelledby="h-reach" class="flex flex-col gap-[18px]">
       <h2 id="h-reach" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Other ways to reach us</h2>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-3">
-        <Surface class="p-[clamp(20px,2.5vw,28px)] flex flex-col gap-2">
-          <h3 class="m-0 text-[20px] font-bold">Email</h3>
-          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">For anything at all.</p>
-          <a href={`mailto:${SITE.email}`} class="font-bold text-[17px] break-words">{SITE.email}</a>
-        </Surface>
-        <Surface class="p-[clamp(20px,2.5vw,28px)] flex flex-col gap-2">
-          <h3 class="m-0 text-[20px] font-bold">LinkedIn</h3>
-          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Updates from the community. You can message us there too.</p>
-          <a href={SITE.linkedinUrl} target="_blank" rel="noopener" class="font-bold text-[17px] break-words">linkedin.com/company/zurichjs</a>
-        </Surface>
-        <Surface class="p-[clamp(20px,2.5vw,28px)] flex flex-col gap-2">
-          <h3 class="m-0 text-[20px] font-bold">Meetup</h3>
-          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Join the group to RSVP for meetups and message the organisers.</p>
-          <a href={SITE.meetupGroupUrl} target="_blank" rel="noopener" class="font-bold text-[17px] break-words">meetup.com/zurich-js</a>
-        </Surface>
+        {
+          [
+            { h: 'Email', d: 'For anything at all.', href: `mailto:${SITE.email}`, label: SITE.email, icon: <LineIcon d={ICON.mail} tone="white" /> },
+            {
+              h: 'LinkedIn',
+              d: 'Updates from the community. You can message us there too.',
+              href: SITE.linkedinUrl,
+              label: 'linkedin.com/company/zurichjs',
+              icon: (
+                <span aria-hidden="true" class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center flex-none">
+                  <SocialIcon kind="linkedin" size={20} />
+                </span>
+              ),
+            },
+            { h: 'Meetup', d: 'Join the group to RSVP for meetups and message the organisers.', href: SITE.meetupGroupUrl, label: 'meetup.com/zurich-js', icon: <LineIcon d={ICON.meetup} tone="white" /> },
+          ].map((c) => (
+            <a
+              href={c.href}
+              {...(c.href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}
+              class="no-underline text-black rounded-card bg-grey hover:bg-grey-hover p-[clamp(20px,2.5vw,28px)] flex flex-col gap-3"
+            >
+              {c.icon}
+              <span class="flex flex-col gap-1">
+                <span class="text-[20px] font-bold">{c.h}</span>
+                <span class="text-[17px] leading-[1.55] text-ink-2">{c.d}</span>
+              </span>
+              <span class="font-bold text-[17px] break-words underline underline-offset-[3px]">{c.label}</span>
+            </a>
+          ))
+        }
       </div>
       <h3 class="m-0 mt-4 text-[22px] font-bold">The organisers</h3>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-3">
         {
-          ORGANISERS.map((o) => (
-            <Surface class="p-[clamp(20px,2.5vw,28px)] flex flex-col gap-2">
-              <h4 class="m-0 text-[20px] font-bold">{o.name}</h4>
-              <p class="m-0 text-[16px] text-ink-2">{o.role}</p>
-              <p class="m-0 text-[17px] leading-[1.55]">Ask about: {o.about}</p>
-              <div class="flex flex-wrap gap-x-5 gap-y-1.5 mt-1">
-                <a href={`mailto:${o.email}`} class="font-bold text-[17px]">
-                  {o.email}
-                </a>
-                <a href={o.linkedin} target="_blank" rel="noopener" class="font-bold text-[17px]">
-                  LinkedIn<span class="sr-only">: {o.name}</span>
-                </a>
-              </div>
-            </Surface>
-          ))
+          ORGANISERS.map((o) => {
+            const email = EMAIL[o.name];
+            const socials = (o.links ?? []).filter((l) => socialKind(l.label));
+            return (
+              <Surface class="p-[clamp(20px,2.5vw,28px)] flex flex-col gap-4">
+                <div class="flex items-center gap-4">
+                  <span class="w-16 h-16 flex-none">
+                    {o.photo ? (
+                      <Photo photo={o.photo} class="w-16 h-16 rounded-full!" sizes="64px" />
+                    ) : (
+                      <Monogram initials={o.initials} size="avatar" label={o.name} />
+                    )}
+                  </span>
+                  <div class="flex flex-col gap-0.5 min-w-0">
+                    <h4 class="m-0 text-[20px] font-bold">{o.name}</h4>
+                    <p class="m-0 text-[16px] text-ink-2">{o.role}</p>
+                  </div>
+                </div>
+                {/* Email on its own line, then one row of icons: the same two rows on every card, at the bottom. */}
+                <div class="mt-auto flex flex-col gap-2.5">
+                  {email && (
+                    <a href={`mailto:${email}`} class="self-start inline-flex items-center gap-2 min-h-[40px] px-4 rounded-pill bg-white text-black no-underline text-[15px] font-bold hover:bg-grey-hover">
+                      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                        <path d={ICON.mail} />
+                      </svg>
+                      {email}
+                    </a>
+                  )}
+                  {socials.length > 0 && (
+                    <ul class="m-0 p-0 list-none flex flex-nowrap items-center gap-2" aria-label={`${o.name} online`}>
+                      {socials.map((l) => (
+                        <li>
+                          <a
+                            href={l.url}
+                            target="_blank"
+                            rel="noopener"
+                            title={l.label}
+                            aria-label={`${o.name} on ${l.label} (opens in a new tab)`}
+                            class="w-10 h-10 rounded-full bg-white hover:bg-grey-hover flex items-center justify-center"
+                          >
+                            <SocialIcon kind={socialKind(l.label)!} size={17} />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </Surface>
+            );
+          })
         }
       </div>
     </section>

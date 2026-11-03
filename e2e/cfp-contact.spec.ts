@@ -225,9 +225,10 @@ test.describe('/contact', () => {
 
   test('channels, organisers and the FAQ are back', async ({ page }) => {
     await page.goto('/contact');
-    await expect(page.getByRole('link', { name: 'linkedin.com/company/zurichjs' })).toHaveAttribute('href', 'https://www.linkedin.com/company/zurichjs');
-    await expect(page.getByRole('link', { name: 'meetup.com/zurich-js' })).toHaveAttribute('href', 'https://www.meetup.com/zurich-js/');
-    await expect(page.getByRole('link', { name: 'faris@zurichjs.com' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /linkedin\.com\/company\/zurichjs/ })).toHaveAttribute('href', 'https://www.linkedin.com/company/zurichjs');
+    await expect(page.getByRole('link', { name: /meetup\.com\/zurich-js/ })).toHaveAttribute('href', 'https://www.meetup.com/zurich-js/');
+    // All three organisers, each with an email.
+    for (const email of ['faris@zurichjs.com', 'bogdan@zurichjs.com', 'nadja@zurichjs.com']) await expect(page.getByRole('link', { name: email })).toBeVisible();
     for (const q of [
       'How can I speak at a ZurichJS meetup?',
       'Do you cover travel and accommodation for speakers?',
@@ -235,6 +236,6 @@ test.describe('/contact', () => {
       'How can I get involved?',
     ])
       await expect(page.getByRole('heading', { name: q })).toBeVisible();
-    await expect(page.getByText(/can’t promise to cover travel or accommodation/)).toBeVisible();
+    await expect(page.getByText(/^No\. Our meetups are free, so we can’t cover travel or accommodation/)).toBeVisible();
   });
 });

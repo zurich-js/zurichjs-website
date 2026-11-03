@@ -1,6 +1,7 @@
 import { directionsUrl, mapEmbedUrl, venueAddress, type Venue } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
+import { cx } from '@zurichjs/design/recipes';
 
 interface Props {
   venue: Venue;
@@ -8,6 +9,8 @@ interface Props {
   mapsKey?: string;
   heading?: string;
   headingLevel?: 2 | 3;
+  /** Beside the event description: tighter spacing, smaller text and a shorter map. */
+  compact?: boolean;
 }
 
 /**
@@ -16,7 +19,7 @@ interface Props {
  * November 2026) and loads lazily as it scrolls near: the Maps Embed API with a
  * key, otherwise Google Maps' keyless embed of the address (see mapEmbedUrl).
  */
-export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLevel = 2 }: Props) {
+export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLevel = 2, compact = false }: Props) {
   const [mapFailed, setMapFailed] = useState(false);
   const H = `h${headingLevel}` as 'h2' | 'h3';
   const address = venueAddress(venue);
@@ -32,23 +35,23 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
       <H id="h-venue" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
         {heading}
       </H>
-      <div class="bg-grey rounded-card p-6 flex flex-col gap-4">
+      <div class={cx('bg-grey rounded-card flex flex-col', compact ? 'p-5 gap-3' : 'p-6 gap-4')}>
         <div class="flex flex-col gap-0.5">
-          <div class="text-[20px] font-bold">{venue.name}</div>
-          <address class="not-italic text-[17px] text-ink-2">{address}</address>
+          <div class={cx('font-bold', compact ? 'text-[18px]' : 'text-[20px]')}>{venue.name}</div>
+          <address class={cx('not-italic text-ink-2', compact ? 'text-[16px]' : 'text-[17px]')}>{address}</address>
         </div>
         {notes.length > 0 && (
-          <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-x-8 gap-y-3">
+          <dl class={cx('m-0 grid gap-x-8', compact ? 'grid-cols-1 gap-y-2' : 'grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-y-3')}>
             {notes.map(([label, value]) => (
               <div key={label} class="flex flex-col gap-0.5">
                 <dt class="text-[15px] text-ink-2">{label}</dt>
-                <dd class="m-0 text-[17px] leading-normal">{value}</dd>
+                <dd class={cx('m-0 leading-normal', compact ? 'text-[16px]' : 'text-[17px]')}>{value}</dd>
               </div>
             ))}
           </dl>
         )}
         <div class="flex flex-wrap gap-3 items-center">
-          <Button href={directionsUrl(venue)} variant="black" external>
+          <Button href={directionsUrl(venue)} variant="black" size={compact ? 'sm' : 'md'} external>
             Get directions
           </Button>
         </div>
@@ -60,7 +63,7 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
               <iframe
                 title={`Map of ${venue.name}, ${address}`}
                 src={mapEmbedUrl(venue, mapsKey)}
-                class="w-full aspect-[4/3] md:aspect-[16/9] rounded-2xl border-0 bg-grey-soft"
+                class={cx('w-full rounded-2xl border-0 bg-grey-soft', compact ? 'h-[200px]' : 'aspect-[4/3] md:aspect-[16/9]')}
                 loading="lazy"
                 referrerpolicy="strict-origin-when-cross-origin"
                 onError={() => setMapFailed(true)}

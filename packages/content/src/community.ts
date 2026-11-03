@@ -53,7 +53,7 @@ export const TEAM: TeamMember[] = [
   {
     name: 'Nadja Hesselbjerg',
     // [conf-blog]: joined the core team after the fourth meetup; [owner]: in May 2025. [old-about] listed her as "Community Supporter".
-    role: 'Core team',
+    role: 'Core team and lead organiser',
     group: 'organisers',
     initials: initials('Nadja Hesselbjerg'),
     // Photo from conf.zurichjs.com/about (owner's choice), on black.

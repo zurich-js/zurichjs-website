@@ -658,12 +658,13 @@ test.describe('partners and sponsors', () => {
     await expect(page.locator('#partners-community').getByRole('heading', { level: 2 })).toHaveText('Hosts and partners');
     await expect(page.locator('#partners-communities').getByRole('heading', { name: 'Community partners' })).toBeVisible();
     // Figures are dated; no source disclaimers or RSVP export figures (owner, 3rd November 2026).
-    await expect(page.getByRole('heading', { name: 'Our reach in October 2025' })).toBeVisible();
-    await expect(page.getByText('RSVPs for a single meetup, the highest at the time')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Our reach in November 2026' })).toBeVisible();
+    await expect(page.getByText('Meetup members')).toBeVisible();
     await expect(page.getByText(/RSVPs, not check-ins|undated and without a stated method|not updated since/)).toHaveCount(0);
     await expect(page.getByText('peak RSVP rate')).toHaveCount(0);
     await expect(page.locator('#sponsorship-tiers').getByText(/workshop/i)).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'See conference packages ↗' })).toHaveAttribute('href', /conf\.zurichjs\.com\/sponsorship/);
+    // The conference sponsorship block is gone from this page (owner, 3rd November 2026).
+    await expect(page.getByRole('heading', { name: 'Sponsoring the conference is separate' })).toHaveCount(0);
   });
 
   for (const [name, way, label] of [

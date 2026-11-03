@@ -24,7 +24,7 @@ describe('production partner record', () => {
     const pub = fileURLToPath(new URL('../../../apps/web/public', import.meta.url));
     for (const p of PARTNER_RECORDS) {
       // Documented sources only: the old site, or the sponsor banners on the owner's event photos.
-      expect(p.source, p.id).toMatch(/^(old-|photo-banners$)/);
+      expect(p.source, p.id).toMatch(/^(old-|photo-banners$|prospectus$)/);
       expect(p.logo && existsSync(`${pub}${p.logo}`), `${p.id} logo ${p.logo}`).toBe(true);
     }
   });
@@ -125,7 +125,7 @@ describe('groupPartners on the production record', () => {
     expect(names(g.supporting)).toEqual(['JetBrains', 'Swiss Dev Jobs']);
   });
   it('keeps previous supporters out of the current lists', () => {
-    expect(names([...g.pastSponsors, ...g.pastPartners])).toEqual(['Cloudflare', 'Digitec Galaxus', 'Dynatrace', 'ImageKit', 'OnlyDust', 'Platformatic', 'Storyblok']);
+    expect(names([...g.pastSponsors, ...g.pastPartners])).toEqual(['Cloudflare', 'Digitec Galaxus', 'Dynatrace', 'ImageKit', 'OnlyDust', 'Platformatic', 'Sentry', 'Storyblok']);
     expect(names(g.currentSponsors)).not.toContain('Dynatrace');
   });
 });
@@ -179,7 +179,7 @@ describe('the offering', () => {
       expect(yearly.note).toBe('2 months free');
     }
   });
-  it('calls the peak a count of RSVPs, not a rate', () => {
-    expect(REACH_STATS.find((r) => r.value === '114')?.label).not.toMatch(/rate/);
+  it('states RSVPs as counts, never as a rate', () => {
+    for (const r of REACH_STATS) expect(r.label).not.toMatch(/RSVP rate/);
   });
 });

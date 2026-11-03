@@ -23,6 +23,7 @@
  *                   3rd November 2026: DotJS and React Paris are no longer shown, Voxxed Days Zurich is a current partner
  *   [conf-sponsor]  conf.zurichjs.com/sponsorship, "Our typical Audience" (undated; "the meetup attendee profile")
  *   [meetup-export] owner-provided Meetup export: RSVPs (not check-ins) for 18 meetups, November 2024 to September 2026
+ *   [prospectus]    the 2026 sponsorship prospectus (owner, shared 3rd November 2026): its partner and sponsor logos
  *   [photo-banners] the sponsor banners on the owner's event photos (ImageKit archive, shared 3rd November 2026), and the
  *                   old site's unused logo files (origin/main public/images/partners): Cloudflare and OnlyDust (September 2025),
  *                   ImageKit and Storyblok (2025 meetups), Platformatic (the June 2025 workshop), Digitec Galaxus (the anniversary)
@@ -240,6 +241,7 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
   { id: 'dynatrace', name: 'Dynatrace', logo: logo('dynatrace.webp'), kinds: ['sponsor'], current: false, source: 'old-previous' },
 
   // Past sponsors named on the event photos' sponsor banners [photo-banners].
+  { id: 'sentry', name: 'Sentry', url: 'https://sentry.io', logo: logo('sentry.svg'), kinds: ['sponsor'], current: false, source: 'prospectus' },
   { id: 'cloudflare', name: 'Cloudflare', url: 'https://www.cloudflare.com', logo: logo('cloudflare.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
   { id: 'imagekit', name: 'ImageKit', url: 'https://imagekit.io', logo: logo('imagekit.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
   { id: 'storyblok', name: 'Storyblok', url: 'https://www.storyblok.com', logo: logo('storyblok.webp'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
@@ -422,17 +424,14 @@ export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
 /** "Request the Prospectus" on production: an email to the organisers with this subject. */
 export const PROSPECTUS_MAILTO = 'mailto:hello@zurichjs.com?subject=ZurichJS%20Sponsorship%20Prospectus%20Request';
 
-/** Production's reach figures, as published in October 2025 [old-stats]. Shown with that date, never as current. */
+/** Reach as of November 2026 (owner, 3rd November 2026); RSVPs per meetup from the 2026 sponsorship prospectus. */
 export const REACH_STATS: { value: string; label: string }[] = [
-  { value: '900', label: 'members across ZurichJS and Vue Zurich' },
-  { value: '50 to 100', label: 'RSVPs per meetup, 70 to 80% confirmed participation' },
-  { value: '15’000+', label: 'website views in 6 months' },
-  { value: '525+', label: 'LinkedIn followers' },
-  { value: '35%', label: 'repeat attendees' },
-  // Production said "peak RSVP rate"; it is a count of RSVPs.
-  { value: '114', label: 'RSVPs for a single meetup, the highest at the time' },
+  { value: '1K+', label: 'Meetup members' },
+  { value: '50%+', label: 'repeat attendees' },
+  { value: '1.6K+', label: 'followers across LinkedIn, Instagram, X and Bluesky' },
+  { value: '50 to 100', label: 'RSVPs per meetup' },
 ];
-export const REACH_AS_OF = 'October 2025';
+export const REACH_AS_OF = 'November 2026';
 
 /**
  * "Our typical Audience" on conf.zurichjs.com/sponsorship [conf-sponsor], which

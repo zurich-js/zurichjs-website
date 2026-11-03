@@ -12,7 +12,6 @@ import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { confLink, trackAttrs } from '@zurichjs/design/analytics';
 import { SITE, content, nextMeetupHref } from '~/lib/content';
 import SponsorTiers from '~/components/SponsorTiers.astro';
 import {
@@ -27,7 +26,7 @@ import {
 import { PAGE_PHOTOS } from '~/lib/photos';
 import { groupPartners, partnerPeriod } from '@zurichjs/events';
 
-const { partners, conference } = await content();
+const { partners } = await content();
 const groups = groupPartners(partners);
 const nextHref = await nextMeetupHref();
 
@@ -294,19 +293,6 @@ const link = 'text-black underline underline-offset-[3px]';
       <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
         Hosting a meetup or covering food and drinks is not a package: see <a href="#ways" class={link}>the ways to partner</a>.
       </p>
-    </section>
-
-    <section aria-labelledby="h-confsp" class="bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 items-center">
-      <div class="flex flex-col gap-2.5">
-        <img src="/images/logo/wordmark-conf.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-[26px] w-auto max-w-full self-start" />
-        <h2 id="h-confsp" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Sponsoring the conference is separate</h2>
-        <p class="m-0 text-[18px] leading-[1.55]">ZurichJS Conf has its own sponsorship packages, from Supporter to Diamond. The meetup packages above do not include the conference, and you can combine both.</p>
-      </div>
-      <div class="flex md:justify-end">
-        <Button href={confLink('/sponsorship', 'partners')} variant="black" grow {...trackAttrs('conf_outbound_click', { placement: 'partners', confstate: conference.state })}>
-          See conference packages ↗
-        </Button>
-      </div>
     </section>
 
     <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">

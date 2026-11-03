@@ -35,7 +35,7 @@ Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11. Agents (any tool) start w
 `loadContent()` reads Sanity. It uses `SANITY_PROJECT_ID` (default `viqjrovw`), `SANITY_DATASET` (default `production`) and, optionally, `SANITY_READ_TOKEN` or `SANITY_TOKEN`.
 
 - **When Sanity is unreachable:** the build falls back to sample content with a warning. On production builds (`CONTEXT=production` or `CONTENT_REQUIRE_SANITY=1`) it fails instead, so sample content never ships.
-- **Typed queries:** the Studio repo generates `packages/content/src/sanity.types.ts` (`npm run typegen`, with both repos checked out side by side). A test fails when a query changes without re-running it.
+- **Typed queries:** `pnpm --filter @zurichjs/studio typegen` generates `packages/content/src/sanity.types.ts` from the Studio in `apps/studio`. CI regenerates it and fails when it is out of date.
 - **Draft preview:** `SANITY_PERSPECTIVE=drafts` (which needs a read token) builds with unpublished changes. The pages are noindex and show a "Draft preview" bar.
 - **Rebuilds:** publishing in Sanity, and each event's doors and doors + 48 h, trigger a rebuild. See the [runbook](docs/v2/RUNBOOK.md).
 

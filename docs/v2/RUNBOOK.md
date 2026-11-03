@@ -56,8 +56,8 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
    - **Leave the old app's variables for a week**, so a rollback to an old deploy keeps working: `CLERK_*`, `PUSHOVER_*`, `GOOGLE_MAPS_API_KEY`, `INTERNAL_NOTIFICATION_SECRET`, `ZURICHJS_ADMIN_ORG_ID`, `NEXT_PUBLIC_BASE_URL`. Delete them afterwards. Keep `STRIPE_SECRET_KEY`, `STRIPE_SUPPORT_PRODUCT_ID` and `IMAGEKIT_PRIVATE_KEY`: V2 uses them.
    - **Production must read Sanity:** `netlify.toml` sets `CONTENT_REQUIRE_SANITY=1`, so a production build that cannot read Sanity fails instead of shipping sample content.
 
-3. **Sanity Studio** (zurich-js/zurich-js-website-sanity-studio#1):
-   1. Merge the PR and run `sanity deploy`.
+3. **Sanity Studio** (now `apps/studio` in this repo; its PRs #1 and #2 are merged):
+   1. From `apps/studio`, run `pnpm exec sanity deploy`.
    2. Run the additive migration on `production`: a dry run first, then `--no-dry-run`.
 
    Every change is additive, so the old site keeps working with the new schema. 3. Content restore (drafts only, dry run first; see the Studio's `scripts/lib/drafts.ts`):

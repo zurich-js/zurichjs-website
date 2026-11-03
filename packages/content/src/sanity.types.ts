@@ -578,7 +578,7 @@ export type Slug = {
 
 export type AllSanitySchemaTypes = SanityImagePaletteSwatch | SanityImagePalette | SanityImageDimensions | Geopoint | SiteSettings | Conference | MeetupRating | Announcement | ComprehensiveFeedback | Feedback | TalkSubmission | Stats | Speaker | Events | Talk | SanityFileAsset | Partner | SanityImageCrop | SanityImageHotspot | SanityImageAsset | SanityAssetSourceData | SanityImageMetadata | Slug;
 export declare const internalGroqTypeReferenceTo: unique symbol;
-// Source: ../zurichjs-website/packages/content/src/queries.ts
+// Source: ../../packages/content/src/queries.ts
 // Variable: EVENTS_QUERY
 // Query: *[_type == "events" && defined(id.current)] | order(datetime desc) {  _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,  location, address, venue, venueNote, description, meetupUrl,  "image": image.asset->url,  "photos": photos[]{ "src": asset->url, alt, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },  practical[]{ label, value },  "hosts": hosts[]->id.current,  supporters[]{ role, "partnerId": partner->id.current },  photoCredit,  agenda[]{ time, kind, title, note, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } },  "talks": talks[]->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current },  recap{ "talks": talks[]{ summary, format, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } } }}
 export type EVENTS_QUERYResult = Array<{
@@ -712,7 +712,7 @@ export type SPEAKERS_QUERYResult = Array<{
 // Variable: PARTNERS_QUERY
 // Query: *[_type == "partner" && defined(id.current)] | order(name asc) {  "id": id.current, name, url, "logo": logo.asset->url, kinds, tier, current, since, until, description, allowReferrer}
 export type PARTNERS_QUERYResult = Array<{
-  id: string | null;
+  id: string;
   name: string | null;
   url: string | null;
   logo: string | null;

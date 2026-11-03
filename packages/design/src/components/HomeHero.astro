@@ -3,18 +3,21 @@
  * Black hero on the same surface as the header. Headline, one sentence, the next
  * meetup once (title, date, venue, status, action), then the rating and award,
  * with a three-photo mosaic beside it (after it on phones).
+ * A tile can carry a short silent `video` loop: its photo is the poster and first paint,
+ * and the loop only plays for visitors who allow motion and aren't saving data.
  */
 import { eventHref, presentEvent, type AwardRecord, type Event, type Photo, type RatingRecord, type TicketingProvider } from '@zurichjs/events';
 import Button from './Button.astro';
 import ProofSentence from './ProofSentence.astro';
 import { trackAttrs } from '../analytics';
 import { srcFor, srcsetFor } from '../images';
+type HeroTile = Photo & { video?: string };
 interface Props {
   /** The next meetup, if one is scheduled. */
   next?: Event;
   now: Date;
   ticketing?: TicketingProvider;
-  photos: { audience: Photo; speaker: Photo; conversation: Photo };
+  photos: { audience: HeroTile; speaker: HeroTile; conversation: HeroTile };
   rating: RatingRecord | null;
   award: AwardRecord;
   meetupGroupUrl: string;
@@ -24,7 +27,7 @@ const p = next ? presentEvent(next, { now, ticketing }) : null;
 const handoff = p && (p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist');
 // `sizes` follows the rendered width of a landscape photo covering each tile (the tall tile needs about
 // three times its own width), so phones and retina screens get a sharp file.
-const mosaic: { photo: Photo; cls: string; sizes: string }[] = [
+const mosaic: { photo: HeroTile; cls: string; sizes: string }[] = [
   { photo: PHOTOS.audience, cls: '', sizes: '(min-width: 800px) 31vw, 67vw' },
   { photo: { ...PHOTOS.speaker, position: PHOTOS.speaker.position ?? 'center 25%' }, cls: 'row-span-2', sizes: '(min-width: 800px) 67vw, 140vw' },
   { photo: PHOTOS.conversation, cls: '', sizes: '(min-width: 800px) 31vw, 67vw' },
@@ -87,8 +90,29 @@ const mosaic: { photo: Photo; cls: string; sizes: string }[] = [
       mosaic.map(({ photo, cls, sizes }, i) => (
         <span class={`relative block min-h-0 rounded-[20px] overflow-hidden bg-ink ${cls}`}>
           <img src={srcFor(photo.src)} srcset={photo.srcset ?? srcsetFor(photo.src)} sizes={sizes} alt={photo.alt} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: photo.position ?? 'center' }} />
+          {photo.video && (
+            <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" style={{ objectPosition: photo.position ?? 'center' }}>
+              <source src={photo.video} type="video/mp4" />
+            </video>
+          )}
         </span>
       ))
     }
   </div>
 </section>
+
+<script>
+  // Play the hero loop after the page has loaded, only when motion is welcome and data isn't being saved.
+  // Until it plays (or if it never does) the photo underneath shows.
+  const start = () => {
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+    if (calm || saveData) return;
+    for (const v of document.querySelectorAll<HTMLVideoElement>('video[data-hero-video]')) {
+      v.addEventListener('playing', () => v.classList.remove('opacity-0'), { once: true });
+      v.play().catch(() => {});
+    }
+  };
+  if (document.readyState === 'complete') start();
+  else addEventListener('load', start, { once: true });
+</script>

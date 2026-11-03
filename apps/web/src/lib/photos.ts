@@ -9,7 +9,8 @@ import type { Photo } from '@zurichjs/events';
  * <name>-480.webp in apps/web/public/images/photos/, then edit `src` and `alt` here.
  */
 export const PAGE_PHOTOS = {
-  // Home, "What happens at a meetup".
+  // Home, "What happens at a meetup": two photos stacked beside the text.
+  talk: { src: '/images/photos/matteo-load-test.webp', alt: 'Matteo Collina walking through load-test results at the June 2025 Node.js workshop', position: 'center 40%' },
   questions: { src: '/images/photos/meetup-questions.webp', alt: 'Hands up for a question at a ZurichJS meetup', position: 'center 40%' },
   // About, "What your first meetup is like" (also the page's share image).
   firstVisit: { src: '/images/photos/speakers-organisers-july-2025.webp', alt: 'Speakers and organisers at the July 2025 meetup' },

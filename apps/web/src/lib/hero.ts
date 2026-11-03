@@ -9,22 +9,25 @@ import type { Photo } from '@zurichjs/events';
  *    /images/* for a week, so reusing a name keeps showing the old photo). Wide (landscape) photos work best:
  *    about 1600 px wide for each tile (the tall middle one can be a portrait crop).
  * 2. Edit `src` and `alt` below (alt describes the photo for people who can't see it).
- * 3. Optional: `srcset` lists a smaller copy for phones, and `position` keeps a part of the
+ * 3. Optional: `video` (the tall tile) is a short silent MP4 loop in apps/web/public/videos/hero/,
+ *    with a still from it as the photo. `srcset` lists a smaller copy for phones, and `position` keeps a part of the
  *    photo in view when the tile crops it (for example "center 30%" or "left center").
  */
-export const HERO_PHOTOS: { audience: Photo; speaker: Photo; conversation: Photo } = {
+export const HERO_PHOTOS: { audience: Photo; speaker: Photo & { video?: string }; conversation: Photo } = {
   // Top left (square).
   audience: {
     src: '/images/hero/full-room.webp',
     srcset: '/images/hero/full-room-1200.webp 1200w, /images/hero/full-room.webp 1600w',
     alt: 'A full room listening to a talk at a ZurichJS meetup',
   },
-  // Right (tall, spans both rows).
+  // Right (tall, spans both rows): a silent loop from the June 2025 Node.js workshop with Matteo Collina.
+  // The photo is a still from it: shown first, and all that shows with reduced motion or data saving.
   speaker: {
-    src: '/images/hero/matteo-workshop-v3.webp',
-    srcset: '/images/hero/matteo-workshop-v3-1000.webp 1000w, /images/hero/matteo-workshop-v3.webp 1600w',
-    alt: 'Matteo Collina running his Node.js workshop for ZurichJS in June 2025',
-    position: 'center 35%',
+    src: '/images/hero/june-2025-workshop-poster.webp',
+    srcset: '/images/hero/june-2025-workshop-poster-720.webp 720w, /images/hero/june-2025-workshop-poster.webp 1080w',
+    alt: 'Matteo Collina presenting at the ZurichJS Node.js workshop, June 2025',
+    position: 'center 30%',
+    video: '/videos/hero/june-2025-workshop.mp4',
   },
   // Bottom left (square).
   conversation: {

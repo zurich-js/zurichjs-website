@@ -910,7 +910,9 @@ test.describe('volunteering (/cfv)', () => {
     await page.goto('/cfv');
     for (const h of ['Professional growth', 'Networking', 'Community impact']) await expect(page.getByRole('heading', { name: h })).toBeVisible();
     await expect(page.getByText(/Volunteering is unpaid/)).toBeVisible();
-    await expect(page.getByText(/a few hours a week, a few hours a month, or only during events/)).toBeVisible();
+    // The time options are shown as labels under 'You choose how much time you give'.
+    await expect(page.getByRole('heading', { name: 'You choose how much time you give' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Where you could help' })).toBeVisible();
     await hydrated(page);
     const areas = page.getByRole('group', { name: 'What would you like to help with?' }).getByRole('checkbox');
     await expect(areas).toHaveCount(8);

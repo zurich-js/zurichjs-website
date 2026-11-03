@@ -40,7 +40,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 
 - **Structure:** a black opening (header and page opening), black footer and white content.
 - **Typeface:** Figtree only.
-- **Colour:** `#F1E271` is the only accent. `#268BCC` is used only for focus rings and the logo.
+- **Colour:** `#F1E271` is the only accent. `#268BCC` is used only for focus rings and the logo. Green (`success`, `success-soft`) is only for success messages, and red (`danger`) only for errors (owner, 3rd November 2026).
 - **Shapes and layout:** rounded pills for buttons and tags, 24px cards, one breakpoint at 800px.
 - **No decoration:** no kickers or eyebrow labels, no decorative borders, dividers or gradients.
 - **No recordings:** ZurichJS does not record talks. Slides are shown on a talk only when the speaker shared them (owner, 2026-11-01). Short clips from the evening may appear in the media archive, never presented as talk recordings.

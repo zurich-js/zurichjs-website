@@ -18,8 +18,9 @@ const fillProposal = async (page: Page) => {
   await form.getByLabel('Name', { exact: true }).fill('Ada Lovelace');
   await form.getByLabel('Email', { exact: true }).fill('ada@example.com');
   await form.getByLabel('Job title').fill('Engineer');
-  await form.getByLabel('Short bio').fill('Writes programs for engines.');
-  await form.getByLabel('LinkedIn profile').fill('https://www.linkedin.com/in/ada');
+  await form.getByLabel('Bio', { exact: true }).fill('Writes programs for engines.');
+  await form.getByLabel('LinkedIn', { exact: true }).fill('https://www.linkedin.com/in/ada');
+  await form.getByLabel('Bluesky (optional)').fill('@ada.bsky.social');
   await form.getByLabel('GitHub (optional)').fill('ada');
   await form.getByLabel('Title', { exact: true }).fill('Typed forms');
   await form.getByLabel('What will people learn?').fill('How to keep forms honest.');
@@ -27,16 +28,19 @@ const fillProposal = async (page: Page) => {
   await form.getByRole('radio', { name: 'Intermediate' }).check();
   await form.getByRole('checkbox', { name: 'TypeScript' }).check();
   await form.getByRole('checkbox', { name: 'Testing', exact: true }).check();
+  await form.getByRole('checkbox', { name: /travel and accommodation can’t be covered/ }).check();
   return form;
 };
 
 test.describe('talk proposals (/cfp)', () => {
-  test('the intro explains CFP once, lists the real lengths and makes no travel promise', async ({ page }) => {
+  test('the meetup form shows straight away (no conference choice), explains CFP once and lists the real lengths', async ({ page }) => {
     await page.goto('/cfp');
+    await hydrated(page);
+    await expect(page.getByRole('form', { name: 'Talk proposal' })).toBeVisible();
+    await expect(page.getByText('At ZurichJS Conf')).toHaveCount(0);
     await expect(page.getByText(/call for papers \(CFP\)/)).toHaveCount(1);
-    await expect(page.getByText('Open all year. A lightning talk (5 minutes) or a standard talk (25 minutes).', { exact: false })).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Lightning talk/ })).toBeAttached();
     await expect(page.getByText(/35 min/)).toHaveCount(0);
-    await expect(page.getByText(/can’t promise to cover travel or accommodation/)).toBeVisible();
   });
 
   test('validation names each missing field, marks it invalid and focuses the first one', async ({ page }) => {
@@ -45,10 +49,14 @@ test.describe('talk proposals (/cfp)', () => {
     await form.getByRole('button', { name: 'Send proposal' }).click();
     await expect(form.getByRole('alert')).toHaveText('Fix the highlighted fields.');
     await expect(form.getByLabel('Name', { exact: true })).toBeFocused();
-    for (const label of ['Name', 'Email', 'Job title', 'Short bio', 'LinkedIn profile', 'What will people learn?'])
-      await expect(form.getByLabel(label)).toHaveAttribute('aria-invalid', 'true');
+    for (const label of ['Name', 'Email', 'Job title', 'Bio', 'LinkedIn', 'What will people learn?'])
+      await expect(form.getByLabel(label, { exact: true })).toHaveAttribute('aria-invalid', 'true');
     await expect(form.getByText('Choose at least one topic.')).toBeVisible();
     await expect(form.getByText('Choose who the talk is for.')).toBeVisible();
+    // The terms must be confirmed: travel isn't covered, and talks are picked by theme and slots.
+    const agree = form.getByRole('checkbox', { name: /travel and accommodation can’t be covered/ });
+    await expect(agree).toHaveAttribute('aria-invalid', 'true');
+    await expect(form.getByText('Tick the box to confirm you’ve read this.')).toBeVisible();
     // Returning speakers may leave the profile out.
     await form.getByLabel('I’ve spoken at ZurichJS before.').check();
     await expect(form.getByLabel('Job title (optional)')).not.toHaveAttribute('aria-invalid', 'true');
@@ -91,7 +99,7 @@ test.describe('talk proposals (/cfp)', () => {
     await send.click();
     // A second press while sending does nothing.
     await form.getByLabel('Title', { exact: true }).press('Enter');
-    await expect(page.getByRole('heading', { name: 'Thanks. Your proposal is in.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Thank you very much. Your proposal is in.' })).toBeVisible();
     expect(sent).toHaveLength(1);
     expect(sent[0]).toMatchObject({
       name: 'Ada Lovelace',
@@ -104,11 +112,41 @@ test.describe('talk proposals (/cfp)', () => {
       abstract: 'How to keep forms honest.',
       format: 'Lightning',
       level: 'intermediate',
+      bluesky: '@ada.bsky.social',
       topics: ['TypeScript', 'Testing'],
+      agree: true,
       website_url: '',
     });
-    await expect(page.getByText(/private link to add your photo/)).toBeVisible();
+    await expect(page.getByText(/We’ll reach out in the coming days about your proposal/)).toBeVisible();
     expect(await page.evaluate((k) => localStorage.getItem(k), DRAFT_KEY)).toBeNull();
+  });
+
+  test('the form is grouped under headings, Name and Email line up, and a photo goes with the proposal', async ({ page }) => {
+    let contentType = '';
+    let body = '';
+    await page.route('**/api/forms/cfp', async (route) => {
+      contentType = route.request().headers()['content-type'] ?? '';
+      body = route.request().postDataBuffer()?.toString('latin1') ?? '';
+      await route.fulfill({ json: { ok: true, id: 'sub-2' } });
+    });
+    await openProposal(page);
+    const form = page.getByRole('form', { name: 'Talk proposal' });
+    for (const legend of ['About you', 'Speaker profile', 'Socials', 'Your talk', 'Before you send']) await expect(form.getByRole('group', { name: legend })).toBeVisible();
+    // Side by side on wide screens: the two inputs start at the same height (measured together, as the page may still be scrolling to #proposal).
+    const [name, email] = await page.evaluate(() =>
+      ['name', 'email'].map((n) => document.querySelector(`#proposal input[name="${n}"]`)!.getBoundingClientRect()).map((r) => ({ x: r.x, y: r.y })),
+    );
+    if (name!.x !== email!.x) expect(Math.abs(name!.y - email!.y)).toBeLessThan(1);
+    // A 1×1 PNG: the browser shrinks it to JPEG only when that is smaller, so it may go as PNG.
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', 'base64');
+    await form.getByLabel('Photo (optional)').setInputFiles({ name: 'ada.png', mimeType: 'image/png', buffer: png });
+    await expect(form.getByRole('img', { name: 'Preview of your upload' })).toBeVisible();
+    await fillProposal(page);
+    await form.getByRole('button', { name: 'Send proposal' }).click();
+    await expect(page.getByRole('heading', { name: 'Thank you very much. Your proposal is in.' })).toBeVisible();
+    expect(contentType).toMatch(/^multipart\/form-data/);
+    expect(body).toContain('name="photo"');
+    expect(body).toContain('"title":"Typed forms"');
   });
 
   test('a failed send keeps every answer and offers the proposal by email', async ({ page }) => {
@@ -117,7 +155,7 @@ test.describe('talk proposals (/cfp)', () => {
     const form = await fillProposal(page);
     await form.getByRole('button', { name: 'Send proposal' }).click();
     await expect(form.getByRole('alert')).toHaveText('We couldn’t send that right now.');
-    await expect(page.getByRole('heading', { name: 'Thanks. Your proposal is in.' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Thank you very much. Your proposal is in.' })).toHaveCount(0);
     await expect(form.getByLabel('Title', { exact: true })).toHaveValue('Typed forms');
     await expect(form.getByRole('checkbox', { name: 'Testing', exact: true })).toBeChecked();
     const mail = form.getByRole('link', { name: 'hello@zurichjs.com' });

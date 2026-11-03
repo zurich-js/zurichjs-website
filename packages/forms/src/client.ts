@@ -151,6 +151,9 @@ export const CFP_PROFILE: Record<string, string> = {
 };
 const isLinkedIn = (v: unknown) => typeof v === 'string' && /^(https?:\/\/)?([\w-]+\.)?linkedin\.com\/\S+/i.test(v.trim());
 
+/** Meetup speakers confirm they've read the terms (owner, 3rd November 2026). */
+export const CFP_AGREE_ERROR = 'Tick the box to confirm you’ve read this.';
+
 /** Profile errors for a talk proposal (empty for returning speakers who leave them out). */
 export function cfpProfileErrors(data: object): Record<string, string> {
   const d = data as Record<string, unknown>;
@@ -161,6 +164,7 @@ export function cfpProfileErrors(data: object): Record<string, string> {
     if (empty(v) ? !returning : field === 'linkedin' && !isLinkedIn(v)) out[field] = msg;
   }
   if (Array.isArray(d.topics) && d.topics.length > MAX_TOPICS) out.topics = `Choose up to ${MAX_TOPICS} topics.`;
+  if (!truthy(d.agree)) out.agree = CFP_AGREE_ERROR;
   return out;
 }
 
@@ -183,9 +187,17 @@ export function validate(kind: FormKind, data: object): { ok: true } | { ok: fal
   return keys.length ? { ok: false, error: `Missing or invalid: ${keys.join(', ')}`, fields } : { ok: true };
 }
 
-export async function submitForm(kind: FormKind, data: object): Promise<FormResult> {
+export async function submitForm(kind: FormKind, data: object, photo?: Blob | null): Promise<FormResult> {
   try {
-    const res = await fetch(`/api/forms/${kind}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+    // With a photo (talk proposals), the same JSON travels as the `data` part of a multipart request.
+    let init: RequestInit = { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) };
+    if (photo) {
+      const body = new FormData();
+      body.set('data', JSON.stringify(data));
+      body.set('photo', photo, photo instanceof File ? photo.name : 'photo.jpg');
+      init = { method: 'POST', body };
+    }
+    const res = await fetch(`/api/forms/${kind}`, init);
     const json = (await res.json()) as FormResult;
     if (!res.ok || !json.ok) return { ok: false, error: ('error' in json && json.error) || 'Something went wrong on our side. Please try again.' };
     return json;

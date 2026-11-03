@@ -94,7 +94,7 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-[28px] p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
+      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
         <div class="text-[28px] font-bold leading-[1.15]">Thanks, we have your inquiry.</div>
         <p class="m-0 text-[18px] leading-[1.55]">
           You asked about: <b>{intentLabel(f.way, f.tier)}</b>. The organisers have it, and one of us will reply to {f.email} from {email} to plan the next step. Nothing is agreed

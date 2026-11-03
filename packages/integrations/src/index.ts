@@ -28,6 +28,11 @@ export interface TalkProposal {
   linkedin?: string;
   github?: string;
   twitter?: string;
+  bluesky?: string;
+  company?: string;
+  website?: string;
+  /** A photo sent with the proposal (checked by the API route: JPEG, PNG or WebP, at most 5 MB). */
+  photo?: ProposalPhoto;
   /** The person says they have spoken at ZurichJS before. */
   returning?: boolean;
   /** The person has not given a talk before: organisers offer help preparing. */
@@ -35,6 +40,14 @@ export interface TalkProposal {
 }
 
 /** Seam for talk proposals. Today: Sanity `talkSubmission`. Later: Sane (docs/v2/SANE-READINESS.md). */
+export interface ProposalPhoto {
+  bytes: Uint8Array;
+  name: string;
+  type: string;
+}
+export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 export interface TalkProposalSink {
   submit(p: TalkProposal): Promise<{ id: string }>;
 }
@@ -70,13 +83,28 @@ export function profileUrl(v: string | undefined, base: string): string | undefi
 }
 
 /** The profile fields of a proposal, as speaker document fields (empty ones left out). */
-export function speakerFields(p: TalkProposal): { title?: string; bio?: string; linkedin?: string; github?: string; twitter?: string } {
-  const out = {
+/** A Bluesky handle (@name.bsky.social, or a custom domain) or a bsky.app link, as a profile URL. */
+export function blueskyUrl(v: string | undefined): string | undefined {
+  const s = v?.trim();
+  if (!s) return undefined;
+  if (/^(https?:\/\/)?(www\.)?bsky\.app\//i.test(s)) return profileUrl(s, 'https://bsky.app/profile/');
+  const handle = s.replace(/^@/, '');
+  return /^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(handle) ? `https://bsky.app/profile/${handle.toLowerCase()}` : undefined;
+}
+
+type SpeakerFieldValues = { title?: string; company?: string; bio?: string; linkedin?: string; github?: string; twitter?: string; bluesky?: string; website?: string };
+
+/** The profile fields of a proposal, as speaker document fields (same names as the Sanity speaker; empty ones left out). */
+export function speakerFields(p: TalkProposal): SpeakerFieldValues {
+  const out: SpeakerFieldValues = {
     title: p.jobTitle?.trim() || undefined,
+    company: p.company?.trim() || undefined,
     bio: p.bio?.trim() || undefined,
     linkedin: profileUrl(p.linkedin, 'https://www.linkedin.com/in/'),
     github: profileUrl(p.github, 'https://github.com/'),
     twitter: profileUrl(p.twitter, 'https://x.com/'),
+    bluesky: blueskyUrl(p.bluesky),
+    website: profileUrl(p.website, 'https://'),
   };
   return Object.fromEntries(Object.entries(out).filter(([, v]) => v));
 }
@@ -118,6 +146,7 @@ export const sanityWriteClient = (env: Env): SanityClient | null =>
 export const sanityTalkProposals = (client: SanityClient, now = () => new Date()): TalkProposalSink => ({
   async submit(p) {
     const existing = await client.fetch<string | null>(`*[_type == "speaker" && lower(email) == lower($email)][0]._id`, { email: p.email });
+    const asset = p.photo ? await client.assets.upload('image', Buffer.from(p.photo.bytes), { filename: p.photo.name, contentType: p.photo.type }) : undefined;
     const speakerId =
       existing ??
       (
@@ -128,10 +157,14 @@ export const sanityTalkProposals = (client: SanityClient, now = () => new Date()
           email: p.email,
           bio: '',
           ...speakerFields(p),
+          ...(asset ? { image: { _type: 'image', asset: { _type: 'reference', _ref: asset._id } } } : {}),
           isVisible: false,
         })
       )._id;
-    const notes = reviewNotes(p, !!existing);
+    // An existing speaker's page never changes from this public form: their new photo waits in the notes.
+    const notes =
+      [reviewNotes(p, !!existing), existing && asset ? `New photo sent with this proposal (not on the speaker page yet): ${asset.url}` : undefined].filter(Boolean).join('\n') ||
+      undefined;
     const doc = await client.create({
       _type: 'talkSubmission',
       id: { _type: 'slug', current: `${slug(p.title)}-${now().getTime().toString(36)}` },
@@ -249,6 +282,8 @@ export interface ForwardDeps {
   proposals?: TalkProposalSink;
   log?: Log;
   now?: () => Date;
+  /** A photo sent with a talk proposal (multipart request). */
+  photo?: ProposalPhoto;
   /** Who sent it, hashed before storing; used to refuse a second rating of the same talk. */
   client?: { ip?: string; headers?: Record<string, string | undefined> };
 }
@@ -301,6 +336,10 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         linkedin: d.linkedin as string | undefined,
         github: d.github as string | undefined,
         twitter: d.twitter as string | undefined,
+        bluesky: d.bluesky as string | undefined,
+        company: d.company as string | undefined,
+        website: d.website as string | undefined,
+        ...(deps.photo ? { photo: deps.photo } : {}),
         returning: flag(d.returning),
         firstTalk: flag(d.firstTalk),
       };
@@ -308,7 +347,7 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
       const facts = [`${minutesFor(proposal.format)} min`, proposal.level, proposal.topics?.join(', ')].filter(Boolean).join(', ');
       await postSlack(
         env,
-        `New talk proposal: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}`,
+        `New talk proposal: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}${proposal.photo ? ', with a photo' : ''}`,
         log,
       );
       return { ok: true, id: saved.id };

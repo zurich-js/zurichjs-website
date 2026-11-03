@@ -132,7 +132,7 @@ export default function MembershipForm() {
         </div>
 
         {sent ? (
-          <div ref={doneRef} tabIndex={-1} role="status" class="bg-yellow rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
+          <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
             <div class="text-[28px] font-bold leading-[1.15]">Request sent.</div>
             <p class="m-0 text-[18px] leading-[1.55]">
               An organiser will reply to {f.email} about joining as {t.name} ({fee}). Nothing has been charged.

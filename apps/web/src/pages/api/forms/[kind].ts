@@ -5,6 +5,7 @@
  *
  * Contract (same as v2/src/pages/api/forms/[kind].ts):
  *   POST /api/forms/<kind>  JSON body
+ *   POST /api/forms/cfp     or multipart: `data` (the same JSON) and an optional `photo` (JPEG, PNG or WebP, ≤ 5 MB)
  *   200 { ok: true, id }
  *   400 { ok: false, error, fields? }   invalid JSON or missing/invalid fields
  *   404 { ok: false, error }            unknown form kind
@@ -15,7 +16,7 @@
  * Package imports only (no `~/` alias) so the handler runs under Vitest as is.
  */
 import { isFormKind, validate } from '@zurichjs/forms';
-import { FormRejected, forwardForm } from '@zurichjs/integrations';
+import { FormRejected, MAX_PHOTO_BYTES, PHOTO_TYPES, forwardForm, type ProposalPhoto } from '@zurichjs/integrations';
 import type { APIRoute } from 'astro';
 
 export const prerender = false;
@@ -32,8 +33,23 @@ export const POST: APIRoute = async (ctx) => {
   if (!isFormKind(kind)) return json(404, { ok: false, error: 'Unknown form' });
 
   let body: unknown;
+  let photo: ProposalPhoto | undefined;
+  const multipart = (request.headers.get('content-type') ?? '').startsWith('multipart/form-data');
+  if (multipart && kind !== 'cfp') return json(400, { ok: false, error: 'Invalid JSON' });
   try {
-    body = await request.json();
+    if (multipart) {
+      const form = await request.formData();
+      body = JSON.parse(String(form.get('data') ?? ''));
+      const file = form.get('photo');
+      if (file instanceof File && file.size > 0) {
+        if (!PHOTO_TYPES.includes(file.type)) return json(400, { ok: false, error: 'Use a JPEG, PNG or WebP photo.', fields: { photo: 'Use a JPEG, PNG or WebP photo.' } });
+        if (file.size > MAX_PHOTO_BYTES)
+          return json(400, { ok: false, error: 'The photo is larger than 5 MB. Please choose a smaller one.', fields: { photo: 'The photo is larger than 5 MB.' } });
+        photo = { bytes: new Uint8Array(await file.arrayBuffer()), name: file.name || 'photo', type: file.type };
+      }
+    } else {
+      body = await request.json();
+    }
   } catch {
     return json(400, { ok: false, error: 'Invalid JSON' });
   }
@@ -50,7 +66,7 @@ export const POST: APIRoute = async (ctx) => {
       ip = clientIp(request);
     }
     const headers = Object.fromEntries(['user-agent', 'accept', 'accept-language', 'accept-encoding'].map((h) => [h, request.headers.get(h) ?? undefined]));
-    const r = await forwardForm(kind, v.data, { env: process.env, client: { ip, headers } });
+    const r = await forwardForm(kind, v.data, { env: process.env, client: { ip, headers }, ...(photo ? { photo } : {}) });
     if (!r.ok) return json(400, r);
     return json(200, { ok: true, id: r.id, ...('url' in r ? { url: r.url } : {}) });
   } catch (cause) {

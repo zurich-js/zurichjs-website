@@ -176,6 +176,7 @@ export function mapSpeaker(r: RawSpeaker): Speaker {
     r.github && { label: 'GitHub', url: r.github },
     r.linkedin && { label: 'LinkedIn', url: r.linkedin },
     r.twitter && { label: 'X', url: r.twitter },
+    r.bluesky && { label: 'Bluesky', url: r.bluesky },
   ].filter((l): l is { label: string; url: string } => !!l);
   // One entry per talk, with every event it was given at (events that list the
   // talk, plus the old single `talk.events` reference).

@@ -23,6 +23,7 @@ export interface ProfileFields {
   github?: string;
   linkedin?: string;
   twitter?: string;
+  bluesky?: string;
   interests?: string[];
 }
 
@@ -59,6 +60,7 @@ export function parseProfile(form: Record<string, unknown>): { ok: true; data: P
       github: url(form.github),
       linkedin: url(form.linkedin),
       twitter: url(form.twitter),
+      bluesky: url(form.bluesky),
       interests,
     },
   };
@@ -67,7 +69,7 @@ export function parseProfile(form: Record<string, unknown>): { ok: true; data: P
 export async function loadProfile(client: SanityClient, speakerId: string) {
   return client.fetch<(ProfileFields & { _id: string; image?: string; hasDraft: boolean }) | null>(
     `*[_type == "speaker" && id.current == $speakerId && !(_id in path("drafts.**"))][0]{
-      _id, name, title, company, bio, website, github, linkedin, twitter, interests,
+      _id, name, title, company, bio, website, github, linkedin, twitter, bluesky, interests,
       "image": coalesce(*[_id == "drafts." + ^._id][0].image.asset->url, image.asset->url),
       "hasDraft": defined(*[_id == "drafts." + ^._id][0]._id)
     }`,

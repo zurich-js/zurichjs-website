@@ -1,11 +1,9 @@
 ---
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
-import CfpForm, { CFP_SUBS } from '~/components/islands/forms/CfpForm';
+import CfpForm, { CFP_SUB } from '~/components/islands/forms/CfpForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
-import { confLink } from '@zurichjs/design/analytics';
-import { content, nextMeetupHref } from '~/lib/content';
+import { nextMeetupHref } from '~/lib/content';
 
-const { conference } = await content();
 const nextHref = await nextMeetupHref();
 ---
 
@@ -16,8 +14,8 @@ const nextHref = await nextMeetupHref();
   description="Propose a talk for a ZurichJS meetup in Zurich: a 5-minute lightning talk or a 25-minute standard talk. First-time speakers welcome, with help from the organisers."
   keywords={['call for papers', 'CFP Zurich', 'speak at a meetup', 'JavaScript talk Zurich', 'tech talk proposal', 'ZurichJS speakers']}
 >
-  <PageOpening slot="opening" title="Speak at a meetup"><span slot="sub" id="cfp-sub">{CFP_SUBS[0]}</span></PageOpening>
+  <PageOpening slot="opening" title="Speak at a meetup"><span slot="sub" id="cfp-sub">{CFP_SUB}</span></PageOpening>
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)]">
-    <CfpForm client:load nextHref={nextHref} confHref={confLink('/cfp', 'cfp')} confCfp={conference.copy.cfp} confState={conference.state} />
+    <CfpForm client:load nextHref={nextHref} />
   </div>
 </BaseLayout>

@@ -27,6 +27,8 @@
   --color-danger: #b3261e;
   --color-danger-hover: #8f1d17;
   --color-danger-soft: #f6d8d3;
+  --color-success: #1e7a3c;
+  --color-success-soft: #dcf0e1;
 
   --font-sans: var(--font-figtree, 'Figtree'), ui-sans-serif, system-ui, sans-serif;
 

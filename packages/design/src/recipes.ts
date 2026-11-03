@@ -35,7 +35,7 @@ const buttonSizes: Record<ButtonSize, string> = {
 export const buttonClass = (variant: ButtonVariant = 'yellow', size: ButtonSize = 'md', grow = false, extra?: string) =>
   cx(buttonBase, buttonVariants[variant], variant !== 'link' && cx('no-underline rounded-pill', buttonSizes[size]), grow && 'flex-[1_1_100%] md:flex-[0_0_auto]', extra);
 
-export type SurfaceTone = 'grey' | 'yellow' | 'black' | 'ink' | 'soft' | 'white' | 'danger';
+export type SurfaceTone = 'grey' | 'yellow' | 'black' | 'ink' | 'soft' | 'white' | 'danger' | 'success';
 const surfaceTones: Record<SurfaceTone, string> = {
   grey: 'bg-grey text-black',
   yellow: 'bg-yellow text-black',
@@ -44,6 +44,8 @@ const surfaceTones: Record<SurfaceTone, string> = {
   soft: 'bg-grey-soft text-black',
   white: 'bg-white text-black',
   danger: 'bg-danger-soft text-black',
+  /** Confirmations: a form was sent, an action is done. */
+  success: 'bg-success-soft text-black',
 };
 export const surfaceClass = (tone: SurfaceTone = 'grey', extra?: string) => cx('rounded-card', surfaceTones[tone], extra);
 

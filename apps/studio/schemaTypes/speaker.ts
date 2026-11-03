@@ -69,6 +69,13 @@ export default defineType({
       title: 'Twitter', 
       type: 'url' 
     },
+    {
+      name: 'bluesky',
+      title: 'Bluesky',
+      type: 'url',
+      description: 'Profile link, e.g. https://bsky.app/profile/name.bsky.social',
+      validation: (Rule) => Rule.uri({scheme: ['http', 'https']}),
+    },
     { 
       name: 'linkedin', 
       title: 'LinkedIn', 

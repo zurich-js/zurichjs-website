@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { forwardForm, postSlack, sanityWriteClient, volunteerMessage, type TalkProposalSink } from '../src/index.ts';
+import { blueskyUrl, forwardForm, postSlack, sanityWriteClient, volunteerMessage, type TalkProposalSink } from '../src/index.ts';
 
 describe('volunteer applications', () => {
   const now = () => new Date('2026-11-02T10:00:00Z');
@@ -138,6 +138,33 @@ describe('talk proposals in Sanity (stubbed client, nothing is written)', () => 
     expect(submission.speakers).toEqual([expect.objectContaining({ _ref: 'sp-ada' })]);
     expect(submission.reviewNotes).toContain('The speaker page was NOT changed');
     expect(submission.reviewNotes).toContain('job title: Engineer');
+  });
+  it('saves Bluesky, company and website on a new speaker under the Sanity field names', async () => {
+    const s = fake(null);
+    await forwardForm('cfp', { ...full, bluesky: '@ada.bsky.social', company: 'Analytical Engines', website: 'ada.dev' }, { env: {}, sanity: s.client, now, log: () => {} });
+    expect(s.create.mock.calls[0]![0]).toMatchObject({ bluesky: 'https://bsky.app/profile/ada.bsky.social', company: 'Analytical Engines', website: 'https://ada.dev/' });
+  });
+  it('a photo sent with the proposal becomes a new speaker’s image, and waits in the notes for an existing one', async () => {
+    const photo = { bytes: new Uint8Array([1, 2, 3]), name: 'ada.jpg', type: 'image/jpeg' };
+    const withAssets = (existing: string | null) => {
+      const s = fake(existing);
+      const upload = vi.fn(async () => ({ _id: 'image-abc', url: 'https://cdn.sanity.io/images/x/y/abc.jpg' }));
+      return { ...s, upload, client: { ...(s.client as object), assets: { upload } } as never };
+    };
+    const fresh = withAssets(null);
+    await forwardForm('cfp', full, { env: {}, sanity: fresh.client, now, log: () => {}, photo });
+    expect(fresh.upload).toHaveBeenCalledWith('image', expect.anything(), { filename: 'ada.jpg', contentType: 'image/jpeg' });
+    expect(fresh.create.mock.calls[0]![0].image).toEqual({ _type: 'image', asset: { _type: 'reference', _ref: 'image-abc' } });
+    const known = withAssets('sp-ada');
+    await forwardForm('cfp', { ...full, returning: true }, { env: {}, sanity: known.client, now, log: () => {}, photo });
+    expect(known.patch).not.toHaveBeenCalled();
+    expect(known.create.mock.calls[0]![0].reviewNotes).toContain('New photo sent with this proposal (not on the speaker page yet): https://cdn.sanity.io/images/x/y/abc.jpg');
+  });
+  it('turns Bluesky handles and links into profile links', () => {
+    expect(blueskyUrl('@ada.bsky.social')).toBe('https://bsky.app/profile/ada.bsky.social');
+    expect(blueskyUrl('ada.dev')).toBe('https://bsky.app/profile/ada.dev');
+    expect(blueskyUrl('https://bsky.app/profile/ada.bsky.social')).toBe('https://bsky.app/profile/ada.bsky.social');
+    expect(blueskyUrl('not a handle')).toBeUndefined();
   });
   it('flags a returning speaker whose email matches no speaker', async () => {
     const s = fake(null);

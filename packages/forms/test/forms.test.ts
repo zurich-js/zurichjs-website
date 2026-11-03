@@ -12,6 +12,7 @@ const proposal = {
   format: 'Standard',
   level: 'beginner',
   topics: ['TypeScript', 'Testing'],
+  agree: true,
 };
 
 describe('talk proposals (production fields)', () => {
@@ -47,6 +48,14 @@ describe('talk proposals (production fields)', () => {
     expect(fieldErrors('cfp', proposal)).toEqual({});
     expect(Object.keys(fieldErrors('cfp', { ...proposal, jobTitle: '', topics: [] })).sort()).toEqual(['jobTitle', 'topics']);
     expect(fieldErrors('cfp', { ...proposal, returning: true, jobTitle: '', bio: '', linkedin: '' })).toEqual({});
+  });
+  it('needs the speaker to confirm the terms (travel not covered, picked by theme and slots), in the browser and on the server', async () => {
+    const { fieldErrors } = await import('../src/client.ts');
+    for (const agree of [undefined, false, 'false', '']) {
+      expect(validate('cfp', { ...proposal, agree }).ok).toBe(false);
+      expect(Object.keys(fieldErrors('cfp', { ...proposal, agree }))).toEqual(['agree']);
+    }
+    expect(validate('cfp', { ...proposal, agree: 'on' }).ok).toBe(true);
   });
 });
 

@@ -202,3 +202,43 @@ export const MILESTONES: Milestone[] = [
     source: 'conf-timeline',
   },
 ];
+
+/**
+ * Companies and organisations our speakers have worked at [owner, 3rd November 2026].
+ * Each logo is the company's own full-colour SVG in apps/web/public/images/companies/
+ * (from Wikimedia Commons or the company's website), with its width-to-height `ratio` (of the drawn logo; the files are trimmed to it)
+ * so the row can size every logo to about the same visual weight.
+ * `label` shows the name beside a logo that is only a symbol.
+ */
+export interface SpeakerCompany {
+  name: string;
+  logo: string;
+  ratio: number;
+  label?: boolean;
+}
+const company = (name: string, file: string, ratio: number, label = false): SpeakerCompany => ({ name, logo: `/images/companies/${file}.svg`, ratio, ...(label ? { label } : {}) });
+export const SPEAKER_COMPANIES: SpeakerCompany[] = [
+  company('Google', 'google', 3.036),
+  company('Cloudflare', 'cloudflare', 3.03),
+  company('Stripe', 'stripe', 2.405),
+  company('AWS', 'aws', 1.672),
+  company('GitLab', 'gitlab', 4.601),
+  company('Hugging Face', 'huggingface', 4.515),
+  company('Storybook', 'storybook', 4.987),
+  company('Chromatic', 'chromatic', 5),
+  company('Astro', 'astro', 3.805),
+  company('Unity', 'unity', 2.721),
+  company('Dynatrace', 'dynatrace', 5.657),
+  company('GetYourGuide', 'getyourguide', 1.264),
+  company('Smallpdf', 'smallpdf', 3.647),
+  company('Digitec Galaxus', 'digitec-galaxus', 9.592),
+  company('SBB', 'sbb', 8.889),
+  company('SIX', 'six', 3.604),
+  company('AXA', 'axa', 1),
+  company('University of Oxford', 'oxford', 3.433),
+  company('ImageKit', 'imagekit', 4.815),
+  company('Platformatic', 'platformatic', 1.471, true),
+  company('React Bricks', 'reactbricks', 6.03),
+];
+/** Recognition programmes our speakers belong to [owner]; not companies, so they're named in a sentence. */
+export const SPEAKER_PROGRAMMES = ['Google Developer Experts', 'Microsoft MVPs'];

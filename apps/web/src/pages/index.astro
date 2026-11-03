@@ -8,7 +8,9 @@ import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
 import { SpeakerDeck, type DeckSpeaker } from '~/components/islands/home/SpeakerDeck';
 import { avatarSrc, sizedSrc, srcsetFor } from '@zurichjs/design/images';
-import { speakersWithTalks } from '@zurichjs/content';
+import { SPEAKER_COMPANIES, SPEAKER_PROGRAMMES, speakersWithTalks } from '@zurichjs/content';
+import AwardSection from '@zurichjs/design/components/AwardSection.astro';
+import SpeakerCompanies from '@zurichjs/design/components/SpeakerCompanies.astro';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
@@ -113,6 +115,8 @@ const partnerGroups = groupPartners(partners);
       </div>
     </section>
 
+    <AwardSection award={award} photo={PAGE_PHOTOS.award} storyUrl="https://conf.zurichjs.com/blog/how-zurichjs-got-here" />
+
     {
       talks.length > 0 && (
         <section aria-labelledby="h-talks" class="px-gut flex flex-col gap-7">
@@ -141,6 +145,7 @@ const partnerGroups = groupPartners(partners);
         <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All speakers</a>
       </div>
       <SpeakerDeck client:visible speakers={deck} />
+      <SpeakerCompanies companies={SPEAKER_COMPANIES} programmes={SPEAKER_PROGRAMMES} headingId="h-speaker-companies" />
       <SpeakCta />
     </section>
 

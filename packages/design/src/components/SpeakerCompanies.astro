@@ -1,0 +1,40 @@
+---
+/**
+ * Where our speakers have worked: the companies' own full-colour logos in a wrapping row.
+ * Every logo gets about the same visual weight: its height follows from its width-to-height
+ * ratio (equal area, capped), so a square mark and a long wordmark read as the same size.
+ */
+interface Props {
+  companies: { name: string; logo: string; ratio: number; label?: boolean }[];
+  /** Recognition programmes (e.g. Google Developer Experts), named in a sentence after the row. */
+  programmes?: string[];
+  headingId: string;
+  as?: 'h2' | 'h3';
+}
+const { companies, programmes = [], headingId, as: Heading = 'h3' } = Astro.props;
+const AREA = 5000; // px² per logo
+const MAX_H = 52;
+const size = (ratio: number) => {
+  const h = Math.min(MAX_H, Math.sqrt(AREA / ratio));
+  return { h: Math.round(h), w: Math.round(h * ratio) };
+};
+const list = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
+---
+
+<div class="flex flex-col gap-6" role="group" aria-labelledby={headingId}>
+  <Heading id={headingId} class="m-0 text-[21px] font-bold">Our speakers have worked at</Heading>
+  <ul class="m-0 p-0 list-none flex flex-wrap items-center gap-x-[clamp(28px,4vw,52px)] gap-y-7">
+    {
+      companies.map((c) => {
+        const { w, h } = size(c.ratio);
+        return (
+          <li class="inline-flex items-center gap-2.5">
+            <img src={c.logo} alt={c.label ? '' : c.name} width={w} height={h} loading="lazy" decoding="async" class="block max-w-[44vw] h-auto" style={{ width: `${w}px` }} />
+            {c.label && <span class="text-[20px] font-bold leading-none text-black">{c.name}</span>}
+          </li>
+        );
+      })
+    }
+  </ul>
+  {programmes.length > 0 && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Among them are {list(programmes)}.</p>}
+</div>

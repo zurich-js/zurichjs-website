@@ -11,10 +11,11 @@ import { avatarSrc, sizedSrc, srcsetFor } from '@zurichjs/design/images';
 import { speakersWithTalks } from '@zurichjs/content';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
-import { BUILD_TIME, PHOTOS, SITE, content, ticketing } from '~/lib/content';
+import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
 import { HERO_PHOTOS } from '~/lib/hero';
+import { PAGE_PHOTOS } from '~/lib/photos';
 
-const { events, speakers, rating, award, conference, partners, media } = await content();
+const { events, speakers, rating, award, conference, partners } = await content();
 const next = nextMeetup(events, BUILD_TIME);
 const byId = new Map(speakers.map((s) => [s.id, s]));
 const harshil = speakers.find((s) => s.name === 'Harshil Agrawal');
@@ -61,12 +62,8 @@ const deck: DeckSpeaker[] = speakersWithTalks(speakers)
     photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), alt: s.photo.alt, position: s.photo.position } : undefined,
   }));
 // The hero photos are set by hand in ~/lib/hero.ts (owner), never picked from ImageKit.
-// The section photo below comes from the archive when available (high resolution), otherwise a bundled one.
-const archive = (path: string, alt: string, position?: string) => {
-  const m = media.items.find((x) => x.kind === 'photo' && (x.src.split('?')[0] ?? '').endsWith(path));
-  return m ? { src: m.src, alt, width: m.width, height: m.height, position } : undefined;
-};
-const likePhoto = archive('/jan-2026/2026-01-22-export-017.png', 'A full room at ZurichJS x Stripe, January 2026') ?? PHOTOS.community3;
+// The section photo is set by hand too (~/lib/photos.ts).
+const likePhoto = PAGE_PHOTOS.questions;
 // Current sponsors (only those marked current) at their tier's logo size, then venue hosts and current partners.
 const partnerGroups = groupPartners(partners);
 ---

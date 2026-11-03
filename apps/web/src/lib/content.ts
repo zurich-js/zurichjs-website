@@ -4,7 +4,7 @@ import { nextMeetup } from '@zurichjs/events';
 
 export { ticketing } from './ticketing.ts';
 
-export { PHOTOS, SITE, slackLink } from '@zurichjs/content';
+export { SITE, slackLink } from '@zurichjs/content';
 /** Draft preview build (SANITY_PERSPECTIVE=drafts): noindex everywhere, robots.txt disallows all. */
 export const PREVIEW = isPreview(process.env);
 export const content = () => loadContent(import.meta.env.MODE === 'test' ? { ...process.env, CONTENT_SOURCE: 'sample' } : process.env);

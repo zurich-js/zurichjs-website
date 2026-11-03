@@ -245,12 +245,13 @@ test.describe('donations and membership', () => {
     await expect(page.getByText('Enter an amount from 5 to 1000.')).toBeVisible();
   });
 
-  test('donate: questions, cancellation and thanks from production; no tax claim; a bad amount moves focus to it', async ({ page }) => {
+  test('donate: questions and cancellation; no donor list for now; no tax claim; a bad amount moves focus to it', async ({ page }) => {
     await page.goto('/donate');
     await hydrated(page);
     await expect(page.getByRole('heading', { name: 'Questions' })).toBeVisible();
     await expect(page.locator('[data-faq-cancel]')).toContainText('No questions asked.');
-    await expect(page.getByRole('link', { name: 'Patrick Stillhart' })).toHaveAttribute('href', 'https://stillh.art/');
+    // The donor thank-you list is hidden for now (owner, 3rd November 2026).
+    await expect(page.getByRole('heading', { name: 'Thank you' })).toHaveCount(0);
     await expect(page.getByText(/tax/i)).toHaveCount(0);
     await page.getByLabel(/Or another amount/).fill('3');
     await page.getByRole('button', { name: 'Continue to secure payment' }).click();

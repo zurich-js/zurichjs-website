@@ -45,7 +45,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @zurichjs/studio lint
-      - run: pnpm --filter @zurichjs/studio exec sanity build --yes --no-auto-updates
+      - run: pnpm --filter @zurichjs/studio exec sanity build --yes
       - name: Generated types are current
         run: |
           pnpm --filter @zurichjs/studio typegen

@@ -13,16 +13,16 @@ export function ReadinessView(props: {document: {displayed: EventDraft & {_id?: 
   const url = previewUrlFor(doc.id?.current)
   return (
     <Box padding={4}>
-      <Stack space={4}>
+      <Stack gap={4}>
         <Card padding={4} radius={3} tone={missing.length ? 'caution' : 'positive'}>
           <Text weight="bold">{missing.length ? `${missing.length} thing${missing.length === 1 ? '' : 's'} missing before this page is ready` : 'Ready to publish'}</Text>
         </Card>
-        <Stack space={3}>
+        <Stack gap={3}>
           {checks.map((c) => (
             <Card key={c.label} padding={3} radius={2} border>
               <Flex gap={3} align="flex-start">
                 <Badge tone={c.ok ? 'positive' : 'caution'}>{c.ok ? 'Done' : 'Missing'}</Badge>
-                <Stack space={2}>
+                <Stack gap={2}>
                   <Text weight="semibold">{c.label}</Text>
                   <Text size={1} muted>
                     {c.why}
@@ -33,7 +33,7 @@ export function ReadinessView(props: {document: {displayed: EventDraft & {_id?: 
           ))}
         </Stack>
         <Card padding={3} radius={2} tone="primary">
-          <Stack space={3}>
+          <Stack gap={3}>
             <Text weight="semibold">Before you publish</Text>
             <Text size={1}>1. Start from the “Meetup” template or duplicate last month’s event.</Text>
             <Text size={1}>2. Venue tab: name, street, postcode. Programme tab: talks in running order.</Text>

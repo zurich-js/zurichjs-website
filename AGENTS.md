@@ -8,7 +8,7 @@ zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It 
 
 | Path                                      | What                                                                                                                                             |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `apps/studio`                             | The Sanity Studio: schema, desk, actions, migrations and content scripts. Deployed by hand with `sanity deploy`.                                 |
+| `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                   |
 | `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`. |
 | `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                  |
 | `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                              |
@@ -55,7 +55,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 - changing the rating copy or the AI-crawler rules in `robots.txt`
 - deleting content or Sanity documents
 - spending money
-- production deploys, `sanity deploy`, and migrations on the `production` dataset
+- production deploys, and migrations on the `production` dataset. The Studio deploys itself when `apps/studio` changes reach `main` (`.github/workflows/deploy-studio.yml`); never run `sanity deploy` by hand
 - the legal pages (`apps/web/src/content/policies`)
 
 ## Content, state and rebuilds

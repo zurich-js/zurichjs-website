@@ -21,8 +21,8 @@ export const HERO_PHOTOS: { audience: Photo; speaker: Photo; conversation: Photo
   },
   // Right (tall, spans both rows).
   speaker: {
-    src: '/images/hero/matteo-workshop.webp',
-    srcset: '/images/hero/matteo-workshop-1000.webp 1000w, /images/hero/matteo-workshop.webp 1600w',
+    src: '/images/hero/matteo-workshop-toned.webp',
+    srcset: '/images/hero/matteo-workshop-toned-1000.webp 1000w, /images/hero/matteo-workshop-toned.webp 1600w',
     alt: 'Matteo Collina running his Node.js workshop for ZurichJS in June 2025',
     position: 'center 35%',
   },

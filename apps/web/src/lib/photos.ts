@@ -12,6 +12,8 @@ export const PAGE_PHOTOS = {
   // Home, "What happens at a meetup": two photos stacked beside the text.
   talk: { src: '/images/photos/speakers-organisers-july-2025.webp', alt: 'Speakers and organisers together at the July 2025 meetup' },
   questions: { src: '/images/photos/meetup-questions.webp', alt: 'Hands up for a question at a ZurichJS meetup', position: 'center 40%' },
+  // Home, "An award-winning community": the JavaScript Open Source Awards 2026 stage (from conf.zurichjs.com/volunteer).
+  award: { src: '/images/photos/oss-awards-2026.webp', alt: 'ZurichJS on stage at the JavaScript Open Source Awards 2026 during JSNation in Amsterdam' },
   // About, "What your first meetup is like" (also the page's share image).
   firstVisit: { src: '/images/photos/speakers-organisers-july-2025.webp', alt: 'Speakers and organisers at the July 2025 meetup' },
   // Partners, "What we take care of".

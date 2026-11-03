@@ -422,17 +422,6 @@ export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
 /** "Request the Prospectus" on production: an email to the organisers with this subject. */
 export const PROSPECTUS_MAILTO = 'mailto:hello@zurichjs.com?subject=ZurichJS%20Sponsorship%20Prospectus%20Request';
 
-/**
- * What each payment option means, from what production states. Production does
- * not say how long one-time benefits last, nor whether monthly has a minimum
- * term: both are owner decisions (docs/v2/DECISIONS.md), so the wording stays neutral.
- */
-export const PAYMENT_OPTIONS: { label: string; text: string }[] = [
-  { label: 'Yearly', text: 'Twelve months of the tier’s benefits for the price of ten (2 months free).' },
-  { label: 'Monthly', text: 'The same benefits, paid month by month while you sponsor.' },
-  { label: 'One-time', text: 'A single contribution. Ask us what it covers when we plan it together.' },
-];
-
 /** Production's reach figures, as published in October 2025 [old-stats]. Shown with that date, never as current. */
 export const REACH_STATS: { value: string; label: string }[] = [
   { value: '900', label: 'members across ZurichJS and Vue Zurich' },
@@ -454,7 +443,30 @@ export const AUDIENCE_PROFILE: { value: string; label: string }[] = [
   { value: '40%', label: 'in senior roles' },
   { value: '60%+', label: 'with five or more years of experience' },
 ];
-export const AUDIENCE_INTERESTS = ['TypeScript', 'React', 'Node.js', 'Next.js', 'Performance', 'AI integration', 'Testing', 'GraphQL', 'DevOps'];
+// What the audience works with (owner, 3rd November 2026): far beyond JavaScript. Qwik and Laravel came up in past talks.
+export const AUDIENCE_INTERESTS = [
+  'JavaScript',
+  'TypeScript',
+  'React',
+  'Next.js',
+  'Vue',
+  'Nuxt',
+  'Angular',
+  'Svelte',
+  'Astro',
+  'Qwik',
+  'Node.js',
+  'Python',
+  'Java',
+  'Go',
+  'Ruby',
+  'PHP and Laravel',
+  'GraphQL',
+  'Performance',
+  'AI integration',
+  'Testing',
+  'DevOps',
+];
 
 /** [old-stats] "International reach", without the flags. */
 export const REACH_COUNTRIES = 'Attendees and speakers have travelled in for the meetup from the Swiss French side, Germany, France, Belgium, Italy, Greece, and Albania.';

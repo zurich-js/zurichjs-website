@@ -656,10 +656,10 @@ test.describe('partners and sponsors', () => {
     // One umbrella name, distinct from the "Community partners" group under it.
     await expect(page.locator('#partners-community').getByRole('heading', { level: 2 })).toHaveText('Hosts and partners');
     await expect(page.locator('#partners-communities').getByRole('heading', { name: 'Community partners' })).toBeVisible();
-    // Figures are dated and labelled with their source.
+    // Figures are dated; no source disclaimers or RSVP export figures (owner, 3rd November 2026).
     await expect(page.getByRole('heading', { name: 'Our reach in October 2025' })).toBeVisible();
     await expect(page.getByText('RSVPs for a single meetup, the highest at the time')).toBeVisible();
-    await expect(page.getByText(/RSVPs, not check-ins/)).toBeVisible();
+    await expect(page.getByText(/RSVPs, not check-ins|undated and without a stated method|not updated since/)).toHaveCount(0);
     await expect(page.getByText('peak RSVP rate')).toHaveCount(0);
     await expect(page.locator('#sponsorship-tiers').getByText(/workshop/i)).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'See conference packages ↗' })).toHaveAttribute('href', /conf\.zurichjs\.com\/sponsorship/);
@@ -780,8 +780,16 @@ test.describe('partners and sponsors', () => {
     for (const name of ['Community Champion', 'Community Builder', 'Community Friend', 'Community Supporter']) {
       await expect(tiers.getByRole('heading', { name, exact: true })).toBeVisible();
     }
-    await expect(tiers.getByText('CHF 7’500')).toBeVisible();
+    // Monthly by default; the billing switch shows each package's yearly and one-time price instead.
+    await expect(tiers.getByText('CHF 750', { exact: true })).toBeVisible();
     await expect(tiers.getByText('CHF 150', { exact: true })).toBeVisible();
+    await expect(tiers.getByText('CHF 7’500')).toBeHidden();
+    await tiers.getByRole('radio', { name: 'Yearly' }).click();
+    await expect(tiers.getByText('CHF 7’500')).toBeVisible();
+    await expect(tiers.getByText('Twelve months for the price of ten: 2 months free.')).toBeVisible();
+    await tiers.getByRole('radio', { name: 'One-time' }).click();
+    await expect(tiers.getByText('CHF 1’000', { exact: true })).toBeVisible();
+    await expect(tiers.getByText('CHF 150', { exact: true })).toBeHidden();
     await expect(page.locator('#hosting')).toContainText('Community Friend');
   });
 

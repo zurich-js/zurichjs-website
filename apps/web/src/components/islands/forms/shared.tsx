@@ -29,11 +29,6 @@ export function optional(label: ComponentChildren) {
   );
 }
 
-/** The one line that explains the convention above. */
-export function RequiredNote({ class: extra }: { class?: string }) {
-  return <p class={`m-0 text-[16px] leading-[1.5] text-ink-2${extra ? ` ${extra}` : ''}`}>All fields are required unless marked optional.</p>;
-}
-
 /**
  * Runs one submission at a time. `busy` drives the button; a second submit
  * (a double click, Enter pressed twice) is ignored until the first settles.

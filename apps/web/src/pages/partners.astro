@@ -18,7 +18,6 @@ import SponsorTiers from '~/components/SponsorTiers.astro';
 import {
   AUDIENCE_INTERESTS,
   AUDIENCE_PROFILE,
-  PAYMENT_OPTIONS,
   PROSPECTUS_MAILTO,
   REACH_AS_OF,
   REACH_COUNTRIES,
@@ -33,6 +32,13 @@ const groups = groupPartners(partners);
 const nextHref = await nextMeetupHref();
 
 const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host');
+// The billing switch over the packages: monthly is the default (owner, 3rd November 2026).
+const BILLING = [
+  { key: 'Monthly', note: 'The same benefits, paid month by month while you sponsor.' },
+  { key: 'Yearly', note: 'Twelve months for the price of ten: 2 months free.' },
+  { key: 'One-time', note: 'A single contribution. Ask us what it covers when we plan it together.' },
+];
+const UNIT: Record<string, string> = { Monthly: 'per month', Yearly: 'per year', 'One-time': 'once' };
 const hostTier = SPONSORSHIP_TIERS.find((t) => t.id === 'host')!;
 const travel = hostTier.prices.find((p) => p.label.includes('travel'));
 const CATEGORIES = [
@@ -218,19 +224,34 @@ const link = 'text-black underline underline-offset-[3px]';
       <div class="flex flex-col gap-2.5 max-w-[760px]">
         <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Sponsorship packages</h2>
         <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
-          Four packages, each with a yearly, monthly and one-time price. Not sure which fits? <a href="#partner-form" class={link}>Start a conversation</a> or <a href={PROSPECTUS_MAILTO} class={link}>request the prospectus</a>.
+          Pay monthly, yearly or once. Not sure which fits? <a href="#partner-form" class={link}>Start a conversation</a> or <a href={PROSPECTUS_MAILTO} class={link}>request the prospectus</a>.
         </p>
       </div>
-      <dl class="m-0 grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 max-w-[1100px]">
+      {/* One billing choice for every package: a pill with a segment per option, monthly first. */}
+      <div class="flex flex-col items-center gap-2.5" data-billing>
+        <div role="radiogroup" aria-label="Billing" class="inline-flex p-1 rounded-pill bg-grey">
+          {
+            BILLING.map((b) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={b.key === 'Monthly' ? 'true' : 'false'}
+                data-billing-option={b.key}
+                class="min-h-[44px] px-3.5 md:min-w-[110px] md:px-5 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors bg-transparent text-black hover:bg-grey-hover aria-checked:bg-black aria-checked:text-white"
+              >
+                {b.key}
+              </button>
+            ))
+          }
+        </div>
         {
-          PAYMENT_OPTIONS.map((o) => (
-            <div class="flex flex-col gap-1">
-              <dt class="text-[18px] font-bold">{o.label}</dt>
-              <dd class="m-0 text-[17px] leading-[1.5] text-ink-2">{o.text}</dd>
-            </div>
+          BILLING.map((b) => (
+            <p class="m-0 text-[16px] text-ink-2" data-billing-show={b.key} hidden={b.key !== 'Monthly'}>
+              {b.note}
+            </p>
           ))
         }
-      </dl>
+      </div>
       <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start list-none m-0 p-0">
         {
           sponsorTiers.map((t) => (
@@ -238,22 +259,20 @@ const link = 'text-black underline underline-offset-[3px]';
               <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
                 {t.name}
               </h3>
-              <dl class="m-0 flex flex-col gap-2.5">
-                {t.prices.map((pr) => (
-                  <div class="flex flex-col">
-                    <dt class="text-[15px] text-ink-2">{pr.label}</dt>
-                    <dd class="m-0 text-[20px] font-bold">
-                      {pr.amount}
-                      {pr.note && <span class="text-[15px] font-normal text-ink-2"> ({pr.note})</span>}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              {t.prices.map((pr) => (
+                <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
+                  <span class="text-[clamp(30px,2.6vw,38px)] leading-none font-bold">{pr.amount}</span>
+                  <span class="text-[16px] text-ink-2">{UNIT[pr.label] ?? ''}</span>
+                </p>
+              ))}
               <div class="flex flex-col gap-2">
                 <div class="text-[16px] font-bold">Included</div>
-                <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal">
+                <ul class="m-0 p-0 list-none flex flex-col gap-2 text-[16px] leading-normal">
                   {t.perks.map((perk) => (
-                    <li>{perk}</li>
+                    <li class="flex gap-2.5 items-start">
+                      <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-[11px] font-bold">✓</span>
+                      {perk}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -332,12 +351,13 @@ const link = 'text-black underline underline-offset-[3px]';
 
     <Surface as="figure" tone="grey" class="m-0 p-7 flex flex-col gap-4 max-w-[860px]">
       <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">
-        “Organizing a workshop and a meetup with the ZurichJS team was a great experience. They took care of everything and are very supportive. The community they are building is truly amazing.”
+        “Every meetup feels like a mini-conference, thanks to the impressive depth of expertise in the room. Finding a local group that consistently sets a high technical
+        standard while maintaining authentic community spirit is truly uncommon.”
       </blockquote>
       <figcaption class="text-[16px] leading-[1.4]">
-        <b>Harshil Agrawal</b>
+        <b>Colin Schwarz</b>
         <br />
-        <span class="text-ink-2">Dev Educator, Cloudflare</span>
+        <span class="text-ink-2">Attendee</span>
       </figcaption>
     </Surface>
 
@@ -390,4 +410,17 @@ const link = 'text-black underline underline-offset-[3px]';
     form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     form?.focus({ preventScroll: true });
   });
+</script>
+
+<script>
+  // Billing switch on the sponsorship packages: shows one price per package (monthly by default).
+  const box = document.querySelector<HTMLElement>('#sponsorship-tiers');
+  if (box) {
+    const options = [...box.querySelectorAll<HTMLButtonElement>('[data-billing-option]')];
+    const choose = (key: string) => {
+      for (const o of options) o.setAttribute('aria-checked', String(o.dataset.billingOption === key));
+      for (const el of box.querySelectorAll<HTMLElement>('[data-billing-show]')) el.hidden = el.dataset.billingShow !== key;
+    };
+    for (const o of options) o.addEventListener('click', () => choose(o.dataset.billingOption!));
+  }
 </script>

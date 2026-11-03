@@ -16,7 +16,7 @@ import {
   type Venue,
 } from '@zurichjs/events';
 
-import type { EVENTS_QUERYResult, PARTNERS_QUERYResult, SINGLETONS_QUERYResult, SPEAKERS_QUERYResult } from './sanity.types.ts';
+import type { EVENTS_QUERY_RESULT, PARTNERS_QUERY_RESULT, SINGLETONS_QUERY_RESULT, SPEAKERS_QUERY_RESULT } from './sanity.types.ts';
 
 /**
  * Raw shapes returned by queries.ts, derived from the types `sanity typegen` generates
@@ -29,11 +29,11 @@ import type { EVENTS_QUERYResult, PARTNERS_QUERYResult, SINGLETONS_QUERYResult, 
 type Loose<T> = T extends readonly (infer U)[] ? Loose<U>[] : T extends object ? { [K in keyof T]?: Loose<T[K]> | null } : T;
 
 /** The queries filter on `defined(id.current)`, so the slug is always there. */
-export type RawEvent = Loose<EVENTS_QUERYResult[number]> & { _id: string; id: string };
+export type RawEvent = Loose<EVENTS_QUERY_RESULT[number]> & { _id: string; id: string };
 export type RawTalk = NonNullable<NonNullable<RawEvent['talks']>[number]>;
-export type RawSpeaker = Loose<SPEAKERS_QUERYResult[number]> & { id: string };
-export type RawPartner = Loose<PARTNERS_QUERYResult[number]> & { id: string };
-export type RawSingletons = Loose<SINGLETONS_QUERYResult>;
+export type RawSpeaker = Loose<SPEAKERS_QUERY_RESULT[number]> & { id: string };
+export type RawPartner = Loose<PARTNERS_QUERY_RESULT[number]> & { id: string };
+export type RawSingletons = Loose<SINGLETONS_QUERY_RESULT>;
 
 /** null (GROQ) → undefined (domain types). */
 const u = <T>(v: T | null | undefined): T | undefined => v ?? undefined;

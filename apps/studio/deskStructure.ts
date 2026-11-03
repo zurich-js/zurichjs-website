@@ -1,17 +1,15 @@
-import {
-  BlockContentIcon,
-  CalendarIcon,
-  CheckmarkCircleIcon,
-  ClockIcon,
-  CogIcon,
-  CommentIcon,
-  DocumentIcon,
-  MasterDetailIcon,
-  RocketIcon,
-  StarIcon,
-  UsersIcon,
-  WarningOutlineIcon,
-} from '@sanity/icons'
+import {BlockContentIcon} from '@sanity/icons/BlockContent'
+import {CalendarIcon} from '@sanity/icons/Calendar'
+import {CheckmarkCircleIcon} from '@sanity/icons/CheckmarkCircle'
+import {ClockIcon} from '@sanity/icons/Clock'
+import {CogIcon} from '@sanity/icons/Cog'
+import {CommentIcon} from '@sanity/icons/Comment'
+import {DocumentIcon} from '@sanity/icons/Document'
+import {MasterDetailIcon} from '@sanity/icons/MasterDetail'
+import {RocketIcon} from '@sanity/icons/Rocket'
+import {StarIcon} from '@sanity/icons/Star'
+import {UsersIcon} from '@sanity/icons/Users'
+import {WarningOutlineIcon} from '@sanity/icons/WarningOutline'
 import type {DefaultDocumentNodeResolver, StructureBuilder} from 'sanity/structure'
 import {ReadinessView} from './components/ReadinessView'
 

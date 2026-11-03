@@ -1,4 +1,4 @@
-import {StarIcon} from '@sanity/icons'
+import {StarIcon} from '@sanity/icons/Star'
 import {defineField, defineType} from 'sanity'
 
 /**

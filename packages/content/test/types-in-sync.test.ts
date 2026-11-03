@@ -14,7 +14,7 @@ describe('generated Sanity types', () => {
   const names = Object.keys(queries).filter((k) => k.endsWith('_QUERY'));
   it('exist for every query', () => {
     expect(names.length).toBeGreaterThan(0);
-    for (const n of names) expect(types, `${n}: run pnpm --filter @zurichjs/studio typegen`).toContain(`export type ${n}Result =`);
+    for (const n of names) expect(types, `${n}: run pnpm --filter @zurichjs/studio typegen`).toContain(`export type ${n}_RESULT =`);
   });
   it('were generated from the current query text', () => {
     for (const n of names) {

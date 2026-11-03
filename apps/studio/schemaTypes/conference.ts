@@ -1,4 +1,4 @@
-import {RocketIcon} from '@sanity/icons'
+import {RocketIcon} from '@sanity/icons/Rocket'
 import {defineField, defineType} from 'sanity'
 
 /** The conference module on the meetup site. Follows the conference lifecycle; never invent dates or prices. */

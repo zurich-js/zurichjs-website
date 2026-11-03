@@ -57,7 +57,7 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
    - **Production must read Sanity:** `netlify.toml` sets `CONTENT_REQUIRE_SANITY=1`, so a production build that cannot read Sanity fails instead of shipping sample content.
 
 3. **Sanity Studio** (now `apps/studio` in this repo; its PRs #1 and #2 are merged):
-   1. From `apps/studio`, run `pnpm exec sanity deploy`.
+   1. Add the repository secret `SANITY_DEPLOY_TOKEN` (GitHub › Settings › Secrets and variables › Actions): a Sanity API token with the "Deploy Studio" permission, from sanity.io/manage › API › Tokens. Merging this PR then deploys the Studio (Sanity 6, the new schema) through `.github/workflows/deploy-studio.yml`; later merges that touch `apps/studio` redeploy it. Without the secret the workflow skips with a notice, and **Actions › Deploy Studio › Run workflow** deploys it once the secret is set.
    2. Run the additive migration on `production`: a dry run first, then `--no-dry-run`.
 
    Every change is additive, so the old site keeps working with the new schema. 3. Content restore (drafts only, dry run first; see the Studio's `scripts/lib/drafts.ts`):

@@ -1,4 +1,4 @@
-import {CogIcon} from '@sanity/icons'
+import {CogIcon} from '@sanity/icons/Cog'
 import {defineField, defineType} from 'sanity'
 
 /** Contact details, social links, association details, the award and the support page's Twint QR. */

@@ -19,21 +19,21 @@
     "sanity"
   ],
   "dependencies": {
-    "@sanity/vision": "3.79.0",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "sanity": "3.79.0",
-    "styled-components": "6.1.15",
-    "@sanity/icons": "3.7.0",
-    "@sanity/ui": "2.15.5",
-    "@sanity/schema": "3.79.0"
+    "@sanity/vision": "^6.21.0",
+    "react": "^19.2.2",
+    "react-dom": "^19.2.2",
+    "sanity": "^6.21.0",
+    "styled-components": "^6.6.0",
+    "@sanity/icons": "^5.2.3",
+    "@sanity/ui": "^4.4.10",
+    "@sanity/schema": "^6.21.0"
   },
   "devDependencies": {
-    "@sanity/eslint-config-studio": "5.0.2",
-    "@types/react": "18.3.18",
-    "eslint": "9.22.0",
-    "prettier": "3.5.3",
-    "typescript": "5.7.3",
+    "@sanity/eslint-config-studio": "^7.0.0",
+    "@types/react": "^19.2.0",
+    "eslint": "^10.0.0",
+    "prettier": "^3.9.0",
+    "typescript": "5.9.3",
     "tsx": "4.23.15"
   },
   "prettier": {
@@ -41,5 +41,8 @@
     "printWidth": 100,
     "bracketSpacing": false,
     "singleQuote": true
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }

@@ -6,7 +6,7 @@ import { cx, surfaceClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { SocialLabel } from './SocialLabel.tsx';
-import { Honeypot, RequiredNote, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
+import { Honeypot, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
 const DRAFT_KEY = 'zurichjs-cfp-draft';
 const EMAIL = 'hello@zurichjs.com';
@@ -371,7 +371,6 @@ export default function CfpForm({ nextHref }: Props) {
         <form ref={formRef} id="proposal" onSubmit={submit} noValidate class="relative flex flex-col gap-10 min-w-0 max-w-[760px] scroll-mt-6" aria-label="Talk proposal">
           <Honeypot />
           <div class="flex flex-col gap-2">
-            <RequiredNote />
             <p class="m-0 text-[16px] leading-[1.5] text-ink-2">
               Your answers, including your name and email, are saved in this browser only, until you send the proposal or clear them.{' '}
               <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-[16px]">

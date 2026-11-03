@@ -361,7 +361,8 @@ const isExt = (href: string) => /^https?:/.test(href);
       <h2 id="h-quotes" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What people tell us afterwards</h2>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
         {
-          quotes.map((q, i) => (
+          // Harshil's quote is the one highlighted on the home page; here the others.
+          quotes.filter((q) => q.name !== 'Harshil Agrawal').map((q, i) => (
             <Surface as="figure" tone={i === 0 ? 'yellow' : 'grey'} class="m-0 p-7 flex flex-col gap-4 justify-between">
               <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">“{q.text}”</blockquote>
               <figcaption class="text-[16px] leading-[1.4]">

@@ -132,7 +132,6 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
   return (
     <form ref={formRef} onSubmit={submit} noValidate aria-label="Volunteer application" class="relative flex flex-col gap-6 max-w-[720px]">
       <Honeypot />
-      <p class="m-0 text-[16px] text-ink-2">Every field is required unless it says optional.</p>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-3.5">
         <TextField
           label="Name"

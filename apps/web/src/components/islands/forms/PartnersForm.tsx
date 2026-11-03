@@ -112,11 +112,8 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate aria-describedby="partners-form-note" class="relative flex flex-col gap-[18px]">
+    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-[18px]">
       <Honeypot />
-      <p id="partners-form-note" class="m-0 text-[16px] text-ink-2">
-        Every field is required unless it says optional.
-      </p>
       <ChipGroup<Way>
         label="What would you like to talk about?"
         value={f.way}

@@ -424,12 +424,13 @@ export const SPONSORSHIP_TIERS: SponsorshipTierOffer[] = [
 /** "Request the Prospectus" on production: an email to the organisers with this subject. */
 export const PROSPECTUS_MAILTO = 'mailto:hello@zurichjs.com?subject=ZurichJS%20Sponsorship%20Prospectus%20Request';
 
-/** Reach as of November 2026 (owner, 3rd November 2026); RSVPs per meetup from the 2026 sponsorship prospectus. */
+/** Reach as of November 2026 (owner, 3rd November 2026, including the page views); RSVPs per meetup from the 2026 sponsorship prospectus. */
 export const REACH_STATS: { value: string; label: string }[] = [
   { value: '1K+', label: 'Meetup members' },
   { value: '50%+', label: 'repeat attendees' },
   { value: '1.6K+', label: 'followers across LinkedIn, Instagram, X and Bluesky' },
   { value: '50 to 100', label: 'RSVPs per meetup' },
+  { value: '52K+', label: 'website page views since the March 2025 launch' },
 ];
 export const REACH_AS_OF = 'November 2026';
 

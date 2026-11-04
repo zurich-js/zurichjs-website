@@ -67,7 +67,7 @@ export const TEAM: TeamMember[] = [
   },
 ];
 
-/** ZurichJS Conf 2026 volunteers, as thanked on conf.zurichjs.com [conf-about]. */
+/** ZurichJS Conf 2026 volunteers, as thanked on conf.zurichjs.com [conf-about]. Saurav Tiru removed: he came as an attendee (owner, 4th November 2026). */
 export const VOLUNTEERS: string[] = [
   'Aldous Waites',
   'Aleksej Dix',
@@ -82,7 +82,6 @@ export const VOLUNTEERS: string[] = [
   'Maximilian Walterskirchen',
   'Oleh Vdovenko',
   'Renan Oliveira',
-  'Saurav Tiru',
 ];
 
 const h = (name: string, alt: string) => ({ src: `/images/photos/${name}.webp`, alt });

@@ -858,7 +858,7 @@ test.describe('community page', () => {
     await expect(team.getByRole('img', { name: 'Nadja Hesselbjerg' })).toBeVisible();
     await expect(team.getByRole('heading', { name: 'Meetup organisers' })).toBeVisible();
     await expect(team.getByRole('list', { name: 'Faris Aziz: links' }).getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/farisaziz12');
-    await expect(team.getByText(/ZurichJS Conf 2026 happened thanks to 14 volunteers/)).toBeVisible();
+    await expect(team.getByText(/ZurichJS Conf 2026 happened thanks to 13 volunteers/)).toBeVisible();
   });
 
   test('section navigation with shareable anchors, and the first-visit link still works', async ({ page }) => {

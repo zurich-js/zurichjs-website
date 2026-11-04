@@ -30,7 +30,8 @@ const { partners } = await content();
 const groups = groupPartners(partners);
 const nextHref = await nextMeetupHref();
 
-const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host');
+// Lowest to highest, the order people expect to compare prices in (Bogdan's review).
+const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host').reverse();
 // The billing switch over the packages: monthly is the default (owner, 3rd November 2026).
 const BILLING = [
   { key: 'Monthly', note: 'The same benefits, paid month by month while you sponsor.' },
@@ -117,17 +118,17 @@ const link = 'text-black underline underline-offset-[3px]';
   </PageOpening>
 
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <section id="audience" aria-labelledby="h-aud" class="on-black bg-black text-white rounded-block p-[clamp(24px,4vw,56px)] flex flex-col gap-[clamp(24px,3vw,36px)] scroll-mt-6">
+    <section id="audience" aria-labelledby="h-aud" class="flex flex-col gap-[clamp(24px,3vw,36px)] scroll-mt-6">
       <div class="flex flex-col gap-2.5 max-w-[720px]">
         <h2 id="h-aud" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Who you reach</h2>
-        <p class="m-0 text-[18px] leading-[1.55]">Mostly engineers who shape the products they work on.</p>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Mostly engineers who shape the products they work on.</p>
       </div>
       <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
         {
           AUDIENCE_PROFILE.map((a) => (
             <div class="flex flex-col-reverse justify-end gap-1.5">
               <dt class="text-[18px] leading-[1.4]">{a.label}</dt>
-              <dd class="m-0 text-[clamp(44px,5vw,64px)] leading-none font-bold text-white">{a.value}</dd>
+              <dd class="m-0 text-[clamp(40px,4.4vw,56px)] leading-none font-bold">{a.value}</dd>
             </div>
           ))
         }
@@ -135,7 +136,7 @@ const link = 'text-black underline underline-offset-[3px]';
       <div class="flex flex-col gap-2.5">
         <div class="text-[17px] font-bold">What they work with</div>
         <div class="flex flex-wrap gap-2">
-          {AUDIENCE_INTERESTS.map((i) => <span class="text-[16px] font-bold py-2 px-4 rounded-pill bg-ink">{i}</span>)}
+          {AUDIENCE_INTERESTS.map((i) => <span class="text-[15px] py-1 px-3 rounded-lg bg-grey-soft">{i}</span>)}
         </div>
       </div>
 
@@ -146,12 +147,12 @@ const link = 'text-black underline underline-offset-[3px]';
             REACH_STATS.map((r) => (
               <div class="flex flex-col-reverse justify-end gap-1.5">
                 <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
-                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold text-white">{r.value}</dd>
+                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold">{r.value}</dd>
               </div>
             ))
           }
         </dl>
-        <p class="m-0 text-[18px] leading-[1.55] max-w-[760px]">{REACH_COUNTRIES}</p>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2 max-w-[760px]">{REACH_COUNTRIES}</p>
       </div>
     </section>
 
@@ -188,11 +189,11 @@ const link = 'text-black underline underline-offset-[3px]';
               <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
               <p class="m-0 text-[17px] leading-[1.55] text-ink-2 flex-1">{w.d}</p>
               {'way' in w.cta ? (
-                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="yellow" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
+                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="black" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
                   {w.cta.label}
                 </Button>
               ) : (
-                <Button href={w.cta.href} variant="yellow" size="sm" class="self-start">
+                <Button href={w.cta.href} variant="black" size="sm" class="self-start">
                   {w.cta.label}
                 </Button>
               )}
@@ -250,45 +251,46 @@ const link = 'text-black underline underline-offset-[3px]';
           ))
         }
       </div>
-      <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start list-none m-0 p-0">
-        {
-          sponsorTiers.map((t) => (
-            <Surface as="li" tone="grey" class={`p-6 flex flex-col gap-5 ${t.id === 'champion' ? 'outline-2 outline-black' : ''}`} aria-labelledby={`h-tier-${t.id}`}>
-              <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
-                {t.name}
-              </h3>
-              {t.prices.map((pr) => (
-                <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
-                  <span class="text-[clamp(30px,2.6vw,38px)] leading-none font-bold">{pr.amount}</span>
-                  <span class="text-[16px] text-ink-2">{UNIT[pr.label] ?? ''}</span>
-                </p>
-              ))}
-              <div class="flex flex-col gap-2">
-                <div class="text-[16px] font-bold">Included</div>
-                <ul class="m-0 p-0 list-none flex flex-col gap-2 text-[16px] leading-normal">
-                  {t.perks.map((perk) => (
-                    <li class="flex gap-2.5 items-start">
-                      <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-[11px] font-bold">✓</span>
-                      {perk}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <Button
-                href={`/partners?way=partner&tier=${t.id}#partner-form`}
-                variant={t.id === 'champion' ? 'yellow' : 'white'}
-                size="sm"
-                class="self-start"
-                data-partner-way="partner"
-                data-partner-tier={t.id}
-                aria-label={`Become a sponsor: ${t.name}`}
-              >
-                Become a sponsor
-              </Button>
-            </Surface>
-          ))
-        }
-      </ul>
+      {/* The packages are one choice (radios): a yellow border and a filled circle when selected, then one action below. */}
+      <fieldset class="border-0 p-0 m-0 min-w-0" data-tier-choice>
+        <legend class="sr-only">Choose a package</legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+          {
+            sponsorTiers.map((t) => (
+              <label class="tier-card relative rounded-card bg-white border-[3px] border-grey-frame hover:border-grey-mid has-checked:border-yellow p-6 pr-14 flex flex-col gap-5 cursor-pointer has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2">
+                <input type="radio" name="tier" value={t.id} data-tier-name={t.name} class="sr-only" aria-labelledby={`h-tier-${t.id}`} />
+                <span aria-hidden="true" class="tier-dot absolute top-6 right-6 w-7 h-7 rounded-full border-2 border-grey-line bg-white flex items-center justify-center text-white text-[14px] font-bold">✓</span>
+                <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
+                  {t.name}
+                </h3>
+                {t.prices.map((pr) => (
+                  <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
+                    <span class="text-[clamp(30px,2.6vw,38px)] leading-none font-bold">{pr.amount}</span>
+                    <span class="text-[16px] text-ink-2">{UNIT[pr.label] ?? ''}</span>
+                  </p>
+                ))}
+                <div class="flex flex-col gap-2">
+                  <div class="text-[16px] font-bold">Included</div>
+                  <ul class="m-0 p-0 list-none flex flex-col gap-2 text-[16px] leading-normal">
+                    {t.perks.map((perk) => (
+                      <li class="flex gap-2.5 items-start">
+                        <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-[11px] font-bold">✓</span>
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+      <div class="flex flex-col items-center gap-2 text-center">
+        <Button href="/partners?way=partner#partner-form" variant="yellow" data-partner-way="partner" data-partner-tier="" data-tier-cta>
+          <span data-tier-cta-label>Ask about sponsoring</span>
+        </Button>
+        <p class="m-0 text-[16px] text-ink-2" data-tier-cta-note>Choose a package above, or ask us what fits.</p>
+      </div>
       <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
         Hosting a meetup or covering food and drinks is not a package: see <a href="#ways" class={link}>the ways to partner</a>.
       </p>
@@ -394,6 +396,31 @@ const link = 'text-black underline underline-offset-[3px]';
     const form = document.getElementById('partner-form');
     form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     form?.focus({ preventScroll: true });
+  });
+</script>
+
+<style>
+  .tier-card:has(input:checked) .tier-dot {
+    background: #000;
+    border-color: #000;
+  }
+  .tier-card:not(:has(input:checked)) .tier-dot {
+    color: transparent;
+  }
+</style>
+
+<script>
+  // The chosen package goes into the one action below the packages.
+  const cta = document.querySelector<HTMLAnchorElement>('[data-tier-cta]');
+  const ctaLabel = document.querySelector<HTMLElement>('[data-tier-cta-label]');
+  const ctaNote = document.querySelector<HTMLElement>('[data-tier-cta-note]');
+  document.querySelector('[data-tier-choice]')?.addEventListener('change', (e) => {
+    const input = e.target as HTMLInputElement;
+    if (!cta || input.name !== 'tier') return;
+    cta.dataset.partnerTier = input.value;
+    cta.href = `/partners?way=partner&tier=${input.value}#partner-form`;
+    if (ctaLabel) ctaLabel.textContent = `Ask about ${input.dataset.tierName}`;
+    if (ctaNote) ctaNote.textContent = 'We reply by email. Nothing is agreed until you confirm.';
   });
 </script>
 

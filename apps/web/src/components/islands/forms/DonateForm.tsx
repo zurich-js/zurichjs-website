@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cx } from '@zurichjs/design/recipes';
+import { cx, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
 
@@ -137,22 +137,21 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
         <legend class="text-[16px] font-bold mb-2 p-0">Amount in Swiss francs</legend>
         <div class="flex flex-wrap gap-2">
           {PRESETS.map((p) => (
-            <button
-              key={p.amount}
-              type="button"
-              aria-pressed={preset === p.amount}
-              onClick={() => {
-                setPreset(p.amount);
-                setCustom('');
-                setError('');
-              }}
-              class={cx(
-                'min-h-[44px] px-5 rounded-pill text-[17px] font-bold border-2 cursor-pointer',
-                preset === p.amount ? 'bg-black text-white border-black' : 'bg-white text-black border-black hover:bg-grey-soft',
-              )}
-            >
+            <label key={p.amount} class={optionClass(false, 'text-[17px]')}>
+              <input
+                type="radio"
+                name="preset"
+                value={p.amount}
+                checked={preset === p.amount}
+                onChange={() => {
+                  setPreset(p.amount);
+                  setCustom('');
+                  setError('');
+                }}
+                class={optionInput}
+              />
               {chf(p.amount)}
-            </button>
+            </label>
           ))}
         </div>
         {preset !== null && <p class="m-0 text-[16px] text-ink-2">{PRESETS.find((p) => p.amount === preset)?.covers}</p>}

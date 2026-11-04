@@ -65,8 +65,10 @@ test.describe('talk proposals (/cfp)', () => {
   test('the draft is saved in this browser, survives a reload and can be cleared', async ({ page }) => {
     await openProposal(page);
     const form = page.getByRole('form', { name: 'Talk proposal' });
-    await expect(form.getByText(/saved in this browser only/)).toBeVisible();
+    // The saved-answers bar only shows once the form holds answers.
+    await expect(form.getByText(/saved in this browser only/)).toHaveCount(0);
     await form.getByLabel('Title', { exact: true }).fill('Draft title');
+    await expect(form.getByText(/saved in this browser only/)).toBeVisible();
     await form.getByRole('checkbox', { name: 'React', exact: true }).check();
     await page.reload();
     await hydrated(page);

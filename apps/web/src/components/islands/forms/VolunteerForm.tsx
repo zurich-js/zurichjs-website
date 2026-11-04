@@ -2,7 +2,7 @@ import { REQUIRED, VOLUNTEER_AVAILABILITY, VOLUNTEER_INTERESTS, submitForm, type
 import type { ComponentChildren } from 'preact';
 import { useId, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cx } from '@zurichjs/design/recipes';
+import { optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
@@ -23,7 +23,7 @@ const EMPTY: Answers = { name: '', email: '', linkedinProfile: '', githubProfile
 /** Every field the form shows. Empty strings keep the shared messages, which differ for "missing" and "wrong format". */
 const MESSAGES: Record<string, string> = Object.fromEntries([...Object.keys(REQUIRED.volunteer), 'githubProfile', 'availabilityOther'].map((k) => [k, '']));
 
-/** Pill-shaped native checkbox or radio, so keyboard and screen readers get the real control. */
+/** A native checkbox or radio in the shared option style (never button-like), so keyboard and screen readers get the real control. */
 function Choice({
   type,
   name,
@@ -42,22 +42,8 @@ function Choice({
   onChange: () => void;
 }) {
   return (
-    <label
-      class={cx(
-        'min-h-[44px] px-4 rounded-pill border flex items-center gap-2.5 text-[16px] font-bold cursor-pointer',
-        checked ? 'bg-black text-white border-black' : 'bg-white text-black hover:bg-grey',
-        !checked && (invalid ? 'border-danger' : 'border-black'),
-      )}
-    >
-      <input
-        type={type}
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        aria-invalid={invalid || undefined}
-        aria-describedby={describedBy}
-        class={cx('w-[18px] h-[18px] m-0 flex-none cursor-pointer', checked ? 'accent-yellow' : 'accent-black')}
-      />
+    <label class={optionClass(invalid && !checked)}>
+      <input type={type} name={name} checked={checked} onChange={onChange} aria-invalid={invalid || undefined} aria-describedby={describedBy} class={optionInput} />
       {label}
     </label>
   );

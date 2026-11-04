@@ -4,7 +4,7 @@ import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, nextMeetupHref } from '~/lib/content';
-import { cx } from '@zurichjs/design/recipes';
+import { cx, linkCardArrow, linkCardClass } from '@zurichjs/design/recipes';
 
 const nextHref = await nextMeetupHref();
 const LINKS = [
@@ -44,7 +44,8 @@ const LINKS = [
     <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-3">
       {
         LINKS.map((l) => (
-          <a href={l.href} class={cx('no-underline text-black text-left rounded-[20px] py-5 px-[22px] flex flex-col gap-1', 'bg-grey hover:bg-grey-hover')}>
+          <a href={l.href} class={linkCardClass('flex flex-col gap-1')}>
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class={linkCardArrow}><path d="M4 10h12M11 5l5 5-5 5" /></svg>
             <span class="text-[19px] font-bold">{l.h}</span>
             <span class="text-[16px] leading-[1.45] text-ink-2">{l.d}</span>
           </a>

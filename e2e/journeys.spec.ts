@@ -212,7 +212,7 @@ test.describe('donations and membership', () => {
     await page.goto('/donate');
     await hydrated(page);
     await page.getByRole('radio', { name: 'Monthly' }).click();
-    await page.getByRole('button', { name: 'CHF 30' }).click();
+    await page.getByRole('radio', { name: 'CHF 30' }).check();
     await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 30 every month until you cancel.');
     await expect(page.getByText(/cancel a monthly donation at any time/)).toBeVisible();
     await page.getByRole('button', { name: 'Continue to secure payment' }).click();
@@ -269,9 +269,12 @@ test.describe('donations and membership', () => {
     await hydrated(page);
     await expect(page.getByText('Coming to meetups is free and never needs a membership.')).toBeVisible();
     await expect(page.getByText('Free or discounted workshops')).toBeVisible();
-    await page.getByRole('button', { name: 'Choose Supporter' }).click();
+    // The tier cards are the choice: selecting one is a radio, not a button.
+    await expect(page.getByRole('button', { name: /^Choose / })).toHaveCount(0);
+    await page.locator('label', { has: page.getByRole('radio', { name: /^Supporter, CHF/ }) }).click();
+    await expect(page.getByRole('radio', { name: /^Supporter, CHF/ })).toBeChecked();
     await page.getByRole('radio', { name: /Yearly, CHF 250/ }).click();
-    await expect(page.getByRole('button', { name: 'Send request: Supporter, CHF 250 a year' })).toBeVisible();
+    await expect(page.locator('[data-request-summary]')).toContainText('Supporter, CHF 250 a year');
     let sent: Record<string, unknown> | undefined;
     await page.route('**/api/verein-inquiry', async (route) => {
       sent = route.request().postDataJSON();
@@ -294,7 +297,7 @@ test.describe('donations and membership', () => {
     };
     const UNIT = { Quarterly: 'quarter', Yearly: 'year' };
     // Supporter and yearly are the defaults; the switch above the cards changes what every card shows.
-    await expect(page.getByRole('button', { name: 'Send request: Supporter, CHF 250 a year' })).toBeVisible();
+    await expect(page.locator('[data-request-summary]')).toContainText('Supporter, CHF 250 a year');
     await expect(page.getByText('Save CHF 25 compared with paying quarterly.')).toBeVisible();
     await page.getByRole('radio', { name: 'Quarterly', exact: true }).click();
     await expect(page.getByText('CHF 200 over a year.')).toBeVisible();
@@ -303,7 +306,7 @@ test.describe('donations and membership', () => {
       await page.getByRole('radio', { name: tier, exact: true }).click();
       for (const [cycle, price] of Object.entries(cycles)) {
         await page.getByRole('radio', { name: `${cycle}, ${price}`, exact: true }).click();
-        await expect(page.getByRole('button', { name: `Send request: ${tier}, ${price} a ${UNIT[cycle as keyof typeof UNIT]}` })).toBeVisible();
+        await expect(page.locator('[data-request-summary]')).toContainText(`${tier}, ${price} a ${UNIT[cycle as keyof typeof UNIT]}`);
       }
     }
     let calls = 0;
@@ -353,7 +356,8 @@ test.describe('donations and membership', () => {
       await page.getByRole('radio', { name: new RegExp(`^${label}, `) }).click();
       await page.locator('input[name="name"]').fill('Test Person');
       await page.locator('input[name="email"]').fill('test@example.com');
-      await page.getByRole('button', { name: `Send request: ${tier}, ${fee}` }).click();
+      await expect(page.locator('[data-request-summary]')).toContainText(`${tier}, ${fee}`);
+      await page.getByRole('button', { name: 'Send request' }).click();
       await expect(page.getByText(`An organiser will reply to test@example.com about joining as ${tier} (${fee}). Nothing has been charged.`)).toBeVisible();
       expect(sent.at(-1)).toMatchObject({ name: 'Test Person', email: 'test@example.com', tier, billingCycle: cycle, website_url: '' });
       await page.getByRole('button', { name: 'Send another request' }).click();
@@ -411,7 +415,7 @@ test.describe('donations through a mock Stripe', () => {
     await wire(page);
     await page.goto('/donate');
     await hydrated(page);
-    await page.getByRole('button', { name: 'CHF 40' }).click();
+    await page.getByRole('radio', { name: 'CHF 40' }).check();
     await page.getByLabel('Email for the receipt (optional)').fill('anna@example.com');
     await expect(page.locator('#donate-summary')).toHaveText('You’ll give CHF 40 once.');
     await page.getByRole('button', { name: 'Continue to secure payment' }).click();
@@ -640,7 +644,7 @@ test.describe('media archive', () => {
 
 test.describe('partners and sponsors', () => {
   const intent = (page: Page) => page.getByTestId('partner-intent');
-  const chosen = (page: Page) => page.locator('#partner-form [role="radio"][aria-checked="true"]');
+  const chosen = (page: Page) => page.locator('#partner-form label:has(input[type="radio"]:checked)');
 
   test('the page runs from audience to ways, packages, proof and the form', async ({ page }) => {
     await page.goto('/partners');
@@ -688,9 +692,13 @@ test.describe('partners and sponsors', () => {
     ['friend', 'Community Friend'],
     ['supporter', 'Community Supporter'],
   ] as const) {
-    test(`${name}: the button, a direct link and a reload all select sponsorship and the package`, async ({ page }) => {
+    test(`${name}: choosing it, a direct link and a reload all select sponsorship and the package`, async ({ page }) => {
       await page.goto('/partners');
-      await page.getByRole('link', { name: `Become a sponsor: ${name}` }).click();
+      // Packages are a choice (radios); one action below asks about the chosen one.
+      // Click the package card, as a visitor would; its radio is inside.
+      await page.locator('#sponsorship-tiers label', { has: page.locator(`#h-tier-${id}`) }).click();
+      await expect(page.locator('#sponsorship-tiers').getByRole('radio', { name, exact: true })).toBeChecked();
+      await page.getByRole('link', { name: `Ask about ${name}` }).click();
       await expect(page).toHaveURL(new RegExp(`[?&]tier=${id}.*#partner-form$`));
       await expect(chosen(page)).toHaveText('Sponsorship');
       await expect(page.getByLabel('Sponsorship package (optional)')).toHaveValue(id);

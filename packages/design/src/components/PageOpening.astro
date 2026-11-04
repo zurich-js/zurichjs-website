@@ -11,6 +11,8 @@ interface Props {
   compact?: boolean;
 }
 const { title, sub, crumb, pills, compact } = Astro.props;
+// Long titles get smaller type (Bogdan's review: 72px for long titles is too big).
+const titleSize = title.length <= 24 ? 'text-[clamp(36px,5vw,64px)]' : title.length <= 48 ? 'text-[clamp(32px,4vw,52px)]' : 'text-[clamp(28px,3.2vw,44px)]';
 const hasSub = !!sub || Astro.slots.has('sub');
 ---
 
@@ -35,7 +37,7 @@ const hasSub = !!sub || Astro.slots.has('sub');
       </div>
     )
   }
-  <h1 class="m-0 text-[clamp(36px,5.4vw,72px)] leading-[1.08] font-bold max-w-[1000px] text-balance">{title}</h1>
+  <h1 class:list={["m-0 leading-[1.1] font-bold max-w-[1000px] text-balance", titleSize]}>{title}</h1>
   {hasSub && <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[700px] text-pretty">{sub}<slot name="sub" /></p>}
   <slot />
 </section>

@@ -263,7 +263,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
 }
 
 function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPhase; now: Date; names: Record<string, string>; rated: Record<string, number> }) {
-  const h1 = 'm-0 text-[clamp(36px,5.4vw,72px)] leading-[1.08] font-bold max-w-[1000px] text-balance';
+  const h1 = 'm-0 text-[clamp(32px,4.4vw,56px)] leading-[1.1] font-bold max-w-[1000px] text-balance';
   const sub = 'm-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[700px] text-pretty';
 
   if (!ev || phase === 'none') {

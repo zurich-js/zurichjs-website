@@ -139,3 +139,13 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 - **Deterministic input:** build with `CONTENT_SOURCE=sample BUILD_NOW=2026-11-01T12:00:00+01:00`; the browser clock is fixed to the same instant.
 - **Environment:** the baselines come from Playwright 1.63 Chromium on Linux. Run the suite in the same environment, or it reports false differences.
 - **After an intended change:** run `pnpm exec playwright test e2e/visual.spec.ts --update-snapshots`, and review the new images in the PR.
+
+## Cards, choices and headings (Bogdan's review, 4th November 2026)
+
+- **A card that is a link** (`linkCardClass`): soft grey, darker on hover, an arrow top right. The whole card is one link.
+- **A card of static content** (`Surface`, tones `grey` and `soft`): white with a thin `grey-frame` border, no hover, no arrow. Any action inside is an explicit button or link.
+- **A choice** (radio or checkbox, `optionClass`): a light bordered option with the native control visible, regular weight. Choices never look like buttons. A choice that is a whole card (membership tiers, sponsorship packages) has a `grey-frame` border, a yellow border when selected, and a filled circle with a tick in the top right.
+- **Segmented switches** (billing, how often) stay as one pill with segments.
+- **Page titles** scale with their length (`PageOpening`): up to 64px for short titles, 52px up to 48 characters, 44px beyond.
+- **Saved form answers** are announced in a small bar at the bottom of the screen, only while the form holds answers.
+- **Social links** use one scheme everywhere: white or outlined, with each network's own small mark; no brand-coloured buttons.

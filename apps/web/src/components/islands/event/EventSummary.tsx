@@ -6,7 +6,7 @@ import { Button } from '@zurichjs/design/islands/Button';
 import { cx } from '@zurichjs/design/recipes';
 import { useEventState } from '../useEventState.ts';
 
-/** Sticky summary panel: when, where, cost, status and the action for the current state. */
+/** Sticky summary panel: when, cost, status and the action for the current state. The venue card sits above it. */
 export default function EventSummary({ ev, initial, url }: { ev: Event; initial: EventState; url: string }) {
   const state = useEventState(ev, initial);
   const p = presentEvent(ev, { override: state, ticketing });
@@ -19,16 +19,6 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
         <div class="text-[15px] text-ink-2">When</div>
         <div class="text-[19px] font-bold">{p.whenShort}</div>
         {times && <div class="text-[16px] text-ink-2">{times}</div>}
-      </div>
-      <div class="flex flex-col gap-0.5">
-        <div class="text-[15px] text-ink-2">Where</div>
-        <div class="text-[19px] font-bold">{p.venueShort}</div>
-        {p.venueSub && <div class="text-[16px] text-ink-2">{p.venueSub}</div>}
-        {ev.venue && (
-          <a href="#venue" class="text-[16px] font-bold underline underline-offset-[3px] self-start">
-            Directions
-          </a>
-        )}
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>

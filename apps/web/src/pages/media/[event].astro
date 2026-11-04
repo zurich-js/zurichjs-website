@@ -1,11 +1,11 @@
 ---
 /** One event's photos and videos: the page "All photos" links to. Stable URL: /media/<event slug>. */
+import { eventCardAlt } from '~/lib/og';
 import { mediaForEvent } from '@zurichjs/content';
 import { dateLong, eventHref, type Event } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import { sizedSrc } from '@zurichjs/design/images';
 import { Gallery } from '@zurichjs/design/islands/Gallery';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content } from '~/lib/content';
@@ -20,15 +20,14 @@ const { ev } = Astro.props as { ev: Event };
 const { media } = await content();
 const items = mediaForEvent(media.items, ev.slug);
 const credits = [...new Set(items.map((m) => m.credit).filter(Boolean))];
-const cover = items.find((m) => m.kind === 'photo');
 const when = ev.startsAt ? dateLong(ev.startsAt) : '';
 ---
 
 <BaseLayout
   title={`Photos: ${ev.title}`}
   description={`${countLabel(items)} from ${ev.title}${when ? `, ${when}` : ''}, a ZurichJS meetup in ${ev.venue?.city ?? 'Zurich'}.`}
-  image={cover ? sizedSrc(cover.src, 1200) : undefined}
-  imageAlt={cover?.alt}
+  image={`/og/event-${ev.slug}.png`}
+  imageAlt={eventCardAlt(ev.title, when, ev.venue?.name)}
   jsonLd={[breadcrumbSchema([{ name: 'Photos', path: '/media' }, { name: ev.title, path: `/media/${ev.slug}` }])]}
 >
   <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Photos', href: '/media', here: when || 'Event' }} sub={[when, ev.venue ? `${ev.venue.name}, ${ev.venue.city}` : '', countLabel(items)].filter(Boolean).join(' · ')} compact>

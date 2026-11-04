@@ -1,5 +1,6 @@
 ---
 /** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
+import { speakerCardAlt } from '~/lib/og';
 import { dateLong, dateParts, eventHref, eventTalks, plainText, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
 import { RichText } from '~/components/RichText';
 import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
@@ -70,7 +71,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
   type="profile"
   profile={{ firstName, lastName: rest.join(' ') || undefined }}
   image={`/og/speaker-${s.id}.png`}
-  imageAlt={s.photo ? s.photo.alt : undefined}
+  imageAlt={speakerCardAlt(s.name, s.role)}
   keywords={[s.name, 'JavaScript', 'ZurichJS', 'tech talks', ...s.topics]}
   jsonLd={jsonLd}
 >

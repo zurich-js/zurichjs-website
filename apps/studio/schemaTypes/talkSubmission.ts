@@ -30,9 +30,9 @@ export default defineType({
       validation: Rule => Rule.required(),
       options: {
         list: [
-          {title: 'Lightning (5 min)', value: 5},
-          {title: 'Standard (25 min)', value: 25},
-          {title: 'Deep Dive (35 min)', value: 35},
+          // Lightning 10 and full talks 20 minutes (owner, 4th November 2026). Older submissions keep 5, 25 or 35.
+          {title: 'Lightning (10 min)', value: 10},
+          {title: 'Full talk (20 min)', value: 20},
         ]
       }
     },

@@ -39,15 +39,14 @@ export const LINKEDIN_URL = /^(https?:\/\/)?([\w-]+\.)?linkedin\.com\/.+/i;
 export const GITHUB_PROFILE = /^(@?[A-Za-z0-9-]{1,39}|(https?:\/\/)?(www\.)?github\.com\/[A-Za-z0-9-]{1,39}\/?)$/i;
 
 /**
- * Talk proposal choices. Lengths and levels match the deployed Sanity
- * `talkSubmission` (`durationMinutes` 5 | 25 | 35, `level`); the meetup CFP
- * offers 5 and 25 minutes, as production does (its 35-minute deep dive sits
- * behind a feature flag that is off). Topics are the reconciled set used on
+ * Talk proposal choices. Meetup talks are a 10-minute lightning talk or a 20-minute full talk
+ * (owner, 4th November 2026); Sanity's `talkSubmission.durationMinutes` offers the same. The stored
+ * values stay `Lightning` and `Standard`, so saved drafts and older submissions keep working. Topics are the reconciled set used on
  * every talk in Sanity (owner, 3rd November 2026), stored as `tags`.
  */
 export const TALK_LENGTHS = [
-  { value: 'Lightning', minutes: 5, label: 'Lightning talk', hint: '5 minutes' },
-  { value: 'Standard', minutes: 25, label: 'Standard talk', hint: '25 minutes' },
+  { value: 'Lightning', minutes: 10, label: 'Lightning talk', hint: '10 minutes' },
+  { value: 'Standard', minutes: 20, label: 'Full talk', hint: '20 minutes' },
 ] as const;
 export const TALK_LEVELS = [
   { value: 'beginner', label: 'Beginner-friendly' },

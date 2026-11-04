@@ -13,7 +13,6 @@ import { byStartDesc, dateLong, dateParts, dateShort } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
-import { sizedSrc } from '@zurichjs/design/images';
 import { Gallery } from '@zurichjs/design/islands/Gallery';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content } from '~/lib/content';
@@ -42,7 +41,6 @@ const conference = mediaInFolder(media.items, settings.conferenceMediaFolder);
 // Clips from every event in one place, newest event first. They are short moments from the room, not talk recordings.
 const counts = mediaCounts(media.items);
 const complete = archiveComplete(media);
-const cover = withMedia[0]?.items.find((m) => m.kind === 'photo');
 const summary = counts.events ? `${countLabel(media.items.filter((m) => m.eventSlug))} from ${counts.events} event${counts.events === 1 ? '' : 's'}.` : '';
 const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo removal request')}`;
 ---
@@ -51,8 +49,6 @@ const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo remova
   title="Photos and videos"
   fullTitle="Photos and videos from ZurichJS meetups · ZurichJS"
   description="Photos and videos from ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed."
-  image={cover ? sizedSrc(cover.src, 1200) : undefined}
-  imageAlt={cover?.alt}
   keywords={['ZurichJS photos', 'JavaScript meetup Zurich', 'Zurich tech events', 'ZurichJS media gallery']}
   jsonLd={[breadcrumbSchema([{ name: 'Photos', path: '/media' }])]}
 >

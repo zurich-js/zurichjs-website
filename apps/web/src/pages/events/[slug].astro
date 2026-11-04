@@ -5,6 +5,7 @@
  * prerendered as of the build; islands follow the clock in the browser, and
  * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
  */
+import { eventCardAlt } from '~/lib/og';
 import { dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
@@ -18,7 +19,6 @@ import VenueCard from '~/components/islands/event/VenueCard';
 import SupporterList from '~/components/SupporterList.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import { Gallery } from '@zurichjs/design/islands/Gallery';
-import { sizedSrc } from '@zurichjs/design/images';
 import { eventPhotoState, mediaForEvent } from '@zurichjs/content';
 import { countLabel, mediaHref, toGallery } from '~/lib/media';
 import Surface from '@zurichjs/design/components/Surface.astro';
@@ -55,8 +55,9 @@ const next = nextMeetup(c.events, BUILD_TIME);
 const nextP = next ? presentEvent(next, { now: BUILD_TIME, ticketing }) : null;
 const description = clip(isPast ? `${recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} ${ev.description}` : `${p.dateLineShort} · ${p.venueShort}. ${ev.description}`);
 const jsonLd = [eventSchema(ev, c.speakers, hosts), breadcrumbSchema([{ name: 'Events', path: '/events' }, { name: ev.title, path: eventHref(ev) }])];
-const firstPhoto = gallery.find((m) => m.kind === 'photo');
-const image = firstPhoto ? sizedSrc(firstPhoto.src, 1200) : (ev.cover?.src ?? `/og/event-${ev.slug}.png`);
+// The event's own card (with its artwork when it has one), never a random photo (pages/og/[name].png.ts).
+const image = `/og/event-${ev.slug}.png`;
+const imageAlt = eventCardAlt(ev.title, ev.startsAt ? dateLong(ev.startsAt) : ev.dateText, ev.venue?.name);
 const times = timesLine(ev);
 const summaries = Object.fromEntries((ev.recap?.talks ?? []).filter((t) => t.summary).map((t) => [t.title, t.summary]));
 // Recap talks that are not in the programme (older events) still get listed.
@@ -67,7 +68,7 @@ const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda
 const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] items-start';
 ---
 
-<BaseLayout title={ev.title} description={description} image={image} jsonLd={jsonLd}>
+<BaseLayout title={ev.title} description={description} image={image} imageAlt={imageAlt} jsonLd={jsonLd}>
   {
     isPast ? (
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} />

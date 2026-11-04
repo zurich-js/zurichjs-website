@@ -208,13 +208,10 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
 
           <EventBanner client:load ev={ev} initial={state} />
 
-          <div class={ABOUT_GRID}>
-            <section class="flex flex-col gap-3.5">
-              <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
-              <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
-            </section>
-            {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} compact />}
-          </div>
+          <section class="flex flex-col gap-3.5">
+            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
+            <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
+          </section>
 
           {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} preview={PREVIEW} />}
 
@@ -271,7 +268,11 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
           )}
         </div>
 
-        <EventSummary client:idle ev={ev} initial={state} url={url} />
+        {/* The venue on top, then the summary (when, cost, status, RSVP), which stays in view while scrolling. */}
+        <div class="self-stretch flex flex-col gap-6 min-w-0">
+          {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} compact />}
+          <EventSummary client:idle ev={ev} initial={state} url={url} />
+        </div>
       </div>
     )
   }

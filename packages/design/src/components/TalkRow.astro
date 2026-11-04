@@ -1,5 +1,8 @@
 ---
-/** One past talk. Grey card on phones; white row with a hover highlight and an arrow on desktop. */
+/**
+ * One past talk, one row: the title is the strongest element (Bogdan's review). A grey card on phones,
+ * as the conference's talk cards are; a white row with a hover highlight and an arrow on desktop.
+ */
 import type { Speaker } from '@zurichjs/events';
 import { monogramClass } from '../recipes';
 import { avatarSrc } from '../images';
@@ -32,11 +35,8 @@ const lead = t.speakers[0];
     )
   }
   <span class="flex flex-col gap-1.5 min-w-0">
-    <span class="text-[18px] md:text-[20px] font-bold leading-[1.3] text-pretty wrap-anywhere">{t.title}</span>
-    <span class="flex flex-wrap gap-x-2.5 gap-y-1 text-[16px] leading-[1.4] text-ink-2">
-      <span class="font-bold text-black">{t.speakers.map((s) => s.name).join(', ')}</span>
-      <span>{t.date} · {t.format}</span>
-    </span>
+    <span class="text-[19px] md:text-[23px] font-bold leading-[1.25] text-pretty wrap-anywhere">{t.title}</span>
+    <span class="text-[15px] md:text-[16px] leading-[1.4] text-ink-2">{t.speakers.map((s) => s.name).join(', ')} · {t.date} · {t.format}</span>
   </span>
   <span aria-hidden="true" class="hidden md:flex w-10 h-10 rounded-pill bg-grey items-center justify-center font-bold self-center">→</span>
 </a>

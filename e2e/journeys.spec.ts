@@ -1000,3 +1000,28 @@ test.describe('volunteering (/cfv)', () => {
     );
   });
 });
+
+test.describe('home (Bogdan’s review)', () => {
+  test('the next meetup is one link to its event page, and the carousel works from the keyboard', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('JavaScript meets Zurich.');
+    const card = page.locator('[data-next-meetup]');
+    await expect(card).toHaveAccessibleName(/Details and RSVP$/);
+    await expect(card).toHaveAttribute('href', /^\/events\//);
+    await expect(page.getByText('Opens Meetup in a new tab')).toHaveCount(0);
+    const carousel = page.getByRole('region', { name: 'ZurichJS speakers' });
+    await carousel.scrollIntoViewIfNeeded();
+    await expect(page.locator('astro-island[ssr]', { has: carousel })).toHaveCount(0);
+    const active = () => carousel.locator('a[tabindex="0"]');
+    // Focus inside holds the rotation, so the active card only moves when we move it.
+    await carousel.getByRole('button', { name: 'Next speaker' }).focus();
+    const first = await active().getAttribute('href');
+    await carousel.getByRole('button', { name: 'Next speaker' }).click();
+    await expect(active()).not.toHaveAttribute('href', first!);
+    await carousel.getByRole('button', { name: 'Previous speaker' }).click();
+    await expect(active()).toHaveAttribute('href', first!);
+    await active().focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(active()).not.toHaveAttribute('href', first!);
+  });
+});

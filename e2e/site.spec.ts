@@ -115,18 +115,24 @@ test('keyboard users see a focus ring and can skip to content', async ({ page })
   expect(outline).not.toBe('none');
 });
 
-test('the mobile menu opens and closes from the keyboard', async ({ page, isMobile }) => {
+test('the mobile menu opens and closes from the keyboard, and focus returns to the button', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'mobile only');
   await page.goto('/');
-  const btn = page.locator('[data-menu-toggle]');
-  await expect(btn).toHaveText('Menu');
+  const btn = page.getByRole('button', { name: 'Open menu' });
   await btn.focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#mobile-nav')).toBeVisible();
+  const menu = page.getByRole('dialog', { name: 'Menu' });
+  await expect(menu).toBeVisible();
   await expect(btn).toHaveAttribute('aria-expanded', 'true');
-  await page.keyboard.press('Enter');
-  await expect(page.locator('#mobile-nav')).toBeHidden();
-  await expect(btn).toHaveText('Menu');
+  await expect(menu.getByRole('link', { name: 'Events' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(btn).toBeFocused();
+  await expect(btn).toHaveAttribute('aria-expanded', 'false');
+  // The close button works too.
+  await btn.click();
+  await menu.getByRole('button', { name: 'Close menu' }).click();
+  await expect(menu).toBeHidden();
 });
 
 test('the support page never shows a sample payment code', async ({ page }) => {

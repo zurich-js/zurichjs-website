@@ -401,3 +401,14 @@ The proof sentence now reads "Rated 4.9/5 on Meetup from 199 ratings, and winner
 - **Design:** black, white and yellow, Figtree, 24px tiles, the wordmark and zurichjs.com on top, no kicker line. Emoji are removed from card text (the font has none).
 - **Tags:** `og:image:type`, `og:image:width`, `og:image:height`, `og:image:alt` and `twitter:image:alt` on every page. Deploy previews point share images at their own URL (`DEPLOY_PRIME_URL`); canonical URLs stay on zurichjs.com.
 - **The SEO gate** fails a page whose share image is not a generated 1200×630 card.
+
+## Home page, Bogdan's review (4th November 2026)
+
+- **Hero:** "JavaScript meets Zurich." is the H1, "Shaping the Zurich tech scene." a smaller H2, then "Come for the talks, stay for the people…". No rating in the hero (it moved to the award section).
+- **Next meetup:** a white card inside the hero's square composition (a photo, the workshop loop, the card), kept after trying it: it is the only light surface in the black hero, so it is the first thing to find, and it reads top to bottom as date and venue, title, "Details and RSVP". The whole card is one link to the event page; no price, "RSVP open" or Meetup note. On phones it spans the width under the two photos. It carries the corner illustration from the V2 handoff (`corner-js.svg`).
+- **Navigation:** the conference pattern: sticky, a floating black pill after scrolling, social icons and a divider on desktop, a full-screen modal menu on phones.
+- **Below the award:** a packed photo grid (the conference's `useGridPacker`, ported to `@zurichjs/design/gridPacker` and packed at build time). "What happens at a meetup" is gone from the home page (with Harshil's quote).
+- **Speakers:** a full-width carousel (active card in the middle, neighbours at lower opacity, arrows at the sides, a quiet Pause/Play below); "Where our speakers come from" replaces "Our speakers have worked at", without the Google Developer Experts / Microsoft MVPs line.
+- **Yellow:** "Speak at a meetup" is the only large yellow section; no yellow text highlights; no yellow footer link.
+- **Footer:** the conference's layout (who we are, link columns, stay in the know, wordmark and social icons).
+- **The conference module** is a development placeholder: shown with `pnpm dev`, or when a build sets `SHOW_PREVIEW_MODULES=true` (use only on password-protected deploy previews), never on the public site.

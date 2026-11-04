@@ -3,7 +3,7 @@
  * The award, told once on the home page: what we won, a photo from the evening, and the story.
  * The award's name and link come from the award record (the same one as the hero's proof sentence).
  */
-import type { AwardRecord, Photo as PhotoData } from '@zurichjs/events';
+import type { AwardRecord, Photo as PhotoData, RatingRecord } from '@zurichjs/events';
 import Photo from './Photo.astro';
 import Button from './Button.astro';
 
@@ -13,8 +13,10 @@ interface Props {
   storyUrl: string;
   /** A few proof numbers under the text, e.g. members, partners, countries. */
   stats?: { value: string; label: string }[];
+  /** The Meetup rating, shown here rather than in the hero (Bogdan's review); null hides it. */
+  rating?: RatingRecord | null;
 }
-const { award, photo, storyUrl, stats = [] } = Astro.props;
+const { award, photo, storyUrl, stats = [], rating } = Astro.props;
 ---
 
 <section id="award" aria-labelledby="h-award" class="scroll-mt-6 px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
@@ -23,6 +25,17 @@ const { award, photo, storyUrl, stats = [] } = Astro.props;
     <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
       In June 2026 ZurichJS won the JavaScript Open Source Award for <a href={award.url} target="_blank" rel="noopener" class="text-black underline underline-offset-[3px]">{award.category}</a>, at the OSS Awards during JSNation in Amsterdam.
     </p>
+    {
+      rating && (
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+          Rated <b class="text-black">{rating.score}/5</b> on Meetup from{' '}
+          <a href={rating.url} target="_blank" rel="noopener" class="text-black underline underline-offset-[3px]" title={`${rating.source}, checked ${rating.checkedAt}`}>
+            {rating.count} ratings
+          </a>
+          .
+        </p>
+      )
+    }
     <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
       In under two years we’ve grown from a single meetup to monthly events, international partnerships, and speakers ranging from local emerging talent to web superstars. We’re a registered nonprofit and don’t make a penny from it. We do it because we love giving back to the community.
     </p>

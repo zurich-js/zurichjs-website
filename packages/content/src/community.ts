@@ -266,5 +266,3 @@ export const BEGINNINGS: { value: string; label: string }[] = [
   { value: '0', label: 'partners or sponsors' },
   { value: '0', label: 'speakers' },
 ];
-
-export const SPEAKER_PROGRAMMES = ['Google Developer Experts', 'Microsoft MVPs'];

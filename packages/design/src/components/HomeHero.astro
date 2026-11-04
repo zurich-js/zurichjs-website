@@ -1,15 +1,16 @@
 ---
 /**
- * Black hero on the same surface as the header. Headline, one sentence, the next
- * meetup once (title, date, venue, status, action), then the rating and award,
- * with a three-photo mosaic beside it (after it on phones).
- * A tile can carry a short silent `video` loop: its photo is the poster and first paint,
- * and the loop only plays for visitors who allow motion and aren't saving data.
+ * Black hero on the same surface as the header (Bogdan's review, 4th November 2026):
+ * "JavaScript meets Zurich." as the H1, the mission as a smaller H2, one line of copy, and a square
+ * composition on the right: a meetup photo, the workshop loop, and the next meetup as its own card.
+ *
+ * The next-meetup card is one link to the event page ("Details and RSVP"); visitors continue to Meetup
+ * from there. Its visible text (date, venue, title, "Details and RSVP") is the link's name. The rating lives in the award section now, not here.
+ *
+ * The tall tile can carry a short silent `video` loop: its photo is the poster and first paint, and the
+ * loop only plays for visitors who allow motion and aren't saving data.
  */
-import { eventHref, presentEvent, type AwardRecord, type Event, type Photo, type RatingRecord, type TicketingProvider } from '@zurichjs/events';
-import Button from './Button.astro';
-import ProofSentence from './ProofSentence.astro';
-import { trackAttrs } from '../analytics';
+import { eventHref, presentEvent, type Event, type Photo, type TicketingProvider } from '@zurichjs/events';
 import { srcFor, srcsetFor } from '../images';
 type HeroTile = Photo & { video?: string };
 interface Props {
@@ -17,89 +18,90 @@ interface Props {
   next?: Event;
   now: Date;
   ticketing?: TicketingProvider;
-  photos: { audience: HeroTile; speaker: HeroTile; conversation: HeroTile };
-  rating: RatingRecord | null;
-  award: AwardRecord;
+  photos: { audience: HeroTile; speaker: HeroTile };
   meetupGroupUrl: string;
 }
-const { next, now, ticketing, photos: PHOTOS, rating, award, meetupGroupUrl } = Astro.props;
+const { next, now, ticketing, photos: PHOTOS, meetupGroupUrl } = Astro.props;
 const p = next ? presentEvent(next, { now, ticketing }) : null;
-const handoff = p && (p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist');
-// `sizes` follows the rendered width of a landscape photo covering each tile (the tall tile needs about
-// three times its own width), so phones and retina screens get a sharp file.
-const mosaic: { photo: HeroTile; cls: string; sizes: string }[] = [
-  { photo: PHOTOS.audience, cls: '', sizes: '(min-width: 800px) 31vw, 67vw' },
-  { photo: { ...PHOTOS.speaker, position: PHOTOS.speaker.position ?? 'center 25%' }, cls: 'row-span-2', sizes: '(min-width: 800px) 67vw, 140vw' },
-  { photo: PHOTOS.conversation, cls: '', sizes: '(min-width: 800px) 31vw, 67vw' },
-];
+// Only states that change whether to come are shown; "RSVP open" and the price are not (review).
+const NOTICE: Partial<Record<string, string>> = { full: 'Full, waitlist open', postponed: 'Postponed', cancelled: 'Cancelled', live: 'Happening now', tbc: 'Date to be confirmed' };
+const notice = p ? NOTICE[p.state] : undefined;
+const tile = 'relative block min-h-0 rounded-card overflow-hidden bg-ink';
 ---
 
 <section class="relative px-gut pt-[clamp(24px,5vw,72px)] pb-[clamp(40px,6vw,88px)] grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-[clamp(36px,5vw,72px)] items-center">
-  <div class="relative z-1 flex flex-col gap-[clamp(28px,3.4vw,44px)] min-w-0">
-    <div class="flex flex-col gap-[18px]">
-      <h1 class="m-0 text-[clamp(40px,6.4vw,84px)] leading-[1.05] font-bold text-balance">Shaping the Zurich tech scene.</h1>
-      <p class="m-0 text-[clamp(22px,2.4vw,32px)] leading-[1.2] font-bold text-yellow text-balance">JavaScript meets Zurich.</p>
-      <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[540px] text-pretty">
-        Come for the talks. Stay for the people: juniors to CTOs, every framework, and a room full of developers you wouldn’t otherwise meet.
-      </p>
-    </div>
-
-    {
-      next && p ? (
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-1.5">
-            <div class="text-[17px] font-bold text-yellow">{p.dateLineShort}</div>
-            <div class="text-[clamp(22px,2.2vw,28px)] leading-[1.2] font-bold text-pretty">{next.title}</div>
-            <div class="text-[17px] leading-normal text-grey-mid">
-              {p.venueShort} · Free · {p.stateLabel}
-            </div>
-          </div>
-          <div class="flex flex-wrap gap-3 items-center">
-            {p.cta.href && p.cta.kind !== 'next' && (
-              <Button href={p.cta.kind === 'feedback' || p.cta.kind === 'buy' ? `${eventHref(next)}${p.cta.href}` : p.cta.href} variant="yellow" {...(handoff ? trackAttrs('rsvp_handoff_click', { eventid: next.id }) : {})}>
-                {p.cta.label}
-              </Button>
-            )}
-            <Button href={eventHref(next)} variant="outline-white">
-              Event details
-            </Button>
-          </div>
-          {handoff && <div class="text-[15px] text-grey-mid">Opens Meetup in a new tab. Your RSVP is confirmed there.</div>}
-        </div>
-      ) : (
-        <div class="flex flex-col gap-3.5">
-          <div class="text-[clamp(22px,2.2vw,28px)] leading-[1.2] font-bold">The next meetup is being planned.</div>
-          <div class="text-[17px] leading-normal text-grey-mid">We announce it on Meetup first. Follow the group there, or catch up on past talks.</div>
-          <div class="flex flex-wrap gap-3">
-            <Button href={meetupGroupUrl} variant="yellow">
-              Follow ZurichJS on Meetup
-            </Button>
-            <Button href="/events?tab=past" variant="outline-white">
-              Past events
-            </Button>
-          </div>
-        </div>
-      )
-    }
-
-    <ProofSentence rating={rating} award={award} />
+  <div class="relative z-1 flex flex-col gap-[clamp(14px,1.6vw,20px)] min-w-0">
+    <h1 class="m-0 text-[clamp(44px,7vw,96px)] leading-[1.02] font-bold text-balance">JavaScript meets Zurich.</h1>
+    <h2 class="m-0 text-[clamp(22px,2.4vw,32px)] leading-[1.2] font-bold text-grey text-balance">Shaping the Zurich tech scene.</h2>
+    <p class="m-0 mt-2 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[540px] text-pretty text-grey-mid">
+      Come for the talks, stay for the people: juniors to CTOs, every framework, and a room full of developers you wouldn’t otherwise meet.
+    </p>
   </div>
 
-  <div class="grid grid-cols-2 grid-rows-2 gap-[clamp(8px,1vw,12px)] w-full aspect-square md:aspect-[1/1.05]" aria-label="Photos from ZurichJS meetups" role="group">
-    {
-      mosaic.map(({ photo, cls, sizes }, i) => (
-        <span class={`relative block min-h-0 rounded-[20px] overflow-hidden bg-ink ${cls}`}>
-          <img src={srcFor(photo.src)} srcset={photo.srcset ?? srcsetFor(photo.src)} sizes={sizes} alt={photo.alt} loading={i < 2 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: photo.position ?? 'center' }} />
-          {photo.video && (
-            <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" style={{ objectPosition: photo.position ?? 'center' }}>
-              <source src={photo.video} type="video/mp4" />
-            </video>
-          )}
-        </span>
-      ))
-    }
+  {/* The square composition: a photo, the loop, and the next meetup as a card. On phones the card spans the width. */}
+  <div class="hero-squares grid gap-[clamp(8px,1vw,12px)] w-full">
+    <span class={`${tile} [grid-area:a]`}>
+      <img src={srcFor(PHOTOS.audience.src)} srcset={PHOTOS.audience.srcset ?? srcsetFor(PHOTOS.audience.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.audience.alt} loading="eager" fetchpriority="high" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.audience.position ?? 'center' }} />
+    </span>
+    <span class={`${tile} [grid-area:v]`}>
+      <img src={srcFor(PHOTOS.speaker.src)} srcset={PHOTOS.speaker.srcset ?? srcsetFor(PHOTOS.speaker.src)} sizes="(min-width: 800px) 50vw, 100vw" alt={PHOTOS.speaker.alt} loading="eager" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }} />
+      {
+        PHOTOS.speaker.video && (
+          <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }}>
+            <source src={PHOTOS.speaker.video} type="video/mp4" />
+          </video>
+        )
+      }
+    </span>
+    <a
+      href={next ? eventHref(next) : meetupGroupUrl}
+      data-next-meetup
+      {...(next ? {} : { target: '_blank', rel: 'noopener' })}
+      class={`group ${tile} [grid-area:c] bg-white! text-black no-underline flex flex-col gap-3 p-[clamp(18px,2vw,26px)] min-h-[200px] focus-visible:outline-offset-4`}
+    >
+      {
+        next && p ? (
+          <>
+            <span class="flex flex-col gap-0.5 text-[16px] leading-[1.35]">
+              <span class="font-bold">{p.dateLineShort}</span>
+              <span class="text-ink-2">{p.venueShort}</span>
+            </span>
+            {notice && <span class="self-start text-[14px] font-bold px-3 py-1 rounded-pill bg-black text-white">{notice}</span>}
+            <span class="text-[clamp(22px,2.2vw,30px)] leading-[1.12] font-bold text-pretty">{next.title}</span>
+            <span class="mt-auto pr-14 text-[17px] font-bold underline underline-offset-4 decoration-2 group-hover:no-underline">Details and RSVP</span>
+          </>
+        ) : (
+          <>
+            <span class="text-[clamp(22px,2.2vw,30px)] leading-[1.12] font-bold text-pretty">The next meetup is being planned.</span>
+            <span class="text-[16px] leading-[1.45] text-ink-2">We announce it on Meetup first.</span>
+            <span class="mt-auto pr-14 text-[17px] font-bold underline underline-offset-4 decoration-2 group-hover:no-underline">Follow ZurichJS on Meetup</span>
+          </>
+        )
+      }
+      {/* The corner illustration from the V2 design handoff. */}
+      <img src="/images/logo/corner-js.svg" alt="" aria-hidden="true" width="150" height="150" class="absolute right-0 bottom-0 w-[clamp(56px,6vw,84px)] h-auto pointer-events-none" />
+    </a>
   </div>
 </section>
+
+<style>
+  .hero-squares {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: clamp(150px, 46vw, 260px) auto;
+    grid-template-areas:
+      'a v'
+      'c c';
+  }
+  @media (min-width: 800px) {
+    .hero-squares {
+      aspect-ratio: 1 / 1.05;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'a v'
+        'c v';
+    }
+  }
+</style>
 
 <script>
   // Play the hero loop shortly after the page has loaded, only when motion is welcome and data isn't being saved.

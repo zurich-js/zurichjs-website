@@ -40,11 +40,11 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 
 - **Structure:** a black opening (header and page opening), black footer and white content.
 - **Typeface:** Figtree only.
-- **Colour:** `#F1E271` is the only accent. `#268BCC` is used only for focus rings and the logo. Green (`success`, `success-soft`) is only for success messages, and red (`danger`) only for errors (owner, 3rd November 2026).
+- **Colour:** `#F1E271` is the only accent: small button accents, and one large section on the home page ("Speak at a meetup"); no yellow text highlights (Bogdan's review, 4th November 2026). `#268BCC` is used only for focus rings and the logo. Green (`success`, `success-soft`) is only for success messages, and red (`danger`) only for errors (owner, 3rd November 2026).
 - **Shapes and layout:** rounded pills for buttons and tags, 24px cards, one breakpoint at 800px.
 - **No decoration:** no kickers or eyebrow labels, no decorative borders, dividers or gradients.
 - **No recordings:** ZurichJS does not record talks. Slides are shown on a talk only when the speaker shared them (owner, 2026-11-01). Short clips from the evening may appear in the media archive, never presented as talk recordings.
-- **Rating and award:** one plain sentence: "Rated 4.9/5 on Meetup…", with the award linking to its section on the home page (owner, 4th November 2026). The rating comes from the `meetupRating` record, updated by hand and never scraped.
+- **Rating and award:** "Rated 4.9/5 on Meetup…" in plain words, in the home page's award section and never in the hero (Bogdan's review, 4th November 2026); where the award is named elsewhere, it links to that section. The rating comes from the `meetupRating` record, updated by hand and never scraped.
 - **No invented facts:** dates, prices, attendee numbers, speakers and venues come from content or from a person, never from the agent.
 - **Copy:** plain, specific, no em dashes. Say "talk proposals" (explain "call for papers (CFP)" once).
 

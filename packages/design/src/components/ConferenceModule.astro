@@ -8,8 +8,10 @@ interface Props {
   conference: { state: ConferenceState; copy: ConferenceCopy };
   /** Analytics placement, e.g. "home". */
   placement?: string;
+  /** A development preview, not shown on the public site: says so above the heading. */
+  preview?: boolean;
 }
-const { conference, placement = 'home' } = Astro.props;
+const { conference, placement = 'home', preview = false } = Astro.props;
 ---
 
 <section
@@ -17,6 +19,7 @@ const { conference, placement = 'home' } = Astro.props;
   class="on-black mx-gut bg-ink text-white rounded-block p-[clamp(28px,4.4vw,64px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-x-12 gap-y-7 items-end"
 >
   <div class="flex flex-col gap-[18px]">
+    {preview && <p class="m-0 self-start text-[14px] font-bold px-3 py-1 rounded-pill bg-white text-black">Preview only: not shown on the public site</p>}
     <img src="/images/logo/wordmark-conf-white.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-[clamp(26px,2.6vw,34px)] w-auto max-w-full self-start" />
     <h2 class="m-0 text-[clamp(26px,3vw,40px)] leading-[1.15] font-bold">{conference.copy.headline}</h2>
     <p class="m-0 text-[18px] leading-normal text-grey max-w-[560px]">{conference.copy.body}</p>

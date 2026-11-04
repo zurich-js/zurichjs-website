@@ -1,0 +1,78 @@
+---
+/**
+ * A packed grid of square cells (ZurichJS Conf's PackedGrid, packed at build time by ../gridPacker).
+ * Each item has a size per breakpoint; positions are set as CSS variables for phones and for 800px+,
+ * so nothing moves when the page loads. Cells stay square through container query units.
+ *
+ * Usage: pass `items` (id + sizes) and render each one in the default slot's function child:
+ *   <PackedGrid items={items} columns={{ base: 2, md: 6 }}>{(id) => <Photo … />}</PackedGrid>
+ */
+import { packItems, type PackItem } from '../gridPacker';
+
+interface Props {
+  items: PackItem[];
+  columns: { base: number; md: number };
+  label?: string;
+  class?: string;
+}
+const { items, columns, label, class: cls } = Astro.props;
+const base = new Map(packItems(items, columns.base, 'base').map((p) => [p.id, p]));
+const md = new Map(packItems(items, columns.md, 'md').map((p) => [p.id, p]));
+const render = Astro.slots.has('default') ? (id: string) => Astro.slots.render('default', [id]) : () => '';
+// Keep the source order for reading, whatever the visual placement.
+const rendered = await Promise.all(items.map(async (it) => ({ it, html: await render(it.id) })));
+---
+
+<div class:list={['packed-wrap', cls]}>
+<div class="packed-grid" style={{ '--cols-base': columns.base, '--cols-md': columns.md }} role={label ? 'group' : undefined} aria-label={label}>
+  {
+    rendered.map(({ it, html }) => {
+      const b = base.get(it.id)!;
+      const m = md.get(it.id)!;
+      return (
+        <div
+          class="packed-cell"
+          style={{
+            '--c': `${b.col} / span ${b.colSpan}`,
+            '--r': `${b.row} / span ${b.rowSpan}`,
+            '--c-md': `${m.col} / span ${m.colSpan}`,
+            '--r-md': `${m.row} / span ${m.rowSpan}`,
+          }}
+          set:html={html}
+        />
+      );
+    })
+  }
+</div>
+</div>
+
+<style>
+  /* The wrapper is the container, so the grid can size its rows from its width (cqw). */
+  .packed-wrap {
+    container-type: inline-size;
+  }
+  .packed-grid {
+    --gap: clamp(8px, 1vw, 12px);
+    display: grid;
+    gap: var(--gap);
+    grid-template-columns: repeat(var(--cols-base), minmax(0, 1fr));
+    /* Square cells: the container's width minus the gaps, divided by the columns. */
+    grid-auto-rows: calc((100cqw - (var(--cols-base) - 1) * var(--gap)) / var(--cols-base));
+  }
+  .packed-cell {
+    grid-column: var(--c);
+    grid-row: var(--r);
+    min-width: 0;
+    min-height: 0;
+  }
+  @media (min-width: 800px) {
+    .packed-grid {
+      grid-template-columns: repeat(var(--cols-md), minmax(0, 1fr));
+      grid-auto-rows: calc((100cqw - (var(--cols-md) - 1) * var(--gap)) / var(--cols-md));
+    }
+    .packed-cell {
+      grid-column: var(--c-md);
+      grid-row: var(--r-md);
+    }
+  }
+</style>

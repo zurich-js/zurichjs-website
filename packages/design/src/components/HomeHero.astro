@@ -102,7 +102,7 @@ const mosaic: { photo: HeroTile; cls: string; sizes: string }[] = [
 </section>
 
 <script>
-  // Play the hero loop after the page has loaded, only when motion is welcome and data isn't being saved.
+  // Play the hero loop shortly after the page has loaded, only when motion is welcome and data isn't being saved.
   // Until it plays (or if it never does) the photo underneath shows.
   const start = () => {
     const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -113,6 +113,9 @@ const mosaic: { photo: HeroTile; cls: string; sizes: string }[] = [
       v.play().catch(() => {});
     }
   };
-  if (document.readyState === 'complete') start();
-  else addEventListener('load', start, { once: true });
+  // A short wait after load: the poster is already showing, and the 1.5 MB clip then never competes
+  // with the first paint on slow phones.
+  const later = () => setTimeout(start, 2500);
+  if (document.readyState === 'complete') later();
+  else addEventListener('load', later, { once: true });
 </script>

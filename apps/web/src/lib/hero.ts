@@ -17,7 +17,7 @@ export const HERO_PHOTOS: { audience: Photo; speaker: Photo & { video?: string }
   // Top left (square).
   audience: {
     src: '/images/hero/full-room.webp',
-    srcset: '/images/hero/full-room-1200.webp 1200w, /images/hero/full-room.webp 1600w',
+    srcset: '/images/hero/full-room-640.webp 640w, /images/hero/full-room-1200.webp 1200w, /images/hero/full-room.webp 1600w',
     alt: 'A full room listening to a talk at a ZurichJS meetup',
   },
   // Right (tall, spans both rows): a silent loop from the June 2025 Node.js workshop with Matteo Collina.
@@ -32,7 +32,7 @@ export const HERO_PHOTOS: { audience: Photo; speaker: Photo & { video?: string }
   // Bottom left (square).
   conversation: {
     src: '/images/hero/drinks-after-talks.webp',
-    srcset: '/images/hero/drinks-after-talks-960.webp 960w, /images/hero/drinks-after-talks.webp 1317w',
+    srcset: '/images/hero/drinks-after-talks-640.webp 640w, /images/hero/drinks-after-talks-960.webp 960w, /images/hero/drinks-after-talks.webp 1317w',
     alt: 'Two attendees with drinks after the talks at a ZurichJS meetup',
     position: 'center 30%',
   },

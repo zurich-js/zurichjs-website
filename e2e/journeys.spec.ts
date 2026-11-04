@@ -585,6 +585,8 @@ test.describe('media archive', () => {
   test('viewer: keyboard, previous/next, close returns focus, video plays on request', async ({ page }) => {
     await page.goto('/media/2026-09-signals-streams');
     const first = page.getByRole('button', { name: /^Open photo:/ }).first();
+    // Wait for the gallery island to hydrate: before that, the keyboard has nothing to open.
+    await expect(page.locator('astro-island[ssr]', { has: first })).toHaveCount(0);
     await first.focus();
     await page.keyboard.press('Enter');
     const dialog = page.getByRole('dialog');

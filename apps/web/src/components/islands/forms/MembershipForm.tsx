@@ -31,11 +31,6 @@ export default function MembershipForm() {
   const fee = feeLabel(t, cycle);
   const unit = CYCLES.find((c) => c.value === cycle)!.unit;
 
-  const choose = (k: TierKey) => {
-    setTier(k);
-    formSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const submit = async (e: Event) => {
     e.preventDefault();
     // One request at a time, even if Enter or the button is pressed twice before the re-render.
@@ -96,9 +91,34 @@ export default function MembershipForm() {
         <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-4 items-stretch">
           {TIER_KEYS.map((k) => {
             const x = TIERS[k];
-            const featured = k === 'supporter';
+            const on = tier === k;
+            // The card is the choice (Bogdan's review): a yellow border and a filled radio in the top right when selected.
             return (
-              <article key={k} class={cx('rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-6', featured ? 'bg-grey outline-2 outline-black' : 'bg-grey')}>
+              <label
+                key={k}
+                class={cx(
+                  'relative rounded-card p-[clamp(22px,3vw,36px)] pr-[clamp(56px,6vw,72px)] flex flex-col gap-6 bg-white border-[3px] cursor-pointer transition-colors has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
+                  on ? 'border-yellow' : 'border-grey-frame hover:border-grey-mid',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="tier-card"
+                  value={k}
+                  checked={on}
+                  onChange={() => setTier(k)}
+                  aria-label={`${x.name}, ${chf(x.fees[cycle])} per ${unit}`}
+                  class="sr-only"
+                />
+                <span
+                  aria-hidden="true"
+                  class={cx(
+                    'absolute top-[clamp(20px,2.6vw,32px)] right-[clamp(20px,2.6vw,32px)] w-8 h-8 rounded-full flex items-center justify-center border-2',
+                    on ? 'bg-black border-black text-white' : 'bg-white border-grey-line',
+                  )}
+                >
+                  {on && <Check class="w-4 h-4" />}
+                </span>
                 <div class="flex flex-col gap-1">
                   <h3 class="m-0 text-[clamp(26px,2.6vw,34px)] leading-[1.15] font-bold">{x.name}</h3>
                   <p class="m-0 text-[17px] leading-normal text-ink-2">{x.tagline}</p>
@@ -135,10 +155,7 @@ export default function MembershipForm() {
                     ))}
                   </ul>
                 </div>
-                <Button variant={featured ? 'black' : 'outline-black'} class="self-start mt-auto" onClick={() => choose(k)} aria-controls="membership-form">
-                  Choose {x.name}
-                </Button>
-              </article>
+              </label>
             );
           })}
         </div>
@@ -176,7 +193,7 @@ export default function MembershipForm() {
             </Button>
           </div>
         ) : (
-          <form ref={formRef} onSubmit={submit} noValidate class="relative bg-grey rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
+          <form ref={formRef} onSubmit={submit} noValidate class="relative bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
             <Honeypot />
             <ChipGroup label="Membership" value={tier} onChange={setTier} options={TIER_KEYS.map((k) => ({ value: k, label: TIERS[k].name }))} />
             <ChipGroup label="Billing cycle" value={cycle} onChange={setCycle} options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${chf(t.fees[c.value])}` }))} />
@@ -204,9 +221,17 @@ export default function MembershipForm() {
               />
             </div>
             <TextArea label="Message (optional)" name="message" rows={3} maxLength={2000} value={f.message} onInput={(e) => setF({ ...f, message: e.currentTarget.value })} />
-            <SubmitButton variant="yellow" size="lg" busy={busy} class="w-full">
-              {busy ? 'Sending…' : `Send request: ${t.name}, ${fee}`}
-            </SubmitButton>
+            <div class="flex flex-col gap-2">
+              <SubmitButton variant="yellow" size="lg" busy={busy} class="w-full">
+                {busy ? 'Sending…' : 'Send request'}
+              </SubmitButton>
+              <p data-request-summary aria-live="polite" class="m-0 text-[16px] leading-[1.45] text-ink-2 text-center">
+                <b class="text-black">
+                  {t.name}, {fee}
+                </b>
+                . Nothing is charged now.
+              </p>
+            </div>
             <span role="alert" class="text-[15px] text-danger empty:hidden">
               {tried && !valid ? 'Fix the highlighted fields.' : serverError}
             </span>

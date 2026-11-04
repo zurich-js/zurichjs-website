@@ -13,7 +13,7 @@ import Surface from '@zurichjs/design/components/Surface.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
 import { PAGE_PHOTOS } from '~/lib/photos';
-import { cx } from '@zurichjs/design/recipes';
+import { cx, linkCardArrow, linkCardClass } from '@zurichjs/design/recipes';
 import { RichText } from '~/components/RichText';
 import { SocialIcon, socialKind } from '@zurichjs/design/islands/SocialLabel';
 
@@ -71,11 +71,11 @@ const SUPPORT = [
 ];
 
 const TOUCH = [
-  { label: 'Meetup', bg: 'bg-[#ED1C40]', href: SITE.meetupGroupUrl },
-  { label: slack.external ? 'Slack' : 'Slack (ask for an invite)', bg: 'bg-[#4A154B]', href: slack.href },
-  { label: 'LinkedIn', bg: 'bg-[#0A66C2]', href: SITE.linkedinUrl },
-  { label: 'Instagram', bg: 'bg-[linear-gradient(45deg,#F58529_0%,#DD2A7B_50%,#8134AF_100%)]', href: SITE.instagramUrl },
-  { label: 'Bluesky', bg: 'bg-[#1185FE]', href: SITE.blueskyUrl },
+  { label: 'Meetup', href: SITE.meetupGroupUrl },
+  { label: slack.external ? 'Slack' : 'Slack (ask for an invite)', href: slack.href },
+  { label: 'LinkedIn', href: SITE.linkedinUrl },
+  { label: 'Instagram', href: SITE.instagramUrl },
+  { label: 'Bluesky', href: SITE.blueskyUrl },
 ];
 
 const INVOLVE = [
@@ -96,8 +96,8 @@ const NOW = [
   { value: String(speakerCount), label: 'speakers' },
 ];
 const THEN_AND_NOW = [
-  { h: 'November 2024', stats: BEGINNINGS, tone: 'bg-grey' },
-  { h: REACH_AS_OF, stats: NOW, tone: 'bg-black text-white' },
+  { h: 'November 2024', stats: BEGINNINGS, tone: 'border border-grey-frame bg-white' },
+  { h: REACH_AS_OF, stats: NOW, tone: 'border border-grey-frame bg-white' },
 ];
 ---
 
@@ -164,7 +164,7 @@ const THEN_AND_NOW = [
         <h2 id="h-why" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Why it’s called ZurichJS</h2>
         <p class="m-0 text-[18px] leading-[1.55] text-ink-2">People ask this surprisingly often.</p>
         <div class="flex flex-wrap gap-2">
-          {['Why not ZurichTS?', 'Why not Zurich Web?', 'Why not Zurich Tech?'].map((q) => <span class="text-[17px] font-bold py-2 px-4 rounded-pill bg-grey">{q}</span>)}
+          {['Why not ZurichTS?', 'Why not Zurich Web?', 'Why not Zurich Tech?'].map((q) => <span class="text-[17px] text-ink-2 italic">{q}</span>)}
         </div>
       </div>
       <div class="flex flex-col gap-4 text-[18px] leading-[1.6] text-ink-2 max-w-[640px]">
@@ -235,7 +235,7 @@ const THEN_AND_NOW = [
               </li>
             ) : (
               <li id={`story-${m.iso}`} class="scroll-mt-6">
-                <div class="h-full rounded-[20px] bg-grey p-[22px] flex flex-col gap-2 box-border">
+                <div class="h-full rounded-[20px] border border-grey-frame bg-white p-[22px] flex flex-col gap-2 box-border">
                   <span class="text-[16px] font-bold">{m.date}</span>
                   <h3 class="m-0 text-[24px] font-bold leading-[1.15] text-pretty">{m.title}</h3>
                   {m.text && <p class="m-0 text-[16px] leading-[1.5]">{m.text}</p>}
@@ -349,7 +349,7 @@ const THEN_AND_NOW = [
             </p>
             <ul class="m-0 p-0 list-none flex flex-wrap gap-2 max-w-[960px]" aria-label="Volunteers at ZurichJS Conf 2026">
               {volunteers.map((v) => (
-                <li class="px-3.5 py-1.5 rounded-pill bg-grey text-[15px] font-bold text-black">{v}</li>
+                <li class="px-3 py-1 rounded-lg border border-grey-frame text-[15px] text-black">{v}</li>
               ))}
             </ul>
           </div>
@@ -357,7 +357,7 @@ const THEN_AND_NOW = [
       }
     </section>
 
-    <section id="association" aria-labelledby="h-verein" class="mx-gut bg-grey rounded-block p-[clamp(24px,4vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-x-12 gap-y-7 items-start scroll-mt-6">
+    <section id="association" aria-labelledby="h-verein" class="mx-gut border border-grey-frame rounded-block p-[clamp(24px,4vw,56px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-x-12 gap-y-7 items-start scroll-mt-6">
       <div class="flex flex-col gap-3.5">
         <h2 id="h-verein" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">A nonprofit, run by volunteers</h2>
         <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
@@ -371,14 +371,12 @@ const THEN_AND_NOW = [
             <a
               href={s.href}
               {...(isExt(s.href) ? { target: '_blank', rel: 'noopener' } : {})}
-              class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-white hover:bg-grey-soft"
+              class={linkCardClass()}
             >
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class={linkCardArrow}><path d="M4 10h12M11 5l5 5-5 5" /></svg>
               <span class="flex flex-col gap-[3px]">
                 <span class="text-[18px] font-bold">{s.h}</span>
                 <span class="text-[16px] leading-[1.45] text-ink-2">{s.d}</span>
-              </span>
-              <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-black text-white">
-                →
               </span>
             </a>
           ))
@@ -443,8 +441,10 @@ const THEN_AND_NOW = [
               {...(isExt(t.href) ? { target: '_blank' } : {})}
               rel="noopener"
               aria-label={isExt(t.href) ? `ZurichJS on ${t.label} (opens in a new tab)` : undefined}
-              class={cx('no-underline min-h-[52px] px-[22px] rounded-pill text-white font-bold text-[19px] flex items-center justify-center hover:brightness-[0.92] flex-[1_1_100%] md:flex-[0_0_auto]', t.bg)}
+              class="no-underline min-h-[48px] px-5 rounded-pill border-2 border-black text-black font-bold text-[17px] flex items-center justify-center gap-2.5 hover:bg-black hover:text-white flex-[1_1_100%] md:flex-[0_0_auto]"
             >
+              {/* One colour scheme for every network: outlined, with the brand's own small mark (Bogdan's review). */}
+              {socialKind(t.label.split(' ')[0]!) && <SocialIcon kind={socialKind(t.label.split(' ')[0]!)!} size={18} />}
               {t.label}
             </a>
           ))

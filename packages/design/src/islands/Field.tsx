@@ -1,7 +1,7 @@
 /** Form controls for islands (Preact). Labels wrap controls; errors are announced politely. */
 import type { ComponentChildren, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'preact';
 import { useId } from 'preact/hooks';
-import { cx } from '../recipes.ts';
+import { cx, optionClass, optionInput } from '../recipes.ts';
 
 const control = 'rounded-[14px] border px-3.5 text-[17px] font-normal bg-white text-black w-full box-border';
 const border = (bad?: boolean) => (bad ? 'border-danger' : 'border-grey-line');
@@ -98,34 +98,21 @@ export function Checkbox({ label, class: className, ...rest }: { label: Componen
 }
 
 /** Pill-shaped radio chips. */
+/** One choice from a few: native radios shown as light options (never as buttons). */
 export function ChipGroup<T extends string>({ label, options, value, onChange }: { label: string; options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   const id = label.toLowerCase().replace(/\W+/g, '-');
   return (
-    <div role="radiogroup" aria-labelledby={id} class="flex flex-col gap-2">
-      <div id={id} class="text-[16px] font-bold">
-        {label}
-      </div>
+    <fieldset class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0">
+      <legend class="p-0 mb-2 text-[16px] font-bold">{label}</legend>
       <div class="flex flex-wrap gap-2">
-        {options.map((o) => {
-          const on = o.value === value;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              onClick={() => onChange(o.value)}
-              class={cx(
-                'min-h-[44px] px-[18px] rounded-pill border border-black font-bold text-[16px] cursor-pointer',
-                on ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey',
-              )}
-            >
-              {o.label}
-            </button>
-          );
-        })}
+        {options.map((o) => (
+          <label key={o.value} class={optionClass()}>
+            <input type="radio" name={id} value={o.value} checked={o.value === value} onChange={() => onChange(o.value)} class={optionInput} />
+            {o.label}
+          </label>
+        ))}
       </div>
-    </div>
+    </fieldset>
   );
 }
 

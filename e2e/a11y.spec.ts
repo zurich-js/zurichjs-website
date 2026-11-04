@@ -74,7 +74,9 @@ test('touch targets in the main content are at least 24px', async ({ page, isMob
     const small = await page.evaluate(() =>
       [...document.querySelectorAll<HTMLElement>('main a, main button, main input:not([type=hidden]), main select')]
         .filter((el) => {
-          const r = el.getBoundingClientRect();
+          // A radio or checkbox inside its label: the label is the target (WCAG 2.5.8), so measure that.
+          const target = el.tagName === 'INPUT' ? (el.closest('label') ?? el) : el;
+          const r = target.getBoundingClientRect();
           // Inline links inside sentences are exempt (WCAG 2.5.8).
           const inline = el.tagName === 'A' && getComputedStyle(el).display === 'inline';
           return r.width > 0 && r.height > 0 && !inline && (r.width < 24 || r.height < 24);

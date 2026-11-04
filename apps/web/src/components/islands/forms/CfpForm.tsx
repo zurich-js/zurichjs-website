@@ -2,7 +2,7 @@ import { CFP_AGREE_ERROR, MAX_TOPICS, TALK_LENGTHS, TALK_LEVELS, TALK_TOPICS, su
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cx, surfaceClass } from '@zurichjs/design/recipes';
+import { cx, surfaceClass, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { SocialLabel } from '@zurichjs/design/islands/SocialLabel';
@@ -166,9 +166,6 @@ function ChoiceGroup({
 const section = 'border-0 p-0 m-0 flex flex-col gap-4 min-w-0';
 const sectionTitle = 'text-[24px] font-bold mb-3.5 p-0';
 
-const hiddenInput = 'absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer disabled:cursor-not-allowed';
-const choice = 'relative has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2 cursor-pointer';
-
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PHOTO_MAX_SIDE = 1600;
 
@@ -291,6 +288,7 @@ export default function CfpForm({ nextHref }: Props) {
   const { busy, run } = useSubmitOnce();
   const [serverError, setServerError] = useState('');
   const [cleared, setCleared] = useState(false);
+  const hasAnswers = JSON.stringify(d) !== JSON.stringify(EMPTY);
   const formRef = useRef<HTMLFormElement>(null);
   const focusError = useFocusFirstError(formRef);
   const doneRef = useFocusWhen<HTMLDivElement>(sent);
@@ -338,6 +336,7 @@ export default function CfpForm({ nextHref }: Props) {
     setTried(false);
     setServerError('');
     setCleared(true);
+    window.setTimeout(() => setCleared(false), 4000);
     formRef.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
   };
 
@@ -370,17 +369,23 @@ export default function CfpForm({ nextHref }: Props) {
       {!sent && (
         <form ref={formRef} id="proposal" onSubmit={submit} noValidate class="relative flex flex-col gap-10 min-w-0 max-w-[760px] scroll-mt-6" aria-label="Talk proposal">
           <Honeypot />
-          <div class="flex flex-col gap-2">
-            <p class="m-0 text-[16px] leading-[1.5] text-ink-2">
-              Your answers, including your name and email, are saved in this browser only, until you send the proposal or clear them.{' '}
-              <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-[16px]">
-                Clear saved answers
-              </button>
-            </p>
-            <p role="status" class="m-0 text-[16px] font-bold text-success empty:hidden">
-              {cleared ? 'Saved answers cleared.' : ''}
-            </p>
-          </div>
+          {/* Saved answers: a small bar at the bottom of the screen, only while the form holds answers (Bogdan's review). */}
+          {(hasAnswers || cleared) && (
+            <div class="on-black fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100%-32px)] bg-black text-white rounded-[20px] md:rounded-pill shadow-[0_8px_28px_rgba(0,0,0,0.25)] px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] leading-[1.4]">
+              {cleared && !hasAnswers ? (
+                <p role="status" class="m-0 font-bold">
+                  Saved answers cleared.
+                </p>
+              ) : (
+                <>
+                  <p class="m-0">Your answers are saved in this browser only, until you send or clear them.</p>
+                  <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-white underline underline-offset-[3px] cursor-pointer text-[15px]">
+                    Clear saved answers
+                  </button>
+                </>
+              )}
+            </div>
+          )}
           <fieldset class={section}>
             <legend class={sectionTitle}>About you</legend>
             <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 items-start">
@@ -532,29 +537,17 @@ export default function CfpForm({ nextHref }: Props) {
             />
             <ChoiceGroup legend="Length" radio class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-2.5">
               {TALK_LENGTHS.map((l) => (
-                <label
-                  key={l.value}
-                  class={cx(
-                    choice,
-                    'min-h-[68px] py-3 px-[18px] rounded-2xl flex flex-col gap-0.5 border border-grey-line bg-white has-checked:border-black has-checked:bg-yellow has-checked:outline-1 has-checked:outline-black',
-                  )}
-                >
-                  <input type="radio" name="format" value={l.value} checked={d.format === l.value} onChange={() => set('format', l.value)} class={hiddenInput} />
+                <label key={l.value} class={optionClass(false, 'w-full grid! grid-cols-[auto_minmax(0,1fr)] gap-y-0.5 items-center py-3')}>
+                  <input type="radio" name="format" value={l.value} checked={d.format === l.value} onChange={() => set('format', l.value)} class={optionInput} />
                   <span class="font-bold text-[17px]">{l.label}</span>
-                  <span class="text-[15px] text-ink-2">{l.hint}</span>
+                  <span class="col-start-2 text-[15px] text-ink-2">{l.hint}</span>
                 </label>
               ))}
             </ChoiceGroup>
             <ChoiceGroup legend="Level" radio error={err('level')} class="flex flex-wrap gap-2">
               {TALK_LEVELS.map((l) => (
-                <label
-                  key={l.value}
-                  class={cx(
-                    choice,
-                    'min-h-[44px] px-[18px] inline-flex items-center rounded-pill border border-black font-bold text-[16px] bg-white hover:bg-grey has-checked:bg-black has-checked:text-white',
-                  )}
-                >
-                  <input type="radio" name="level" value={l.value} checked={d.level === l.value} onChange={() => set('level', l.value)} class={hiddenInput} />
+                <label key={l.value} class={optionClass(!!err('level'))}>
+                  <input type="radio" name="level" value={l.value} checked={d.level === l.value} onChange={() => set('level', l.value)} class={optionInput} />
                   {l.label}
                 </label>
               ))}
@@ -563,13 +556,7 @@ export default function CfpForm({ nextHref }: Props) {
               {TALK_TOPICS.map((t) => {
                 const on = d.topics.includes(t);
                 return (
-                  <label
-                    key={t}
-                    class={cx(
-                      choice,
-                      'min-h-[44px] px-4 inline-flex items-center rounded-pill border border-black text-[16px] bg-white hover:bg-grey has-checked:bg-black has-checked:text-white has-disabled:opacity-50 has-disabled:cursor-not-allowed',
-                    )}
-                  >
+                  <label key={t} class={optionClass(!!err('topics'))}>
                     <input
                       type="checkbox"
                       name="topics"
@@ -578,7 +565,7 @@ export default function CfpForm({ nextHref }: Props) {
                       disabled={!on && d.topics.length >= MAX_TOPICS}
                       onChange={() => set('topics', on ? d.topics.filter((x) => x !== t) : [...d.topics, t])}
                       aria-invalid={bad('topics') || undefined}
-                      class={hiddenInput}
+                      class={optionInput}
                     />
                     {t}
                   </label>

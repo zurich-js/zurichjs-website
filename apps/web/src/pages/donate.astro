@@ -15,7 +15,7 @@ import Button from '@zurichjs/design/components/Button.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import RetiredNotice from '~/components/RetiredNotice.astro';
 import { SITE, content } from '~/lib/content';
-import { isExternal } from '@zurichjs/design/recipes';
+import { isExternal, linkCardArrow, linkCardClass } from '@zurichjs/design/recipes';
 
 const { support } = await content();
 const qr = support.twintQr;
@@ -121,13 +121,13 @@ const WAYS = [
           <a
             href={o.href}
             {...(isExternal(o.href) ? { target: '_blank', rel: 'noopener' } : {})}
-            class={`no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center ${'bg-grey hover:bg-grey-hover'}`}
+            class={linkCardClass()}
           >
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class={linkCardArrow}><path d="M4 10h12M11 5l5 5-5 5" /></svg>
             <span class="flex flex-col gap-[3px]">
               <span class="text-[18px] font-bold">{o.h}</span>
               <span class="text-[16px] leading-[1.45] text-ink-2">{o.d}</span>
             </span>
-            <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-white">→</span>
           </a>
         ))
       }

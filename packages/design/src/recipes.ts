@@ -36,12 +36,17 @@ export const buttonClass = (variant: ButtonVariant = 'yellow', size: ButtonSize 
   cx(buttonBase, buttonVariants[variant], variant !== 'link' && cx('no-underline rounded-pill', buttonSizes[size]), grow && 'flex-[1_1_100%] md:flex-[0_0_auto]', extra);
 
 export type SurfaceTone = 'grey' | 'yellow' | 'black' | 'ink' | 'soft' | 'white' | 'danger' | 'success';
+/**
+ * Cards (Bogdan's review, 4th November 2026): a Surface is static content, so 'grey' and 'soft' are white with a
+ * thin border, never a fill that looks clickable. A card that is a link uses linkCardClass (soft grey, an arrow,
+ * a hover state); a choice uses a yellow border when selected.
+ */
 const surfaceTones: Record<SurfaceTone, string> = {
-  grey: 'bg-grey text-black',
+  grey: 'bg-white text-black border border-grey-frame',
   yellow: 'bg-yellow text-black',
   black: 'bg-black text-white on-black',
   ink: 'bg-ink text-white on-black',
-  soft: 'bg-grey-soft text-black',
+  soft: 'bg-white text-black border border-grey-frame',
   white: 'bg-white text-black',
   danger: 'bg-danger-soft text-black',
   /** Confirmations: a form was sent, an action is done. */
@@ -68,3 +73,23 @@ export const headingSizes = {
 } as const;
 
 export const isExternal = (href: string) => /^(https?:|mailto:)/.test(href);
+
+/**
+ * A choice in a form (radio or checkbox): a light bordered option with the native control visible and regular
+ * weight, so it never looks like a button (Bogdan's review, 4th November 2026). Selected: black border, soft fill.
+ */
+export const optionClass = (invalid = false, extra?: string) =>
+  cx(
+    'inline-flex items-center gap-2.5 min-h-[44px] px-3.5 py-2 rounded-xl border bg-white text-[16px] text-black cursor-pointer select-none',
+    'hover:border-black has-checked:border-black has-checked:bg-grey-soft has-disabled:opacity-50 has-disabled:cursor-not-allowed',
+    invalid ? 'border-danger' : 'border-grey-line',
+    extra,
+  );
+/** The native radio or checkbox inside an option. */
+export const optionInput = 'w-[18px] h-[18px] m-0 flex-none accent-black cursor-pointer';
+
+/** A card that is one link: soft grey, darker on hover, with an arrow (add `linkCardArrow` inside). */
+export const linkCardClass = (extra?: string) =>
+  cx('group relative block rounded-card bg-grey-soft hover:bg-grey transition-colors no-underline text-black p-5 md:p-6 pr-14 md:pr-16', extra);
+/** The arrow for a link card, top right; it nudges right on hover. */
+export const linkCardArrow = 'absolute right-5 top-5 md:right-6 md:top-6 transition-transform duration-300 group-hover:translate-x-1';

@@ -158,17 +158,17 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
               class={cx(
                 'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-start py-4 px-[18px] rounded-[20px]',
                 anyTime ? 'grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[72px_minmax(0,1fr)_auto]' : 'grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_auto]',
-                isNow ? 'bg-yellow' : done ? 'bg-white' : 'bg-grey-soft',
+                isNow ? 'bg-white outline-2 outline-black' : done ? 'bg-white' : 'bg-grey-soft',
               )}
             >
               {anyTime && (
                 <div class="flex flex-col gap-1 items-start">
                   {r.time && (
-                    <time class={cx('px-2.5 py-1 rounded-lg text-[15px] font-bold tabular-nums leading-none', done ? 'bg-grey text-grey-text' : 'bg-black text-yellow')}>
+                    <time class={cx('px-2.5 py-1 rounded-lg text-[15px] font-bold tabular-nums leading-none', done ? 'bg-grey text-grey-text' : 'bg-black text-white')}>
                       {r.time}
                     </time>
                   )}
-                  {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-yellow">Now</span>}
+                  {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-white">Now</span>}
                 </div>
               )}
               <div class="flex flex-col gap-2 min-w-0">
@@ -301,10 +301,10 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   if (phase === 'upcoming') {
     return (
       <div class="flex flex-col gap-[18px]">
-        <div class="text-[16px] font-bold text-yellow">Next meetup</div>
+        <div class="text-[16px] font-bold text-grey-mid">Next meetup</div>
         <h1 class={h1}>{ev.title}</h1>
         <p class={sub}>
-          <b class="text-yellow">{date}</b>
+          <b>{date}</b>
           {times && <> · {times}</>}
           <br />
           <span class="text-grey-light">{findVenue}</span>
@@ -336,15 +336,15 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
 
   return (
     <div class="flex flex-col gap-[18px]">
-      <div class="text-[16px] font-bold text-yellow">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
+      <div class="text-[16px] font-bold text-grey-mid">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
       <h1 class={h1}>{ev.title}</h1>
       <p class={sub}>
-        <b class="text-yellow">{date}</b>
+        <b>{date}</b>
         {times && <> · {times}</>}
       </p>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-3 max-w-[880px]" aria-live="polite">
         <div class="rounded-card bg-ink text-white py-5 px-[22px] flex flex-col gap-1.5">
-          <div class="text-[15px] font-bold text-yellow">
+          <div class="text-[15px] font-bold text-white">
             {phase === 'today'
               ? doors
                 ? `Doors open at ${doors}`
@@ -374,7 +374,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
                   : findVenue}
           </div>
           {phase === 'today' && ev.venue && (
-            <a href={directionsUrl(ev.venue)} target="_blank" rel="noopener" class="text-[16px] font-bold text-yellow underline underline-offset-[3px] mt-1 self-start">
+            <a href={directionsUrl(ev.venue)} target="_blank" rel="noopener" class="text-[16px] font-bold text-white underline underline-offset-[3px] mt-1 self-start">
               Get directions (opens Google Maps)
             </a>
           )}

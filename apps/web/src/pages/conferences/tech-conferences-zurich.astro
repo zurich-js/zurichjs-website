@@ -49,7 +49,7 @@ const PARTNERSHIP = [
 ];
 
 const FORMATS = [
-  { h: 'Monthly meetups', d: 'Free JavaScript & TypeScript meetups every month, no expensive conference tickets needed.', tone: 'yellow' as const },
+  { h: 'Monthly meetups', d: 'Free JavaScript & TypeScript meetups every month, no expensive conference tickets needed.', tone: 'grey' as const },
   { h: 'Open to speakers', d: 'Anyone can propose a talk, and first-time speakers get help preparing.', tone: 'grey' as const },
   { h: 'Community focus', d: 'Build lasting connections with fellow developers throughout the year.', tone: 'grey' as const },
 ];
@@ -189,7 +189,7 @@ const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
           <thead>
             <tr>
               <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-l-2xl">Aspect</th>
-              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-yellow">Monthly meetups (ZurichJS)</th>
+              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white">Monthly meetups (ZurichJS)</th>
               <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-r-2xl">Annual conferences</th>
             </tr>
           </thead>
@@ -241,7 +241,7 @@ const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
                   ))}
                 </dl>
                 <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{c.text}</p>
-                <p class="m-0 self-start text-[16px] font-bold leading-[1.4] py-2 px-4 rounded-[20px] bg-yellow">{c.tip}</p>
+                <p class="m-0 self-start text-[16px] font-bold leading-[1.4] py-2 px-4 rounded-[20px] bg-grey">{c.tip}</p>
               </Surface>
             ))
           }

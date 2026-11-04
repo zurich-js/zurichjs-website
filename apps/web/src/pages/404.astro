@@ -44,7 +44,7 @@ const LINKS = [
     <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-3">
       {
         LINKS.map((l) => (
-          <a href={l.href} class={cx('no-underline text-black text-left rounded-[20px] py-5 px-[22px] flex flex-col gap-1', l.yellow ? 'bg-yellow hover:bg-yellow-hover' : 'bg-grey hover:bg-grey-hover')}>
+          <a href={l.href} class={cx('no-underline text-black text-left rounded-[20px] py-5 px-[22px] flex flex-col gap-1', 'bg-grey hover:bg-grey-hover')}>
             <span class="text-[19px] font-bold">{l.h}</span>
             <span class="text-[16px] leading-[1.45] text-ink-2">{l.d}</span>
           </a>

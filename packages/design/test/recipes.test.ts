@@ -13,8 +13,9 @@ describe('recipes', () => {
   it('surfaces use the 24px card radius', () => {
     expect(surfaceClass('grey')).toContain('rounded-card');
   });
-  it('monograms take tone and size', () => {
-    expect(monogramClass('yellow', 'avatar')).toMatch(/bg-yellow/);
+  it('monograms take tone and size, and are never yellow (yellow is for buttons and one CTA section)', () => {
+    expect(monogramClass('white', 'avatar')).toMatch(/bg-white/);
+    expect(monogramClass('yellow', 'avatar')).not.toMatch(/bg-yellow/);
   });
   it('detects external links', () => {
     expect(isExternal('https://meetup.com')).toBe(true);

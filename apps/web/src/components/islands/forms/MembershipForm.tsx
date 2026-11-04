@@ -98,7 +98,7 @@ export default function MembershipForm() {
             const x = TIERS[k];
             const featured = k === 'supporter';
             return (
-              <article key={k} class={cx('rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-6', featured ? 'bg-yellow' : 'bg-grey')}>
+              <article key={k} class={cx('rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-6', featured ? 'bg-grey outline-2 outline-black' : 'bg-grey')}>
                 <div class="flex flex-col gap-1">
                   <h3 class="m-0 text-[clamp(26px,2.6vw,34px)] leading-[1.15] font-bold">{x.name}</h3>
                   <p class="m-0 text-[17px] leading-normal text-ink-2">{x.tagline}</p>

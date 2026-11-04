@@ -76,7 +76,7 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }} pills={p.pills}>
         <div class="flex flex-col gap-[18px] pt-1">
           <div class="text-[clamp(18px,1.6vw,21px)] leading-normal">
-            <b class="text-yellow">{p.whenShort}</b>
+            <b>{p.whenShort}</b>
             {p.dateKnown && times && (
               <>
                 <br />

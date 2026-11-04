@@ -30,7 +30,7 @@ const hasSub = !!sub || Astro.slots.has('sub');
     pills && pills.length > 0 && (
       <div class="flex flex-wrap gap-2" data-state-pills>
         {pills.map((p) => (
-          <span class={cx('text-[15px] font-bold px-3.5 py-1.5 rounded-pill text-black', p.yellow ? 'bg-yellow' : 'bg-white')}>{p.text}</span>
+          <span class={cx('text-[15px] font-bold px-3.5 py-1.5 rounded-pill text-black', 'bg-white')}>{p.text}</span>
         ))}
       </div>
     )

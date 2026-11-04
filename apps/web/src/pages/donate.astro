@@ -121,7 +121,7 @@ const WAYS = [
           <a
             href={o.href}
             {...(isExternal(o.href) ? { target: '_blank', rel: 'noopener' } : {})}
-            class={`no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center ${o.yellow ? 'bg-yellow hover:bg-yellow-hover' : 'bg-grey hover:bg-grey-hover'}`}
+            class={`no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center ${'bg-grey hover:bg-grey-hover'}`}
           >
             <span class="flex flex-col gap-[3px]">
               <span class="text-[18px] font-bold">{o.h}</span>

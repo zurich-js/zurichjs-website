@@ -51,7 +51,8 @@ export const surfaceClass = (tone: SurfaceTone = 'grey', extra?: string) => cx('
 
 export type MonogramTone = 'grey' | 'yellow' | 'white' | 'blue';
 export type MonogramSize = 'avatar' | 'tile' | 'portrait';
-const monoTones: Record<MonogramTone, string> = { grey: 'bg-grey', yellow: 'bg-yellow', white: 'bg-white', blue: 'bg-blue-soft' };
+// Yellow is for buttons and one CTA section per page (Bogdan's review): a 'yellow' monogram is grey.
+const monoTones: Record<MonogramTone, string> = { grey: 'bg-grey', yellow: 'bg-grey', white: 'bg-white', blue: 'bg-blue-soft' };
 const monoSizes: Record<MonogramSize, string> = {
   avatar: 'rounded-full items-center justify-center text-[15px]',
   tile: 'aspect-square w-full rounded-card items-center justify-center text-[clamp(36px,4vw,56px)]',

@@ -1,7 +1,8 @@
 ---
 /**
- * One past talk, one row: the title is the strongest element (Bogdan's review). A grey card on phones,
- * as the conference's talk cards are; a white row with a hover highlight and an arrow on desktop.
+ * One past talk as a card, in the conference's talk-card style (Bogdan's review, 4th November 2026):
+ * a grey card per talk, the title as the strongest element, then the speaker, the date and the format,
+ * and an arrow that moves on hover. The whole card is one link to the talk on its event page.
  */
 import type { Speaker } from '@zurichjs/events';
 import { monogramClass } from '../recipes';
@@ -21,22 +22,24 @@ const { t } = Astro.props;
 const lead = t.speakers[0];
 ---
 
-<a
-  href={t.href}
-  class="no-underline text-black grid grid-cols-[40px_minmax(0,1fr)] md:grid-cols-[52px_minmax(0,1fr)_auto] gap-3.5 md:gap-[18px] items-start p-4 md:py-4 md:px-[18px] rounded-[20px] bg-grey-soft md:bg-white md:hover:bg-grey md:mx-[-18px] box-border w-full md:w-[calc(100%+36px)]"
->
-  {
-    lead?.photo ? (
-      <img src={avatarSrc(lead.photo.src, 52)} alt="" width="52" height="52" loading="lazy" decoding="async" class="w-10 h-10 md:w-[52px] md:h-[52px] rounded-full object-cover bg-grey" />
-    ) : (
-      <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'w-10 h-10 md:w-[52px] md:h-[52px] bg-white! md:bg-grey!')}>
-        {lead?.initials ?? '?'}
-      </span>
-    )
-  }
-  <span class="flex flex-col gap-1.5 min-w-0">
-    <span class="text-[19px] md:text-[23px] font-bold leading-[1.25] text-pretty wrap-anywhere">{t.title}</span>
-    <span class="text-[15px] md:text-[16px] leading-[1.4] text-ink-2">{t.speakers.map((s) => s.name).join(', ')} · {t.date} · {t.format}</span>
+<a href={t.href} class="group relative no-underline text-black flex flex-col justify-between gap-5 min-h-[150px] p-5 md:p-6 pr-14 md:pr-16 rounded-card bg-grey-soft hover:bg-grey transition-colors duration-300">
+  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-5 top-5 md:right-6 md:top-6 transition-transform duration-300 group-hover:translate-x-1">
+    <path d="M4 10h12M11 5l5 5-5 5"></path>
+  </svg>
+  <span class="text-[20px] md:text-[23px] font-bold leading-[1.22] text-pretty wrap-anywhere">{t.title}</span>
+  <span class="flex items-center gap-3 min-w-0">
+    {
+      lead?.photo ? (
+        <img src={avatarSrc(lead.photo.src, 40)} alt="" width="40" height="40" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-grey flex-none" />
+      ) : (
+        <span aria-hidden="true" class={monogramClass('white', 'avatar', 'w-10 h-10 flex-none')}>
+          {lead?.initials ?? '?'}
+        </span>
+      )
+    }
+    <span class="flex flex-col min-w-0 text-[15px] leading-[1.35]">
+      <span class="font-bold truncate">{t.speakers.map((s) => s.name).join(', ')}</span>
+      <span class="text-ink-2">{t.date} · {t.format}</span>
+    </span>
   </span>
-  <span aria-hidden="true" class="hidden md:flex w-10 h-10 rounded-pill bg-grey items-center justify-center font-bold self-center">→</span>
 </a>

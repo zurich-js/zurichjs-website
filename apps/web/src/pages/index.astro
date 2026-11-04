@@ -38,6 +38,7 @@ outer: for (const ev of pastEvents(events, BUILD_TIME)) {
 }
 // The carousel: speakers who gave a talk at an event, most recent first, photos sized for the card.
 const lastTalk = (s: (typeof speakers)[number]) => s.talks.flatMap((t) => t.eventSlugs.map((x) => events.find((e) => e.slug === x)?.startsAt ?? '')).sort().pop() ?? '';
+const speakerCount = speakersWithTalks(speakers).length;
 const carousel: CarouselSpeaker[] = speakersWithTalks(speakers)
   .sort((a, b) => lastTalk(b).localeCompare(lastTalk(a)) || a.name.localeCompare(b.name))
   .slice(0, 24)
@@ -100,7 +101,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
               All past events
             </a>
           </div>
-          <div class="flex flex-col gap-2">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             {talks.map((t) => (
               <TalkRow t={t} />
             ))}
@@ -113,8 +114,11 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
 
     <section aria-labelledby="h-speakers" class="flex flex-col gap-7 overflow-x-clip">
       <div class="px-gut flex justify-between items-baseline gap-4 flex-wrap">
-        <h2 id="h-speakers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Meet the speakers</h2>
-        <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All speakers</a>
+        <div class="flex flex-col gap-2">
+          <h2 id="h-speakers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Meet the speakers</h2>
+          <p class="m-0 text-[18px] text-ink-2">{speakerCount} people have spoken at ZurichJS so far.</p>
+        </div>
+        <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All {speakerCount} speakers</a>
       </div>
       <SpeakerCarousel client:visible speakers={carousel} />
       <div class="px-gut pt-[clamp(24px,3vw,40px)]">

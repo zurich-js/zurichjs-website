@@ -11,8 +11,10 @@ interface Props {
   award: AwardRecord;
   photo: PhotoData;
   storyUrl: string;
+  /** A few proof numbers under the text, e.g. members, partners, countries. */
+  stats?: { value: string; label: string }[];
 }
-const { award, photo, storyUrl } = Astro.props;
+const { award, photo, storyUrl, stats = [] } = Astro.props;
 ---
 
 <section id="award" aria-labelledby="h-award" class="scroll-mt-6 px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
@@ -24,6 +26,18 @@ const { award, photo, storyUrl } = Astro.props;
     <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
       In under two years we’ve grown from a single meetup to monthly events, international partnerships, and speakers ranging from local emerging talent to web superstars. We’re a registered nonprofit and don’t make a penny from it. We do it because we love giving back to the community.
     </p>
+    {
+      stats.length > 0 && (
+        <dl class="m-0 grid grid-cols-3 gap-4">
+          {stats.map((st) => (
+            <div class="flex flex-col-reverse justify-end gap-1">
+              <dt class="text-[16px] leading-[1.4] text-ink-2">{st.label}</dt>
+              <dd class="m-0 text-[clamp(30px,3.4vw,44px)] leading-none font-bold">{st.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
     <div class="flex flex-wrap gap-3">
       <Button href={storyUrl} variant="yellow" external>Read the full story</Button>
     </div>

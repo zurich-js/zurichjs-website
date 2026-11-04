@@ -23,7 +23,7 @@ export * from './media.ts';
 export * from './queries.ts';
 export * from './partners.ts';
 export { PHOTOS, SITE } from './sample.ts';
-export { SPEAKER_COMPANIES, SPEAKER_PROGRAMMES, type SpeakerCompany } from './community.ts';
+export { BEGINNINGS, SPEAKER_COMPANIES, SPEAKER_PROGRAMMES, type SpeakerCompany } from './community.ts';
 
 export interface SiteContent {
   /** Where the content came from. "sample" is placeholder content and must never ship to production. */

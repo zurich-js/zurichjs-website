@@ -12,7 +12,7 @@
  * Without an agenda but with a start time, the evening is estimated the way
  * the old site did it (owner, 4th November 2026): doors at the start, welcome
  * an hour later, the first talk 20 minutes after that, 5 minutes between talks,
- * a 15-minute break after the second talk, then networking until 21:30. Those
+ * a 15-minute food break after the second talk, then networking until 21:30. Those
  * lines are marked `estimated`. Without a start time, the talks are listed in
  * running order with no times.
  */
@@ -55,12 +55,14 @@ function estimatedEvening(talks: TalkRef[], startsAt: string): AgendaItem[] {
   talks.forEach((t, i) => {
     items.push({ time: hhmm(at), kind: 'talk', title: t.title, talk: t, estimated: true });
     at += t.durationMin || 20;
-    if (i === 1 && i < talks.length - 1) {
+    if (i === 1) {
+      // The old event page always planned the food break after the second talk (owner, 4th November 2026).
       items.push({ time: hhmm(at), kind: 'break', title: 'Food break', estimated: true });
       at += 15;
     } else if (i < talks.length - 1) at += 5;
   });
-  items.push({ time: hhmm(at + 5), kind: 'networking', title: 'Networking and drinks', estimated: true });
+  const afterBreak = items.at(-1)!.kind === 'break';
+  items.push({ time: hhmm(afterBreak ? at : at + 5), kind: 'networking', title: 'Networking and drinks', estimated: true });
   return items;
 }
 
@@ -232,4 +234,26 @@ export function speakerTopics(speakers: { talks: { tags: string[] }[] }[], min =
     }
   }
   return [...counts.values()].filter((c) => c.count >= min).sort((a, b) => b.count - a.count || a.topic.localeCompare(b.topic));
+}
+
+const minutesOf = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h! * 60 + m!;
+};
+/**
+ * How long each line runs, in minutes, or undefined: a talk's own length, otherwise the gap to the
+ * next timed line. A closing networking line runs until 21:30, as on the old site.
+ */
+export function itemMinutes(agenda: Pick<AgendaItem, 'time' | 'kind' | 'talk'>[]): (number | undefined)[] {
+  return agenda.map((a, i) => {
+    if (a.talk?.durationMin) return a.talk.durationMin;
+    if (!a.time) return undefined;
+    const next = agenda.slice(i + 1).find((b) => b.time);
+    if (next) return minutesOf(next.time) - minutesOf(a.time) || undefined;
+    if (a.kind === 'networking') {
+      const left = 21 * 60 + 30 - minutesOf(a.time);
+      return left > 0 ? left : undefined;
+    }
+    return undefined;
+  });
 }

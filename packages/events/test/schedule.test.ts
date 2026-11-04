@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSchedule,
+  itemMinutes,
   directionsUrl,
   eventEndsAt,
   eventSupporters,
@@ -307,5 +308,21 @@ describe('an evening estimated from the start time (no agenda; owner, 4th Novemb
   it('a talk without a length counts as 20 minutes; an agenda from Sanity always wins', () => {
     expect(buildSchedule({ talks: [talk('A', 0)], startsAt: '2026-11-12T16:30:00.000Z' }).at(-1)!.time).toBe('19:15');
     expect(buildSchedule({ agenda: [{ time: '18:00', title: 'Doors' }], talks: [], startsAt: '2026-11-12T16:30:00.000Z' })[0]!.estimated).toBeUndefined();
+  });
+});
+
+describe('programme durations (the old site’s schedule look)', () => {
+  const talk = (title: string, durationMin: number, format: 'talk' | 'lightning' = 'talk') => ({ title, speakerIds: [], format, durationMin });
+  it('a talk runs its own length; other lines run until the next one; closing networking runs to 21:30', () => {
+    const items = buildSchedule({ talks: [talk('Surprise', 10, 'lightning'), talk('Retro', 40)], startsAt: '2026-11-12T16:30:00.000Z' });
+    expect(items.map((i) => [i.time, i.kind])).toEqual([
+      ['17:30', 'doors'],
+      ['18:30', 'intro'],
+      ['18:50', 'talk'],
+      ['19:05', 'talk'],
+      ['19:45', 'break'],
+      ['20:00', 'networking'],
+    ]);
+    expect(itemMinutes(items)).toEqual([60, 20, 10, 40, 15, 90]);
   });
 });

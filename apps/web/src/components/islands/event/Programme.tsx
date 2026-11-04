@@ -1,4 +1,4 @@
-import { feedbackAvailability, talkAnchor, talkFormatLine, untimedNote, type AgendaItem, type Event, type EventState, type ProgrammeMoment } from '@zurichjs/events';
+import { feedbackAvailability, itemMinutes, talkAnchor, talkFormatLine, untimedNote, type Event, type EventState, type ProgrammeMoment } from '@zurichjs/events';
 import { RichText } from '../../RichText.tsx';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
@@ -18,8 +18,6 @@ export interface ProgrammeSpeaker {
   avatar?: string;
 }
 
-const KIND_LABEL: Partial<Record<AgendaItem['kind'], string>> = { doors: 'Doors', intro: 'Welcome', break: 'Break', networking: 'Networking', close: 'Close' };
-
 /**
  * The whole evening in running order: doors, welcome, every talk with its
  * own time, breaks and networking. Server-rendered in full for search
@@ -34,9 +32,8 @@ const KIND_LABEL: Partial<Record<AgendaItem['kind'], string>> = { doors: 'Doors'
  * link opens nothing here: FeedbackGate explains when feedback opens. A
  * draft preview build (`preview`) opens the ratings early for organisers.
  */
-/** Talk card padding, and the matching top offset for the time beside it. */
+/** Talk card padding; doors, breaks and the rest are smaller cards. */
 const CARD_PAD = 'p-[clamp(18px,2.4vw,28px)]';
-const CARD_TOP = 'pt-[clamp(18px,2.4vw,28px)]';
 
 export default function Programme({
   ev,
@@ -83,7 +80,7 @@ export default function Programme({
   const moment: ProgrammeMoment = state === 'past' ? 'past' : state === 'live' ? 'now' : 'future';
   const note = untimedNote(ev, moment);
   // Without any time the programme is a plain ordered list: no empty time column.
-  const anyTime = ev.agenda.some((a) => a.time);
+  const minutes = itemMinutes(ev.agenda);
 
   return (
     <section id="programme" aria-labelledby="h-programme" class="flex flex-col gap-6 scroll-mt-6">
@@ -104,18 +101,19 @@ export default function Programme({
           </a>
         </div>
       )}
-      <ol class="m-0 p-0 list-none flex flex-col gap-6">
+      <ol class="m-0 p-0 list-none flex flex-col gap-3">
         {ev.agenda.map((a, i) => {
           const anchor = a.talk ? talkAnchor(a.talk) : undefined;
           const summary = a.talk ? summaries[a.talk.title] : undefined;
+          const mins = minutes[i];
           return (
-            <li key={i} id={anchor} class={cx('grid gap-[18px] scroll-mt-24', anyTime ? 'grid-cols-[64px_minmax(0,1fr)]' : 'grid-cols-[minmax(0,1fr)]')}>
-              {anyTime && <div class={cx('text-[18px] font-bold tabular-nums', a.talk ? CARD_TOP : 'pt-px')}>{a.time && <time>{a.time}</time>}</div>}
-              {/* Talks sit on their own card; doors, breaks and the rest stay plain between them. */}
-              <div class={cx('flex flex-col gap-2 min-w-0', a.talk && `rounded-card bg-grey-soft ${CARD_PAD}`)}>
-                {!a.talk && KIND_LABEL[a.kind] && !a.title.toLowerCase().includes(KIND_LABEL[a.kind]!.toLowerCase()) && (
-                  <div class="text-[15px] text-ink-2">{KIND_LABEL[a.kind]}</div>
-                )}
+            <li key={i} id={anchor} class="scroll-mt-24">
+              {/* Every line is a card, as on the old site: time, kind and length on top, then the content. Talks get the bigger card. */}
+              <div class={cx('flex flex-col gap-2 min-w-0 rounded-card bg-grey-soft', a.talk ? CARD_PAD : 'px-[clamp(16px,2vw,24px)] py-4')}>
+                <div class="flex items-center gap-2 flex-wrap">
+                  {a.time && <time class="px-2.5 py-1 rounded-lg bg-black text-yellow text-[15px] font-bold tabular-nums leading-none">{a.time}</time>}
+                  {mins && !a.talk && <span class="ml-auto text-[14px] font-bold text-ink-2 tabular-nums">{mins} min</span>}
+                </div>
                 <h3 class={cx('m-0 font-bold leading-[1.3] text-pretty', a.talk ? 'text-[22px]' : 'text-[19px]')}>
                   {anchor ? (
                     <a href={`#${anchor}`} class="no-underline hover:underline">

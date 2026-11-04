@@ -1,4 +1,17 @@
-import { dateLong, directionsUrl, itemStartsAt, scheduleFacts, timesLine, todayPhase, untimedNote, venueAddress, type Event, type TodayPhase } from '@zurichjs/events';
+import {
+  dateLong,
+  directionsUrl,
+  itemMinutes,
+  itemStartsAt,
+  talkFormatLine,
+  scheduleFacts,
+  timesLine,
+  todayPhase,
+  untimedNote,
+  venueAddress,
+  type Event,
+  type TodayPhase,
+} from '@zurichjs/events';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
 import { cx } from '@zurichjs/design/recipes';
@@ -127,6 +140,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
 
   const note = untimedNote(ev, phase === 'upcoming' ? 'future' : 'now');
   const anyTime = items.some((it) => it.time);
+  const minutes = itemMinutes(ev.agenda);
 
   return (
     <div class="flex flex-col gap-2">
@@ -149,11 +163,22 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
             >
               {anyTime && (
                 <div class="flex flex-col gap-1 items-start">
-                  {r.time && <span class={cx('text-[18px] font-bold tabular-nums', done && 'text-grey-text')}>{r.time}</span>}
+                  {r.time && (
+                    <time class={cx('px-2.5 py-1 rounded-lg text-[15px] font-bold tabular-nums leading-none', done ? 'bg-grey text-grey-text' : 'bg-black text-yellow')}>
+                      {r.time}
+                    </time>
+                  )}
                   {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-yellow">Now</span>}
                 </div>
               )}
               <div class="flex flex-col gap-2 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  {r.talk ? (
+                    <span class="text-[14px] font-bold text-ink-2">{talkFormatLine(r.talk)}</span>
+                  ) : (
+                    minutes[r.i] && <span class="text-[14px] font-bold text-ink-2 tabular-nums">{minutes[r.i]} min</span>
+                  )}
+                </div>
                 <span class={cx('font-bold leading-[1.3] text-pretty', r.talk ? 'text-[20px]' : 'text-[17px]', done && 'text-grey-text')}>{r.title}</span>
                 {r.talk ? (
                   <>

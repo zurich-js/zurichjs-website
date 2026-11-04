@@ -21,7 +21,7 @@ const talkFields = /* groq */ `
 export const EVENTS_QUERY = defineQuery(`
 *[_type == "events" && defined(id.current)] | order(datetime desc) {
   _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,
-  location, address, venue, venueNote, description, meetupUrl,
+  location, address, venue, venueNote, description, meetupUrl, sane{ organization, event },
   "image": image.asset->url,
   "photos": photos[]{ "src": asset->url, alt, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },
   practical[]{ label, value },

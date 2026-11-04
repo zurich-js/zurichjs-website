@@ -20,6 +20,15 @@ export type EventStatus =
 
 export type EventState = 'open' | 'notopen' | 'tbc' | 'full' | 'postponed' | 'cancelled' | 'live' | 'past';
 
+/** Sane's `registration.state` for an event (GET /v1/public/events/{org}/{event}). */
+export type SaneRegistrationState = 'open' | 'not_open_yet' | 'sold_out' | 'closed' | 'ended' | 'cancelled';
+
+export interface SaneEvent {
+  /** The event page on Sane, where people get a ticket. */
+  url: string;
+  state: SaneRegistrationState;
+}
+
 export interface Venue {
   name: string;
   street?: string;
@@ -106,6 +115,8 @@ export interface Event {
   venue?: Venue;
   venueNote?: string;
   meetupUrl?: string;
+  /** Free tickets on Sane, read at build time. Missing when the event is not linked to Sane or Sane could not be read. */
+  sane?: SaneEvent;
   description: string;
   agenda: AgendaItem[];
   practical: PracticalInfo[];

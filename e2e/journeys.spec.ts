@@ -818,13 +818,13 @@ test.describe('partners and sponsors', () => {
     }
   });
 
-  test('Vercel, Ginetta and Code Blossom are not promoted on active pages (owner, 2nd November 2026)', async ({ page }) => {
+  test('Ginetta and Code Blossom are not promoted on active pages (owner, 2nd November 2026)', async ({ page }) => {
     for (const path of ['/', '/partners', '/events/2026-11-forms-types', '/today']) {
       await page.goto(path);
       const text = await page.locator('body').innerText();
-      expect(text, path).not.toMatch(/vercel|ginetta|code\s?blossom/i);
-      for (const host of ['vercel.com', 'ginetta.net', 'code-blossom.com']) await expect(page.locator(`a[href*="${host}"]`), `${path} ${host}`).toHaveCount(0);
-      await expect(page.getByRole('img', { name: /vercel|ginetta|code blossom/i })).toHaveCount(0);
+      expect(text, path).not.toMatch(/ginetta|code\s?blossom/i);
+      for (const host of ['ginetta.net', 'code-blossom.com']) await expect(page.locator(`a[href*="${host}"]`), `${path} ${host}`).toHaveCount(0);
+      await expect(page.getByRole('img', { name: /ginetta|code blossom/i })).toHaveCount(0);
     }
   });
 

@@ -23,6 +23,7 @@
  *                   3rd November 2026: DotJS and React Paris are no longer shown, Voxxed Days Zurich is a current partner
  *   [conf-sponsor]  conf.zurichjs.com/sponsorship, "Our typical Audience" (undated; "the meetup attendee profile")
  *   [meetup-export] owner-provided Meetup export: RSVPs (not check-ins) for 18 meetups, November 2024 to September 2026
+ *   [owner]         the owner, 4th November 2026: AWS, Gatling, Supabase, Remotion and Vercel as past sponsors; SAE Institute Zürich as a current host
  *   [prospectus]    the 2026 sponsorship prospectus (owner, shared 3rd November 2026): its partner and sponsor logos
  *   [photo-banners] the sponsor banners on the owner's event photos (ImageKit archive, shared 3rd November 2026), and the
  *                   old site's unused logo files (origin/main public/images/partners): Cloudflare and OnlyDust (September 2025),
@@ -36,7 +37,7 @@ const logo = (f: string) => `/images/partners/${f}`;
 
 export const PARTNER_RECORDS: Sourced<Partner>[] = [
   // Current sponsors: production lists these under "Our Sponsors" with a tier.
-  // Vercel was production's Community Champion; withdrawn from promotion [owner-2026-11]. Kept only as history.
+  // Vercel was production's Community Champion; shown again as a past sponsor (owner, 4th November 2026).
   {
     id: 'vercel',
     name: 'Vercel',
@@ -44,7 +45,6 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     logo: logo('vercel-black.webp'),
     kinds: ['sponsor'],
     current: false,
-    delisted: true,
     source: 'old-partners, owner-2026-11',
   },
   {
@@ -241,6 +241,11 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
   { id: 'dynatrace', name: 'Dynatrace', logo: logo('dynatrace.webp'), kinds: ['sponsor'], current: false, source: 'old-previous' },
 
   // Past sponsors named on the event photos' sponsor banners [photo-banners].
+  { id: 'aws', name: 'AWS', url: 'https://aws.amazon.com', logo: logo('aws.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
+  { id: 'gatling', name: 'Gatling', url: 'https://gatling.io', logo: logo('gatling.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
+  { id: 'supabase', name: 'Supabase', url: 'https://supabase.com', logo: logo('supabase.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
+  { id: 'remotion', name: 'Remotion', url: 'https://www.remotion.dev', logo: logo('remotion.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
+  { id: 'sae-institute', name: 'SAE Institute Zürich', url: 'https://www.sae.swiss', logo: logo('sae-institute.svg'), kinds: ['venue'], current: true, source: 'owner' },
   { id: 'sentry', name: 'Sentry', url: 'https://sentry.io', logo: logo('sentry.svg'), kinds: ['sponsor'], current: false, source: 'prospectus' },
   { id: 'cloudflare', name: 'Cloudflare', url: 'https://www.cloudflare.com', logo: logo('cloudflare.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
   { id: 'imagekit', name: 'ImageKit', url: 'https://imagekit.io', logo: logo('imagekit.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
@@ -263,7 +268,7 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
  * name. Applied to Sanity partners too, so a seeded or re-imported document
  * cannot bring them back onto partner lists, logo walls or upcoming event pages.
  */
-export const DELISTED_PARTNERS: readonly string[] = ['vercel', 'ginetta', 'code-blossom', 'dotjs', 'react-paris'];
+export const DELISTED_PARTNERS: readonly string[] = ['ginetta', 'code-blossom', 'dotjs', 'react-paris'];
 const norm = (s: string) =>
   s
     .toLowerCase()

@@ -24,7 +24,7 @@ describe('production partner record', () => {
     const pub = fileURLToPath(new URL('../../../apps/web/public', import.meta.url));
     for (const p of PARTNER_RECORDS) {
       // Documented sources only: the old site, or the sponsor banners on the owner's event photos.
-      expect(p.source, p.id).toMatch(/^(old-|photo-banners$|prospectus$)/);
+      expect(p.source, p.id).toMatch(/^(old-|photo-banners$|prospectus$|owner$)/);
       expect(p.logo && existsSync(`${pub}${p.logo}`), `${p.id} logo ${p.logo}`).toBe(true);
     }
   });
@@ -57,15 +57,13 @@ describe('withPartnerFallback', () => {
     expect(r.events).toBe(events);
   });
 
-  it('withdraws Vercel, Ginetta and Code Blossom even when Sanity marks them current', () => {
+  it('withdraws Ginetta and Code Blossom even when Sanity marks them current', () => {
     const sanity: Partner[] = [
-      { id: 'vercel', name: 'Vercel', kinds: ['sponsor'], tier: 'champion', current: true },
       { id: 'abc123', name: 'Code Blossom', kinds: ['community'], current: true },
       { id: 'stripe', name: 'Stripe', kinds: ['sponsor'], tier: 'builder', current: true },
     ];
     const r = withPartnerFallback(sanity, []);
     expect(r.partners.map((p) => [p.name, p.current, !!p.delisted])).toEqual([
-      ['Vercel', false, true],
       ['Code Blossom', false, true],
       ['Stripe', true, false],
     ]);
@@ -119,19 +117,33 @@ describe('groupPartners on the production record', () => {
     ]);
   });
   it('separates venues, conference, community and supporting partners as production does', () => {
-    expect(names(g.venues)).toEqual(['GetYourGuide', 'novu AG', 'Orbiz Josef Zurich', 'Smallpdf'].sort((a, b) => a.localeCompare(b)));
+    expect(names(g.venues)).toEqual(['GetYourGuide', 'novu AG', 'Orbiz Josef Zurich', 'SAE Institute Zürich', 'Smallpdf'].sort((a, b) => a.localeCompare(b)));
     expect(names(g.conferences)).toEqual(['CityJS', 'Grusp', 'iJS Munich', 'Voxxed Days Zurich', 'WhatTheStack']);
     expect(names(g.communities)).toEqual(['Web Zurich']);
     expect(names(g.supporting)).toEqual(['JetBrains', 'Swiss Dev Jobs']);
   });
   it('keeps previous supporters out of the current lists', () => {
-    expect(names([...g.pastSponsors, ...g.pastPartners])).toEqual(['Cloudflare', 'Digitec Galaxus', 'Dynatrace', 'ImageKit', 'OnlyDust', 'Platformatic', 'Sentry', 'Storyblok']);
+    expect(names([...g.pastSponsors, ...g.pastPartners])).toEqual([
+      'AWS',
+      'Cloudflare',
+      'Digitec Galaxus',
+      'Dynatrace',
+      'Gatling',
+      'ImageKit',
+      'OnlyDust',
+      'Platformatic',
+      'Remotion',
+      'Sentry',
+      'Storyblok',
+      'Supabase',
+      'Vercel',
+    ]);
     expect(names(g.currentSponsors)).not.toContain('Dynatrace');
   });
 });
 
-describe('owner decision of 2nd November 2026: Vercel, Ginetta and Code Blossom are not promoted', () => {
-  const WITHDRAWN = ['Vercel', 'Ginetta', 'Code Blossom'];
+describe('owner decision of 2nd November 2026: Ginetta and Code Blossom are not promoted (Vercel is a past sponsor again, 4th November)', () => {
+  const WITHDRAWN = ['Ginetta', 'Code Blossom'];
   it('are marked withdrawn and not current in the record', () => {
     for (const name of WITHDRAWN) {
       const p = PARTNERS.find((x) => x.name === name)!;

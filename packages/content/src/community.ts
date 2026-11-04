@@ -238,6 +238,7 @@ export const SPEAKER_COMPANIES: SpeakerCompany[] = [
   company('GetYourGuide', 'getyourguide', 1.264),
   company('Smallpdf', 'smallpdf', 3.647),
   company('Digitec Galaxus', 'digitec-galaxus.webp', 685 / 352),
+  company('Gatling', 'gatling', 533 / 145),
   company('SBB', 'sbb', 8.889),
   company('SIX', 'six', 3.604),
   company('AXA', 'axa', 1),

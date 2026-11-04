@@ -134,7 +134,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                   <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                     {t.tags.map((tag) => (
                       <li>
-                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-yellow text-black no-underline hover:bg-yellow-hover inline-flex">
+                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-grey text-black no-underline hover:bg-grey-hover inline-flex">
                           {tag}
                         </a>
                       </li>
@@ -152,7 +152,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                             href={`${eventHref(e)}${anchorOn(e)}`}
                             class="group no-underline text-black rounded-2xl bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
                           >
-                            <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-yellow' : 'bg-grey'}`} aria-hidden="true">
+                            <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
                               <span class="text-[12px] font-bold leading-none">{d?.mon ?? 'TBC'}</span>
                               <span class="text-[21px] font-bold leading-tight">
                                 {d?.day ?? '?'}

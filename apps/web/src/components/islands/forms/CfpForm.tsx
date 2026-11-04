@@ -653,7 +653,7 @@ export default function CfpForm({ nextHref }: Props) {
           <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-5">
             {STAGES.map(([label, desc], i) => (
               <li key={label} class="flex flex-col gap-1.5">
-                <span class={cx('w-9 h-9 rounded-full flex items-center justify-center font-bold', i === 0 ? 'bg-yellow' : 'bg-grey')}>{i + 1}</span>
+                <span class={cx('w-9 h-9 rounded-full flex items-center justify-center font-bold', i === 0 ? 'bg-black text-white' : 'bg-grey')}>{i + 1}</span>
                 <span class="text-[18px] font-bold">{label}</span>
                 <span class="text-[16px] text-ink-2 leading-[1.45]">{desc}</span>
               </li>

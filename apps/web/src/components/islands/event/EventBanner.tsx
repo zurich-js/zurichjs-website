@@ -2,7 +2,8 @@ import { presentEvent, type Event, type EventState } from '@zurichjs/events';
 import { cx } from '@zurichjs/design/recipes';
 import { useEventState } from '../useEventState.ts';
 
-const TONE = { yellow: 'bg-yellow', grey: 'bg-grey', danger: 'bg-danger-soft' } as const;
+// Yellow is for buttons and one CTA section per page (Bogdan's review): the 'yellow' banner is black.
+const TONE = { yellow: 'bg-black text-white on-black', grey: 'bg-grey', danger: 'bg-danger-soft' } as const;
 
 /** Status banner (postponed, cancelled, feedback open). Follows the clock. */
 export default function EventBanner({ ev, initial }: { ev: Event; initial: EventState }) {

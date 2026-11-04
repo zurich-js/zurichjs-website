@@ -111,7 +111,7 @@ export default function Programme({
               {/* Every line is a card, as on the old site: time, kind and length on top, then the content. Talks get the bigger card. */}
               <div class={cx('flex flex-col gap-2 min-w-0 rounded-card bg-grey-soft', a.talk ? CARD_PAD : 'px-[clamp(16px,2vw,24px)] py-4')}>
                 <div class="flex items-center gap-2 flex-wrap">
-                  {a.time && <time class="px-2.5 py-1 rounded-lg bg-black text-yellow text-[15px] font-bold tabular-nums leading-none">{a.time}</time>}
+                  {a.time && <time class="px-2.5 py-1 rounded-lg bg-black text-white text-[15px] font-bold tabular-nums leading-none">{a.time}</time>}
                   {mins && !a.talk && <span class="ml-auto text-[14px] font-bold text-ink-2 tabular-nums">{mins} min</span>}
                 </div>
                 <h3 class={cx('m-0 font-bold leading-[1.3] text-pretty', a.talk ? 'text-[22px]' : 'text-[19px]')}>
@@ -151,7 +151,7 @@ export default function Programme({
                     {!!a.talk.tags?.length && (
                       <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                         {a.talk.tags.map((t) => (
-                          <li key={t} class="text-[14px] px-2.5 py-0.5 rounded-pill bg-yellow">
+                          <li key={t} class="text-[14px] px-2.5 py-0.5 rounded-pill bg-white">
                             {t}
                           </li>
                         ))}

@@ -58,7 +58,7 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
     <Button href="#apply" variant="yellow" class="self-start text-[17px]">Apply to volunteer</Button>
   </PageOpening>
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,88px)]">
-    <Surface tone="yellow" class="p-[clamp(22px,3vw,32px)] flex flex-wrap gap-x-8 gap-y-3 items-center justify-between">
+    <Surface tone="grey" class="p-[clamp(22px,3vw,32px)] flex flex-wrap gap-x-8 gap-y-3 items-center justify-between">
       <div class="flex flex-col gap-1 max-w-[720px]">
         <h2 class="m-0 text-[22px] font-bold">You’d be joining an award-winning community</h2>
         <p class="m-0 text-[17px] leading-[1.55]">
@@ -119,7 +119,7 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
           {
             STEPS.map(([h, d], i) => (
               <li class="grid grid-cols-[40px_minmax(0,1fr)] gap-3.5 items-start">
-                <span class={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${i === 0 ? 'bg-yellow' : 'bg-grey'}`}>{i + 1}</span>
+                <span class={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${i === 0 ? 'bg-black text-white' : 'bg-grey'}`}>{i + 1}</span>
                 <span class="flex flex-col gap-0.5 pt-1.5">
                   <span class="text-[18px] font-bold">{h}</span>
                   <span class="text-[17px] leading-[1.55] text-ink-2">{d}</span>

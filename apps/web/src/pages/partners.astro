@@ -127,7 +127,7 @@ const link = 'text-black underline underline-offset-[3px]';
           AUDIENCE_PROFILE.map((a) => (
             <div class="flex flex-col-reverse justify-end gap-1.5">
               <dt class="text-[18px] leading-[1.4]">{a.label}</dt>
-              <dd class="m-0 text-[clamp(44px,5vw,64px)] leading-none font-bold text-yellow">{a.value}</dd>
+              <dd class="m-0 text-[clamp(44px,5vw,64px)] leading-none font-bold text-white">{a.value}</dd>
             </div>
           ))
         }
@@ -146,7 +146,7 @@ const link = 'text-black underline underline-offset-[3px]';
             REACH_STATS.map((r) => (
               <div class="flex flex-col-reverse justify-end gap-1.5">
                 <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
-                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold text-yellow">{r.value}</dd>
+                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold text-white">{r.value}</dd>
               </div>
             ))
           }
@@ -253,7 +253,7 @@ const link = 'text-black underline underline-offset-[3px]';
       <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start list-none m-0 p-0">
         {
           sponsorTiers.map((t) => (
-            <Surface as="li" tone={t.id === 'champion' ? 'yellow' : 'grey'} class="p-6 flex flex-col gap-5" aria-labelledby={`h-tier-${t.id}`}>
+            <Surface as="li" tone="grey" class={`p-6 flex flex-col gap-5 ${t.id === 'champion' ? 'outline-2 outline-black' : ''}`} aria-labelledby={`h-tier-${t.id}`}>
               <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
                 {t.name}
               </h3>
@@ -276,7 +276,7 @@ const link = 'text-black underline underline-offset-[3px]';
               </div>
               <Button
                 href={`/partners?way=partner&tier=${t.id}#partner-form`}
-                variant={t.id === 'champion' ? 'black' : 'white'}
+                variant={t.id === 'champion' ? 'yellow' : 'white'}
                 size="sm"
                 class="self-start"
                 data-partner-way="partner"

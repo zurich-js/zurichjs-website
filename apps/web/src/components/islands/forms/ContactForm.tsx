@@ -80,7 +80,7 @@ export default function ContactForm() {
     <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-4">
       <Honeypot />
       {conduct && (
-        <div role="note" class="bg-yellow rounded-[20px] p-5 flex flex-col gap-1.5">
+        <div role="note" class="bg-grey rounded-[20px] p-5 flex flex-col gap-1.5">
           <strong class="text-[18px]">Reporting a code of conduct concern?</strong>
           <span class="text-[17px] leading-[1.5]">
             Please don’t use this form.{' '}

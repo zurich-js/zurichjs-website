@@ -61,7 +61,7 @@ const FIRST_STEPS = [
 const VALUES = [
   ['Trust', 'We act responsibly with the trust that members place in us to execute on our mission.', 'grey'],
   ['Authenticity', 'Everyone should feel included. We only promote partners we believe in ourselves.', 'grey'],
-  ['Quality', 'Conference-level experiences in a relaxed meetup space.', 'yellow'],
+  ['Quality', 'Conference-level experiences in a relaxed meetup space.', 'grey'],
 ] as const;
 
 const SUPPORT = [
@@ -97,7 +97,7 @@ const NOW = [
 ];
 const THEN_AND_NOW = [
   { h: 'November 2024', stats: BEGINNINGS, tone: 'bg-grey' },
-  { h: REACH_AS_OF, stats: NOW, tone: 'bg-yellow' },
+  { h: REACH_AS_OF, stats: NOW, tone: 'bg-black text-white' },
 ];
 ---
 
@@ -235,7 +235,7 @@ const THEN_AND_NOW = [
               </li>
             ) : (
               <li id={`story-${m.iso}`} class="scroll-mt-6">
-                <div class="h-full rounded-[20px] bg-yellow p-[22px] flex flex-col gap-2 box-border">
+                <div class="h-full rounded-[20px] bg-grey p-[22px] flex flex-col gap-2 box-border">
                   <span class="text-[16px] font-bold">{m.date}</span>
                   <h3 class="m-0 text-[24px] font-bold leading-[1.15] text-pretty">{m.title}</h3>
                   {m.text && <p class="m-0 text-[16px] leading-[1.5]">{m.text}</p>}
@@ -377,7 +377,7 @@ const THEN_AND_NOW = [
                 <span class="text-[18px] font-bold">{s.h}</span>
                 <span class="text-[16px] leading-[1.45] text-ink-2">{s.d}</span>
               </span>
-              <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-yellow">
+              <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-black text-white">
                 →
               </span>
             </a>
@@ -392,7 +392,7 @@ const THEN_AND_NOW = [
         {
           // Harshil's quote is the one highlighted on the home page; here the others.
           quotes.filter((q) => q.name !== 'Harshil Agrawal').map((q, i) => (
-            <Surface as="figure" tone={i === 0 ? 'yellow' : 'grey'} class="m-0 p-7 flex flex-col gap-4 justify-between">
+            <Surface as="figure" tone="grey" class="m-0 p-7 flex flex-col gap-4 justify-between">
               <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">“{q.text}”</blockquote>
               <figcaption class="text-[16px] leading-[1.4]">
                 <b>{q.name}</b>
@@ -418,10 +418,10 @@ const THEN_AND_NOW = [
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,250px),1fr))] gap-4">
         {
           INVOLVE.map((w) => (
-            <Surface tone={w.tone} class="p-[26px] flex flex-col gap-2.5">
+            <Surface tone="grey" class="p-[26px] flex flex-col gap-2.5">
               <h3 class="m-0 text-[22px] font-bold">{w.h}</h3>
               <p class="m-0 text-[17px] leading-normal text-ink-2 flex-1">{w.d}</p>
-              <Button href={w.href} variant={w.tone === 'yellow' ? 'black' : w.href === '/cfp' ? 'yellow' : 'white'} size="sm" class="self-start mt-2">
+              <Button href={w.href} variant={w.tone === 'yellow' ? 'yellow' : 'white'} size="sm" class="self-start mt-2">
                 {w.cta}
               </Button>
             </Surface>

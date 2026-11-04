@@ -1,7 +1,7 @@
 ---
 /** About: the first visit, the name, the story, values, team, the nonprofit, quotes and ways to take part. */
 import { eventHref, normalizeSearch, zurichDay } from '@zurichjs/events';
-import { mediaForEvent, mediaTagged } from '@zurichjs/content';
+import { BEGINNINGS, PARTNERS_TO_DATE, REACH_AS_OF, mediaForEvent, mediaTagged, speakersWithTalks } from '@zurichjs/content';
 import { mediaHref } from '~/lib/media';
 import { breadcrumbSchema, organizationSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
@@ -86,6 +86,19 @@ const INVOLVE = [
 ];
 
 const isExt = (href: string) => /^https?:/.test(href);
+
+// Then and now [prospectus]: where we started in November 2024, and where we are. The speaker count comes from content.
+const speakerCount = speakersWithTalks(speakers).length;
+const NOW = [
+  { value: '1K+', label: 'Meetup members' },
+  { value: '1.6K+', label: 'social media followers' },
+  { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
+  { value: String(speakerCount), label: 'speakers' },
+];
+const THEN_AND_NOW = [
+  { h: 'November 2024', stats: BEGINNINGS, tone: 'bg-grey' },
+  { h: REACH_AS_OF, stats: NOW, tone: 'bg-yellow' },
+];
 ---
 
 <BaseLayout
@@ -171,6 +184,23 @@ const isExt = (href: string) => /^https?:/.test(href);
         <Fragment slot="sub">We started with personal financial investments, a LinkedIn page, an inactive Meetup group with no past events, and good relationships that allowed us to host events. Here’s what happened next, newest first.</Fragment>
         <Button slot="action" href="/events?tab=past" variant="white">Browse all past events</Button>
       </SectionHeading>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {
+          THEN_AND_NOW.map((c) => (
+            <div class={cx('rounded-card p-[clamp(22px,3vw,32px)] flex flex-col gap-5', c.tone)}>
+              <h3 class="m-0 text-[22px] font-bold">{c.h}</h3>
+              <dl class="m-0 grid grid-cols-2 gap-x-6 gap-y-5">
+                {c.stats.map((st) => (
+                  <div class="flex flex-col-reverse justify-end gap-1">
+                    <dt class="text-[16px] leading-[1.4]">{st.label}</dt>
+                    <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold">{st.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ))
+        }
+      </div>
       <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,260px),1fr))] gap-x-4 gap-y-8">
         {
           timeline.map(({ m, ev, photo, gallery }) => {
@@ -222,7 +252,7 @@ const isExt = (href: string) => /^https?:/.test(href);
     <section id="values" aria-labelledby="h-values" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <SectionHeading id="h-values">
         Trust, authenticity, quality
-        <Fragment slot="sub">We believe a healthy developer community relies on these three pillars.</Fragment>
+        <Fragment slot="sub">Our mission is a passionate community of developers around JavaScript in Zurich. We run meetups and workshops for real networking, where everybody feels welcome and included. A healthy developer community relies on three pillars.</Fragment>
       </SectionHeading>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
         {

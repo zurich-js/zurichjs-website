@@ -8,7 +8,7 @@ import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
 import { SpeakerDeck, type DeckSpeaker } from '~/components/islands/home/SpeakerDeck';
 import { avatarSrc, sizedSrc, srcsetFor } from '@zurichjs/design/images';
-import { SPEAKER_COMPANIES, SPEAKER_PROGRAMMES, speakersWithTalks } from '@zurichjs/content';
+import { COUNTRIES_REACHED, PARTNERS_TO_DATE, SPEAKER_COMPANIES, SPEAKER_PROGRAMMES, speakersWithTalks } from '@zurichjs/content';
 import AwardSection from '@zurichjs/design/components/AwardSection.astro';
 import SpeakerCompanies from '@zurichjs/design/components/SpeakerCompanies.astro';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
@@ -117,7 +117,16 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
       </div>
     </section>
 
-    <AwardSection award={award} photo={PAGE_PHOTOS.award} storyUrl="https://conf.zurichjs.com/blog/how-zurichjs-got-here" />
+    <AwardSection
+      award={award}
+      photo={PAGE_PHOTOS.award}
+      storyUrl="https://conf.zurichjs.com/blog/how-zurichjs-got-here"
+      stats={[
+        { value: '1K+', label: 'Meetup members' },
+        { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
+        { value: COUNTRIES_REACHED, label: 'countries our speakers and attendees come from' },
+      ]}
+    />
 
     {
       talks.length > 0 && (

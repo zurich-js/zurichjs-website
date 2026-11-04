@@ -20,26 +20,28 @@ The community page's timeline and team (`packages/content/src/community.ts`), th
 | old-membership | The production `/membership` page: `origin/main` `src/pages/membership.tsx` (tiers, fees, benefits).                                                                                       |
 | old-coffee     | The production `/buy-us-a-coffee` page: `origin/main` `src/pages/buy-us-a-coffee.tsx` (presets, FAQ, "Recent Supporters").                                                                 |
 | old-donate     | The production `/donate` page: `origin/main` `src/pages/donate.tsx` (Twint QR, cash box).                                                                                                  |
+| prospectus     | The 2026 sponsorship prospectus (PDF from the owner, 3rd November 2026): our beginnings, 70% turnout at the first meetup, 436 conference CFP submissions, 30+ partners, 10+ countries.     |
 
 ## Timeline
 
-| Milestone                                                                      | Source                         | Status                                                      |
-| ------------------------------------------------------------------------------ | ------------------------------ | ----------------------------------------------------------- |
-| July 2024, Faris and Bogdan meet at a Zürich ReactJS meetup                    | conf-blog                      |                                                             |
-| 14 Nov 2024, first meetup, 34 developers at novu, Nico Martin speaks           | old-about                      |                                                             |
-| Jan 2025, 100 LinkedIn followers, 80–90 active Meetup members                  | old-about                      |                                                             |
-| Feb 2025, Evangelia from Thessaloniki; Web Zurich partnership                  | old-about                      |                                                             |
-| Mar 2025, React Paris and Code Blossom partnerships, with CityJS and Grusp     | old-about                      |                                                             |
-| Mar 2025, Vue Zurich joins; Adam Berecz speaks                                 | old-about                      |                                                             |
-| Apr 2025, Smallpdf hosts the fourth meetup                                     | old-about                      |                                                             |
-| May, June, July, Sep, Oct 2025 meetups                                         | old-about                      |                                                             |
-| 18 Jun 2025, ZurichJS becomes official through the Swiss JavaScript Group      | conf-blog                      |                                                             |
-| Nov 2025, one-year anniversary at Pause im Foifi, presented by Digitec Galaxus | old-about                      |                                                             |
-| 14 Nov 2025, first ZurichJS Conf tickets on sale                               | conf-timeline                  | **confirm** the date tickets actually went on sale          |
-| Jan 2026, Vue x Stripe meetup with Stripe and GetYourGuide                     | old-about                      |                                                             |
-| June 2026, OSS Award at JSNation                                               | conf-blog, Site settings award |                                                             |
-| Sep 2026, conference warm-up meetup at GetYourGuide with GYFF and FIN          | old-today                      | **confirm**; linked to event `sep-2026` if that slug exists |
-| 9–12 Sep 2026, the first ZurichJS Conf at Technopark Zürich                    | conf-timeline                  | **confirm** it took place as planned                        |
+| Milestone                                                                               | Source                         | Status                                                      |
+| --------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------- |
+| July 2024, Faris and Bogdan meet at a Zürich ReactJS meetup                             | conf-blog                      |                                                             |
+| 14 Nov 2024, first meetup, 34 developers at novu, Nico Martin speaks; 70% of RSVPs came | old-about, prospectus          |                                                             |
+| Jan 2025, 100 LinkedIn followers, 80–90 active Meetup members                           | old-about                      |                                                             |
+| Feb 2025, Evangelia from Thessaloniki; Web Zurich partnership                           | old-about                      |                                                             |
+| Mar 2025, React Paris and Code Blossom partnerships, with CityJS and Grusp              | old-about                      |                                                             |
+| Mar 2025, Vue Zurich joins; Adam Berecz speaks                                          | old-about                      |                                                             |
+| Apr 2025, Smallpdf hosts the fourth meetup                                              | old-about                      |                                                             |
+| May, June, July, Sep, Oct 2025 meetups                                                  | old-about                      |                                                             |
+| 18 Jun 2025, ZurichJS becomes official through the Swiss JavaScript Group               | conf-blog                      |                                                             |
+| Nov 2025, one-year anniversary at Pause im Foifi, presented by Digitec Galaxus          | old-about                      |                                                             |
+| 14 Nov 2025, first ZurichJS Conf tickets on sale                                        | conf-timeline                  | **confirm** the date tickets actually went on sale          |
+| Jan 2026, Vue x Stripe meetup with Stripe and GetYourGuide                              | old-about                      |                                                             |
+| 3 Apr 2026, conference CFP closes with 436 submissions, reviewed anonymised             | prospectus                     |                                                             |
+| June 2026, OSS Award at JSNation                                                        | conf-blog, Site settings award |                                                             |
+| Sep 2026, conference warm-up meetup at GetYourGuide with GYFF and FIN                   | old-today                      | **confirm**; linked to event `sep-2026` if that slug exists |
+| 9–12 Sep 2026, the first ZurichJS Conf at Technopark Zürich                             | conf-timeline                  | **confirm** it took place as planned                        |
 
 Left out because no source confirms them: attendance at the conference (the conference site's "300–500 attendees", "19 speakers", "6 workshops" are planned figures, not results), a "Front-Conf warm-up" (commented out in the old site), and the 2nd anniversary (12 November 2026 has not happened yet).
 

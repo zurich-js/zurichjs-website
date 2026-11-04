@@ -102,7 +102,7 @@ export const MILESTONES: Milestone[] = [
     date: '14th November 2024',
     iso: '2024-11-14',
     title: 'The first ZurichJS meetup',
-    text: '34 developers at novu, with Nico Martin, a Google Developer Expert in AI, as the first speaker.',
+    text: '34 developers at novu, with Nico Martin, a Google Developer Expert in AI, as the first speaker. 70% of the RSVPs came, which told us Zurich developers wanted a better meetup.',
     photo: h('history-first-meetup', 'The first ZurichJS meetup at novu, November 2024'),
     source: 'old-about',
   },
@@ -184,6 +184,15 @@ export const MILESTONES: Milestone[] = [
     source: 'conf-timeline',
   },
   {
+    // [prospectus]: the conference CFP closed on 3rd April 2026 with 436 submissions, reviewed anonymised by the CFP Review Committee.
+    date: '3rd April 2026',
+    iso: '2026-04-03',
+    title: '436 talk proposals for ZurichJS Conf',
+    text: 'The call for papers (CFP) for the conference closes with 436 submissions. The review committee reads them anonymised, so every proposal is judged on its content.',
+    link: { label: 'conf.zurichjs.com', href: 'https://conf.zurichjs.com' },
+    source: 'prospectus',
+  },
+  {
     date: 'June 2026',
     iso: '2026-06',
     title: 'Open Source Award at JSNation',
@@ -248,4 +257,15 @@ export const SPEAKER_COMPANIES: SpeakerCompany[] = [
   company('React Bricks', 'reactbricks', 6.03),
 ];
 /** Recognition programmes our speakers belong to [owner]; not companies, so they're named in a sentence. */
+/**
+ * "Our beginnings" in the 2026 sponsorship prospectus [prospectus]: where we started in November 2024.
+ * The "now" side is the November 2026 reach (partners.ts) plus the speaker count from content.
+ */
+export const BEGINNINGS: { value: string; label: string }[] = [
+  { value: '3', label: 'active members, in a Meetup group of 216' },
+  { value: '0', label: 'social media followers' },
+  { value: '0', label: 'partners or sponsors' },
+  { value: '0', label: 'speakers' },
+];
+
 export const SPEAKER_PROGRAMMES = ['Google Developer Experts', 'Microsoft MVPs'];

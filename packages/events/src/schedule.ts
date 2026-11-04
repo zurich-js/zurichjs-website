@@ -9,8 +9,12 @@
  *   - Doors, the welcome, each talk, breaks, networking and the close have a
  *     time only when the event's `agenda` gives one (HH:MM in Zurich).
  *   - The end is `endsAt`, or the agenda's close line; otherwise unknown.
- * Without an agenda the programme is the talks in running order, with no
- * times and no doors, welcome, break or networking lines. Nothing is guessed.
+ * Without an agenda but with a start time, the evening is estimated the way
+ * the old site did it (owner, 4th November 2026): doors at the start, welcome
+ * an hour later, the first talk 20 minutes after that, 5 minutes between talks,
+ * a 15-minute break after the second talk, then networking until 21:30. Those
+ * lines are marked `estimated`. Without a start time, the talks are listed in
+ * running order with no times.
  */
 import { time, zoneLabel, zurichDay, zurichWallTime } from './format.ts';
 import type { AgendaItem, Event, ScheduleKind, TalkRef } from './types.ts';
@@ -33,13 +37,38 @@ export function inferKind(item: { kind?: string | null; title?: string | null; t
 export interface ScheduleInput {
   agenda?: { time?: string | null; kind?: string | null; title?: string | null; note?: string | null; talk?: TalkRef }[];
   talks: TalkRef[];
+  /** The event's start (ISO): doors, for an estimated evening when there is no agenda. */
+  startsAt?: string;
+}
+
+const hhmm = (minutes: number) => `${String(Math.floor(minutes / 60) % 24).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+/** The evening estimated from the start time, as the old site did (see the note at the top). */
+function estimatedEvening(talks: TalkRef[], startsAt: string): AgendaItem[] {
+  const [h, m] = time(startsAt).split(':').map(Number);
+  const doors = h! * 60 + m!;
+  const items: AgendaItem[] = [
+    { time: hhmm(doors), kind: 'doors', title: 'Doors open', estimated: true },
+    { time: hhmm(doors + 60), kind: 'intro', title: 'Welcome and intro', estimated: true },
+  ];
+  let at = doors + 80;
+  talks.forEach((t, i) => {
+    items.push({ time: hhmm(at), kind: 'talk', title: t.title, talk: t, estimated: true });
+    at += t.durationMin || 20;
+    if (i === 1 && i < talks.length - 1) {
+      items.push({ time: hhmm(at), kind: 'break', title: 'Food break', estimated: true });
+      at += 15;
+    } else if (i < talks.length - 1) at += 5;
+  });
+  items.push({ time: hhmm(at + 5), kind: 'networking', title: 'Networking and drinks', estimated: true });
+  return items;
 }
 
 const HHMM = /^\d{1,2}:\d{2}$/;
 const cleanTime = (t?: string | null) => (t && HHMM.test(t.trim()) ? t.trim().padStart(5, '0') : '');
 
 /** Builds the ordered programme from what Sanity has. Used by the content mappers. */
-export function buildSchedule({ agenda, talks }: ScheduleInput): AgendaItem[] {
+export function buildSchedule({ agenda, talks, startsAt }: ScheduleInput): AgendaItem[] {
   if (agenda?.length) {
     const items = agenda.map((a) => {
       const kind = inferKind(a);
@@ -56,7 +85,7 @@ export function buildSchedule({ agenda, talks }: ScheduleInput): AgendaItem[] {
     const missing = talks.filter((t) => t.id && !listed.has(t.id)).map((t) => ({ time: '', kind: 'talk' as const, title: t.title, talk: t }));
     return [...items, ...missing];
   }
-  // The event's `datetime` is the Meetup start, not doors: it never becomes a programme line.
+  if (startsAt && talks.length) return estimatedEvening(talks, startsAt);
   return talks.map((t) => ({ time: '', kind: 'talk' as const, title: t.title, talk: t }));
 }
 
@@ -131,6 +160,8 @@ export type ProgrammeMoment = 'future' | 'now' | 'past';
  * Replaces a per-talk "time not fixed" placeholder.
  */
 export function untimedNote(ev: Pick<Event, 'agenda'>, moment: ProgrammeMoment): string | undefined {
+  // An evening estimated from the start time says so, before and after it happened.
+  if (ev.agenda.some((a) => a.estimated)) return 'Times are approximate.';
   const talks = ev.agenda.filter((a) => a.talk);
   if (!talks.length || talks.every((a) => a.time)) return undefined;
   if (moment === 'past') return undefined;

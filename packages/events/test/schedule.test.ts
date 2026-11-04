@@ -287,3 +287,25 @@ describe('speaker search', () => {
     expect(speakerTopics([faris, other])).toEqual([{ topic: 'React', count: 2 }]);
   });
 });
+
+describe('an evening estimated from the start time (no agenda; owner, 4th November 2026)', () => {
+  const talk = (title: string, durationMin: number) => ({ title, speakerIds: [], format: 'talk' as const, durationMin });
+  it('runs doors, welcome, talks with 5-minute gaps, a break after the second talk, then networking', () => {
+    const items = buildSchedule({ talks: [talk('A', 25), talk('B', 20), talk('C', 25)], startsAt: '2026-11-12T16:30:00.000Z' });
+    expect(items.map((i) => [i.time, i.kind, i.title])).toEqual([
+      ['17:30', 'doors', 'Doors open'],
+      ['18:30', 'intro', 'Welcome and intro'],
+      ['18:50', 'talk', 'A'],
+      ['19:20', 'talk', 'B'],
+      ['19:40', 'break', 'Food break'],
+      ['19:55', 'talk', 'C'],
+      ['20:25', 'networking', 'Networking and drinks'],
+    ]);
+    expect(items.every((i) => i.estimated)).toBe(true);
+    expect(untimedNote({ agenda: items }, 'past')).toBe('Times are approximate.');
+  });
+  it('a talk without a length counts as 20 minutes; an agenda from Sanity always wins', () => {
+    expect(buildSchedule({ talks: [talk('A', 0)], startsAt: '2026-11-12T16:30:00.000Z' }).at(-1)!.time).toBe('19:15');
+    expect(buildSchedule({ agenda: [{ time: '18:00', title: 'Doors' }], talks: [], startsAt: '2026-11-12T16:30:00.000Z' })[0]!.estimated).toBeUndefined();
+  });
+});

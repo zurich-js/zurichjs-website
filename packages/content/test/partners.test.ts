@@ -118,7 +118,7 @@ describe('groupPartners on the production record', () => {
   });
   it('separates venues, conference, community and supporting partners as production does', () => {
     expect(names(g.venues)).toEqual(['GetYourGuide', 'novu AG', 'Orbiz Josef Zurich', 'SAE Institute Zürich', 'Smallpdf'].sort((a, b) => a.localeCompare(b)));
-    expect(names(g.conferences)).toEqual(['CityJS', 'Grusp', 'iJS Munich', 'Voxxed Days Zurich', 'WhatTheStack']);
+    expect(names(g.conferences)).toEqual(['Grusp', 'iJS Munich', 'Voxxed Days Zurich', 'WhatTheStack']);
     expect(names(g.communities)).toEqual(['Web Zurich']);
     expect(names(g.supporting)).toEqual(['JetBrains', 'Swiss Dev Jobs']);
   });
@@ -137,6 +137,7 @@ describe('groupPartners on the production record', () => {
       'Storyblok',
       'Supabase',
       'Vercel',
+      'CityJS',
     ]);
     expect(names(g.currentSponsors)).not.toContain('Dynatrace');
   });

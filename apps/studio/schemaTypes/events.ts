@@ -189,6 +189,18 @@ export default defineType({
     }),
 
     defineField({name: 'meetupUrl', title: 'Meetup event link', type: 'url', group: 'tickets', description: 'RSVPs happen on Meetup. The site links here; it does not register anyone.'}),
+    defineField({
+      name: 'sane',
+      title: 'Free tickets on Sane',
+      type: 'object',
+      group: 'tickets',
+      description:
+        'Optional. When this is filled in and registration is open on Sane, the main button offers a free ticket on Sane. Meetup RSVPs stay open, and in every other case the button goes to Meetup.',
+      fields: [
+        defineField({name: 'organization', title: 'Sane organisation', type: 'string', description: 'The organisation part of the Sane link, e.g. "zurichjs".', validation: (r) => r.regex(/^[a-z0-9-]+$/, {name: 'slug'})}),
+        defineField({name: 'event', title: 'Sane event', type: 'string', description: 'The event part of the Sane link, e.g. "november-2026".', validation: (r) => r.regex(/^[a-z0-9-]+$/, {name: 'slug'})}),
+      ],
+    }),
     // Pro meetups and paid tickets are gone: every meetup is free and RSVPs on Meetup.
     // These fields stay declared, read-only and hidden when empty, so values on
     // existing documents are kept and visible. Nothing is deleted.

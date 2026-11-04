@@ -16,12 +16,14 @@ import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from '
 import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
 import { withPartnerFallback } from './partners.ts';
 import { loadMedia, MediaUnavailableError, type MediaCollection } from './media.ts';
+import { attachSane } from './sane.ts';
 import * as sample from './sample.ts';
 
 export * from './map.ts';
 export * from './media.ts';
 export * from './queries.ts';
 export * from './partners.ts';
+export * from './sane.ts';
 export { PHOTOS, SITE } from './sample.ts';
 export { BEGINNINGS, SPEAKER_COMPANIES, type SpeakerCompany } from './community.ts';
 
@@ -155,7 +157,8 @@ async function sanityContent(env: Env): Promise<SiteContent> {
   const fallback = sampleContent();
   const conf = singletons.conference;
   // Until Sanity has partner documents, production's sourced partner list (partners.ts) is used.
-  const withPartners = withPartnerFallback(partners.map(mapPartner), events.map(mapEvent));
+  // Events linked to Sane get its link and registration state; on any Sane failure they keep Meetup.
+  const withPartners = withPartnerFallback(partners.map(mapPartner), await attachSane(events.map(mapEvent), events, env));
   const mappedEvents = withPartners.events;
   return {
     source: 'sanity',

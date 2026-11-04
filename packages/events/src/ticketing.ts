@@ -1,8 +1,8 @@
 import type { Event, EventState } from './types.ts';
 
 /**
- * Seam for where people get a place at an event. Today: Meetup RSVP links
- * (every meetup is free). Later: Sane (see
+ * Seam for where people get a place at an event: Meetup RSVP links (every
+ * meetup is free), and free tickets on Sane for events linked to it (see
  * docs/v2/SANE-READINESS.md). Pages never branch on the provider; they render
  * the action.
  */
@@ -60,6 +60,25 @@ export const meetupTicketing = (groupUrl: string): TicketingProvider => ({
     }
   },
 });
+
+/**
+ * Free tickets on Sane, side by side with Meetup (owner decision): Sane takes
+ * the main button only while its registration is open; in every other Sane
+ * state, Meetup's action applies (a meetup full on Sane points to the Meetup waitlist).
+ */
+export const saneTicketing: TicketingProvider = {
+  id: 'sane',
+  actionFor(ev, state) {
+    if (state !== 'open' || ev.sane?.state !== 'open') return undefined;
+    return {
+      kind: 'rsvp',
+      label: 'Get a free ticket',
+      href: ev.sane.url,
+      external: true,
+      note: 'Opens Sane in a new tab. Your ticket arrives by email, and an RSVP on Meetup still counts.',
+    };
+  },
+};
 
 /** First provider with an answer wins. */
 export const chainTicketing = (...providers: TicketingProvider[]): TicketingProvider => ({

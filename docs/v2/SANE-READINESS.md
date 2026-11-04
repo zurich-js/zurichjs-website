@@ -1,6 +1,8 @@
 # Sane readiness
 
-Goal: the V2 platform can switch ticketing, talk proposals and check-in to [Sane](https://github.com/farisaziz12/sane) later without rewriting pages. **Out of scope now:** no Sane calls, no Sane fields in Sanity, no Sane UI.
+Goal: the V2 platform can switch ticketing, talk proposals and check-in to [Sane](https://github.com/farisaziz12/sane) later without rewriting pages.
+
+**Built now (free tickets, side by side with Meetup):** an event can link to its Sane event, and while Sane's registration is open the main button offers a free ticket on Sane. Meetup RSVPs stay open and Meetup is the fallback in every other case. See "Free tickets on Sane" below. Paid tickets, the embed, talk proposals and check-in on Sane are still out of scope.
 
 Source: `farisaziz12/sane@50e27b4` (read 2026-10-31). Sane is ticketing for tech events that plugs into meetup.com, Luma, organisers' own sites and Sane-hosted event pages. An organisation is the legal and money entity; brands (for example ZurichJS Conf) are series inside it.
 
@@ -57,10 +59,10 @@ Constraints that shape the seams:
    }
    ```
 
-   - Today: `meetupTicketing` only (RSVP, waitlist and follow links to meetup.com), in `apps/web/src/lib/ticketing.ts`. Every meetup is free; pro meetups and Stripe were removed (owner, 2026-11-01).
+   - Today: `chainTicketing(saneTicketing, meetupTicketing(MEETUP_GROUP_URL))` in `apps/web/src/lib/ticketing.ts` (see "Free tickets on Sane" below). Every meetup is free; pro meetups and Stripe were removed (owner, 2026-11-01).
    - `presentEvent()` in `@zurichjs/events` takes the action as data and never branches on the provider itself.
    - Sane goes in front with `chainTicketing(saneTicketing, meetupTicketing(...))`; the first provider with an answer wins (tested in `packages/events/test/state.test.ts`).
-   - A later `saneProvider` reads `GET /v1/public/events/{org}/{event}` at build time and returns a buy or registration link. Switching one event is a per-event field, added when Sane is adopted.
+   - `saneTicketing` is pure: it reads only `event.sane`, which the content layer fills at build time from `GET /v1/public/events/{org}/{event}`. Switching one event is the per-event `sane` field.
 
 2. **`TalkProposalSink`** in `@zurichjs/integrations` (`packages/integrations/src/index.ts`):
 
@@ -73,4 +75,18 @@ Constraints that shape the seams:
    Today it writes the Sanity `talkSubmission`. The CFP form and its API function depend only on the interface.
 
 3. **Server-side only.** All provider calls happen at build time or in Netlify Functions, matching Sane's CORS rule.
-4. **No Sane identifiers in content yet.** When adopted, add `sane{ org, event }` to `events` through a migration. Nothing is reserved now.
+4. **Sane identifiers in content:** the optional `sane{ organization, event }` object on `events` (Studio tab "Meetup", "Free tickets on Sane"). Optional, so no migration.
+
+## Free tickets on Sane (built)
+
+Owner decision: side by side. Meetup RSVPs stay open; Sane is preferred for events linked to it.
+
+| Piece           | Where                                                                                                                                                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sanity field    | `events.sane{ organization, event }` (`apps/studio/schemaTypes/events.ts`), read by `EVENTS_QUERY`                                                                                                                                              |
+| Build-time read | `attachSane` in `packages/content/src/sane.ts`: only events with the field, in parallel, 8 s timeout each. Sets `event.sane = { url: SANE_WEB_URL + event.path, state: registration.state }`                                                    |
+| Failure         | network error, timeout, 404 (draft on Sane), a body that is not JSON or lacks `event.path` or a known `registration.state`: one `[sane] …` log line, `event.sane` stays unset, the event uses Meetup. Never fails the build, no sample data     |
+| Provider        | `saneTicketing` in `packages/events/src/ticketing.ts`: when the site state is `open` and Sane says `open`, "Get a free ticket" (external) to the Sane event page. Any other Sane state, or no `sane`, has no answer, so Meetup's action applies |
+| Configuration   | `SANE_API_URL` (default `https://api.sane.events`), `SANE_WEB_URL` (default `https://sane.events`); see `docs/v2/RUNBOOK.md`                                                                                                                    |
+
+Known limit: Sane is read at build time only, so the button follows Sane's state at the next build (a Sanity publish, or the scheduled rebuilds at doors). Sold out on Sane while the site still says RSVP open gives the Meetup RSVP button; the site's own `full` status gives the Meetup waitlist.

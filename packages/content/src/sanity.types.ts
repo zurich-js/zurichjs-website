@@ -223,7 +223,7 @@ export type TalkSubmission = {
   id?: Slug;
   title: string;
   description: string;
-  durationMinutes: 5 | 25 | 35;
+  durationMinutes: 10 | 20;
   level?: "beginner" | "intermediate" | "advanced";
   tags: Array<string>;
   speakers: Array<

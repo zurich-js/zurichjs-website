@@ -21,9 +21,12 @@ describe('talk proposals (production fields)', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(Object.keys(r.fields).sort()).toEqual(['abstract', 'format', 'level', 'topics']);
   });
-  it('offers 5 and 25 minutes, as production does', async () => {
+  it('offers a 10-minute lightning talk and a 20-minute full talk (owner, 4th November 2026)', async () => {
     const { TALK_LENGTHS } = await import('../src/client.ts');
-    expect(TALK_LENGTHS.map((l) => l.minutes)).toEqual([5, 25]);
+    expect(TALK_LENGTHS.map((l) => [l.label, l.minutes])).toEqual([
+      ['Lightning talk', 10],
+      ['Full talk', 20],
+    ]);
     expect(validate('cfp', { ...proposal, format: 'Lightning' }).ok).toBe(true);
   });
   it('accepts only topics from the list, at most eight', () => {

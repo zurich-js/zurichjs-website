@@ -93,6 +93,23 @@ for (const route of prodRoutes) {
   if (b?.title && b.title !== r.title) notes.push(`${route}: title "${b.title}" → "${r.title}"${allow[route] || allow['*'] ? '' : ' (NOT ALLOWLISTED)'}`);
 }
 
+/** Width × height of a built PNG card, read from its header (once per file). */
+const cardSizes = new Map();
+const cardSize = (path) => {
+  if (!cardSizes.has(path))
+    cardSizes.set(
+      path,
+      fetch(`${base}${path}`)
+        .then(async (res) => {
+          if (!res.ok) return `missing (${res.status})`;
+          const b = Buffer.from(await res.arrayBuffer());
+          return b.toString('ascii', 1, 4) === 'PNG' ? `${b.readUInt32BE(16)}x${b.readUInt32BE(20)}` : 'not a PNG';
+        })
+        .catch(() => 'unreachable'),
+    );
+  return cardSizes.get(path);
+};
+
 // 2. Every built page: complete head for indexable pages.
 const sitemapXml = await fetch(`${base}/sitemap.xml`).then((r) => r.text());
 const inSitemap = new Set([...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].replace(SITE, '') || '/'));
@@ -114,6 +131,14 @@ for (const route of builtPages) {
   for (const k of ['og:title', 'og:description', 'og:url', 'og:image', 'twitter:card', 'twitter:image']) if (!r.og[k]) fail(route, `missing ${k}`);
   if (r.og['og:url'] && r.og['og:url'] !== r.canonical) fail(route, 'og:url differs from canonical');
   if (r.og['og:image'] && !r.og['og:image'].startsWith('https://')) fail(route, 'og:image not absolute');
+  // Share images are the generated 1200×630 cards (apps/web/src/lib/og.ts), never a photo or the square logo.
+  for (const k of ['og:image:alt', 'og:image:width', 'og:image:height', 'twitter:image:alt']) if (!r.og[k]) fail(route, `missing ${k}`);
+  const ogPath = r.og['og:image'] ? new URL(r.og['og:image']).pathname : '';
+  if (ogPath && !/^\/og\/[\w.-]+\.png$/.test(ogPath)) fail(route, `og:image is not a generated card: ${ogPath}`);
+  else if (ogPath) {
+    const size = await cardSize(ogPath);
+    if (size !== '1200x630') fail(route, `og:image ${ogPath} is ${size}, not 1200x630`);
+  }
   if (!r.h1.length || !r.h1[0]) fail(route, 'missing <h1>');
   if (r.textLength < 200) fail(route, `only ${r.textLength} characters of server-rendered text`);
   if (r.jsonld.some((j) => j.type === 'INVALID_JSON')) fail(route, 'invalid JSON-LD');

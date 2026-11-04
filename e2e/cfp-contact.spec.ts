@@ -83,7 +83,7 @@ test.describe('talk proposals (/cfp)', () => {
     await openProposal(page);
     const form = page.getByRole('form', { name: 'Talk proposal' });
     await expect(form.getByLabel('Title', { exact: true })).toHaveValue('Old draft');
-    await expect(form.getByRole('radio', { name: /Standard talk/ })).toBeChecked();
+    await expect(form.getByRole('radio', { name: /Full talk/ })).toBeChecked();
   });
 
   test('success only after the API accepts it, sends the full payload once, then clears the draft', async ({ page }) => {

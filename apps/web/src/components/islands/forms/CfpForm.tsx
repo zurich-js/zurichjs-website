@@ -77,10 +77,10 @@ const EMPTY: Draft = {
   agree: false,
 };
 
-/** Reads a saved draft, including drafts from the earlier form (format in minutes, 35 for a deep dive). */
+/** Reads a saved draft, including drafts from the earlier form (format in minutes: 5 or 10 was a lightning talk). */
 function readDraft(raw: string): Draft {
   const saved = JSON.parse(raw) as Partial<Omit<Draft, 'format'>> & { format?: unknown };
-  const format: Length = saved.format === 5 || saved.format === 'Lightning' ? 'Lightning' : 'Standard';
+  const format: Length = saved.format === 5 || saved.format === 10 || saved.format === 'Lightning' ? 'Lightning' : 'Standard';
   const topics = Array.isArray(saved.topics) ? saved.topics.filter((t): t is string => (TALK_TOPICS as readonly string[]).includes(String(t))) : [];
   const level = TALK_LEVELS.some((l) => l.value === saved.level) ? (saved.level as Level) : '';
   return { ...EMPTY, ...saved, format, topics, level };

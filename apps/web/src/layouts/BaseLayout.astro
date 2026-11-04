@@ -8,6 +8,7 @@ import Footer from '@zurichjs/design/components/Footer.astro';
 import Header from '@zurichjs/design/components/Header.astro';
 import { Font } from 'astro:assets';
 import { PREVIEW, SITE, content } from '~/lib/content';
+import { cardForPath } from '~/lib/og';
 import '~/styles/global.css';
 
 type Props = Omit<MetaInput, 'path' | 'title'> & {
@@ -23,7 +24,13 @@ const cleanPath = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, 
 const { title, fullTitle, path = cleanPath, jsonLd = [], ...meta } = Astro.props;
 const docTitle = fullTitle ?? (title === 'ZurichJS' ? 'ZurichJS · JavaScript meetups in Zurich' : `${title} · ZurichJS`);
 // Draft preview builds are never indexed, whatever the page says.
-const head = buildMeta({ ...meta, noindex: meta.noindex || PREVIEW, title: docTitle, path });
+// Every page shares a generated card: its own, or the policies or default card (lib/og.ts).
+const pageCard = cardForPath(path);
+const image = meta.image ?? `/og/${pageCard.name}.png`;
+const imageAlt = meta.imageAlt ?? (meta.image ? undefined : pageCard.title === 'ZurichJS' ? pageCard.title : `${pageCard.title} · ZurichJS`);
+// Deploy previews point share images at themselves; production and CI builds use zurichjs.com.
+const assetOrigin = process.env.CONTEXT && process.env.CONTEXT !== 'production' ? process.env.DEPLOY_PRIME_URL : undefined;
+const head = buildMeta({ ...meta, image, imageAlt, assetOrigin, noindex: meta.noindex || PREVIEW, title: docTitle, path });
 const c = await content();
 // NEXT_PUBLIC_* are the production site's existing variable names.
 const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY ?? process.env.PUBLIC_POSTHOG_KEY ?? process.env.NEXT_PUBLIC_POSTHOG_KEY;

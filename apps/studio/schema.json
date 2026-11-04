@@ -1223,15 +1223,11 @@
           "of": [
             {
               "type": "number",
-              "value": 5
+              "value": 10
             },
             {
               "type": "number",
-              "value": 25
-            },
-            {
-              "type": "number",
-              "value": 35
+              "value": 20
             }
           ]
         },

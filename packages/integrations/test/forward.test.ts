@@ -120,7 +120,7 @@ describe('talk proposals in Sanity (stubbed client, nothing is written)', () => 
       _type: 'talkSubmission',
       title: 'Typed forms',
       description: 'What you learn',
-      durationMinutes: 5,
+      durationMinutes: 10,
       level: 'beginner',
       tags: ['TypeScript', 'Testing'],
       speakers: [{ _type: 'reference', _ref: 'sp-new' }],
@@ -174,7 +174,7 @@ describe('talk proposals in Sanity (stubbed client, nothing is written)', () => 
   it('tells Slack the length, level and topics (Slack stubbed)', async () => {
     const log = vi.fn();
     await forwardForm('cfp', full, { env: {}, sanity: null, now, log });
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('5 min, beginner, TypeScript, Testing'));
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('10 min, beginner, TypeScript, Testing'));
   });
 });
 

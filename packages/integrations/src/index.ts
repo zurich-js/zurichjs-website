@@ -52,8 +52,9 @@ export interface TalkProposalSink {
   submit(p: TalkProposal): Promise<{ id: string }>;
 }
 
-const FORMAT_MINUTES: Record<string, number> = { lightning: 5, 'lightning talk': 5, standard: 25, 'standard talk': 25, talk: 25, 'deep dive': 35 };
-const minutesFor = (format: string) => FORMAT_MINUTES[format.trim().toLowerCase()] ?? 25;
+// Lightning 10 and full talks 20 minutes (owner, 4th November 2026).
+const FORMAT_MINUTES: Record<string, number> = { lightning: 10, 'lightning talk': 10, standard: 20, 'standard talk': 20, full: 20, 'full talk': 20, talk: 20 };
+const minutesFor = (format: string) => FORMAT_MINUTES[format.trim().toLowerCase()] ?? 20;
 const slug = (s: string) =>
   s
     .toLowerCase()

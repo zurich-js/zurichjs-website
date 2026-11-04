@@ -1,7 +1,8 @@
 import { dateLong, type Event, type Partner, type Speaker } from '@zurichjs/events';
 
 export const SITE_URL = 'https://zurichjs.com';
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/logo-square.png`;
+/** The generated default share card (apps/web/src/lib/og.ts); pages normally pass their own card. */
+export const DEFAULT_OG_IMAGE = '/og/default.png';
 
 export const absoluteUrl = (pathOrUrl: string) => (/^https?:\/\//.test(pathOrUrl) ? pathOrUrl : `${SITE_URL}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`);
 
@@ -19,6 +20,11 @@ export interface MetaInput {
   image?: string;
   imageAlt?: string;
   type?: 'website' | 'article' | 'profile';
+  /**
+   * Origin for the share image on non-production deploys (Netlify's DEPLOY_PRIME_URL), so previews show
+   * their own cards before they exist on zurichjs.com. Canonical URLs always stay on zurichjs.com.
+   */
+  assetOrigin?: string;
   noindex?: boolean;
   keywords?: string[];
   /** Adds geo.* and ICBM tags for Zurich (landing pages). */
@@ -35,7 +41,11 @@ export interface MetaTags {
 /** Everything that goes into <head>, built once. Mirrors the production SEO component, with absolute URLs. */
 export function buildMeta(m: MetaInput): MetaTags {
   const canonical = canonicalUrl(m.path);
-  const image = absoluteUrl(m.image ?? DEFAULT_OG_IMAGE);
+  const path = m.image ?? DEFAULT_OG_IMAGE;
+  const image = m.assetOrigin && path.startsWith('/') ? `${m.assetOrigin.replace(/\/+$/, '')}${path}` : absoluteUrl(path);
+  // Generated cards are always 1200×630 PNGs.
+  const card = /\/og\/[\w.-]+\.png$/.test(path);
+  const alt = m.imageAlt ?? m.title;
   const meta: MetaTags['meta'] = [
     { name: 'description', content: m.description },
     { httpEquiv: 'content-language', content: 'en' },
@@ -47,12 +57,20 @@ export function buildMeta(m: MetaInput): MetaTags {
     { property: 'og:type', content: m.type ?? 'website' },
     { property: 'og:url', content: canonical },
     { property: 'og:image', content: image },
-    { property: 'og:image:alt', content: m.imageAlt ?? m.title },
+    ...(card
+      ? [
+          { property: 'og:image:type', content: 'image/png' },
+          { property: 'og:image:width', content: '1200' },
+          { property: 'og:image:height', content: '630' },
+        ]
+      : []),
+    { property: 'og:image:alt', content: alt },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:site', content: '@zurichjs' },
     { name: 'twitter:title', content: m.title },
     { name: 'twitter:description', content: m.description },
     { name: 'twitter:image', content: image },
+    { name: 'twitter:image:alt', content: alt },
   ];
   if (m.keywords?.length) meta.push({ name: 'keywords', content: m.keywords.join(', ') });
   if (m.geo) {
@@ -183,7 +201,7 @@ export function eventSchema(ev: Event, speakers: Speaker[], hosts: Partner[] = [
     eventStatus: STATUS[ev.status],
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
     url,
-    ...(ev.photos[0] ? { image: [absoluteUrl(ev.photos[0].src)] } : { image: [DEFAULT_OG_IMAGE] }),
+    ...(ev.photos[0] ? { image: [absoluteUrl(ev.photos[0].src)] } : { image: [`${SITE_URL}/og/event-${ev.slug}.png`] }),
     location: ev.venue
       ? {
           '@type': 'Place',

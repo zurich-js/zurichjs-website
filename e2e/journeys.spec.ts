@@ -623,21 +623,16 @@ test.describe('media archive', () => {
     await expect(photos.getByRole('link', { name: 'See photos from other meetups' })).toHaveAttribute('href', '/media');
   });
 
-  test('archive: jump to an event, and all clips in one place (never presented as talk recordings)', async ({ page }) => {
+  test('archive: jump to an event; clips stay in their event, with no separate clips section', async ({ page }) => {
     await page.goto('/media');
     const nav = page.getByRole('navigation', { name: 'Events in the archive' });
     await nav.getByRole('link', { name: /Signals, streams and the state of state, 4 photos and 1 video$/ }).click();
     await expect(page).toHaveURL(/#event-2026-09-signals-streams$/);
     await expect(page.getByRole('heading', { name: 'Signals, streams and the state of state' })).toBeInViewport();
-    await nav.getByRole('link', { name: 'All clips (1)' }).click();
-    const clips = page.locator('#clips');
-    await expect(clips).toContainText('We don’t record the talks.');
-    await clips.getByRole('button', { name: /^Play clip:/ }).click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog.locator('video')).toBeVisible();
-    // The clip links back to its event, since this gallery mixes events.
-    await expect(dialog.getByRole('link', { name: /Signals, streams and the state of state/ })).toHaveAttribute('href', '/events/2026-09-signals-streams');
-    await expect(page).toHaveURL(/#media-clip-sample-clip$/);
+    await expect(nav.getByRole('link', { name: /All clips/ })).toHaveCount(0);
+    await expect(page.locator('#clips')).toHaveCount(0);
+    await expect(page.getByText('Clips from the evenings')).toHaveCount(0);
+    await expect(page.locator('#event-2026-09-signals-streams').getByRole('button', { name: /^Play clip:/ })).toHaveCount(1);
   });
 });
 

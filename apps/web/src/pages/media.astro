@@ -2,7 +2,8 @@
 /**
  * The media archive: photos and short clips taken at ZurichJS events, by event,
  * newest first (ImageKit and Sanity, see @zurichjs/content media.ts), with a
- * jump list of the events and the clips gathered in one place.
+ * jump list of the events. Clips stay in their event's gallery; there is no
+ * separate clips section (owner, 4th November 2026).
  * Promotional artwork is not included. Each event has its own gallery page.
  * When the build could not read the archive, the page says so instead of
  * looking empty.
@@ -39,7 +40,6 @@ const dayMonth = (iso: string) => {
 };
 const conference = mediaInFolder(media.items, settings.conferenceMediaFolder);
 // Clips from every event in one place, newest event first. They are short moments from the room, not talk recordings.
-const clips = withMedia.flatMap(({ items }) => items.filter((m) => m.kind === 'video'));
 const counts = mediaCounts(media.items);
 const complete = archiveComplete(media);
 const cover = withMedia[0]?.items.find((m) => m.kind === 'photo');
@@ -77,7 +77,7 @@ const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo remova
       }
 
       {
-        (withMedia.length > 1 || clips.length > 0) && (
+        withMedia.length > 1 && (
           <nav aria-label="Events in the archive" class="flex flex-col gap-3">
             {byYear.map(({ year, list }) => (
               <div class="grid grid-cols-[56px_minmax(0,1fr)] gap-3 items-start">
@@ -98,14 +98,6 @@ const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo remova
                 </ul>
               </div>
             ))}
-            {clips.length > 0 && (
-              <div class="grid grid-cols-[56px_minmax(0,1fr)] gap-3 items-start">
-                <span aria-hidden="true"></span>
-                <a href="#clips" class="self-start justify-self-start inline-flex items-center min-h-[44px] px-4 rounded-pill bg-grey text-black text-[16px] font-bold no-underline hover:bg-grey-soft">
-                  {`All clips (${clips.length})`}
-                </a>
-              </div>
-            )}
           </nav>
         )
       }
@@ -142,18 +134,6 @@ const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo remova
           ))}
         </div>
       ))
-    }
-
-    {
-      clips.length > 0 && (
-        <section class="flex flex-col gap-4 scroll-mt-6" aria-labelledby="h-clips" id="clips">
-          <h2 id="h-clips" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
-            Clips from the evenings
-          </h2>
-          <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[720px]">Short moments from the room. We don’t record the talks.</p>
-          <Gallery client:visible items={toGallery(clips, events).map((g) => ({ ...g, id: `clip-${g.id}` }))} label="Short clips from ZurichJS evenings" />
-        </section>
-      )
     }
 
     {

@@ -30,6 +30,9 @@ export const SITE = {
   linkedinUrl: 'https://www.linkedin.com/company/zurichjs',
   instagramUrl: 'https://www.instagram.com/zurich.js',
   blueskyUrl: 'https://bsky.app/profile/zurichjs.com',
+  xUrl: 'https://x.com/zurichjs',
+  /** The Slack invite (owner, 4th November 2026), used unless Site settings in Sanity set another. */
+  slackInviteUrl: 'https://join.slack.com/t/zurichjs/shared_invite/zt-4dlq2wk5i-fsL14ZKQcn78tnOJWuVHAQ',
   confUrl: 'https://conf.zurichjs.com',
   confSponsorshipUrl: 'https://conf.zurichjs.com/sponsorship',
   confContactUrl: 'https://conf.zurichjs.com/contact',
@@ -40,7 +43,7 @@ export const SITE = {
 /**
  * Sourced starting value, not a live integration. Meetup API approval is
  * unavailable, so organisers update this record by hand after checking the
- * group page. The scale was not confirmed, so the UI does not print "/5".
+ * group page. The site shows it out of 5 (owner, 4th November 2026).
  */
 export const RATING: RatingRecord = {
   score: '4.9',

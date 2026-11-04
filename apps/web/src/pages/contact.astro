@@ -155,6 +155,17 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
               ),
             },
             { h: 'Meetup', d: 'Join the group to RSVP for meetups and message the organisers.', href: SITE.meetupGroupUrl, label: 'meetup.com/zurich-js', icon: <LineIcon d={ICON.meetup} tone="white" /> },
+            {
+              h: 'Slack',
+              d: 'Talk with the community between meetups.',
+              href: SITE.slackInviteUrl,
+              label: 'Join our Slack',
+              icon: (
+                <span aria-hidden="true" class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center flex-none">
+                  <SocialIcon kind="slack" size={20} />
+                </span>
+              ),
+            },
           ].map((c) => (
             <a
               href={c.href}

@@ -37,7 +37,7 @@ Changing any of these needs the owner's approval.
 - **No kickers:** no small all-caps labels above headings.
 - **No decorative borders or dividers:** separate content with space and surfaces instead. Borders are allowed only where they do a job: form controls, outline buttons, and the white swatch in the gallery.
 - **No recordings:** never promise or link talk recordings. Link slides only when the speaker shared them (owner, 2026-11-01).
-- **Rating and award:** always one sentence, for example "Rated 4.9 on Meetup from 199 ratings, and winner of …". Never print the scale ("/5"). If the rating has no score, drop the rating part and keep the award.
+- **Rating and award:** always one sentence, for example "Rated 4.9/5 on Meetup from 199 ratings, and winner of the 2026 Open Source Award for … globally", with the award linking to its section on the home page (owner, 4th November 2026). If the rating has no score, drop the rating part and keep the award.
 
 ## Colour
 

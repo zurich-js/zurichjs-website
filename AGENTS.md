@@ -44,7 +44,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 - **Shapes and layout:** rounded pills for buttons and tags, 24px cards, one breakpoint at 800px.
 - **No decoration:** no kickers or eyebrow labels, no decorative borders, dividers or gradients.
 - **No recordings:** ZurichJS does not record talks. Slides are shown on a talk only when the speaker shared them (owner, 2026-11-01). Short clips from the evening may appear in the media archive, never presented as talk recordings.
-- **Rating and award:** one plain sentence, never "/5". The rating comes from the `meetupRating` record, updated by hand and never scraped.
+- **Rating and award:** one plain sentence: "Rated 4.9/5 on Meetup…", with the award linking to its section on the home page (owner, 4th November 2026). The rating comes from the `meetupRating` record, updated by hand and never scraped.
 - **No invented facts:** dates, prices, attendee numbers, speakers and venues come from content or from a person, never from the agent.
 - **Copy:** plain, specific, no em dashes. Say "talk proposals" (explain "call for papers (CFP)" once).
 

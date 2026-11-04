@@ -15,7 +15,7 @@ interface Props {
 const { award, photo, storyUrl } = Astro.props;
 ---
 
-<section aria-labelledby="h-award" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+<section id="award" aria-labelledby="h-award" class="scroll-mt-6 px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
   <div class="flex flex-col gap-[18px]">
     <h2 id="h-award" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">An award-winning community</h2>
     <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">

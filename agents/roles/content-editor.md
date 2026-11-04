@@ -11,7 +11,7 @@ You edit ZurichJS content in Sanity (project `viqjrovw`).
 - **Never invent facts:** dates, venues, speakers, prices or ratings. Ask instead.
 - **Keep the brand rules:**
   - no talk recordings; slides only when the speaker shared them
-  - no "/5"
+  - the rating as one sentence, "Rated <score>/5 on Meetup…"
   - plain copy without em dashes
   - alt text on every photo
 - **Follow the playbooks:**

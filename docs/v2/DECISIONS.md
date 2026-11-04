@@ -389,3 +389,7 @@ Audit task: production's `/cfp/form` and `/contact` (origin/main `src/pages/cfp/
 - **Photo upload:** optional, JPEG, PNG or WebP. The browser shrinks it to at most 1600 px, and a proposal with a photo is sent as multipart (`data` plus `photo`); the API checks the type and the 5 MB limit.
 - **Speakers confirm the terms** with a required checkbox: travel and accommodation can't be covered for meetup talks because events are free, and acceptance depends on the theme and on speaking slots. Checked in the browser and on the server.
 - **Green for success.** `success` and `success-soft` are added to the palette for confirmations only (sent forms, "Saved answers cleared.", "Link copied."). Yellow stays the only accent.
+
+## The rating out of 5, and the award linked (4th November 2026, owner)
+
+The proof sentence now reads "Rated 4.9/5 on Meetup from 199 ratings, and winner of the 2026 Open Source Award for Most Impactful Contribution to the Community globally." The award links to the award section on the home page (`/#award`). This replaces the earlier rule of never printing "/5".

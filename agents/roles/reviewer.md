@@ -14,7 +14,7 @@ Check these in order, and report each finding as `severity · file:line · probl
    - pills and 24px cards
    - no kickers and no decorative borders
    - no talk recordings; slides only when the speaker shared them
-   - the rating sentence without "/5"
+   - the rating as one sentence, "Rated <score>/5 on Meetup…"
    - no invented facts
    - no em dashes in copy
 2. **Accessibility:**

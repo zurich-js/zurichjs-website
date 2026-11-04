@@ -1,7 +1,8 @@
 ---
 /**
  * Rating and award in one plain sentence, after the main action. The rating part
- * disappears when the record has no score; the award stays. Never prints the scale.
+ * disappears when the record has no score; the award stays. The score is shown
+ * out of 5 and the award links to its section on the home page (owner, 4th November 2026).
  */
 import type { AwardRecord, RatingRecord } from '@zurichjs/events';
 
@@ -17,7 +18,7 @@ const { rating, award } = Astro.props;
   {
     rating && (
       <span>
-        Rated <b class="text-yellow">{rating.score}</b> on Meetup from{' '}
+        Rated <b class="text-yellow">{rating.score}/5</b> on Meetup from{' '}
         <a href={rating.url} target="_blank" rel="noopener" title={`${rating.source}, checked ${rating.checkedAt}`}>
           {rating.count} ratings</a
         >, and{' '}
@@ -25,7 +26,8 @@ const { rating, award } = Astro.props;
     )
   }
   <span>
-    {rating ? 'winner' : 'Winner'} of the <b class="text-yellow">2026 Open Source Award</b> for{' '}
-    <a href={award.url} target="_blank" rel="noopener">{award.category}</a>.
+    {rating ? 'winner' : 'Winner'} of the{' '}
+    <a href="/#award" class="text-yellow font-bold underline underline-offset-[3px]">2026 Open Source Award</a> for {award.category}{' '}
+    globally.
   </span>
 </p>

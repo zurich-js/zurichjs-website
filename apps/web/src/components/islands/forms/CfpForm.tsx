@@ -5,7 +5,7 @@ import { track } from '@zurichjs/design/analytics';
 import { cx, surfaceClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { SocialLabel } from './SocialLabel.tsx';
+import { SocialLabel } from '@zurichjs/design/islands/SocialLabel';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
 const DRAFT_KEY = 'zurichjs-cfp-draft';
@@ -626,7 +626,7 @@ export default function CfpForm({ nextHref }: Props) {
       )}
 
       {!sent && (
-        <aside aria-label="Before you propose" class="flex flex-col gap-7 md:sticky md:top-6">
+        <aside aria-label="Before you propose" class="flex flex-col gap-7 md:sticky md:top-28">
           {NOTES.map(([h, p]) => (
             <div key={h} class="flex flex-col gap-1.5">
               <h2 class="m-0 text-[20px] font-bold leading-[1.25]">{h}</h2>

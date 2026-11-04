@@ -14,7 +14,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
   const times = p.dateKnown ? timesLine(ev) : '';
   const handoff = p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist';
   return (
-    <aside aria-label="Event summary" class="md:sticky md:top-[72px] bg-grey rounded-card p-6 flex flex-col gap-[18px]">
+    <aside aria-label="Event summary" class="md:sticky md:top-[104px] bg-grey rounded-card p-6 flex flex-col gap-[18px]">
       <div class="flex flex-col gap-0.5">
         <div class="text-[15px] text-ink-2">When</div>
         <div class="text-[19px] font-bold">{p.whenShort}</div>

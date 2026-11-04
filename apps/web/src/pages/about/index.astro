@@ -15,7 +15,7 @@ import { SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
 import { PAGE_PHOTOS } from '~/lib/photos';
 import { cx } from '@zurichjs/design/recipes';
 import { RichText } from '~/components/RichText';
-import { SocialIcon, socialKind } from '~/components/islands/forms/SocialLabel';
+import { SocialIcon, socialKind } from '@zurichjs/design/islands/SocialLabel';
 
 const { events, milestones, team, volunteers, quotes, settings, speakers, media } = await content();
 const slack = slackLink(settings);

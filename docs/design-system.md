@@ -37,18 +37,20 @@ Changing any of these needs the owner's approval.
 - **No kickers:** no small all-caps labels above headings.
 - **No decorative borders or dividers:** separate content with space and surfaces instead. Borders are allowed only where they do a job: form controls, outline buttons, and the white swatch in the gallery.
 - **No recordings:** never promise or link talk recordings. Link slides only when the speaker shared them (owner, 2026-11-01).
-- **Rating and award:** always one sentence, for example "Rated 4.9/5 on Meetup from 199 ratings, and winner of the 2026 Open Source Award for … globally", with the award linking to its section on the home page (owner, 4th November 2026). If the rating has no score, drop the rating part and keep the award.
+- **Rating and award:** on the home page the rating sits in the award section ("Rated 4.9/5 on Meetup from 199 ratings."), never in the hero (Bogdan's review, 4th November 2026). Elsewhere it is one sentence, "Rated 4.9/5 on Meetup from 199 ratings, and winner of the 2026 Open Source Award for … globally", with the award linking to its section on the home page. If the rating has no score, drop the rating part and keep the award.
 
 ## Colour
 
+- **Yellow has one clear role** (Bogdan's review, 4th November 2026): small button accents, and on the home page one large section, "Speak at a meetup".
 - **Yellow is allowed for:**
   - the one primary action per view (`Button variant="yellow"`)
-  - status pills (for example "RSVP open")
+  - status pills and talk tags
   - the upcoming-event date tile
-  - the rating number
-  - the "Speak at a meetup" block
+  - the "Speak at a meetup" section (the home page's only large yellow block)
+  - the corner illustration (`/images/logo/corner-js.svg`) on the hero's next-meetup card
 - **Not yellow:**
   - more than one primary button per view
+  - text highlights (dates, numbers, links) and footer links
   - decoration
   - body text on white (it fails contrast)
 - **Surfaces on black** use `ink` and `ink-2`. **Supporting light surfaces** use `grey` and `grey-soft`.

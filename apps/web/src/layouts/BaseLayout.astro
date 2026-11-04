@@ -35,6 +35,13 @@ const c = await content();
 // NEXT_PUBLIC_* are the production site's existing variable names.
 const posthogKey = import.meta.env.PUBLIC_POSTHOG_KEY ?? process.env.PUBLIC_POSTHOG_KEY ?? process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const posthogHost = import.meta.env.PUBLIC_POSTHOG_HOST ?? process.env.PUBLIC_POSTHOG_HOST ?? process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
+const SOCIAL = [
+  { kind: 'meetup', label: 'Meetup', href: SITE.meetupGroupUrl },
+  { kind: 'linkedin', label: 'LinkedIn', href: SITE.linkedinUrl },
+  { kind: 'instagram', label: 'Instagram', href: SITE.instagramUrl },
+  { kind: 'bluesky', label: 'Bluesky', href: SITE.blueskyUrl },
+  { kind: 'x', label: 'X', href: SITE.xUrl },
+] as const;
 const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
 ---
 
@@ -78,8 +85,8 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
         </div>
       )
     }
+    <Header social={SOCIAL} />
     <div class="on-black bg-black text-white">
-      <Header />
       <slot name="opening" />
     </div>
     <main id="main" class="flex-1"><slot /></main>

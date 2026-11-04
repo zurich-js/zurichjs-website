@@ -1,14 +1,17 @@
 ---
-/** Yellow "Speak at a meetup" block, used on the homepage. */
+/**
+ * "Speak at a meetup": the home page's only large yellow section (Bogdan's review, 4th November 2026),
+ * on the scale of the conference's ticket section: full width, centred, one clear action.
+ */
 import Button from './Button.astro';
 ---
 
-<div class="mt-3 bg-yellow text-black rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-x-10 gap-y-5 items-center">
-  <div class="flex flex-col gap-2.5">
-    <h2 class="m-0 text-[clamp(26px,2.8vw,38px)] leading-[1.15] font-bold">Speak at a meetup</h2>
-    <p class="m-0 text-[18px] leading-normal max-w-[560px]">
-      Does it have to be about JavaScript? Not really. We’ve had talks on Laravel, careers, infrastructure and observability. First-time speakers are welcome, and we help you prepare.
+<section aria-labelledby="h-speak" class="bg-yellow text-black px-gut py-[clamp(72px,10vw,144px)]">
+  <div class="mx-auto max-w-[760px] flex flex-col items-center text-center gap-[clamp(16px,2vw,24px)]">
+    <h2 id="h-speak" class="m-0 text-[clamp(34px,4.4vw,60px)] leading-[1.05] font-bold text-balance">Speak at a meetup</h2>
+    <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal text-pretty">
+      Does it have to be about JavaScript? Not really. We’ve had talks on Laravel, careers, infrastructure and observability. A 10-minute lightning talk or a 20-minute full talk. First-time speakers are welcome, and we help you prepare.
     </p>
+    <Button href="/cfp" variant="black" class="mt-2">Propose a talk</Button>
   </div>
-  <div class="flex justify-end"><Button href="/cfp" variant="black">Propose a talk</Button></div>
-</div>
+</section>

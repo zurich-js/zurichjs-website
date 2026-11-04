@@ -6,36 +6,21 @@ import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro
 import HomeHero from '@zurichjs/design/components/HomeHero.astro';
 import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
-import { SpeakerDeck, type DeckSpeaker } from '~/components/islands/home/SpeakerDeck';
-import { avatarSrc, sizedSrc, srcsetFor } from '@zurichjs/design/images';
-import { COUNTRIES_REACHED, PARTNERS_TO_DATE, SPEAKER_COMPANIES, SPEAKER_PROGRAMMES, speakersWithTalks } from '@zurichjs/content';
+import { SpeakerCarousel, type CarouselSpeaker } from '~/components/islands/home/SpeakerCarousel';
+import { sizedSrc, srcsetFor } from '@zurichjs/design/images';
+import { COUNTRIES_REACHED, PARTNERS_TO_DATE, SPEAKER_COMPANIES, speakersWithTalks } from '@zurichjs/content';
 import AwardSection from '@zurichjs/design/components/AwardSection.astro';
 import SpeakerCompanies from '@zurichjs/design/components/SpeakerCompanies.astro';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
+import PackedGrid from '@zurichjs/design/components/PackedGrid.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
 import { HERO_PHOTOS } from '~/lib/hero';
-import { PAGE_PHOTOS } from '~/lib/photos';
+import { COMMUNITY_GRID, PAGE_PHOTOS } from '~/lib/photos';
 
 const { events, speakers, rating, award, conference, partners } = await content();
 const next = nextMeetup(events, BUILD_TIME);
 const byId = new Map(speakers.map((s) => [s.id, s]));
-const harshil = speakers.find((s) => s.name === 'Harshil Agrawal');
-
-const LIKE = [
-  {
-    t: 'Talks, then time to talk',
-    d: 'Doors open around 17:30. After a short welcome there are two or three talks, some full-length, some lightning, on what’s new and on ideas that last. Then everyone hangs around to meet the speakers and each other until about 21:30.',
-  },
-  {
-    t: 'Every framework, every level',
-    d: 'You’ll meet juniors and CTOs, frontend and infrastructure people, and plenty of first-timers who came on their own. JavaScript is what we have in common, and that’s a wide enough banner for everyone.',
-  },
-  {
-    t: 'A mini-conference in a meetup room',
-    d: 'Speakers come from Zurich and from much further away. Every meetup costs nothing and is in English, and the event page has the address and directions.',
-  },
-];
 
 // The latest past talks, each linking straight to the talk on its event page.
 const talks: TalkRowData[] = [];
@@ -51,9 +36,9 @@ outer: for (const ev of pastEvents(events, BUILD_TIME)) {
     if (talks.length === 4) break outer;
   }
 }
-// The deck: speakers who gave a talk at an event, most recent first, photos sized for the card.
+// The carousel: speakers who gave a talk at an event, most recent first, photos sized for the card.
 const lastTalk = (s: (typeof speakers)[number]) => s.talks.flatMap((t) => t.eventSlugs.map((x) => events.find((e) => e.slug === x)?.startsAt ?? '')).sort().pop() ?? '';
-const deck: DeckSpeaker[] = speakersWithTalks(speakers)
+const carousel: CarouselSpeaker[] = speakersWithTalks(speakers)
   .sort((a, b) => lastTalk(b).localeCompare(lastTalk(a)) || a.name.localeCompare(b.name))
   .slice(0, 24)
   .map((s) => ({
@@ -68,6 +53,9 @@ const deck: DeckSpeaker[] = speakersWithTalks(speakers)
 // Current sponsors (only those marked current) at their tier's logo size, then venue hosts and current partners.
 const partnerGroups = groupPartners(partners);
 // Everyone who supported ZurichJS before (sponsors, hosts and partners), by name; delisted partners never appear.
+// The conference module is a development placeholder: shown locally, or on a build that sets
+// SHOW_PREVIEW_MODULES=true (only for password-protected deploy previews), never on the public site.
+const showPreviewModules = import.meta.env.DEV || process.env.SHOW_PREVIEW_MODULES === 'true';
 const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.filter((p) => !p.current), ...partnerGroups.pastPartners].sort((a, b) => a.name.localeCompare(b.name));
 ---
 
@@ -79,53 +67,27 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
   geo
   jsonLd={[organizationSchema(), websiteSchema(), localBusinessSchema()]}
 >
-  <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={HERO_PHOTOS} rating={rating} award={award} meetupGroupUrl={SITE.meetupGroupUrl} />
-  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
-    <section aria-labelledby="h-like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
-      <div class="flex flex-col gap-[clamp(8px,1vw,12px)]">
-        <Photo photo={PAGE_PHOTOS.talk} class="aspect-4/3 w-full" />
-        <Photo photo={PAGE_PHOTOS.questions} class="aspect-4/3 w-full" />
-      </div>
-      <div class="flex flex-col gap-7">
-        <h2 id="h-like" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What happens at a meetup</h2>
-        {
-          LIKE.map((l) => (
-            <div class="flex flex-col gap-1.5">
-              <h3 class="m-0 text-[21px] font-bold">{l.t}</h3>
-              <p class="m-0 text-[18px] leading-[1.55] text-ink-2 text-pretty">{l.d}</p>
-            </div>
-          ))
-        }
-        {/* The quote stands apart: a yellow card, larger type, the speaker's photo and profile. */}
-        <figure class="m-0 rounded-card bg-yellow p-[clamp(22px,3vw,32px)] flex flex-col gap-5">
-          <blockquote class="m-0 text-[clamp(22px,2.2vw,28px)] leading-[1.35] font-bold text-pretty">“It felt like a large group of friends because folks knew each other, and were also very welcoming.”</blockquote>
-          <figcaption class="flex items-center gap-3 text-[16px]">
-            {harshil?.photo && <img src={avatarSrc(harshil.photo.src, 44)} alt="" width="44" height="44" loading="lazy" decoding="async" class="w-11 h-11 rounded-full object-cover bg-white flex-none" />}
-            <span class="flex flex-col">
-              {harshil ? (
-                <a href={`/speakers/${harshil.id}`} class="font-bold text-black underline underline-offset-[3px]">
-                  Harshil Agrawal
-                </a>
-              ) : (
-                <span class="font-bold">Harshil Agrawal</span>
-              )}
-              <span>Dev Educator at Cloudflare</span>
-            </span>
-          </figcaption>
-        </figure>
-      </div>
-    </section>
-
-    <AwardSection
-      award={award}
-      photo={PAGE_PHOTOS.award}
-      storyUrl="https://conf.zurichjs.com/blog/how-zurichjs-got-here"
-      stats={[
-        { value: '1K+', label: 'Meetup members' },
-        { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
-        { value: COUNTRIES_REACHED, label: 'countries our speakers and attendees come from' },
-      ]}
-    />
+  <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={HERO_PHOTOS} meetupGroupUrl={SITE.meetupGroupUrl} />
+  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)]">
+    <div class="flex flex-col gap-[clamp(32px,4vw,56px)]">
+      <AwardSection
+        award={award}
+        photo={PAGE_PHOTOS.award}
+        rating={rating}
+        storyUrl="https://conf.zurichjs.com/blog/how-zurichjs-got-here"
+        stats={[
+          { value: '1K+', label: 'Meetup members' },
+          { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
+          { value: COUNTRIES_REACHED, label: 'countries our speakers and attendees come from' },
+        ]}
+      />
+      <PackedGrid items={COMMUNITY_GRID.map((g) => ({ id: g.id, sizes: g.sizes, priority: g.priority }))} columns={{ base: 4, md: 6 }} label="Photos from ZurichJS meetups" class="px-gut">
+        {(id: string) => {
+          const g = COMMUNITY_GRID.find((x) => x.id === id)!;
+          return <Photo photo={g.photo} class="w-full h-full rounded-card!" sizes="(min-width: 800px) 50vw, 100vw" />;
+        }}
+      </PackedGrid>
+    </div>
 
     {
       talks.length > 0 && (
@@ -147,18 +109,22 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
       )
     }
 
-    <ConferenceModule conference={conference} />
+    {showPreviewModules && <ConferenceModule conference={conference} preview />}
 
-    <section aria-labelledby="h-speakers" class="px-gut flex flex-col gap-7 overflow-x-clip">
-      <div class="flex justify-between items-baseline gap-4 flex-wrap">
+    <section aria-labelledby="h-speakers" class="flex flex-col gap-7 overflow-x-clip">
+      <div class="px-gut flex justify-between items-baseline gap-4 flex-wrap">
         <h2 id="h-speakers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Meet the speakers</h2>
         <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All speakers</a>
       </div>
-      <SpeakerDeck client:visible speakers={deck} />
-      <SpeakerCompanies companies={SPEAKER_COMPANIES} programmes={SPEAKER_PROGRAMMES} headingId="h-speaker-companies" />
-      <SpeakCta />
+      <SpeakerCarousel client:visible speakers={carousel} />
+      <div class="px-gut pt-[clamp(24px,3vw,40px)]">
+        <SpeakerCompanies companies={SPEAKER_COMPANIES} headingId="h-speaker-companies" as="h2" />
+      </div>
     </section>
 
+    <SpeakCta />
+  </div>
+  <div class="pt-[clamp(64px,8vw,112px)] pb-[clamp(64px,8vw,112px)]">
     <HostsSection
       sponsors={partnerGroups.currentSponsors}
       partners={[...partnerGroups.venues.filter((p) => p.current), ...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]}

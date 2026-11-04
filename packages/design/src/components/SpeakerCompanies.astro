@@ -1,29 +1,29 @@
 ---
 /**
- * Where our speakers have worked: the companies' own full-colour logos, each centred in an
+ * "Where our speakers come from" (Bogdan's review, 4th November 2026): the companies' own full-colour logos, each centred in an
  * equal grey tile, so the wall reads as an even grid at every width.
  * Every logo gets about the same visual weight: its height follows from its width-to-height
  * ratio (equal area, capped), so a square mark and a long wordmark read as the same size.
  */
 interface Props {
   companies: { name: string; logo: string; ratio: number; label?: boolean }[];
-  /** Recognition programmes (e.g. Google Developer Experts), named in a sentence after the row. */
-  programmes?: string[];
   headingId: string;
   as?: 'h2' | 'h3';
 }
-const { companies, programmes = [], headingId, as: Heading = 'h3' } = Astro.props;
+const { companies, headingId, as: Heading = 'h3' } = Astro.props;
 const AREA = 3600; // px² per logo, so the widest wordmark still fits its tile
 const MAX_H = 46;
 const size = (ratio: number) => {
   const h = Math.min(MAX_H, Math.sqrt(AREA / ratio));
   return { h: Math.round(h), w: Math.round(h * ratio) };
 };
-const list = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs.at(-1)}`);
 ---
 
 <div class="flex flex-col gap-6" role="group" aria-labelledby={headingId}>
-  <Heading id={headingId} class="m-0 text-[21px] font-bold">Our speakers have worked at</Heading>
+  <div class="flex flex-col gap-2">
+    <Heading id={headingId} class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where our speakers come from</Heading>
+    <p class="m-0 text-[18px] leading-[1.55] text-ink-2 max-w-[720px] text-pretty">From freelancers and open-source maintainers to engineers at some of the largest companies in tech.</p>
+  </div>
   <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,150px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
     {
       companies.map((c) => {
@@ -38,5 +38,4 @@ const list = (xs: string[]) => (xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -
       })
     }
   </ul>
-  {programmes.length > 0 && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Among them are {list(programmes)}.</p>}
 </div>

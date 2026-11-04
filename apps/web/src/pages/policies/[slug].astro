@@ -36,7 +36,7 @@ const isCoc = entry.id === 'code-of-conduct';
       }
     </nav>
     <div class="grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] gap-[clamp(32px,5vw,72px)] items-start">
-      <nav aria-label="On this page" class="hidden md:flex sticky top-6 flex-col gap-1">
+      <nav aria-label="On this page" class="hidden md:flex sticky top-28 flex-col gap-1">
         <div class="text-[16px] font-bold mb-1.5">On this page</div>
         {sections.map((s) => <a href={`#${s.slug}`} class="py-1.5 text-[16px] text-ink-2 no-underline hover:text-black hover:underline">{s.text}</a>)}
       </nav>

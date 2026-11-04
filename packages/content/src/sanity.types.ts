@@ -360,6 +360,10 @@ export type Events = {
     _key: string;
   }>;
   meetupUrl?: string;
+  sane?: {
+    organization?: string;
+    event?: string;
+  };
   isProMeetup?: boolean;
   stripePriceId?: string;
   ticketSaleUrl?: string;
@@ -584,7 +588,7 @@ export type AllSanitySchemaTypes =
 
 // Source: ../../packages/content/src/queries.ts
 // Variable: EVENTS_QUERY
-// Query: *[_type == "events" && defined(id.current)] | order(datetime desc) {  _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,  location, address, venue, venueNote, description, meetupUrl,  "image": image.asset->url,  "photos": photos[]{ "src": asset->url, alt, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },  practical[]{ label, value },  "hosts": hosts[]->id.current,  supporters[]{ role, "partnerId": partner->id.current },  photoCredit,  agenda[]{ time, kind, title, note, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } },  "talks": talks[]->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current },  recap{ "talks": talks[]{ summary, format, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } } }}
+// Query: *[_type == "events" && defined(id.current)] | order(datetime desc) {  _id, _updatedAt, "id": id.current, title, status, datetime, endsAt, dateText,  location, address, venue, venueNote, description, meetupUrl, sane{ organization, event },  "image": image.asset->url,  "photos": photos[]{ "src": asset->url, alt, "width": asset->metadata.dimensions.width, "height": asset->metadata.dimensions.height },  practical[]{ label, value },  "hosts": hosts[]->id.current,  supporters[]{ role, "partnerId": partner->id.current },  photoCredit,  agenda[]{ time, kind, title, note, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } },  "talks": talks[]->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current },  recap{ "talks": talks[]{ summary, format, "talk": talk->{   _id, "id": id.current, title, description, type, durationMinutes, tags, level, language,  "slidesUrl": slides.asset->url,  "speakerIds": speakers[]->id.current } } }}
 export type EVENTS_QUERY_RESULT = Array<{
   _id: string;
   _updatedAt: string;
@@ -616,6 +620,10 @@ export type EVENTS_QUERY_RESULT = Array<{
   venueNote: string | null;
   description: string | null;
   meetupUrl: string | null;
+  sane: {
+    organization: string | null;
+    event: string | null;
+  } | null;
   image: string | null;
   photos: Array<{
     src: string | null;

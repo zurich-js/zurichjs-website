@@ -53,6 +53,7 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
    | `IMAGEKIT_API_URL`                                    | never in production; local checks only (`tools/imagekit-mock.mjs`)                                                                             | points the build at a mock of ImageKit's list API                                                                     |
    | `PUBLIC_GOOGLE_MAPS_EMBED_KEY`                        | optional: a Maps Embed API key restricted to `zurichjs.com/*`                                                                                  | "Show map" uses the Embed API; without it, Google's keyless embed.                                                    |
    | `SANITY_WRITE_TOKEN`, `SANITY_READ_TOKEN`             | optional                                                                                                                                       | separate tokens instead of `SANITY_TOKEN`                                                                             |
+   | `SANE_API_URL`, `SANE_WEB_URL`                        | optional; default to `https://api.sane.events` and `https://sane.events`. Set them only to point a build at another Sane (local, staging)      | free tickets on Sane for events with "Free tickets on Sane" filled in (build time only; no secret)                    |
    - **Leave the old app's variables for a week**, so a rollback to an old deploy keeps working: `CLERK_*`, `PUSHOVER_*`, `GOOGLE_MAPS_API_KEY`, `INTERNAL_NOTIFICATION_SECRET`, `ZURICHJS_ADMIN_ORG_ID`, `NEXT_PUBLIC_BASE_URL`. Delete them afterwards. Keep `STRIPE_SECRET_KEY`, `STRIPE_SUPPORT_PRODUCT_ID` and `IMAGEKIT_PRIVATE_KEY`: V2 uses them.
    - **Production must read Sanity:** `netlify.toml` sets `CONTENT_REQUIRE_SANITY=1`, so a production build that cannot read Sanity fails instead of shipping sample content.
 
@@ -145,11 +146,20 @@ The site is static, so content changes appear only after a rebuild.
 
 **To force a rebuild:** in Netlify, go to Deploys › Trigger deploy, or run `curl -X POST "$NETLIFY_BUILD_HOOK_URL?trigger_title=Manual"`.
 
+## Free tickets on Sane
+
+An event can offer a free ticket on [Sane](https://sane.events) side by side with Meetup (owner decision). In Sanity, open the event, tab "Meetup", and fill in "Free tickets on Sane" with the organisation and event slugs from the Sane event link. Keep the Meetup event link too.
+
+- Each build reads the event from Sane's public API (no key). While Sane's registration is open and the site shows RSVP open, the main button is "Get a free ticket" and goes to the Sane event page. In every other case the button is the Meetup one: RSVP, waitlist or follow.
+- Sane is read only at build time. When Sane's state changes (opens, sells out), publish the event in Sanity or trigger a build so the button follows. Until then Sane's own page shows the current state.
+- A draft event on Sane answers 404, and the site keeps Meetup until it is published there.
+
 ## When something fails
 
 - **"Sanity is not reachable" on a production build:** this is deliberate. Production never ships sample content. Check Sanity's status and the token, then retry.
 - **"SANITY_PERSPECTIVE=drafts needs SANITY_READ_TOKEN":** the preview site is missing its Viewer token.
 - **"[media] IMAGEKIT_PRIVATE_KEY missing" or "ImageKit could not be read" failing a production build:** deliberate, so `/media` never ships empty. The previous deploy stays live. Check the key in Netlify (build scope) and ImageKit's status, then retry. To check the archive locally without the key: `node tools/imagekit-mock.mjs 4529 <listing.json> &` and build with `IMAGEKIT_API_URL=http://127.0.0.1:4529/v1/files IMAGEKIT_PRIVATE_KEY=dummy`.
+- **"[sane] … could not be read":** the event links to Meetup in this build instead of Sane. Never fails the build. Check that the event is published on Sane and that the slugs in "Free tickets on Sane" match its link, then publish in Sanity (or trigger a build) to try again.
 - **A content change broke the build:** the previous deploy stays live. Fix or revert the document in Sanity's history.
 - **CI, the SEO parity gate:** a URL, title, canonical URL, JSON-LD type or sitemap entry was lost. Fix it, or record an intentional change, with a reason, in `tools/seo/scope.json` or `allowlist.json`.
 - **CI, visual regression:** the log's "Visual diff summary" step shows where each screenshot differs, and the `reports` artifact has the images. If the change is intended, run `pnpm exec playwright test e2e/visual.spec.ts --update-snapshots` and commit the new baselines. Chromium runs with fixed text rendering (`playwright.config.ts`), so baselines made locally on Linux match CI.

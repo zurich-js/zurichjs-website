@@ -11,9 +11,11 @@ import {
   pastEvents,
   presentEvent,
   resolveState,
+  saneTicketing,
   stateChangeTimes,
   upcomingEvents,
   type Event,
+  type SaneRegistrationState,
 } from '../src/index.ts';
 
 const DOORS = '2026-11-18T18:30:00+01:00';
@@ -122,6 +124,51 @@ describe('presentEvent', () => {
   });
   it('honours a preview override', () => {
     expect(presentEvent(ev(), { now: at(doors - HOUR), override: 'postponed' }).crumb).toBe('Postponed');
+  });
+});
+
+describe('saneTicketing', () => {
+  const SANE_URL = 'https://sane.events/events/zurichjs/meetups/november-2026';
+  const linked = (state: SaneRegistrationState) => ev({ sane: { url: SANE_URL, state } });
+  const before = at(doors - HOUR);
+  const ticketing = chainTicketing(saneTicketing, meetupTicketing('https://www.meetup.com/zurich-js/'));
+
+  it('offers a free ticket on Sane while registration is open on Sane and on the site', () => {
+    expect(saneTicketing.actionFor(linked('open'), 'open')).toEqual({
+      kind: 'rsvp',
+      label: 'Get a free ticket',
+      href: SANE_URL,
+      external: true,
+      note: 'Opens Sane in a new tab. Your ticket arrives by email, and an RSVP on Meetup still counts.',
+    });
+    expect(presentEvent(linked('open'), { now: before, ticketing }).cta).toEqual({ kind: 'rsvp', label: 'Get a free ticket', href: SANE_URL, external: true });
+  });
+
+  it.each(['not_open_yet', 'sold_out', 'closed', 'ended', 'cancelled'] as const)('has no answer when Sane says %s, so Meetup applies', (state) => {
+    expect(saneTicketing.actionFor(linked(state), 'open')).toBeUndefined();
+    expect(presentEvent(linked(state), { now: before, ticketing }).cta).toMatchObject({
+      kind: 'rsvp',
+      label: 'RSVP on Meetup',
+      href: 'https://www.meetup.com/zurich-js/events/1/',
+    });
+  });
+
+  it('has no answer for an event not linked to Sane', () => {
+    expect(saneTicketing.actionFor(ev(), 'open')).toBeUndefined();
+    expect(presentEvent(ev(), { now: before, ticketing }).cta).toMatchObject({ label: 'RSVP on Meetup' });
+  });
+
+  it('follows the site state: full, not open, tbc, cancelled and past events never get the Sane link', () => {
+    for (const state of ['notopen', 'tbc', 'full', 'postponed', 'cancelled', 'live', 'past'] as const) {
+      expect(saneTicketing.actionFor(linked('open'), state)).toBeUndefined();
+    }
+  });
+
+  it('sends people to the Meetup waitlist when the meetup is sold out on Sane and full on the site', () => {
+    expect(presentEvent(ev({ status: 'full', sane: { url: SANE_URL, state: 'sold_out' } }), { now: before, ticketing }).cta).toMatchObject({
+      kind: 'waitlist',
+      label: 'Join the waitlist on Meetup',
+    });
   });
 });
 

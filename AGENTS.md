@@ -62,7 +62,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 
 - **Queries** live in `packages/content/src/queries.ts` and are typed by `sanity typegen` into `sanity.types.ts`. After changing a query or the schema, run `pnpm --filter @zurichjs/studio typegen` and commit `sanity.types.ts` and `apps/studio/schema.json`. CI regenerates them and fails when they differ.
 - **Sample content** (`packages/content/src/sample.ts`) is used only offline or in CI. Production builds fail rather than ship it.
-- **Schedules** (`packages/events/src/schedule.ts`): the event's `agenda` is the programme, with times in Zurich. Without an agenda, talks are listed without times. Never invent a time.
+- **Schedules** (`packages/events/src/schedule.ts`): the event's `agenda` is the programme, with times in Zurich. Without an agenda, the evening is estimated from the start time as the old site did (doors, welcome, talks, a break after the second talk, networking), marked "Times are approximate" (owner, 4th November 2026). Never invent any other time.
 - **Event state** (`packages/events/src/state.ts`) comes from the editorial status plus the clock. Cancelled and postponed override the clock. An event is "live" (feedback mode) from doors for 48 hours, then "past" (the recap on the same URL).
 - **Rebuilds:**
   - A Sanity publish calls a signed webhook (`/api/rebuild`).

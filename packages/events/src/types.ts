@@ -65,6 +65,8 @@ export interface AgendaItem {
   title: string;
   note?: string;
   talk?: TalkRef;
+  /** The time is estimated from the start time (no agenda in Sanity), not published by the organisers. */
+  estimated?: boolean;
 }
 
 export interface PracticalInfo {

@@ -40,8 +40,19 @@ describe('mapEvent (production document shape)', () => {
   it('builds a venue from location and address', () => {
     expect(ev.venue).toEqual({ name: 'Venue AG', street: 'Hardstrasse 201', zip: '8005', city: 'Zürich' });
   });
-  it('lists the talks without inventing times when there is no agenda, and never turns datetime into a doors line', () => {
-    expect(ev.agenda).toEqual([{ time: '', kind: 'talk', title: 'Typed forms', talk: expect.objectContaining({ speakerIds: ['ada'], format: 'talk' }) }]);
+  it('without an agenda, estimates the evening from the start time as the old site did, marked estimated (owner, 4th November 2026)', () => {
+    expect(ev.agenda.map((a) => [a.kind, a.title, a.estimated])).toEqual([
+      ['doors', 'Doors open', true],
+      ['intro', 'Welcome and intro', true],
+      ['talk', 'Typed forms', true],
+      ['networking', 'Networking and drinks', true],
+    ]);
+    expect(ev.agenda.every((a) => /^\d{2}:\d{2}$/.test(a.time))).toBe(true);
+    expect(ev.agenda[2]!.talk).toEqual(expect.objectContaining({ speakerIds: ['ada'], format: 'talk' }));
+  });
+  it('without an agenda or a start time, lists the talks with no times', () => {
+    const undated = mapEvent({ ...raw, datetime: null });
+    expect(undated.agenda).toEqual([{ time: '', kind: 'talk', title: 'Typed forms', talk: expect.objectContaining({ speakerIds: ['ada'] }) }]);
   });
   it('keeps the agenda times and order as organisers wrote them, including non-talk lines', () => {
     const withAgenda = mapEvent({

@@ -103,6 +103,7 @@ export function mapEvent(r: RawEvent): Event {
   const agenda = buildSchedule({
     agenda: (r.agenda ?? []).map((a) => ({ time: a.time, kind: a.kind, title: a.title, note: a.note, talk: a.talk ? mapTalk(a.talk) : undefined })),
     talks,
+    startsAt,
   });
   // Photos taken at the event. The promotional artwork (`image`) is the cover, never a photo.
   const photos: Photo[] = (r.photos ?? []).filter((p) => p.src).map((p) => ({ src: p.src!, alt: p.alt ?? r.title ?? '', width: u(p.width), height: u(p.height) }));

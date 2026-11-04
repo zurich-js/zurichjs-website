@@ -807,7 +807,9 @@ test.describe('partners and sponsors', () => {
     await page.goto('/partners#partners-venues');
     await expect(page.locator('#partners-venues').getByRole('heading', { name: 'Venue partners' })).toBeVisible();
     await expect(page.locator('#partners-communities').getByRole('link', { name: /Web Zurich/ })).toBeVisible();
-    await expect(page.locator('#partners-conferences').getByRole('link', { name: /CityJS/ })).toBeVisible();
+    await expect(page.locator('#partners-conferences').getByRole('link', { name: /Grusp/ })).toBeVisible();
+    // CityJS is a past supporter now (owner, 4th November 2026).
+    await expect(page.locator('#partners-past').getByRole('img', { name: 'CityJS' })).toBeVisible();
     await expect(page.locator('#partners-past').getByRole('img', { name: 'Dynatrace' })).toBeVisible();
     // The About timeline links here.
     for (const href of ['/partners#partners-venues', '/partners#partners-community']) {

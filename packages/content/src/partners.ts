@@ -161,7 +161,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://cityjsconf.org/',
     logo: logo('city-js.webp'),
     kinds: ['conference'],
-    current: true,
+    // A past supporter now (owner, 4th November 2026).
+    current: false,
     description: 'Exclusive perks for ZurichJS members',
     source: 'old-partners',
   },

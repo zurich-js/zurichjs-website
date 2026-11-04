@@ -70,9 +70,9 @@ export function validSlackInvite(url?: string | null): string | undefined {
   }
 }
 
-/** The Slack call to action: the invite when one is set, otherwise a way to ask for one. */
+/** The Slack call to action: the invite from Site settings, else the site's own invite, otherwise a way to ask for one. */
 export function slackLink(settings: SiteSettings): { href: string; label: string; external: boolean } {
-  const invite = validSlackInvite(settings.slackInviteUrl);
+  const invite = validSlackInvite(settings.slackInviteUrl) ?? validSlackInvite(sample.SITE.slackInviteUrl);
   return invite ? { href: invite, label: 'Join our Slack', external: true } : { href: '/contact?topic=slack', label: 'Ask us for a Slack invite', external: false };
 }
 

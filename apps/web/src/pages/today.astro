@@ -15,6 +15,8 @@ import VenueCard from '~/components/islands/event/VenueCard';
 import Button from '@zurichjs/design/components/Button.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
 import SupporterList from '~/components/SupporterList.astro';
+import { avatarSrc } from '@zurichjs/design/images';
+import { SocialIcon } from '~/components/islands/forms/SocialLabel';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, MAPS_EMBED_KEY, SITE, content, slackLink } from '~/lib/content';
 
@@ -29,7 +31,28 @@ const after = ev
   ? upcomingEvents(events, BUILD_TIME).find((e) => e.id !== ev.id && resolveState(e, BUILD_TIME) !== 'cancelled' && (!ev.startsAt || !e.startsAt || e.startsAt > ev.startsAt))
   : undefined;
 const afterP = after ? presentEvent(after, { now: BUILD_TIME }) : undefined;
-const share = ev ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`${SITE_URL}${eventHref(ev)}?utm_source=today`)}` : '';
+const eventUrl = ev ? `${SITE_URL}${eventHref(ev)}?utm_source=today` : '';
+const postText = ev ? `At ${ev.title} with @ZurichJS, the JavaScript community in Zurich. ${eventUrl}` : '';
+// Share links with the event prefilled. Instagram has no share link, so it gets the handle instead.
+const SHARE = ev
+  ? [
+      { kind: 'linkedin' as const, label: 'LinkedIn', href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(eventUrl)}` },
+      { kind: 'x' as const, label: 'X', href: `https://x.com/intent/post?text=${encodeURIComponent(postText)}` },
+      { kind: 'bluesky' as const, label: 'Bluesky', href: `https://bsky.app/intent/compose?text=${encodeURIComponent(postText)}` },
+    ]
+  : [];
+const FOLLOW = [
+  { kind: 'linkedin' as const, label: 'LinkedIn', href: SITE.linkedinUrl },
+  { kind: 'instagram' as const, label: 'Instagram', href: SITE.instagramUrl },
+  { kind: 'x' as const, label: 'X', href: SITE.xUrl },
+  { kind: 'bluesky' as const, label: 'Bluesky', href: SITE.blueskyUrl },
+  { kind: 'meetup' as const, label: 'Meetup', href: SITE.meetupGroupUrl },
+  { kind: 'slack' as const, label: 'Slack', href: slack.href },
+]
+// What the programme shows of each speaker: role and a small photo; the chip links to their profile.
+const people = Object.fromEntries(
+  speakers.map((s) => [s.id, { name: s.name, role: s.role || undefined, initials: s.initials, avatar: s.photo ? avatarSrc(s.photo.src, 36) : undefined }]),
+);
 const description = ev
   ? `ZurichJS on the evening of a meetup: arrival and directions, the running order with times, and talk ratings. Next: ${ev.title}${ev.startsAt ? `, ${dateLong(ev.startsAt)}` : ''}.`
   : 'ZurichJS on the evening of a meetup: arrival and directions, the running order with times, and talk ratings.';
@@ -45,22 +68,127 @@ const description = ev
       ev && ev.agenda.length > 0 && (
         <section id="programme" aria-labelledby="h-prog" class="px-gut flex flex-col gap-5 scroll-mt-6">
           <h2 id="h-prog" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
-            {phase === 'upcoming' ? 'Programme' : 'Today’s programme'}
+            {phase === 'upcoming' ? 'Programme and talks' : 'Today’s programme'}
           </h2>
-          <Tonight client:load part="programme" ev={ev} names={names} now={BUILD_TIME.toISOString()} />
+          <Tonight client:load part="programme" ev={ev} names={names} people={people} now={BUILD_TIME.toISOString()} />
         </section>
       )
     }
 
+    {ev && <Tonight client:load part="feedback" ev={ev} now={BUILD_TIME.toISOString()} />}
+
     {
-      ev?.venue && (
-        <div class="px-gut">
-          <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} heading="Venue and arrival" />
-        </div>
+      ev && (
+        <section aria-labelledby="h-feedback" class="px-gut flex flex-col gap-4">
+          <h2 id="h-feedback" class="m-0 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold">
+            Your feedback
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Surface class="p-6 flex flex-col gap-2.5">
+              <h3 class="m-0 text-[21px] font-bold">Rate the talks</h3>
+              <p class="m-0 text-[17px] leading-normal flex-1">Rate each talk on the event page once it has started. Speakers read the ratings for their own talk.</p>
+              <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="yellow" size="sm" class="self-start">
+                Rate the talks
+              </Button>
+            </Surface>
+            <Surface class="p-6 flex flex-col gap-2.5">
+              <h3 class="m-0 text-[21px] font-bold">Tell us about the evening</h3>
+              <p class="m-0 text-[17px] leading-normal flex-1">A few open questions for the organisers. Only they read your answers.</p>
+              <Button href={`/feedback?event=${ev.slug}`} variant="yellow" size="sm" class="self-start">
+                Give feedback
+              </Button>
+            </Surface>
+          </div>
+        </section>
       )
     }
 
-    {ev && <Tonight client:load part="feedback" ev={ev} now={BUILD_TIME.toISOString()} />}
+    {/* Getting there on the left; posting about the evening and staying in touch beside it. */}
+    <div class="px-gut grid grid-cols-1 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-[clamp(28px,4vw,48px)] items-start">
+      {ev?.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} heading="Getting there" compact />}
+      <section aria-labelledby="h-share" class="flex flex-col gap-4">
+        <h2 id="h-share" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Share the evening</h2>
+      {
+        ev && (
+          <Surface tone="yellow" class="p-6 flex flex-col gap-3">
+            <h3 class="m-0 text-[21px] font-bold">Post about it</h3>
+            <p class="m-0 text-[17px] leading-normal flex-1">
+              A photo, your favourite takeaway or a thank-you to a speaker. Tag ZurichJS: it helps more people find the community, and the speakers love seeing it.
+            </p>
+            <ul class="m-0 p-0 list-none flex flex-wrap gap-2" aria-label="Post about this meetup">
+              {SHARE.map((x) => (
+                <li>
+                  <a
+                    href={x.href}
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center gap-2 min-h-[40px] px-4 rounded-pill bg-white text-black no-underline text-[15px] font-bold hover:bg-grey-hover"
+                  >
+                    <SocialIcon kind={x.kind} size={16} />
+                    Post on {x.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p class="m-0 text-[15px]">
+              On Instagram, tag <a href={SITE.instagramUrl} target="_blank" rel="noopener" class="font-bold">@zurich.js</a>.
+            </p>
+          </Surface>
+        )
+      }
+      <Surface class="p-6 flex flex-col gap-3">
+        <h3 class="m-0 text-[21px] font-bold">Stay connected</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">Talk between meetups on Slack, and follow us for the next dates and the photos.</p>
+        <ul class="m-0 p-0 list-none flex flex-wrap items-center gap-2" aria-label="ZurichJS online">
+          {
+            FOLLOW.map((x) => (
+              <li>
+                <a
+                  href={x.href}
+                  target="_blank"
+                  rel="noopener"
+                  title={x.label}
+                  aria-label={`ZurichJS on ${x.label} (opens in a new tab)`}
+                  class="w-10 h-10 rounded-full bg-white hover:bg-grey-hover flex items-center justify-center"
+                >
+                  <SocialIcon kind={x.kind} size={17} />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </Surface>
+      </section>
+    </div>
+
+    <section aria-labelledby="h-support" class="px-gut grid grid-cols-1 md:grid-cols-3 gap-4">
+      <h2 id="h-support" class="m-0 mb-1 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold col-span-full">Keep ZurichJS going</h2>
+      <Surface class="p-6 flex flex-col gap-2.5">
+        <h3 class="m-0 text-[21px] font-bold">Become a member</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">
+          Join the {SITE.association}, the association (Verein) behind ZurichJS. Members fund the meetups and have a say in how the community grows.
+        </p>
+        <Button href="/membership" variant="yellow" size="sm" class="self-start">
+          Become a member
+        </Button>
+      </Surface>
+      <Surface class="p-6 flex flex-col gap-2.5">
+        <h3 class="m-0 text-[21px] font-bold">Donate</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">Meetups are free and run by volunteers. A donation, once or monthly, pays for food, drinks and the tools behind them.</p>
+        <Button href="/donate" variant="yellow" size="sm" class="self-start">
+          Donate
+        </Button>
+      </Surface>
+      <Surface tone="black" class="p-6 flex flex-col gap-2.5">
+        <h3 class="m-0 text-[21px] font-bold">Coming up</h3>
+        <p class="m-0 text-[17px] leading-normal flex-1">
+          {after && afterP ? `${after.title}: ${afterP.dateLineShort}.` : 'The meetup after this one is being planned. It is announced on Meetup first.'}
+        </p>
+        <Button href={after ? eventHref(after) : '/events'} variant="yellow" size="sm" class="self-start">
+          {after ? 'See that meetup' : 'See all events'}
+        </Button>
+      </Surface>
+    </section>
 
     {
       (supporters.length > 0 || seasonSponsors.length > 0) && (
@@ -84,52 +212,5 @@ const description = ev
       )
     }
 
-    <section aria-labelledby="h-after" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
-      <h2 id="h-after" class="m-0 mb-1 text-[clamp(28px,3vw,40px)] leading-[1.15] font-bold col-span-full">
-        {phase === 'upcoming' || phase === 'none' ? 'Meanwhile' : 'Before you head home'}
-      </h2>
-      <Surface class="p-6 flex flex-col gap-2.5">
-        <h3 class="m-0 text-[21px] font-bold">Keep in touch</h3>
-        <p class="m-0 text-[17px] leading-normal flex-1">Talk between meetups on Slack, or follow along on LinkedIn.</p>
-        <div class="flex flex-wrap gap-2 mt-1.5">
-          <Button href={slack.href} variant="yellow" size="sm">
-            {slack.label}
-          </Button>
-          <Button href={SITE.linkedinUrl} variant="white" size="sm">
-            LinkedIn
-          </Button>
-        </div>
-      </Surface>
-      <Surface class="p-6 flex flex-col gap-2.5">
-        <h3 class="m-0 text-[21px] font-bold">Support the community</h3>
-        <p class="m-0 text-[17px] leading-normal flex-1">ZurichJS is a non-profit run by volunteers. Members, donors and partners pay for the next one.</p>
-        <div class="flex flex-wrap gap-2 mt-1.5">
-          <Button href="/membership" variant="yellow" size="sm">
-            Become a member
-          </Button>
-          <Button href="/donate" variant="white" size="sm">
-            Donate
-          </Button>
-        </div>
-      </Surface>
-      <Surface tone="black" class="p-6 flex flex-col gap-2.5">
-        <h3 class="m-0 text-[21px] font-bold">Coming up</h3>
-        <p class="m-0 text-[17px] leading-normal flex-1">
-          {after && afterP ? `${after.title}: ${afterP.dateLineShort}.` : 'The meetup after this one is being planned. It is announced on Meetup first.'}
-        </p>
-        <div class="flex flex-wrap gap-2 mt-1.5">
-          <Button href={after ? eventHref(after) : '/events'} variant="yellow" size="sm">
-            {after ? 'See that meetup' : 'See all events'}
-          </Button>
-          {
-            ev && (
-              <Button href={share} variant="outline-white" size="sm" class="border!">
-                Share on LinkedIn
-              </Button>
-            )
-          }
-        </div>
-      </Surface>
-    </section>
   </div>
 </BaseLayout>

@@ -5,6 +5,7 @@ import { cx } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { Check } from '@zurichjs/design/islands/Check';
+import { RichText } from '~/components/RichText';
 
 /**
  * The Tonight page (/today). Several islands from this one module share a
@@ -59,6 +60,8 @@ interface Props {
   ev?: Event;
   /** Speaker id → name. */
   names?: Record<string, string>;
+  /** Speaker id → what the programme shows of them: role and a small photo (avatar URL). */
+  people?: Record<string, { name: string; role?: string; avatar?: string; initials: string }>;
   /** Build time (ISO), the clock for the server render. */
   now: string;
 }
@@ -79,7 +82,7 @@ function targetsFor(ev: Event, names: Record<string, string>, items: { i: number
   });
 }
 
-export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
+export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso }: Props) {
   const now = useClock(nowIso);
   const { rated, target } = useShared();
   const phase: TodayPhase = todayPhase(ev, now);
@@ -139,7 +142,7 @@ export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
               key={r.i}
               aria-current={isNow ? 'time' : undefined}
               class={cx(
-                'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-center py-4 px-[18px] rounded-[20px]',
+                'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-start py-4 px-[18px] rounded-[20px]',
                 anyTime ? 'grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[72px_minmax(0,1fr)_auto]' : 'grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_auto]',
                 isNow ? 'bg-yellow' : done ? 'bg-white' : 'bg-grey-soft',
               )}
@@ -150,9 +153,51 @@ export default function Tonight({ part, ev, names = {}, now: nowIso }: Props) {
                   {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-yellow">Now</span>}
                 </div>
               )}
-              <div class="flex flex-col gap-[3px] min-w-0">
-                <span class={cx('font-bold leading-[1.3] text-pretty', r.talk ? 'text-[19px]' : 'text-[17px]', done && 'text-grey-text')}>{r.title}</span>
-                {(r.talk || r.note) && <span class={cx('text-[16px]', done ? 'text-grey-text' : 'text-ink-2')}>{who(r)}</span>}
+              <div class="flex flex-col gap-2 min-w-0">
+                <span class={cx('font-bold leading-[1.3] text-pretty', r.talk ? 'text-[20px]' : 'text-[17px]', done && 'text-grey-text')}>{r.title}</span>
+                {r.talk ? (
+                  <>
+                    {r.talk.description && (
+                      <RichText
+                        text={r.talk.description}
+                        clampLines={3}
+                        moreLabels={['See more ↓', 'See less ↑']}
+                        moreClass="p-0 bg-transparent border-0 text-[14px] font-bold text-grey-text hover:text-black cursor-pointer"
+                        class="text-[16px] leading-[1.55] text-ink-2 max-w-[720px]"
+                      />
+                    )}
+                    {r.talk.speakerIds.length > 0 && (
+                      // Equal-width speaker cards, whatever the length of the name or role.
+                      <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-2 max-w-[780px]" aria-label={`Speakers: ${r.title}`}>
+                        {r.talk.speakerIds.map((id) => {
+                          const p = people[id];
+                          return (
+                            <li key={id}>
+                              <a
+                                href={`/speakers/${id}`}
+                                class="flex w-full h-full items-center gap-2.5 py-1.5 pl-1.5 pr-4 rounded-pill bg-white text-black no-underline hover:bg-grey-hover"
+                              >
+                                {p?.avatar ? (
+                                  <img src={p.avatar} alt="" width={36} height={36} loading="lazy" decoding="async" class="w-9 h-9 rounded-full object-cover bg-grey flex-none" />
+                                ) : (
+                                  <span aria-hidden="true" class="w-9 h-9 rounded-full bg-grey flex items-center justify-center text-[13px] font-bold flex-none">
+                                    {p?.initials ?? '?'}
+                                  </span>
+                                )}
+                                <span class="flex flex-col leading-tight min-w-0">
+                                  <span class="text-[15px] font-bold truncate">{p?.name ?? names[id] ?? id}</span>
+                                  {p?.role && <span class="text-[13px] text-ink-2 truncate">{p.role}</span>}
+                                </span>
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  r.note && <span class={cx('text-[16px]', done ? 'text-grey-text' : 'text-ink-2')}>{who(r)}</span>
+                )}
               </div>
               {mine.length > 0 && (
                 <div class="flex flex-wrap gap-2 justify-self-start md:justify-self-end col-span-full md:col-auto">

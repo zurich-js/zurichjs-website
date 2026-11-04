@@ -888,12 +888,12 @@ test.describe('community page', () => {
     await expect(page.getByRole('link', { name: /Become a member/ }).first()).toHaveAttribute('href', '/membership');
   });
 
-  test('Slack: no broken invite; without a verified link people can ask for one', async ({ page }) => {
-    for (const path of ['/about', '/today']) {
+  test('Slack: no broken invite; the site’s own invite is used everywhere (owner, 4th November 2026)', async ({ page }) => {
+    for (const path of ['/about', '/today', '/contact']) {
       await page.goto(path);
       await expect(page.locator('a[href*="shared_invite/"]:not([href*="shared_invite/zt-"])')).toHaveCount(0);
+      await expect(page.locator('a[href^="https://join.slack.com/t/zurichjs/shared_invite/zt-"]').first()).toBeAttached();
     }
-    await expect(page.getByRole('link', { name: 'Ask us for a Slack invite' })).toHaveAttribute('href', '/contact?topic=slack');
   });
 });
 

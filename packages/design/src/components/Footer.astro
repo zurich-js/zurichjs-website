@@ -8,6 +8,8 @@ export interface FooterSite {
   linkedinUrl: string;
   blueskyUrl: string;
   instagramUrl: string;
+  xUrl: string;
+  slackInviteUrl: string;
 }
 interface Props {
   site: FooterSite;
@@ -53,6 +55,8 @@ const SOCIAL = [
   { label: 'LinkedIn', href: SITE.linkedinUrl },
   { label: 'Bluesky', href: SITE.blueskyUrl },
   { label: 'Instagram', href: SITE.instagramUrl },
+  { label: 'X', href: SITE.xUrl },
+  { label: 'Slack', href: SITE.slackInviteUrl },
 ];
 ---
 

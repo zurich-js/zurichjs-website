@@ -2,11 +2,13 @@
 // Serves apps/web/dist the way Netlify does for static files: /path → /path.html or /path/index.html,
 // 301s from dist/_redirects (written by Astro), then files, then the [[redirects]] in apps/web/netlify.toml
 // (with `/*` splats, shadowed by existing files like on Netlify), then 404.html. API routes are not served
-// (they are Netlify Functions).
+// (they are Netlify Functions). Text responses are compressed (brotli or gzip) as Netlify compresses them,
+// so Lighthouse measures the transfer sizes visitors get.
 //   node tools/serve-dist.mjs [port] [dir]
 import { createServer } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
+import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 
 const port = Number(process.argv[2] ?? 4321);
 const root = process.argv[3] ?? new URL('../apps/web/dist/', import.meta.url).pathname;
@@ -24,6 +26,29 @@ const TYPES = {
   '.xml': 'application/xml',
   '.txt': 'text/plain; charset=utf-8',
   '.json': 'application/json',
+  '.mp4': 'video/mp4',
+};
+const COMPRESSIBLE = new Set(['.html', '.css', '.js', '.mjs', '.svg', '.xml', '.txt', '.json']);
+const compressed = new Map();
+/** Sends a file, compressed when it is text and the client accepts it. */
+const send = (req, res, status, f) => {
+  const ext = extname(f);
+  const headers = { 'content-type': TYPES[ext] ?? 'application/octet-stream' };
+  let body = readFileSync(f);
+  if (COMPRESSIBLE.has(ext)) {
+    const accept = String(req.headers['accept-encoding'] ?? '');
+    headers.vary = 'Accept-Encoding';
+    const enc = /\bbr\b/.test(accept) ? 'br' : /\bgzip\b/.test(accept) ? 'gzip' : '';
+    if (enc) {
+      // Compressed once per file and encoding; a fast brotli level, like a CDN compressing on the fly.
+      const key = `${enc}:${f}`;
+      if (!compressed.has(key)) compressed.set(key, enc === 'br' ? brotliCompressSync(body, { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }) : gzipSync(body));
+      body = compressed.get(key);
+      headers['content-encoding'] = enc;
+    }
+  }
+  res.writeHead(status, headers);
+  res.end(body);
 };
 const redirects = new Map();
 const rfile = join(root, '_redirects');
@@ -77,8 +102,7 @@ createServer((req, res) => {
   }
   const hit = file(path) ?? file(`${path}.html`) ?? file(join(path, 'index.html'));
   if (hit) {
-    res.writeHead(200, { 'content-type': TYPES[extname(hit)] ?? 'application/octet-stream' });
-    return res.end(readFileSync(hit));
+    return send(req, res, 200, hit);
   }
   const t = tomlRedirect(path);
   if (t) {
@@ -86,6 +110,7 @@ createServer((req, res) => {
     return res.end();
   }
   const nf = file('404.html');
-  res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' });
-  res.end(nf ? readFileSync(nf) : 'Not found');
+  if (nf) return send(req, res, 404, nf);
+  res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+  res.end('Not found');
 }).listen(port, () => console.log(`serving ${root} on http://localhost:${port}`));

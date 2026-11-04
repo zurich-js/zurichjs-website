@@ -197,7 +197,8 @@ export function SpeakerDeck({ speakers }: Props) {
               sizes="(min-width: 800px) 290px, 80vw"
               alt=""
               draggable={false}
-              loading={Math.abs(o) <= SPREAD ? 'eager' : 'lazy'}
+              // Lazy: the deck sits far below the fold, and eager photos here delay the first paint on phones.
+              loading="lazy"
               decoding="async"
               class="w-full h-full object-cover pointer-events-none"
               style={{ objectPosition: sp.photo.position ?? 'center 25%' }}

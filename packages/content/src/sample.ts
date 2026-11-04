@@ -261,7 +261,6 @@ const PRACTICAL_MEETUP = [
   { label: 'Cost', value: 'Free. RSVP helps the host plan food and space.' },
   { label: 'Language', value: 'Talks in English.' },
   { label: 'Who it’s for', value: 'Anyone who builds software, or is curious about it. Juniors to CTOs. First-timers very welcome.' },
-  { label: 'Access', value: 'Not yet checked by organisers. Email hello@zurichjs.com and we will find out for you.' },
   { label: 'Code of conduct', value: 'All ZurichJS events follow our code of conduct.' },
 ];
 

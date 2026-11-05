@@ -16,6 +16,15 @@ const ICONS = {
         <path d="M10.7 9.7h3.2v1.3c.5-.9 1.6-1.6 3.1-1.6 2.6 0 3.3 1.6 3.3 4.1v5.2h-3.4v-4.6c0-1.1-.3-1.9-1.4-1.9s-1.5.8-1.5 1.9v4.6h-3.3z" fill="#fff" />
       </>
     ),
+    // White square, black cut-outs: for the black header and footer.
+    mono: (
+      <>
+        <rect width="24" height="24" rx="4" fill="currentColor" />
+        <circle cx="7" cy="7" r="1.9" fill="#000" />
+        <rect x="5.3" y="9.7" width="3.4" height="9" rx="0.4" fill="#000" />
+        <path d="M10.7 9.7h3.2v1.3c.5-.9 1.6-1.6 3.1-1.6 2.6 0 3.3 1.6 3.3 4.1v5.2h-3.4v-4.6c0-1.1-.3-1.9-1.4-1.9s-1.5.8-1.5 1.9v4.6h-3.3z" fill="#000" />
+      </>
+    ),
   },
   github: {
     color: '#181717',
@@ -73,6 +82,13 @@ const ICONS = {
         <rect x="13" y="9.5" width="9" height="3.4" rx="1.7" fill="#ECB22E" />
       </>
     ),
+    // The single-colour mark (Simple Icons' former Slack icon, CC0), for the black header and footer.
+    mono: (
+      <path
+        fill="currentColor"
+        d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"
+      />
+    ),
   },
   website: {
     color: '#242528',
@@ -101,12 +117,13 @@ const KINDS: Record<string, Social> = {
 };
 export const socialKind = (label: string): Social | undefined => KINDS[label.trim().toLowerCase()];
 
-/** The brand mark alone (decorative: the link around it carries the name). */
-export function SocialIcon({ kind, size = 18 }: { kind: Social; size?: number }) {
-  const icon = ICONS[kind];
+/** The brand mark alone (decorative: the link around it carries the name). `white` is the plain white mark for black surfaces. */
+export function SocialIcon({ kind, size = 18, tone = 'brand' }: { kind: Social; size?: number; tone?: 'brand' | 'white' }) {
+  const icon: { color: string; body: ComponentChildren; mono?: ComponentChildren } = ICONS[kind];
+  const white = tone === 'white';
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{ color: icon.color }} class="flex-none">
-      {icon.body}
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={{ color: white ? '#fff' : icon.color }} class="flex-none">
+      {white ? (icon.mono ?? icon.body) : icon.body}
     </svg>
   );
 }

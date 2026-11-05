@@ -135,6 +135,25 @@ test('the mobile menu opens and closes from the keyboard, and focus returns to t
   await expect(menu).toBeHidden();
 });
 
+test('the header turns into the floating bar once, without changing its height (no flicker)', async ({ page }) => {
+  await page.goto('/');
+  const header = page.locator('[data-site-header]');
+  const height = await header.evaluate((el) => el.offsetHeight);
+  await header.evaluate((el) => {
+    const w = window as unknown as { toggles: number };
+    w.toggles = 0;
+    new MutationObserver(() => w.toggles++).observe(el, { attributes: true, attributeFilter: ['data-scrolled'] });
+  });
+  // Small steps across the 40px threshold: a height change here used to make scroll anchoring flip the state back.
+  for (let i = 0; i < 25; i++) await page.mouse.wheel(0, 2);
+  await expect(header).toHaveAttribute('data-scrolled', '');
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => (window as unknown as { toggles: number }).toggles)).toBe(1);
+  expect(await header.evaluate((el) => el.offsetHeight)).toBe(height);
+  await page.evaluate(() => scrollTo(0, 0));
+  await expect(header).not.toHaveAttribute('data-scrolled');
+});
+
 test('the support page never shows a sample payment code', async ({ page }) => {
   // The Twint QR only comes from Sanity Site settings; sample content has none.
   await page.goto('/donate');

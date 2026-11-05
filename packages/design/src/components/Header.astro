@@ -36,13 +36,16 @@ const path = Astro.url.pathname.replace(/\.html$/, '');
 const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p + '/'));
 const involvedCurrent = isCurrent(INVOLVED.map((i) => i.href));
 const barSocial = social.filter((s) => ['linkedin', 'instagram', 'bluesky'].includes(s.kind));
-const iconLink = 'w-9 h-9 rounded-full bg-white hover:bg-grey flex items-center justify-center';
+// Plain white marks (nav review, 5th November 2026), each in a 40px round hit area for the focus ring.
+const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70';
 ---
 
-<header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white transition-[padding,background-color] duration-300">
-  <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut transition-[border-radius,padding,box-shadow] duration-300">
+<!-- Scrolled once this leaves the viewport. It sits outside the header, so the header's own height can't flip the state back. -->
+<div data-scroll-sentinel aria-hidden="true" class="absolute top-10 left-0 w-px h-px pointer-events-none"></div>
+<header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white">
+  <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
-      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[22px] md:h-7 w-auto" />
+      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" />
     </a>
 
     <nav aria-label="Main" class="hidden md:flex items-center gap-[clamp(14px,1.9vw,28px)] text-[clamp(15px,1.45vw,17px)] whitespace-nowrap">
@@ -79,11 +82,11 @@ const iconLink = 'w-9 h-9 rounded-full bg-white hover:bg-grey flex items-center 
       {
         barSocial.length > 0 && (
           <>
-            <ul class="hidden lg:flex m-0 p-0 list-none items-center gap-1.5" aria-label="ZurichJS on social media">
+            <ul class="hidden lg:flex m-0 p-0 list-none items-center gap-0.5" aria-label="ZurichJS on social media">
               {barSocial.map((s) => (
                 <li>
                   <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class={iconLink}>
-                    <SocialIcon kind={s.kind} size={16} />
+                    <SocialIcon kind={s.kind} size={22} tone="white" />
                   </a>
                 </li>
               ))}
@@ -104,7 +107,7 @@ const iconLink = 'w-9 h-9 rounded-full bg-white hover:bg-grey flex items-center 
 <dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none bg-black text-white border-0">
   <div class="flex flex-col min-h-full">
     <div class="flex items-center justify-between py-4 px-gut">
-      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[22px] w-auto" /></a>
+      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" /></a>
       <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
         <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
@@ -136,8 +139,8 @@ const iconLink = 'w-9 h-9 rounded-full bg-white hover:bg-grey flex items-center 
         <ul class="m-0 p-0 list-none flex flex-wrap gap-2 px-gut pb-8" aria-label="ZurichJS on social media">
           {social.map((s) => (
             <li>
-              <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} class="w-11 h-11 rounded-full bg-white flex items-center justify-center">
-                <SocialIcon kind={s.kind} size={18} />
+              <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} class="w-11 h-11 rounded-full flex items-center justify-center text-white hover:opacity-70">
+                <SocialIcon kind={s.kind} size={24} tone="white" />
               </a>
             </li>
           ))}
@@ -148,24 +151,48 @@ const iconLink = 'w-9 h-9 rounded-full bg-white hover:bg-grey flex items-center 
 </dialog>
 
 <style>
-  /* Scrolled: the bar floats as a black pill with space around it (the conference's nav). */
+  /*
+   * Scrolled: the bar floats as a black pill with space around it (the conference's nav).
+   * The header keeps the same height in both states (8 + 12 + 12 = 16 + 16), so the page below never moves,
+   * and only the colours, the corners, the shadow and the side inset animate.
+   */
+  .site-header {
+    overflow-anchor: none;
+  }
   .site-header[data-scrolled] {
     background-color: transparent;
-    padding: 10px var(--gut) 0;
+    padding: 8px var(--gut) 0;
   }
   .site-header[data-scrolled] .bar {
-    background: #000;
-    border-radius: 9999px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    background-color: #000;
+    border-radius: 40px;
+    padding-top: 12px;
+    padding-bottom: 12px;
     box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
   }
   @media (max-width: 799px) {
+    /* Phones: the bar stays full width and flat. */
     .site-header[data-scrolled] {
+      background-color: #000;
       padding: 0;
     }
     .site-header[data-scrolled] .bar {
       border-radius: 0;
+      padding-top: 16px;
+      padding-bottom: 16px;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header {
+      transition:
+        background-color 300ms ease,
+        padding-inline 300ms ease;
+    }
+    .site-header .bar {
+      transition:
+        background-color 300ms ease,
+        border-radius 300ms ease,
+        box-shadow 300ms ease;
     }
   }
   .mobile-nav::backdrop {
@@ -177,11 +204,15 @@ const iconLink = 'w-9 h-9 rounded-full bg-white hover:bg-grey flex items-center 
 </style>
 
 <script>
-  // Sticky bar: flat at the top of the page, a floating pill after scrolling.
+  // Sticky bar: flat at the top of the page, a floating pill once the sentinel 40px down has scrolled out of view.
   const header = document.querySelector<HTMLElement>('[data-site-header]');
-  const onScroll = () => header?.toggleAttribute('data-scrolled', window.scrollY > 40);
-  onScroll();
-  addEventListener('scroll', onScroll, { passive: true });
+  const sentinel = document.querySelector('[data-scroll-sentinel]');
+  if (header && sentinel) {
+    new IntersectionObserver((entries) => {
+      const e = entries.at(-1);
+      if (e) header.toggleAttribute('data-scrolled', !e.isIntersecting && e.boundingClientRect.top < 0);
+    }).observe(sentinel);
+  }
 
   // Phone menu: a modal dialog (focus stays inside, Escape closes it, focus returns to the button).
   const dialog = document.getElementById('mobile-nav') as HTMLDialogElement | null;

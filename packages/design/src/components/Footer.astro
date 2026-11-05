@@ -112,12 +112,12 @@ const link = 'text-white underline decoration-dotted decoration-1 underline-offs
 
   <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
     <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" loading="lazy" class="h-7 w-auto self-start max-w-full" />
-    <ul class="m-0 p-0 list-none flex flex-wrap gap-2" aria-label="ZurichJS on social media">
+    <ul class="m-0 p-0 list-none flex flex-wrap gap-1 -mx-2.5" aria-label="ZurichJS on social media">
       {
         SOCIAL.map((s) => (
           <li>
-            <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class="w-10 h-10 rounded-full bg-white hover:bg-grey flex items-center justify-center">
-              <SocialIcon kind={s.kind} size={18} />
+            <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class="w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70">
+              <SocialIcon kind={s.kind} size={22} tone="white" />
             </a>
           </li>
         ))

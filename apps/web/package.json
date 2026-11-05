@@ -1,0 +1,35 @@
+{
+  "name": "@zurichjs/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/netlify": "8.2.10",
+    "@astrojs/preact": "6.1.1",
+    "@netlify/blobs": "11.1.7",
+    "@resvg/resvg-js": "2.6.2",
+    "@tailwindcss/vite": "4.3.3",
+    "@zurichjs/agent": "workspace:*",
+    "@zurichjs/content": "workspace:*",
+    "@zurichjs/design": "workspace:*",
+    "@zurichjs/events": "workspace:*",
+    "@zurichjs/forms": "workspace:*",
+    "@zurichjs/integrations": "workspace:*",
+    "@zurichjs/seo": "workspace:*",
+    "astro": "7.4.4",
+    "preact": "10.29.8",
+    "satori": "0.63.2",
+    "tailwindcss": "4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

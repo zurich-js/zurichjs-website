@@ -1,0 +1,200 @@
+---
+/**
+ * Speaker directory. Every card is prerendered. A small script searches
+ * names, roles, companies, bios, talk titles, talk descriptions and talk
+ * topics (case and accents ignored), filters by topic, and keeps both in the
+ * URL (?q=, ?topic=) so searches can be shared and survive reloads and the
+ * back button.
+ */
+import { normalizeSearch, speakerTopics } from '@zurichjs/events';
+import { breadcrumbSchema } from '@zurichjs/seo';
+import { speakersWithTalks } from '@zurichjs/content';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { content } from '~/lib/content';
+
+const { speakers: all, events } = await content();
+const speakers = speakersWithTalks(all);
+// Deterministic order: most recent talk first, then name.
+const dateOf = new Map(events.map((e) => [e.slug, e.startsAt ?? '']));
+const latest = (s: (typeof speakers)[number]) =>
+  s.talks
+    .flatMap((t) => t.eventSlugs.map((x) => dateOf.get(x) ?? ''))
+    .sort()
+    .pop() ?? '';
+const ordered = [...speakers].sort((a, b) => latest(b).localeCompare(latest(a)) || a.name.localeCompare(b.name));
+const topics = speakerTopics(speakers).slice(0, 12);
+const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
+---
+
+<BaseLayout
+  title="Speakers"
+  description="Meet the speakers who have shared their JavaScript knowledge at ZurichJS meetups in Zurich, and see what each of them talked about."
+  keywords={['ZurichJS speakers', 'JavaScript speakers Zurich', 'tech talks Zurich', 'JavaScript meetup Zurich', ...topics.map((t) => t.topic)]}
+  jsonLd={[breadcrumbSchema([{ name: 'Speakers', path: '/speakers' }])]}
+>
+  <PageOpening
+    slot="opening"
+    title="Speakers"
+    sub="Half of our speakers travel in from outside Zurich. We’ve hosted contributors from Node.js, Astro and Qwik, alongside Microsoft MVPs and Google Developer Experts. Here they all are, with what they talked about."
+    compact
+  >
+    <Button href="/cfp" variant="yellow" class="self-start text-[17px]">Speak at a meetup</Button>
+  </PageOpening>
+
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-6" data-speakers>
+    <form role="search" class="flex flex-wrap gap-3 items-center" action="/speakers" method="get" data-search-form>
+      <label class="flex-[1_1_280px] flex min-w-0 relative">
+        <span class="sr-only">Search speakers, talks and topics</span>
+        <input
+          type="search"
+          name="q"
+          data-q
+          placeholder="Name, company, talk or topic"
+          autocomplete="off"
+          enterkeyhint="search"
+          class="flex-1 min-w-0 min-h-[48px] border border-grey-line rounded-pill px-5 text-[17px] bg-white"
+        />
+      </label>
+      <button type="button" data-clear hidden class="min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer [[hidden]]:hidden">Clear search</button>
+    </form>
+
+    {
+      topics.length > 0 && (
+        <div class="flex flex-col gap-2">
+          <h2 id="h-topics" class="m-0 text-[16px] font-bold">
+            Topics people spoke about
+          </h2>
+          <ul class="m-0 p-0 list-none flex flex-wrap gap-2" aria-labelledby="h-topics">
+            {topics.map((t) => (
+              <li>
+                <a
+                  href={`/speakers?topic=${encodeURIComponent(t.topic)}`}
+                  data-topic={normalizeSearch(t.topic)}
+                  class="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-pill border border-black text-[16px] font-bold no-underline text-black bg-white hover:bg-grey aria-[current=true]:bg-black aria-[current=true]:text-white"
+                >
+                  {t.topic}
+                  <span class="font-normal opacity-70">{t.count}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+
+    <p class="m-0 text-[16px] text-ink-2" role="status" aria-live="polite" data-count>{`${ordered.length} speakers`}</p>
+
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-8" data-grid>
+      {ordered.map((s, i) => <SpeakerCard speaker={s} meta={`${s.role}${s.role ? ' · ' : ''}${talkWord(s.talks.length)}`} tone={i % 3 === 0 ? 'yellow' : 'grey'} />)}
+    </div>
+    <Surface class="p-7 flex flex-col gap-2.5 [[hidden]]:hidden" data-empty hidden>
+      <h2 class="m-0 text-[24px] font-bold" data-empty-title>No speakers match.</h2>
+      <p class="m-0 text-[17px] text-ink-2">
+        This list only covers speaker profiles, so a topic can still have come up at a meetup. Try another word, <a href="/events?tab=past" data-events-link class="font-bold text-black">search past events</a>, or propose a talk on it.
+      </p>
+      <div class="flex flex-wrap gap-2.5">
+        <Button href="/cfp" variant="yellow">Propose a talk</Button>
+        <button type="button" data-clear-2 class="min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer">Show all speakers</button>
+      </div>
+    </Surface>
+  </div>
+</BaseLayout>
+
+<script>
+  import { normalizeSearch } from '@zurichjs/events';
+
+  const root = document.querySelector<HTMLElement>('[data-speakers]');
+  if (root) {
+    const form = root.querySelector<HTMLFormElement>('[data-search-form]')!;
+    const input = root.querySelector<HTMLInputElement>('[data-q]')!;
+    const clear = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const clear2 = root.querySelector<HTMLButtonElement>('[data-clear-2]')!;
+    const count = root.querySelector<HTMLElement>('[data-count]')!;
+    const grid = root.querySelector<HTMLElement>('[data-grid]')!;
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-speaker-card]')];
+    const chips = [...root.querySelectorAll<HTMLAnchorElement>('[data-topic]')];
+    const empty = root.querySelector<HTMLElement>('[data-empty]')!;
+    const title = root.querySelector<HTMLElement>('[data-empty-title]')!;
+    const eventsLink = root.querySelector<HTMLAnchorElement>('[data-events-link]')!;
+    let topic = '';
+
+    const render = () => {
+      const q = input.value;
+      const tokens = normalizeSearch(q).split(' ').filter(Boolean);
+      // Name matches first, then everyone else who matches; the page order breaks ties.
+      let shown = 0;
+      const byName = (c: HTMLElement) => tokens.length > 0 && tokens.every((t) => (c.dataset.name ?? '').includes(t));
+      // Reorder the DOM (not just the visual order) so keyboard and screen reader order match.
+      for (const c of [...cards].sort((a, b) => Number(byName(b)) - Number(byName(a)) || cards.indexOf(a) - cards.indexOf(b))) grid.append(c);
+      for (const c of cards) {
+        const hay = c.dataset.search ?? '';
+        const match = tokens.every((t) => hay.includes(t)) && (!topic || (c.dataset.topics ?? '').split('|').includes(topic));
+        // The card is display:flex, which would override the hidden attribute.
+        c.style.display = match ? '' : 'none';
+        if (match) shown++;
+      }
+      // The selected topic is the current filter (aria-current on links; aria-pressed is for buttons).
+      for (const chip of chips) {
+        if (chip.dataset.topic === topic) chip.setAttribute('aria-current', 'true');
+        else chip.removeAttribute('aria-current');
+      }
+      const filtered = tokens.length > 0 || !!topic;
+      clear.hidden = !filtered;
+      empty.hidden = shown > 0;
+      count.textContent = filtered ? `${shown} of ${cards.length} speakers` : `${cards.length} speakers`;
+      const label = [q.trim() && `“${q.trim()}”`, topic && chips.find((c) => c.dataset.topic === topic)?.firstChild?.textContent?.trim()].filter(Boolean).join(' in ');
+      title.textContent = `No speakers match ${label || 'that'}.`;
+      eventsLink.href = q.trim() ? `/events?tab=past&q=${encodeURIComponent(q.trim())}` : '/events?tab=past';
+    };
+
+    const fromUrl = () => {
+      const p = new URLSearchParams(location.search);
+      input.value = p.get('q') ?? '';
+      topic = normalizeSearch(p.get('topic') ?? '');
+      render();
+    };
+    const toUrl = (push: boolean) => {
+      const u = new URL(location.href);
+      if (input.value.trim()) u.searchParams.set('q', input.value);
+      else u.searchParams.delete('q');
+      const chip = chips.find((c) => c.dataset.topic === topic);
+      if (topic && chip) u.searchParams.set('topic', chip.firstChild?.textContent?.trim() ?? topic);
+      else u.searchParams.delete('topic');
+      const next = u.pathname + u.search + u.hash;
+      if (push) history.pushState(null, '', next);
+      else history.replaceState(history.state, '', next);
+    };
+    const reset = () => {
+      input.value = '';
+      topic = '';
+      toUrl(true);
+      render();
+      input.focus();
+    };
+
+    input.addEventListener('input', () => {
+      toUrl(false);
+      render();
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      toUrl(true);
+      render();
+    });
+    for (const chip of chips)
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        topic = topic === chip.dataset.topic ? '' : (chip.dataset.topic ?? '');
+        toUrl(true);
+        render();
+      });
+    clear.addEventListener('click', reset);
+    clear2.addEventListener('click', reset);
+    window.addEventListener('popstate', fromUrl);
+    fromUrl();
+  }
+</script>

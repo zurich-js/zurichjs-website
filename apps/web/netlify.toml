@@ -1,0 +1,114 @@
+# Netlify config for zurichjs.com (docs/v2/RUNBOOK.md).
+#
+# Netlify site settings: Base directory `apps/web` (also set by the root netlify.toml, so deploy previews
+# work before the UI changes), Package directory empty. Every path
+# below is relative to that folder, and pnpm installs the whole workspace from there
+# (checked with @netlify/config's resolveConfig).
+
+[build]
+command = "pnpm --filter @zurichjs/web build"
+publish = "dist"
+
+[build.environment]
+# Astro 7.4 needs Node >= 22.23.4 (same as .nvmrc).
+NODE_VERSION = "22.23.4"
+# The site still has the old app's Next.js plugin installed from the Netlify UI; it fails on an Astro build.
+# The plugin honours this switch (checked in @netlify/plugin-nextjs 5.16.3). Remove the plugin at go-live.
+NETLIFY_NEXT_PLUGIN_SKIP = "true"
+# Production builds must read Sanity; a build that would fall back to sample content fails instead.
+CONTENT_REQUIRE_SANITY = "1"
+# Production builds must list the ImageKit photo archive (IMAGEKIT_PRIVATE_KEY); without it the build fails
+# and the previous deploy stays live. The draft preview site is exempt (packages/content/src/media.ts).
+MEDIA_REQUIRE_IMAGEKIT = "1"
+
+# Deploy previews and branch deploys may fall back to sample content (with a warning) when Sanity is down,
+# and build without the photo archive (pages then say it is unavailable).
+[context.deploy-preview.environment]
+CONTENT_REQUIRE_SANITY = "0"
+MEDIA_REQUIRE_IMAGEKIT = "0"
+[context.branch-deploy.environment]
+CONTENT_REQUIRE_SANITY = "0"
+MEDIA_REQUIRE_IMAGEKIT = "0"
+
+# The scheduled rebuild (every 2 minutes). The webhook is an Astro endpoint, /api/rebuild.
+[functions]
+directory = "netlify/functions"
+
+# Sub-pages of production sections V2 does not have (the section roots are in src/lib/redirects.mjs).
+[[redirects]]
+from = "/workshops/*"
+to = "/events?from=workshops"
+status = 301
+# Old Stripe checkout pages (other than /checkout/success, in src/lib/redirects.mjs).
+[[redirects]]
+from = "/checkout/*"
+to = "/donate"
+status = 301
+[[redirects]]
+from = "/admin/*"
+to = "/"
+status = 301
+[[redirects]]
+from = "/profile/*"
+to = "/"
+status = 301
+[[redirects]]
+from = "/invite/*"
+to = "/about"
+status = 301
+
+# Production OG image URLs (cached by social networks) → static images generated at build.
+[[redirects]]
+from = "/api/og/home"
+to = "/og/home.png"
+status = 301
+[[redirects]]
+from = "/api/og/cfp"
+to = "/og/cfp.png"
+status = 301
+[[redirects]]
+from = "/api/og/cfv"
+to = "/og/cfv.png"
+status = 301
+[[redirects]]
+from = "/api/og/contact"
+to = "/og/contact.png"
+status = 301
+[[redirects]]
+from = "/api/og/partnerships"
+to = "/og/partners.png"
+status = 301
+[[redirects]]
+from = "/api/og/speakers"
+to = "/og/speakers.png"
+status = 301
+[[redirects]]
+from = "/api/og/support"
+to = "/og/donate.png"
+status = 301
+
+# Fingerprinted assets (scripts, styles, the self-hosted Figtree) never change.
+[[headers]]
+for = "/_astro/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/images/*"
+[headers.values]
+Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
+
+# Machine-read files change with every build.
+[[headers]]
+for = "/state-changes.json"
+[headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+# Same security headers as the production next.config.mjs (Netlify adds HSTS on HTTPS itself).
+[[headers]]
+for = "/*"
+[headers.values]
+X-Content-Type-Options = "nosniff"
+X-Frame-Options = "DENY"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"

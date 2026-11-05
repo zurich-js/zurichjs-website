@@ -1,0 +1,161 @@
+{
+  "$comment": "What happens to every production URL in V2. status: ported (same URL), redirect (301 to `to`), pending (ported in a later phase; reported, not failed), descoped / removed (owner decisions, docs/v2/DECISIONS.md; reported, not failed).",
+  "routes": {
+    "/": {
+      "status": "ported"
+    },
+    "/about": {
+      "status": "ported"
+    },
+    "/ai-context": {
+      "status": "ported"
+    },
+    "/buy-us-a-coffee": {
+      "status": "redirect",
+      "to": "/donate"
+    },
+    "/support": {
+      "status": "redirect",
+      "to": "/donate"
+    },
+    "/cfp": {
+      "status": "ported"
+    },
+    "/cfp/form": {
+      "status": "redirect",
+      "to": "/cfp#proposal",
+      "reason": "Opens the proposal form directly (launch restoration, 2026-11-01)."
+    },
+    "/cfv": {
+      "status": "ported"
+    },
+    "/checkout/success": {
+      "status": "redirect",
+      "to": "/events"
+    },
+    "/success": {
+      "status": "redirect",
+      "to": "/donate"
+    },
+    "/conferences/tech-conferences-zurich": {
+      "status": "ported"
+    },
+    "/contact": {
+      "status": "ported"
+    },
+    "/donate": {
+      "status": "ported"
+    },
+    "/event-feedback": {
+      "status": "redirect",
+      "to": "/feedback"
+    },
+    "/events": {
+      "status": "ported"
+    },
+    "/feedback": {
+      "status": "ported"
+    },
+    "/media": {
+      "status": "ported"
+    },
+    "/media-demo": {
+      "status": "redirect",
+      "to": "/media"
+    },
+    "/meetups/ai-ml-zurich": {
+      "status": "ported"
+    },
+    "/meetups/javascript-zurich": {
+      "status": "ported"
+    },
+    "/membership": {
+      "status": "ported"
+    },
+    "/partnerships": {
+      "status": "redirect",
+      "to": "/partners"
+    },
+    "/policies/code-of-conduct": {
+      "status": "ported"
+    },
+    "/policies/privacy-policy": {
+      "status": "ported"
+    },
+    "/policies/refund-policy": {
+      "status": "ported"
+    },
+    "/policies/terms-and-conditions": {
+      "status": "ported"
+    },
+    "/speakers": {
+      "status": "ported"
+    },
+    "/today": {
+      "status": "ported"
+    },
+    "/tshirt": {
+      "status": "redirect",
+      "to": "/donate?from=tshirt",
+      "reason": "T-shirt sales ended (owner); the donate page explains it (?from=tshirt)."
+    },
+    "/waitlist/conf": {
+      "status": "ported"
+    },
+    "/workshops": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/accessibility-fundamentals": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/ai-security-snyk-2026": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/astro-zero-to-hero": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/observability-dynatrace": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/react-architecture": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/react-performance": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/workshops/reliable-ai-agents": {
+      "status": "redirect",
+      "to": "/events?from=workshops",
+      "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
+    },
+    "/admin": {
+      "status": "redirect",
+      "to": "/"
+    },
+    "/profile": {
+      "status": "redirect",
+      "to": "/"
+    },
+    "/invite": {
+      "status": "redirect",
+      "to": "/about"
+    },
+    "/feedback/speaker/[token]": {
+      "status": "ported"
+    }
+  }
+}

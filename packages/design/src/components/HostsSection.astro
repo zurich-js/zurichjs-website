@@ -1,0 +1,49 @@
+---
+import LogoGrid from './LogoGrid.astro';
+import type { Partner } from '@zurichjs/events';
+
+interface Props {
+  /** Venue hosts and other partners, shown at the standard size. */
+  partners: Partner[];
+  /** Current sponsors, highest tier first, shown larger above the rest. */
+  sponsors?: Partner[];
+  /** Everyone who supported ZurichJS before: shown greyed out, in colour on hover. */
+  past?: Partner[];
+  heading?: string;
+  link?: boolean;
+}
+const { partners, sponsors = [], past = [], heading = 'Companies who host and support ZurichJS', link = true } = Astro.props;
+// Champions get the XL logo the tier promises, Builders a large one, everyone else the standard size.
+const xl = sponsors.filter((p) => p.tier === 'champion');
+const lg = sponsors.filter((p) => p.tier === 'builder');
+const rest = sponsors.filter((p) => p.tier !== 'champion' && p.tier !== 'builder');
+---
+
+{
+  partners.length + sponsors.length > 0 && (
+    <section aria-labelledby="h-hosts" class="px-gut flex flex-col gap-[22px]">
+      <h2 id="h-hosts" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
+        {heading}
+      </h2>
+      <div class="flex flex-col gap-3">
+        {past.length > 0 && <h3 class="m-0 text-[19px] font-bold">Thank you to everyone supporting us today</h3>}
+        <LogoGrid partners={xl} size="xl" />
+        <LogoGrid partners={lg} size="lg" />
+        <LogoGrid partners={[...rest, ...partners]} />
+      </div>
+      {
+        past.length > 0 && (
+          <div class="flex flex-col gap-3 mt-4">
+            <h3 class="m-0 text-[19px] font-bold">And thank you to everyone who helped us get here</h3>
+            <LogoGrid partners={past} size="sm" muted />
+          </div>
+        )
+      }
+      {link && (
+        <a href="/partners" class="self-start font-bold text-[18px] underline underline-offset-4">
+          Host a meetup or support the community
+        </a>
+      )}
+    </section>
+  )
+}

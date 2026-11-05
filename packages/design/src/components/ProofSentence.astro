@@ -1,0 +1,33 @@
+---
+/**
+ * Rating and award in one plain sentence, after the main action. The rating part
+ * disappears when the record has no score; the award stays. The score is shown
+ * out of 5 and the award links to its section on the home page (owner, 4th November 2026).
+ */
+import type { AwardRecord, RatingRecord } from '@zurichjs/events';
+
+interface Props {
+  /** null hides the rating; the award stays. */
+  rating: RatingRecord | null;
+  award: AwardRecord;
+}
+const { rating, award } = Astro.props;
+---
+
+<p class="m-0 text-[clamp(18px,1.6vw,20px)] leading-[1.6] text-white max-w-[560px] text-pretty">
+  {
+    rating && (
+      <span>
+        Rated <b>{rating.score}/5</b> on Meetup from{' '}
+        <a href={rating.url} target="_blank" rel="noopener" title={`${rating.source}, checked ${rating.checkedAt}`}>
+          {rating.count} ratings</a
+        >, and{' '}
+      </span>
+    )
+  }
+  <span>
+    {rating ? 'winner' : 'Winner'} of the{' '}
+    <a href="/#award" class="font-bold underline underline-offset-[3px]">2026 Open Source Award</a> for {award.category}{' '}
+    globally.
+  </span>
+</p>

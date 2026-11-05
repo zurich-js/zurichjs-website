@@ -1,0 +1,17 @@
+{
+  "name": "@zurichjs/events",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Framework-free event domain: types, clock-based state, presentation copy, ticketing seam, .ics.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

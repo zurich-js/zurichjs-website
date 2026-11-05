@@ -1,0 +1,151 @@
+---
+/**
+ * The media archive: photos and short clips taken at ZurichJS events, by event,
+ * newest first (ImageKit and Sanity, see @zurichjs/content media.ts), with a
+ * jump list of the events. Clips stay in their event's gallery; there is no
+ * separate clips section (owner, 4th November 2026).
+ * Promotional artwork is not included. Each event has its own gallery page.
+ * When the build could not read the archive, the page says so instead of
+ * looking empty.
+ */
+import { archiveComplete, mediaCounts, mediaForEvent, mediaInFolder } from '@zurichjs/content';
+import { byStartDesc, dateLong, dateParts, dateShort } from '@zurichjs/events';
+import { breadcrumbSchema } from '@zurichjs/seo';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import { Gallery } from '@zurichjs/design/islands/Gallery';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE, content } from '~/lib/content';
+import { countLabel, mediaHref, toGallery } from '~/lib/media';
+
+const { events, media, settings } = await content();
+const withMedia = [...events]
+  .sort(byStartDesc)
+  .map((ev) => ({ ev, items: mediaForEvent(media.items, ev.slug) }))
+  .filter((x) => x.items.length > 0);
+// Grouped by year, newest first, so the archive reads as 2026, 2025, 2024.
+const yearOf = (ev: (typeof withMedia)[number]['ev']) => (ev.startsAt ? dateParts(ev.startsAt).year : 'Undated');
+const byYear = withMedia.reduce<{ year: string; list: typeof withMedia }[]>((out, x) => {
+  const y = yearOf(x.ev);
+  const last = out.at(-1);
+  if (last?.year === y) last.list.push(x);
+  else out.push({ year: y, list: [x] });
+  return out;
+}, []);
+/** "18th Nov": the year is already the row's label. */
+const dayMonth = (iso: string) => {
+  const d = dateParts(iso);
+  return `${d.day}${d.suffix} ${d.mon}`;
+};
+const conference = mediaInFolder(media.items, settings.conferenceMediaFolder);
+// Clips from every event in one place, newest event first. They are short moments from the room, not talk recordings.
+const counts = mediaCounts(media.items);
+const complete = archiveComplete(media);
+const summary = counts.events ? `${countLabel(media.items.filter((m) => m.eventSlug))} from ${counts.events} event${counts.events === 1 ? '' : 's'}.` : '';
+const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo removal request')}`;
+---
+
+<BaseLayout
+  title="Photos and videos"
+  fullTitle="Photos and videos from ZurichJS meetups · ZurichJS"
+  description="Photos and videos from ZurichJS meetups in Zurich: the speakers, the talks and the JavaScript community in the room. Ask us if you want a picture of you removed."
+  keywords={['ZurichJS photos', 'JavaScript meetup Zurich', 'Zurich tech events', 'ZurichJS media gallery']}
+  jsonLd={[breadcrumbSchema([{ name: 'Photos', path: '/media' }])]}
+>
+  <PageOpening slot="opening" title="Photos and videos" sub={`Taken at ZurichJS events. ${summary}`.trim()} compact />
+
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
+    <div class="flex flex-col gap-5">
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[720px]">
+        Want a photo of you removed? Email <a href={removal} class="font-bold text-black">{SITE.email}</a> with a link to it (open the photo and copy the address), and we take it down.
+      </p>
+
+      {
+        !complete && (
+          <Surface class="p-6 text-[17px] leading-[1.55] max-w-[720px]">
+            The photo archive could not be loaded for this version of the site, so {withMedia.length ? 'only some photos are' : 'no photos are'} shown here. Looking for a picture from an event? Email{' '}
+            <a href={`mailto:${SITE.email}`} class="font-bold text-black">
+              {SITE.email}
+            </a>
+            .
+          </Surface>
+        )
+      }
+
+      {
+        withMedia.length > 1 && (
+          <nav aria-label="Events in the archive" class="flex flex-col gap-3">
+            {byYear.map(({ year, list }) => (
+              <div class="grid grid-cols-[56px_minmax(0,1fr)] gap-3 items-start">
+                <span class="min-h-[44px] flex items-center text-[17px] font-bold">{year}</span>
+                <ul class="m-0 p-0 list-none flex flex-wrap gap-2" aria-label={`Events in ${year}`}>
+                  {list.map(({ ev, items }) => (
+                    <li>
+                      <a
+                        href={`#event-${ev.slug}`}
+                        class="inline-flex items-center min-h-[44px] px-4 rounded-pill bg-grey text-black text-[16px] font-bold no-underline hover:bg-grey-soft"
+                        aria-label={`${ev.startsAt ? dateShort(ev.startsAt) : ev.title}: ${ev.title}, ${countLabel(items)}`}
+                      >
+                        {/* The day too: some months had two meetups. */}
+                        {ev.startsAt ? dayMonth(ev.startsAt) : ev.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        )
+      }
+    </div>
+
+    {
+      byYear.map(({ year, list }) => (
+        <div class="flex flex-col gap-[clamp(40px,5vw,64px)]">
+          <h2 id={`year-${year}`} class="m-0 text-[clamp(36px,4.4vw,56px)] leading-none font-bold">
+            {year}
+          </h2>
+          {list.map(({ ev, items }) => (
+        <section class="flex flex-col gap-4 scroll-mt-6" aria-labelledby={`h-${ev.slug}`} id={`event-${ev.slug}`}>
+          <div class="flex justify-between items-baseline flex-wrap gap-x-4 gap-y-1.5">
+            <h3 id={`h-${ev.slug}`} class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
+              <a href={mediaHref(ev.slug)} class="no-underline hover:underline">
+                {ev.title}
+              </a>
+            </h3>
+            <span class="text-[16px] text-ink-2">{[ev.startsAt ? dateLong(ev.startsAt) : '', countLabel(items)].filter(Boolean).join(' · ')}</span>
+          </div>
+          <Gallery client:visible items={toGallery(items)} label={`Photos and videos from ${ev.title}`} max={8} />
+          <div class="flex flex-wrap gap-x-5 gap-y-2 text-[17px]">
+            {items.length > 8 && (
+              <a href={mediaHref(ev.slug)} class="font-bold underline underline-offset-[3px]">
+                {`All ${items.length} from this event`}
+              </a>
+            )}
+            <a href={`/events/${ev.slug}`} class="underline underline-offset-[3px]">
+              The event page
+            </a>
+          </div>
+        </section>
+          ))}
+        </div>
+      ))
+    }
+
+    {
+      conference.length > 0 && (
+        <section class="flex flex-col gap-4" aria-labelledby="h-conf">
+          <h2 id="h-conf" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">
+            ZurichJS Conf
+          </h2>
+          <p class="m-0 text-[17px] text-ink-2">
+            From our annual conference. More on <a href={SITE.confUrl} class="font-bold text-black">conf.zurichjs.com</a>.
+          </p>
+          <Gallery client:visible items={toGallery(conference)} label="Photos from ZurichJS Conf" max={12} />
+        </section>
+      )
+    }
+
+    {complete && withMedia.length === 0 && conference.length === 0 && <p class="m-0 text-[18px] text-ink-2">There are no photos in the archive.</p>}
+  </div>
+</BaseLayout>

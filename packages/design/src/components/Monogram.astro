@@ -1,0 +1,15 @@
+---
+/** Initials in a rounded tile, used wherever a portrait is missing. */
+import { monogramClass, type MonogramSize, type MonogramTone } from '../recipes';
+
+interface Props {
+  initials: string;
+  class?: string;
+  tone?: MonogramTone;
+  size?: MonogramSize;
+  label?: string;
+}
+const { initials, class: extra, tone = 'grey', size = 'tile', label } = Astro.props;
+---
+
+<span role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'} class={monogramClass(tone, size, extra)}>{initials}</span>

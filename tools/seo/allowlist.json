@@ -1,0 +1,6 @@
+{
+  "$comment": "Intentional title/description changes against the production baseline (V2 copy). Every changed route needs a reason here, or compare.mjs flags it.",
+  "copy": {
+    "*": "V2 rewrites page copy and switches the title separator from ' | ' to ' · ' (design handoff, docs/v2/DECISIONS.md). Keywords from production titles are kept where they fit."
+  }
+}

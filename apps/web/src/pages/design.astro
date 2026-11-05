@@ -1,0 +1,248 @@
+---
+/**
+ * Design system gallery: every @zurichjs/design component in every variant, on black and on
+ * white. Noindex, not in the sitemap or llms.txt, linked from nowhere. Rules: docs/design-system.md.
+ * Rendered from fixtures, so it looks the same whatever content Sanity has.
+ */
+import type { Event, Speaker } from '@zurichjs/events';
+import { breakpoints, colors, gutter, headings, radii } from '@zurichjs/design/tokens';
+import { cx, headingSizes, type ButtonSize, type ButtonVariant, type MonogramSize, type MonogramTone, type SurfaceTone } from '@zurichjs/design/recipes';
+import Button from '@zurichjs/design/components/Button.astro';
+import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
+import EventRow from '@zurichjs/design/components/EventRow.astro';
+import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
+import Monogram from '@zurichjs/design/components/Monogram.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import ProofSentence from '@zurichjs/design/components/ProofSentence.astro';
+import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
+import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
+import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import TalkRow from '@zurichjs/design/components/TalkRow.astro';
+import IslandsDemo from '~/components/islands/design/IslandsDemo';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { content, ticketing } from '~/lib/content';
+
+const { award, rating, conference, partners } = await content();
+
+const VARIANTS: ButtonVariant[] = ['yellow', 'black', 'outline-black', 'white', 'grey', 'danger', 'link'];
+const SIZES: ButtonSize[] = ['sm', 'md', 'lg'];
+const TONES: SurfaceTone[] = ['grey', 'soft', 'yellow', 'white', 'black', 'ink', 'danger'];
+const MONO_TONES: MonogramTone[] = ['grey', 'yellow', 'white', 'blue'];
+const MONO_SIZES: MonogramSize[] = ['avatar', 'tile', 'portrait'];
+
+// One fixture event, shown in every state by changing its status and the reference clock.
+const NOW = new Date('2026-11-01T12:00:00+01:00');
+const base: Event = {
+  id: 'design-demo',
+  slug: 'design-demo',
+  title: 'ZurichJS November: Signals, servers and the edge',
+  status: 'scheduled',
+  startsAt: '2026-11-19T18:00:00+01:00',
+  endsAt: '2026-11-19T21:30:00+01:00',
+  venue: { name: 'Example office', street: 'Bahnhofstrasse 1', zip: '8001', city: 'Zurich' },
+  meetupUrl: 'https://www.meetup.com/zurich-js/',
+  description: 'Two talks and a lightning talk.',
+  agenda: [
+    { time: '18:45', kind: 'talk', title: 'Signals', talk: { speakerIds: ['ada'], title: 'Signals', format: 'talk', durationMin: 25 } },
+    { time: '19:20', kind: 'talk', title: 'Edge', talk: { speakerIds: ['grace'], title: 'Edge', format: 'talk', durationMin: 25 } },
+  ],
+  practical: [],
+  photos: [],
+};
+const STATES: { label: string; ev: Event; now: Date }[] = [
+  { label: 'Open', ev: base, now: NOW },
+  { label: 'RSVP soon', ev: { ...base, status: 'rsvp-soon' }, now: NOW },
+  { label: 'Full', ev: { ...base, status: 'full' }, now: NOW },
+  { label: 'To be confirmed', ev: { ...base, status: 'tbc', startsAt: undefined, dateText: 'December 2026' }, now: NOW },
+  { label: 'Postponed', ev: { ...base, status: 'postponed' }, now: NOW },
+  { label: 'Cancelled', ev: { ...base, status: 'cancelled' }, now: NOW },
+  { label: 'Today (live)', ev: base, now: new Date('2026-11-19T19:00:00+01:00') },
+  { label: 'Past', ev: base, now: new Date('2026-12-01T12:00:00+01:00') },
+];
+
+const speaker: Speaker = {
+  id: 'ada',
+  name: 'Ada Example',
+  role: 'Frontend engineer',
+  company: 'Example AG',
+  initials: 'AE',
+  bio: 'Builds design systems.',
+  topics: ['Signals'],
+  tagline: 'Builds design systems.',
+  links: [],
+  talks: [{ title: 'Signals', format: 'Talk', tags: ['Signals'], eventSlugs: ['design-demo'] }],
+};
+
+const swatch = (c: string) => `background:${c}`;
+const TYPE = [
+  ['Display (opening)', headings.display],
+  ['H1', headings.h1],
+  ['H2 (section, lg)', headings.h2],
+  ['H2 (md)', headings.h2Medium],
+  ['H3 (sm)', headings.h3],
+  ['Body', headings.body],
+  ['Small', headings.small],
+] as const;
+---
+
+<BaseLayout title="Design system" description="The ZurichJS design system: tokens, components and islands in every variant, for people working on the site." noindex>
+  <PageOpening
+    slot="opening"
+    title="Design system"
+    sub="Every component in @zurichjs/design, in every variant. Rules are in docs/design-system.md."
+    crumb={{ label: 'Home', href: '/', here: 'Design system' }}
+    pills={[{ text: 'Astro 7' }, { text: 'Tailwind 4' }, { text: 'Noindex', yellow: true }]}
+  />
+
+  <div class="flex flex-col gap-[clamp(56px,7vw,96px)] py-[clamp(48px,6vw,80px)]">
+    <section aria-labelledby="d-colour" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-colour">Colour<Fragment slot="sub">#F1E271 is the only accent. Blue is for focus rings and the logo.</Fragment></SectionHeading>
+      <ul class="list-none m-0 p-0 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {
+          Object.entries(colors).map(([name, value]) => (
+            <li class="flex flex-col gap-2">
+              <span class={cx('block h-20 rounded-card', value === colors.white && 'border border-grey-frame')} style={swatch(value)} />
+              <span class="text-[16px] font-bold">{name}</span>
+              <code class="text-[14px] text-grey-text">{value}</code>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="d-type" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-type">Type<Fragment slot="sub">Figtree, variable 300–900, self-hosted through the Astro Fonts API.</Fragment></SectionHeading>
+      <ul class="list-none m-0 p-0 flex flex-col gap-5">
+        {
+          TYPE.map(([label, size]) => (
+            <li class="flex flex-col gap-1">
+              <code class="text-[14px] text-grey-text">
+                {label} · {size}
+              </code>
+              <span class="font-bold leading-[1.1]" style={`font-size:${size}`}>
+                JavaScript in Zurich
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="flex flex-col gap-3">
+        {
+          (Object.keys(headingSizes) as (keyof typeof headingSizes)[]).map((s) => (
+            <SectionHeading size={s}>
+              SectionHeading size="{s}"<Fragment slot="sub">With a sub line.</Fragment>
+            </SectionHeading>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="d-shape" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-shape">Radius, breakpoint and gutter</SectionHeading>
+      <div class="grid gap-4 md:grid-cols-3">
+        <div class="bg-grey rounded-pill px-6 py-4 font-bold">pill · {radii.pill}</div>
+        <div class="bg-grey rounded-card px-6 py-4 font-bold">card · {radii.card}</div>
+        <div class="bg-grey rounded-block px-6 py-4 font-bold">block · {radii.block}</div>
+      </div>
+      <p class="m-0 text-[18px] leading-[1.55] max-w-[720px]">
+        One layout breakpoint at <code>{breakpoints.md}</code> (<code>md:</code>); <code>lg:</code> ({breakpoints.lg}) only for wide grids. The side gutter is {gutter.mobile} on phones and {gutter.desktop} from the breakpoint, centring content in a {gutter.column} column.
+      </p>
+      <div class="bg-yellow rounded-card"><div class="bg-white mx-gut py-4 text-center font-bold rounded-card">.mx-gut content edge</div></div>
+    </section>
+
+    <section aria-labelledby="d-button" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-button">Button<Fragment slot="sub">Pills. One yellow primary action per view.</Fragment></SectionHeading>
+      {
+        SIZES.map((size) => (
+          <div class="flex flex-wrap gap-3 items-center">
+            {VARIANTS.map((v) => (
+              <Button variant={v} size={size} href="#d-button">
+                {`${v} · ${size}`}
+              </Button>
+            ))}
+            <Button variant="outline-black" size={size} type="button">
+              {`<button> · ${size}`}
+            </Button>
+          </div>
+        ))
+      }
+      <div class="bg-black rounded-block p-[clamp(24px,3vw,40px)] flex flex-wrap gap-3">
+        <Button href="#d-button">yellow on black</Button>
+        <Button variant="outline-white" href="#d-button">outline-white</Button>
+        <Button variant="white" href="#d-button">white</Button>
+        <Button href="https://www.meetup.com/zurich-js/" variant="outline-white">External link</Button>
+      </div>
+    </section>
+
+    <section aria-labelledby="d-surface" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-surface">Surface<Fragment slot="sub">Groups related content. Never around a single paragraph.</Fragment></SectionHeading>
+      <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {
+          TONES.map((tone) => (
+            <Surface tone={tone} class="p-6 flex flex-col gap-2">
+              <strong class="text-[20px]">{tone}</strong>
+              <span class="text-[16px]">Two related lines grouped together.</span>
+            </Surface>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="d-mono" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-mono">Monogram</SectionHeading>
+      <div class="grid gap-4 grid-cols-2 md:grid-cols-4 items-start">
+        {MONO_TONES.map((tone) => <Monogram initials="ZJ" tone={tone} size="tile" label={`${tone} tile`} />)}
+      </div>
+      <div class="flex gap-4 items-center">
+        {MONO_SIZES.filter((s) => s === 'avatar').map((size) => MONO_TONES.map((tone) => <Monogram initials="AE" tone={tone} size={size} class="w-[52px] h-[52px]" />))}
+        <div class="w-[200px]"><Monogram initials="AE" size="portrait" tone="yellow" /></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="d-events" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-events">EventRow in every state<Fragment slot="sub">State comes from the editorial status and the clock (@zurichjs/events).</Fragment></SectionHeading>
+      <ul class="list-none m-0 p-0 flex flex-col gap-4">
+        {
+          STATES.map((s) => (
+            <li class="flex flex-col gap-2">
+              <code class="text-[14px] text-grey-text">{s.label}</code>
+              <EventRow ev={s.ev} now={s.now} ticketing={ticketing} />
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section aria-labelledby="d-talks" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-talks">TalkRow and SpeakerCard</SectionHeading>
+      <TalkRow t={{ title: 'Signals without the hype', speakers: [speaker], date: 'Sep 2026', format: 'Talk', href: '#d-talks' }} />
+      <div class="grid gap-4 grid-cols-2 md:grid-cols-4">
+        <SpeakerCard speaker={speaker} meta="1 talk" />
+        <SpeakerCard speaker={{ ...speaker, id: 'grace', name: 'Grace Example', initials: 'GE' }} meta="2 talks" tone="yellow" />
+      </div>
+    </section>
+
+    <section aria-labelledby="d-proof" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-proof">ProofSentence and LogoGrid<Fragment slot="sub">Rating and award in one sentence. No "/5".</Fragment></SectionHeading>
+      <div class="bg-black text-white rounded-block p-[clamp(24px,3vw,40px)]"><ProofSentence rating={rating} award={award} /></div>
+      <LogoGrid partners={partners.filter((p) => !p.delisted).slice(0, 6)} />
+    </section>
+
+    <section aria-labelledby="d-islands" class="px-gut flex flex-col gap-6">
+      <SectionHeading id="d-islands">Islands (Preact)<Fragment slot="sub">StarRating, fields with hint and error, Button and Modal.</Fragment></SectionHeading>
+      <IslandsDemo client:visible />
+    </section>
+
+    <ConferenceModule conference={conference} placement="design" />
+    <div class="px-gut"><SpeakCta /></div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Token values in Figtree, not a system monospace, so the gallery renders the same on every machine (visual baselines). */
+  code {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+/** One event in the list: date tile, status, title, one line of practical detail. */
+import { dateParts, eventHref, presentEvent, talkCount, type Event, type TicketingProvider } from '@zurichjs/events';
+import { cx } from '../recipes';
+
+interface Props {
+  ev: Event;
+  /** Reference clock (build time). */
+  now: Date;
+  ticketing?: TicketingProvider;
+}
+const { ev, now, ticketing } = Astro.props;
+const p = presentEvent(ev, { now, ticketing });
+const upcoming = p.state !== 'past';
+const parts = ev.startsAt ? dateParts(ev.startsAt) : { mon: ev.dateText?.slice(0, 3) ?? 'TBC', day: '?', suffix: '', year: ev.dateText?.slice(-4) ?? '' };
+const status = upcoming ? p.stateLabel : ev.recap ? 'Recap' : 'Past';
+const n = talkCount(ev);
+const meta = upcoming ? `${n} talk${n === 1 ? '' : 's'} · ${p.venueShort} · Free` : `${n} talk${n === 1 ? '' : 's'}${ev.photos.length ? ' · Photos' : ''}`;
+---
+
+<a
+  href={eventHref(ev)}
+  data-event-row
+  data-upcoming={String(upcoming)}
+  data-search={`${ev.title} ${ev.description} ${ev.venue?.name ?? ''}`.toLowerCase()}
+  class="no-underline text-black w-full text-left rounded-card bg-white hover:bg-grey grid grid-cols-[80px_minmax(0,1fr)] gap-[clamp(16px,2vw,28px)] items-center p-3.5 -mx-3.5 box-content"
+>
+  <span class={cx('flex flex-col items-center justify-center h-20 rounded-2xl', upcoming ? 'bg-black text-white' : 'bg-grey')}>
+    <span class="text-[14px] font-bold">{parts.mon}</span>
+    <span class="text-[30px] font-bold leading-none">{parts.day}<span class="text-[15px] align-top">{parts.suffix}</span></span>
+    <span class="text-[13px]">{parts.year}</span>
+  </span>
+  <span class="flex flex-col gap-1.5 min-w-0">
+    <span class="text-[15px] font-bold text-ink-2">Meetup · {status}</span>
+    <span class="text-[clamp(19px,2vw,23px)] font-bold leading-tight text-pretty">{ev.title}</span>
+    <span class="text-[16px] text-ink-2">{meta}</span>
+  </span>
+</a>

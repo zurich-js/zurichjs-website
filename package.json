@@ -17,13 +17,15 @@
     "seo:check": "node tools/seo/compare.mjs",
     "e2e": "playwright test",
     "agent": "tsx tools/agent-cli.ts",
-    "speaker-link": "tsx tools/speaker-profile-link.ts"
+    "speaker-link": "tsx tools/speaker-profile-link.ts",
+    "membership:import": "tsx tools/membership-import.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@playwright/test": "1.63.0",
     "@types/node": "22.15.3",
     "@zurichjs/agent": "workspace:*",
+    "@zurichjs/membership": "workspace:*",
     "husky": "9.1.7",
     "knip": "6.43.0",
     "lint-staged": "15.5.2",

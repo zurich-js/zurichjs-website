@@ -1,0 +1,17 @@
+{
+  "name": "@zurichjs/membership",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Verein membership domain: levels, the status machine, the member store (in-memory and Supabase), CSV import.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

@@ -412,3 +412,12 @@ The proof sentence now reads "Rated 4.9/5 on Meetup from 199 ratings, and winner
 - **Yellow:** "Speak at a meetup" is the only large yellow section; no yellow text highlights; no yellow footer link.
 - **Footer:** the conference's layout (who we are, link columns, stay in the know, wordmark and social icons).
 - **The conference module** is a development placeholder: shown with `pnpm dev`, or when a build sets `SHOW_PREVIEW_MODULES=true` (use only on password-protected deploy previews), never on the public site.
+
+## Verein membership goes self-serve (owner, 5th November 2026)
+
+Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
+
+- **Signed off by the owner:** the phases in that plan; Supabase Pro for the production member database (about USD 25 a month, the price to confirm when subscribing; the owner subscribes); memberships charged through Stripe, which changes the AGENTS.md payments rule; and updating the privacy policy and terms for it (drafted in a later phase, the owner approves the text).
+- **Member data lives in Supabase,** not Sanity: row-level security, a private bucket for signed declarations, an append-only audit log. Sanity keeps only public content.
+- **Phase 1 is the data layer only:** `@zurichjs/membership` (levels, status machine, store), the first migration and the CSV import. No page, route or email changes yet, so `/membership` still sends requests as before.
+- **The database is tested on a local Postgres** with a stand-in for Supabase's roles and auth (`supabase/tests/supabase-stub.sql`), because Docker (and so `supabase start`) is not available in CI or agent sessions. The tests skip when Postgres is not installed. The real staging project still has to be checked before production.

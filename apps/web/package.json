@@ -21,6 +21,7 @@
     "@zurichjs/events": "workspace:*",
     "@zurichjs/forms": "workspace:*",
     "@zurichjs/integrations": "workspace:*",
+    "@zurichjs/membership": "workspace:*",
     "@zurichjs/seo": "workspace:*",
     "astro": "7.4.4",
     "preact": "10.29.8",

@@ -31,6 +31,9 @@ importers:
       '@zurichjs/agent':
         specifier: workspace:*
         version: link:packages/agent
+      '@zurichjs/membership':
+        specifier: workspace:*
+        version: link:packages/membership
       husky:
         specifier: 9.1.7
         version: 9.1.7
@@ -137,6 +140,9 @@ importers:
       '@zurichjs/integrations':
         specifier: workspace:*
         version: link:../../packages/integrations
+      '@zurichjs/membership':
+        specifier: workspace:*
+        version: link:../../packages/membership
       '@zurichjs/seo':
         specifier: workspace:*
         version: link:../../packages/seo
@@ -264,6 +270,15 @@ importers:
       '@zurichjs/forms':
         specifier: workspace:*
         version: link:../forms
+    devDependencies:
+      '@zurichjs/config':
+        specifier: workspace:*
+        version: link:../config
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/membership:
     devDependencies:
       '@zurichjs/config':
         specifier: workspace:*

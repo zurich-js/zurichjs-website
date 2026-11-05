@@ -188,3 +188,29 @@ Without the key (no `STRIPE_*` variables), "Continue to secure payment" answers 
 ## Membership requests locally
 
 `/api/verein-inquiry` charges nothing. Without `RESEND_API_KEY` and a Slack channel it logs a stub line and still answers `{ ok: true }`, so a local request sends nothing. The organisers' email lists name, email, tier, billing cycle, "Fee shown" (from `apps/web/src/lib/membership.ts`, the same table as the page) and the message. Change fees or benefits only in that file; the page, the API and the tests follow.
+
+## Member database (Supabase)
+
+Self-serve membership is being built in phases (`docs/v2/MEMBERSHIP.md`). Phase 1 adds the database and the import; nothing on the site uses it yet.
+
+**Set up (owner, once):**
+
+1. Create two Supabase projects in an EU region: `zurichjs-members-staging` and `zurichjs-members` (production, Pro plan so it is never paused).
+2. Apply `supabase/migrations/*.sql` in order, staging first (Supabase SQL editor, or `supabase db push` with the CLI linked to the project).
+3. Check the staging project by hand once: as a signed-in test user, `select * from members` fails, `select name from members` returns only that user's row; the `declarations` and `member-documents` buckets are private.
+
+| Variable                    | Where                                    | Used by                                                                             |
+| --------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| `SUPABASE_URL`              | functions and organisers' shells         | the member store, the import                                                        |
+| `SUPABASE_SERVICE_ROLE_KEY` | functions and organisers' shells, secret | the same; bypasses row-level security, so never `PUBLIC_` and never in browser code |
+
+**Import existing members** (signed on paper, paid by hand). The CSV columns are described in `packages/membership/src/import.ts`; put each scanned declaration PDF next to the CSV.
+
+```bash
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… pnpm membership:import members.csv           # dry run: lists every member, writes nothing
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… pnpm membership:import members.csv --apply   # writes
+```
+
+The dry run stops on any problem (with line numbers) and on emails already in the database. With `--apply`, each member becomes "paid by hand until `paid_until`", the PDF goes to the private `declarations` bucket with its SHA-256, and the creation is in the audit log. Run it on staging first: `--apply` has been tested only against the local stand-in, not a real project yet.
+
+**Tests:** `pnpm test` runs the migration on a throwaway local Postgres (needs the `postgresql` package; skipped without it) and checks the access rules.

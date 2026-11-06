@@ -1,0 +1,64 @@
+---
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import MembershipForm from '~/components/islands/forms/MembershipForm';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+
+// Member accounts on (docs/v2/MEMBERSHIP.md): requests go through /membership/account instead of email.
+const applyOnline = Boolean((import.meta.env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL) && (import.meta.env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY));
+
+// What members' fees pay for (owner, 3rd November 2026). Speaker travel is not listed: meetup talks don't cover it (see /cfp).
+const FEES = [
+  ['Food and drinks', 'On the evenings that no host or sponsor covers.'],
+  ['Subscriptions', 'Meetup.com and the tools that keep the community running.'],
+  ['Team travel', 'Travel for the organising team.'],
+];
+---
+
+<BaseLayout
+  title="Membership"
+  fullTitle="Membership · Join the ZurichJS Association"
+  description="Join ZurichJS as a member of the Swiss JavaScript Group association. Support the Zurich JavaScript community as a Basic Member or Supporter."
+  keywords={['ZurichJS membership', 'Swiss JavaScript Group', 'Verein Zurich', 'JavaScript community Zurich', 'support ZurichJS']}
+>
+  <PageOpening
+    slot="opening"
+    title="Become a member"
+    sub={`ZurichJS is run by the ${SITE.association}, a registered Swiss association (Verein). Members fund the meetups and have a say in how the community grows.`}
+  >
+    <p class="m-0 text-[17px] text-grey-light max-w-[700px]">Coming to meetups is free and never needs a membership.</p>
+  </PageOpening>
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+    <MembershipForm client:load applyOnline={applyOnline} />
+
+    <section aria-labelledby="h-fees" class="flex flex-col gap-5 max-w-[880px]">
+      <h2 id="h-fees" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where the fees go</h2>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+        {
+          FEES.map(([h, d]) => (
+            <Surface class="p-6 flex flex-col gap-1.5">
+              <h3 class="m-0 text-[20px] font-bold">{h}</h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{d}</p>
+            </Surface>
+          ))
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="h-free" class="flex flex-col gap-4 max-w-[880px]">
+      <h2 id="h-free" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Membership is optional</h2>
+      <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+        Every meetup stays free and open to everyone, member or not. Members are how we keep it that way: their fees pay for the food and drinks, the tools and the travel behind each evening. If you would rather not join, a one-off or monthly donation helps just as much.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <Button href="/donate#donate" variant="black">Donate once or monthly</Button>
+        <Button href="/donate" variant="outline-black">Other ways to help</Button>
+      </div>
+      <p class="m-0 text-[17px] text-ink-2">
+        Questions about membership? <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a>
+      </p>
+    </section>
+  </div>
+</BaseLayout>

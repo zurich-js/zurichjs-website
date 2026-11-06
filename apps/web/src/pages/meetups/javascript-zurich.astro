@@ -1,0 +1,199 @@
+---
+/** Landing page for "JavaScript meetups in Zurich" searches. Copy and FAQ from production; events from content. */
+import { faqSchema, organizationSchema } from '@zurichjs/seo';
+import LandingCta from '@zurichjs/design/components/landing/LandingCta.astro';
+import LandingEvents from '@zurichjs/design/components/landing/LandingEvents.astro';
+import LandingFaq from '@zurichjs/design/components/landing/LandingFaq.astro';
+import PointList from '@zurichjs/design/components/landing/PointList.astro';
+import TopicGroups from '@zurichjs/design/components/landing/TopicGroups.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { BUILD_TIME, SITE, content, nextMeetupHref, ticketing } from '~/lib/content';
+
+const nextHref = await nextMeetupHref();
+const { events } = await content();
+
+// Verbatim from production: these answers feed the FAQPage JSON-LD and the visible FAQ.
+const faqs = [
+  {
+    question: 'What are the best JavaScript meetups in Zurich?',
+    answer:
+      'ZurichJS is the premier JavaScript and TypeScript community in Zurich, Switzerland. We host regular free meetups featuring expert speakers covering React, Node.js, Vue, Angular, and modern web development. Our community welcomes developers of all levels from Zurich, Winterthur, Basel, Zug, and nearby German cities like Konstanz.',
+  },
+  {
+    question: 'Where can I find JavaScript events in Zurich?',
+    answer:
+      'ZurichJS hosts monthly JavaScript meetups in Zurich at various tech company offices. Visit zurichjs.com/events to see upcoming JavaScript, TypeScript, React, and Node.js events. All our regular meetups are free to attend.',
+  },
+  {
+    question: 'How do I join the JavaScript community in Zurich?',
+    answer:
+      'Join ZurichJS by attending our free monthly meetups, following us on Twitter @zurichjs, joining our Meetup.com group, or visiting zurichjs.com. We welcome JavaScript developers, TypeScript enthusiasts, and web developers of all skill levels.',
+  },
+  {
+    question: 'Are there TypeScript meetups in Zurich?',
+    answer:
+      'Yes! ZurichJS covers both JavaScript and TypeScript. Our meetups regularly feature TypeScript talks, workshops, and discussions. Many of our speakers present on TypeScript best practices, type-safe development, and modern TypeScript features.',
+  },
+  {
+    question: 'What topics are covered at ZurichJS meetups?',
+    answer:
+      'ZurichJS meetups cover JavaScript, TypeScript, React, Vue, Angular, Node.js, web performance, AI/ML integration, serverless, GraphQL, testing, accessibility, and modern web development practices. We also host specialized workshops.',
+  },
+];
+
+const STATS = [
+  { n: '900+', h: 'Active members', d: 'Developers from Zurich, Winterthur, Basel, and beyond. Consistent 70-80% attendance rate.', tone: 'grey' as const },
+  { n: 'Free', h: 'Monthly meetups', d: 'Every meetup is free. A non-profit funded by partners, members and donations.', tone: 'grey' as const },
+  { n: 'Juniors to CTOs', h: 'Real connections', d: 'From juniors to CTOs. Technical exchange and networking that happens naturally.', tone: 'grey' as const },
+];
+
+const WORKS = [
+  { t: 'Consistent rhythm', d: 'Monthly events that people trust. Same quality, every time. 50-100 RSVPs per meetup with 70-80% actual attendance.' },
+  { t: 'Real growth', d: 'Organic expansion through word of mouth. New members join monthly while loyal faces keep returning. This balance lets us scale without losing character.' },
+  { t: 'Community sustains itself', d: 'After almost every event, new volunteers step forward. Members give feedback. Speakers refine their talks. It’s become our DNA.' },
+  { t: 'Geographic reach', d: 'People travel from Winterthur, Basel, Zug, St. Gallen, even Konstanz. Our workshops showed us developers will cross borders to be part of this.' },
+  { t: 'Lasting impact', d: 'Talks live on through recap posts, SEO-indexed event pages, social channels. Content amplifies long after the event ends.' },
+  { t: 'Non-profit model', d: 'Registered Swiss association. Funded by community donations. Every franc goes back into better events, better speakers, better experiences.' },
+];
+
+const TOPICS = [
+  { title: 'Frontend development', items: ['React & Next.js', 'Vue & Nuxt.js', 'Angular', 'Svelte & SvelteKit', 'Web Components', 'CSS-in-JS & Tailwind'] },
+  { title: 'Backend & full stack', items: ['Node.js & Express', 'Deno & Bun', 'GraphQL & REST APIs', 'Serverless & Edge Computing', 'Database integration', 'Real-time applications'] },
+  { title: 'Modern JavaScript', items: ['TypeScript', 'ES2024+ features', 'Testing & TDD', 'Build tools & bundlers', 'Performance optimization', 'Web security'] },
+  { title: 'Emerging technologies', items: ['AI & Machine Learning', 'WebAssembly', 'Progressive Web Apps', 'Web3 & Blockchain', 'IoT with JavaScript', 'Mobile development'] },
+];
+
+const WHO = [
+  { t: 'Beginners', d: 'Learn from experienced developers and get started with modern web development.' },
+  { t: 'Intermediate developers', d: 'Deepen your knowledge and discover new frameworks and tools.' },
+  { t: 'Senior engineers', d: 'Share your expertise, stay current with latest trends, and network.' },
+  { t: 'Career changers', d: 'Connect with the community and learn about job opportunities.' },
+  { t: 'Students', d: 'Get real-world insights and meet potential employers.' },
+  { t: 'Tech leads & CTOs', d: 'Scout talent and stay updated on technology trends.' },
+];
+
+const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 'Konstanz (Germany)', 'Baden', 'Lucerne', 'Bern'];
+---
+
+<BaseLayout
+  title="JavaScript Meetups in Zurich"
+  fullTitle="JavaScript Meetups in Zurich · ZurichJS · Premier JS & TypeScript Community"
+  description="Free monthly JavaScript and TypeScript meetups in Zurich: expert speakers on React, Node.js, Vue and Angular. Developers from Winterthur, Basel and Zug welcome."
+  keywords={[
+    'JavaScript Zurich',
+    'JavaScript meetup Zurich',
+    'TypeScript Zurich',
+    'JS meetup Zurich',
+    'Web development Zurich',
+    'React meetup Zurich',
+    'Node.js Zurich',
+    'Vue meetup Zurich',
+    'Angular Zurich',
+    'Frontend development Zurich',
+    'Tech meetup Zurich',
+    'Programming events Zurich',
+    'Software engineering Zurich',
+    'Developer community Switzerland',
+    'Coding meetup Zurich',
+    'JavaScript Switzerland',
+    'Tech events Zurich',
+    'Developer meetup Zurich',
+    'JavaScript events Zurich',
+    'TypeScript meetup Switzerland',
+  ]}
+  geo
+  jsonLd={[organizationSchema(), faqSchema(faqs)]}
+>
+  <PageOpening slot="opening" title="JavaScript meetups in Zurich">
+    <Fragment slot="sub">
+      In November 2024, we hosted our first JavaScript meetup in Zurich with nothing but personal savings and a belief that this city’s developer community deserved better. Today, <strong>ZurichJS</strong> brings together 900+ developers every month: people who
+      travel from Basel, Winterthur, even across borders, because there’s something powerful about being in the same room with people who don’t look or think exactly like you.
+    </Fragment>
+    <div class="flex flex-wrap gap-3 pt-1.5">
+      <Button href={nextHref} variant="yellow" grow>See the next meetup</Button>
+      <Button href="/events" variant="outline-white" grow>View upcoming events</Button>
+    </div>
+  </PageOpening>
+
+  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+    <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
+      <h2 id="h-why" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Why we started this</h2>
+      <div class="flex flex-col gap-4 text-[18px] leading-[1.6] text-ink-2 max-w-[680px]">
+        <p class="m-0">
+          After the pandemic, Zurich’s developer meetup scene had become a piece of history. Monthly gatherings disappeared. The energy was gone. In July 2024, our founders met at a ReactJS meetup and realized: the Zurich tech space is filled with potential, and we
+          needed to shape that into reality.
+        </p>
+        <p class="m-0">
+          Our first event validated everything. 70% confirmed attendance. People showing up not just for the tech, but for face-to-face connection across backgrounds, languages, and experience levels. Because in an age of online everything, there’s value in
+          seeing who’s actually in your city and realizing you belong in this industry.
+        </p>
+        <p class="m-0 text-black font-bold">Less than a year later, we’re a registered Swiss non-profit association, recognized across Europe, hosting consistent events that people trust.</p>
+      </div>
+    </section>
+
+    <section aria-label="ZurichJS in numbers" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+      {
+        STATS.map((s) => (
+          <Surface tone={s.tone} class="p-7 flex flex-col gap-2.5">
+            <div class="text-[clamp(30px,3.2vw,44px)] leading-[1.05] font-bold">{s.n}</div>
+            <h3 class="m-0 text-[22px] font-bold">{s.h}</h3>
+            <p class="m-0 text-[17px] leading-[1.55]">{s.d}</p>
+          </Surface>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="h-built" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
+      <div class="flex flex-col gap-4 max-w-[760px]">
+        <h2 id="h-built" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">How we built this</h2>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          We started with zero. No social media followers. No sponsors. No speakers. Just a LinkedIn page, an inactive Meetup group with no past events, and relationships that let us host in borrowed spaces.
+        </p>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          What we did have: a belief that <strong class="text-black">Trust, Authenticity, and Quality</strong> matter more than scale. That conference-level experiences can happen in relaxed meetup spaces. That everyone should feel included, regardless of background
+          or experience level.
+        </p>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">What makes this work</h3>
+        <PointList items={WORKS} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Topics we cover</h3>
+        <TopicGroups groups={TOPICS} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2.5">
+          <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Who should join?</h3>
+          <p class="m-0 text-[18px] leading-[1.55] text-ink-2">ZurichJS welcomes everyone interested in JavaScript and web development:</p>
+        </div>
+        <PointList items={WHO} min={280} />
+      </div>
+
+      <div class="flex flex-col gap-5 max-w-[880px]">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Location & accessibility</h3>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          Our meetups are hosted in central Zurich at tech company offices, making them easily accessible by public transport. We regularly welcome attendees from:
+        </p>
+        <ul class="m-0 p-0 list-none flex flex-wrap gap-2">
+          {CITIES.map((c) => <li class="text-[17px] font-bold py-2 px-4 rounded-pill bg-grey">{c}</li>)}
+        </ul>
+      </div>
+    </section>
+
+    <LandingEvents events={events} now={BUILD_TIME} ticketing={ticketing} meetupGroupUrl={SITE.meetupGroupUrl} id="h-next" title="Next JavaScript meetups in Zurich" sub="Talks, food and conversation. Free to attend, in English, and fine to come alone." />
+
+    <LandingFaq faqs={faqs} />
+
+    <LandingCta id="h-join" title="Ready to join Zurich’s JavaScript community?" text="Don’t miss out on the next JavaScript meetup in Zurich. Join our community today.">
+      <Button href="/events" variant="yellow" grow>View upcoming events</Button>
+      <Button href="/cfp" variant="white" grow>Become a speaker</Button>
+    </LandingCta>
+  </div>
+</BaseLayout>

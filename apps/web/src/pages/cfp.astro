@@ -1,0 +1,20 @@
+---
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import CfpForm, { CFP_SUB } from '~/components/islands/forms/CfpForm';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { nextMeetupHref } from '~/lib/content';
+
+const nextHref = await nextMeetupHref();
+---
+
+<BaseLayout
+  title="Call for Papers"
+  fullTitle="Call for Papers · Speak at a ZurichJS Meetup"
+  description="Propose a talk for a ZurichJS meetup in Zurich: a 10-minute lightning talk or a 20-minute full talk. First-time speakers welcome, with help from the organisers."
+  keywords={['call for papers', 'CFP Zurich', 'speak at a meetup', 'JavaScript talk Zurich', 'tech talk proposal', 'ZurichJS speakers']}
+>
+  <PageOpening slot="opening" title="Speak at a meetup"><span slot="sub" id="cfp-sub">{CFP_SUB}</span></PageOpening>
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)]">
+    <CfpForm client:load nextHref={nextHref} />
+  </div>
+</BaseLayout>

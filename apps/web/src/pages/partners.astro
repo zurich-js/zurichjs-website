@@ -1,0 +1,438 @@
+---
+/**
+ * /partners: who you reach, the ways to partner, the sponsorship packages, the
+ * partners who already support us, then the inquiry form. Hosting and food are
+ * ways to help, never paid packages. Conference sponsorship is separate
+ * (conf.zurichjs.com/sponsorship). Sources: packages/content/src/partners.ts.
+ */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import PartnersForm from '~/components/islands/forms/PartnersForm';
+import Button from '@zurichjs/design/components/Button.astro';
+import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE, content, nextMeetupHref } from '~/lib/content';
+import SponsorTiers from '~/components/SponsorTiers.astro';
+import {
+  AUDIENCE_INTERESTS,
+  AUDIENCE_PROFILE,
+  PROSPECTUS_MAILTO,
+  REACH_AS_OF,
+  REACH_COUNTRIES,
+  REACH_STATS,
+  SPONSORSHIP_TIERS,
+} from '@zurichjs/content';
+import { PAGE_PHOTOS } from '~/lib/photos';
+import { groupPartners, partnerPeriod } from '@zurichjs/events';
+
+const { partners } = await content();
+const groups = groupPartners(partners);
+const nextHref = await nextMeetupHref();
+
+// Lowest to highest, the order people expect to compare prices in (Bogdan's review).
+const sponsorTiers = SPONSORSHIP_TIERS.filter((t) => t.id !== 'host').reverse();
+// The billing switch over the packages: monthly is the default (owner, 3rd November 2026).
+const BILLING = [
+  { key: 'Monthly', note: 'The same benefits, paid month by month while you sponsor.' },
+  { key: 'Yearly', note: 'Twelve months for the price of ten: 2 months free.' },
+  { key: 'One-time', note: 'A single contribution. Ask us what it covers when we plan it together.' },
+];
+const UNIT: Record<string, string> = { Monthly: 'per month', Yearly: 'per year', 'One-time': 'once' };
+const hostTier = SPONSORSHIP_TIERS.find((t) => t.id === 'host')!;
+const travel = hostTier.prices.find((p) => p.label.includes('travel'));
+const CATEGORIES = [
+  {
+    id: 'venues',
+    h: 'Venue partners',
+    sub: 'Companies that have opened their spaces for ZurichJS meetups.',
+    list: groups.venues,
+  },
+  { id: 'conferences', h: 'Conference partners', sub: 'Conferences that offer ZurichJS members discounts and special access to their events.', list: groups.conferences },
+  {
+    id: 'communities',
+    h: 'Community partners',
+    sub: 'Fellow tech communities we collaborate with to strengthen the JavaScript ecosystem in our region.',
+    list: groups.communities,
+  },
+  {
+    id: 'supporting',
+    h: 'Supporting partners',
+    sub: 'Companies that provide resources, tools and services that help us run ZurichJS.',
+    list: groups.supporting,
+  },
+];
+const previous = [...groups.pastSponsors, ...groups.pastPartners];
+const HANDLE = [
+  ['Speakers and programme', 'We find the speakers and support each one individually: mentoring, preparation and technical checks, and travel where sponsors make it possible.'],
+  ['Promotion', 'We announce on Meetup, LinkedIn and Slack, and credit you everywhere the event appears.'],
+  ['The evening itself', 'Organisers welcome people, run the stage, and look after the code of conduct.'],
+  ['Photos afterwards', 'Our photographer shares pictures you can use on your own channels.'],
+];
+// The four ways to partner. Hosting and food are not packages; production: "Food & beverage welcome but does not replace partnership tier".
+const WAYS = [
+  {
+    id: 'ways-sponsorship',
+    h: 'Sponsorship',
+    d: 'A package with your logo, sponsor slides and mentions at our meetups. Pay yearly, monthly or once.',
+    cta: { label: 'See the packages', href: '#sponsorship-tiers' },
+  },
+  {
+    id: 'ways-host',
+    h: 'Host a meetup',
+    d: 'Open your space for an evening. Hosting is free and is not a sponsorship package.',
+    cta: { label: 'Host a meetup', way: 'host' },
+  },
+  {
+    id: 'ways-food',
+    h: 'Food and drinks',
+    d: 'Cover food and drinks for an evening. Always welcome, and separate from the sponsorship packages.',
+    cta: { label: 'Cover food and drinks', way: 'food' },
+  },
+  {
+    id: 'ways-community',
+    h: 'Community collaboration',
+    d: 'For fellow tech communities and conferences that want to work with us for the JavaScript ecosystem in the region.',
+    cta: { label: 'Community collaboration', way: 'community' },
+  },
+] as const;
+const link = 'text-black underline underline-offset-[3px]';
+---
+
+<BaseLayout
+  title="Partnership Opportunities"
+  fullTitle="Partnership Opportunities · Host or Sponsor ZurichJS"
+  description="Host a ZurichJS meetup, cover food and drinks, or become a community partner. Meet the engineers who build JavaScript products in Zurich."
+  keywords={['sponsor a meetup Zurich', 'host a tech meetup', 'developer community sponsorship', 'JavaScript meetup sponsor', 'ZurichJS partners', 'developer relations Switzerland']}
+>
+  <PageOpening
+    slot="opening"
+    title="Host or support a ZurichJS meetup"
+    sub="By sponsoring, you help us keep events accessible, bring in international expertise, and create opportunities for developers at all levels."
+  >
+    <div class="flex flex-wrap gap-3 pt-1.5">
+      <Button href="#ways" variant="yellow" grow>Ways to partner</Button>
+      <Button href={PROSPECTUS_MAILTO} variant="outline-white" grow>Request the prospectus</Button>
+      <Button href="#partner-form" variant="outline-white" grow>Send an inquiry</Button>
+    </div>
+  </PageOpening>
+
+  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
+    <section id="audience" aria-labelledby="h-aud" class="flex flex-col gap-[clamp(24px,3vw,36px)] scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-[720px]">
+        <h2 id="h-aud" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Who you reach</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Mostly engineers who shape the products they work on.</p>
+      </div>
+      <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+        {
+          AUDIENCE_PROFILE.map((a) => (
+            <div class="flex flex-col-reverse justify-end gap-1.5">
+              <dt class="text-[18px] leading-[1.4]">{a.label}</dt>
+              <dd class="m-0 text-[clamp(40px,4.4vw,56px)] leading-none font-bold">{a.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <div class="flex flex-col gap-2.5">
+        <div class="text-[17px] font-bold">What they work with</div>
+        <div class="flex flex-wrap gap-2">
+          {AUDIENCE_INTERESTS.map((i) => <span class="text-[15px] py-1 px-3 rounded-lg bg-grey-soft">{i}</span>)}
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
+        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach in {REACH_AS_OF}</h3>
+        <dl class="m-0 grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-6">
+          {
+            REACH_STATS.map((r) => (
+              <div class="flex flex-col-reverse justify-end gap-1.5">
+                <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
+                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold">{r.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2 max-w-[760px]">{REACH_COUNTRIES}</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+      <Photo
+        photo={PAGE_PHOTOS.hosted}
+        class="aspect-4/3 w-full"
+      />
+      <div class="flex flex-col gap-[22px]">
+        <h2 id="h-handle" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What we take care of</h2>
+        {
+          HANDLE.map(([h, d]) => (
+            <div class="flex flex-col gap-1">
+              <div class="text-[20px] font-bold">{h}</div>
+              <div class="text-[17px] leading-[1.55] text-ink-2">{d}</div>
+            </div>
+          ))
+        }
+        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+          We only work with partners we know and trust. When we recommend a sponsor’s product, service or image, it’s because we believe in it ourselves.
+        </p>
+      </div>
+    </section>
+
+    <section id="ways" aria-labelledby="h-ways" class="flex flex-col gap-7 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <h2 id="h-ways" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Four ways to partner</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Sponsorship is the only paid option. Hosting an evening or covering its food and drinks are separate ways to help, and you can combine them.</p>
+      </div>
+      <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 list-none m-0 p-0">
+        {
+          WAYS.map((w) => (
+            <Surface as="li" tone="grey" id={w.id} class="p-7 flex flex-col gap-4 scroll-mt-6">
+              <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 flex-1">{w.d}</p>
+              {'way' in w.cta ? (
+                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="black" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
+                  {w.cta.label}
+                </Button>
+              ) : (
+                <Button href={w.cta.href} variant="black" size="sm" class="self-start">
+                  {w.cta.label}
+                </Button>
+              )}
+            </Surface>
+          ))
+        }
+      </ul>
+      <Surface id="hosting" tone="grey" class="p-7 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 scroll-mt-6">
+        <div class="flex flex-col gap-3">
+          <h3 class="m-0 text-[24px] font-bold">Hosting an evening</h3>
+          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Hosting is free. In return, your company is recognised at the meetup you host.</p>
+          {
+            travel && (
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+                If you also cover the speakers’ travel for that evening (about {travel.amount}), you are recognised as a Community Friend sponsor.
+              </p>
+            )
+          }
+        </div>
+        <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal self-start">
+          {hostTier.perks.filter((perk) => !/travel/i.test(perk)).map((perk) => <li>{perk}</li>)}
+        </ul>
+      </Surface>
+    </section>
+
+    <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Sponsorship packages</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
+          Pay monthly, yearly or once. Not sure which fits? <a href="#partner-form" class={link}>Start a conversation</a> or <a href={PROSPECTUS_MAILTO} class={link}>request the prospectus</a>.
+        </p>
+      </div>
+      {/* One billing choice for every package: a pill with a segment per option, monthly first. */}
+      <div class="flex flex-col items-center gap-2.5" data-billing>
+        <div role="radiogroup" aria-label="Billing" class="inline-flex p-1 rounded-pill bg-grey">
+          {
+            BILLING.map((b) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={b.key === 'Monthly' ? 'true' : 'false'}
+                data-billing-option={b.key}
+                class="min-h-[44px] px-3.5 md:min-w-[110px] md:px-5 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors bg-transparent text-black hover:bg-grey-hover aria-checked:bg-black aria-checked:text-white"
+              >
+                {b.key}
+              </button>
+            ))
+          }
+        </div>
+        {
+          BILLING.map((b) => (
+            <p class="m-0 text-[16px] text-ink-2" data-billing-show={b.key} hidden={b.key !== 'Monthly'}>
+              {b.note}
+            </p>
+          ))
+        }
+      </div>
+      {/* The packages are one choice (radios): a yellow border and a filled circle when selected, then one action below. */}
+      <fieldset class="border-0 p-0 m-0 min-w-0" data-tier-choice>
+        <legend class="sr-only">Choose a package</legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+          {
+            sponsorTiers.map((t) => (
+              <label class="tier-card relative rounded-card bg-white border-[3px] border-grey-frame hover:border-grey-mid has-checked:border-yellow p-6 pr-14 flex flex-col gap-5 cursor-pointer has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2">
+                <input type="radio" name="tier" value={t.id} data-tier-name={t.name} class="sr-only" aria-labelledby={`h-tier-${t.id}`} />
+                <span aria-hidden="true" class="tier-dot absolute top-6 right-6 w-7 h-7 rounded-full border-2 border-grey-line bg-white flex items-center justify-center text-white text-[14px] font-bold">✓</span>
+                <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
+                  {t.name}
+                </h3>
+                {t.prices.map((pr) => (
+                  <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
+                    <span class="text-[clamp(30px,2.6vw,38px)] leading-none font-bold">{pr.amount}</span>
+                    <span class="text-[16px] text-ink-2">{UNIT[pr.label] ?? ''}</span>
+                  </p>
+                ))}
+                <div class="flex flex-col gap-2">
+                  <div class="text-[16px] font-bold">Included</div>
+                  <ul class="m-0 p-0 list-none flex flex-col gap-2 text-[16px] leading-normal">
+                    {t.perks.map((perk) => (
+                      <li class="flex gap-2.5 items-start">
+                        <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-[11px] font-bold">✓</span>
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+      <div class="flex flex-col items-center gap-2 text-center">
+        <Button href="/partners?way=partner#partner-form" variant="yellow" data-partner-way="partner" data-partner-tier="" data-tier-cta>
+          <span data-tier-cta-label>Ask about sponsoring</span>
+        </Button>
+        <p class="m-0 text-[16px] text-ink-2" data-tier-cta-note>Choose a package above, or ask us what fits.</p>
+      </div>
+      <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
+        Hosting a meetup or covering food and drinks is not a package: see <a href="#ways" class={link}>the ways to partner</a>.
+      </p>
+    </section>
+
+    <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">
+      <div class="flex flex-col gap-1.5">
+        <h2 id="h-p-current" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Our sponsors</h2>
+        <p class="m-0 text-[18px] text-ink-2">These sponsors make ZurichJS possible. Join them in supporting our community.</p>
+      </div>
+      {
+        groups.sponsorsByTier.length > 0 ? (
+          <SponsorTiers groups={groups.sponsorsByTier} />
+        ) : (
+          <p class="m-0 text-[17px]">
+            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the packages</a>.
+          </p>
+        )
+      }
+    </section>
+
+    <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-[clamp(28px,3vw,40px)] scroll-mt-6">
+      <div class="flex flex-col gap-1.5 max-w-[720px]">
+        <h2 id="h-p-community" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Hosts and partners</h2>
+        <p class="m-0 text-[18px] text-ink-2">The venues, conferences, communities and companies we work with.</p>
+      </div>
+      {
+        CATEGORIES.map((g) => (
+          <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-[18px] scroll-mt-6">
+            <div class="flex flex-col gap-1.5">
+              <h3 id={`h-p-${g.id}`} class="m-0 text-[clamp(22px,2.2vw,28px)] leading-[1.2] font-bold">
+                {g.h}
+              </h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">{g.sub}</p>
+            </div>
+            {g.list.length > 0 ? (
+              <LogoGrid partners={g.list} caption={(p) => [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined} />
+            ) : (
+              <p class="m-0 text-[17px]">None listed right now.</p>
+            )}
+          </section>
+        ))
+      }
+    </section>
+
+    <Surface as="figure" tone="grey" class="m-0 p-7 flex flex-col gap-4 max-w-[860px]">
+      <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">
+        “Every meetup feels like a mini-conference, thanks to the impressive depth of expertise in the room. Finding a local group that consistently sets a high technical
+        standard while maintaining authentic community spirit is truly uncommon.”
+      </blockquote>
+      <figcaption class="text-[16px] leading-[1.4]">
+        <b>Colin Schwarz</b>
+        <br />
+        <span class="text-ink-2">Attendee</span>
+      </figcaption>
+    </Surface>
+
+    {
+      previous.length > 0 && (
+        <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-[18px] scroll-mt-6">
+          <div class="flex flex-col gap-1.5">
+            <h2 id="h-p-past" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+              Previous partners and sponsors
+            </h2>
+            <p class="m-0 text-[17px] text-ink-2">We’re grateful to all the companies and organisations that have supported ZurichJS over the years.</p>
+          </div>
+          <LogoGrid partners={previous} size="sm" caption={(p) => partnerPeriod(p)} />
+        </section>
+      )
+    }
+
+    <span id="inquiry-form" aria-hidden="true"></span>
+    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-1 md:grid-cols-2 gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
+      <div class="flex flex-col gap-3">
+        <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
+        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Choose what you’d like to talk about, and change it any time before you send. An organiser replies from {SITE.email} to plan the details.</p>
+      </div>
+      <PartnersForm client:load nextHref={nextHref} email={SITE.email} />
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  // "Choose this" selects the matching option in the form. The choice is in the link
+  // (?way=…&tier=…#partner-form), so it also works when this script or the form island has
+  // not loaded yet: the page then reloads with ?way= and the island reads it. Once loaded,
+  // the URL is updated in place and the form is told directly.
+  document.addEventListener('click', (e) => {
+    const el = (e.target as Element | null)?.closest<HTMLAnchorElement>('a[data-partner-way]');
+    const way = el?.dataset.partnerWay;
+    if (!el || !way) return;
+    e.preventDefault();
+    const tier = el.dataset.partnerTier ?? '';
+    const u = new URL(location.href);
+    u.searchParams.set('way', way);
+    if (tier) u.searchParams.set('tier', tier);
+    else u.searchParams.delete('tier');
+    u.hash = 'partner-form';
+    history.replaceState(history.state, '', u);
+    window.__zjsPartnerTier = tier;
+    window.__zjsPartnerWay = way;
+    document.dispatchEvent(new CustomEvent('zjs:partner-way', { detail: way }));
+    const form = document.getElementById('partner-form');
+    form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    form?.focus({ preventScroll: true });
+  });
+</script>
+
+<style>
+  .tier-card:has(input:checked) .tier-dot {
+    background: #000;
+    border-color: #000;
+  }
+  .tier-card:not(:has(input:checked)) .tier-dot {
+    color: transparent;
+  }
+</style>
+
+<script>
+  // The chosen package goes into the one action below the packages.
+  const cta = document.querySelector<HTMLAnchorElement>('[data-tier-cta]');
+  const ctaLabel = document.querySelector<HTMLElement>('[data-tier-cta-label]');
+  const ctaNote = document.querySelector<HTMLElement>('[data-tier-cta-note]');
+  document.querySelector('[data-tier-choice]')?.addEventListener('change', (e) => {
+    const input = e.target as HTMLInputElement;
+    if (!cta || input.name !== 'tier') return;
+    cta.dataset.partnerTier = input.value;
+    cta.href = `/partners?way=partner&tier=${input.value}#partner-form`;
+    if (ctaLabel) ctaLabel.textContent = `Ask about ${input.dataset.tierName}`;
+    if (ctaNote) ctaNote.textContent = 'We reply by email. Nothing is agreed until you confirm.';
+  });
+</script>
+
+<script>
+  // Billing switch on the sponsorship packages: shows one price per package (monthly by default).
+  const box = document.querySelector<HTMLElement>('#sponsorship-tiers');
+  if (box) {
+    const options = [...box.querySelectorAll<HTMLButtonElement>('[data-billing-option]')];
+    const choose = (key: string) => {
+      for (const o of options) o.setAttribute('aria-checked', String(o.dataset.billingOption === key));
+      for (const el of box.querySelectorAll<HTMLElement>('[data-billing-show]')) el.hidden = el.dataset.billingShow !== key;
+    };
+    for (const o of options) o.addEventListener('click', () => choose(o.dataset.billingOption!));
+  }
+</script>

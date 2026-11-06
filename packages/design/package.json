@@ -1,0 +1,36 @@
+{
+  "name": "@zurichjs/design",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ZurichJS design system: tokens, Tailwind 4 theme, Figtree, Astro components and Preact islands.",
+  "type": "module",
+  "exports": {
+    "./theme.css": "./src/theme.css",
+    "./fonts.css": "./src/fonts.css",
+    "./tokens": "./src/tokens.ts",
+    "./recipes": "./src/recipes.ts",
+    "./images": "./src/images.ts",
+    "./analytics": "./src/analytics.ts",
+    "./fonts/*": "./src/fonts/*",
+    "./components/*": "./src/components/*",
+    "./islands/*": "./src/islands/*.tsx"
+  },
+  "scripts": {
+    "theme": "node scripts/build-theme.mjs",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@zurichjs/events": "workspace:*"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@zurichjs/config": "workspace:*",
+    "astro": "7.4.4",
+    "preact": "10.29.8",
+    "typescript": "5.9.3"
+  },
+  "peerDependencies": {
+    "astro": "^7.0.0",
+    "preact": "^10.29.0"
+  }
+}

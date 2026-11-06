@@ -1,0 +1,204 @@
+---
+/** Speaker profile: bio, links, the next talk if one is scheduled, and every talk given at ZurichJS. */
+import { speakerCardAlt } from '~/lib/og';
+import { dateLong, dateParts, eventHref, eventTalks, plainText, presentEvent, resolveState, talkAnchor, upcomingEvents, type Speaker } from '@zurichjs/events';
+import { RichText } from '~/components/RichText';
+import { breadcrumbSchema, personSchema } from '@zurichjs/seo';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import Monogram from '@zurichjs/design/components/Monogram.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { Gallery } from '@zurichjs/design/islands/Gallery';
+import { mediaTagged } from '@zurichjs/content';
+import { toGallery } from '~/lib/media';
+import { BUILD_TIME, content, ticketing } from '~/lib/content';
+import { clip } from '~/lib/text';
+
+export async function getStaticPaths() {
+  const { speakers } = await content();
+  return speakers.map((s) => ({ params: { id: s.id }, props: { s } }));
+}
+
+const { s } = Astro.props as { s: Speaker };
+const { events, media } = await content();
+// Photos of this speaker, tagged speaker:<id> in ImageKit by the editors.
+const stage = mediaTagged(media.items, `speaker:${s.id}`);
+// Speakers reference events by their public slug (not the Sanity _id).
+const bySlug = new Map(events.map((e) => [e.slug, e]));
+const roleLine = `${s.role}${s.company ? ` at ${s.company}` : ''}`;
+
+// Speaking next: the first upcoming (not cancelled) event whose agenda lists this speaker.
+const upcoming = (() => {
+  for (const ev of upcomingEvents(events, BUILD_TIME)) {
+    if (resolveState(ev, BUILD_TIME) === 'cancelled') continue;
+    const item = ev.agenda.find((a) => a.talk?.speakerIds.includes(s.id));
+    if (item) return { ev, item, talk: item.talk!, p: presentEvent(ev, { now: BUILD_TIME, ticketing }) };
+  }
+  return null;
+})();
+
+// Each talk once, with every event it was given at, newest first; split into upcoming and past.
+const upcomingIds = new Set(upcomingEvents(events, BUILD_TIME).map((e) => e.slug));
+const talks = s.talks.map((t) => {
+  const evs = t.eventSlugs
+    .map((x) => bySlug.get(x))
+    .filter((e) => !!e)
+    .sort((a, b) => (b.startsAt ?? '').localeCompare(a.startsAt ?? ''));
+  // The event page's anchor for this talk (same talk document, or the same title).
+  const anchorOn = (e: (typeof evs)[number]) => {
+    const ref = eventTalks(e).find((x) => (t.id && x.id === t.id) || x.title === t.title);
+    return ref ? `#${talkAnchor(ref)}` : '';
+  };
+  return { t, evs, anchorOn, latest: evs[0]?.startsAt ?? '', upcoming: evs.some((e) => upcomingIds.has(e.slug)) };
+});
+talks.sort((a, b) => b.latest.localeCompare(a.latest) || a.t.title.localeCompare(b.t.title));
+const nextTalks = talks.filter((x) => x.upcoming);
+const pastTalks = talks.filter((x) => !x.upcoming);
+
+const fallback = `${s.name}, ${roleLine}, has spoken at ZurichJS, the JavaScript meetup in Zurich.`;
+const bio = plainText(s.bio);
+const description = clip(bio.length >= 50 ? bio : `${fallback} ${bio}`);
+const [firstName, ...rest] = s.name.split(' ');
+const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/speakers' }, { name: s.name, path: `/speakers/${s.id}` }])];
+---
+
+<BaseLayout
+  title={s.name}
+  fullTitle={`${s.name} · Speaker at ZurichJS`}
+  description={description}
+  type="profile"
+  profile={{ firstName, lastName: rest.join(' ') || undefined }}
+  image={`/og/speaker-${s.id}.png`}
+  imageAlt={speakerCardAlt(s.name, s.role)}
+  keywords={[s.name, 'JavaScript', 'ZurichJS', 'tech talks', ...s.topics]}
+  jsonLd={jsonLd}
+>
+  <PageOpening slot="opening" title={s.name} crumb={{ label: 'Speakers', href: '/speakers', here: s.name }} sub={roleLine} />
+
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-14 gap-y-7 items-start">
+      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] text-[88px]!" />}
+      <div class="flex flex-col gap-[18px] col-span-full md:col-span-2 min-w-0">
+        <RichText text={s.bio} class="text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty" />
+        {
+          s.links.length > 0 && (
+            <div class="flex flex-wrap gap-2">
+              {s.links.map((l) => (
+                <Button href={l.url} variant="grey" size="sm" class="border-0!">
+                  {l.label}
+                </Button>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </div>
+
+    {
+      upcoming && (
+        <Surface tone="yellow" class="py-6 px-7 flex flex-wrap gap-x-7 gap-y-4 items-center justify-between">
+          <div class="flex flex-col gap-1 min-w-0">
+            <div class="text-[17px] font-bold">
+              Speaking next: {upcoming.ev.startsAt ? dateLong(upcoming.ev.startsAt) : upcoming.p.dateLineShort}
+              {upcoming.item.time ? `, talk at ${upcoming.item.time}` : ''} · {upcoming.ev.title}
+            </div>
+            <div class="text-[22px] font-bold leading-tight">{upcoming.item.title}</div>
+          </div>
+          <Button href={`${eventHref(upcoming.ev)}#${talkAnchor(upcoming.talk)}`} variant="black" class="text-[17px]">
+            See the meetup
+          </Button>
+        </Surface>
+      )
+    }
+
+    {
+      [
+        { id: 'h-next-talks', heading: 'Upcoming at ZurichJS', list: nextTalks },
+        { id: 'h-talks', heading: nextTalks.length ? 'Earlier talks at ZurichJS' : 'Talks at ZurichJS', list: pastTalks },
+      ]
+        .filter((g) => g.list.length > 0 || g.id === 'h-talks')
+        .map((g) => (
+          <section class="flex flex-col gap-4" aria-labelledby={g.id}>
+            <h2 id={g.id} class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+              {g.heading}
+            </h2>
+            {g.list.length === 0 && <p class="m-0 text-[17px] text-ink-2">No earlier talks listed yet.</p>}
+            {g.list.map(({ t, evs, anchorOn }) => (
+              <article class="rounded-[20px] bg-grey-soft flex flex-col gap-2.5 py-5 px-5">
+                <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+                <div class="text-[16px] text-ink-2">{[t.format, t.durationMin ? `${t.durationMin} min` : ''].filter(Boolean).join(' · ')}</div>
+                <RichText text={t.description} class="text-[17px] leading-[1.55] text-ink-2 max-w-[700px]" />
+                {t.tags.length > 0 && (
+                  <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
+                    {t.tags.map((tag) => (
+                      <li>
+                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-grey text-black no-underline hover:bg-grey-hover inline-flex">
+                          {tag}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {evs.length > 0 ? (
+                  <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-2.5 mt-1" aria-label="Where this talk was given">
+                    {evs.map((e) => {
+                      const soon = upcomingIds.has(e.slug);
+                      const d = e.startsAt ? dateParts(e.startsAt) : undefined;
+                      return (
+                        <li>
+                          <a
+                            href={`${eventHref(e)}${anchorOn(e)}`}
+                            class="group no-underline text-black rounded-2xl bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
+                          >
+                            <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
+                              <span class="text-[12px] font-bold leading-none">{d?.mon ?? 'TBC'}</span>
+                              <span class="text-[21px] font-bold leading-tight">
+                                {d?.day ?? '?'}
+                                <span class="text-[11px] align-top">{d?.suffix}</span>
+                              </span>
+                              <span class="text-[11px] leading-none">{d?.year}</span>
+                            </span>
+                            <span class="flex flex-col gap-0.5 min-w-0">
+                              <span class="text-[13px] font-bold text-ink-2">{soon ? 'Coming up at' : 'Given at'}</span>
+                              <span class="text-[16px] font-bold leading-snug text-pretty">{e.title}</span>
+                              <span class="text-[14px] text-ink-2">{e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}</span>
+                            </span>
+                            <span aria-hidden="true" class="text-[20px] font-bold transition-transform group-hover:translate-x-0.5">→</span>
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <p class="m-0 text-[15px] text-ink-2">The event for this talk isn’t linked yet.</p>
+                )}
+                {t.slidesUrl && (
+                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-[16px] font-bold underline underline-offset-[3px]">
+                    Slides (opens in a new tab)
+                  </a>
+                )}
+              </article>
+            ))}
+          </section>
+        ))
+    }
+
+    {
+      stage.length > 0 && (
+        <section class="flex flex-col gap-4" aria-labelledby="h-stage">
+          <h2 id="h-stage" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+            At ZurichJS
+          </h2>
+          <Gallery client:visible items={toGallery(stage, events)} label={`Photos of ${s.name} at ZurichJS`} max={6} />
+        </section>
+      )
+    }
+
+    <Surface class="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center py-6 px-7">
+      <p class="m-0 text-[18px]">Want to give a talk like this? First-time speakers are welcome, and we’ll help you get ready.</p>
+      <Button href="/cfp" variant="yellow" class="text-[17px]">Propose a talk</Button>
+    </Surface>
+  </div>
+</BaseLayout>

@@ -1,0 +1,19 @@
+---
+/** Section heading, optionally with a right-aligned action (slot "action") and a sub line (slot "sub"). */
+import { cx, headingSizes } from '../recipes';
+
+interface Props {
+  id?: string;
+  size?: keyof typeof headingSizes;
+  class?: string;
+}
+const { id, size = 'lg', class: extra } = Astro.props;
+---
+
+<div class={cx('flex justify-between items-end gap-4 flex-wrap', extra)}>
+  <div class="flex flex-col gap-2.5 max-w-[720px]">
+    <h2 id={id} class={cx('m-0 font-bold', headingSizes[size])}><slot /></h2>
+    {Astro.slots.has('sub') && <p class="m-0 text-[18px] leading-[1.55] text-ink-2 text-pretty"><slot name="sub" /></p>}
+  </div>
+  <slot name="action" />
+</div>

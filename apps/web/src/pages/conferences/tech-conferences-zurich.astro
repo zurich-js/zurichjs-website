@@ -1,0 +1,293 @@
+---
+/** Landing page for "tech conferences in Zurich" searches. Copy and FAQ from production; events and the conference module from content. */
+import { faqSchema, organizationSchema } from '@zurichjs/seo';
+import LandingCta from '@zurichjs/design/components/landing/LandingCta.astro';
+import LandingEvents from '@zurichjs/design/components/landing/LandingEvents.astro';
+import LandingFaq from '@zurichjs/design/components/landing/LandingFaq.astro';
+import PointList from '@zurichjs/design/components/landing/PointList.astro';
+import TopicGroups from '@zurichjs/design/components/landing/TopicGroups.astro';
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
+import Button from '@zurichjs/design/components/Button.astro';
+import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
+import Surface from '@zurichjs/design/components/Surface.astro';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { cx } from '@zurichjs/design/recipes';
+import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
+
+const { events, conference } = await content();
+
+// Verbatim from production: these answers feed the FAQPage JSON-LD and the visible FAQ.
+const faqs = [
+  {
+    question: 'What are the best tech conferences and meetups in Zurich?',
+    answer:
+      'Zurich offers many excellent tech events including ZurichJS (JavaScript/TypeScript meetups), FrontConf Zurich, Voxxed Days Zurich, WeAreDevelopers, and various specialized meetups. ZurichJS hosts free monthly meetups, making it accessible for developers at all levels.',
+  },
+  {
+    question: 'How does ZurichJS complement FrontConf and Voxxed Days Zurich?',
+    answer:
+      'ZurichJS was the official warm-up event partner for both FrontConf and Voxxed Days Zurich 2026. We complement these annual conferences with free monthly meetups throughout the year, keeping the community connected between major events. We run as a non-profit with community support.',
+  },
+  {
+    question: 'Should I attend both ZurichJS meetups and tech conferences?',
+    answer:
+      'Absolutely! They complement each other perfectly. ZurichJS keeps you connected to the Zurich tech community year-round with monthly free meetups, while conferences like FrontConf and Voxxed Days provide immersive multi-day experiences. As the official warm-up event partner for both conferences in 2026, our meetups help you prepare for and extend your conference experience.',
+  },
+  {
+    question: 'What topics does ZurichJS cover compared to tech conferences?',
+    answer:
+      'ZurichJS focuses on JavaScript, TypeScript, and web development including React, Vue, Angular, Node.js, AI/ML integration, performance, and modern frameworks. While conferences offer broader tech coverage, we provide deep dives into JavaScript ecosystem topics with opportunities to interact directly with speakers.',
+  },
+];
+
+const PARTNERSHIP = [
+  { t: 'Building bridges', d: 'Conferences happen once a year. We keep the community connected month after month, creating the foundation that makes those big events even better.' },
+  { t: 'Always accessible', d: 'Every ZurichJS event is free. Registered non-profit, funded by community donations. No financial barriers to being part of this.' },
+  { t: 'Different format, same quality', d: '50-100 people per meetup means real conversations with speakers. Conference-level content in a relaxed space where networking happens naturally.' },
+  { t: 'Beyond Zurich', d: 'Developers travel from Basel, Winterthur, St. Gallen, even Konstanz. Geographic reach that validates the need for this community.' },
+];
+
+const FORMATS = [
+  { h: 'Monthly meetups', d: 'Free JavaScript & TypeScript meetups every month, no expensive conference tickets needed.', tone: 'grey' as const },
+  { h: 'Open to speakers', d: 'Anyone can propose a talk, and first-time speakers get help preparing.', tone: 'grey' as const },
+  { h: 'Community focus', d: 'Build lasting connections with fellow developers throughout the year.', tone: 'grey' as const },
+];
+
+const COMPARE = [
+  ['Frequency', 'Monthly year-round', 'Once or twice per year'],
+  ['Format', '2-3 focused talks, networking', 'Multi-track, workshops, keynotes'],
+  ['Atmosphere', 'Casual, intimate, community-focused', 'Professional, polished, large-scale'],
+  ['Networking', 'Deep connections, ongoing relationships', 'Broad exposure, many new contacts'],
+  ['Speaker interaction', 'Extended Q&A, personal conversations', 'Brief Q&A, speaker hallway track'],
+  ['Best for', 'Continuous learning, local community', 'Big picture insights, industry trends'],
+] as const;
+
+const CONFERENCES = [
+  {
+    name: 'FrontConf Zurich (Official Partner)',
+    facts: [
+      ['Focus', 'Frontend development, UX, design systems'],
+      ['When', '27th February 2026'],
+      ['Best for', 'Frontend developers, UX designers, design system enthusiasts'],
+    ],
+    text: 'ZurichJS was the official warm-up event partner for FrontConf 2026. Join our meetups throughout the year to connect with the community and get excited for the main conference.',
+    tip: 'Attend ZurichJS meetups to meet fellow FrontConf attendees year-round.',
+  },
+  {
+    name: 'Voxxed Days Zurich (Official Partner)',
+    facts: [
+      ['Focus', 'Multi-track developer conference (Java, Cloud, Web, etc.)'],
+      ['When', '24th March 2026'],
+      ['Best for', 'Developers interested in diverse technology stacks'],
+    ],
+    text: 'ZurichJS was the official warm-up event for Voxxed Days Zurich 2026. Our JavaScript track complements Voxxed Days’ comprehensive program with year-round community events.',
+    tip: 'Network with Voxxed Days speakers and attendees at our monthly meetups.',
+  },
+];
+
+const WHY = [
+  { t: 'Free monthly meetups', d: 'Every meetup is free to attend. We’re a non-profit funded by partners, members and donations.' },
+  { t: 'Consistent learning', d: 'Don’t wait a year between conferences. Attend 12+ events annually.' },
+  { t: 'Current topics', d: 'Monthly format means we adapt quickly to new trends and technologies.' },
+  { t: 'Community building', d: 'See the same faces monthly, build lasting relationships.' },
+  { t: 'Speaker opportunities', d: 'We welcome speakers of all experience levels.' },
+  { t: 'Flexible schedule', d: 'Attend when it fits your schedule, no multi-day commitment needed.' },
+];
+
+const TOPICS = [
+  { title: 'Frontend frameworks', items: ['React & Next.js', 'Vue & Nuxt', 'Angular', 'Svelte & SvelteKit', 'Astro, Remix, Qwik'] },
+  { title: 'Backend & APIs', items: ['Node.js, Deno, Bun', 'GraphQL & tRPC', 'Serverless functions', 'Edge computing', 'API design patterns'] },
+  { title: 'Modern topics', items: ['AI/ML integration', 'Web performance', 'TypeScript advanced', 'Testing strategies', 'Accessibility (a11y)'] },
+];
+
+const WHO = [
+  { t: 'Conference regulars', d: 'Developers who attend FrontConf, Voxxed Days, and other conferences.' },
+  { t: 'Senior engineers', d: 'Tech leads and architects staying current with JavaScript trends.' },
+  { t: 'Freelancers & consultants', d: 'Building networks and showcasing expertise.' },
+  { t: 'Students & career changers', d: 'Learning from experienced developers.' },
+  { t: 'International developers', d: 'People from Zurich, Winterthur, Basel, Zug, Konstanz, and beyond.' },
+];
+
+const h3 = 'm-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold';
+---
+
+<BaseLayout
+  title="Tech Conferences & Meetups in Zurich"
+  fullTitle="Tech Conferences & Meetups in Zurich · ZurichJS Alternative to FrontConf & Voxxed Days"
+  description="Tech conferences in Zurich and the meetups between them: ZurichJS complements FrontConf and Voxxed Days Zurich with free monthly JavaScript meetups."
+  keywords={[
+    'tech conferences Zurich',
+    'FrontConf Zurich',
+    'Voxxed Days Zurich',
+    'JavaScript conference Zurich',
+    'web development conference Switzerland',
+    'tech meetups Zurich',
+    'developer conferences Zurich',
+    'frontend conference Zurich',
+    'WeAreDevelopers Zurich',
+    'tech events Zurich',
+    'programming conferences Switzerland',
+    'software engineering events Zurich',
+    'React conference Zurich',
+    'TypeScript conference Switzerland',
+    'developer events Zurich',
+  ]}
+  geo
+  jsonLd={[organizationSchema(), faqSchema(faqs)]}
+>
+  <PageOpening slot="opening" title="Meetups & conferences in Zurich">
+    <Fragment slot="sub">
+      In late 2024, we started ZurichJS because Zurich’s meetup scene had become history after the pandemic. In 2026 we were the <strong>official warm-up partner</strong> for both FrontConf and Voxxed Days Zurich: proof that consistent, community-driven events can
+      complement the conference scene, not replace it.
+    </Fragment>
+    <div class="flex flex-wrap gap-3 pt-1.5">
+      <Button href="/events" variant="yellow" grow>View upcoming events</Button>
+      <Button href="/cfp" variant="outline-white" grow>Become a speaker</Button>
+    </div>
+  </PageOpening>
+
+  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+    <section aria-labelledby="h-partner" class="px-gut flex flex-col gap-7">
+      <SectionHeading id="h-partner">
+        Why this partnership matters
+        <Fragment slot="sub">
+          Less than a year after our first event, conference organizers approached us to become the official warm-up partner for 2026. This happened because we proved something: consistent, trust-based meetups can strengthen the entire ecosystem, not compete
+          with it.
+        </Fragment>
+      </SectionHeading>
+      <ul class="m-0 p-0 list-none grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))]">
+        {
+          PARTNERSHIP.map((p) => (
+            <li class="rounded-card bg-grey-soft p-6 flex flex-col gap-1.5">
+              <h3 class="m-0 text-[20px] leading-[1.3] font-bold">{p.t}</h3>
+              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 text-pretty">{p.d}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section aria-label="What ZurichJS offers" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+      {
+        FORMATS.map((f) => (
+          <Surface tone={f.tone} class="p-7 flex flex-col gap-2.5">
+            <h3 class="m-0 text-[22px] font-bold">{f.h}</h3>
+            <p class="m-0 text-[17px] leading-[1.55]">{f.d}</p>
+          </Surface>
+        ))
+      }
+    </section>
+
+    <section aria-labelledby="h-compare" class="px-gut flex flex-col gap-7">
+      <SectionHeading id="h-compare">
+        Understanding meetups vs conferences
+        <Fragment slot="sub">Both meetups and conferences serve important roles in the developer community. Here’s how they complement each other:</Fragment>
+      </SectionHeading>
+      <div class="overflow-x-auto max-w-[1000px]">
+        <table class="w-full min-w-[300px] border-separate border-spacing-0 text-[16px] md:text-[17px] leading-[1.45]">
+          <thead>
+            <tr>
+              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-l-2xl">Aspect</th>
+              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white">Monthly meetups (ZurichJS)</th>
+              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-r-2xl">Annual conferences</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              COMPARE.map(([aspect, meetup, conf], i) => (
+                <tr>
+                  <th scope="row" class={cx('text-left font-bold p-3 md:p-4 align-top rounded-l-2xl', i % 2 === 1 && 'bg-grey-soft')}>
+                    {aspect}
+                  </th>
+                  <td class={cx('p-3 md:p-4 align-top', i % 2 === 1 && 'bg-grey-soft')}>{meetup}</td>
+                  <td class={cx('p-3 md:p-4 align-top text-ink-2 rounded-r-2xl', i % 2 === 1 && 'bg-grey-soft')}>{conf}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="flex flex-col gap-4 max-w-[760px]">
+        <h3 class={h3}>What we’ve learned</h3>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          The developers who get the most out of Zurich’s tech scene do both: they attend our monthly meetups for consistent community connection, and they go to conferences for those immersive multi-day experiences.
+        </p>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          Meetups give you familiar faces month after month. Conferences give you broad industry exposure. Together, they create something neither can do alone: a complete, year-round professional development ecosystem.
+        </p>
+        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+          That’s why we’re building warm-up events for 2026, to make sure conference attendees already know each other, already have context, already feel like they belong before walking into those bigger venues.
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="h-guide" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
+      <h2 id="h-guide" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold max-w-[900px] text-balance">Complete guide to tech conferences & meetups in Zurich</h2>
+
+      <div class="flex flex-col gap-6">
+        <h3 class={h3}>Major tech conferences in Zurich</h3>
+        <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))]">
+          {
+            CONFERENCES.map((c) => (
+              <Surface class="p-[clamp(22px,3vw,32px)] flex flex-col gap-4">
+                <h4 class="m-0 text-[22px] leading-tight font-bold">{c.name}</h4>
+                <dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-[17px] leading-[1.45]">
+                  {c.facts.map(([k, v]) => (
+                    <>
+                      <dt class="font-bold">{k}</dt>
+                      <dd class="m-0 text-ink-2">{v}</dd>
+                    </>
+                  ))}
+                </dl>
+                <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{c.text}</p>
+                <p class="m-0 self-start text-[16px] font-bold leading-[1.4] py-2 px-4 rounded-[20px] bg-grey">{c.tip}</p>
+              </Surface>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2.5 max-w-[760px]">
+          <h3 class={h3}>Why attend ZurichJS meetups?</h3>
+          <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
+            As a registered non-profit, ZurichJS is committed to making tech education accessible to everyone. Our regular meetups are free thanks to partners, members and donations:
+          </p>
+        </div>
+        <PointList items={WHY} min={280} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2.5 max-w-[760px]">
+          <h3 class={h3}>Topics we cover</h3>
+          <p class="m-0 text-[18px] leading-[1.55] text-ink-2">ZurichJS covers the latest in JavaScript and web development, often featuring topics you’ll see at conferences, but in a more interactive format:</p>
+        </div>
+        <TopicGroups groups={TOPICS} min={240} />
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col gap-2.5">
+          <h3 class={h3}>Who attends ZurichJS?</h3>
+          <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Our community includes:</p>
+        </div>
+        <PointList items={WHO} min={280} />
+      </div>
+    </section>
+
+    <ConferenceModule conference={conference} placement="tech-conferences-zurich" />
+
+    <LandingEvents events={events} now={BUILD_TIME} ticketing={ticketing} meetupGroupUrl={SITE.meetupGroupUrl} id="h-next" title="Next JavaScript meetups in Zurich" sub="Monthly, free to attend, in English, and fine to come alone." />
+
+    <LandingFaq faqs={faqs} />
+
+    <LandingCta
+      id="h-join"
+      title="Don’t wait for the next conference: join ZurichJS today"
+      text="Get conference-quality content every month, free to attend."
+    >
+      <Button href="/events" variant="yellow" grow>View upcoming events</Button>
+      <Button href="/cfp" variant="white" grow>Become a speaker</Button>
+    </LandingCta>
+  </div>
+</BaseLayout>

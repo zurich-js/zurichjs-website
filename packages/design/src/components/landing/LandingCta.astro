@@ -1,0 +1,15 @@
+---
+/** Closing call to action of a landing page: heading, one line, two actions (default slot). */
+interface Props {
+  id: string;
+  title: string;
+  text: string;
+}
+const { id, title, text } = Astro.props;
+---
+
+<section aria-labelledby={id} class="mx-gut bg-grey rounded-block p-[clamp(28px,4.4vw,64px)] flex flex-col gap-5">
+  <h2 id={id} class="m-0 text-[clamp(28px,3.2vw,44px)] leading-[1.12] font-bold max-w-[820px] text-balance">{title}</h2>
+  <p class="m-0 text-[clamp(18px,1.6vw,20px)] leading-[1.55] max-w-[680px] text-pretty">{text}</p>
+  <div class="flex flex-wrap gap-3 pt-1"><slot /></div>
+</section>

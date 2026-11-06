@@ -77,6 +77,7 @@ export const fromRow = (r: MemberRow): Member => ({
 
 const PATCH_COLUMNS: Record<keyof MemberPatch, string> = {
   authUserId: 'auth_user_id',
+  kind: 'kind',
   name: 'name',
   organisationName: 'organisation_name',
   level: 'level',
@@ -140,6 +141,7 @@ export function supabaseStore(env: Env, fetchImpl: Fetch = fetch): MemberStore {
     byEmail: (email) => one(`email=eq.${encodeURIComponent(normaliseEmail(email))}`),
     byAuthUser: (uid) => one(`auth_user_id=eq.${encodeURIComponent(uid)}`),
     byStripeSubscription: (sid) => one(`stripe_subscription_id=eq.${encodeURIComponent(sid)}`),
+    byStatus: async (status) => (await call<MemberRow[]>('GET', `members?select=*&status=eq.${encodeURIComponent(status)}&order=created_at.asc&limit=200`)).map(fromRow),
     create: (m: NewMember, actor) =>
       rpc('member_create', {
         p_member: {
@@ -167,6 +169,7 @@ export function supabaseStore(env: Env, fetchImpl: Fetch = fetch): MemberStore {
     async transition(id, input) {
       const current = await one(`id=eq.${encodeURIComponent(id)}`);
       if (!current) throw new MemberNotFound(id);
+      if (input.from && current.status !== input.from) throw new TransitionError('The membership changed in the meantime. Look again.', 'conflict');
       const t = checkTransition(current, input.to, input.actor.kind, input.reason);
       return rpc('member_transition', {
         p_id: id,

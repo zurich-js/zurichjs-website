@@ -198,7 +198,7 @@ describe('GET /api/membership/me', () => {
 
   it('answers null for someone who is not a member', async () => {
     const res = await handleMe(me(TOKEN), { env, fetch: authFetch({ id: 'u2', email: 'new@example.com', email_confirmed_at: '2026-11-06T09:00:00Z' }), store: memoryStore() });
-    expect(await res.json()).toEqual({ ok: true, email: 'new@example.com', member: null });
+    expect(await res.json()).toEqual({ ok: true, email: 'new@example.com', member: null, canApply: true });
   });
 
   it('answers 503 when member accounts are not configured', async () => {

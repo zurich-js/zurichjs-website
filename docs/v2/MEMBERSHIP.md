@@ -4,7 +4,7 @@
 
 Today `/membership` is a request form only: `apps/web/src/pages/api/verein-inquiry.ts` emails and Slacks the organisers, who then sign people up and reconcile payments by hand. That is the admin overhead to remove. Target: people log in, apply, we approve in Slack, they sign the membership agreement on the site, a Stripe subscription starts, they see their status, perks and (later) AGM/voting notes, and cancellation goes through us, never self-serve. Existing manually signed and paid members get imported with their paid-until dates and moved onto automatic payment.
 
-Status: phases, Supabase Pro, the payments rule and the legal page updates signed off by the owner (5th November 2026). Phase 1 (data layer) is built; the open questions below still block phases 3 onwards. Based on `v2/switchover` (PR #68). Source for the bylaws analysis: the Swiss JavaScript Group bylaws (Statuten), approved at the founding meeting on 23rd May 2025, held by the board.
+Status: phases, Supabase Pro, the payments rule and the legal page updates signed off by the owner (5th November 2026). Phases 1 (data layer), 2 (sign-in) and 3 (requests and Slack review) are built. Based on `v2/switchover` (PR #68). Source for the bylaws analysis: the Swiss JavaScript Group bylaws (Statuten), approved at the founding meeting on 23rd May 2025, held by the board.
 
 ## Decisions taken (owner, 5th November 2026)
 

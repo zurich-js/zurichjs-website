@@ -2,14 +2,14 @@
  * The signed-in person's membership, for /membership/account.
  *
  * GET /api/membership/me   Authorization: Bearer <Supabase access token>
- *   200 { ok: true, email, member: null | MemberView }
+ *   200 { ok: true, email, member: null | MemberView, canApply }
  *   401 { ok: false, error }   not signed in, or the session expired
  *   503 { ok: false, error }   member accounts are not configured (no Supabase variables)
  *   502 { ok: false, error }   Supabase failed
  *
  * Only what the member may see: no Stripe ids, notes or audit log.
  */
-import { levelInfo, label, supabaseStore, SupabaseUnavailable, type Member, type MemberStore } from '@zurichjs/membership';
+import { canApply, levelInfo, label, supabaseStore, SupabaseUnavailable, type Member, type MemberStore } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { CONTACT_EMAIL, fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
 import { authUser, memberFor } from '../../../server/member-auth.ts';
@@ -51,7 +51,7 @@ export async function handleMe(request: Request, deps: { env?: Env; fetch?: type
     if (!user) return fail(401, 'Your session has ended. Sign in again.');
     const store = deps.store ?? supabaseStore(env, deps.fetch);
     const member = await memberFor(user, store);
-    return json(200, { ok: true, email: user.email, member: member ? memberView(member) : null });
+    return json(200, { ok: true, email: user.email, member: member ? memberView(member) : null, canApply: canApply(member?.status ?? null) });
   } catch (cause) {
     if (cause instanceof SupabaseUnavailable) return fail(503, `Member accounts are not available yet. Write to ${CONTACT_EMAIL}.`);
     console.error('[membership] me failed', cause);

@@ -18,7 +18,8 @@
     "e2e": "playwright test",
     "agent": "tsx tools/agent-cli.ts",
     "speaker-link": "tsx tools/speaker-profile-link.ts",
-    "membership:import": "tsx tools/membership-import.ts"
+    "membership:import": "tsx tools/membership-import.ts",
+    "membership:review": "tsx tools/membership-review.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

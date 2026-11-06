@@ -6,6 +6,9 @@ import MembershipForm from '~/components/islands/forms/MembershipForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
 
+// Member accounts on (docs/v2/MEMBERSHIP.md): requests go through /membership/account instead of email.
+const applyOnline = Boolean((import.meta.env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL) && (import.meta.env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY));
+
 // What members' fees pay for (owner, 3rd November 2026). Speaker travel is not listed: meetup talks don't cover it (see /cfp).
 const FEES = [
   ['Food and drinks', 'On the evenings that no host or sponsor covers.'],
@@ -28,7 +31,7 @@ const FEES = [
     <p class="m-0 text-[17px] text-grey-light max-w-[700px]">Coming to meetups is free and never needs a membership.</p>
   </PageOpening>
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
-    <MembershipForm client:load />
+    <MembershipForm client:load applyOnline={applyOnline} />
 
     <section aria-labelledby="h-fees" class="flex flex-col gap-5 max-w-[880px]">
       <h2 id="h-fees" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where the fees go</h2>

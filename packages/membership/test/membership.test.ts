@@ -129,6 +129,15 @@ describe('memory store', () => {
     expect((await s.byEmail('ada@EXAMPLE.com'))?.stripeCustomerId).toBe('cus_1');
   });
 
+  it('refuses a change when the member is no longer in the status the caller saw', async () => {
+    const s = memoryStore();
+    const m = await s.create(applicant, member);
+    await s.transition(m.id, { from: 'applied', to: 'approved', actor: board });
+    // A second approver pressing Reject on the same card: approved → rejected is allowed in general, but not from this card.
+    await expect(s.transition(m.id, { from: 'applied', to: 'rejected', actor: board })).rejects.toMatchObject({ code: 'conflict' });
+    expect((await s.get(m.id))!.status).toBe('approved');
+  });
+
   it('refuses a change the status machine does not allow, and logs nothing', async () => {
     const s = memoryStore();
     const m = await s.create(applicant, member);
@@ -200,6 +209,12 @@ describe('supabase store', () => {
     const refused = fake([[200, [row]]]);
     await expect(supabaseStore(env, refused.f).transition('m1', { to: 'approved', actor: member })).rejects.toThrow(/Only an organiser/);
     expect(refused.calls).toHaveLength(1);
+  });
+
+  it('refuses a stale expected status before calling the database', async () => {
+    const { f, calls } = fake([[200, [{ ...row, status: 'approved' }]]]);
+    await expect(supabaseStore(env, f).transition('m1', { from: 'applied', to: 'rejected', actor: board })).rejects.toMatchObject({ code: 'conflict' });
+    expect(calls).toHaveLength(1);
   });
 
   it('maps a lost race and a duplicate email to the store errors', async () => {

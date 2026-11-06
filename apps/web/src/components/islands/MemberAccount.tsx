@@ -1,8 +1,8 @@
 /**
  * The member area (/membership/account). Signs in with a Supabase email link
  * (implicit flow, so a link requested on a laptop also works on a phone), then
- * shows the membership from /api/membership/me. Phase 2 of
- * docs/v2/MEMBERSHIP.md: applying, signing and paying come in later phases.
+ * shows the membership from /api/membership/me, or the request form
+ * (MemberApply). Signing and paying come in later phases (docs/v2/MEMBERSHIP.md).
  *
  * Without PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY the page says
  * accounts are not available yet, instead of breaking.
@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { SubmitButton, useFocusWhen } from './forms/shared.tsx';
+import MemberApply, { readChoice } from './MemberApply.tsx';
 import type { MemberView } from '../../pages/api/membership/me.ts';
 
 interface Props {
@@ -24,7 +25,7 @@ type View =
   | { kind: 'loading' }
   | { kind: 'signed-out'; notice?: string }
   | { kind: 'sent'; email: string }
-  | { kind: 'signed-in'; email: string; member: MemberView | null }
+  | { kind: 'signed-in'; email: string; member: MemberView | null; canApply: boolean; justApplied?: boolean }
   | { kind: 'error'; message: string };
 
 const CYCLE_LABEL = { quarterly: 'Quarterly', yearly: 'Yearly' } as const;
@@ -82,14 +83,16 @@ export default function MemberAccount({ supabaseUrl, supabaseAnonKey, contactEma
     if (!auth) return;
     const load = async (token: string, userEmail: string) => {
       const res = await fetch('/api/membership/me', { headers: { authorization: `Bearer ${token}` } });
-      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; member?: MemberView | null; error?: string };
+      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; member?: MemberView | null; canApply?: boolean; error?: string };
       if (res.status === 401) {
         await auth?.signOut({ scope: 'local' });
         return setView({ kind: 'signed-out', notice: body.error });
       }
       if (!res.ok || !body.ok) return setView({ kind: 'error', message: body.error ?? `We couldn’t load your membership. Try again, or write to ${contactEmail}.` });
-      setView({ kind: 'signed-in', email: userEmail, member: body.member ?? null });
+      setView({ kind: 'signed-in', email: userEmail, member: body.member ?? null, canApply: body.canApply ?? false });
     };
+    // Keep the level and cycle from /membership (query string) for after signing in on this device.
+    readChoice();
     const link = takeLinkResult();
     // A fresh sign-in from the link (setSession checks the token with Supabase), or the session in storage.
     const session = link.tokens ? auth.setSession(link.tokens) : auth.getSession();
@@ -217,12 +220,29 @@ export default function MemberAccount({ supabaseUrl, supabaseAnonKey, contactEma
           Sign out
         </Button>
       </div>
-      {m ? <MemberSummary m={m} /> : <NotAMember contactEmail={contactEmail} />}
+      {view.canApply ? (
+        <MemberApply
+          token={async () => (await auth.getSession()).data.session?.access_token ?? null}
+          previous={m}
+          contactEmail={contactEmail}
+          onApplied={(member) => setView({ ...view, member, canApply: false, justApplied: true })}
+          onSignedOut={() => void signOut()}
+        />
+      ) : (
+        m && <MemberSummary m={m} justApplied={view.justApplied} />
+      )}
     </div>
   );
 }
 
-function MemberSummary({ m }: { m: MemberView }) {
+/** What happens next, per status (only the statuses that exist so far). */
+const NEXT: Partial<Record<MemberView['status'], string>> = {
+  applied: 'An organiser looks at your request soon, and you hear from us by email. Nothing has been charged.',
+  approved: 'Your request is approved. Signing the membership declaration opens here soon; we email you when it does. Nothing has been charged.',
+};
+
+function MemberSummary({ m, justApplied }: { m: MemberView; justApplied?: boolean }) {
+  const doneRef = useFocusWhen<HTMLParagraphElement>(!!justApplied);
   const rows: [string, string][] = [
     ['Membership', m.levelName],
     ['Status', m.statusLabel[0]!.toUpperCase() + m.statusLabel.slice(1)],
@@ -243,31 +263,17 @@ function MemberSummary({ m }: { m: MemberView }) {
           </div>
         ))}
       </dl>
-      {m.paymentMode === 'manual' && (
+      {justApplied && (
+        <p ref={doneRef} tabIndex={-1} role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 text-[17px] font-bold outline-hidden">
+          Request sent. We emailed you a copy.
+        </p>
+      )}
+      {NEXT[m.status] && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{NEXT[m.status]}</p>}
+      {m.paymentMode === 'manual' && m.status === 'imported_manual' && (
         <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
           You pay by hand today. Switching to automatic payment, with no charge before your paid period ends, comes to this page soon.
         </p>
       )}
-    </section>
-  );
-}
-
-function NotAMember({ contactEmail }: { contactEmail: string }) {
-  return (
-    <section aria-labelledby="h-none" class="flex flex-col gap-4">
-      <h2 id="h-none" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
-        You are not a member yet
-      </h2>
-      <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-        Choose a membership and ask to join; an organiser replies by email. Already a member? Sign in with the email you joined with, or write to{' '}
-        <a href={`mailto:${contactEmail}`} class="font-bold text-black">
-          {contactEmail}
-        </a>
-        .
-      </p>
-      <Button href="/membership#membership-form" variant="black" class="self-start">
-        See memberships
-      </Button>
     </section>
   );
 }

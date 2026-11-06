@@ -83,7 +83,9 @@ export type NewMember = Omit<Member, 'id' | 'createdAt' | 'updatedAt' | 'authUse
   Partial<Pick<Member, 'authUserId' | 'stripeCustomerId' | 'stripeSubscriptionId'>>;
 
 /** Fields that may change without a status transition. Status, Stripe ids and the end reason are not here on purpose. */
-export type MemberPatch = Partial<Pick<Member, 'authUserId' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt'>>;
+export type MemberPatch = Partial<
+  Pick<Member, 'authUserId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt'>
+>;
 
 /** One row of the append-only audit log (`member_events`). */
 export interface MemberEvent {

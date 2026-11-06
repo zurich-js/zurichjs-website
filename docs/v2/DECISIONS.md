@@ -437,3 +437,11 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **Implicit sign-in flow, not PKCE,** so a link requested on one device works on another. The tokens are taken out of the URL without leaving a history entry.
 - **Emails are plain TypeScript templates** on the design tokens, not React Email (deprecated components package, heavy CLI dependencies, React next to Preact). Recorded in `MEMBERSHIP.md`.
 - **The sign-in email comes from Supabase's Send Email Hook** (`/api/membership/auth-email`, Standard Webhooks signature checked without a library). It only sends sign-in links; password and email-change emails are refused, since member accounts have neither.
+
+## Membership phase 3: requests and Slack review (6th November 2026)
+
+- **Requesting membership needs an account:** `/membership/account` has the request form (person or organisation, level, cycle, an optional message). With member accounts configured, `/membership`'s "Ask to join" leads there with the chosen level and cycle; without them, the old email form stays (so CI, previews without Supabase and production behave as before).
+- **Approve and Reject in Slack,** only for Nadja, Bogdan and Faris. Reject asks for confirmation and gives no reason in the email. A click names the status it expects (`applied`), so a stale card or two approvers at once cannot flip an approved member to rejected.
+- **The applicant's message is not stored,** only shown in Slack (data minimisation).
+- **When Slack fails** the request is still taken; the organisers get an email and `pnpm membership:review` re-posts the cards.
+- **Production stays on the email form until payment exists** (phase 5): the `PUBLIC_SUPABASE_*` variables switch the flow, and the runbook says not to set them on production before then.

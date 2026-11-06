@@ -79,6 +79,12 @@ d('membership migration', () => {
       expect(db.sql(`select notes from public.members where id = '${ids.a}'`)).toBe('Paid by bank transfer');
     });
 
+    it('switches a person to an organisation only together with its name', () => {
+      expect(db.fails(`select public.member_update('${ids.c}', '{"kind":"organisation"}', 'member', 'auth')`, { role: 'service_role' })).toMatch(/organisation_has_name/);
+      db.sql(`select public.member_update('${ids.c}', '{"kind":"organisation","organisation_name":"Acme AG"}', 'member', 'auth')`, { role: 'service_role' });
+      expect(db.sql(`select kind || ':' || organisation_name from public.members where id = '${ids.c}'`)).toBe('organisation:Acme AG');
+    });
+
     it('keeps manual members dated', () => {
       expect(() => create(db, { email: 'd@example.com', name: 'D', level: 'basic', cycle: 'yearly', source: 'imported', status: 'imported_manual' })).toThrow(
         /manual_has_paid_until/,

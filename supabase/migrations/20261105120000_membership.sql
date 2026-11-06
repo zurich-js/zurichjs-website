@@ -237,12 +237,13 @@ declare
   unknown text[];
 begin
   select array_agg(k) into unknown from jsonb_object_keys(p_patch) k
-  where k not in ('auth_user_id', 'name', 'organisation_name', 'level', 'cycle', 'category', 'paid_until', 'payment_mode', 'notes', 'joined_at');
+  where k not in ('auth_user_id', 'kind', 'name', 'organisation_name', 'level', 'cycle', 'category', 'paid_until', 'payment_mode', 'notes', 'joined_at');
   if unknown is not null then
     raise exception 'member_update cannot change %', array_to_string(unknown, ', ') using errcode = 'P0001';
   end if;
   update public.members set
     auth_user_id = case when p_patch ? 'auth_user_id' then (p_patch->>'auth_user_id')::uuid else auth_user_id end,
+    kind = case when p_patch ? 'kind' then (p_patch->>'kind')::public.member_kind else kind end,
     name = case when p_patch ? 'name' then p_patch->>'name' else name end,
     organisation_name = case when p_patch ? 'organisation_name' then p_patch->>'organisation_name' else organisation_name end,
     level = case when p_patch ? 'level' then (p_patch->>'level')::public.member_level else level end,

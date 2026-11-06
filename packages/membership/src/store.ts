@@ -2,6 +2,11 @@ import { checkTransition, TransitionError } from './state.ts';
 import type { Actor, EndedReason, Member, MemberEvent, MemberPatch, NewMember, Status } from './types.ts';
 
 export interface TransitionInput {
+  /**
+   * The status the caller saw. When set, the change fails with a `conflict` if the
+   * member is no longer in it (a stale Slack card, two approvers at once).
+   */
+  from?: Status;
   to: Status;
   actor: Actor;
   reason?: EndedReason;
@@ -19,6 +24,8 @@ export interface MemberStore {
   byEmail(email: string): Promise<Member | null>;
   byAuthUser(authUserId: string): Promise<Member | null>;
   byStripeSubscription(subscriptionId: string): Promise<Member | null>;
+  /** Oldest first, at most 200 (e.g. the applications waiting for review). */
+  byStatus(status: Status): Promise<Member[]>;
   /** Fails with `DuplicateEmail` if the email exists. */
   create(m: NewMember, actor: Actor): Promise<Member>;
   update(id: string, patch: MemberPatch, actor: Actor): Promise<Member>;
@@ -78,6 +85,7 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
     byEmail: (email) => find((m) => m.email === normaliseEmail(email)),
     byAuthUser: (uid) => find((m) => m.authUserId === uid),
     byStripeSubscription: (sid) => find((m) => m.stripeSubscriptionId === sid),
+    byStatus: (status) => Promise.resolve([...members.values()].filter((m) => m.status === status).map((m) => ({ ...m }))),
     async create(input, actor) {
       const email = normaliseEmail(input.email);
       if ([...members.values()].some((m) => m.email === email)) throw new DuplicateEmail(email);
@@ -99,8 +107,8 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
     },
     async transition(id, input) {
       const m = must(id);
+      if (input.from && m.status !== input.from) throw new TransitionError('The membership changed in the meantime. Look again.', 'conflict');
       const t = checkTransition(m, input.to, input.actor.kind, input.reason);
-      if (members.get(id)!.status !== t.from) throw new TransitionError('The membership changed in the meantime. Look again.', 'conflict');
       record(id, 'status_changed', input.actor, { fromStatus: t.from, toStatus: t.to, payload: { ...input.payload, ...(t.endedReason ? { reason: t.endedReason } : {}) } });
       return save({ ...m, status: t.to, endedReason: t.endedReason });
     },

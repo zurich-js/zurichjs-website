@@ -10,8 +10,13 @@ import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, perYear, type Cycle, type Tier
 /** The billing switch: yearly first, as it costs less. */
 const BILLING = [...CYCLES].reverse();
 
-/** Tier cards plus the membership request form on /membership. Posts to /api/verein-inquiry; nothing is charged. */
-export default function MembershipForm() {
+/**
+ * Tier cards plus the membership request on /membership. Nothing is charged.
+ * With member accounts configured (`applyOnline`), "Ask to join" leads to
+ * /membership/account with the chosen level and cycle; otherwise the request
+ * form posts to /api/verein-inquiry and an organiser replies by email.
+ */
+export default function MembershipForm({ applyOnline = false }: { applyOnline?: boolean }) {
   const [tier, setTier] = useState<TierKey>('supporter');
   const [cycle, setCycle] = useState<Cycle>('yearly');
   const [f, setF] = useState({ name: '', email: '', message: '' });
@@ -171,10 +176,24 @@ export default function MembershipForm() {
           <h2 id="h-join" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
             Ask to join
           </h2>
-          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Nothing is charged here. An organiser replies by email with the next steps and how to pay.</p>
+          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+            {applyOnline
+              ? 'Nothing is charged here. Sign in with your email to send your request; an organiser looks at it, you sign the membership declaration, and only then set up payment.'
+              : 'Nothing is charged here. An organiser replies by email with the next steps and how to pay.'}
+          </p>
         </div>
 
-        {sent ? (
+        {applyOnline ? (
+          <div class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-4">
+            <p class="m-0 text-[20px] font-bold leading-[1.3]" aria-live="polite">
+              {t.name}, {fee}
+            </p>
+            <Button href={`/membership/account?level=${tier}&cycle=${cycle}`} variant="black" size="lg" class="self-start">
+              Continue to sign in
+            </Button>
+            <p class="m-0 text-[16px] text-ink-2">Already a member? Sign in there to see your membership.</p>
+          </div>
+        ) : sent ? (
           <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
             <div class="text-[28px] font-bold leading-[1.15]">Request sent.</div>
             <p class="m-0 text-[18px] leading-[1.55]">

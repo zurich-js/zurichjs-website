@@ -237,3 +237,25 @@ Members sign in with an emailed link (Supabase Auth, no passwords). Supabase doe
 | `MEMBERSHIP_FROM`             | functions                  | optional, default `ZurichJS <hello@zurichjs.com>`: the sender of member emails (Resend) |
 
 **Locally:** without the `PUBLIC_SUPABASE_*` variables `/membership/account` says accounts are not available yet. Without `RESEND_API_KEY` the hook logs a stub line instead of sending. To see an email: `pnpm --filter @zurichjs/emails preview <folder>` writes every template as HTML and text.
+
+### Membership requests and Slack review (phase 3)
+
+Signed-in people ask to join on `/membership/account`. The request posts a card with **Approve** and **Reject** to Slack, and the person gets an email copy. Only `SLACK_MEMBERSHIP_APPROVER_IDS` can decide (others get a note only they can see). A decision replaces the buttons, emails the person (approved: sign the declaration next; rejected: a neutral note, no reason), and is in the audit log with the approver's Slack ID. Nothing is charged at this point.
+
+| Variable                        | Where     | What                                                                                                |
+| ------------------------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| `SLACK_MEMBERSHIP_CHANNEL_ID`   | functions | the private channel for review cards; falls back to `SLACK_AGENT_CHANNEL_ID`. Invite @ZurichJS Bot. |
+| `SLACK_MEMBERSHIP_APPROVER_IDS` | functions | see above (Nadja, Bogdan, Faris)                                                                    |
+
+The cards use the content agent's Slack app (`SLACK_AGENT_BOT_TOKEN`, `SLACK_SIGNING_SECRET`), because a Slack app has one interactivity URL. Its existing `chat:write` scope covers posting, updating and the private notes; the manifest is unchanged.
+
+**If a card is missing** (Slack was down or not set up), the organisers get an email instead, and this posts the cards for every waiting request:
+
+```bash
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… SLACK_AGENT_BOT_TOKEN=… SLACK_MEMBERSHIP_CHANNEL_ID=… pnpm membership:review          # lists, posts nothing
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… SLACK_AGENT_BOT_TOKEN=… SLACK_MEMBERSHIP_CHANNEL_ID=… pnpm membership:review --post
+```
+
+The applicant's message is only in the first card and the fallback email: it is not stored.
+
+**Do not set `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` on production before phase 5 (payment) is merged.** With them set, `/membership` sends people to the account page instead of the email form, and approved members would have no way to sign and pay yet. Use them on staging and previews until then.

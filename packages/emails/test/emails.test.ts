@@ -5,6 +5,14 @@ import { describe, expect, it } from 'vitest';
 import { render, renderEmail, safeUrl, TEMPLATE_NAMES } from '../src/index.ts';
 
 const root = join(import.meta.dirname, '../../..');
+const application = {
+  name: 'Ada  Lovelace',
+  organisationName: null,
+  levelName: 'Supporter',
+  cycleLabel: 'Yearly',
+  feeLabel: 'CHF 250 a year',
+  accountUrl: 'https://zurichjs.com/membership/account',
+};
 const link = 'https://abc.supabase.co/auth/v1/verify?token=t1&type=magiclink&redirect_to=https%3A%2F%2Fzurichjs.com%2Fmembership%2Faccount';
 
 describe('login-link', () => {
@@ -28,6 +36,29 @@ describe('login-link', () => {
   });
 });
 
+describe('application emails', () => {
+  it('confirms the request with what the person chose, and says nothing is charged', () => {
+    const e = renderEmail('application-received', { ...application, organisationName: 'Acme AG' });
+    expect(e.text).toMatch(/^Thanks, Ada\n/);
+    expect(e.text).toContain('Organisation: Acme AG\nMembership: Supporter\nBilling: Yearly\nFee: CHF 250 a year');
+    expect(e.text).toContain('Nothing has been charged.');
+    expect(e.text).toContain('See your request: https://zurichjs.com/membership/account');
+  });
+
+  it('sends the approved member to sign first, then pay', () => {
+    const e = renderEmail('application-approved', application);
+    expect(e.subject).toBe('Your ZurichJS membership is approved');
+    expect(e.text).toContain('Sign the declaration: https://zurichjs.com/membership/account');
+    expect(e.html).toContain('#dcf0e1'); // the success box, in success-soft
+  });
+
+  it('declines neutrally, without a reason, and points to the free meetups', () => {
+    const e = renderEmail('application-declined', application);
+    expect(e.text).toContain('See upcoming meetups: https://zurichjs.com/events');
+    expect(e.text).not.toMatch(/because|reason/i);
+  });
+});
+
 describe('layout', () => {
   it('escapes everything a template passes', () => {
     const e = render({ subject: 'S <b>', preheader: 'P', heading: 'H "q"', blocks: [{ kind: 'p', text: '<script>alert(1)</script> & co' }] });
@@ -45,7 +76,7 @@ describe('layout', () => {
 
   it('follows the brand rules: only token colours, no em or en dashes', () => {
     for (const name of TEMPLATE_NAMES) {
-      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true });
+      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true, ...application } as never);
       const used = new Set((e.html.match(/#[0-9a-f]{6}\b/gi) ?? []).map((c) => c.toLowerCase()));
       const allowed = new Set(Object.values(colors).map((c) => c.toLowerCase()));
       expect([...used].filter((c) => !allowed.has(c))).toEqual([]);

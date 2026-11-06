@@ -119,6 +119,9 @@ importers:
       '@resvg/resvg-js':
         specifier: 2.6.2
         version: 2.6.2
+      '@supabase/auth-js':
+        specifier: 2.118.0
+        version: 2.118.0
       '@tailwindcss/vite':
         specifier: 4.3.3
         version: 4.3.3(vite@8.3.5(@types/node@22.15.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -131,6 +134,9 @@ importers:
       '@zurichjs/design':
         specifier: workspace:*
         version: link:../../packages/design
+      '@zurichjs/emails':
+        specifier: workspace:*
+        version: link:../../packages/emails
       '@zurichjs/events':
         specifier: workspace:*
         version: link:../../packages/events
@@ -236,6 +242,19 @@ importers:
       preact:
         specifier: 10.29.8
         version: 10.29.8(preact-render-to-string@6.8.2)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/emails:
+    dependencies:
+      '@zurichjs/design':
+        specifier: workspace:*
+        version: link:../design
+    devDependencies:
+      '@zurichjs/config':
+        specifier: workspace:*
+        version: link:../config
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -4074,6 +4093,10 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@supabase/auth-js@2.118.0':
+    resolution: {integrity: sha512-xWfPXyhS2KDSfAneMtI6p/tBnbdiz/5vaRKXEqUfzfC9WCniKr2Ds5o5G7RIGig0bom4z6wUY9zaV07WDVTfnQ==}
+    engines: {node: '>=22.0.0'}
 
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
@@ -13233,6 +13256,10 @@ snapshots:
       text-hex: 1.0.0
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@supabase/auth-js@2.118.0':
+    dependencies:
+      tslib: 2.8.1
 
   '@tailwindcss/node@4.3.3':
     dependencies:

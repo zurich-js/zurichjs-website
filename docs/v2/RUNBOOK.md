@@ -191,7 +191,7 @@ Without the key (no `STRIPE_*` variables), "Continue to secure payment" answers 
 
 ## Member database (Supabase)
 
-Self-serve membership is being built in phases (`docs/v2/MEMBERSHIP.md`). Phase 1 adds the database and the import; nothing on the site uses it yet.
+Self-serve membership is being built in phases (`docs/v2/MEMBERSHIP.md`). Phase 1 added the database and the import, phase 2 the sign-in and `/membership/account` (shows the membership; applying, signing and paying come later). `/membership` still sends requests by email as before.
 
 **Set up (owner, once):**
 
@@ -215,3 +215,25 @@ SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… pnpm membership:import members.cs
 The dry run stops on any problem (with line numbers) and on emails already in the database. With `--apply`, each member becomes "paid by hand until `paid_until`", the PDF goes to the private `declarations` bucket with its SHA-256, and the creation is in the audit log. Run it on staging first: `--apply` has been tested only against the local stand-in, not a real project yet.
 
 **Tests:** `pnpm test` runs the migration on a throwaway local Postgres (needs the `postgresql` package; skipped without it) and checks the access rules.
+
+### Member sign-in (phase 2)
+
+Members sign in with an emailed link (Supabase Auth, no passwords). Supabase does not send the email itself: its Send Email Hook calls `/api/membership/auth-email`, which sends the ZurichJS email through Resend.
+
+**Supabase project settings (owner, once per project):**
+
+1. Authentication › Sign In / Providers: Email on; "Confirm email" on.
+2. Authentication › URL Configuration: Site URL `https://zurichjs.com`; Redirect URLs `https://zurichjs.com/membership/account`, plus `http://localhost:4321/membership/account` on staging and the deploy-preview pattern for previews.
+3. Authentication › Hooks › Send Email: HTTPS, `https://zurichjs.com/api/membership/auth-email` (staging: the preview URL). Generate the secret and copy it into `SUPABASE_AUTH_HOOK_SECRET`.
+4. Email OTP expiry (Authentication › Sign In / Providers › Email): keep `SUPABASE_OTP_EXPIRY_MINUTES` the same, so the email states the right lifetime.
+5. Use asymmetric JWT signing keys if offered (Supabase recommends them); the site checks tokens with `/auth/v1/user`, which works with either.
+
+| Variable                      | Where                      | What                                                                                    |
+| ----------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`         | build (read at build time) | the project URL, for the sign-in form; without it the page says accounts are not ready  |
+| `PUBLIC_SUPABASE_ANON_KEY`    | build                      | the publishable (anon) key: public by design, row-level security protects the data      |
+| `SUPABASE_AUTH_HOOK_SECRET`   | functions, secret          | `v1,whsec_…` from the Send Email hook; without it every sign-in email is refused        |
+| `SUPABASE_OTP_EXPIRY_MINUTES` | functions                  | optional, default 60: the link lifetime stated in the email                             |
+| `MEMBERSHIP_FROM`             | functions                  | optional, default `ZurichJS <hello@zurichjs.com>`: the sender of member emails (Resend) |
+
+**Locally:** without the `PUBLIC_SUPABASE_*` variables `/membership/account` says accounts are not available yet. Without `RESEND_API_KEY` the hook logs a stub line instead of sending. To see an email: `pnpm --filter @zurichjs/emails preview <folder>` writes every template as HTML and text.

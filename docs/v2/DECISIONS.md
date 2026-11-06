@@ -430,3 +430,10 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **Imported members re-sign digitally** before switching to automatic payment.
 - **Retention:** one year after a membership ends, then the member is anonymised in the database (`member_anonymise`); Stripe's payment records stay, for the accounts.
 - **Still open:** the basic discount and which paid events are included each year (board).
+
+## Membership phase 2: sign-in and the account page (6th November 2026)
+
+- **`/membership/account`** (noindex, not in the sitemap or `llms.txt`): sign in by emailed link, then see the membership (level, status, billing, paid until, member since). People without a membership are sent to `/membership`. Imported members are linked to their account the first time their email signs in.
+- **Implicit sign-in flow, not PKCE,** so a link requested on one device works on another. The tokens are taken out of the URL without leaving a history entry.
+- **Emails are plain TypeScript templates** on the design tokens, not React Email (deprecated components package, heavy CLI dependencies, React next to Preact). Recorded in `MEMBERSHIP.md`.
+- **The sign-in email comes from Supabase's Send Email Hook** (`/api/membership/auth-email`, Standard Webhooks signature checked without a library). It only sends sign-in links; password and email-change emails are refused, since member accounts have neither.

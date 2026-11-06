@@ -202,6 +202,49 @@ export async function sendEmail(env: Env, subject: string, text: string, replyTo
   if (!res.ok) throw new Error(`Resend ${res.status}`);
 }
 
+export interface MemberEmail {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}
+
+/**
+ * Sends one email to a member (rendered by @zurichjs/emails) through Resend.
+ * From MEMBERSHIP_FROM (default hello@zurichjs.com, so replies reach the
+ * organisers). `idempotencyKey` makes a retried send a no-op at Resend (24 h).
+ * Without RESEND_API_KEY it logs a stub line, with the address masked.
+ */
+export async function sendMemberEmail(
+  env: Env,
+  email: MemberEmail,
+  opts: { idempotencyKey?: string; log?: Log; fetch?: typeof fetch; timeoutMs?: number } = {},
+): Promise<{ sent: boolean }> {
+  const log = opts.log ?? console.log;
+  if (!env.RESEND_API_KEY) {
+    log(`[email] RESEND_API_KEY missing; not sent to ${email.to.replace(/^[^@]+/, '***')}: ${email.subject}`);
+    return { sent: false };
+  }
+  const res = await (opts.fetch ?? fetch)('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+      ...(opts.idempotencyKey ? { 'idempotency-key': opts.idempotencyKey.slice(0, 256) } : {}),
+    },
+    body: JSON.stringify({
+      from: env.MEMBERSHIP_FROM ?? 'ZurichJS <hello@zurichjs.com>',
+      to: [email.to],
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+    }),
+    signal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
+  });
+  if (!res.ok) throw new Error(`Resend ${res.status}`);
+  return { sent: true };
+}
+
 /**
  * Posts to Slack through an incoming webhook (SLACK_WEBHOOK_URL) or, as the production site
  * already does, through the bot API (SLACK_BOT_TOKEN + SLACK_DEFAULT_CHANNEL).

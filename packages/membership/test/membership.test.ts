@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   atLeast,
   canApply,
+  canStartAutomaticPayment,
   checkTransition,
   isMember,
   memoryStore,
@@ -47,8 +48,9 @@ const code = (fn: () => unknown) => {
 };
 
 describe('levels', () => {
-  it('orders the four bylaw levels and names Stripe prices after them', () => {
-    expect(atLeast('advocate', 'supporter')).toBe(true);
+  it('orders the levels and names Stripe prices after them', () => {
+    expect(atLeast('supporter', 'basic')).toBe(true);
+    expect(atLeast('supporter', 'supporter')).toBe(true);
     expect(atLeast('basic', 'supporter')).toBe(false);
     expect(priceLookupKey('basic', 'quarterly')).toBe('member_basic_quarterly');
   });
@@ -98,6 +100,14 @@ describe('status machine', () => {
     expect(isMember('signed')).toBe(false);
     expect(canApply(null) && canApply('ended') && canApply('rejected')).toBe(true);
     expect(canApply('applied')).toBe(false);
+  });
+
+  it('makes imported members re-sign digitally before automatic payment', () => {
+    expect(canStartAutomaticPayment({ status: 'imported_manual', paymentMode: 'manual' }, false)).toBe(false);
+    expect(canStartAutomaticPayment({ status: 'imported_manual', paymentMode: 'manual' }, true)).toBe(true);
+    expect(canStartAutomaticPayment({ status: 'signed', paymentMode: 'automatic' }, true)).toBe(true);
+    expect(canStartAutomaticPayment({ status: 'approved', paymentMode: 'automatic' }, true)).toBe(false);
+    expect(canStartAutomaticPayment({ status: 'active', paymentMode: 'automatic' }, true)).toBe(false);
   });
 
   it('never lets the import script change a status (it only creates)', () => {
@@ -258,7 +268,7 @@ describe('import', () => {
     expect(problems.filter((p) => p.line === 2).map((p) => p.message)).toEqual([
       'name is empty.',
       'email "" is not an email address.',
-      'level must be basic, supporter, enthusiast or advocate, not "gold".',
+      'level must be basic or supporter, not "gold".',
       'cycle must be quarterly or yearly, not "monthly".',
       'joined_at "2025-02-30" is not a date like 2025-05-23.',
       'paid_until is empty: say until when they have paid.',

@@ -4,8 +4,8 @@
  *
  *   kind,name,organisation,email,level,cycle,category,joined_at,paid_until,declaration_pdf,notes
  *
- * kind: person | organisation (empty = person). level: basic | supporter |
- * enthusiast | advocate. cycle: quarterly | yearly. category: passive | active
+ * kind: person | organisation (empty = person). level: basic | supporter.
+ * cycle: quarterly | yearly. category: passive | active
  * (empty = passive). Dates are YYYY-MM-DD; paid_until is required.
  * declaration_pdf is the path to the signed paper declaration, relative to the
  * CSV, or empty. Rows become `imported_manual` members paying by hand.
@@ -92,7 +92,7 @@ export function parseImport(text: string): { rows: ImportRow[]; problems: Import
     else if (seen.has(email)) bad(`${email} is already on line ${seen.get(email)}.`);
     else seen.set(email, line);
     const level = get('level').toLowerCase();
-    if (!isLevel(level)) bad(`level must be basic, supporter, enthusiast or advocate, not "${get('level')}".`);
+    if (!isLevel(level)) bad(`level must be basic or supporter, not "${get('level')}".`);
     const cycle = get('cycle').toLowerCase();
     if (!isCycle(cycle)) bad(`cycle must be quarterly or yearly, not "${get('cycle')}".`);
     const category = (get('category').toLowerCase() || 'passive') as Category;

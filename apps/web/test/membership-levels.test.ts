@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { CYCLES, TIERS, TIER_KEYS } from '../src/lib/membership.ts';
 
 describe('fee table and membership levels', () => {
-  it('offers on /membership exactly the levels the membership package offers, by the bylaws names', () => {
-    expect(TIER_KEYS).toEqual(LEVELS.filter((l) => l.offered).map((l) => l.key));
+  it('offers on /membership exactly the membership levels, by their bylaw names', () => {
+    expect(TIER_KEYS).toEqual(LEVELS.map((l) => l.key));
     for (const k of TIER_KEYS) expect(TIERS[k].name).toBe(LEVELS.find((l) => l.key === k)!.name);
   });
 

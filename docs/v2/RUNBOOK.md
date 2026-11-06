@@ -199,10 +199,11 @@ Self-serve membership is being built in phases (`docs/v2/MEMBERSHIP.md`). Phase 
 2. Apply `supabase/migrations/*.sql` in order, staging first (Supabase SQL editor, or `supabase db push` with the CLI linked to the project).
 3. Check the staging project by hand once: as a signed-in test user, `select * from members` fails, `select name from members` returns only that user's row; the `declarations` and `member-documents` buckets are private.
 
-| Variable                    | Where                                    | Used by                                                                             |
-| --------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
-| `SUPABASE_URL`              | functions and organisers' shells         | the member store, the import                                                        |
-| `SUPABASE_SERVICE_ROLE_KEY` | functions and organisers' shells, secret | the same; bypasses row-level security, so never `PUBLIC_` and never in browser code |
+| Variable                        | Where                                    | Used by                                                                                                                                                     |
+| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SUPABASE_URL`                  | functions and organisers' shells         | the member store, the import                                                                                                                                |
+| `SUPABASE_SERVICE_ROLE_KEY`     | functions and organisers' shells, secret | the same; bypasses row-level security, so never `PUBLIC_` and never in browser code                                                                         |
+| `SLACK_MEMBERSHIP_APPROVER_IDS` | functions                                | who may approve or reject applications in Slack: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris; owner, 6th November 2026). Used from phase 3. |
 
 **Import existing members** (signed on paper, paid by hand). The CSV columns are described in `packages/membership/src/import.ts`; put each scanned declaration PDF next to the CSV.
 

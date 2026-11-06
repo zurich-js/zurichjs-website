@@ -24,8 +24,8 @@ My reading of the text, not legal advice. Items marked **board** need a board de
 1. **Signing is fine as click-to-sign.** The bylaws set no form for joining (Art. 4: any person who supports the goals may join). The signed document is a membership declaration (Beitrittserklärung): accepting the bylaws (version stored), level, dues, cycle, resignation terms. The PDF embeds the bylaws version it accepted.
 2. **No fixed commitment beyond the paid period.** Art. 5: resignation "at any time in writing to the Board, provided there are no outstanding dues". A 12-month lock-in on a quarterly plan has no basis in the bylaws. So "commitment period" = the billing period already paid (quarterly or yearly up front); resignation takes effect at the end of it, no refund. Longer commitments need a bylaw amendment at the GV (**board**). `commitmentEndsAt` is dropped from the model.
 3. **Cancellation is a resignation, not a request we can refuse.** The board cannot say "Keep". The Slack card becomes **Confirm resignation** with an automatic check: if an invoice is open or `past_due`, it says so and the resignation waits until it is paid (that is the only bylaw condition). Members still cannot cancel in Stripe themselves, which matches "to the Board".
-4. **"In writing"** (schriftlich). Whether a request from the logged-in account plus our confirmation email counts is a **board** call; the clean fix is amending Art. 5 at the next GV to "in writing or electronically". Until then the account flow also emails the member a copy of their resignation for the record.
-5. **Four levels, not two.** Art. 4 lists Basic Member, Supporter, Enthusiast, Advocate. The site has two. The model and Stripe lookup keys cover all four; Enthusiast and Advocate stay hidden until the owner sets fees and benefits (**owner**).
+4. **"In writing"** (schriftlich): a resignation sent from the logged-in account counts as written notice to the board (owner, 6th November 2026). The member also gets an email copy of their resignation for the record.
+5. **Two levels, one to one with the site.** Art. 4 also names Enthusiast and Advocate, but they do not exist yet (owner, 6th November 2026). The model has only Basic Member and Supporter; adding a level later is one migration (`alter type member_level add value`) and a row in `levels.ts`.
 6. **Passive vs active is about attendance, not the fee.** Active = at least 40% of events per year. Voting on minor decisions is for active members; Supporter-level and up also have a say in dates and speakers. The record gets `category: passive | active`, set by the board each year at first (attendance data from Meetup/Sane can come later). Current `/membership` copy says Basic gets "vote on small decisions" without the attendance condition; flag in `CONTENT-SOURCES.md`, change only with the owner.
 7. **Perks the bylaws name:** a basic discount set by the board (all members), and one paid event per year included for active members. The perk model needs a yearly entitlement (issued, redeemed) for that event, not just a list.
 8. **Legal persons can join.** Record gets `kind: person | organisation`, organisation name and the signatory's name.
@@ -69,7 +69,7 @@ Signed PDFs go to a private Storage bucket `declarations`; downloads are signed 
 
 1. **Log in:** Supabase Auth magic link (`signInWithOtp`, redirect to `/membership/account`). Supabase's Send Email Hook calls `/api/membership/auth-email` (signed by Supabase), which sends our `login-link` template through Resend, so the login email looks like every other ZurichJS email and is not throttled by Supabase's sender. Signing in creates an auth user, not a member. The first login links an imported member by email.
 2. **Apply:** logged-in `POST /api/membership/apply` {name, tier, cycle, message} → `member` with `applied` → Slack message in the organisers' channel with **Approve** / **Reject** (`action_id: member_approve|member_reject`, value = member id). Replaces `/api/verein-inquiry` (route kept, answering for old clients, until removed with a decision).
-3. **Approve (Slack):** only `SLACK_PUBLISHER_IDS` (or a new `SLACK_MEMBERSHIP_APPROVER_IDS`) → `approved` → email "sign your declaration" with a login link to `/membership/account`.
+3. **Approve (Slack):** only the people in `SLACK_MEMBERSHIP_APPROVER_IDS`: Nadja, Bogdan and Faris (owner, 6th November 2026) → `approved` → email "sign your declaration" with a login link to `/membership/account`.
 4. **Sign:** the account page shows the declaration and the bylaws in full (DE and EN), a typed full name, an explicit consent checkbox, and the level and cycle chosen. `POST /api/membership/sign` renders the PDF (agreement text, name, timestamp UTC + Zurich, IP, UA, version, hash), stores it in the private bucket, sets `signed`, emails the member a copy and Slacks the organisers.
 5. **Pay:** only from `signed`. `POST /api/membership/checkout` → Stripe Checkout `mode=subscription`, price by lookup key, `customer` reused or created with `metadata.memberId`, `subscription_data.metadata.source = 'zurichjs.com/membership'`. Webhook `/api/membership/webhook` (own endpoint and secret, so donation handling stays untouched): `checkout.session.completed` → `active`; `invoice.paid` → move `paidUntil`; `invoice.payment_failed` → `past_due` + Slack; `customer.subscription.deleted` → `ended`. Idempotent on Stripe event id (`stripe_events`).
 6. **No self-cancel:** a dedicated Stripe Billing Portal configuration (created once by script, id in `STRIPE_MEMBER_PORTAL_CONFIG`) with `subscription_cancel` and `subscription_update` disabled, payment-method and invoice history enabled. Portal sessions are created server-side per member (`billing_portal/sessions` with `configuration`), so the donation portal link is never used for members. A member can still dispute a charge with their card issuer; that is a policy matter for the terms, not something the system can block.
@@ -109,7 +109,7 @@ Organiser notifications stay in Slack. Stripe keeps sending its own receipts and
 ### Migrating existing members
 
 - `tools/membership/import-members.mjs`: CSV (kind, name, organisation, email, level, cycle, category, joinedAt, paidUntil, signed paper declaration PDF path, notes) → `member` with `source: imported`, `status: imported_manual`, `paymentMode: manual`. Paper PDFs go to the private bucket as `declarations` with `kind: paper_import` and their hash. Dry run by default; writing needs `--apply`. Run against a staging Supabase project first.
-- **Moving them to automatic payment:** the account page shows "Switch to automatic payment". Checkout in subscription mode with `subscription_data.trial_end = paidUntil` (no charge until what they already paid runs out; Stripe requires `trial_end` at least 48 h ahead, so near-expiry members are charged at signup). On success, `paymentMode: automatic`, status `active`. Imported members who never signed digitally can be asked to sign the current version first (open question 5).
+- **Moving them to automatic payment:** the account page shows "Switch to automatic payment". Checkout in subscription mode with `subscription_data.trial_end = paidUntil` (no charge until what they already paid runs out; Stripe requires `trial_end` at least 48 h ahead, so near-expiry members are charged at signup). On success, `paymentMode: automatic`, status `active`. Imported members must re-sign the current declaration digitally before they can switch (owner, 6th November 2026; `canStartAutomaticPayment` in `state.ts`). The paper copy stays on file.
 - **Reminders:** a scheduled function (pattern: `netlify/functions/scheduled-rebuild.mts`) emails imported manual members 30 and 7 days before `paidUntil`, and Slacks the organisers a weekly list of expiries. No automatic status change without a person.
 
 ### Admin surface
@@ -128,14 +128,18 @@ Two Supabase projects: `zurichjs-members-staging` (deploy previews, tests) and `
 - Production Stripe objects (prices, portal configuration, webhook) and the production Supabase project (and its plan) are production changes: scripts are written and tested in test mode; the owner runs them on live.
 - `/membership` keeps its URL; new routes are `noindex` and excluded from the sitemap and `llms.txt`, so the SEO gate only needs allowlist entries for new routes.
 
-## Open questions (after reading the bylaws)
+## Answers (owner, 6th November 2026)
 
-1. **Board:** does an account request plus our email confirmation count as "in writing" for resignation, or do we amend Art. 5 at the next GV?
-2. **Owner:** fees and benefits for Enthusiast and Advocate, or keep them hidden for now.
-3. **Board:** who may approve admissions in Slack (the bylaws let the board delegate; Art. 8). Approval itself is our policy, not a bylaw requirement.
-4. **Board:** the "basic discount" and which paid event counts as the included one per year.
-5. **Owner:** do imported members re-sign the declaration digitally, or does the paper copy stand.
-6. Data to keep per member (address?) and retention after leaving, for the privacy policy.
+1. A resignation from the logged-in account counts as "in writing" (Art. 5).
+2. Only Basic Member and Supporter exist; Enthusiast and Advocate are not modelled.
+3. Nadja, Bogdan and Faris approve applications in Slack.
+4. Imported members re-sign the declaration digitally before automatic payment.
+5. **Retention:** member data is kept for one year after the membership ends, then anonymised (`member_anonymise` in the migration): name, email, organisation, notes, Stripe ids and the signing evidence (typed name, IP, browser) are removed, the signed PDFs and the auth user are deleted, and the row stays as a count with its level and dates. The function refuses before a year has passed.
+
+**Still open:**
+
+- **Board:** what the "basic discount" is, and which paid events are included each year (Art. 4). Perks and entitlements wait for this; nothing else does.
+- **Accounting records (check with whoever keeps the books):** Swiss law most likely requires keeping bookkeeping records for 10 years (OR Art. 958f), which is longer than the one-year member data rule. Stripe invoices and payouts are those records, so the anonymisation never touches Stripe; only the member database is anonymised. My reading, not legal advice.
 
 ## Phases (one PR each; base branch to agree with the owner)
 

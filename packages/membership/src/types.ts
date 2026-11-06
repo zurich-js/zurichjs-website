@@ -4,8 +4,12 @@
  * Bylaws references: Statuten approved on 23rd May 2025 (docs/v2/MEMBERSHIP.md).
  */
 
-/** The four levels in the bylaws (Art. 4). Only some are offered on the site (levels.ts). */
-export type Level = 'basic' | 'supporter' | 'enthusiast' | 'advocate';
+/**
+ * The levels that exist today, one to one with the fees on /membership. The bylaws (Art. 4)
+ * also name Enthusiast and Advocate; they do not exist yet (owner, 6th November 2026).
+ * Adding one later is a migration (`alter type member_level add value`) plus a row in levels.ts.
+ */
+export type Level = 'basic' | 'supporter';
 
 export type Cycle = 'quarterly' | 'yearly';
 

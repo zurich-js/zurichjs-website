@@ -4,16 +4,12 @@ export interface LevelInfo {
   key: Level;
   /** The name in the bylaws (Art. 4). */
   name: string;
-  /** Offered on /membership. Enthusiast and Advocate wait for the owner's fees and benefits. */
-  offered: boolean;
 }
 
 /** Lowest first. The order decides which documents and perks a level sees ("Supporter and up"). */
 export const LEVELS: readonly LevelInfo[] = [
-  { key: 'basic', name: 'Basic Member', offered: true },
-  { key: 'supporter', name: 'Supporter', offered: true },
-  { key: 'enthusiast', name: 'Enthusiast', offered: false },
-  { key: 'advocate', name: 'Advocate', offered: false },
+  { key: 'basic', name: 'Basic Member' },
+  { key: 'supporter', name: 'Supporter' },
 ];
 
 export const LEVEL_KEYS = LEVELS.map((l) => l.key);
@@ -25,7 +21,7 @@ export const isCycle = (v: unknown): v is Cycle => typeof v === 'string' && (CYC
 
 export const levelInfo = (l: Level): LevelInfo => LEVELS.find((x) => x.key === l)!;
 
-/** 0 for Basic, 3 for Advocate. */
+/** 0 for Basic, 1 for Supporter. */
 export const levelRank = (l: Level): number => LEVEL_KEYS.indexOf(l);
 
 /** True when `level` is `min` or higher. */

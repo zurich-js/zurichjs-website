@@ -16,7 +16,7 @@
 
 create extension if not exists citext with schema extensions;
 
-create type public.member_level as enum ('basic', 'supporter', 'enthusiast', 'advocate');
+create type public.member_level as enum ('basic', 'supporter');
 create type public.member_cycle as enum ('quarterly', 'yearly');
 create type public.member_kind as enum ('person', 'organisation');
 create type public.member_category as enum ('passive', 'active');
@@ -41,6 +41,9 @@ create table public.members (
   category public.member_category not null default 'passive',
   status public.member_status not null,
   ended_reason public.member_ended_reason,
+  -- Set when the status becomes `ended`; the one-year retention runs from here.
+  ended_at timestamptz,
+  anonymised_at timestamptz,
   source public.member_source not null,
   joined_at date,
   paid_until date,
@@ -52,6 +55,8 @@ create table public.members (
   updated_at timestamptz not null default now(),
   constraint organisation_has_name check (kind = 'person' or organisation_name is not null),
   constraint ended_has_reason check ((status = 'ended') = (ended_reason is not null)),
+  constraint ended_has_date check ((status = 'ended') = (ended_at is not null)),
+  constraint anonymised_only_when_ended check (anonymised_at is null or status = 'ended'),
   constraint manual_has_paid_until check (status <> 'imported_manual' or paid_until is not null)
 );
 
@@ -111,7 +116,8 @@ create table public.declarations (
   sha256 text not null check (sha256 ~ '^[0-9a-f]{64}$'),
   storage_path text not null unique,
   created_at timestamptz not null default now(),
-  constraint digital_has_evidence check (kind = 'paper_import' or (version_id is not null and typed_name is not null))
+  -- typed_name is cleared when the member is anonymised (member_anonymise).
+  constraint digital_has_version check (kind = 'paper_import' or version_id is not null)
 );
 
 create index declarations_member_idx on public.declarations (member_id);
@@ -175,6 +181,20 @@ create trigger members_touch before update on public.members
   for each row execute function public.touch_updated_at();
 
 -- Writes (service role only) -------------------------------------------------------
+-- Used by the write functions: raises when the member does not exist (P0002) or
+-- was anonymised (nothing may change an anonymised member again).
+create function public.member_missing_or_anonymised(p_id uuid) returns void
+language plpgsql set search_path = '' as $$
+begin
+  if not exists (select 1 from public.members where id = p_id) then
+    raise exception 'member_not_found' using errcode = 'P0002';
+  end if;
+  if exists (select 1 from public.members where id = p_id and anonymised_at is not null) then
+    raise exception 'member_anonymised' using errcode = 'P0001';
+  end if;
+end;
+$$;
+
 -- security definer: the service role has no direct INSERT or UPDATE on members or
 -- member_events, so these functions are the only way to write them.
 
@@ -232,10 +252,10 @@ begin
     payment_mode = case when p_patch ? 'payment_mode' then (p_patch->>'payment_mode')::public.member_payment_mode else payment_mode end,
     notes = case when p_patch ? 'notes' then p_patch->>'notes' else notes end,
     joined_at = case when p_patch ? 'joined_at' then (p_patch->>'joined_at')::date else joined_at end
-  where id = p_id
+  where id = p_id and anonymised_at is null
   returning * into m;
   if m.id is null then
-    raise exception 'member_not_found' using errcode = 'P0002';
+    perform public.member_missing_or_anonymised(p_id);
   end if;
   insert into public.member_events (member_id, type, actor_kind, actor_id, payload)
   values (m.id, 'updated', p_actor_kind, p_actor_id, jsonb_build_object('fields', (select jsonb_agg(k) from jsonb_object_keys(p_patch) k)));
@@ -252,10 +272,10 @@ begin
   update public.members set
     stripe_customer_id = coalesce(p_customer_id, stripe_customer_id),
     stripe_subscription_id = coalesce(p_subscription_id, stripe_subscription_id)
-  where id = p_id
+  where id = p_id and anonymised_at is null
   returning * into m;
   if m.id is null then
-    raise exception 'member_not_found' using errcode = 'P0002';
+    perform public.member_missing_or_anonymised(p_id);
   end if;
   insert into public.member_events (member_id, type, actor_kind, actor_id, payload)
   values (m.id, 'stripe_linked', p_actor_kind, p_actor_id, jsonb_strip_nulls(jsonb_build_object('customerId', p_customer_id, 'subscriptionId', p_subscription_id)));
@@ -278,19 +298,62 @@ language plpgsql security definer set search_path = '' as $$
 declare
   m public.members;
 begin
-  update public.members set status = p_to, ended_reason = p_ended_reason
-  where id = p_id and status = p_from
+  update public.members set status = p_to, ended_reason = p_ended_reason,
+    ended_at = case when p_to = 'ended' then now() else null end
+  where id = p_id and status = p_from and anonymised_at is null
   returning * into m;
   if m.id is null then
-    if exists (select 1 from public.members where id = p_id) then
-      raise exception 'member_transition_conflict' using errcode = 'P0001';
-    end if;
-    raise exception 'member_not_found' using errcode = 'P0002';
+    perform public.member_missing_or_anonymised(p_id);
+    raise exception 'member_transition_conflict' using errcode = 'P0001';
   end if;
   insert into public.member_events (member_id, type, from_status, to_status, actor_kind, actor_id, payload)
   values (m.id, 'status_changed', p_from, p_to, p_actor_kind, p_actor_id,
     coalesce(p_payload, '{}'::jsonb) || case when p_ended_reason is null then '{}'::jsonb else jsonb_build_object('reason', p_ended_reason) end);
   return m;
+end;
+$$;
+
+-- Retention ------------------------------------------------------------------------
+-- Member data is kept for one year after the membership ends (owner, 6th November
+-- 2026), then anonymised: the row stays (counts, levels and dates for the GV and the
+-- accounts), the person does not. Returns the declaration files the caller must
+-- delete from Storage; the caller also deletes the auth user. Stripe invoices are
+-- not touched: they are the payment records the association's accounts rely on.
+-- The audit log keeps its rows: payloads never hold personal data by design.
+create function public.member_anonymise(p_id uuid, p_actor_id text, p_retention interval default interval '1 year')
+returns setof text
+language plpgsql security definer set search_path = '' as $$
+declare
+  m public.members;
+begin
+  if p_retention < interval '1 year' then
+    raise exception 'member_retention_too_short' using errcode = 'P0001';
+  end if;
+  select * into m from public.members where id = p_id for update;
+  if m.id is null then
+    raise exception 'member_not_found' using errcode = 'P0002';
+  end if;
+  if m.anonymised_at is not null then
+    raise exception 'member_already_anonymised' using errcode = 'P0001';
+  end if;
+  if m.status <> 'ended' or m.ended_at > now() - p_retention then
+    raise exception 'member_retention_not_reached' using errcode = 'P0001';
+  end if;
+  update public.members set
+    email = 'anonymised-' || m.id || '@members.invalid',
+    name = 'Anonymised',
+    kind = 'person',
+    organisation_name = null,
+    notes = null,
+    auth_user_id = null,
+    stripe_customer_id = null,
+    stripe_subscription_id = null,
+    anonymised_at = now()
+  where id = p_id;
+  update public.declarations set typed_name = null, ip = null, user_agent = null where member_id = p_id;
+  insert into public.member_events (member_id, type, actor_kind, actor_id)
+  values (p_id, 'anonymised', 'script', p_actor_id);
+  return query select d.storage_path from public.declarations d where d.member_id = p_id;
 end;
 $$;
 
@@ -353,6 +416,7 @@ grant execute on function public.member_create(jsonb, public.member_actor_kind, 
 grant execute on function public.member_update(uuid, jsonb, public.member_actor_kind, text) to service_role;
 grant execute on function public.member_link_stripe(uuid, text, text, public.member_actor_kind, text) to service_role;
 grant execute on function public.member_transition(uuid, public.member_status, public.member_status, public.member_ended_reason, public.member_actor_kind, text, jsonb) to service_role;
+grant execute on function public.member_anonymise(uuid, text, interval) to service_role;
 
 -- Private buckets. No storage policies: only the service role reads or writes,
 -- and members download through short-lived signed URLs the functions create.

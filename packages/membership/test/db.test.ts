@@ -29,7 +29,7 @@ d('membership migration', () => {
     const base = { kind: 'person', cycle: 'yearly', source: 'imported', status: 'imported_manual', paid_until: '2027-03-31', payment_mode: 'manual' };
     ids.a = create(db, { ...base, email: 'a@example.com', name: 'Ada', level: 'basic', auth_user_id: A });
     ids.b = create(db, { ...base, email: 'b@example.com', name: 'Bob', level: 'supporter', category: 'active', auth_user_id: B });
-    ids.c = create(db, { email: 'c@example.com', name: 'Cy', level: 'advocate', cycle: 'yearly', source: 'self_serve', status: 'applied', auth_user_id: C });
+    ids.c = create(db, { email: 'c@example.com', name: 'Cy', level: 'supporter', cycle: 'yearly', source: 'self_serve', status: 'applied', auth_user_id: C });
     db.sql(`insert into public.member_documents (title, kind, dated, min_level, active_only, storage_path) values
       ('Minutes 2026', 'gv_minutes', '2026-06-01', 'basic', false, 'docs/minutes-2026.pdf'),
       ('Supporter notes', 'other', '2026-06-01', 'supporter', false, 'docs/supporter.pdf'),
@@ -86,6 +86,72 @@ d('membership migration', () => {
     });
   });
 
+  describe('retention (one year after the membership ends)', () => {
+    let id = '';
+    beforeAll(() => {
+      id = create(db, {
+        kind: 'organisation',
+        organisation_name: 'Acme AG',
+        email: 'gone@example.com',
+        name: 'Gina',
+        level: 'basic',
+        cycle: 'yearly',
+        source: 'self_serve',
+        status: 'applied',
+        notes: 'Prefers German',
+      });
+      db.sql(`select public.member_link_stripe('${id}', 'cus_gone', 'sub_gone', 'stripe', 'evt_1')`, { role: 'service_role' });
+      db.sql(
+        `insert into public.declaration_versions (id, effective_from, bylaws_version, declaration_de, declaration_en, bylaws_de, bylaws_en) values ('2026-11-06', '2026-11-06', '2025-05-23', 'de', 'en', 'de', 'en')`,
+      );
+      db.sql(
+        `insert into public.declarations (member_id, kind, version_id, signed_at, typed_name, ip, user_agent, sha256, storage_path) values ('${id}', 'digital', '2026-11-06', now(), 'Gina Rossi', '203.0.113.7', 'Firefox', '${'a'.repeat(64)}', 'digital/gina.pdf')`,
+      );
+      db.sql(`select public.member_transition('${id}', 'applied', 'rejected', null, 'board', 'U1')`, { role: 'service_role' });
+      db.sql(`select public.member_transition('${id}', 'rejected', 'applied', null, 'member', 'auth')`, { role: 'service_role' });
+      db.sql(`select public.member_transition('${id}', 'applied', 'approved', null, 'board', 'U1')`, { role: 'service_role' });
+      db.sql(`select public.member_transition('${id}', 'approved', 'signed', null, 'member', 'auth')`, { role: 'service_role' });
+      db.sql(`select public.member_transition('${id}', 'signed', 'ended', 'resigned', 'board', 'U1')`, { role: 'service_role' });
+    });
+
+    it('dates the end of a membership', () => {
+      expect(db.sql(`select ended_at is not null and ended_at > now() - interval '1 minute' from public.members where id = '${id}'`)).toBe('t');
+    });
+
+    it('refuses to anonymise before a year has passed, or with a shorter period', () => {
+      expect(db.fails(`select public.member_anonymise('${id}', 'retention')`, { role: 'service_role' })).toMatch(/member_retention_not_reached/);
+      expect(db.fails(`select public.member_anonymise('${id}', 'retention', interval '1 day')`, { role: 'service_role' })).toMatch(/member_retention_too_short/);
+      expect(db.fails(`select public.member_anonymise('${ids.a}', 'retention')`, { role: 'service_role' })).toMatch(/member_retention_not_reached/);
+    });
+
+    it('anonymises after a year: the person goes, the counts stay, the files are returned for deletion', () => {
+      db.sql(`update public.members set ended_at = now() - interval '13 months' where id = '${id}'`);
+      expect(db.sql(`select * from public.member_anonymise('${id}', 'retention')`, { role: 'service_role' })).toBe('digital/gina.pdf');
+      expect(
+        db.sql(
+          `select concat_ws('|', email, name, kind, coalesce(organisation_name, '-'), coalesce(notes, '-'), coalesce(stripe_customer_id, '-'), level, status, anonymised_at is not null) from public.members where id = '${id}'`,
+        ),
+      ).toBe(`anonymised-${id}@members.invalid|Anonymised|person|-|-|-|basic|ended|t`);
+      expect(
+        db.sql(
+          `select concat_ws('|', coalesce(typed_name, '-'), coalesce(host(ip), '-'), coalesce(user_agent, '-'), sha256 = '${'a'.repeat(64)}') from public.declarations where member_id = '${id}'`,
+        ),
+      ).toBe('-|-|-|t');
+      expect(db.sql(`select type from public.member_events where member_id = '${id}' order by id desc limit 1`)).toBe('anonymised');
+    });
+
+    it('never changes an anonymised member again', () => {
+      expect(db.fails(`select public.member_anonymise('${id}', 'retention')`, { role: 'service_role' })).toMatch(/member_already_anonymised/);
+      expect(db.fails(`select public.member_update('${id}', '{"name":"Gina"}', 'board', 'U1')`, { role: 'service_role' })).toMatch(/member_anonymised/);
+      expect(db.fails(`select public.member_link_stripe('${id}', 'cus_x', null, 'stripe', 'evt')`, { role: 'service_role' })).toMatch(/member_anonymised/);
+      expect(db.fails(`select public.member_transition('${id}', 'ended', 'applied', null, 'member', 'auth')`, { role: 'service_role' })).toMatch(/member_anonymised/);
+    });
+
+    it('is not callable by members', () => {
+      expect(db.fails(`select public.member_anonymise('${id}', 'x')`, { role: 'authenticated', uid: A })).toMatch(/permission denied/);
+    });
+  });
+
   it('keeps the audit log append-only, even for the database owner', () => {
     expect(db.fails(`update public.member_events set actor_id = 'someone else'`)).toMatch(/append-only/);
     expect(db.fails(`delete from public.member_events`)).toMatch(/append-only/);
@@ -107,7 +173,7 @@ d('membership migration', () => {
     });
 
     it('cannot write anything or call the write functions', () => {
-      expect(db.fails(`update public.members set level = 'advocate'`, { role: 'authenticated', uid: A })).toMatch(/permission denied/);
+      expect(db.fails(`update public.members set level = 'supporter'`, { role: 'authenticated', uid: A })).toMatch(/permission denied/);
       expect(db.fails(`select public.member_transition('${ids.a}', 'imported_manual', 'active', null, 'stripe', 'x')`, { role: 'authenticated', uid: A })).toMatch(
         /permission denied/,
       );
@@ -125,7 +191,7 @@ d('membership migration', () => {
         'Minutes 2026',
         'Supporter notes',
       ]);
-      // Cy is Advocate but not a member yet (approved, not paying): nothing.
+      // Cy is Supporter but not a member yet (approved, not paying): nothing.
       expect(db.sql(`select count(*) from public.member_documents`, { role: 'authenticated', uid: C })).toBe('0');
     });
   });

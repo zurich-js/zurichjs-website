@@ -421,3 +421,12 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **Member data lives in Supabase,** not Sanity: row-level security, a private bucket for signed declarations, an append-only audit log. Sanity keeps only public content.
 - **Phase 1 is the data layer only:** `@zurichjs/membership` (levels, status machine, store), the first migration and the CSV import. No page, route or email changes yet, so `/membership` still sends requests as before.
 - **The database is tested on a local Postgres** with a stand-in for Supabase's roles and auth (`supabase/tests/supabase-stub.sql`), because Docker (and so `supabase start`) is not available in CI or agent sessions. The tests skip when Postgres is not installed. The real staging project still has to be checked before production.
+
+## Membership answers (owner, 6th November 2026)
+
+- **Resigning from the account counts as "in writing"** (bylaws Art. 5), with an email copy to the member.
+- **Two levels only:** Basic Member and Supporter, one to one with `/membership`. Enthusiast and Advocate (named in Art. 4) do not exist yet and were removed from the model.
+- **Approvers:** Nadja, Bogdan and Faris, through `SLACK_MEMBERSHIP_APPROVER_IDS` (Slack IDs in the runbook).
+- **Imported members re-sign digitally** before switching to automatic payment.
+- **Retention:** one year after a membership ends, then the member is anonymised in the database (`member_anonymise`); Stripe's payment records stay, for the accounts.
+- **Still open:** the basic discount and which paid events are included each year (board).

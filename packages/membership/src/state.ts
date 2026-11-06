@@ -63,6 +63,19 @@ export function checkTransition(member: Pick<Member, 'status'>, to: Status, acto
 /** Statuses in which someone is a member of the association. */
 export const isMember = (s: Status): boolean => s === 'active' || s === 'past_due' || s === 'imported_manual' || s === 'resigning';
 
+/**
+ * Whether the member may start (or switch to) automatic payment through Stripe.
+ * New members pay once they have signed. Imported members must re-sign the
+ * declaration digitally first: a paper declaration alone is not enough (owner,
+ * 6th November 2026). Signing does not change an imported member's status;
+ * the caller passes whether a digital declaration exists.
+ */
+export function canStartAutomaticPayment(m: Pick<Member, 'status' | 'paymentMode'>, hasDigitalDeclaration: boolean): boolean {
+  if (m.status === 'signed') return hasDigitalDeclaration;
+  if (m.status === 'imported_manual') return m.paymentMode === 'manual' && hasDigitalDeclaration;
+  return false;
+}
+
 /** Statuses in which a person may start a new application. */
 export const canApply = (s: Status | null): boolean => s === null || s === 'rejected' || s === 'ended';
 

@@ -11,6 +11,7 @@
     "./recipes": "./src/recipes.ts",
     "./images": "./src/images.ts",
     "./analytics": "./src/analytics.ts",
+    "./session": "./src/session.ts",
     "./fonts/*": "./src/fonts/*",
     "./components/*": "./src/components/*",
     "./islands/*": "./src/islands/*.tsx"

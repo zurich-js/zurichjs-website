@@ -2,7 +2,9 @@
  * The member resigns (bylaws Art. 5: at any time, in writing to the board,
  * provided no dues are open). A resignation from the account counts as in
  * writing (owner, 6th November 2026); the member gets an email copy. The board
- * confirms it in Slack, and the membership ends with the paid period.
+ * hears in Slack (with the Confirm button) and by email to hello@zurichjs.com,
+ * confirms it, and the membership ends with the paid period. Undo:
+ * /api/membership/resign/undo.
  *
  * POST /api/membership/resign   (session cookie)
  *   200 { ok: true, member } · 409 nothing to resign from · 401 · 503 · 502
@@ -13,6 +15,7 @@ import { TransitionError } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed } from '../../../server/http.ts';
 import { memberView, membershipProps } from '../../../server/membership.ts';
+import { emailBoard } from '../../../server/membership-resignation.ts';
 import { membershipSlack, notify, resignationCard } from '../../../server/membership-slack.ts';
 import { openInvoices } from '../../../server/membership-stripe.ts';
 import { signedIn, type RouteDeps } from '../../../server/membership-route.ts';
@@ -46,6 +49,7 @@ export const handleResign = (request: Request, deps: RouteDeps = {}) =>
           log,
         });
       }
+      await emailBoard(updated, { kind: 'resigned', dues }, { env, origin, fetch: deps.fetch, log });
       const email = renderEmail('resignation-received', { ...membershipProps(updated, origin), openDues: dues > 0 });
       await sendMemberEmail(env, { to: updated.email, ...email }, { idempotencyKey: `member-resignation:${updated.id}:${updated.updatedAt}`, log, fetch: deps.fetch }).catch(
         (e: Error) => log(`[membership] resignation copy to ${updated.id} failed: ${e.message}`),

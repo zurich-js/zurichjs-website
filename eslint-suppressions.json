@@ -34,7 +34,7 @@
   },
   "apps/web/src/components/islands/MembershipAdmin.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 44
+      "count": 42
     }
   },
   "apps/web/src/components/islands/design/IslandsDemo.tsx": {

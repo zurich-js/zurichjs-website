@@ -11,9 +11,11 @@ const application = {
   levelName: 'Supporter',
   cycleLabel: 'Yearly',
   feeLabel: 'CHF 250 a year',
+  price: 'CHF 250',
+  per: 'a year',
   accountUrl: 'https://zurichjs.com/membership/account',
 };
-const term = { ...application, term: '10 November 2026 to 9 November 2027', certificateNumber: 'ZJS-2026-0001' };
+const term = { ...application, term: '10th November 2026 to 9th November 2027', certificateNumber: 'ZJS-2026-0001', nextPayment: '10th November 2027' };
 const link = 'https://zurichjs.com/api/auth/magic-link/verify?token=t1&callbackURL=%2Fmembership%2Faccount';
 
 describe('login-link', () => {
@@ -42,13 +44,27 @@ describe('membership emails', () => {
     const e = renderEmail('membership-welcome', { ...term, organisationName: 'Acme AG' });
     expect(e.subject).toBe('Welcome to the Swiss JavaScript Group');
     expect(e.text).toMatch(/^Welcome, Ada\n/);
-    expect(e.text).toContain('Organisation: Acme AG\nMembership: Supporter\nBilling: Yearly, CHF 250 a year\nTerm: 10 November 2026 to 9 November 2027');
+    expect(e.text).toContain(
+      'Supporter: CHF 250 a year\nOrganisation: Acme AG\nBilled: Once a year, automatically\nCurrent term: 10th November 2026 to 9th November 2027\nNext payment: 10th November 2027',
+    );
+    expect(e.text).toContain('Your membership is active');
+    expect(e.text).toContain('Manage subscription: https://zurichjs.com/membership/account');
     expect(e.text).toContain('(ZJS-2026-0001) is attached');
-    expect(e.html).toContain('#dcf0e1'); // the success box, in success-soft
+    expect(e.html).toContain('#dcf0e1'); // the active badge, in success-soft
+    // Certificate and account notes come after the button, small and grey.
+    expect(e.html.indexOf('Manage subscription')).toBeLessThan(e.html.indexOf('ZJS-2026-0001) is attached'));
+    expect(e.html).toMatch(/font-size:15px;color:#5f626b;">Your certificate of membership/);
+  });
+
+  it('says quarterly billing in plain words', () => {
+    const e = renderEmail('membership-welcome', { ...term, levelName: 'Basic Member', cycleLabel: 'Quarterly', price: 'CHF 50', per: 'a quarter' });
+    expect(e.text).toContain('Basic Member: CHF 50 a quarter\nBilled: Every 3 months, automatically');
   });
 
   it('confirms a renewal with the new term', () => {
-    expect(renderEmail('membership-renewed', term).text).toContain('New term: 10 November 2026 to 9 November 2027');
+    expect(renderEmail('membership-renewed', term).text).toContain(
+      'Supporter: CHF 250 a year\nBilled: Once a year, automatically\nNew term: 10th November 2026 to 9th November 2027\nNext payment: 10th November 2027',
+    );
   });
 
   it('flags a failed payment in the error colour', () => {
@@ -60,7 +76,7 @@ describe('membership emails', () => {
   it('gives a written copy of a resignation, and says when dues hold it up (Art. 5)', () => {
     expect(renderEmail('resignation-received', { ...application, openDues: false }).text).toContain('This email is your written copy (bylaws Art. 5).');
     expect(renderEmail('resignation-received', { ...application, openDues: true }).text).toContain('takes effect once it is paid');
-    expect(renderEmail('resignation-confirmed', { ...application, lastDay: '9 November 2027' }).text).toContain('Your membership ends on 9 November 2027');
+    expect(renderEmail('resignation-confirmed', { ...application, lastDay: '9th November 2027' }).text).toContain('Your membership ends on 9th November 2027');
   });
 
   it('never talks about signing or approval any more', () => {
@@ -88,7 +104,7 @@ describe('layout', () => {
 
   it('follows the brand rules: only token colours, no em or en dashes', () => {
     for (const name of TEMPLATE_NAMES) {
-      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true, ...term, openDues: true, lastDay: '9 November 2027' } as never);
+      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true, ...term, openDues: true, lastDay: '9th November 2027' } as never);
       const used = new Set((e.html.match(/#[0-9a-f]{6}\b/gi) ?? []).map((c) => c.toLowerCase()));
       const allowed = new Set(Object.values(colors).map((c) => c.toLowerCase()));
       expect([...used].filter((c) => !allowed.has(c))).toEqual([]);

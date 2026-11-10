@@ -1,5 +1,6 @@
 /** What the admin area shows of a member: everything the board needs, nothing for the public. */
 import { label, levelInfo, type Member } from '@zurichjs/membership';
+import { resignationLabel } from './membership.ts';
 
 export const adminMember = (m: Member) => ({
   id: m.id,
@@ -12,7 +13,7 @@ export const adminMember = (m: Member) => ({
   cycle: m.cycle,
   category: m.category,
   status: m.status,
-  statusLabel: label(m.status),
+  statusLabel: resignationLabel(m) ?? label(m.status),
   endedReason: m.endedReason,
   source: m.source,
   paymentMode: m.paymentMode,
@@ -22,6 +23,8 @@ export const adminMember = (m: Member) => ({
   stripeCustomerId: m.stripeCustomerId,
   stripeSubscriptionId: m.stripeSubscriptionId,
   notes: m.notes,
+  resignedAt: m.resignedAt,
+  resignationConfirmedAt: m.resignationConfirmedAt,
   createdAt: m.createdAt,
 });
 

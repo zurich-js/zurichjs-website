@@ -15,6 +15,7 @@ import { handleCheckout } from '../src/pages/api/membership/checkout.ts';
 import { handleMe } from '../src/pages/api/membership/me.ts';
 import { handlePortal } from '../src/pages/api/membership/portal.ts';
 import { handleResign } from '../src/pages/api/membership/resign.ts';
+import { handleUndoResignation } from '../src/pages/api/membership/resign/undo.ts';
 import { handleMembershipWebhook } from '../src/pages/api/membership/webhook.ts';
 import { CONFIRM_RESIGNATION, handleMembershipClick, type MembershipSlack, type SlackBlock } from '../src/server/membership-slack.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
@@ -66,6 +67,7 @@ function world(opts: { openInvoices?: number } = {}) {
       return '1700000000.000100';
     },
     update: async (...args) => void slackCalls.push({ method: 'update', args }),
+    reply: async (...args) => void slackCalls.push({ method: 'reply', args }),
     ephemeral: async (...args) => void slackCalls.push({ method: 'ephemeral', args }),
   };
   return { f, calls, emails, slack, slackPosts, slackCalls };
@@ -192,7 +194,7 @@ describe('payments (Stripe webhook)', () => {
     expect(certs).toMatchObject([{ number: 'ZJS-2026-0001', periodStart: '2026-11-10', periodEnd: '2027-11-10', stripeInvoiceId: 'in_1' }]);
     const email = w.emails.at(-1)!;
     expect(email).toMatchObject({ to: ['ada@example.com'], subject: 'Welcome to the Swiss JavaScript Group' });
-    expect(String(email.text)).toContain('Term: 10 November 2026 to 9 November 2027');
+    expect(String(email.text)).toContain('Current term: 10th November 2026 to 9th November 2027\nNext payment: 10th November 2027');
     const [att] = email.attachments as { filename: string; content: string }[];
     expect(att!.filename).toBe('ZurichJS-membership-ZJS-2026-0001.pdf');
     expect((await PDFDocument.load(Buffer.from(att!.content, 'base64'))).getTitle()).toBe('Certificate of membership ZJS-2026-0001');
@@ -237,9 +239,9 @@ describe('payments (Stripe webhook)', () => {
     await handleMembershipWebhook(stripeEvent('evt_f2', 'invoice.payment_failed', declined(2)), deps());
     const failed = w.emails.filter((e) => e.subject === 'Your ZurichJS membership payment did not go through');
     expect(failed).toHaveLength(2);
-    expect(String(failed[0]!.text)).toContain('Stripe tries again on 14 November 2027.');
+    expect(String(failed[0]!.text)).toContain('Stripe tries again on 14th November 2027.');
     expect(String(failed[0]!.html)).toContain('https://invoice.stripe.com/i/acct_x/test_in_2');
-    expect(w.slackPosts.at(-1)!.text).toContain('(attempt 2). Stripe tries again on 14 November 2027');
+    expect(w.slackPosts.at(-1)!.text).toContain('(attempt 2). Stripe tries again on 14th November 2027');
     expect((await store.get(memberId))!.status).toBe('past_due');
   });
 
@@ -434,7 +436,7 @@ describe('resigning (bylaws Art. 5)', () => {
     expect(await handleMembershipClick(click('U-SOMEONE'), d)).toBe('not_allowed');
     expect(await handleMembershipClick(click(NADJA), d)).toBe('confirmed');
     expect(Object.fromEntries(w.calls.find((c) => c.path === 'subscriptions/sub_ada')!.params)).toEqual({ cancel_at_period_end: 'true' });
-    expect(JSON.stringify(w.slackCalls.find((c) => c.method === 'update')!.args)).toContain(`Confirmed by <@${NADJA}> on 1 December 2026. Ends 9 November 2027.`);
+    expect(JSON.stringify(w.slackCalls.find((c) => c.method === 'update')!.args)).toContain(`Confirmed by <@${NADJA}> on 1st December 2026. Ends 9th November 2027.`);
     expect(w.emails.at(-1)).toMatchObject({ subject: 'Your resignation is confirmed' });
     // Stripe ends the subscription at the period end:
     await handleMembershipWebhook(stripeEvent('evt_end', 'customer.subscription.deleted', { id: 'sub_ada', metadata: { source: 'zurichjs.com/membership', memberId: id } }), {
@@ -457,6 +459,74 @@ describe('resigning (bylaws Art. 5)', () => {
     );
     expect(res).toBe('open_dues');
     expect(w.calls.some((c) => c.path.startsWith('subscriptions/'))).toBe(false);
+  });
+
+  const resign = (store: MemberStore, w: ReturnType<typeof world>) =>
+    handleResign(req('/api/membership/resign', {}), { env, store, session: async () => ada, fetch: w.f, slack: w.slack });
+  const undo = (store: MemberStore, w: ReturnType<typeof world>) =>
+    handleUndoResignation(req('/api/membership/resign/undo', {}), { env, store, session: async () => ada, fetch: w.f, slack: w.slack, log: () => {} });
+  const confirm = (store: MemberStore, w: ReturnType<typeof world>, id: string, ts = '1700000000.000200') =>
+    handleMembershipClick(
+      { action: CONFIRM_RESIGNATION, memberId: id, user: NADJA, channel: CHANNEL, ts },
+      { env, store, slack: w.slack, origin: 'https://zurichjs.com', fetch: w.f, log: () => {} },
+    );
+  const view = async (store: MemberStore, w: ReturnType<typeof world>) =>
+    ((await (await handleMe(req('/api/membership/me'), { env, store, session: async () => ada, fetch: w.f })).json()) as { member: { statusLabel: string; resignation: unknown } })
+      .member;
+
+  it('emails the board at hello@zurichjs.com too, and tells the member the board answers within 72 hours', async () => {
+    const { store, w } = await activeMember();
+    await resign(store, w);
+    const board = w.emails.find((e) => e.subject === 'Resignation from Ada Lovelace')!;
+    expect(board).toMatchObject({ to: ['hello@zurichjs.com'], reply_to: 'ada@example.com' });
+    expect(String(board.text)).toContain('Confirm it with the button in Slack, or in the admin area: https://zurichjs.com/membership/admin');
+    const copy = w.emails.at(-1)!;
+    expect(copy.subject).toBe('We received your resignation');
+    expect(String(copy.text)).toContain('Your request is with the board, and they typically get back to you within 72 hours.');
+    expect(String(copy.text)).not.toContain('soon');
+  });
+
+  it('shows a waiting resignation, then a confirmed one, and confirms only once', async () => {
+    const { store, w, id } = await activeMember();
+    await resign(store, w);
+    expect(await view(store, w)).toMatchObject({ statusLabel: 'resignation with the board', resignation: { state: 'waiting', confirmedAt: null } });
+    expect(await confirm(store, w, id)).toBe('confirmed');
+    expect(await view(store, w)).toMatchObject({ statusLabel: 'resignation confirmed', resignation: { state: 'confirmed' } });
+    expect(await confirm(store, w, id, '1700000000.000300')).toBe('already_confirmed');
+    expect(w.calls.filter((c) => c.path === 'subscriptions/sub_ada')).toHaveLength(1);
+  });
+
+  it('undoes a waiting resignation: active again, nothing changes in Stripe, member and board told', async () => {
+    const { store, w, id } = await activeMember();
+    await resign(store, w);
+    const res = await undo(store, w);
+    expect(res.status).toBe(200);
+    expect(await store.get(id)).toMatchObject({ status: 'active', resignedAt: null, resignationConfirmedAt: null });
+    expect(w.calls.some((c) => c.path.startsWith('subscriptions/'))).toBe(false);
+    expect(w.emails.some((e) => e.subject === 'Resignation undone: Ada Lovelace' && JSON.stringify(e.to) === '["hello@zurichjs.com"]')).toBe(true);
+    expect(w.emails.at(-1)).toMatchObject({ subject: 'Your resignation is undone', to: ['ada@example.com'] });
+    expect(w.slackPosts.at(-1)!.text).toContain('Resignation undone by the member');
+    expect((await undo(store, w)).status).toBe(409);
+  });
+
+  it('undoes a confirmed resignation: the subscription renews again', async () => {
+    const { store, w, id } = await activeMember();
+    await resign(store, w);
+    await confirm(store, w, id);
+    await undo(store, w);
+    const subs = w.calls.filter((c) => c.path === 'subscriptions/sub_ada').map((c) => c.params.get('cancel_at_period_end'));
+    expect(subs).toEqual(['true', 'false']);
+    expect((await store.get(id))!.status).toBe('active');
+    // A later Confirm press on the old card changes nothing.
+    expect(await confirm(store, w, id)).toBe('not_resigning');
+  });
+
+  it('returns someone who resigned while behind on payment to past due, if the dues are still open', async () => {
+    const { store, w, id } = await activeMember(1);
+    await store.transition(id, { from: 'active', to: 'past_due', actor: { kind: 'stripe', id: 'evt_f' } });
+    await resign(store, w);
+    await undo(store, w);
+    expect((await store.get(id))!.status).toBe('past_due');
   });
 
   it('lapses a membership whose subscription ends without a resignation', async () => {

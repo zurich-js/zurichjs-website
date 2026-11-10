@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { allowlist, changeBlocks, signInternal, threadToMessages, verifyInternal, verifySlackRequest } from '../src/index.ts';
+import { CONTEXT_ONLY, allowlist, changeBlocks, signInternal, threadToMessages, verifyInternal, verifySlackRequest } from '../src/index.ts';
 
 const sign = (secret: string, ts: number, body: string) => `v0=${createHmac('sha256', secret).update(`v0:${ts}:${body}`).digest('hex')}`;
 
@@ -24,20 +24,23 @@ describe('Slack request signatures', () => {
 });
 
 describe('thread → model messages', () => {
-  it('maps the bot to assistant and people to user, without the mention', () => {
+  it('maps the bot to assistant; people who mention it are requests, the rest is marked context only', () => {
     const msgs = threadToMessages(
       [
         { ts: '1', user: 'U1', text: '<@UBOT> change the venue of the next meetup to Smallpdf' },
         { ts: '2', user: 'UBOT', text: 'Which address?' },
-        { ts: '3', user: 'U1', text: 'Steinstrasse 21' },
-        { ts: '4', user: 'U2', text: '' },
+        { ts: '3', user: 'U2', text: 'I think it is Steinstrasse 21?' },
+        { ts: '4', user: 'U1', text: '<@UBOT> Steinstrasse 21' },
+        { ts: '5', user: 'U2', text: '' },
+        { ts: '6', user: 'U2', text: 'later message, after the mention' },
       ],
       'UBOT',
+      '4',
     );
     expect(msgs).toEqual([
       { role: 'user', content: '<@U1>: change the venue of the next meetup to Smallpdf' },
       { role: 'assistant', content: 'Which address?' },
-      { role: 'user', content: '<@U1>: Steinstrasse 21' },
+      { role: 'user', content: `${CONTEXT_ONLY} <@U2>: I think it is Steinstrasse 21?\n\n<@U1>: Steinstrasse 21` },
     ]);
   });
 });

@@ -19,7 +19,7 @@
  * events the site handles (apps/web/src/pages/api/membership/webhook.ts), on the
  * API version the site pins, and prints STRIPE_MEMBERSHIP_WEBHOOK_SECRET (Stripe
  * shows the secret only when the endpoint is created). Locally, `stripe listen`
- * replaces the endpoint (pnpm local:stripe).
+ * replaces the endpoint (pnpm local).
  */
 import { priceLookupKey } from '@zurichjs/membership';
 import { CYCLES, TIERS, TIER_KEYS } from '../apps/web/src/lib/membership.ts';

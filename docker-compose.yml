@@ -1,19 +1,21 @@
 # Local development for zurichjs.com: the site and everything it talks to, on your machine.
 #
-#   docker compose up                      site, database, Stripe mock, Mailpit
-#   docker compose --profile studio up     … plus the Sanity Studio
-#   docker compose down                    stop (the database keeps its data)
-#   docker compose down -v                 stop and delete the local database and installs
+#   pnpm local                             site, database, Mailpit, Stripe test mode (tools/local.sh)
+#   pnpm local:studio                      … plus the Sanity Studio
+#   pnpm local:down                        stop (the database keeps its data)
+#   pnpm local:reset                       stop and delete the local database and installs
 #
 #   http://localhost:4321                  the site (membership on: /membership, /membership/account)
 #   http://localhost:8025                  Mailpit: every email the site sends (sign-in links, certificates)
 #   localhost:1025                         Mailpit's SMTP, for anything else you want to test locally
-#   http://localhost:4533                  Stripe mock (checkout and portal pages; nothing is charged)
 #   http://localhost:3333                  Sanity Studio (profile `studio`; sign in with your Sanity account)
 #   http://localhost:4321/membership/admin   admin area (password: local-admin-password-docker)
 #   localhost:54322                        Postgres (user postgres, password postgres, database zurichjs)
 #
-# Nothing here reaches Stripe, Resend or Slack. Content comes from the built-in sample by
+# Payments use Stripe's test mode (a sandbox; nothing is charged): .env.local needs a test-mode
+# STRIPE_SECRET_KEY and STRIPE_MEMBER_PORTAL_CONFIG, and tools/local.sh runs `stripe listen` for the
+# webhooks. Run it through pnpm local, not `docker compose up`, which lacks the webhook secret.
+# Nothing here reaches Resend or Slack. Content comes from the built-in sample by
 # default; put SANITY_TOKEN (read) in .env.local and CONTENT_SOURCE= (empty) for real content.
 # Your own overrides go in .env.local (git-ignored). Details: docs/v2/RUNBOOK.md, "Local development".
 
@@ -23,8 +25,10 @@ x-node: &node
   image: node:22.23.4-bookworm-slim
   working_dir: /app
   environment: &node-env
-    MOCK_HOST: 0.0.0.0
     COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+    # "localhost" resolves to ::1 first in the container, and Netlify's functions emulation listens
+    # on one address and connects on the other (every function answered 500 ECONNREFUSED).
+    NODE_OPTIONS: --dns-result-order=ipv4first
 
 services:
   db:
@@ -61,19 +65,6 @@ services:
     entrypoint: ['sh', '/migrate.sh']
     restart: 'no'
 
-  # tools/mock-stripe.mjs: prices, customers, Checkout, billing portal; Pay sends signed webhooks to the site.
-  stripe:
-    <<: *node
-    command: ['node', 'tools/mock-stripe.mjs', '4533']
-    environment:
-      <<: *node-env
-      MOCK_STRIPE_WEBHOOK_URL: http://web:4321/api/membership/webhook
-      MOCK_STRIPE_WEBHOOK_SECRET: whsec_local_docker
-    ports:
-      - '4533:4533'
-    volumes:
-      - ./tools:/app/tools:ro
-
   # Mailpit (https://mailpit.axllent.org) catches every email the site sends (MAILPIT_URL below); nothing leaves your machine.
   # The inbox is kept in the mail-data volume, so it survives restarts; `docker compose down -v` clears it.
   mail:
@@ -92,11 +83,11 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      stripe:
-        condition: service_started
       mail:
         condition: service_started
-    command: ['sh', '-c', 'corepack enable && pnpm install --frozen-lockfile && pnpm --filter @zurichjs/web exec astro dev --host 0.0.0.0 --port 4321']
+    # Astro's dev lock (.astro/dev.json) lives in the bind mount, so one left by a previous container is always stale here.
+    command:
+      ['sh', '-c', 'corepack enable && pnpm install --frozen-lockfile && rm -f apps/web/.astro/dev.json && pnpm --filter @zurichjs/web exec astro dev --host 0.0.0.0 --port 4321']
     environment:
       <<: *node-env
       CONTENT_SOURCE: sample
@@ -104,13 +95,18 @@ services:
       MEMBERSHIP_DB_URL: postgres://postgres:postgres@db:5432/zurichjs
       BETTER_AUTH_URL: http://localhost:4321
       BETTER_AUTH_SECRET: local-docker-only-secret-not-for-production
-      STRIPE_API_BASE: http://stripe:4533
-      STRIPE_SECRET_KEY: sk_test_local_docker
-      STRIPE_MEMBER_PORTAL_CONFIG: bpc_local_docker
-      STRIPE_MEMBERSHIP_WEBHOOK_SECRET: whsec_local_docker
+      # Stripe test mode, from .env.local through tools/local.sh, which checks the key and sets the
+      # webhook secret from `stripe listen`. Empty here so `docker compose down` works without them.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_MEMBER_PORTAL_CONFIG: ${STRIPE_MEMBER_PORTAL_CONFIG:-}
+      STRIPE_MEMBERSHIP_WEBHOOK_SECRET: ${STRIPE_MEMBERSHIP_WEBHOOK_SECRET:-}
+      STRIPE_SUPPORT_PRODUCT_ID: ${STRIPE_SUPPORT_PRODUCT_ID:-}
       MAILPIT_URL: http://mail:8025
       MEMBERSHIP_ADMIN_PASSWORD: local-admin-password-docker
+    # .env, then .env.local (which wins); the values set above win over both.
     env_file:
+      - path: .env
+        required: false
       - path: .env.local
         required: false
     ports:

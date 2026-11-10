@@ -11,6 +11,7 @@ import { handleAdminLogin } from '../src/pages/api/membership/admin/login.ts';
 import { handleAdminLogout } from '../src/pages/api/membership/admin/logout.ts';
 import { handleAdminMember } from '../src/pages/api/membership/admin/members/[id]/index.ts';
 import { handleAdminConfirmResignation } from '../src/pages/api/membership/admin/members/[id]/confirm-resignation.ts';
+import { handleAdminUndoResignation } from '../src/pages/api/membership/admin/members/[id]/undo-resignation.ts';
 import { handleAdminMembers } from '../src/pages/api/membership/admin/members/index.ts';
 import { handleAdminSession } from '../src/pages/api/membership/admin/session.ts';
 import { ADMIN_COOKIE, MAX_FAILURES, SESSION_SECONDS, isAdmin, memoryAttempts, signSession, verifySession } from '../src/server/admin-auth.ts';
@@ -199,6 +200,22 @@ describe('admin API', () => {
     expect(res.status).toBe(200);
     expect(await store.get(id)).toMatchObject({ status: 'ended', endedReason: 'resigned' });
     expect((await store.events(id)).at(-1)).toMatchObject({ actor: { kind: 'board', id: 'admin' } });
+  });
+
+  it('undoes a resignation for a member who asked the board, back to where they were', async () => {
+    const undo = () =>
+      handleAdminUndoResignation(asAdmin(`/api/membership/admin/members/${id}/undo-resignation`, { method: 'POST', body: {} }), id, {
+        env,
+        store,
+        fetch: okFetch(),
+        log: () => {},
+      });
+    expect((await undo()).status).toBe(409);
+    const before = (await store.get(id))!.status;
+    await store.transition(id, { to: 'resigning', actor: { kind: 'member', id: 'u1' } });
+    expect((await undo()).status).toBe(200);
+    expect((await store.get(id))!.status).toBe(before);
+    expect((await store.events(id)).at(-1)).toMatchObject({ actor: { kind: 'board', id: 'admin' }, payload: { undo: true } });
   });
 
   it('refuses writes from another site (CSRF), even with a valid session', async () => {

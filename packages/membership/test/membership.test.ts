@@ -16,6 +16,7 @@ import {
   priceLookupKey,
   type NewMember,
   type Status,
+  resignationState,
 } from '../src/index.ts';
 
 const member = { kind: 'member', id: 'user-1' } as const;
@@ -72,9 +73,19 @@ describe('status machine', () => {
     expect(code(() => checkTransition({ status: 'imported_manual' }, 'active', 'member'))).toBe('wrong_actor');
   });
 
-  it('has no way for the board to refuse a resignation, only to record it was withdrawn (Art. 5)', () => {
-    expect(Object.keys(TRANSITIONS.resigning).sort()).toEqual(['active', 'ended']);
-    expect(code(() => checkTransition({ status: 'resigning' }, 'active', 'member'))).toBe('wrong_actor');
+  it('has no way for the board to refuse a resignation; it ends, or the member undoes it (Art. 5; owner, 10th November 2026)', () => {
+    // Out of resigning: ended, or back to where the member was before resigning (an undo).
+    expect(Object.keys(TRANSITIONS.resigning).sort()).toEqual(['active', 'ended', 'imported_manual', 'past_due']);
+    expect(code(() => checkTransition({ status: 'resigning' }, 'active', 'member'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'resigning' }, 'past_due', 'board'))).toBe('ok');
+    expect(code(() => checkTransition({ status: 'resigning' }, 'active', 'stripe'))).toBe('wrong_actor');
+    expect(code(() => checkTransition({ status: 'resigning' }, 'ended', 'member', 'resigned'))).toBe('wrong_actor');
+  });
+
+  it('tells a waiting resignation from a confirmed one', () => {
+    expect(resignationState({ status: 'resigning', resignationConfirmedAt: null })).toBe('waiting');
+    expect(resignationState({ status: 'resigning', resignationConfirmedAt: '2026-11-12T10:00:00.000Z' })).toBe('confirmed');
+    expect(resignationState({ status: 'active', resignationConfirmedAt: null })).toBeNull();
   });
 
   it('needs a reason to end, and only the board can expel', () => {

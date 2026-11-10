@@ -19,6 +19,7 @@ export const handleAdminConfirmResignation = (request: Request, id: string, deps
       const r = await confirmResignation(id, 'admin', { env, store, origin, fetch: deps.fetch, log: deps.log, reference: `admin-${new Date().toISOString().slice(0, 16)}` });
       if (r.result === 'not_found') return fail(404, 'No such member.');
       if (r.result === 'not_resigning') return fail(409, `This member is not resigning (status: ${r.member.status.replace('_', ' ')}).`);
+      if (r.result === 'already_confirmed') return fail(409, 'This resignation is already confirmed.');
       if (r.result === 'open_dues')
         return fail(409, `${r.member.name} has ${r.dues} open invoice${r.dues === 1 ? '' : 's'}. Under the bylaws the resignation takes effect once paid.`);
       await notify(`:white_check_mark: Resignation confirmed in the admin area: ${who(r.member)}.${r.lastPaidDay ? ` Ends ${r.lastPaidDay}.` : ''}`, {

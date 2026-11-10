@@ -221,7 +221,7 @@ export function startMockStripe(port = 0) {
   }
 
   return new Promise((resolve) => {
-    // MOCK_HOST=0.0.0.0 inside a container (docker-compose.yml); local runs stay on loopback.
+    // MOCK_HOST=0.0.0.0 to listen on every interface (e.g. in a container); by default it stays on loopback.
     server.listen(port, process.env.MOCK_HOST ?? '127.0.0.1', () => {
       const address = server.address();
       base = `http://localhost:${typeof address === 'object' && address ? address.port : port}`;

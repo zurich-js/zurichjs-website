@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ChangeLog, buildTools, zurichToUtcIso } from '../src/index.ts';
+import { ChangeLog, buildTools, helpText, isHelpRequest, zurichToUtcIso } from '../src/index.ts';
 import { NOV, SEP, fakeStore } from './fake-store.ts';
 
 const now = () => new Date('2026-11-01T10:00:00Z');
@@ -80,7 +80,22 @@ describe('agent tools write drafts only', () => {
     const f = fakeStore([NOV]);
     const tools = buildTools(f.store, new ChangeLog(), now);
     expect(await run(tools, 'createEventDraft', { slug: 'zurichjs-meetup-november-2026', title: 'Again' })).toMatchObject({ error: expect.stringContaining('already exists') });
-    expect(Object.keys(tools).sort()).toEqual(['createEventDraft', 'findEvents', 'findVenuesUsedBefore', 'getEvent', 'updateEventDraft', 'updateSupportNote']);
+    expect(Object.keys(tools).sort()).toEqual([
+      'createEventDraft',
+      'findEvents',
+      'findSpeakers',
+      'findTalks',
+      'findVenuesUsedBefore',
+      'getEvent',
+      'mergeSpeakers',
+      'scheduleProposal',
+      'setEventProgramme',
+      'talkProposals',
+      'updateEventDraft',
+      'updateProposals',
+      'updateSupportNote',
+      'updateTalkDraft',
+    ]);
     // There is no field to change the slug; extra keys are dropped by the schema before execute runs.
     const schema = tools.updateEventDraft!.inputSchema as { parse: (v: unknown) => Record<string, unknown> };
     expect(schema.parse({ slug: 'zurichjs-meetup-november-2026', id: { current: 'new-url' }, title: 'New title' })).toEqual({
@@ -97,5 +112,32 @@ describe('agent tools write drafts only', () => {
     };
     expect(out.when).toBe('Wed 18th Nov 2026, 18:30');
     expect(out.missingBeforePublishing).toEqual([expect.stringContaining('Meetup event link')]);
+  });
+});
+
+describe('read tools: venues, more events, talk proposals, help', () => {
+  const tools = (docs: Parameters<typeof fakeStore>[0]) => buildTools(fakeStore(docs).store, new ChangeLog(), now);
+  const aug = { ...SEP, _id: 'evt-aug', id: { _type: 'slug', current: 'zurichjs-meetup-august-2026' }, title: 'Workers', datetime: '2026-08-19T16:30:00.000Z' };
+
+  it('says which meetups used a venue, newest first', async () => {
+    const out = (await run(tools([NOV, SEP, aug]), 'findVenuesUsedBefore', { name: 'old' })) as { name: string; timesUsed: number; usedBy: { slug: string }[] }[];
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ name: 'Old Office', timesUsed: 2 });
+    expect(out[0]!.usedBy.map((u) => u.slug)).toEqual(['zurichjs-meetup-september-2026', 'zurichjs-meetup-august-2026']);
+  });
+
+  it('filters events by venue and says when more matched than the limit', async () => {
+    const out = (await run(tools([NOV, SEP, aug]), 'findEvents', { when: 'past', venue: 'old', limit: 1 })) as Record<string, unknown>[];
+    expect(out[0]).toMatchObject({ slug: 'zurichjs-meetup-september-2026' });
+    expect(out[1]).toMatchObject({ note: expect.stringContaining('1 more matched') });
+  });
+
+  it('answers help without the model', () => {
+    expect(isHelpRequest('<@U123> help')).toBe(true);
+    expect(isHelpRequest('<@U123> what can you do?')).toBe(true);
+    expect(isHelpRequest('<@U123> help me change the venue')).toBe(false);
+    expect(helpText(true)).toContain('Membership');
+    expect(helpText(false)).not.toContain('Membership');
+    expect(helpText(false)).toContain('Talk proposals');
   });
 });

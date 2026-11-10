@@ -15,7 +15,8 @@ interface Props {
 }
 const { social = [] } = Astro.props;
 
-// The header's one action: submitting a talk (owner, 4th November 2026).
+// The header's one action: submitting a talk (owner, 4th November 2026), or "Account" for a
+// signed-in member (swapped in the browser below; the pages are static).
 const CTA = { label: 'Submit a talk', href: '/cfp' };
 const NAV = [
   { label: 'Events', href: '/events', match: ['/events', '/feedback', '/today'] },
@@ -95,7 +96,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           </>
         )
       }
-      <a href={CTA.href} class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}>{CTA.label}</a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}>{CTA.label}</a>
     </nav>
 
     <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
@@ -132,7 +133,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           ))
         }
       </ul>
-      <a href={CTA.href} class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}>{CTA.label}</a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}>{CTA.label}</a>
     </nav>
     {
       social.length > 0 && (
@@ -204,6 +205,16 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 </style>
 
 <script>
+  import { isSignedIn } from '../session';
+
+  // Signed in: the action goes to the member's account instead of the talk form.
+  if (isSignedIn()) {
+    document.querySelectorAll<HTMLAnchorElement>('[data-header-cta]').forEach((a) => {
+      a.href = '/membership/account';
+      a.textContent = 'Account';
+    });
+  }
+
   // Sticky bar: flat at the top of the page, a floating pill once the sentinel 40px down has scrolled out of view.
   const header = document.querySelector<HTMLElement>('[data-site-header]');
   const sentinel = document.querySelector('[data-scroll-sentinel]');

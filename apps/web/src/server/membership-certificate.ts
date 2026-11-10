@@ -9,6 +9,7 @@ import { renderEmail } from '@zurichjs/emails';
 import { sendMemberEmail } from '@zurichjs/integrations';
 import { levelInfo, type Actor, type Certificate, type Member, type MemberStore } from '@zurichjs/membership';
 import { bundledAssets, renderCertificate } from './certificate.ts';
+import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { membershipProps, termLabel } from './membership.ts';
 
@@ -71,7 +72,12 @@ export async function issueAndSendCertificate(
   const log = deps.log ?? console.log;
   const cert = await deps.store.issueCertificate(m.id, term, deps.actor);
   const pdf = await certificatePdf(m, cert, await (deps.signature ?? (() => loadSignature(log)))());
-  const props = { ...membershipProps(m, deps.origin), term: termLabel(cert.periodStart, cert.periodEnd), certificateNumber: cert.number };
+  const props = {
+    ...membershipProps(m, deps.origin),
+    term: termLabel(cert.periodStart, cert.periodEnd),
+    certificateNumber: cert.number,
+    nextPayment: longDate(cert.periodEnd),
+  };
   const email = renderEmail(first ? 'membership-welcome' : 'membership-renewed', props);
   await sendMemberEmail(
     deps.env,

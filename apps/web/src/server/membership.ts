@@ -6,8 +6,8 @@
  * assets.
  */
 import type { MembershipProps } from '@zurichjs/emails';
-import { label, levelInfo, type Certificate, type Member } from '@zurichjs/membership';
-import { CYCLES, TIERS, feeLabel } from '../lib/membership.ts';
+import { label, levelInfo, resignationState, type Certificate, type Member } from '@zurichjs/membership';
+import { CYCLES, TIERS, chf, feeLabel } from '../lib/membership.ts';
 import { lastDay, longDate } from './dates.ts';
 
 export interface MemberView {
@@ -25,6 +25,8 @@ export interface MemberView {
   joinedAt: string | null;
   /** Has a Stripe customer, so the payment portal can open. */
   canManagePayment: boolean;
+  /** A resignation: waiting for the board or confirmed by it (ISO times); null otherwise. */
+  resignation: { state: 'waiting' | 'confirmed'; requestedAt: string | null; confirmedAt: string | null } | null;
 }
 
 export const memberView = (m: Member): MemberView => ({
@@ -36,18 +38,27 @@ export const memberView = (m: Member): MemberView => ({
   feeLabel: feeLabel(TIERS[m.level], m.cycle),
   category: m.category,
   status: m.status,
-  statusLabel: label(m.status),
+  statusLabel: resignationLabel(m) ?? label(m.status),
   paidUntil: m.paidUntil,
   paymentMode: m.paymentMode,
   joinedAt: m.joinedAt,
   canManagePayment: !!m.stripeCustomerId,
+  resignation: resignationOf(m),
 });
+
+const resignationOf = (m: Member): MemberView['resignation'] => {
+  const state = resignationState(m);
+  return state ? { state, requestedAt: m.resignedAt, confirmedAt: m.resignationConfirmedAt } : null;
+};
+
+/** "resignation with the board" or "resignation confirmed", in place of "resigning". */
+export const resignationLabel = (m: Member) => ({ waiting: 'resignation with the board', confirmed: 'resignation confirmed', none: null })[resignationState(m) ?? 'none'];
 
 export interface CertificateView {
   id: string;
   number: string;
   levelName: string;
-  /** "10 November 2026 to 9 November 2027" */
+  /** "10th November 2026 to 9th November 2027" */
   term: string;
   issuedAt: string;
 }
@@ -65,13 +76,17 @@ export const certificateView = (c: Certificate): CertificateView => ({
 /** The account page on this deploy (production, preview or local). */
 export const accountUrl = (origin: string) => new URL('/membership/account', origin).toString();
 
+const cycleOf = (c: Member['cycle']) => CYCLES.find((x) => x.value === c)!;
+
 export function membershipProps(m: Member, origin: string): MembershipProps {
   return {
     name: m.name,
     organisationName: m.organisationName,
     levelName: levelInfo(m.level).name,
-    cycleLabel: CYCLES.find((c) => c.value === m.cycle)!.label,
+    cycleLabel: cycleOf(m.cycle).label,
     feeLabel: feeLabel(TIERS[m.level], m.cycle),
+    price: chf(TIERS[m.level].fees[m.cycle]),
+    per: `a ${cycleOf(m.cycle).unit}`,
     accountUrl: accountUrl(origin),
   };
 }

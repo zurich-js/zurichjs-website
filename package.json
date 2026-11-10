@@ -23,9 +23,8 @@
     "membership:import": "tsx tools/membership-import.ts",
     "membership:stripe-setup": "tsx tools/membership-stripe-setup.ts",
     "membership:signature": "tsx tools/membership-signature.ts",
-    "local": "docker compose up",
-    "local:stripe": "sh tools/local-stripe.sh",
-    "local:studio": "docker compose --profile studio up",
+    "local": "sh tools/local.sh",
+    "local:studio": "COMPOSE_PROFILES=studio sh tools/local.sh",
     "local:down": "docker compose down",
     "local:reset": "docker compose down -v"
   },

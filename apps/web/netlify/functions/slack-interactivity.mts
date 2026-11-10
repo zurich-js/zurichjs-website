@@ -4,13 +4,14 @@
  * the draft. Env: SLACK_SIGNING_SECRET, SLACK_AGENT_BOT_TOKEN, SLACK_AGENT_CHANNEL_ID,
  * SLACK_PUBLISHER_IDS, SANITY_AGENT_TOKEN.
  *
- * Also Confirm resignation on membership resignations (src/server/membership-slack.ts): a Slack
- * app has one interactivity URL, so both land here. Only SLACK_MEMBERSHIP_APPROVER_IDS confirm.
+ * Also Confirm and Undo resignation (src/server/membership-slack.ts), on resignation cards and on
+ * the member cards under the agent's replies: a Slack app has one interactivity URL, so all land
+ * here. Only SLACK_MEMBERSHIP_APPROVER_IDS can press them.
  */
-import { allowlist, handleButton, sanityStore, slackApi, verifySlackRequest, type ButtonAction, type ButtonValue } from '@zurichjs/agent';
+import { allowlist, handleButton, sanityStore, slackApi, verifySlackRequest, type ButtonAction, type ButtonValue, type ButtonValues } from '@zurichjs/agent';
 import { siteOrigin } from '../../src/server/auth.ts';
 import { memberStore } from '../../src/server/membership-db.ts';
-import { handleMembershipClick, isMembershipAction, membershipSlack } from '../../src/server/membership-slack.ts';
+import { handleMembershipClick, isMembershipAction, membershipSlack, parseMemberButton } from '../../src/server/membership-slack.ts';
 
 interface Payload {
   type: string;
@@ -27,7 +28,16 @@ export default async (req: Request, context: { waitUntil?: (p: Promise<unknown>)
   const action = payload.actions?.[0];
   if (payload.type === 'block_actions' && action && isMembershipAction(action.action_id) && payload.channel && payload.message) {
     const env = process.env;
-    const click = { action: action.action_id, memberId: action.value, user: payload.user.id, channel: payload.channel.id, ts: payload.message.ts };
+    const { memberId, fromAgent } = parseMemberButton(action.value);
+    const click = {
+      action: action.action_id,
+      memberId,
+      fromAgent,
+      user: payload.user.id,
+      channel: payload.channel.id,
+      ts: payload.message.ts,
+      threadTs: payload.message.thread_ts ?? payload.message.ts,
+    };
     const review = (async () => {
       try {
         const result = await handleMembershipClick(click, { env, store: memberStore(env), slack: membershipSlack(env), origin: siteOrigin(env) });
@@ -53,7 +63,7 @@ export default async (req: Request, context: { waitUntil?: (p: Promise<unknown>)
     try {
       const result = await handleButton(
         action.action_id as ButtonAction,
-        JSON.parse(action.value) as ButtonValue,
+        JSON.parse(action.value) as ButtonValue | ButtonValues,
         payload.user.id,
         allowlist(env.SLACK_PUBLISHER_IDS),
         sanityStore(env),

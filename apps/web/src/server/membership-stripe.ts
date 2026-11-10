@@ -136,16 +136,32 @@ export async function openInvoices(member: Member, deps: StripeDeps): Promise<nu
   return open!.data.length + uncollectible!.data.length;
 }
 
-/** Ends the subscription at the end of the paid period (the board confirmed a resignation). */
-export async function cancelAtPeriodEnd(subscriptionId: string, deps: StripeDeps): Promise<{ periodEnd: string | null }> {
+/**
+ * Ends the subscription at the end of the paid period (the board confirmed a resignation).
+ * `reference` names this resignation (its time), so after an undo a new resignation is not
+ * answered from Stripe's 24-hour idempotency cache.
+ */
+export async function cancelAtPeriodEnd(subscriptionId: string, reference: string, deps: StripeDeps): Promise<{ periodEnd: string | null }> {
   const s = await stripeApi<{ cancel_at?: number | null; items?: { data?: { current_period_end?: number }[] } }>(
     deps.env,
     deps.fetch ?? fetch,
     'POST',
     `subscriptions/${encodeURIComponent(subscriptionId)}`,
     stripeForm({ cancel_at_period_end: true }),
-    `member-cancel:${subscriptionId}`,
+    `member-cancel:${subscriptionId}:${reference}`,
   );
   const end = s.cancel_at ?? s.items?.data?.[0]?.current_period_end;
   return { periodEnd: end ? new Date(end * 1000).toISOString().slice(0, 10) : null };
+}
+
+/** Takes back a scheduled end (an undone resignation the board had confirmed): the subscription renews again. */
+export async function resumeSubscription(subscriptionId: string, reference: string, deps: StripeDeps): Promise<void> {
+  await stripeApi(
+    deps.env,
+    deps.fetch ?? fetch,
+    'POST',
+    `subscriptions/${encodeURIComponent(subscriptionId)}`,
+    stripeForm({ cancel_at_period_end: false }),
+    `member-resume:${subscriptionId}:${reference}`,
+  );
 }

@@ -2,7 +2,7 @@
  * The member area (/membership/account, docs/v2/MEMBERSHIP.md). Sign in with
  * an emailed link (Better Auth; the session is an httpOnly cookie, so no token
  * ever reaches this script), then join, or manage the membership: status,
- * certificates, payment method and cycle (Stripe portal), switching from
+ * certificates, the subscription (Stripe portal), switching from
  * paying by hand to automatic payment, and resigning through the board.
  *
  * Without member accounts configured, the API answers 503 and the page says
@@ -10,7 +10,10 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
+import { badgeClass } from '@zurichjs/design/recipes';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
+import { setSignedIn } from '@zurichjs/design/session';
+import { lastDay, longDate } from '../../server/dates.ts';
 import type { CertificateView, MemberView } from '../../server/membership.ts';
 import { SubmitButton, useFocusWhen } from './forms/shared.tsx';
 import MemberJoin, { TermsCheckbox, readChoice, startCheckout } from './MemberJoin.tsx';
@@ -37,10 +40,8 @@ type View =
 
 const CYCLE_LABEL = { quarterly: 'Quarterly', yearly: 'Yearly' } as const;
 
-/** 2026-12-31 → 31 December 2026 (as on the rest of the site). */
-const longDate = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 /** paid_until is the first unpaid day: show the day before. */
-const lastPaidDay = (iso: string) => longDate(new Date(Date.parse(`${iso}T12:00:00Z`) - 86_400_000).toISOString());
+const lastPaidDay = (iso: string) => longDate(lastDay(iso));
 
 /** Notices carried in the URL: an expired link (Better Auth's error callback) and the return from Stripe. */
 function urlNotice() {
@@ -67,11 +68,15 @@ export default function MemberAccount({ contactEmail }: Props) {
   const load = async (n: ReturnType<typeof urlNotice>, attempt = 0): Promise<void> => {
     const res = await fetch('/api/membership/me', { credentials: 'same-origin' }).catch(() => null);
     if (!res) return setView({ kind: 'error', message: 'We couldn’t reach the site. Check your connection and reload.' });
-    if (res.status === 401) return setView({ kind: 'signed-out', notice: n.link });
+    if (res.status === 401) {
+      setSignedIn(false);
+      return setView({ kind: 'signed-out', notice: n.link });
+    }
     if (res.status === 503) return setView({ kind: 'unavailable' });
     const body = (await res.json().catch(() => ({}))) as Partial<Me> & { ok?: boolean; error?: string };
     if (!res.ok || !body.ok) return setView({ kind: 'error', message: body.error ?? `We couldn’t load your membership. Try again, or write to ${contactEmail}.` });
     const me = body as Me;
+    setSignedIn(true);
     // Back from Stripe: the payment is confirmed by Stripe's webhook a few seconds later.
     if (n.checkout === 'done' && me.member?.status === 'pending' && attempt < 5) {
       setView({ kind: 'ready', me });
@@ -114,6 +119,7 @@ export default function MemberAccount({ contactEmail }: Props) {
 
   const signOut = async () => {
     await fetch('/api/auth/sign-out', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }).catch(() => null);
+    setSignedIn(false);
     setView({ kind: 'signed-out' });
   };
 
@@ -163,7 +169,9 @@ export default function MemberAccount({ contactEmail }: Props) {
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(32px,5vw,80px)] items-start">
         <div class="flex flex-col gap-3.5">
           <h2 class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Sign in</h2>
-          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Sign in with your email to join or to manage your membership. We send a link, no password needed.</p>
+          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+            Sign in with your email to join or to manage your membership. We email you a link, so there is no password to remember.
+          </p>
         </div>
         <form onSubmit={requestLink} noValidate class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
           {view.notice && (
@@ -207,12 +215,12 @@ export default function MemberAccount({ contactEmail }: Props) {
       </div>
       {notice.checkout === 'done' && m && m.status !== 'pending' && (
         <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 text-[17px] font-bold">
-          Payment received. Thank you, your certificate is on its way by email.
+          Payment received, thank you. Your certificate is on its way by email.
         </p>
       )}
       {notice.checkout === 'done' && m?.status === 'pending' && (
         <p role="status" class="m-0 bg-grey rounded-card px-5 py-4 text-[17px]">
-          Stripe is confirming your payment. This page updates in a moment; your certificate follows by email.
+          Stripe is confirming your payment. This page updates in a moment, and your certificate follows by email.
         </p>
       )}
       {notice.checkout === 'cancelled' && <p class="m-0 bg-grey rounded-card px-5 py-4 text-[17px]">The payment was not finished, so nothing was charged.</p>}
@@ -235,9 +243,17 @@ export default function MemberAccount({ contactEmail }: Props) {
 }
 
 const NOTES: Partial<Record<MemberView['status'], string>> = {
-  past_due: 'Your last payment did not go through. Stripe tries again; check your payment method below to keep your membership.',
-  resigning: 'You resigned. The board confirms it soon, and your membership then ends with the period you already paid.',
+  past_due: 'Your last payment did not go through. Stripe will try again. To keep your membership, update your card under Manage subscription.',
 };
+
+/** Where a resignation stands: with the board (waiting) or confirmed by it. */
+function resignationNote(m: MemberView): string | null {
+  if (!m.resignation) return null;
+  const until = m.paidUntil ? `You stay a member until ${lastPaidDay(m.paidUntil)}` : 'You stay a member until the end of the period you already paid for';
+  if (m.resignation.state === 'waiting') return `Your resignation request is with the board. They typically get back to you within 72 hours. ${until}.`;
+  const on = m.resignation.confirmedAt ? ` on ${longDate(m.resignation.confirmedAt)}` : '';
+  return `The board confirmed your resignation${on}. ${until}. After that, you will not be charged again.`;
+}
 
 function MemberPortal({
   m,
@@ -254,7 +270,7 @@ function MemberPortal({
   onChanged: () => void;
   onSignedOut: () => void;
 }) {
-  const [busy, setBusy] = useState<'' | 'portal' | 'resign' | 'switch'>('');
+  const [busy, setBusy] = useState<'' | 'portal' | 'resign' | 'undo' | 'switch'>('');
   const [error, setError] = useState('');
   const [confirmResign, setConfirmResign] = useState(false);
   const [accepted, setAccepted] = useState(acceptedCurrentTerms);
@@ -293,6 +309,22 @@ function MemberPortal({
             </div>
           ))}
         </dl>
+        {m.resignation && (
+          <div class="flex flex-col gap-3">
+            <p class="m-0 text-lg leading-relaxed text-ink-2">{resignationNote(m)}</p>
+            <Button
+              variant="outline-black"
+              class="self-start"
+              disabled={!!busy}
+              onClick={async () => {
+                const r = await post('/api/membership/resign/undo', 'undo');
+                if (r) onChanged();
+              }}
+            >
+              {busy === 'undo' ? 'Undoing…' : 'Undo resignation'}
+            </Button>
+          </div>
+        )}
         {NOTES[m.status] && (
           <p class={m.status === 'past_due' ? 'm-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold' : 'm-0 text-[17px] leading-[1.55] text-ink-2'}>
             {NOTES[m.status]}
@@ -308,7 +340,7 @@ function MemberPortal({
                 if (r?.url) location.assign(r.url);
               }}
             >
-              {busy === 'portal' ? 'Opening Stripe…' : 'Payment method, invoices and billing cycle'}
+              {busy === 'portal' ? 'Opening Stripe…' : 'Manage subscription'}
             </Button>
           </div>
         )}
@@ -349,10 +381,13 @@ function MemberPortal({
         </h2>
         {certificates.length ? (
           <ul class="m-0 p-0 list-none flex flex-col gap-3">
-            {certificates.map((c) => (
+            {certificates.map((c, i) => (
               <li key={c.id} class="flex flex-wrap items-center justify-between gap-3 border border-grey-frame rounded-card px-5 py-4">
                 <div class="flex flex-col gap-0.5">
-                  <span class="text-[17px] font-bold">{c.term}</span>
+                  <span class="flex flex-wrap items-center gap-2">
+                    <span class="text-[17px] font-bold">{c.term}</span>
+                    {i === 0 && <span class={badgeClass('dark')}>Latest</span>}
+                  </span>
                   <span class="text-[15px] text-grey-text">
                     {c.levelName}, certificate {c.number}
                   </span>
@@ -364,7 +399,7 @@ function MemberPortal({
             ))}
           </ul>
         ) : (
-          <p class="m-0 text-[17px] text-ink-2">You get a certificate with every paid term, by email and here.</p>
+          <p class="m-0 text-[17px] text-grey-text">You get a certificate with every paid term, by email and here.</p>
         )}
       </section>
 
@@ -379,9 +414,9 @@ function MemberPortal({
           <h2 id="h-resign" class="m-0 text-[22px] leading-[1.2] font-bold">
             Leaving
           </h2>
-          <p class="m-0 text-[17px] leading-[1.6] text-ink-2 text-pretty">
-            You can resign at any time (bylaws Art. 5). The board confirms it, and your membership ends with the period you already paid. Nothing is refunded and nothing more is
-            charged.
+          <p class="m-0 text-[17px] leading-[1.6] text-grey-text text-pretty">
+            You can resign at any time (bylaws Art. 5). Your request goes to the board, which typically gets back to you within 72 hours. You stay a member until the end of the
+            period you already paid for, and you can undo your resignation until then. After that, you will not be charged again. Nothing is refunded.
           </p>
           {confirmResign ? (
             <div class="flex flex-wrap gap-3">

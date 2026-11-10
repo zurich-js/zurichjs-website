@@ -34,6 +34,11 @@ export interface MemberStore {
   /** Links Stripe ids. Kept apart from `update` so ordinary edits cannot overwrite them. */
   linkStripe(id: string, ids: { customerId?: string; subscriptionId?: string }, actor: Actor): Promise<Member>;
   transition(id: string, input: TransitionInput): Promise<Member>;
+  /**
+   * The board confirms a resignation (sets `resignationConfirmedAt`). Only while
+   * `resigning`, else a `conflict`; confirming again returns the member unchanged.
+   */
+  confirmResignation(id: string, actor: Actor, payload?: Record<string, unknown>): Promise<Member>;
   /** Records that the member accepted a version of the membership terms (append-only). */
   acceptTerms(id: string, version: string, actor: Actor): Promise<void>;
   /** The latest terms version the member accepted, or null. */
@@ -120,7 +125,19 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       const email = normaliseEmail(input.email);
       if ([...members.values()].some((m) => m.email === email)) throw new DuplicateEmail(email);
       const at = now().toISOString();
-      const m: Member = { userId: null, stripeCustomerId: null, stripeSubscriptionId: null, ...input, email, endedReason: null, id: nextId(), createdAt: at, updatedAt: at };
+      const m: Member = {
+        userId: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        ...input,
+        email,
+        endedReason: null,
+        resignedAt: null,
+        resignationConfirmedAt: null,
+        id: nextId(),
+        createdAt: at,
+        updatedAt: at,
+      };
       members.set(m.id, m);
       record(m.id, 'created', actor, { toStatus: m.status, payload: { source: m.source } });
       return { ...m };
@@ -140,7 +157,17 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       if (input.from && m.status !== input.from) throw new TransitionError('The membership changed in the meantime. Look again.', 'conflict');
       const t = checkTransition(m, input.to, input.actor.kind, input.reason);
       record(id, 'status_changed', input.actor, { fromStatus: t.from, toStatus: t.to, payload: { ...input.payload, ...(t.endedReason ? { reason: t.endedReason } : {}) } });
-      return save({ ...m, status: t.to, endedReason: t.endedReason });
+      // As member_transition: set on resigning, kept when it ends, cleared otherwise (an undo).
+      const resignedAt = t.to === 'resigning' ? now().toISOString() : t.to === 'ended' ? m.resignedAt : null;
+      const resignationConfirmedAt = t.to === 'ended' ? m.resignationConfirmedAt : null;
+      return save({ ...m, status: t.to, endedReason: t.endedReason, resignedAt, resignationConfirmedAt });
+    },
+    async confirmResignation(id, actor, payload = {}) {
+      const m = must(id);
+      if (m.status !== 'resigning') throw new TransitionError('The membership changed in the meantime. Look again.', 'conflict');
+      if (m.resignationConfirmedAt) return { ...m };
+      record(id, 'resignation_confirmed', actor, { payload });
+      return save({ ...m, resignationConfirmedAt: now().toISOString() });
     },
     async acceptTerms(id, version, actor) {
       must(id);

@@ -13,8 +13,9 @@ import { TERMS } from '@zurichjs/membership';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
 import { CYCLES, TIERS, TIER_KEYS, feeLabel } from '~/lib/membership';
+import { longDate } from '~/server/dates';
 
-const version = new Date(`${TERMS.version}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const version = longDate(TERMS.version);
 const fees = TIER_KEYS.map((k) => `${TIERS[k].name}: ${CYCLES.map((c) => feeLabel(TIERS[k], c.value)).join(' or ')}`);
 
 const SECTIONS: [string, string[]][] = [

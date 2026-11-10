@@ -13,16 +13,19 @@ import type { ActorKind, EndedReason, Member, Status } from './types.ts';
  *
  * Bylaws (Art. 5): a member may resign at any time, provided no dues are
  * outstanding. So `resigning → ended` is the board confirming, and the caller
- * checks for open invoices first; the board cannot refuse a resignation, only
- * record that the member withdrew it (`resigning → active`). The board can also
- * end a membership (expulsion, death, dissolution).
+ * checks for open invoices first; the board cannot refuse a resignation. While the
+ * membership still runs, the member (or the board for them) can undo it: back to the
+ * status they had before (owner, 10th November 2026). A resignation waits for the
+ * board, then is confirmed (`resignationConfirmedAt`); see `resignationState`. The
+ * board can also end a membership (expulsion, death, dissolution).
  */
 export const TRANSITIONS: Readonly<Record<Status, Partial<Record<Status, readonly ActorKind[]>>>> = {
   pending: { active: ['stripe'] },
   active: { past_due: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   past_due: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   imported_manual: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board'] },
-  resigning: { ended: ['board', 'stripe'], active: ['board'] },
+  // Undo: back to the status the member had before resigning, by the member or the board.
+  resigning: { ended: ['board', 'stripe'], active: ['member', 'board'], past_due: ['member', 'board'], imported_manual: ['member', 'board'] },
   ended: { pending: ['member'] },
 };
 
@@ -34,15 +37,24 @@ const REASONS_BY_ACTOR: Record<ActorKind, readonly EndedReason[]> = {
   script: [],
 };
 
+type TransitionErrorCode = 'not_allowed' | 'wrong_actor' | 'reason_required' | 'reason_not_allowed' | 'conflict';
+
 export class TransitionError extends Error {
-  constructor(
-    message: string,
-    readonly code: 'not_allowed' | 'wrong_actor' | 'reason_required' | 'reason_not_allowed' | 'conflict',
-  ) {
+  // A plain field, not a parameter property: the local functions runtime runs this .ts with type stripping only.
+  readonly code: TransitionErrorCode;
+  constructor(message: string, code: TransitionErrorCode) {
     super(message);
     this.name = 'TransitionError';
+    this.code = code;
   }
 }
+
+/** A resignation waiting for the board, or confirmed by it; null when the member is not resigning. */
+export const resignationState = (m: Pick<Member, 'status' | 'resignationConfirmedAt'>): 'waiting' | 'confirmed' | null =>
+  m.status !== 'resigning' ? null : m.resignationConfirmedAt ? 'confirmed' : 'waiting';
+
+/** The statuses an undone resignation can return to. */
+export const UNDO_TARGETS = ['active', 'past_due', 'imported_manual'] as const satisfies readonly Status[];
 
 export const canTransition = (from: Status, to: Status, actor: ActorKind): boolean => TRANSITIONS[from][to]?.includes(actor) ?? false;
 

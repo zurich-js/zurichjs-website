@@ -54,6 +54,23 @@ const surfaceTones: Record<SurfaceTone, string> = {
 };
 export const surfaceClass = (tone: SurfaceTone = 'grey', extra?: string) => cx('rounded-card', surfaceTones[tone], extra);
 
+export type BadgeTone = 'neutral' | 'accent' | 'dark' | 'success' | 'danger';
+export type BadgeSize = 'sm' | 'md';
+/**
+ * Badge (docs/v2/UI-AUDIT.md, "Badge"): a small rounded pill that labels something (a status,
+ * "Latest"). Not interactive. Green only for success and red only for errors (brand rules).
+ */
+const badgeTones: Record<BadgeTone, string> = {
+  neutral: 'bg-grey text-black',
+  accent: 'bg-yellow text-black',
+  dark: 'bg-black text-white',
+  success: 'bg-success-soft text-success',
+  danger: 'bg-danger-soft text-danger',
+};
+const badgeSizes: Record<BadgeSize, string> = { sm: 'px-2.5 py-0.5 text-sm', md: 'px-3 py-1 text-base' };
+export const badgeClass = (tone: BadgeTone = 'neutral', size: BadgeSize = 'sm') =>
+  cx('inline-flex items-center rounded-pill font-bold leading-normal whitespace-nowrap', badgeTones[tone], badgeSizes[size]);
+
 export type MonogramTone = 'grey' | 'yellow' | 'white' | 'blue';
 export type MonogramSize = 'avatar' | 'tile' | 'portrait';
 // Yellow is for buttons and one CTA section per page (Bogdan's review): a 'yellow' monogram is grey.

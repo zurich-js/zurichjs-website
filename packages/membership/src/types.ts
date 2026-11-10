@@ -70,12 +70,18 @@ export interface Member {
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   notes: string | null;
+  /** ISO times. When the member resigned, and when the board confirmed it (null while it waits). Cleared by an undo. */
+  resignedAt: string | null;
+  resignationConfirmedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 /** A new member record, before the store assigns id and timestamps. */
-export type NewMember = Omit<Member, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'endedReason' | 'stripeCustomerId' | 'stripeSubscriptionId'> &
+export type NewMember = Omit<
+  Member,
+  'id' | 'createdAt' | 'updatedAt' | 'userId' | 'endedReason' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'resignedAt' | 'resignationConfirmedAt'
+> &
   Partial<Pick<Member, 'userId' | 'stripeCustomerId' | 'stripeSubscriptionId'>>;
 
 /** Fields that may change without a status transition. Status, Stripe ids and the end reason are not here on purpose. */

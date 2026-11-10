@@ -34,6 +34,8 @@ export interface MemberRow {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   notes: string | null;
+  resigned_at: string | Date | null;
+  resignation_confirmed_at: string | Date | null;
   created_at: string | Date;
   updated_at: string | Date;
 }
@@ -89,6 +91,8 @@ export const fromRow = (r: MemberRow): Member => ({
   stripeCustomerId: r.stripe_customer_id,
   stripeSubscriptionId: r.stripe_subscription_id,
   notes: r.notes,
+  resignedAt: r.resigned_at ? iso(r.resigned_at) : null,
+  resignationConfirmedAt: r.resignation_confirmed_at ? iso(r.resignation_confirmed_at) : null,
   createdAt: iso(r.created_at),
   updatedAt: iso(r.updated_at),
 });
@@ -189,6 +193,7 @@ export function postgresStore(db: Queryable): MemberStore {
       ]),
     update: (id, patch, actor) => fn('member_update($1, $2::jsonb, $3, $4)', [id, JSON.stringify(toPatchRow(patch)), actor.kind, actor.id]),
     linkStripe: (id, ids, actor) => fn('member_link_stripe($1, $2, $3, $4, $5)', [id, ids.customerId ?? null, ids.subscriptionId ?? null, actor.kind, actor.id]),
+    confirmResignation: (id, actor, payload = {}) => fn('member_confirm_resignation($1, $2, $3, $4::jsonb)', [id, actor.kind, actor.id, JSON.stringify(payload)]),
     async transition(id, input) {
       const current = await one('id', id);
       if (!current) throw new MemberNotFound(id);

@@ -265,9 +265,21 @@ async function deliver(env: Env, m: Outgoing, opts: { fetch?: typeof fetch; time
 
 const canSend = (env: Env) => Boolean(env.RESEND_API_KEY || mailpitSendUrl(env));
 
-export async function sendEmail(env: Env, subject: string, text: string, replyTo?: string, log: Log = console.log): Promise<void> {
+/** A plain-text email to the organisers (FORMS_TO, default hello@zurichjs.com); replies go to `replyTo`. */
+export async function sendEmail(
+  env: Env,
+  subject: string,
+  text: string,
+  replyTo?: string,
+  log: Log = console.log,
+  opts: { fetch?: typeof fetch; idempotencyKey?: string } = {},
+): Promise<void> {
   if (!canSend(env)) return log(`[forms] RESEND_API_KEY missing; email not sent: ${subject}`);
-  await deliver(env, { from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>', to: [env.FORMS_TO ?? 'hello@zurichjs.com'], subject, text, replyTo });
+  await deliver(
+    env,
+    { from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>', to: [env.FORMS_TO ?? 'hello@zurichjs.com'], subject, text, replyTo, idempotencyKey: opts.idempotencyKey },
+    opts,
+  );
 }
 
 export interface MemberEmail {
@@ -414,11 +426,12 @@ export function clientHashes(client: ForwardDeps['client'] = {}) {
 
 /** A form that was understood but cannot be accepted (duplicate rating, unknown talk). Maps to 409 or 400. */
 export class FormRejected extends Error {
-  constructor(
-    message: string,
-    readonly status: 400 | 409,
-  ) {
+  // A plain field, not a constructor parameter property: Node runs this package's .ts as-is in the
+  // local functions runtime (type stripping only), and parameter properties are not strippable.
+  readonly status: 400 | 409;
+  constructor(message: string, status: 400 | 409) {
     super(message);
+    this.status = status;
   }
 }
 

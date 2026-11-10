@@ -23,6 +23,13 @@ export type Block =
   | { kind: 'url'; text: string; url: string }
   | { kind: 'small'; text: string }
   | { kind: 'success'; text: string }
+  /** A status pill in the success colours ("Your membership is active"). */
+  | { kind: 'badge'; text: string }
+  /**
+   * A plan at a glance, in a grey card: the level as its title, the price large
+   * ("CHF 250" with "a year" beside it), then label and value rows.
+   */
+  | { kind: 'plan'; title: string; price: string; per: string; rows: [string, string][] }
   | { kind: 'error'; text: string };
 
 export interface EmailContent {
@@ -60,6 +67,19 @@ function blockHtml(b: Block): string {
       return `<p style="margin:0 0 14px;${text}font-size:15px;color:${colors['grey-text']};">${escapeHtml(b.text)}</p>`;
     case 'success':
       return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radii.card};background:${colors['success-soft']};${text}color:${colors.success};font-weight:700;">${escapeHtml(b.text)}</p>`;
+    case 'badge':
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;"><tr><td bgcolor="${colors['success-soft']}" style="border-radius:${radii.pill};background:${colors['success-soft']};padding:8px 16px;font-family:${FONT_STACK};font-size:15px;line-height:1.2;font-weight:700;color:${colors.success};">&#10003;&nbsp; ${escapeHtml(b.text)}</td></tr></table>`;
+    case 'plan':
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border-radius:${radii.card};background:${colors.grey};"><tr><td style="padding:24px;">
+<p style="margin:0 0 4px;font-family:${FONT_STACK};font-size:22px;line-height:1.25;font-weight:700;color:${colors.black};">${escapeHtml(b.title)}</p>
+<p style="margin:0 0 18px;font-family:${FONT_STACK};line-height:1.2;color:${colors.black};"><span style="font-size:32px;font-weight:800;">${escapeHtml(b.price)}</span> <span style="font-size:17px;color:${colors['grey-text']};">${escapeHtml(b.per)}</span></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${b.rows
+        .map(
+          ([k, v]) =>
+            `<tr><td valign="top" style="padding:6px 12px 6px 0;width:40%;font-family:${FONT_STACK};font-size:15px;line-height:1.45;color:${colors['grey-text']};">${escapeHtml(k)}</td><td valign="top" style="padding:6px 0;font-family:${FONT_STACK};font-size:15px;line-height:1.45;font-weight:700;color:${colors.black};">${escapeHtml(v)}</td></tr>`,
+        )
+        .join('')}</table>
+</td></tr></table>`;
     case 'error':
       return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radii.card};background:${colors['danger-soft']};${text}color:${colors.danger};font-weight:700;">${escapeHtml(b.text)}</p>`;
     case 'url':
@@ -79,8 +99,11 @@ function blockText(b: Block): string {
     case 'p':
     case 'small':
     case 'success':
+    case 'badge':
     case 'error':
       return b.text;
+    case 'plan':
+      return [`${b.title}: ${b.price} ${b.per}`, ...b.rows.map(([k, v]) => `${k}: ${v}`)].join('\n');
     case 'button':
       return `${b.label}: ${safeUrl(b.url)}`;
     case 'url':

@@ -144,7 +144,7 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
           <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Your payment was not finished, so nothing was charged. Check your details and continue.</p>
         )}
         {previous?.status === 'ended' && <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Your membership has ended. You are welcome to join again.</p>}
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+        <p class="m-0 text-[18px] leading-[1.6] text-grey-text text-pretty">
           You pay securely with Stripe. Your membership starts with the first payment, and you get your certificate of membership by email.
         </p>
         <p class="m-0 text-[17px] leading-[1.6] text-ink-2 text-pretty">
@@ -192,7 +192,7 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
           onChange={setCycle}
           options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${chf(TIERS[level].fees[c.value])}` }))}
         />
-        <p class="m-0 text-[16px] text-ink-2" aria-live="polite">
+        <p class="m-0 text-[16px] text-grey-text" aria-live="polite">
           {TIERS[level].name}, {feeLabel(TIERS[level], cycle)}, renewing automatically. You can switch between quarterly and yearly later.
         </p>
         <TermsCheckbox checked={accepted} onChange={setAccepted} error={fieldError('terms') || undefined} />

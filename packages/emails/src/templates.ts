@@ -46,15 +46,20 @@ export interface MembershipProps {
   cycleLabel: string;
   /** "CHF 250 a year", from apps/web/src/lib/membership.ts (the same table as the page). */
   feeLabel: string;
+  /** The same fee in two parts, for the plan card: "CHF 250" and "a year". */
+  price: string;
+  per: string;
   /** https://zurichjs.com/membership/account (or the preview's). */
   accountUrl: string;
 }
 
 export interface TermProps extends MembershipProps {
-  /** "10 November 2026 to 9 November 2027" */
+  /** "10th November 2026 to 9th November 2027" */
   term: string;
   /** "ZJS-2026-0001" (the certificate is attached). */
   certificateNumber: string;
+  /** "10th November 2027": when the next payment is taken automatically (the end of the term). */
+  nextPayment: string;
 }
 
 const summary = (p: MembershipProps, extra: [string, string][] = []): Block => ({
@@ -69,23 +74,41 @@ const summary = (p: MembershipProps, extra: [string, string][] = []): Block => (
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;
 
+/** The plan card of the welcome and renewal emails: level, price, billing, the term and the next payment. */
+function planCard(p: TermProps, termLabel: string): Block {
+  const cycle = p.cycleLabel === 'Quarterly' ? 'Every 3 months' : p.cycleLabel === 'Yearly' ? 'Once a year' : p.cycleLabel;
+  return {
+    kind: 'plan',
+    title: p.levelName,
+    price: p.price,
+    per: p.per,
+    rows: [
+      ...(p.organisationName ? ([['Organisation', p.organisationName]] as [string, string][]) : []),
+      ['Billed', `${cycle}, automatically`],
+      [termLabel, p.term],
+      ['Next payment', p.nextPayment],
+    ],
+  };
+}
+
 function membershipWelcome(p: TermProps): EmailContent {
   return {
     subject: 'Welcome to the Swiss JavaScript Group',
-    preheader: `Your membership is active. Your certificate ${p.certificateNumber} is attached.`,
+    preheader: `Your ${p.levelName} membership is active. Your certificate ${p.certificateNumber} is attached.`,
     heading: `Welcome, ${firstName(p.name)}`,
     blocks: [
-      { kind: 'success', text: 'Your membership is active. Thank you for supporting ZurichJS.' },
-      summary(p, [['Term', p.term]]),
+      { kind: 'badge', text: 'Your membership is active' },
+      { kind: 'p', text: 'Thank you for supporting ZurichJS. Here is your membership at a glance.' },
+      planCard(p, 'Current term'),
+      { kind: 'button', label: 'Manage subscription', url: p.accountUrl },
       {
-        kind: 'p',
-        text: `Your certificate of membership (${p.certificateNumber}) is attached. You get a new one with every payment, and you can download them on your account page.`,
+        kind: 'small',
+        text: `Your certificate of membership (${p.certificateNumber}) is attached. You get a new one with every payment, and all of them are on your account page.`,
       },
       {
-        kind: 'p',
-        text: 'Payments renew automatically. To change your payment method or switch between quarterly and yearly, use your account page. To leave, resign there too: the board confirms it and your membership ends with the paid period.',
+        kind: 'small',
+        text: 'On your account page you can change your payment method or switch between quarterly and yearly. To leave, resign there: the board confirms it and your membership ends with the paid period.',
       },
-      { kind: 'button', label: 'Open your membership', url: p.accountUrl },
     ],
   };
 }
@@ -97,7 +120,7 @@ function membershipRenewed(p: TermProps): EmailContent {
     heading: `Thank you, ${firstName(p.name)}`,
     blocks: [
       { kind: 'p', text: 'Your membership payment went through and your membership continues.' },
-      summary(p, [['New term', p.term]]),
+      planCard(p, 'New term'),
       { kind: 'p', text: `Your certificate of membership for this term (${p.certificateNumber}) is attached.` },
       { kind: 'button', label: 'Open your membership', url: p.accountUrl },
     ],
@@ -109,7 +132,7 @@ export interface PaymentFailedProps extends MembershipProps {
   payUrl?: string | null;
   /** The bank asks the member to confirm the payment (3D Secure), rather than declining it. */
   needsConfirmation?: boolean;
-  /** "14 November 2026": when Stripe tries again, if it does. */
+  /** "14th November 2026": when Stripe tries again, if it does. */
   nextAttempt?: string | null;
 }
 
@@ -145,21 +168,38 @@ export interface ResignationProps extends MembershipProps {
 function resignationReceived(p: ResignationProps): EmailContent {
   return {
     subject: 'We received your resignation',
-    preheader: 'A copy for your records. The board confirms it soon.',
+    preheader: 'A copy for your records. Your request is with the board.',
     heading: `Hi ${firstName(p.name)}`,
     blocks: [
       { kind: 'p', text: 'You resigned from the Swiss JavaScript Group on your account page. This email is your written copy (bylaws Art. 5).' },
       summary(p),
+      { kind: 'p', text: 'Your request is with the board, and they typically get back to you within 72 hours.' },
       p.openDues
         ? { kind: 'error', text: 'A membership payment is still open. Under the bylaws the resignation takes effect once it is paid.' }
-        : { kind: 'p', text: 'The board confirms your resignation soon. Your membership then ends with the period you already paid; nothing more is charged.' },
+        : { kind: 'p', text: 'You stay a member until the end of the period you already paid for. After that, you will not be charged again.' },
       { kind: 'button', label: 'Open your membership', url: p.accountUrl },
+      { kind: 'small', text: 'Changed your mind? You can undo your resignation on your account page until your membership ends.' },
+    ],
+  };
+}
+
+function resignationWithdrawn(p: MembershipProps): EmailContent {
+  return {
+    subject: 'Your resignation is undone',
+    preheader: 'Your membership continues as before.',
+    heading: `Welcome back, ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'badge', text: 'Your membership continues' },
+      { kind: 'p', text: 'Your resignation is undone, and your membership continues as before. Nothing else changes.' },
+      summary(p),
+      { kind: 'button', label: 'Manage subscription', url: p.accountUrl },
+      { kind: 'small', text: 'Did not do this? Reply to this email and the board will look into it.' },
     ],
   };
 }
 
 export interface ResignationConfirmedProps extends MembershipProps {
-  /** "9 November 2027": the last day of the paid period. */
+  /** "9th November 2027": the last day of the paid period. */
   lastDay: string | null;
 }
 
@@ -188,6 +228,7 @@ const TEMPLATES = {
   'payment-failed': paymentFailed,
   'resignation-received': resignationReceived,
   'resignation-confirmed': resignationConfirmed,
+  'resignation-withdrawn': resignationWithdrawn,
 } satisfies Record<string, (p: never) => EmailContent>;
 
 export type TemplateName = keyof typeof TEMPLATES;

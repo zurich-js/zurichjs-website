@@ -7,8 +7,9 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { cx } from '@zurichjs/design/recipes';
+import { badgeClass, cx } from '@zurichjs/design/recipes';
 import type { AdminMember } from '../../server/admin-views.ts';
+import { lastDay, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { CertificateView } from '../../server/membership.ts';
 import { SubmitButton } from './forms/shared.tsx';
 
@@ -33,12 +34,10 @@ const FILTERS: { value: '' | Status; label: string }[] = [
   ...(Object.keys(STATUS_LABEL) as Status[]).map((s) => ({ value: s, label: STATUS_LABEL[s] })),
 ];
 
-const date = (iso: string | null) =>
-  iso ? new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '–';
-const dateTime = (iso: string) =>
-  new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
+const date = (iso: string | null) => (iso ? shortDate(iso) : '–');
+const dateTime = shortDateTime;
 /** paid_until is the first unpaid day: show the last paid one. */
-const paidThrough = (iso: string | null) => (iso ? date(new Date(Date.parse(`${iso}T12:00:00Z`) - 86_400_000).toISOString()) : '–');
+const paidThrough = (iso: string | null) => (iso ? shortDate(lastDay(iso)) : '–');
 
 async function api<T>(path: string, init?: RequestInit): Promise<{ status: number; body: T & { ok?: boolean; error?: string } }> {
   const res = await fetch(path, { credentials: 'same-origin', ...init, headers: { 'content-type': 'application/json', ...init?.headers } });
@@ -359,30 +358,56 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
 
       {m.status === 'resigning' && (
         <div class="flex flex-col gap-3">
-          <p class="m-0 text-[17px]">This member resigned. Confirming ends the membership with the paid period (bylaws Art. 5); open dues hold it.</p>
-          <Button
-            variant="black"
-            class="self-start"
-            disabled={busy}
-            onClick={async () => {
-              setBusy(true);
-              setError('');
-              const { status, body } = await api<{ lastPaidDay: string | null; emailFailed: boolean }>(`/api/membership/admin/members/${id}/confirm-resignation`, {
-                method: 'POST',
-                body: '{}',
-              });
-              setBusy(false);
-              if (status === 401) return onSignedOut();
-              if (status !== 200) return setError(body.error ?? 'Could not confirm.');
-              setNotice(
-                `Confirmed.${body.lastPaidDay ? ` The membership ends on ${body.lastPaidDay}.` : ''}${body.emailFailed ? ' The email to the member failed: write to them by hand.' : ' The member was emailed.'}`,
-              );
-              onChanged();
-              void load();
-            }}
-          >
-            {busy ? 'Confirming…' : 'Confirm resignation'}
-          </Button>
+          <p class="m-0 text-lg">
+            {m.resignationConfirmedAt
+              ? `Resignation confirmed on ${dateTime(m.resignationConfirmedAt)}${m.resignedAt ? ` (requested ${dateTime(m.resignedAt)})` : ''}. The membership ends with the paid period.`
+              : `Resignation requested${m.resignedAt ? ` on ${dateTime(m.resignedAt)}` : ''}, waiting for the board. Confirming ends the membership with the paid period (bylaws Art. 5); open dues hold it.`}
+          </p>
+          <div class="flex flex-wrap gap-3">
+            {!m.resignationConfirmedAt && (
+              <Button
+                variant="black"
+                disabled={busy}
+                onClick={async () => {
+                  setBusy(true);
+                  setError('');
+                  const { status, body } = await api<{ lastPaidDay: string | null; emailFailed: boolean }>(`/api/membership/admin/members/${id}/confirm-resignation`, {
+                    method: 'POST',
+                    body: '{}',
+                  });
+                  setBusy(false);
+                  if (status === 401) return onSignedOut();
+                  if (status !== 200) return setError(body.error ?? 'Could not confirm.');
+                  setNotice(
+                    `Confirmed.${body.lastPaidDay ? ` The membership ends on ${body.lastPaidDay}.` : ''}${body.emailFailed ? ' The email to the member failed: write to them by hand.' : ' The member was emailed.'}`,
+                  );
+                  onChanged();
+                  void load();
+                }}
+              >
+                {busy ? 'Working…' : 'Confirm resignation'}
+              </Button>
+            )}
+            <Button
+              variant="outline-black"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError('');
+                const { status, body } = await api<{ emailFailed: boolean }>(`/api/membership/admin/members/${id}/undo-resignation`, { method: 'POST', body: '{}' });
+                setBusy(false);
+                if (status === 401) return onSignedOut();
+                if (status !== 200) return setError(body.error ?? 'Could not undo the resignation.');
+                setNotice(
+                  `Resignation undone. The membership continues.${body.emailFailed ? ' The email to the member failed: write to them by hand.' : ' The member was emailed.'}`,
+                );
+                onChanged();
+                void load();
+              }}
+            >
+              Undo resignation
+            </Button>
+          </div>
         </div>
       )}
       {notice && (
@@ -400,9 +425,12 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
         <h3 class="m-0 text-[20px] font-bold">Certificates</h3>
         {d.certificates.length ? (
           <ul class="m-0 p-0 list-none flex flex-col gap-1.5">
-            {d.certificates.map((c) => (
-              <li key={c.id} class="text-[16px]">
-                <b>{c.number}</b>, {c.levelName}, {c.term}
+            {d.certificates.map((c, i) => (
+              <li key={c.id} class="flex flex-wrap items-center gap-2 text-base">
+                <span>
+                  <b>{c.number}</b>, {c.levelName}, {c.term}
+                </span>
+                {i === 0 && <span class={badgeClass('dark')}>Latest</span>}
               </li>
             ))}
           </ul>

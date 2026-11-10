@@ -334,7 +334,7 @@
   },
   "packages/design/src/components/Header.astro": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 13
+      "count": 11
     }
   },
   "packages/design/src/components/HomeHero.astro": {
@@ -461,7 +461,7 @@
   },
   "packages/design/src/islands/SocialLabel.tsx": {
     "no-restricted-syntax": {
-      "count": 21
+      "count": 17
     }
   },
   "packages/design/src/islands/StarRating.tsx": {

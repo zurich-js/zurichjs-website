@@ -36,7 +36,7 @@ const path = Astro.url.pathname.replace(/\.html$/, '');
 const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p + '/'));
 const involvedCurrent = isCurrent(INVOLVED.map((i) => i.href));
 const barSocial = social.filter((s) => ['linkedin', 'instagram', 'bluesky'].includes(s.kind));
-// Plain white marks (nav review, 5th November 2026), each in a 40px round hit area for the focus ring.
+// White marks as on conf.zurichjs.com: 24px glyphs in a 40px round hit area (for the focus ring).
 const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70';
 ---
 
@@ -45,7 +45,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 <header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white">
   <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
-      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" />
+      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" />
     </a>
 
     <nav aria-label="Main" class="hidden md:flex items-center gap-[clamp(14px,1.9vw,28px)] text-[clamp(15px,1.45vw,17px)] whitespace-nowrap">
@@ -86,7 +86,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
               {barSocial.map((s) => (
                 <li>
                   <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class={iconLink}>
-                    <SocialIcon kind={s.kind} size={22} tone="white" />
+                    <SocialIcon kind={s.kind} size={24} tone="white" />
                   </a>
                 </li>
               ))}
@@ -107,7 +107,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 <dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none bg-black text-white border-0">
   <div class="flex flex-col min-h-full">
     <div class="flex items-center justify-between py-4 px-gut">
-      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" /></a>
+      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" /></a>
       <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
         <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>

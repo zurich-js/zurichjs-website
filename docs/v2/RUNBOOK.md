@@ -194,7 +194,7 @@ Without the key (no `STRIPE_*` variables), "Continue to secure payment" answers 
 One command runs the site with everything it talks to:
 
 ```bash
-pnpm local            # docker compose up: site, Postgres, Stripe mock, mail viewer
+pnpm local            # docker compose up: site, Postgres, Stripe mock, Mailpit
 pnpm local:studio     # the same plus the Sanity Studio
 pnpm local:down       # stop (the local database keeps its data)
 pnpm local:reset      # stop and delete the local database and the container installs
@@ -203,18 +203,20 @@ pnpm local:reset      # stop and delete the local database and the container ins
 | Where                 | What                                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------------------- |
 | http://localhost:4321 | the site, with online membership on (`/membership`, `/membership/account`)                              |
-| http://localhost:4535 | mail viewer (`tools/mock-resend.mjs`): every email the site sends, sign-in links and certificate PDFs   |
+| http://localhost:8025 | Mailpit: every email the site sends (sign-in links, certificate PDFs); SMTP on `localhost:1025`         |
 | http://localhost:4533 | Stripe mock (`tools/mock-stripe.mjs`): Checkout and portal pages; Pay sends signed webhooks to the site |
 | http://localhost:3333 | Sanity Studio (`pnpm local:studio`), against the real project: sign in with your Sanity account         |
 | `localhost:54322`     | Postgres (`postgres` / `postgres`, database `zurichjs`), migrations applied by the `migrate` service    |
 
-**How to try the membership:** open `/membership`, choose a level, sign in with any email, open the link from the mail viewer, join, press Pay on the mock checkout. The certificate arrives in the mail viewer. Sign-in links are rate limited to 3 per 10 minutes per address; `pnpm local:reset` or `delete from "rateLimit"` clears that.
+**How to try the membership:** open `/membership`, choose a level, sign in with any email, open the link from Mailpit, join, press Pay on the mock checkout. The certificate arrives in Mailpit. Sign-in links are rate limited to 3 per 10 minutes per address; `pnpm local:reset` or `delete from "rateLimit"` clears that.
 
 **Content:** sample content by default (offline). For real content, put a Sanity read token in `.env.local`: `SANITY_TOKEN=…` and `CONTENT_SOURCE=` (empty). Sanity has no local backend; the Studio container edits the real project, so the same care applies as in the hosted Studio (drafts; a person publishes).
 
+**Email:** with `MAILPIT_URL` set, the site sends every email to Mailpit and needs no Resend key. `MAILPIT_URL` is ignored in production. The inbox survives restarts (`pnpm local:reset` clears it).
+
 **Your signature on certificates:** put `MEMBERSHIP_SIGNATURE_FILE=/app/path/to/signature.png` in `.env.local` with the PNG inside the repository folder but not committed (e.g. `.local/signature.png`; `.local` is git-ignored). Production reads it from Netlify Blobs instead (below).
 
-`.env.local` (git-ignored) overrides any variable of the `web` service. Nothing here reaches Stripe, Resend, Slack or Netlify. Without Docker, the same pieces run natively: `node tools/mock-stripe.mjs`, `node tools/mock-resend.mjs`, a Postgres with `tools/docker/migrate.sh` applied, and `MEMBERSHIP_DB_URL` pointing at it.
+`.env.local` (git-ignored) overrides any variable of the `web` service. Nothing here reaches Stripe, Resend, Slack or Netlify. Without Docker, the same pieces run natively: `node tools/mock-stripe.mjs`, Mailpit (`brew install mailpit`, or its binary, then `MAILPIT_URL=http://localhost:8025`), a Postgres with `tools/docker/migrate.sh` applied, and `MEMBERSHIP_DB_URL` pointing at it.
 
 ## Membership (online)
 

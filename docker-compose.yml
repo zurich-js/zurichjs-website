@@ -1,12 +1,13 @@
 # Local development for zurichjs.com: the site and everything it talks to, on your machine.
 #
-#   docker compose up                      site, database, Stripe mock, mail viewer
+#   docker compose up                      site, database, Stripe mock, Mailpit
 #   docker compose --profile studio up     … plus the Sanity Studio
 #   docker compose down                    stop (the database keeps its data)
 #   docker compose down -v                 stop and delete the local database and installs
 #
 #   http://localhost:4321                  the site (membership on: /membership, /membership/account)
-#   http://localhost:4535                  mail viewer: every email the site sends (sign-in links, certificates)
+#   http://localhost:8025                  Mailpit: every email the site sends (sign-in links, certificates)
+#   localhost:1025                         Mailpit's SMTP, for anything else you want to test locally
 #   http://localhost:4533                  Stripe mock (checkout and portal pages; nothing is charged)
 #   http://localhost:3333                  Sanity Studio (profile `studio`; sign in with your Sanity account)
 #   http://localhost:4321/membership/admin   admin area (password: local-admin-password-docker)
@@ -73,14 +74,18 @@ services:
     volumes:
       - ./tools:/app/tools:ro
 
-  # tools/mock-resend.mjs: receives the site's emails and shows them.
+  # Mailpit (https://mailpit.axllent.org) catches every email the site sends (MAILPIT_URL below); nothing leaves your machine.
+  # The inbox is kept in the mail-data volume, so it survives restarts; `docker compose down -v` clears it.
   mail:
-    <<: *node
-    command: ['node', 'tools/mock-resend.mjs', '4535']
+    image: axllent/mailpit:v1.33.0
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: '1000'
     ports:
-      - '4535:4535'
+      - '8025:8025'
+      - '1025:1025'
     volumes:
-      - ./tools:/app/tools:ro
+      - mail-data:/data
 
   web:
     <<: *node
@@ -103,8 +108,7 @@ services:
       STRIPE_SECRET_KEY: sk_test_local_docker
       STRIPE_MEMBER_PORTAL_CONFIG: bpc_local_docker
       STRIPE_MEMBERSHIP_WEBHOOK_SECRET: whsec_local_docker
-      RESEND_API_BASE: http://mail:4535
-      RESEND_API_KEY: re_local_docker
+      MAILPIT_URL: http://mail:8025
       MEMBERSHIP_ADMIN_PASSWORD: local-admin-password-docker
     env_file:
       - path: .env.local
@@ -158,6 +162,7 @@ services:
 
 volumes:
   db-data:
+  mail-data:
   pnpm-store:
   nm-root:
   nm-web:

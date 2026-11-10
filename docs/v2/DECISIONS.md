@@ -455,7 +455,7 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **Production keeps the email form** until `PUBLIC_MEMBERSHIP_ONLINE=on`.
 - **Deploy previews fork production data** (Netlify Database branching). The site protects that copy itself (see the admin area below); no Netlify visitor password.
 - **Existing members are imported through an admin endpoint,** not a data migration, so member data never goes into git.
-- **Local development runs in Docker** (`docker-compose.yml`): Postgres with the migrations, the Stripe mock (now with memberships and signed webhooks), a mail viewer (`tools/mock-resend.mjs`, via `RESEND_API_BASE`, ignored in production) and the Sanity Studio against the real project (Sanity has no local backend).
+- **Local development runs in Docker** (`docker-compose.yml`): Postgres with the migrations, the Stripe mock (now with memberships and signed webhooks), Mailpit for email (via `MAILPIT_URL`, ignored in production; replaced the home-made mail viewer `tools/mock-resend.mjs` on 10th November 2026, owner) and the Sanity Studio against the real project (Sanity has no local backend).
 
 ## Membership admin area behind a site-level password (owner, 11th November 2026)
 

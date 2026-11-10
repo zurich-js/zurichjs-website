@@ -34,7 +34,6 @@
     "@playwright/test": "1.63.0",
     "@types/node": "22.15.3",
     "@zurichjs/agent": "workspace:*",
-    "@zurichjs/integrations": "workspace:*",
     "@zurichjs/membership": "workspace:*",
     "astro-eslint-parser": "3.2.0",
     "eslint": "10.14.0",

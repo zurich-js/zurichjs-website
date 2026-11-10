@@ -56,6 +56,9 @@ export class StripeUnavailable extends Error {}
 
 const STRIPE_API = 'https://api.stripe.com';
 
+/** The API version every call uses, and the membership webhook endpoint is created on. */
+export const STRIPE_API_VERSION = '2025-08-27.basil';
+
 /** Stripe's API, or a local mock outside production (STRIPE_API_BASE). */
 export function stripeApiBase(env: Env): string {
   const override = env.STRIPE_API_BASE?.replace(/\/+$/, '');
@@ -73,7 +76,7 @@ export async function stripeApi<T>(env: Env, fetchImpl: Fetch, method: 'GET' | '
     headers: {
       authorization: `Bearer ${key}`,
       'content-type': 'application/x-www-form-urlencoded',
-      'stripe-version': '2025-08-27.basil',
+      'stripe-version': STRIPE_API_VERSION,
       ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}),
     },
     body: method === 'POST' ? params?.toString() : undefined,

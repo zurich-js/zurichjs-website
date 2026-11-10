@@ -225,6 +225,76 @@ describe('payments (Stripe webhook)', () => {
     expect((await store.get(memberId))!.status).toBe('active');
   });
 
+  it('emails the payment page and the next retry for a declined renewal, once per attempt', async () => {
+    await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
+    const declined = (attempt: number) => ({
+      ...paidInvoice('in_2', memberId, '2027-11-10', '2028-11-10', 0),
+      attempt_count: attempt,
+      next_payment_attempt: unix('2027-11-14T09:00:00Z'),
+      hosted_invoice_url: 'https://invoice.stripe.com/i/acct_x/test_in_2',
+    });
+    await handleMembershipWebhook(stripeEvent('evt_f1', 'invoice.payment_failed', declined(1)), deps());
+    await handleMembershipWebhook(stripeEvent('evt_f2', 'invoice.payment_failed', declined(2)), deps());
+    const failed = w.emails.filter((e) => e.subject === 'Your ZurichJS membership payment did not go through');
+    expect(failed).toHaveLength(2);
+    expect(String(failed[0]!.text)).toContain('Stripe tries again on 14 November 2027.');
+    expect(String(failed[0]!.html)).toContain('https://invoice.stripe.com/i/acct_x/test_in_2');
+    expect(w.slackPosts.at(-1)!.text).toContain('(attempt 2). Stripe tries again on 14 November 2027');
+    expect((await store.get(memberId))!.status).toBe('past_due');
+  });
+
+  it('asks the member to confirm a payment their bank holds (3D Secure)', async () => {
+    await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
+    const held = { ...paidInvoice('in_2', memberId, '2027-11-10', '2028-11-10', 0), hosted_invoice_url: 'https://invoice.stripe.com/i/acct_x/test_in_2' };
+    await handleMembershipWebhook(stripeEvent('evt_a', 'invoice.payment_action_required', held), deps());
+    expect((await store.get(memberId))!.status).toBe('past_due');
+    const email = w.emails.at(-1)!;
+    expect(email.subject).toBe('Please confirm your ZurichJS membership payment');
+    expect(String(email.html)).toContain('Confirm the payment');
+    expect(w.slackPosts.at(-1)!.text).toContain('3D Secure');
+  });
+
+  it('leaves a payment page that is not Stripe out of the email', async () => {
+    await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
+    const odd = { ...paidInvoice('in_2', memberId, '2027-11-10', '2028-11-10', 0), hosted_invoice_url: 'https://evil.example/pay' };
+    await handleMembershipWebhook(stripeEvent('evt_f', 'invoice.payment_failed', odd), deps());
+    expect(String(w.emails.at(-1)!.html)).not.toContain('evil.example');
+  });
+
+  it('does not email someone whose first payment is still in Checkout', async () => {
+    const before = w.emails.length;
+    await handleMembershipWebhook(stripeEvent('evt_f', 'invoice.payment_failed', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10', 0)), deps());
+    expect(w.emails).toHaveLength(before);
+    expect((await store.get(memberId))!.status).toBe('pending');
+  });
+
+  it('reads invoices in the shape of API versions before basil', async () => {
+    const { parent: _parent, ...rest } = paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10');
+    const legacy = { ...rest, subscription: 'sub_ada', subscription_details: { metadata: { source: 'zurichjs.com/membership', memberId } } };
+    await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', legacy), deps());
+    expect(await store.get(memberId)).toMatchObject({ status: 'active', stripeSubscriptionId: 'sub_ada', paidUntil: '2027-11-10' });
+  });
+
+  it('marks an active member behind when Stripe reports the subscription past due', async () => {
+    await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
+    const sub = {
+      id: 'sub_ada',
+      status: 'past_due',
+      metadata: { source: 'zurichjs.com/membership', memberId },
+      items: { data: [{ price: { lookup_key: 'member_supporter_yearly' } }] },
+    };
+    await handleMembershipWebhook(stripeEvent('evt_u', 'customer.subscription.updated', sub), deps());
+    expect((await store.get(memberId))!.status).toBe('past_due');
+  });
+
+  it('ends a membership as lapsed when Stripe cancels after the last retry', async () => {
+    await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
+    await handleMembershipWebhook(stripeEvent('evt_f', 'invoice.payment_failed', paidInvoice('in_2', memberId, '2027-11-10', '2028-11-10', 0)), deps());
+    const sub = { id: 'sub_ada', status: 'canceled', metadata: { source: 'zurichjs.com/membership', memberId } };
+    await handleMembershipWebhook(stripeEvent('evt_d', 'customer.subscription.deleted', sub), deps());
+    expect(await store.get(memberId)).toMatchObject({ status: 'ended', endedReason: 'lapsed' });
+  });
+
   it('follows a switch of level or cycle made in the billing portal', async () => {
     await handleMembershipWebhook(stripeEvent('evt_1', 'invoice.paid', paidInvoice('in_1', memberId, '2026-11-10', '2027-11-10')), deps());
     const sub = { id: 'sub_ada', metadata: { source: 'zurichjs.com/membership', memberId }, items: { data: [{ price: { lookup_key: 'member_basic_quarterly' } }] } };

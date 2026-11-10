@@ -6,7 +6,7 @@
  */
 import type { APIRoute } from 'astro';
 import { fail, methodNotAllowed } from '../../../../server/http.ts';
-import { certificateFilename, certificatePdf, loadSignature } from '../../../../server/membership.ts';
+import { certificateFilename, certificatePdf, loadSignature } from '../../../../server/membership-certificate.ts';
 import { signedIn, type RouteDeps } from '../../../../server/membership-route.ts';
 
 export const prerender = false;

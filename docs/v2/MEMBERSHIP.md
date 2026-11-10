@@ -25,11 +25,30 @@ This section is the current design. The sections after it are the original inves
 | Slack        | notes for new members, renewals and failed payments; Confirm resignation button for the approvers                                                                                |
 | Data         | `packages/membership` (status machine, `postgresStore`); anonymised one year after a membership ends; Stripe keeps the payment records                                           |
 | Admin        | `/membership/admin` for the board, behind the site-level password `MEMBERSHIP_ADMIN_PASSWORD`: members, details and history, confirm resignations, import, export                |
-| Local        | `docker compose up` (`pnpm local`): site, Postgres, Stripe mock, mail viewer, optional Studio                                                                                    |
+| Local        | `docker compose up` (`pnpm local`): site, Postgres, Stripe mock, mail viewer, optional Studio; `pnpm local:stripe` uses Stripe test mode instead of the mock                     |
 
 **Status rules** (`packages/membership/src/state.ts`): `pending → active` (Stripe, first payment) · `active ⇄ past_due` (Stripe) · `active / past_due / imported_manual → resigning` (member) · `resigning → ended` (board confirms, or Stripe at period end) · `ended → pending` (joins again). Every change is compare-and-set and logged in an append-only audit table.
 
 **Still open:** the basic discount and which paid events are included each year (board; perks wait for it); the scheduled job that runs the one-year anonymisation; the terms page text needs the owner's approval before `PUBLIC_MEMBERSHIP_ONLINE=on`; Swiss bookkeeping retention for payment records (10 years, OR Art. 958f, likely) to confirm with whoever keeps the books.
+
+### Stripe
+
+**Objects** (`pnpm membership:stripe-setup`, dry run first, then `--apply`): one product per level ("ZurichJS membership: Basic Member" and "…: Supporter"; the billing portal allows one price per interval on a product, so one shared product could not offer the level switch), four recurring CHF prices with lookup keys `member_<basic|supporter>_<quarterly|yearly>` (amounts from `apps/web/src/lib/membership.ts`), the billing portal configuration without cancelling (`STRIPE_MEMBER_PORTAL_CONFIG`) and, with `--webhook-url`, the webhook endpoint on the API version the site pins (`STRIPE_MEMBERSHIP_WEBHOOK_SECRET`). Test mode first; the owner runs it with the live key (production change).
+
+**Lifecycle** (`apps/web/src/pages/api/membership/webhook.ts`):
+
+| Stripe event                      | What happens                                                                                                                   |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `checkout.session.completed`      | subscription linked; an imported member switching to automatic payment becomes active (no charge until their paid period ends) |
+| `invoice.paid`                    | first payment and every renewal: active, paid until the period end, certificate emailed (welcome or renewal), Slack note       |
+| `invoice.payment_failed`          | declined renewal: active → past due; email with Stripe's payment page and the next retry date (one per attempt); Slack note    |
+| `invoice.payment_action_required` | the bank wants the member to confirm (3D Secure): the same, worded "confirm the payment"                                       |
+| `customer.subscription.updated`   | level or cycle switched in the portal; Stripe reporting `past_due` or `unpaid` marks an active member past due                 |
+| `customer.subscription.deleted`   | ended: resigned (the board confirmed) or lapsed (the retries ran out)                                                          |
+
+People still in Checkout get no failed-payment email (Checkout shows the error). Disputes and refunds are not handled by the site; Stripe emails the account owner.
+
+**Dashboard settings** (Billing › Revenue recovery, once per account): Smart Retries on; when all retries fail, **cancel the subscription** (that sends `customer.subscription.deleted`, so the membership lapses); Stripe's own failed-payment and 3D Secure customer emails off, since the site sends them. Keep receipts and invoices on (they are the payment record).
 
 Setup and day-to-day: `docs/v2/RUNBOOK.md`, "Membership (online)" and "Local development (Docker)".
 

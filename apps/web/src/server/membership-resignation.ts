@@ -8,7 +8,7 @@
 import { renderEmail } from '@zurichjs/emails';
 import { sendMemberEmail } from '@zurichjs/integrations';
 import { TransitionError, type Member, type MemberStore } from '@zurichjs/membership';
-import { lastDay, longDate } from './certificate.ts';
+import { lastDay, longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { membershipProps } from './membership.ts';
 import { cancelAtPeriodEnd, openInvoices, type StripeDeps } from './membership-stripe.ts';

@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
-import { bundledAssets, lastDay, longDate, renderCertificate } from '../src/server/certificate.ts';
+import { bundledAssets, renderCertificate } from '../src/server/certificate.ts';
+import { lastDay, longDate } from '../src/server/dates.ts';
 
 const cert = {
   number: 'ZJS-2026-0001',

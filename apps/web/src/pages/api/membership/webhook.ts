@@ -2,16 +2,29 @@
  * Stripe webhook for memberships (separate from the donations webhook).
  * Configure in Stripe › Developers › Webhooks: https://zurichjs.com/api/membership/webhook,
  * events checkout.session.completed, invoice.paid, invoice.payment_failed,
- * customer.subscription.updated, customer.subscription.deleted; secret in
- * STRIPE_MEMBERSHIP_WEBHOOK_SECRET. Without the secret every call is refused.
+ * invoice.payment_action_required, customer.subscription.updated,
+ * customer.subscription.deleted; secret in STRIPE_MEMBERSHIP_WEBHOOK_SECRET.
+ * Without the secret every call is refused. `pnpm membership:stripe-setup`
+ * creates the endpoint (docs/v2/MEMBERSHIP.md, "Stripe").
  *
- *   invoice.paid (amount > 0)          pending/past_due/imported → active; paid until the period end;
- *                                       certificate for the term, emailed (welcome or renewal); Slack note
+ *   invoice.paid (amount > 0)          the first payment and every renewal: pending/past_due/imported → active;
+ *                                       paid until the period end; certificate for the term, emailed
+ *                                       (welcome or renewal); Slack note
  *   checkout.session.completed          links the subscription; an imported member switching to automatic
  *                                       payment (trial until their paid period ends) becomes active
- *   invoice.payment_failed              active → past_due; email to update the payment method; Slack note
- *   customer.subscription.updated       level or cycle switched in the billing portal
- *   customer.subscription.deleted       ended: resigned (after the board confirmed) or lapsed
+ *   invoice.payment_failed              a declined renewal: active → past_due; email with Stripe's payment
+ *                                       page and the next retry; Slack note. Stripe retries (Smart Retries);
+ *                                       when the retries run out it cancels the subscription (below)
+ *   invoice.payment_action_required     the bank wants the member to confirm (3D Secure): the same, with
+ *                                       "confirm the payment" wording
+ *   customer.subscription.updated       level or cycle switched in the billing portal; a subscription Stripe
+ *                                       reports as past_due or unpaid marks an active member past_due
+ *   customer.subscription.deleted       ended: resigned (after the board confirmed) or lapsed (retries ran out)
+ *
+ * Events come in the endpoint's API version. Invoices are read in both shapes
+ * (2025-03-31.basil and later: `parent.subscription_details`; before:
+ * `subscription` and `subscription_details`), so an endpoint or a `stripe listen`
+ * on an older version still works.
  *
  * Safe to receive twice: handled events are skipped, every status change names
  * the status it expects, certificates are one per invoice, emails carry
@@ -24,7 +37,9 @@ import { TransitionError, levelInfo, type Member, type MemberStore, type Status 
 import type { APIRoute } from 'astro';
 import { siteOrigin } from '../../../server/auth.ts';
 import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
-import { issueAndSendCertificate, membershipProps } from '../../../server/membership.ts';
+import { longDate } from '../../../server/dates.ts';
+import { issueAndSendCertificate } from '../../../server/membership-certificate.ts';
+import { membershipProps } from '../../../server/membership.ts';
 import { MembershipUnavailable, memberStore } from '../../../server/membership-db.ts';
 import { notify, who, type MembershipSlack } from '../../../server/membership-slack.ts';
 import { MEMBERSHIP_SOURCE, fromLookupKey } from '../../../server/membership-stripe.ts';
@@ -38,12 +53,36 @@ interface StripeEvent {
   data: { object: Record<string, unknown> };
 }
 
+interface SubscriptionDetails {
+  subscription?: string | { id: string };
+  metadata?: Record<string, string> | null;
+}
+
 interface Invoice {
   id: string;
   amount_paid?: number;
   customer?: string;
+  attempt_count?: number;
+  next_payment_attempt?: number | null;
+  hosted_invoice_url?: string | null;
   lines?: { data?: { period?: { start: number; end: number } }[] };
-  parent?: { subscription_details?: { subscription?: string; metadata?: Record<string, string> } };
+  parent?: { subscription_details?: SubscriptionDetails | null } | null;
+  /** Before API version 2025-03-31.basil. */
+  subscription?: string | { id: string } | null;
+  subscription_details?: { metadata?: Record<string, string> | null } | null;
+}
+
+/** The invoice's subscription and that subscription's metadata, in either API shape. */
+function subscriptionOf(inv: Invoice): { subscription?: string; metadata?: Record<string, string> } | null {
+  const details = inv.parent?.subscription_details ?? (inv.subscription ? { subscription: inv.subscription, metadata: inv.subscription_details?.metadata } : null);
+  if (!details) return null;
+  const sub = details.subscription;
+  return { subscription: typeof sub === 'string' ? sub : sub?.id, metadata: details.metadata ?? undefined };
+}
+
+/** The term an invoice pays for: the line that reaches furthest (a switch can add proration lines). */
+function termOf(inv: Invoice): { start: number; end: number } | undefined {
+  return (inv.lines?.data ?? []).map((l) => l.period).reduce<{ start: number; end: number } | undefined>((best, p) => (p && (!best || p.end > best.end) ? p : best), undefined);
 }
 
 interface Subscription {
@@ -64,6 +103,9 @@ export interface WebhookDeps {
 }
 
 const day = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
+
+/** Stripe's hosted invoice page, and nothing else, goes into the email. */
+const safeStripeUrl = (url: string | null | undefined) => (url?.startsWith('https://invoice.stripe.com/') ? url : null);
 
 /** Moves the member to `to` from whatever they are in now, when that is allowed; otherwise leaves them. */
 async function moveTo(
@@ -124,12 +166,12 @@ export async function handleMembershipWebhook(request: Request, deps: WebhookDep
     switch (event.type) {
       case 'invoice.paid': {
         const inv = o as unknown as Invoice;
-        const sub = inv.parent?.subscription_details;
-        if (sub?.metadata?.source !== MEMBERSHIP_SOURCE) break;
+        const sub = subscriptionOf(inv);
+        if (!sub || sub.metadata?.source !== MEMBERSHIP_SOURCE) break;
         // The trial invoice of an imported member (nothing charged) is not a paid term.
         if (!inv.amount_paid) break;
         let m = await memberOf(store, { memberId: sub.metadata.memberId, subscriptionId: sub.subscription });
-        const period = inv.lines?.data?.[0]?.period;
+        const period = termOf(inv);
         if (!m || !period) {
           log(`[membership] invoice ${inv.id}: no member or period; skipped`);
           break;
@@ -172,28 +214,45 @@ export async function handleMembershipWebhook(request: Request, deps: WebhookDep
         break;
       }
 
-      case 'invoice.payment_failed': {
+      case 'invoice.payment_failed':
+      case 'invoice.payment_action_required': {
         const inv = o as unknown as Invoice;
-        const sub = inv.parent?.subscription_details;
-        if (sub?.metadata?.source !== MEMBERSHIP_SOURCE) break;
+        const sub = subscriptionOf(inv);
+        if (!sub || sub.metadata?.source !== MEMBERSHIP_SOURCE) break;
         let m = await memberOf(store, { memberId: sub.metadata.memberId, subscriptionId: sub.subscription });
-        if (!m) break;
-        if (m.status === 'active') m = await moveTo(store, m, 'past_due', event.id, { payload: { invoice: inv.id } });
+        // Someone still in Checkout (pending) fixes the card there; only renewals concern members.
+        if (!m || !(m.status === 'active' || m.status === 'past_due' || m.status === 'resigning')) break;
+        if (m.status === 'active') m = await moveTo(store, m, 'past_due', event.id, { payload: { invoice: inv.id, event: event.type } });
+        const needsConfirmation = event.type === 'invoice.payment_action_required';
+        const nextAttempt = inv.next_payment_attempt ? longDate(day(inv.next_payment_attempt)) : null;
         await sendMemberEmail(
           env,
-          { to: m.email, ...renderEmail('payment-failed', membershipProps(m, origin)) },
-          { idempotencyKey: `member-payment-failed:${inv.id}`, log, fetch: deps.fetch },
+          {
+            to: m.email,
+            ...renderEmail('payment-failed', { ...membershipProps(m, origin), payUrl: safeStripeUrl(inv.hosted_invoice_url), needsConfirmation, nextAttempt }),
+          },
+          // One email per attempt: Stripe sends a new event for each retry.
+          { idempotencyKey: `member-payment-failed:${inv.id}:${inv.attempt_count ?? 0}:${needsConfirmation ? 'confirm' : 'declined'}`, log, fetch: deps.fetch },
         ).catch((e: Error) => log(`[membership] payment-failed email to ${m!.id} failed: ${e.message}`));
-        await say(`:warning: Payment failed for ${who(m)}. Stripe retries; they were emailed.`);
+        const retry = nextAttempt ? `Stripe tries again on ${nextAttempt}` : 'No retry scheduled; the subscription ends if it stays unpaid';
+        await say(
+          needsConfirmation
+            ? `:lock: ${who(m)} has to confirm their payment with their bank (3D Secure). They were emailed the payment page.`
+            : `:warning: Payment failed for ${who(m)} (attempt ${inv.attempt_count ?? 1}). ${retry}; they were emailed.`,
+        );
         break;
       }
 
       case 'customer.subscription.updated': {
         const s = o as unknown as Subscription;
         if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
-        const m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
+        let m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
+        if (!m) break;
+        // Catches a missed payment_failed event: Stripe says the subscription is behind.
+        if ((s.status === 'past_due' || s.status === 'unpaid') && m.status === 'active')
+          m = await moveTo(store, m, 'past_due', event.id, { payload: { subscriptionStatus: s.status } });
         const plan = fromLookupKey(s.items?.data?.[0]?.price?.lookup_key);
-        if (!m || !plan || (plan.level === m.level && plan.cycle === m.cycle)) break;
+        if (!plan || (plan.level === m.level && plan.cycle === m.cycle)) break;
         await store.update(m.id, { level: plan.level, cycle: plan.cycle }, { kind: 'stripe', id: event.id });
         await say(`:arrows_counterclockwise: ${who(m)} switched to ${levelInfo(plan.level).name}, ${plan.cycle}.`);
         break;

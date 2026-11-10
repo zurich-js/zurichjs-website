@@ -104,16 +104,35 @@ function membershipRenewed(p: TermProps): EmailContent {
   };
 }
 
-function paymentFailed(p: MembershipProps): EmailContent {
+export interface PaymentFailedProps extends MembershipProps {
+  /** Stripe's page for this invoice, where the member can pay it or confirm the payment with their bank. */
+  payUrl?: string | null;
+  /** The bank asks the member to confirm the payment (3D Secure), rather than declining it. */
+  needsConfirmation?: boolean;
+  /** "14 November 2026": when Stripe tries again, if it does. */
+  nextAttempt?: string | null;
+}
+
+function paymentFailed(p: PaymentFailedProps): EmailContent {
+  const retry = p.nextAttempt ? `Stripe tries again on ${p.nextAttempt}.` : 'Stripe tries again over the next days.';
   return {
-    subject: 'Your ZurichJS membership payment did not go through',
-    preheader: 'Update your payment method to keep your membership.',
+    subject: p.needsConfirmation ? 'Please confirm your ZurichJS membership payment' : 'Your ZurichJS membership payment did not go through',
+    preheader: p.needsConfirmation ? 'Your bank asks you to confirm the payment.' : 'Update your payment method to keep your membership.',
     heading: `Hi ${firstName(p.name)}`,
     blocks: [
-      { kind: 'error', text: 'Your last membership payment did not go through.' },
+      p.needsConfirmation
+        ? { kind: 'p', text: 'Your bank asks you to confirm your membership payment before it goes through.' }
+        : { kind: 'error', text: 'Your last membership payment did not go through.' },
       summary(p),
-      { kind: 'p', text: 'Stripe tries again over the next days. To keep your membership, check or update your payment method on your account page.' },
-      { kind: 'button', label: 'Update payment method', url: p.accountUrl },
+      p.needsConfirmation
+        ? { kind: 'p', text: 'Open the payment page and confirm it with your bank. It takes a minute.' }
+        : { kind: 'p', text: `${retry} To keep your membership, pay the open invoice now or update your payment method on your account page.` },
+      ...((p.payUrl
+        ? [
+            { kind: 'button', label: p.needsConfirmation ? 'Confirm the payment' : 'Pay the open invoice', url: p.payUrl },
+            { kind: 'url', text: 'To change your card, open your account page:', url: p.accountUrl },
+          ]
+        : [{ kind: 'button', label: 'Update payment method', url: p.accountUrl }]) satisfies Block[]),
     ],
   };
 }

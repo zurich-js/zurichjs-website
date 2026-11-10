@@ -20,6 +20,16 @@ type Fetch = typeof fetch;
 
 export const MEMBERSHIP_SOURCE = 'zurichjs.com/membership';
 
+/** The events the membership webhook handles (pages/api/membership/webhook.ts); the setup script subscribes to these. */
+export const MEMBERSHIP_WEBHOOK_EVENTS = [
+  'checkout.session.completed',
+  'invoice.paid',
+  'invoice.payment_failed',
+  'invoice.payment_action_required',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+] as const;
+
 export interface StripeDeps {
   env: Env;
   fetch?: Fetch;

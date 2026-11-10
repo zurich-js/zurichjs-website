@@ -216,6 +216,8 @@ pnpm local:reset      # stop and delete the local database and the container ins
 
 **Your signature on certificates:** put `MEMBERSHIP_SIGNATURE_FILE=/app/path/to/signature.png` in `.env.local` with the PNG inside the repository folder but not committed (e.g. `.local/signature.png`; `.local` is git-ignored). Production reads it from Netlify Blobs instead (below).
 
+**Against Stripe test mode instead of the mock:** `pnpm local:stripe` (`tools/local-stripe.sh`, `docker-compose.stripe.yml`). It needs the Stripe CLI and, in `.env.local`, a test-mode `STRIPE_SECRET_KEY=sk_test_…` (a live key is refused) and `STRIPE_MEMBER_PORTAL_CONFIG` from `STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup --apply`. It runs `stripe listen` for the membership events and gives the site the listener's signing secret. Pay with test cards: `4242 4242 4242 4242` pays, `4000 0000 0000 0341` attaches but declines later charges (a failed renewal), `4000 0027 6000 3184` needs 3D Secure. To play renewals and retries without waiting, give the customer a test clock in the dashboard and advance it.
+
 `.env.local` (git-ignored) overrides any variable of the `web` service. Nothing here reaches Stripe, Resend, Slack or Netlify. Without Docker, the same pieces run natively: `node tools/mock-stripe.mjs`, Mailpit (`brew install mailpit`, or its binary, then `MAILPIT_URL=http://localhost:8025`), a Postgres with `tools/docker/migrate.sh` applied, and `MEMBERSHIP_DB_URL` pointing at it.
 
 ## Membership (online)

@@ -12,6 +12,7 @@ import { PDFDocument, rgb, type PDFFont } from 'pdf-lib';
 import figtree400 from '../assets/fonts/figtree-400.ttf?inline';
 import figtree700 from '../assets/fonts/figtree-700.ttf?inline';
 import wordmarkPng from '../assets/certificate/wordmark.png?inline';
+import { lastDay, longDate } from './dates.ts';
 
 export interface CertificateData {
   number: string;
@@ -46,12 +47,6 @@ export const bundledAssets = (signature: Uint8Array | null = null): CertificateA
   wordmark: fromDataUrl(wordmarkPng),
   signature,
 });
-
-/** 2026-11-10 → 10 November 2026. */
-export const longDate = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
-
-/** The last day the term covers: the day before periodEnd. */
-export const lastDay = (periodEnd: string) => new Date(Date.parse(`${periodEnd}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
 
 const BLACK = rgb(0, 0, 0);
 const GREY = rgb(0x5f / 255, 0x62 / 255, 0x6b / 255);

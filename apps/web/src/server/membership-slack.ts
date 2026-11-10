@@ -11,7 +11,7 @@
  * per app), in SLACK_MEMBERSHIP_CHANNEL_ID or else SLACK_AGENT_CHANNEL_ID.
  */
 import { levelInfo, type Member, type MemberStore } from '@zurichjs/membership';
-import { lastDay, longDate } from './certificate.ts';
+import { lastDay, longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { confirmResignation } from './membership-resignation.ts';
 import type { StripeDeps } from './membership-stripe.ts';

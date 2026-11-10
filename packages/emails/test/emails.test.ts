@@ -45,10 +45,11 @@ describe('application emails', () => {
     expect(e.text).toContain('See your request: https://zurichjs.com/membership/account');
   });
 
-  it('sends the approved member to sign first, then pay', () => {
+  it('sends the approved member to set up payment', () => {
     const e = renderEmail('application-approved', application);
     expect(e.subject).toBe('Your ZurichJS membership is approved');
-    expect(e.text).toContain('Sign the declaration: https://zurichjs.com/membership/account');
+    expect(e.text).toContain('Set up payment: https://zurichjs.com/membership/account');
+    expect(e.text).not.toMatch(/declaration|sign the/i);
     expect(e.html).toContain('#dcf0e1'); // the success box, in success-soft
   });
 

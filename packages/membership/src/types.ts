@@ -22,15 +22,13 @@ export type Category = 'passive' | 'active';
 export type Status =
   /** Applied on the site, waiting for an organiser in Slack. */
   | 'applied'
-  /** Approved, waiting for the signed declaration. */
+  /** Approved, waiting for the first payment (terms were accepted when applying). */
   | 'approved'
-  /** Declaration signed, waiting for the first payment. */
-  | 'signed'
   /** Paying automatically through Stripe. */
   | 'active'
   /** A Stripe payment failed; dues are outstanding. */
   | 'past_due'
-  /** Imported from the manual process: signed on paper, paid by hand until `paidUntil`. */
+  /** Imported from the manual process: joined on paper, paid by hand until `paidUntil`. */
   | 'imported_manual'
   /** Resigned; ends at the end of the paid period once the board confirms (Art. 5). */
   | 'resigning'

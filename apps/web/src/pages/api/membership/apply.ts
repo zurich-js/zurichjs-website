@@ -3,7 +3,8 @@
  * is charged: the request waits for an organiser in Slack.
  *
  * POST /api/membership/apply   Authorization: Bearer <Supabase access token>
- *   JSON { kind?: 'person' | 'organisation', name, organisationName?, level, cycle, message? }
+ *   JSON { kind?: 'person' | 'organisation', name, organisationName?, level, cycle, message?, termsVersion }
+ *   termsVersion: the membership terms version the person ticked (must be the current one).
  *   200 { ok: true, member }          the request is in (member: the /me view)
  *   400 { ok: false, error, field? }  invalid fields
  *   401 { ok: false, error }          not signed in
@@ -20,6 +21,7 @@ import { renderEmail } from '@zurichjs/emails';
 import { sendEmail, sendMemberEmail } from '@zurichjs/integrations';
 import {
   DuplicateEmail,
+  TERMS,
   canApply,
   isCycle,
   isLevel,
@@ -61,6 +63,13 @@ export function parseApplication(body: Record<string, unknown>): { ok: true; dat
   if (!isCycle(body.cycle)) return { ok: false, error: 'Choose quarterly or yearly.', field: 'cycle' };
   const message = text(body.message, 1000);
   if (message === false) return { ok: false, error: 'Keep the message under 1000 characters, without HTML.', field: 'message' };
+  // No declaration to sign: accepting the membership terms (based on the bylaws) is the agreement.
+  if (body.termsVersion !== TERMS.version)
+    return {
+      ok: false,
+      error: body.termsVersion ? 'The membership terms changed. Reload the page and accept the current terms.' : 'Accept the membership terms to send your request.',
+      field: 'terms',
+    };
   return { ok: true, data: { kind, name, organisationName: kind === 'organisation' ? (org as string) : null, level: body.level, cycle: body.cycle, message } };
 }
 
@@ -111,6 +120,7 @@ export async function handleApply(
           actor,
         );
       }
+      await store.acceptTerms(member.id, TERMS.version, actor);
     } catch (cause) {
       // Two tabs submitting at once: the second finds the first.
       if (cause instanceof DuplicateEmail) return fail(409, 'Your request is already with the organisers.');

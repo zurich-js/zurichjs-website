@@ -1,4 +1,4 @@
-import { memoryStore, type Member, type MemberStore, type NewMember } from '@zurichjs/membership';
+import { TERMS, memoryStore, type Member, type MemberStore, type NewMember } from '@zurichjs/membership';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleApply, parseApplication } from '../src/pages/api/membership/apply.ts';
 import { APPROVE, REJECT, decide, reviewCard, type MembershipSlack, type SlackBlock } from '../src/server/membership-review.ts';
@@ -51,7 +51,7 @@ const applyReq = (data: Record<string, unknown>) =>
     body: JSON.stringify(data),
   });
 
-const application = { name: 'Ada Lovelace', level: 'supporter', cycle: 'yearly', message: 'Me & my team come to every meetup' };
+const application = { name: 'Ada Lovelace', level: 'supporter', cycle: 'yearly', message: 'Me & my team come to every meetup', termsVersion: TERMS.version };
 
 const applicant: NewMember = {
   kind: 'person',
@@ -87,6 +87,8 @@ describe('parseApplication', () => {
     [{ ...application, cycle: 'monthly' }, 'cycle'],
     [{ ...application, message: 'x'.repeat(1001) }, 'message'],
     [{ ...application, name: '<b>Ada</b>' }, 'name'],
+    [{ ...application, termsVersion: undefined }, 'terms'],
+    [{ ...application, termsVersion: '2020-01-01' }, 'terms'],
   ])('refuses %j (%s)', (body, field) => {
     expect(parseApplication(body)).toMatchObject({ ok: false, field });
   });
@@ -110,6 +112,7 @@ describe('POST /api/membership/apply', () => {
     // The message is in Slack only (escaped), never in the database.
     expect(JSON.stringify(m)).not.toContain('every meetup');
     expect(calls).toHaveLength(1);
+    expect(await store.acceptedTerms(m.id)).toBe(TERMS.version);
     expect(text(calls[0]!.args[1] as SlackBlock[])).toContain('Me &amp; my team come to every meetup');
     expect(emails).toHaveLength(1);
     expect(emails[0]).toMatchObject({ to: ['ada@example.com'], subject: 'We received your ZurichJS membership request' });

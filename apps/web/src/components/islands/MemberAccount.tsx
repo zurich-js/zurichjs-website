@@ -238,7 +238,7 @@ export default function MemberAccount({ supabaseUrl, supabaseAnonKey, contactEma
 /** What happens next, per status (only the statuses that exist so far). */
 const NEXT: Partial<Record<MemberView['status'], string>> = {
   applied: 'An organiser looks at your request soon, and you hear from us by email. Nothing has been charged.',
-  approved: 'Your request is approved. Signing the membership declaration opens here soon; we email you when it does. Nothing has been charged.',
+  approved: 'Your request is approved. Setting up payment opens here soon; we email you when it does. Nothing has been charged.',
 };
 
 function MemberSummary({ m, justApplied }: { m: MemberView; justApplied?: boolean }) {

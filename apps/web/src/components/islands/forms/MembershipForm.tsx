@@ -178,7 +178,7 @@ export default function MembershipForm({ applyOnline = false }: { applyOnline?: 
           </h2>
           <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
             {applyOnline
-              ? 'Nothing is charged here. Sign in with your email to send your request; an organiser looks at it, you sign the membership declaration, and only then set up payment.'
+              ? 'Nothing is charged here. Sign in with your email to send your request; an organiser looks at it, and only then you set up payment.'
               : 'Nothing is charged here. An organiser replies by email with the next steps and how to pay.'}
           </p>
         </div>

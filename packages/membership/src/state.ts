@@ -2,8 +2,12 @@ import type { ActorKind, EndedReason, Member, Status } from './types.ts';
 
 /**
  * Every allowed status change, and who may make it. The store refuses anything
- * else, and Supabase's `member_transition` refuses a change whose `from` no
- * longer matches (two organisers pressing Approve at once).
+ * else, and the database's `member_transition` refuses a change whose `from`
+ * no longer matches (two organisers pressing Approve at once).
+ *
+ * There is no declaration to sign (owner, 10th November 2026): people accept
+ * the membership terms, which rest on the bylaws, when they apply. So an
+ * approved request becomes active when Stripe confirms the first payment.
  *
  * Bylaws (Art. 5): a member may resign at any time, provided no dues are
  * outstanding. So `resigning → ended` is the board confirming, and the caller
@@ -12,8 +16,7 @@ import type { ActorKind, EndedReason, Member, Status } from './types.ts';
  */
 export const TRANSITIONS: Readonly<Record<Status, Partial<Record<Status, readonly ActorKind[]>>>> = {
   applied: { approved: ['board'], rejected: ['board'] },
-  approved: { signed: ['member'], rejected: ['board'] },
-  signed: { active: ['stripe'], ended: ['board'] },
+  approved: { active: ['stripe'], rejected: ['board'] },
   active: { past_due: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   past_due: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   imported_manual: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board'] },
@@ -64,15 +67,15 @@ export function checkTransition(member: Pick<Member, 'status'>, to: Status, acto
 export const isMember = (s: Status): boolean => s === 'active' || s === 'past_due' || s === 'imported_manual' || s === 'resigning';
 
 /**
- * Whether the member may start (or switch to) automatic payment through Stripe.
- * New members pay once they have signed. Imported members must re-sign the
- * declaration digitally first: a paper declaration alone is not enough (owner,
- * 6th November 2026). Signing does not change an imported member's status;
- * the caller passes whether a digital declaration exists.
+ * Whether the member may start (or switch to) automatic payment through Stripe:
+ * approved new members, and imported members paying by hand, once they have
+ * accepted the current membership terms online. Imported members accept them
+ * in the portal first (owner, 6th and 10th November 2026); accepting does not
+ * change their status. The caller passes whether that acceptance exists.
  */
-export function canStartAutomaticPayment(m: Pick<Member, 'status' | 'paymentMode'>, hasDigitalDeclaration: boolean): boolean {
-  if (m.status === 'signed') return hasDigitalDeclaration;
-  if (m.status === 'imported_manual') return m.paymentMode === 'manual' && hasDigitalDeclaration;
+export function canStartAutomaticPayment(m: Pick<Member, 'status' | 'paymentMode'>, acceptedCurrentTerms: boolean): boolean {
+  if (m.status === 'approved') return acceptedCurrentTerms;
+  if (m.status === 'imported_manual') return m.paymentMode === 'manual' && acceptedCurrentTerms;
   return false;
 }
 
@@ -82,7 +85,6 @@ export const canApply = (s: Status | null): boolean => s === null || s === 'reje
 const LABELS: Record<Status, string> = {
   applied: 'waiting for approval',
   approved: 'approved',
-  signed: 'signed',
   active: 'active',
   past_due: 'behind on payment',
   imported_manual: 'paid by hand',

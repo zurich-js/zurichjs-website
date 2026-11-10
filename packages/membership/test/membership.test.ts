@@ -10,7 +10,9 @@ import {
   parseImport,
   priceLookupKey,
   supabaseStore,
+  TERMS,
   TRANSITIONS,
+  acceptedCurrent,
   TransitionError,
   DuplicateEmail,
   type NewMember,
@@ -57,25 +59,24 @@ describe('levels', () => {
 });
 
 describe('status machine', () => {
-  it('runs the self-serve path: apply, approve, sign, pay, resign, end', () => {
+  it('runs the self-serve path: apply (terms accepted), approve, pay, resign, end', () => {
     const path: [Status, Status, 'member' | 'board' | 'stripe'][] = [
       ['applied', 'approved', 'board'],
-      ['approved', 'signed', 'member'],
-      ['signed', 'active', 'stripe'],
+      ['approved', 'active', 'stripe'],
       ['active', 'resigning', 'member'],
     ];
     for (const [from, to, actor] of path) expect(code(() => checkTransition({ status: from }, to, actor))).toBe('ok');
     expect(checkTransition({ status: 'resigning' }, 'ended', 'board', 'resigned')).toEqual({ from: 'resigning', to: 'ended', endedReason: 'resigned' });
   });
 
-  it('never lets members approve themselves or skip signing', () => {
+  it('never lets members approve themselves or skip approval', () => {
     expect(code(() => checkTransition({ status: 'applied' }, 'approved', 'member'))).toBe('wrong_actor');
-    expect(code(() => checkTransition({ status: 'approved' }, 'active', 'stripe'))).toBe('not_allowed');
+    expect(code(() => checkTransition({ status: 'applied' }, 'active', 'stripe'))).toBe('not_allowed');
     expect(code(() => checkTransition({ status: 'applied' }, 'active', 'board'))).toBe('not_allowed');
   });
 
   it('only lets Stripe say a payment happened', () => {
-    expect(code(() => checkTransition({ status: 'signed' }, 'active', 'board'))).toBe('wrong_actor');
+    expect(code(() => checkTransition({ status: 'approved' }, 'active', 'board'))).toBe('wrong_actor');
     expect(code(() => checkTransition({ status: 'imported_manual' }, 'active', 'member'))).toBe('wrong_actor');
   });
 
@@ -102,11 +103,12 @@ describe('status machine', () => {
     expect(canApply('applied')).toBe(false);
   });
 
-  it('makes imported members re-sign digitally before automatic payment', () => {
+  it('lets approved and imported members pay automatically only after accepting the current terms', () => {
     expect(canStartAutomaticPayment({ status: 'imported_manual', paymentMode: 'manual' }, false)).toBe(false);
     expect(canStartAutomaticPayment({ status: 'imported_manual', paymentMode: 'manual' }, true)).toBe(true);
-    expect(canStartAutomaticPayment({ status: 'signed', paymentMode: 'automatic' }, true)).toBe(true);
-    expect(canStartAutomaticPayment({ status: 'approved', paymentMode: 'automatic' }, true)).toBe(false);
+    expect(canStartAutomaticPayment({ status: 'approved', paymentMode: 'automatic' }, true)).toBe(true);
+    expect(canStartAutomaticPayment({ status: 'approved', paymentMode: 'automatic' }, false)).toBe(false);
+    expect(canStartAutomaticPayment({ status: 'applied', paymentMode: 'automatic' }, true)).toBe(false);
     expect(canStartAutomaticPayment({ status: 'active', paymentMode: 'automatic' }, true)).toBe(false);
   });
 
@@ -136,6 +138,17 @@ describe('memory store', () => {
     // A second approver pressing Reject on the same card: approved → rejected is allowed in general, but not from this card.
     await expect(s.transition(m.id, { from: 'applied', to: 'rejected', actor: board })).rejects.toMatchObject({ code: 'conflict' });
     expect((await s.get(m.id))!.status).toBe('approved');
+  });
+
+  it('records terms acceptances and returns the latest version', async () => {
+    const s = memoryStore();
+    const m = await s.create(applicant, member);
+    expect(await s.acceptedTerms(m.id)).toBeNull();
+    await s.acceptTerms(m.id, '2026-01-01', member);
+    await s.acceptTerms(m.id, TERMS.version, member);
+    expect(await s.acceptedTerms(m.id)).toBe(TERMS.version);
+    expect(acceptedCurrent(await s.acceptedTerms(m.id))).toBe(true);
+    expect((await s.events(m.id)).at(-1)).toMatchObject({ type: 'terms_accepted', payload: { version: TERMS.version } });
   });
 
   it('refuses a change the status machine does not allow, and logs nothing', async () => {

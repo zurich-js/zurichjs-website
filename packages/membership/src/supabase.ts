@@ -181,6 +181,9 @@ export function supabaseStore(env: Env, fetchImpl: Fetch = fetch): MemberStore {
         p_payload: input.payload ?? {},
       });
     },
+    // Terms acceptance lands with the Netlify Database store that replaces this file (owner, 10th November 2026).
+    acceptTerms: () => Promise.reject(new Error('Terms acceptance is not available on the Supabase store.')),
+    acceptedTerms: () => Promise.reject(new Error('Terms acceptance is not available on the Supabase store.')),
     async events(id) {
       const rows = await call<EventRow[]>('GET', `member_events?select=*&member_id=eq.${encodeURIComponent(id)}&order=at.asc,id.asc`);
       return rows.map((r) => ({

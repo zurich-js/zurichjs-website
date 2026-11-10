@@ -6,6 +6,8 @@
 import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
+import { TERMS } from '@zurichjs/membership/terms';
+import { cx } from '@zurichjs/design/recipes';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, type Cycle, type TierKey } from '../../lib/membership.ts';
 import type { MemberView } from '../../pages/api/membership/me.ts';
 import { SubmitButton, useFocusFirstError } from './forms/shared.tsx';
@@ -50,6 +52,7 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
   const [level, setLevel] = useState<TierKey>(previous?.level ?? choice.level);
   const [cycle, setCycle] = useState<Cycle>(previous?.cycle ?? choice.cycle);
   const [f, setF] = useState({ name: previous?.name ?? '', organisationName: previous?.organisationName ?? '', message: '' });
+  const [accepted, setAccepted] = useState(false);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -60,9 +63,10 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
   const errs = {
     name: f.name.trim() ? '' : kind === 'organisation' ? 'Add the name of the person who signs for the organisation.' : 'Add your full name.',
     organisationName: kind === 'organisation' && !f.organisationName.trim() ? 'Add the organisation’s name.' : '',
+    terms: accepted ? '' : 'Accept the membership terms to send your request.',
   };
   const fieldError = (k: keyof typeof errs) => (tried ? errs[k] : '') || (serverField?.field === k ? serverField.error : '');
-  const valid = !errs.name && !errs.organisationName;
+  const valid = !errs.name && !errs.organisationName && !errs.terms;
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -81,7 +85,15 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
       const res = await fetch('/api/membership/apply', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${t}` },
-        body: JSON.stringify({ kind, name: f.name, organisationName: kind === 'organisation' ? f.organisationName : undefined, level, cycle, message: f.message || undefined }),
+        body: JSON.stringify({
+          kind,
+          name: f.name,
+          organisationName: kind === 'organisation' ? f.organisationName : undefined,
+          level,
+          cycle,
+          message: f.message || undefined,
+          termsVersion: TERMS.version,
+        }),
       });
       const body = (await res.json().catch(() => ({}))) as { ok?: boolean; member?: MemberView; error?: string; field?: string };
       if (res.status === 401) return onSignedOut();
@@ -110,7 +122,7 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
           </p>
         )}
         <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-          Nothing is charged now. An organiser looks at your request; if it is approved, you sign the membership declaration here, and only then set up payment.
+          Nothing is charged now. An organiser looks at your request; if it is approved, you set up payment here and your membership starts.
         </p>
         <p class="m-0 text-[17px] leading-[1.6] text-ink-2 text-pretty">
           Already a member? Sign in with the email you joined with, or write to{' '}
@@ -166,8 +178,33 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
           maxLength={1000}
         />
         <p class="m-0 text-[16px] text-ink-2" aria-live="polite">
-          {TIERS[level].name}, {feeLabel(TIERS[level], cycle)}. Charged only after approval and your signature.
+          {TIERS[level].name}, {feeLabel(TIERS[level], cycle)}. Charged only after an organiser approves your request.
         </p>
+        <div class="flex flex-col gap-1.5">
+          <label class="flex gap-3 items-start text-[17px] leading-[1.5] cursor-pointer">
+            <input
+              type="checkbox"
+              name="terms"
+              checked={accepted}
+              onChange={(e) => setAccepted((e.target as HTMLInputElement).checked)}
+              aria-invalid={!!fieldError('terms') || undefined}
+              aria-describedby={fieldError('terms') ? 'terms-error' : undefined}
+              class={cx('mt-1 w-5 h-5 flex-none accent-black', fieldError('terms') && 'outline-2 outline-danger')}
+            />
+            <span>
+              I accept the{' '}
+              <a href={TERMS.path} target="_blank" rel="noopener" class="font-bold text-black">
+                membership terms
+              </a>
+              , which follow the association’s bylaws.
+            </span>
+          </label>
+          {fieldError('terms') && (
+            <span id="terms-error" class="text-[14px] text-danger pl-8" aria-live="polite">
+              {fieldError('terms')}
+            </span>
+          )}
+        </div>
         {serverError && (
           <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
             {serverError}

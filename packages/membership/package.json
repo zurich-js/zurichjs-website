@@ -5,7 +5,8 @@
   "description": "Verein membership domain: levels, the status machine, the member store (in-memory and Supabase), CSV import.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./terms": "./src/terms.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

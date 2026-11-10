@@ -32,6 +32,10 @@ export interface MemberStore {
   /** Links Stripe ids. Kept apart from `update` so ordinary edits cannot overwrite them. */
   linkStripe(id: string, ids: { customerId?: string; subscriptionId?: string }, actor: Actor): Promise<Member>;
   transition(id: string, input: TransitionInput): Promise<Member>;
+  /** Records that the member accepted a version of the membership terms (append-only). */
+  acceptTerms(id: string, version: string, actor: Actor): Promise<void>;
+  /** The latest terms version the member accepted, or null. */
+  acceptedTerms(id: string): Promise<string | null>;
   events(id: string): Promise<MemberEvent[]>;
 }
 
@@ -58,6 +62,7 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
   const nextId = opts.id ?? (() => `m_${++n}`);
   const members = new Map<string, Member>();
   const log: MemberEvent[] = [];
+  const acceptances: { memberId: string; version: string; at: string }[] = [];
 
   const record = (memberId: string, type: string, actor: Actor, extra: Partial<MemberEvent> = {}) =>
     log.push({ id: `e_${log.length + 1}`, memberId, type, fromStatus: null, toStatus: null, actor, payload: {}, at: now().toISOString(), ...extra });
@@ -112,6 +117,12 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       record(id, 'status_changed', input.actor, { fromStatus: t.from, toStatus: t.to, payload: { ...input.payload, ...(t.endedReason ? { reason: t.endedReason } : {}) } });
       return save({ ...m, status: t.to, endedReason: t.endedReason });
     },
+    async acceptTerms(id, version, actor) {
+      must(id);
+      acceptances.push({ memberId: id, version, at: now().toISOString() });
+      record(id, 'terms_accepted', actor, { payload: { version } });
+    },
+    acceptedTerms: (id) => Promise.resolve(acceptances.filter((a) => a.memberId === id).at(-1)?.version ?? null),
     events: (id) => Promise.resolve(log.filter((e) => e.memberId === id).map((e) => ({ ...e }))),
   };
 }

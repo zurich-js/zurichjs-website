@@ -70,7 +70,7 @@ function applicationReceived(p: ApplicationProps): EmailContent {
     blocks: [
       { kind: 'p', text: 'You asked to join the Swiss JavaScript Group, the association behind ZurichJS. An organiser looks at your request soon and you hear from us by email.' },
       summary(p),
-      { kind: 'p', text: 'Nothing has been charged. If we approve it, you sign the membership declaration on your account page first, and only then set up payment.' },
+      { kind: 'p', text: 'Nothing has been charged. If we approve it, you set up payment on your account page; your membership starts with the first payment.' },
       { kind: 'button', label: 'See your request', url: p.accountUrl },
     ],
   };
@@ -79,16 +79,16 @@ function applicationReceived(p: ApplicationProps): EmailContent {
 function applicationApproved(p: ApplicationProps): EmailContent {
   return {
     subject: 'Your ZurichJS membership is approved',
-    preheader: 'Sign the membership declaration, then set up payment.',
+    preheader: 'Set up payment on your account page to start your membership.',
     heading: `Welcome, ${firstName(p.name)}`,
     blocks: [
       { kind: 'success', text: 'Your membership request is approved.' },
       summary(p),
       {
         kind: 'p',
-        text: 'Next, sign the membership declaration on your account page. It says you join the association under its bylaws. Payment comes after that; nothing is charged before you sign.',
+        text: 'Next, set up payment on your account page. Your membership starts with the first payment, under the membership terms you accepted and the association’s bylaws. Nothing has been charged yet.',
       },
-      { kind: 'button', label: 'Sign the declaration', url: p.accountUrl },
+      { kind: 'button', label: 'Set up payment', url: p.accountUrl },
     ],
   };
 }

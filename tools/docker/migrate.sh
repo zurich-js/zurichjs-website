@@ -1,7 +1,7 @@
 #!/bin/sh
-# Applies apps/web/netlify/database/migrations to the local Docker database, in file
-# order, each once (recorded in local_migrations), each in one transaction. Netlify
-# applies the same files on every deploy; this is only for the local database.
+# Applies apps/web/database/migrations to the local Docker database, in file
+# order, each once (recorded in local_migrations), each in one transaction. Deploys
+# apply the same files with tools/db-migrate.mjs (Neon); this is only for the local database.
 # Run by the `migrate` service in docker-compose.yml on every `docker compose up`.
 set -eu
 export PGOPTIONS="${PGOPTIONS:-} -c client_min_messages=warning"

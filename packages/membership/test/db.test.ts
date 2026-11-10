@@ -1,5 +1,5 @@
 /**
- * apps/web/netlify/database/migrations on a real (local) Postgres, applied in
+ * apps/web/database/migrations on a real (local) Postgres, applied in
  * order as Netlify applies them, and the Postgres member store against it.
  * Skips when Postgres is not installed.
  */
@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DuplicateEmail, postgresStore, TransitionError, type MemberStore, type NewMember } from '../src/index.ts';
 import { startPg, type Pg } from './pg.ts';
 
-const migrations = join(import.meta.dirname, '../../../apps/web/netlify/database/migrations');
+const migrations = join(import.meta.dirname, '../../../apps/web/database/migrations');
 const db = startPg();
 const d = db ? describe : describe.skip;
 

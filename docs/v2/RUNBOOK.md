@@ -227,7 +227,14 @@ How it works: `docs/v2/MEMBERSHIP.md`. Anyone can join: sign in by email link, c
 
 ### Set up (owner, once)
 
-1. **Database:** Netlify Database is provisioned on deploy because `@netlify/database` is a dependency and `apps/web/netlify/database/migrations` exists; Netlify applies the migrations before each deploy goes live. Check in the Netlify UI that the database exists after the first deploy of this branch. Deploy previews get their own database branch, forked from production data. That copy is protected by the site itself, the same as production: members only ever see their own record (signed in by email link), and everything else is behind the admin password (below). No Netlify visitor password is needed.
+1. **Database (Neon, project `tiny-firefly-25104662`):**
+   - **Branches:** the default branch is production; create a second branch named `preview`. Previews never share production's database: each PR gets its own empty database, `pr_<number>`, on the preview branch.
+   - **Netlify environment variables**, scoped by deploy context:
+     - **Production:** `DATABASE_URL` is the pooled connection string of the production branch, and `DATABASE_URL_UNPOOLED` is its direct one.
+     - **Deploy previews:** the same two, for the `preview` branch.
+   - **Migrations:** every Netlify build runs `node scripts/db-migrate.mjs` first (`apps/web/netlify.toml`). It applies `apps/web/database/migrations`, each once, recorded in `schema_migrations`. A deploy preview creates `pr_<number>` on the preview branch and migrates it from scratch, so no production data reaches a preview. A production build without `DATABASE_URL` fails on purpose.
+   - **Cleanup:** add the GitHub secret `NEON_PREVIEW_DATABASE_URL` (the preview branch's direct connection string). `.github/workflows/preview-db-cleanup.yml` drops a PR's database when the PR closes.
+   - **Local:** the Docker Postgres (`pnpm local`, `MEMBERSHIP_DB_URL`). It wins over `DATABASE_URL`, so a Neon string in `.env` never reaches local data.
 2. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup --webhook-url https://zurichjs.com/api/membership/webhook` is a dry run; add `--apply` to create, in that Stripe account:
    - one product per level and four prices (lookup keys `member_<level>_<cycle>`, amounts from `apps/web/src/lib/membership.ts`),
    - the billing portal configuration without cancelling, which prints `STRIPE_MEMBER_PORTAL_CONFIG`,
@@ -242,18 +249,18 @@ How it works: `docs/v2/MEMBERSHIP.md`. Anyone can join: sign in by email link, c
 5. **Slack:** invite @ZurichJS Bot to the membership channel.
 6. **Environment variables** (functions unless noted):
 
-| Variable                            | What                                                                                                                                             |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `NETLIFY_DB_URL`                    | set by Netlify                                                                                                                                   |
-| `BETTER_AUTH_SECRET`                | secret; 32+ random characters (`openssl rand -base64 32`)                                                                                        |
-| `BETTER_AUTH_URL`                   | optional; defaults to Netlify's URL (production) or the deploy URL (previews)                                                                    |
-| `STRIPE_SECRET_KEY`                 | already set (donations)                                                                                                                          |
-| `STRIPE_MEMBER_PORTAL_CONFIG`       | from `pnpm membership:stripe-setup`                                                                                                              |
-| `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`  | secret; the membership webhook's signing secret (not the donations one)                                                                          |
-| `RESEND_API_KEY`, `MEMBERSHIP_FROM` | email                                                                                                                                            |
-| `SLACK_MEMBERSHIP_CHANNEL_ID`       | the channel for membership notes and resignation cards (falls back to `SLACK_AGENT_CHANNEL_ID`)                                                  |
-| `SLACK_MEMBERSHIP_APPROVER_IDS`     | who may confirm resignations: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris)                                                       |
-| `ADMIN_PASSWORD`                    | secret; the board's password, any length (owner's choice) for `/admin/memberships` and `pnpm membership:import`. Changing it signs everyone out. |
+| Variable                                | What                                                                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | Neon, per deploy context (production branch for production, the `preview` branch for deploy previews): pooled for the functions, direct for migrations |
+| `BETTER_AUTH_SECRET`                    | secret; 32+ random characters (`openssl rand -base64 32`)                                                                                              |
+| `BETTER_AUTH_URL`                       | optional; defaults to Netlify's URL (production) or the deploy URL (previews)                                                                          |
+| `STRIPE_SECRET_KEY`                     | already set (donations)                                                                                                                                |
+| `STRIPE_MEMBER_PORTAL_CONFIG`           | from `pnpm membership:stripe-setup`                                                                                                                    |
+| `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`      | secret; the membership webhook's signing secret (not the donations one)                                                                                |
+| `RESEND_API_KEY`, `MEMBERSHIP_FROM`     | email                                                                                                                                                  |
+| `SLACK_MEMBERSHIP_CHANNEL_ID`           | the channel for membership notes and resignation cards (falls back to `SLACK_AGENT_CHANNEL_ID`)                                                        |
+| `SLACK_MEMBERSHIP_APPROVER_IDS`         | who may confirm resignations: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris)                                                             |
+| `ADMIN_PASSWORD`                        | secret; the board's password, any length (owner's choice) for `/admin/memberships` and `pnpm membership:import`. Changing it signs everyone out.       |
 
 ### Add members who paid manually (cash/bank)
 

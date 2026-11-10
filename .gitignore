@@ -29,3 +29,4 @@ dist/
 
 # Local-only files (e.g. the signature for local certificates)
 .local/
+.neon

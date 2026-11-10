@@ -4,7 +4,7 @@
  * the reply with Publish / Discard buttons. See packages/agent and docs/v2/AUTOMATION.md.
  * Env: SLACK_SIGNING_SECRET, SLACK_AGENT_BOT_TOKEN, SANITY_AGENT_TOKEN, LLM_PROVIDER, LLM_MODEL,
  * LLM_API_KEY (LLM_BASE_URL), SANITY_STUDIO_URL, DRAFT_PREVIEW_URL (optional).
- * With the membership database (NETLIFY_DB_URL or MEMBERSHIP_DB_URL), it also answers questions
+ * With the membership database (DATABASE_URL or MEMBERSHIP_DB_URL), it also answers questions
  * about members (read-only; src/server/membership-agent.ts) and adds cards with buttons.
  */
 import { changeBlocks, helpText, isHelpRequest, modelFromEnv, runTurn, sanityStore, slackApi, threadToMessages, verifyInternal } from '@zurichjs/agent';

@@ -475,3 +475,4 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **"Paid manually (cash/bank)"** replaces "paid by hand" everywhere members and the board read it.
 - **Level and cycle changes apply from the next renewal only** (owner): on the account page, through a Stripe subscription schedule; nothing is charged or prorated now. The billing portal no longer switches plans (`pnpm membership:stripe-setup` turns it off; run it again in each Stripe account).
 - **The admin area has no Content section;** Sanity is reached through the Studio directly.
+- **The membership database is Postgres on Neon, not Netlify Database** (the team's Netlify plan has no database). Production on the Neon production branch; every deploy preview gets its own empty database on a separate preview branch (no production data in previews), dropped when the PR closes; local development stays on Docker. Migrations run before each Netlify build (`apps/web/scripts/db-migrate.mjs`).

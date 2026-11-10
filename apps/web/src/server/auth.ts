@@ -1,7 +1,7 @@
 /**
  * Sign-in for the member portal: Better Auth with an emailed link (no
  * passwords), on the membership database (tables in
- * netlify/database/migrations/20261110120000_auth.sql). The link email is the
+ * database/migrations/20261110120000_auth.sql). The link email is the
  * ZurichJS `login-link` template, sent through Resend.
  *
  * Sessions are httpOnly, secure cookies (7 days, renewed daily). Rate limits are
@@ -11,7 +11,7 @@
  * Environment:
  *   BETTER_AUTH_SECRET  32+ random characters; signs cookies and tokens (secret)
  *   BETTER_AUTH_URL     optional; defaults to Netlify's URL (production) or the deploy URL (previews)
- *   NETLIFY_DB_URL      set by Netlify
+ *   DATABASE_URL        Neon (server/membership-db.ts)
  */
 import { renderEmail } from '@zurichjs/emails';
 import { sendMemberEmail } from '@zurichjs/integrations';

@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startPg, type Pg } from '../../../packages/membership/test/pg.ts';
 import { databaseAttempts } from '../src/server/admin-auth.ts';
 
-const migrations = join(import.meta.dirname, '../netlify/database/migrations');
+const migrations = join(import.meta.dirname, '../database/migrations');
 const db = startPg();
 
 (db ? describe : describe.skip)('admin sign-in attempts (database)', () => {

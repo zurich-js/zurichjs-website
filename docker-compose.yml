@@ -47,7 +47,7 @@ services:
       timeout: 3s
       retries: 30
 
-  # Applies apps/web/netlify/database/migrations (the files Netlify applies on deploy), each once.
+  # Applies apps/web/database/migrations (the files tools/db-migrate.mjs applies on every Netlify build), each once.
   migrate:
     image: postgres:16-alpine
     depends_on:
@@ -60,7 +60,7 @@ services:
       PGDATABASE: zurichjs
       MIGRATIONS_DIR: /migrations
     volumes:
-      - ./apps/web/netlify/database/migrations:/migrations:ro
+      - ./apps/web/database/migrations:/migrations:ro
       - ./tools/docker/migrate.sh:/migrate.sh:ro
     entrypoint: ['sh', '/migrate.sh']
     restart: 'no'

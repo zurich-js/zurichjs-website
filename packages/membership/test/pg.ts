@@ -1,5 +1,5 @@
 /**
- * A throwaway local Postgres for testing apps/web/netlify/database/migrations: initdb in a temp
+ * A throwaway local Postgres for testing apps/web/database/migrations: initdb in a temp
  * directory, a Unix socket only (no TCP port), stopped and deleted afterwards.
  * Returns null when no Postgres binaries are installed, so the tests skip.
  */

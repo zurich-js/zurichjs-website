@@ -1,0 +1,23 @@
+# Drops a pull request's own membership database (pr_<number> on the Neon preview branch) when the
+# PR closes. apps/web/scripts/db-migrate.mjs creates it on the PR's first deploy preview.
+# Secret: NEON_PREVIEW_DATABASE_URL, the direct (unpooled) connection string of the preview branch.
+name: Preview database cleanup
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  drop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Drop pr_${{ github.event.pull_request.number }}
+        env:
+          URL: ${{ secrets.NEON_PREVIEW_DATABASE_URL }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "$URL" ]; then echo "NEON_PREVIEW_DATABASE_URL is not set; nothing to drop."; exit 0; fi
+          psql "$URL" -v ON_ERROR_STOP=1 -c "drop database if exists pr_${PR} with (force)"

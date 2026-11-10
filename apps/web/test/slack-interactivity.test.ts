@@ -38,7 +38,7 @@ beforeEach(() => {
   vi.stubEnv('SLACK_AGENT_CHANNEL_ID', 'CAGENT');
   vi.stubEnv('SLACK_MEMBERSHIP_CHANNEL_ID', 'CMEMBERS');
   vi.stubEnv('SLACK_MEMBERSHIP_APPROVER_IDS', NADJA);
-  vi.stubEnv('NETLIFY_DB_URL', '');
+  vi.stubEnv('DATABASE_URL', '');
   vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
     calls.push({ url, body: init.body ? JSON.parse(String(init.body)) : undefined });
     return new Response('{"ok":true,"ts":"1"}');
@@ -64,7 +64,7 @@ describe('slack-interactivity: membership button', () => {
     expect(res.status).toBe(200);
     const note = calls.find((c) => c.url === 'https://slack.com/api/chat.postEphemeral');
     expect(note?.body).toMatchObject({ channel: 'CMEMBERS', user: NADJA });
-    expect((note?.body as { text?: string } | undefined)?.text ?? '').toContain('NETLIFY_DB_URL is not set');
+    expect((note?.body as { text?: string } | undefined)?.text ?? '').toContain('DATABASE_URL is not set');
   });
 
   it('leaves other buttons to the content agent (unknown actions do nothing)', async () => {

@@ -1,11 +1,11 @@
 /**
  * The member store on Postgres (Netlify Database in production; a throwaway
  * local Postgres in tests). Server-side only. Every write goes through the
- * member_* SQL functions in apps/web/netlify/database/migrations, so a status
+ * member_* SQL functions in apps/web/database/migrations, so a status
  * change and its audit row are one transaction.
  *
  * It takes anything with pg's `query(text, params)`: the `pool` from
- * `@netlify/database`'s getDatabase(), or a `pg.Pool` / `pg.Client`.
+ * a `pg.Pool` (apps/web/src/server/membership-db.ts) or a `pg.Client`.
  */
 import { checkTransition, TransitionError } from './state.ts';
 import { DuplicateEmail, MemberNotFound, normaliseEmail, type MemberStore } from './store.ts';

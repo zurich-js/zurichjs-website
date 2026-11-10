@@ -65,13 +65,13 @@ These rules are mandatory for every UI change. They override convenience. If a r
 
 ### 2. Single source of truth for tokens
 
-- Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read `tokens.ts` before writing any UI. Do not invent tokens that already exist under a different name.
+- Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read the tokens file before writing any UI. Do not invent tokens that already exist under a different name.
 - Semantic names only: `text-muted`, `bg-surface`, `border-danger`, `space-touch`. Never name tokens after their value (`grey-line-2`).
 - Colours, type scale, spacing, radius, shadow, z-index and breakpoints are all tokenised. The touch target minimum is a token, not a repeated literal.
 
 ### 3. Components own variants, pages own layout
 
-- Visual variants (size, intent, state, invalid, disabled) are defined ONCE in a primitive in `packages/design/src/components/ui/`, using cva or tailwind-variants. (The folder is created by the UI compliance work in `docs/v2/UI-AUDIT.md`; until a primitive moves there, its current home is `packages/design/src/components`, `packages/design/src/islands` or `packages/design/src/recipes.ts`.)
+- Visual variants (size, intent, state, invalid, disabled) are defined ONCE in a primitive in `packages/design/src/components/ui/`, using cva or tailwind-variants. (The primitives move there during the UI compliance work in `docs/v2/UI-AUDIT.md`; until one has moved, its current home is `packages/design/src/components`, `packages/design/src/islands` or `packages/design/src/recipes.ts`.)
 - No class-string-returning helper functions (like `optionClass()`) outside a primitive. No long `cx(...)` chains in feature components or pages.
 - Feature components compose primitives. They do not restyle them. Passing `class` to override a primitive's tokens is a smell: add a variant instead.
 - A page or feature component may only use layout utilities (flex, grid, gap, padding from the scale, responsive prefixes).

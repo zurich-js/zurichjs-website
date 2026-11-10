@@ -124,7 +124,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   const signOut = async () => {
@@ -308,7 +308,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
     setNotice('');
     setError('');
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload when the member changes
   }, [id]);
 
   if (!d) return <p class="m-0 text-ink-2">{error || 'Loading the member…'}</p>;

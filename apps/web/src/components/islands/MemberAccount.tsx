@@ -87,7 +87,7 @@ export default function MemberAccount({ contactEmail }: Props) {
     const n = urlNotice();
     setNotice(n);
     void load(n);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
   const emailError = isEmail(email) ? '' : 'Enter an email like name@example.com.';

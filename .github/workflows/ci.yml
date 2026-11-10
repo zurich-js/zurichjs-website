@@ -25,6 +25,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Design-system rules (AGENTS.md): fails on new arbitrary values, inline styles and hex colours.
+      # Legacy ones are baselined in eslint-suppressions.json; a fixed one must be pruned (pnpm lint:ui:prune).
+      - run: pnpm lint:ui
       - run: pnpm format:check
       - run: pnpm knip
       - run: pnpm typecheck

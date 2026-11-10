@@ -26,6 +26,8 @@ export interface MemberStore {
   byStripeSubscription(subscriptionId: string): Promise<Member | null>;
   /** Oldest first, at most 500 (e.g. manual members for the renewal reminders). */
   byStatus(status: Status): Promise<Member[]>;
+  /** For the admin area: newest first; `q` matches name, email or organisation (case-insensitive). */
+  search(filter: { q?: string; status?: Status; limit?: number }): Promise<Member[]>;
   /** Fails with `DuplicateEmail` if the email exists. */
   create(m: NewMember, actor: Actor): Promise<Member>;
   update(id: string, patch: MemberPatch, actor: Actor): Promise<Member>;
@@ -104,6 +106,16 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
     byUser: (uid) => find((m) => m.userId === uid),
     byStripeSubscription: (sid) => find((m) => m.stripeSubscriptionId === sid),
     byStatus: (status) => Promise.resolve([...members.values()].filter((m) => m.status === status).map((m) => ({ ...m }))),
+    search: ({ q, status, limit = 200 }) => {
+      const needle = q?.trim().toLowerCase();
+      return Promise.resolve(
+        [...members.values()]
+          .filter((m) => (!status || m.status === status) && (!needle || [m.name, m.email, m.organisationName ?? ''].some((v) => v.toLowerCase().includes(needle))))
+          .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+          .slice(0, limit)
+          .map((m) => ({ ...m })),
+      );
+    },
     async create(input, actor) {
       const email = normaliseEmail(input.email);
       if ([...members.values()].some((m) => m.email === email)) throw new DuplicateEmail(email);

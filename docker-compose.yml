@@ -9,6 +9,7 @@
 #   http://localhost:4535                  mail viewer: every email the site sends (sign-in links, certificates)
 #   http://localhost:4533                  Stripe mock (checkout and portal pages; nothing is charged)
 #   http://localhost:3333                  Sanity Studio (profile `studio`; sign in with your Sanity account)
+#   http://localhost:4321/membership/admin   admin area (password: local-admin-password-docker)
 #   localhost:54322                        Postgres (user postgres, password postgres, database zurichjs)
 #
 # Nothing here reaches Stripe, Resend or Slack. Content comes from the built-in sample by
@@ -104,7 +105,7 @@ services:
       STRIPE_MEMBERSHIP_WEBHOOK_SECRET: whsec_local_docker
       RESEND_API_BASE: http://mail:4535
       RESEND_API_KEY: re_local_docker
-      MEMBERSHIP_ADMIN_TOKEN: local-docker-admin-token-0123456789abcdef
+      MEMBERSHIP_ADMIN_PASSWORD: local-admin-password-docker
     env_file:
       - path: .env.local
         required: false

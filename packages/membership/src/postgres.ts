@@ -154,6 +154,17 @@ export function postgresStore(db: Queryable): MemberStore {
     byEmail: (email) => one('email', normaliseEmail(email)),
     byUser: (uid) => one('user_id', uid),
     byStripeSubscription: (sid) => one('stripe_subscription_id', sid),
+    search: async ({ q: text, status, limit = 200 }) => {
+      const needle = text?.trim() ? `%${text.trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
+      const rows = await q<MemberRow>(
+        `select * from members
+         where ($1::member_status is null or status = $1)
+           and ($2::text is null or name ilike $2 or email::text ilike $2 or organisation_name ilike $2)
+         order by created_at desc limit $3`,
+        [status ?? null, needle, Math.min(Math.max(limit, 1), 1000)],
+      );
+      return rows.map(fromRow);
+    },
     byStatus: async (status) => (await q<MemberRow>('select * from members where status = $1 order by created_at asc limit 500', [status])).map(fromRow),
     create: (m, actor) =>
       fn('member_create($1::jsonb, $2, $3)', [

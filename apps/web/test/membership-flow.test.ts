@@ -22,7 +22,7 @@ import { resetRateLimits } from '../src/server/rateLimit.ts';
 const NADJA = 'U08NAFH955M';
 const CHANNEL = 'CMEMBERS';
 const WHSEC = 'whsec_test_secret';
-const ADMIN = 'a'.repeat(40);
+const ADMIN = 'admin-password-for-tests';
 const env = {
   STRIPE_SECRET_KEY: 'sk_test_x',
   STRIPE_MEMBER_PORTAL_CONFIG: 'bpc_1',
@@ -31,7 +31,7 @@ const env = {
   SLACK_MEMBERSHIP_APPROVER_IDS: `${NADJA},U08NDGCRYPK,U08MMPMNLKZ`,
   SLACK_MEMBERSHIP_CHANNEL_ID: CHANNEL,
   BETTER_AUTH_URL: 'https://zurichjs.com',
-  MEMBERSHIP_ADMIN_TOKEN: ADMIN,
+  MEMBERSHIP_ADMIN_PASSWORD: ADMIN,
 };
 const ada = { id: 'user-ada', email: 'ada@example.com' };
 const unix = (iso: string) => Math.floor(Date.parse(iso) / 1000);
@@ -417,8 +417,8 @@ describe('admin import', () => {
       { env, store },
     );
 
-  it('needs the admin token', async () => {
-    expect((await call({ csv }, 'b'.repeat(40))).status).toBe(401);
+  it('needs the admin password (Bearer, for the CLI)', async () => {
+    expect((await call({ csv }, 'wrong-password-for-tests')).status).toBe(401);
     expect((await handleImport(new Request('https://x/api', { method: 'POST', body: '{}' }), { env: {}, store: memoryStore() })).status).toBe(503);
   });
 

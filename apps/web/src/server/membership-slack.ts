@@ -10,13 +10,11 @@
  * Slack: the content agent's app (SLACK_AGENT_BOT_TOKEN, one interactivity URL
  * per app), in SLACK_MEMBERSHIP_CHANNEL_ID or else SLACK_AGENT_CHANNEL_ID.
  */
-import { renderEmail } from '@zurichjs/emails';
-import { sendMemberEmail } from '@zurichjs/integrations';
-import { TransitionError, levelInfo, type Member, type MemberStore } from '@zurichjs/membership';
+import { levelInfo, type Member, type MemberStore } from '@zurichjs/membership';
 import { lastDay, longDate } from './certificate.ts';
 import type { Env } from './http.ts';
-import { membershipProps } from './membership.ts';
-import { cancelAtPeriodEnd, openInvoices, type StripeDeps } from './membership-stripe.ts';
+import { confirmResignation } from './membership-resignation.ts';
+import type { StripeDeps } from './membership-stripe.ts';
 
 type Fetch = typeof fetch;
 type Log = (m: string) => void;
@@ -156,49 +154,30 @@ export async function handleMembershipClick(click: Click, deps: ClickDeps): Prom
     );
     return 'not_allowed';
   }
-  const member = await store.get(click.memberId);
-  if (!member) {
+  const r = await confirmResignation(click.memberId, click.user, { env, store, origin: deps.origin, stripe: deps.stripe, fetch: deps.fetch, log, reference: click.ts });
+  if (r.result === 'not_found') {
     await slack.ephemeral(click.channel, click.user, 'That member no longer exists. Nothing changed.');
     return 'not_found';
   }
-  if (member.status !== 'resigning') {
-    await slack.ephemeral(click.channel, click.user, `This resignation was already handled (the membership is now ${member.status.replace('_', ' ')}). Nothing changed.`);
+  if (r.result === 'not_resigning') {
+    await slack.ephemeral(click.channel, click.user, `This resignation was already handled (the membership is now ${r.member.status.replace('_', ' ')}). Nothing changed.`);
     return 'not_resigning';
   }
-  const stripeDeps: StripeDeps = deps.stripe ?? { env, fetch: deps.fetch };
-  const dues = await openInvoices(member, stripeDeps);
-  if (dues > 0) {
+  if (r.result === 'open_dues') {
     await slack.ephemeral(
       click.channel,
       click.user,
-      `${member.name} still has ${dues} open invoice${dues === 1 ? '' : 's'}. Under the bylaws the resignation takes effect once paid. Nothing changed.`,
+      `${r.member.name} still has ${r.dues} open invoice${r.dues === 1 ? '' : 's'}. Under the bylaws the resignation takes effect once paid. Nothing changed.`,
     );
     return 'open_dues';
   }
-  let end: string | null = member.paidUntil;
-  if (member.stripeSubscriptionId) end = (await cancelAtPeriodEnd(member.stripeSubscriptionId, stripeDeps)).periodEnd ?? end;
-  else {
-    // Paid by hand: no subscription to stop; the membership ends now.
-    try {
-      await store.transition(member.id, { from: 'resigning', to: 'ended', actor: { kind: 'board', id: click.user }, reason: 'resigned', payload: { slackTs: click.ts } });
-    } catch (cause) {
-      if (!(cause instanceof TransitionError)) throw cause;
-    }
-  }
-  const lastPaidDay = end ? longDate(lastDay(end)) : null;
-  const outcome = `:white_check_mark: Confirmed by <@${click.user}> on ${longDate((deps.now?.() ?? new Date()).toISOString())}.${lastPaidDay ? ` Ends ${lastPaidDay}.` : ''}`;
+  const outcome = `:white_check_mark: Confirmed by <@${click.user}> on ${longDate((deps.now?.() ?? new Date()).toISOString())}.${r.lastPaidDay ? ` Ends ${r.lastPaidDay}.` : ''}`;
   await slack
-    .update(click.channel, click.ts, `Resignation from ${member.name}: confirmed`, [
-      { type: 'section', text: { type: 'mrkdwn', text: `*Resignation* (bylaws Art. 5)\n${who(member)}` } },
+    .update(click.channel, click.ts, `Resignation from ${r.member.name}: confirmed`, [
+      { type: 'section', text: { type: 'mrkdwn', text: `*Resignation* (bylaws Art. 5)\n${who(r.member)}` } },
       { type: 'context', elements: [{ type: 'mrkdwn', text: outcome }] },
     ])
     .catch((e: Error) => log(`[membership] card not updated: ${e.message}`));
-  const email = renderEmail('resignation-confirmed', { ...membershipProps(member, deps.origin), lastDay: lastPaidDay });
-  await sendMemberEmail(env, { to: member.email, ...email }, { idempotencyKey: `member-resignation-confirmed:${member.id}:${click.ts}`, log, fetch: deps.fetch }).catch(
-    async (e: Error) => {
-      log(`[membership] resignation email to ${member.id} failed: ${e.message}`);
-      await slack.ephemeral(click.channel, click.user, `Confirmed, but the email to ${member.email} failed. Please write to them by hand.`).catch(() => undefined);
-    },
-  );
+  if (r.emailFailed) await slack.ephemeral(click.channel, click.user, `Confirmed, but the email to ${r.member.email} failed. Please write to them by hand.`).catch(() => undefined);
   return 'confirmed';
 }

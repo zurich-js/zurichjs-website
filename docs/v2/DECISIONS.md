@@ -453,6 +453,13 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **Certificate of membership for every paid term,** signed by Faris Aziz, President of the Board, with his signature image (kept out of git, in Netlify Blobs). Emailed and in the portal.
 - **Only quarterly and yearly** cycles; members switch between them (or levels) in the Stripe portal, which cannot cancel. Resignations go through the board (bylaws Art. 5).
 - **Production keeps the email form** until `PUBLIC_MEMBERSHIP_ONLINE=on`.
-- **Deploy previews fork production data** (Netlify Database branching): password-protect previews once real members exist.
+- **Deploy previews fork production data** (Netlify Database branching). The site protects that copy itself (see the admin area below); no Netlify visitor password.
 - **Existing members are imported through an admin endpoint,** not a data migration, so member data never goes into git.
 - **Local development runs in Docker** (`docker-compose.yml`): Postgres with the migrations, the Stripe mock (now with memberships and signed webhooks), a mail viewer (`tools/mock-resend.mjs`, via `RESEND_API_BASE`, ignored in production) and the Sanity Studio against the real project (Sanity has no local backend).
+
+## Membership admin area behind a site-level password (owner, 11th November 2026)
+
+- **`/membership/admin`** for the board: members with search and filters, one member's details and history, confirming resignations, CSV import and export.
+- **Protected by the site, not by the deploy:** one shared password from `MEMBERSHIP_ADMIN_PASSWORD` (16+ characters), enforced by the API on production and every deploy preview. The earlier advice to password-protect deploy previews in Netlify is dropped.
+- **Session:** httpOnly, SameSite=Strict cookie for the admin API, 8 hours, signed with a key derived from the password (changing it signs everyone out). Writes must come from the site's own origin. 10 wrong passwords per IP block sign-in for 15 minutes, counted in the database (`admin_login_attempts`).
+- **The import CLI uses the same password** (Bearer); `MEMBERSHIP_ADMIN_TOKEN` is gone.

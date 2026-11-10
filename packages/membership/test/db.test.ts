@@ -113,6 +113,17 @@ d('membership database', () => {
       expect((await store.update(m.id, { kind: 'organisation', organisationName: 'Acme AG' }, board)).organisationName).toBe('Acme AG');
     });
 
+    it('searches by name, email or organisation (case-insensitive, % and _ taken literally), newest first', async () => {
+      await store.create({ ...person, email: 'grace@zeta.ch', name: 'Grace 100% Hopper', kind: 'organisation', organisationName: 'Zeta_Corp' }, { kind: 'member', id: 'x' });
+      expect((await store.search({ q: 'ZETA' })).map((m) => m.email)).toEqual(['grace@zeta.ch']);
+      expect((await store.search({ q: '100%' })).map((m) => m.email)).toEqual(['grace@zeta.ch']);
+      expect((await store.search({ q: 'zeta_' })).map((m) => m.email)).toEqual(['grace@zeta.ch']);
+      expect(await store.search({ q: 'zetaxcorp' })).toEqual([]);
+      expect((await store.search({ q: '%' })).map((m) => m.email)).toEqual(['grace@zeta.ch']);
+      expect((await store.search({ status: 'active' })).map((m) => m.email)).toEqual(['ada@example.com']);
+      expect((await store.search({})).map((m) => m.email)).toEqual(['grace@zeta.ch', 'ada@example.com']);
+    });
+
     it('keeps manual members dated', async () => {
       await expect(
         store.create({ ...person, email: 'd@example.com', status: 'imported_manual', source: 'imported', paymentMode: 'manual' }, { kind: 'script', id: 't' }),

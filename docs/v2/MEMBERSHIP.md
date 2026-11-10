@@ -24,6 +24,7 @@ This section is the current design. The sections after it are the original inves
 | Certificates | `pdf-lib` with Figtree, A4 landscape (`apps/web/src/server/certificate.ts`); the signature PNG in the private Netlify Blobs store `membership`                                   |
 | Slack        | notes for new members, renewals and failed payments; Confirm resignation button for the approvers                                                                                |
 | Data         | `packages/membership` (status machine, `postgresStore`); anonymised one year after a membership ends; Stripe keeps the payment records                                           |
+| Admin        | `/membership/admin` for the board, behind the site-level password `MEMBERSHIP_ADMIN_PASSWORD`: members, details and history, confirm resignations, import, export                |
 | Local        | `docker compose up` (`pnpm local`): site, Postgres, Stripe mock, mail viewer, optional Studio                                                                                    |
 
 **Status rules** (`packages/membership/src/state.ts`): `pending → active` (Stripe, first payment) · `active ⇄ past_due` (Stripe) · `active / past_due / imported_manual → resigning` (member) · `resigning → ended` (board confirms, or Stripe at period end) · `ended → pending` (joins again). Every change is compare-and-set and logged in an append-only audit table.

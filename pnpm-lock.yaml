@@ -34,6 +34,9 @@ importers:
       '@zurichjs/agent':
         specifier: workspace:*
         version: link:packages/agent
+      '@zurichjs/integrations':
+        specifier: workspace:*
+        version: link:packages/integrations
       '@zurichjs/membership':
         specifier: workspace:*
         version: link:packages/membership

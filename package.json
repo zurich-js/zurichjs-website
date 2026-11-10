@@ -20,7 +20,11 @@
     "speaker-link": "tsx tools/speaker-profile-link.ts",
     "membership:import": "tsx tools/membership-import.ts",
     "membership:stripe-setup": "tsx tools/membership-stripe-setup.ts",
-    "membership:signature": "tsx tools/membership-signature.ts"
+    "membership:signature": "tsx tools/membership-signature.ts",
+    "local": "docker compose up",
+    "local:studio": "docker compose --profile studio up",
+    "local:down": "docker compose down",
+    "local:reset": "docker compose down -v"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
@@ -28,6 +32,7 @@
     "@playwright/test": "1.63.0",
     "@types/node": "22.15.3",
     "@zurichjs/agent": "workspace:*",
+    "@zurichjs/integrations": "workspace:*",
     "@zurichjs/membership": "workspace:*",
     "husky": "9.1.7",
     "knip": "6.43.0",

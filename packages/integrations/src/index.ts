@@ -186,9 +186,19 @@ export const sanityTalkProposals = (client: SanityClient, now = () => new Date()
 
 /* ------------------------------------------------------------------ messages */
 
+/**
+ * Resend's API, or a local mail viewer outside production (RESEND_API_BASE, e.g. the
+ * Docker setup's tools/mock-resend.mjs). Ignored when CONTEXT=production, so the key only ever goes to Resend.
+ */
+export function resendEmailsUrl(env: Env): string {
+  const override = env.RESEND_API_BASE?.replace(/\/+$/, '');
+  if (!override || env.CONTEXT === 'production' || !/^https?:\/\/[^\s/]+$/.test(override)) return 'https://api.resend.com/emails';
+  return `${override}/emails`;
+}
+
 export async function sendEmail(env: Env, subject: string, text: string, replyTo?: string, log: Log = console.log): Promise<void> {
   if (!env.RESEND_API_KEY) return log(`[forms] RESEND_API_KEY missing; email not sent: ${subject}`);
-  const res = await fetch('https://api.resend.com/emails', {
+  const res = await fetch(resendEmailsUrl(env), {
     method: 'POST',
     headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
     body: JSON.stringify({
@@ -227,7 +237,7 @@ export async function sendMemberEmail(
     log(`[email] RESEND_API_KEY missing; not sent to ${email.to.replace(/^[^@]+/, '***')}: ${email.subject}`);
     return { sent: false };
   }
-  const res = await (opts.fetch ?? fetch)('https://api.resend.com/emails', {
+  const res = await (opts.fetch ?? fetch)(resendEmailsUrl(env), {
     method: 'POST',
     headers: {
       authorization: `Bearer ${env.RESEND_API_KEY}`,

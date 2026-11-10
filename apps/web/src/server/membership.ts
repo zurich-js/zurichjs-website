@@ -3,6 +3,7 @@
  * what a member sees (memberView), the email props, and issuing a certificate
  * (record it, render the PDF, email it).
  */
+import { readFile } from 'node:fs/promises';
 import { getStore } from '@netlify/blobs';
 import { renderEmail, type MembershipProps } from '@zurichjs/emails';
 import { sendMemberEmail } from '@zurichjs/integrations';
@@ -79,9 +80,13 @@ export function membershipProps(m: Member, origin: string): MembershipProps {
   };
 }
 
-/** The president's signature (private Netlify Blobs store `membership`, key `signature.png`), or null. */
-export async function loadSignature(log: Log = console.log): Promise<Uint8Array | null> {
+/**
+ * The president's signature (private Netlify Blobs store `membership`, key `signature.png`), or null.
+ * Locally (not production), MEMBERSHIP_SIGNATURE_FILE can point at a PNG instead.
+ */
+export async function loadSignature(log: Log = console.log, env: Env = process.env): Promise<Uint8Array | null> {
   try {
+    if (env.MEMBERSHIP_SIGNATURE_FILE && env.CONTEXT !== 'production') return new Uint8Array(await readFile(env.MEMBERSHIP_SIGNATURE_FILE));
     const data = await getStore('membership').get('signature.png', { type: 'arrayBuffer' });
     return data ? new Uint8Array(data) : null;
   } catch (cause) {

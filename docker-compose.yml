@@ -1,0 +1,173 @@
+# Local development for zurichjs.com: the site and everything it talks to, on your machine.
+#
+#   docker compose up                      site, database, Stripe mock, mail viewer
+#   docker compose --profile studio up     … plus the Sanity Studio
+#   docker compose down                    stop (the database keeps its data)
+#   docker compose down -v                 stop and delete the local database and installs
+#
+#   http://localhost:4321                  the site (membership on: /membership, /membership/account)
+#   http://localhost:4535                  mail viewer: every email the site sends (sign-in links, certificates)
+#   http://localhost:4533                  Stripe mock (checkout and portal pages; nothing is charged)
+#   http://localhost:3333                  Sanity Studio (profile `studio`; sign in with your Sanity account)
+#   localhost:54322                        Postgres (user postgres, password postgres, database zurichjs)
+#
+# Nothing here reaches Stripe, Resend or Slack. Content comes from the built-in sample by
+# default; put SANITY_TOKEN (read) in .env.local and CONTENT_SOURCE= (empty) for real content.
+# Your own overrides go in .env.local (git-ignored). Details: docs/v2/RUNBOOK.md, "Local development".
+
+name: zurichjs
+
+x-node: &node
+  image: node:22.23.4-bookworm-slim
+  working_dir: /app
+  environment: &node-env
+    MOCK_HOST: 0.0.0.0
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zurichjs
+    ports:
+      - '54322:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d zurichjs']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Applies apps/web/netlify/database/migrations (the files Netlify applies on deploy), each once.
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: zurichjs
+      MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./apps/web/netlify/database/migrations:/migrations:ro
+      - ./tools/docker/migrate.sh:/migrate.sh:ro
+    entrypoint: ['sh', '/migrate.sh']
+    restart: 'no'
+
+  # tools/mock-stripe.mjs: prices, customers, Checkout, billing portal; Pay sends signed webhooks to the site.
+  stripe:
+    <<: *node
+    command: ['node', 'tools/mock-stripe.mjs', '4533']
+    environment:
+      <<: *node-env
+      MOCK_STRIPE_WEBHOOK_URL: http://web:4321/api/membership/webhook
+      MOCK_STRIPE_WEBHOOK_SECRET: whsec_local_docker
+    ports:
+      - '4533:4533'
+    volumes:
+      - ./tools:/app/tools:ro
+
+  # tools/mock-resend.mjs: receives the site's emails and shows them.
+  mail:
+    <<: *node
+    command: ['node', 'tools/mock-resend.mjs', '4535']
+    ports:
+      - '4535:4535'
+    volumes:
+      - ./tools:/app/tools:ro
+
+  web:
+    <<: *node
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      stripe:
+        condition: service_started
+      mail:
+        condition: service_started
+    command: ['sh', '-c', 'corepack enable && pnpm install --frozen-lockfile && pnpm --filter @zurichjs/web exec astro dev --host 0.0.0.0 --port 4321']
+    environment:
+      <<: *node-env
+      CONTENT_SOURCE: sample
+      PUBLIC_MEMBERSHIP_ONLINE: 'on'
+      MEMBERSHIP_DB_URL: postgres://postgres:postgres@db:5432/zurichjs
+      BETTER_AUTH_URL: http://localhost:4321
+      BETTER_AUTH_SECRET: local-docker-only-secret-not-for-production
+      STRIPE_API_BASE: http://stripe:4533
+      STRIPE_SECRET_KEY: sk_test_local_docker
+      STRIPE_MEMBER_PORTAL_CONFIG: bpc_local_docker
+      STRIPE_MEMBERSHIP_WEBHOOK_SECRET: whsec_local_docker
+      RESEND_API_BASE: http://mail:4535
+      RESEND_API_KEY: re_local_docker
+      MEMBERSHIP_ADMIN_TOKEN: local-docker-admin-token-0123456789abcdef
+    env_file:
+      - path: .env.local
+        required: false
+    ports:
+      - '4321:4321'
+    volumes:
+      - .:/app
+      - pnpm-store:/root/.local/share/pnpm
+      # Linux installs stay in the container; your own node_modules (e.g. macOS) are not used.
+      - nm-root:/app/node_modules
+      - nm-web:/app/apps/web/node_modules
+      - nm-studio:/app/apps/studio/node_modules
+      - nm-agent:/app/packages/agent/node_modules
+      - nm-config:/app/packages/config/node_modules
+      - nm-content:/app/packages/content/node_modules
+      - nm-design:/app/packages/design/node_modules
+      - nm-emails:/app/packages/emails/node_modules
+      - nm-events:/app/packages/events/node_modules
+      - nm-forms:/app/packages/forms/node_modules
+      - nm-integrations:/app/packages/integrations/node_modules
+      - nm-membership:/app/packages/membership/node_modules
+      - nm-seo:/app/packages/seo/node_modules
+
+  # The Sanity Studio against the real project (Sanity has no local backend). Sign in with your Sanity account.
+  studio:
+    <<: *node
+    profiles: ['studio']
+    depends_on:
+      web:
+        condition: service_started
+    command: ['sh', '-c', 'corepack enable && pnpm --filter @zurichjs/studio exec sanity dev --host 0.0.0.0 --port 3333']
+    ports:
+      - '3333:3333'
+    volumes:
+      - .:/app
+      - pnpm-store:/root/.local/share/pnpm
+      - nm-root:/app/node_modules
+      - nm-web:/app/apps/web/node_modules
+      - nm-studio:/app/apps/studio/node_modules
+      - nm-agent:/app/packages/agent/node_modules
+      - nm-config:/app/packages/config/node_modules
+      - nm-content:/app/packages/content/node_modules
+      - nm-design:/app/packages/design/node_modules
+      - nm-emails:/app/packages/emails/node_modules
+      - nm-events:/app/packages/events/node_modules
+      - nm-forms:/app/packages/forms/node_modules
+      - nm-integrations:/app/packages/integrations/node_modules
+      - nm-membership:/app/packages/membership/node_modules
+      - nm-seo:/app/packages/seo/node_modules
+
+volumes:
+  db-data:
+  pnpm-store:
+  nm-root:
+  nm-web:
+  nm-studio:
+  nm-agent:
+  nm-config:
+  nm-content:
+  nm-design:
+  nm-emails:
+  nm-events:
+  nm-forms:
+  nm-integrations:
+  nm-membership:
+  nm-seo:

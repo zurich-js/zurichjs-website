@@ -189,73 +189,76 @@ Without the key (no `STRIPE_*` variables), "Continue to secure payment" answers 
 
 `/api/verein-inquiry` charges nothing. Without `RESEND_API_KEY` and a Slack channel it logs a stub line and still answers `{ ok: true }`, so a local request sends nothing. The organisers' email lists name, email, tier, billing cycle, "Fee shown" (from `apps/web/src/lib/membership.ts`, the same table as the page) and the message. Change fees or benefits only in that file; the page, the API and the tests follow.
 
-## Member database (Supabase)
+## Local development (Docker)
 
-Self-serve membership is being built in phases (`docs/v2/MEMBERSHIP.md`). Phase 1 added the database and the import, phase 2 the sign-in and `/membership/account` (shows the membership; applying, signing and paying come later). `/membership` still sends requests by email as before.
-
-**Set up (owner, once):**
-
-1. Create two Supabase projects in an EU region: `zurichjs-members-staging` and `zurichjs-members` (production, Pro plan so it is never paused).
-2. Apply `supabase/migrations/*.sql` in order, staging first (Supabase SQL editor, or `supabase db push` with the CLI linked to the project).
-3. Check the staging project by hand once: as a signed-in test user, `select * from members` fails, `select name from members` returns only that user's row; the `declarations` and `member-documents` buckets are private.
-
-| Variable                        | Where                                    | Used by                                                                                                                                                     |
-| ------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SUPABASE_URL`                  | functions and organisers' shells         | the member store, the import                                                                                                                                |
-| `SUPABASE_SERVICE_ROLE_KEY`     | functions and organisers' shells, secret | the same; bypasses row-level security, so never `PUBLIC_` and never in browser code                                                                         |
-| `SLACK_MEMBERSHIP_APPROVER_IDS` | functions                                | who may approve or reject applications in Slack: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris; owner, 6th November 2026). Used from phase 3. |
-
-**Import existing members** (signed on paper, paid by hand). The CSV columns are described in `packages/membership/src/import.ts`; put each scanned declaration PDF next to the CSV.
+One command runs the site with everything it talks to:
 
 ```bash
-SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… pnpm membership:import members.csv           # dry run: lists every member, writes nothing
-SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… pnpm membership:import members.csv --apply   # writes
+pnpm local            # docker compose up: site, Postgres, Stripe mock, mail viewer
+pnpm local:studio     # the same plus the Sanity Studio
+pnpm local:down       # stop (the local database keeps its data)
+pnpm local:reset      # stop and delete the local database and the container installs
 ```
 
-The dry run stops on any problem (with line numbers) and on emails already in the database. With `--apply`, each member becomes "paid by hand until `paid_until`", the PDF goes to the private `declarations` bucket with its SHA-256, and the creation is in the audit log. Run it on staging first: `--apply` has been tested only against the local stand-in, not a real project yet.
+| Where                 | What                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| http://localhost:4321 | the site, with online membership on (`/membership`, `/membership/account`)                              |
+| http://localhost:4535 | mail viewer (`tools/mock-resend.mjs`): every email the site sends, sign-in links and certificate PDFs   |
+| http://localhost:4533 | Stripe mock (`tools/mock-stripe.mjs`): Checkout and portal pages; Pay sends signed webhooks to the site |
+| http://localhost:3333 | Sanity Studio (`pnpm local:studio`), against the real project: sign in with your Sanity account         |
+| `localhost:54322`     | Postgres (`postgres` / `postgres`, database `zurichjs`), migrations applied by the `migrate` service    |
 
-**Tests:** `pnpm test` runs the migration on a throwaway local Postgres (needs the `postgresql` package; skipped without it) and checks the access rules.
+**How to try the membership:** open `/membership`, choose a level, sign in with any email, open the link from the mail viewer, join, press Pay on the mock checkout. The certificate arrives in the mail viewer. Sign-in links are rate limited to 3 per 10 minutes per address; `pnpm local:reset` or `delete from "rateLimit"` clears that.
 
-### Member sign-in (phase 2)
+**Content:** sample content by default (offline). For real content, put a Sanity read token in `.env.local`: `SANITY_TOKEN=…` and `CONTENT_SOURCE=` (empty). Sanity has no local backend; the Studio container edits the real project, so the same care applies as in the hosted Studio (drafts; a person publishes).
 
-Members sign in with an emailed link (Supabase Auth, no passwords). Supabase does not send the email itself: its Send Email Hook calls `/api/membership/auth-email`, which sends the ZurichJS email through Resend.
+**Your signature on certificates:** put `MEMBERSHIP_SIGNATURE_FILE=/app/path/to/signature.png` in `.env.local` with the PNG inside the repository folder but not committed (e.g. `.local/signature.png`; `.local` is git-ignored). Production reads it from Netlify Blobs instead (below).
 
-**Supabase project settings (owner, once per project):**
+`.env.local` (git-ignored) overrides any variable of the `web` service. Nothing here reaches Stripe, Resend, Slack or Netlify. Without Docker, the same pieces run natively: `node tools/mock-stripe.mjs`, `node tools/mock-resend.mjs`, a Postgres with `tools/docker/migrate.sh` applied, and `MEMBERSHIP_DB_URL` pointing at it.
 
-1. Authentication › Sign In / Providers: Email on; "Confirm email" on.
-2. Authentication › URL Configuration: Site URL `https://zurichjs.com`; Redirect URLs `https://zurichjs.com/membership/account`, plus `http://localhost:4321/membership/account` on staging and the deploy-preview pattern for previews.
-3. Authentication › Hooks › Send Email: HTTPS, `https://zurichjs.com/api/membership/auth-email` (staging: the preview URL). Generate the secret and copy it into `SUPABASE_AUTH_HOOK_SECRET`.
-4. Email OTP expiry (Authentication › Sign In / Providers › Email): keep `SUPABASE_OTP_EXPIRY_MINUTES` the same, so the email states the right lifetime.
-5. Use asymmetric JWT signing keys if offered (Supabase recommends them); the site checks tokens with `/auth/v1/user`, which works with either.
+## Membership (online)
 
-| Variable                      | Where                      | What                                                                                    |
-| ----------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`         | build (read at build time) | the project URL, for the sign-in form; without it the page says accounts are not ready  |
-| `PUBLIC_SUPABASE_ANON_KEY`    | build                      | the publishable (anon) key: public by design, row-level security protects the data      |
-| `SUPABASE_AUTH_HOOK_SECRET`   | functions, secret          | `v1,whsec_…` from the Send Email hook; without it every sign-in email is refused        |
-| `SUPABASE_OTP_EXPIRY_MINUTES` | functions                  | optional, default 60: the link lifetime stated in the email                             |
-| `MEMBERSHIP_FROM`             | functions                  | optional, default `ZurichJS <hello@zurichjs.com>`: the sender of member emails (Resend) |
+How it works: `docs/v2/MEMBERSHIP.md`. Anyone can join: sign in by email link, choose Basic Member or Supporter and quarterly or yearly, accept the membership terms, pay in Stripe Checkout. The first payment makes them a member; every paid term issues a certificate of membership (PDF, signed by the president), emailed and in the portal. Members manage payment and cycle in the Stripe portal (no cancelling) and resign on their account page; the board confirms resignations in Slack.
 
-**Locally:** without the `PUBLIC_SUPABASE_*` variables `/membership/account` says accounts are not available yet. Without `RESEND_API_KEY` the hook logs a stub line instead of sending. To see an email: `pnpm --filter @zurichjs/emails preview <folder>` writes every template as HTML and text.
+**Production stays on the email form** (`/api/verein-inquiry`) until `PUBLIC_MEMBERSHIP_ONLINE=on` is set (build time) and a deploy runs. Set it only after the steps below, the terms page approval and a test on a deploy preview.
 
-### Membership requests and Slack review (phase 3)
+### Set up (owner, once)
 
-Signed-in people ask to join on `/membership/account`. The request posts a card with **Approve** and **Reject** to Slack, and the person gets an email copy. Only `SLACK_MEMBERSHIP_APPROVER_IDS` can decide (others get a note only they can see). A decision replaces the buttons, emails the person (approved: sign the declaration next; rejected: a neutral note, no reason), and is in the audit log with the approver's Slack ID. Nothing is charged at this point.
+1. **Database:** Netlify Database is provisioned on deploy because `@netlify/database` is a dependency and `apps/web/netlify/database/migrations` exists; Netlify applies the migrations before each deploy goes live. Check in the Netlify UI that the database exists after the first deploy of this branch. Deploy previews get their own database branch, **forked from production data**: once real members exist, password-protect deploy previews (Site settings › Visitor access), since member names and emails are in that copy.
+2. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup` (dry run), then `--apply`. It creates the membership product, four prices (lookup keys `member_<level>_<cycle>`, amounts from `apps/web/src/lib/membership.ts`) and the billing portal configuration (no cancelling), and prints `STRIPE_MEMBER_PORTAL_CONFIG`. Then Stripe › Webhooks › Add endpoint: `https://zurichjs.com/api/membership/webhook`, events `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`; copy its secret. Repeat in live mode when going live.
+3. **Signature:** `NETLIFY_AUTH_TOKEN=… pnpm membership:signature signature.png` (the PNG Faris supplied, black ink on transparent). Never commit it.
+4. **Resend:** the sender is `MEMBERSHIP_FROM` (default `ZurichJS <hello@zurichjs.com>`); the domain must be verified in Resend.
+5. **Slack:** invite @ZurichJS Bot to the membership channel.
+6. **Environment variables** (functions unless noted):
 
-| Variable                        | Where     | What                                                                                                |
-| ------------------------------- | --------- | --------------------------------------------------------------------------------------------------- |
-| `SLACK_MEMBERSHIP_CHANNEL_ID`   | functions | the private channel for review cards; falls back to `SLACK_AGENT_CHANNEL_ID`. Invite @ZurichJS Bot. |
-| `SLACK_MEMBERSHIP_APPROVER_IDS` | functions | see above (Nadja, Bogdan, Faris)                                                                    |
+| Variable                            | What                                                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `NETLIFY_DB_URL`                    | set by Netlify                                                                                  |
+| `BETTER_AUTH_SECRET`                | secret; 32+ random characters (`openssl rand -base64 32`)                                       |
+| `BETTER_AUTH_URL`                   | optional; defaults to Netlify's URL (production) or the deploy URL (previews)                   |
+| `STRIPE_SECRET_KEY`                 | already set (donations)                                                                         |
+| `STRIPE_MEMBER_PORTAL_CONFIG`       | from `pnpm membership:stripe-setup`                                                             |
+| `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`  | secret; the membership webhook's signing secret (not the donations one)                         |
+| `RESEND_API_KEY`, `MEMBERSHIP_FROM` | email                                                                                           |
+| `SLACK_MEMBERSHIP_CHANNEL_ID`       | the channel for membership notes and resignation cards (falls back to `SLACK_AGENT_CHANNEL_ID`) |
+| `SLACK_MEMBERSHIP_APPROVER_IDS`     | who may confirm resignations: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris)      |
+| `MEMBERSHIP_ADMIN_TOKEN`            | secret; 32+ characters, for `pnpm membership:import`                                            |
+| `PUBLIC_MEMBERSHIP_ONLINE`          | build time; `on` switches `/membership` to online joining                                       |
 
-The cards use the content agent's Slack app (`SLACK_AGENT_BOT_TOKEN`, `SLACK_SIGNING_SECRET`), because a Slack app has one interactivity URL. Its existing `chat:write` scope covers posting, updating and the private notes; the manifest is unchanged.
+### Import existing members
 
-**If a card is missing** (Slack was down or not set up), the organisers get an email instead, and this posts the cards for every waiting request:
+Members who joined on paper and pay by hand. CSV columns in `packages/membership/src/import.ts`. The import goes through the site (member data never goes into git, and Netlify Database changes go through the application):
 
 ```bash
-SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… SLACK_AGENT_BOT_TOKEN=… SLACK_MEMBERSHIP_CHANNEL_ID=… pnpm membership:review          # lists, posts nothing
-SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… SLACK_AGENT_BOT_TOKEN=… SLACK_MEMBERSHIP_CHANNEL_ID=… pnpm membership:review --post
+MEMBERSHIP_ADMIN_TOKEN=… pnpm membership:import members.csv --site https://deploy-preview-78--zurichjs.netlify.app   # dry run on a preview
+MEMBERSHIP_ADMIN_TOKEN=… pnpm membership:import members.csv --apply                                                 # production
 ```
 
-The applicant's message is only in the first card and the fallback email: it is not stored.
+Each becomes "paid by hand until `paid_until`". When they first sign in with the same email, the account links to their record; they accept the terms and switch to automatic payment, with no charge before their paid period ends.
 
-**Do not set `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` on production before phase 5 (payment) is merged.** With them set, `/membership` sends people to the account page instead of the email form, and approved members would have no way to sign and pay yet. Use them on staging and previews until then.
+### Day to day
+
+- **New members, renewals, failed payments** arrive in Slack as notes. Nothing to do.
+- **Resignations** arrive as a card with **Confirm resignation** (Nadja, Bogdan, Faris). If dues are open it says so and waits. Confirming ends the subscription at the end of the paid period and emails the member.
+- **Certificates** are issued per paid invoice; a member can download them all on their account page.
+- **Data retention:** one year after a membership ends, `member_anonymise` removes the person (database function; the scheduled job that calls it is a follow-up). Stripe records are kept for the accounts.

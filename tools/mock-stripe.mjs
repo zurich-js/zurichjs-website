@@ -221,7 +221,8 @@ export function startMockStripe(port = 0) {
   }
 
   return new Promise((resolve) => {
-    server.listen(port, '127.0.0.1', () => {
+    // MOCK_HOST=0.0.0.0 inside a container (docker-compose.yml); local runs stay on loopback.
+    server.listen(port, process.env.MOCK_HOST ?? '127.0.0.1', () => {
       const address = server.address();
       base = `http://localhost:${typeof address === 'object' && address ? address.port : port}`;
       resolve({ url: base, sessions, requests, close: () => new Promise((r) => server.close(() => r(undefined))) });

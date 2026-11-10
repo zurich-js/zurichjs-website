@@ -27,6 +27,7 @@ zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It 
 ```bash
 pnpm install                               # Node 22.23.4+ (.nvmrc), pnpm 11
 pnpm dev                                   # http://localhost:4321 (CONTENT_SOURCE=sample to work offline)
+pnpm local                                 # Docker: site + Postgres + Stripe mock + mail viewer (docs/v2/RUNBOOK.md, Local development)
 CONTENT_SOURCE=sample BUILD_NOW=2026-11-01T12:00:00+01:00 pnpm build   # the deterministic build CI uses
 pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck && pnpm test
 pnpm e2e                                   # needs a build; includes visual regression

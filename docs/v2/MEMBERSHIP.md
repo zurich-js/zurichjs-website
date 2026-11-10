@@ -1,4 +1,40 @@
-# Verein membership: self-serve subscriptions (investigation)
+# Verein membership: self-serve joining
+
+## How it works now (owner, 10th November 2026)
+
+This section is the current design. The sections after it are the original investigation (5th and 6th November 2026), kept for the bylaws analysis and as history: where they mention Supabase, approval in Slack or signing a declaration, this section replaces them.
+
+**Anyone can join** (bylaws Art. 4: any person who supports the goals may become a member). No approval and no declaration to sign.
+
+1. **Sign in** on `/membership/account` with an emailed link (Better Auth; sessions are httpOnly cookies).
+2. **Join:** person or organisation, Basic Member or Supporter, quarterly or yearly (no other cycles), and a tick for the **membership terms** (`/membership/terms`, based on the bylaws; the accepted version is recorded).
+3. **Pay** in Stripe Checkout (subscription). The first payment makes them active.
+4. **Certificate of membership** for every paid term: numbered PDF, signed by Faris Aziz, President of the Board, emailed (welcome or renewal) and downloadable in the portal.
+5. **Portal:** status, paid until, certificates, the Stripe billing portal for payment method, invoices and switching between quarterly and yearly (or level). No cancelling there.
+6. **Resign** on the account page (counts as in writing, bylaws Art. 5; email copy). The board (Nadja, Bogdan, Faris) confirms in Slack; open dues hold it; it ends with the paid period.
+7. **Imported members** (paid by hand): imported through an admin endpoint, linked on first sign-in, accept the terms and switch to automatic payment with no charge before their paid period ends.
+
+| Area         | Choice                                                                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hosting      | Netlify only                                                                                                                                                                     |
+| Database     | Netlify Database (Postgres, GA since April 2026; `@netlify/database`, `NETLIFY_DB_URL`). Migrations in `apps/web/netlify/database/migrations`, applied by Netlify on each deploy |
+| Sign-in      | Better Auth 1.7 with the magic-link plugin; its tables are the first migration; rate limits stored in the database                                                               |
+| Payments     | Stripe over plain fetch (`apps/web/src/server/membership-stripe.ts`); prices by lookup key; portal configuration without cancelling; webhook `/api/membership/webhook`           |
+| Email        | Resend, templates in `packages/emails` (sign-in link, welcome, renewal, payment failed, resignation received and confirmed)                                                      |
+| Certificates | `pdf-lib` with Figtree, A4 landscape (`apps/web/src/server/certificate.ts`); the signature PNG in the private Netlify Blobs store `membership`                                   |
+| Slack        | notes for new members, renewals and failed payments; Confirm resignation button for the approvers                                                                                |
+| Data         | `packages/membership` (status machine, `postgresStore`); anonymised one year after a membership ends; Stripe keeps the payment records                                           |
+| Local        | `docker compose up` (`pnpm local`): site, Postgres, Stripe mock, mail viewer, optional Studio                                                                                    |
+
+**Status rules** (`packages/membership/src/state.ts`): `pending → active` (Stripe, first payment) · `active ⇄ past_due` (Stripe) · `active / past_due / imported_manual → resigning` (member) · `resigning → ended` (board confirms, or Stripe at period end) · `ended → pending` (joins again). Every change is compare-and-set and logged in an append-only audit table.
+
+**Still open:** the basic discount and which paid events are included each year (board; perks wait for it); the scheduled job that runs the one-year anonymisation; the terms page text needs the owner's approval before `PUBLIC_MEMBERSHIP_ONLINE=on`; Swiss bookkeeping retention for payment records (10 years, OR Art. 958f, likely) to confirm with whoever keeps the books.
+
+Setup and day-to-day: `docs/v2/RUNBOOK.md`, "Membership (online)" and "Local development (Docker)".
+
+---
+
+# Original investigation (5th and 6th November 2026)
 
 ## Context
 

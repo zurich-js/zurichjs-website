@@ -445,3 +445,14 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **The applicant's message is not stored,** only shown in Slack (data minimisation).
 - **When Slack fails** the request is still taken; the organisers get an email and `pnpm membership:review` re-posts the cards.
 - **Production stays on the email form until payment exists** (phase 5): the `PUBLIC_SUPABASE_*` variables switch the flow, and the runbook says not to set them on production before then.
+
+## Membership on Netlify only, anyone can join, certificates (owner, 10th November 2026)
+
+- **Supabase removed.** The member database is Netlify Database (Postgres; `@netlify/database`), sign-in is Better Auth with an emailed link, everything deploys with the site on Netlify. The old Netlify DB Neon extension is discontinued; Netlify Database is its GA successor.
+- **No approval and no declaration.** Anyone can join by accepting the membership terms (based on the bylaws) and paying; the first payment makes them a member. The Slack Approve/Reject flow is gone; Slack gets notes, and a Confirm resignation button for the approvers.
+- **Certificate of membership for every paid term,** signed by Faris Aziz, President of the Board, with his signature image (kept out of git, in Netlify Blobs). Emailed and in the portal.
+- **Only quarterly and yearly** cycles; members switch between them (or levels) in the Stripe portal, which cannot cancel. Resignations go through the board (bylaws Art. 5).
+- **Production keeps the email form** until `PUBLIC_MEMBERSHIP_ONLINE=on`.
+- **Deploy previews fork production data** (Netlify Database branching): password-protect previews once real members exist.
+- **Existing members are imported through an admin endpoint,** not a data migration, so member data never goes into git.
+- **Local development runs in Docker** (`docker-compose.yml`): Postgres with the migrations, the Stripe mock (now with memberships and signed webhooks), a mail viewer (`tools/mock-resend.mjs`, via `RESEND_API_BASE`, ignored in production) and the Sanity Studio against the real project (Sanity has no local backend).

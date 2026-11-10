@@ -35,7 +35,7 @@ const buttonSizes: Record<ButtonSize, string> = {
 export const buttonClass = (variant: ButtonVariant = 'yellow', size: ButtonSize = 'md', grow = false, extra?: string) =>
   cx(buttonBase, buttonVariants[variant], variant !== 'link' && cx('no-underline rounded-pill', buttonSizes[size]), grow && 'flex-[1_1_100%] md:flex-[0_0_auto]', extra);
 
-export type SurfaceTone = 'grey' | 'yellow' | 'black' | 'ink' | 'soft' | 'white' | 'danger' | 'success';
+export type SurfaceTone = 'grey' | 'yellow' | 'black' | 'ink' | 'soft' | 'white' | 'danger' | 'success' | 'yellow-soft';
 /**
  * Cards (Bogdan's review, 4th November 2026): a Surface is static content, so 'grey' and 'soft' are white with a
  * thin border, never a fill that looks clickable. A card that is a link uses linkCardClass (soft grey, an arrow,
@@ -51,6 +51,8 @@ const surfaceTones: Record<SurfaceTone, string> = {
   danger: 'bg-danger-soft text-black',
   /** Confirmations: a form was sent, an action is done. */
   success: 'bg-success-soft text-black',
+  /** A call to action inside a page, such as switching to automatic payment (owner, 11th November 2026). */
+  'yellow-soft': 'bg-yellow/25 text-black',
 };
 export const surfaceClass = (tone: SurfaceTone = 'grey', extra?: string) => cx('rounded-card', surfaceTones[tone], extra);
 

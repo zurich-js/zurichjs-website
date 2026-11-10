@@ -6,18 +6,18 @@
  * confirms it, and the membership ends with the paid period. Undo:
  * /api/membership/resign/undo.
  *
- * POST /api/membership/resign   (session cookie)
+ * Why they leave (owner, 10th November 2026): the body may carry { reasons, note } from the
+ * account page. It is recorded and passed to the board, but never required: a resignation
+ * without a reason is just as valid (bylaws Art. 5, Swiss Civil Code Art. 70).
+ *
+ * POST /api/membership/resign   (session cookie)  { reasons?: string[], note?: string }
  *   200 { ok: true, member } · 409 nothing to resign from · 401 · 503 · 502
  */
-import { renderEmail } from '@zurichjs/emails';
-import { sendMemberEmail } from '@zurichjs/integrations';
-import { TransitionError } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed } from '../../../server/http.ts';
-import { memberView, membershipProps } from '../../../server/membership.ts';
-import { emailBoard } from '../../../server/membership-resignation.ts';
-import { membershipSlack, notify, resignationCard } from '../../../server/membership-slack.ts';
-import { openInvoices } from '../../../server/membership-stripe.ts';
+import { parseResignReasons } from '../../../lib/membership.ts';
+import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
+import { memberView } from '../../../server/membership.ts';
+import { startResignation } from '../../../server/membership-resignation.ts';
 import { signedIn, type RouteDeps } from '../../../server/membership-route.ts';
 
 export const prerender = false;
@@ -27,34 +27,12 @@ export const handleResign = (request: Request, deps: RouteDeps = {}) =>
     request,
     deps,
     async ({ user, member, store, origin, env }) => {
-      if (!member || !['active', 'past_due', 'imported_manual'].includes(member.status)) return fail(409, 'There is no membership to resign from.');
-      const log = deps.log ?? console.log;
-      let updated;
-      try {
-        updated = await store.transition(member.id, { from: member.status, to: 'resigning', actor: { kind: 'member', id: user.id } });
-      } catch (cause) {
-        if (cause instanceof TransitionError) return fail(409, 'Your membership changed in the meantime. Reload the page.');
-        throw cause;
-      }
-      const dues = await openInvoices(updated, { env, fetch: deps.fetch }).catch(() => 0);
-      const card = resignationCard(updated, dues);
-      try {
-        await (deps.slack ?? membershipSlack(env, deps.fetch)).post(card.text, card.blocks);
-      } catch (e) {
-        log(`[membership] resignation card for ${updated.id} not posted: ${(e as Error).message}`);
-        await notify(`Resignation from ${updated.name} (${updated.email}) could not be posted with its button. Confirm it by hand.`, {
-          env,
-          slack: deps.slack,
-          fetch: deps.fetch,
-          log,
-        });
-      }
-      await emailBoard(updated, { kind: 'resigned', dues }, { env, origin, fetch: deps.fetch, log });
-      const email = renderEmail('resignation-received', { ...membershipProps(updated, origin), openDues: dues > 0 });
-      await sendMemberEmail(env, { to: updated.email, ...email }, { idempotencyKey: `member-resignation:${updated.id}:${updated.updatedAt}`, log, fetch: deps.fetch }).catch(
-        (e: Error) => log(`[membership] resignation copy to ${updated.id} failed: ${e.message}`),
-      );
-      return json(200, { ok: true, member: memberView(updated) });
+      if (!member) return fail(409, 'There is no membership to resign from.');
+      const why = parseResignReasons(await readJsonObject(request.clone()).catch(() => null));
+      const r = await startResignation(member, { kind: 'member', id: user.id }, why, { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log });
+      if (r.result === 'not_member') return fail(409, 'There is no membership to resign from.');
+      if (r.result === 'changed') return fail(409, 'Your membership changed in the meantime. Reload the page.');
+      return json(200, { ok: true, member: memberView(r.member) });
     },
     'send your resignation',
   );

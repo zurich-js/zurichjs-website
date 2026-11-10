@@ -9,7 +9,7 @@
 #   http://localhost:8025                  Mailpit: every email the site sends (sign-in links, certificates)
 #   localhost:1025                         Mailpit's SMTP, for anything else you want to test locally
 #   http://localhost:3333                  Sanity Studio (profile `studio`; sign in with your Sanity account)
-#   http://localhost:4321/membership/admin   admin area (password: local-admin-password-docker)
+#   http://localhost:4321/admin               admin area (ADMIN_PASSWORD from .env, 16+ characters; else local-admin-password-docker)
 #   localhost:54322                        Postgres (user postgres, password postgres, database zurichjs)
 #
 # Payments use Stripe's test mode (a sandbox; nothing is charged): .env.local needs a test-mode
@@ -91,7 +91,6 @@ services:
     environment:
       <<: *node-env
       CONTENT_SOURCE: sample
-      PUBLIC_MEMBERSHIP_ONLINE: 'on'
       MEMBERSHIP_DB_URL: postgres://postgres:postgres@db:5432/zurichjs
       BETTER_AUTH_URL: http://localhost:4321
       BETTER_AUTH_SECRET: local-docker-only-secret-not-for-production
@@ -102,7 +101,7 @@ services:
       STRIPE_MEMBERSHIP_WEBHOOK_SECRET: ${STRIPE_MEMBERSHIP_WEBHOOK_SECRET:-}
       STRIPE_SUPPORT_PRODUCT_ID: ${STRIPE_SUPPORT_PRODUCT_ID:-}
       MAILPIT_URL: http://mail:8025
-      MEMBERSHIP_ADMIN_PASSWORD: local-admin-password-docker
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-local-admin-password-docker}
     # .env, then .env.local (which wins); the values set above win over both.
     env_file:
       - path: .env

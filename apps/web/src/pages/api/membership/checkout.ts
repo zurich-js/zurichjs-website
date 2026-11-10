@@ -18,7 +18,7 @@
 import { DuplicateEmail, TERMS, canJoin, canStartAutomaticPayment, isCycle, isLevel, type Cycle, type Level, type Member, type MemberKind } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../server/http.ts';
-import { createCheckout } from '../../../server/membership-stripe.ts';
+import { AlreadySubscribed, createCheckout } from '../../../server/membership-stripe.ts';
 import { signedIn, type RouteDeps } from '../../../server/membership-route.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 
@@ -57,6 +57,16 @@ export function parseChoice(body: Record<string, unknown>): Parsed<Choice> {
   return { ok: true, data: { kind, name, organisationName: kind === 'organisation' ? (org as string) : null, level: body.level, cycle: body.cycle } };
 }
 
+/** Checkout's URL, or 409 when the member already has a membership subscription (never a second one). */
+async function start(open: () => Promise<string>): Promise<Response> {
+  try {
+    return json(200, { ok: true, url: await open() });
+  } catch (cause) {
+    if (cause instanceof AlreadySubscribed) return fail(409, 'Automatic payment is already set up. Reload this page in a moment to see it.');
+    throw cause;
+  }
+}
+
 export const handleCheckout = (request: Request, deps: RouteDeps = {}) => {
   if (rateLimited('membership-checkout', clientKey(request), 5, 10 * 60_000)) return Promise.resolve(fail(429, 'Too many attempts. Wait a few minutes, then try again.'));
   return signedIn(
@@ -70,11 +80,11 @@ export const handleCheckout = (request: Request, deps: RouteDeps = {}) => {
       const actor = { kind: 'member', id: user.id } as const;
       const stripe = { env, fetch: deps.fetch, now: deps.now };
 
-      // An imported member switching from paying by hand: same level and cycle, charged when the paid period ends.
+      // An imported member switching from paying manually (cash/bank): same level and cycle, charged when the paid period ends.
       if (member?.status === 'imported_manual') {
         await store.acceptTerms(member.id, TERMS.version, actor);
         if (!canStartAutomaticPayment(member, true)) return fail(409, 'Your membership is already paid automatically.');
-        return json(200, { ok: true, url: await createCheckout(member, store, origin, stripe) });
+        return start(() => createCheckout(member, store, origin, stripe));
       }
       if (member && !canJoin(member.status) && member.status !== 'pending') return fail(409, 'You already have a membership. See it on your account page.');
 
@@ -109,7 +119,7 @@ export const handleCheckout = (request: Request, deps: RouteDeps = {}) => {
         throw cause;
       }
       await store.acceptTerms(m.id, TERMS.version, actor);
-      return json(200, { ok: true, url: await createCheckout(m, store, origin, stripe) });
+      return start(() => createCheckout(m, store, origin, stripe));
     },
     'start the payment',
   );

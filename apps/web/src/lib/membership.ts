@@ -63,3 +63,43 @@ export const perYear = (t: Tier, c: Cycle) => Math.round(t.fees[c] * cycleOf(c).
 
 /** The tier with this display name (what the form sends and the API accepts). */
 export const tierByName = (name: string): Tier | undefined => TIER_KEYS.map((k) => TIERS[k]).find((t) => t.name === name);
+
+/**
+ * Why members leave (owner, 10th November 2026): the account page asks before sending a
+ * resignation. Several can be chosen; "Something else" needs a few words. Giving a reason is
+ * never a condition: the bylaws (Art. 5) and the Swiss Civil Code (Art. 70) let a member resign
+ * at any time, so the form always offers to resign without one.
+ */
+export const RESIGN_REASONS = [
+  { value: 'moving', label: 'I am moving away from Zurich' },
+  { value: 'time', label: 'I do not have time for the meetups' },
+  { value: 'cost', label: 'The fee is too much for me' },
+  { value: 'value', label: 'The membership does not give me enough' },
+  { value: 'relevance', label: 'The topics are not relevant to me any more' },
+  { value: 'employer', label: 'My employer no longer pays for it' },
+  { value: 'other', label: 'Something else' },
+] as const;
+export type ResignReason = (typeof RESIGN_REASONS)[number]['value'];
+export const RESIGN_NOTE_MAX = 1000;
+
+/** What the member told us, cleaned: known reasons only, a trimmed note. Never a reason to refuse. */
+export function parseResignReasons(body: unknown): { reasons: ResignReason[]; note: string } {
+  const b = (body && typeof body === 'object' ? body : {}) as { reasons?: unknown; note?: unknown };
+  const known = new Set<string>(RESIGN_REASONS.map((r) => r.value));
+  const reasons = Array.isArray(b.reasons) ? [...new Set(b.reasons.filter((r): r is ResignReason => typeof r === 'string' && known.has(r)))] : [];
+  const note = typeof b.note === 'string' ? b.note.trim().slice(0, RESIGN_NOTE_MAX) : '';
+  return { reasons, note };
+}
+
+export const resignReasonLabels = (reasons: readonly ResignReason[]) => reasons.map((r) => RESIGN_REASONS.find((x) => x.value === r)!.label);
+
+/**
+ * A term paid manually, cash/bank (owner, 11th November 2026): from the first of the start month (YYYY-MM),
+ * one cycle long. `end` is the first unpaid day (paid_until); the last paid day is the day before.
+ */
+export function manualTerm(startMonth: string, cycle: Cycle): { start: string; end: string } {
+  const [y, m] = startMonth.split('-').map(Number);
+  const start = new Date(Date.UTC(y!, m! - 1, 1));
+  const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + (cycle === 'yearly' ? 12 : 3), 1));
+  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+}

@@ -1,3 +1,4 @@
+import { boardNoticeFromText, renderEmail, type BoardNoticeProps } from '@zurichjs/emails';
 import { createHash } from 'node:crypto';
 import { createClient, type SanityClient } from '@sanity/client';
 import { VOLUNTEER_AVAILABILITY, type FormData, type FormKind, type FormResult } from '@zurichjs/forms';
@@ -265,19 +266,32 @@ async function deliver(env: Env, m: Outgoing, opts: { fetch?: typeof fetch; time
 
 const canSend = (env: Env) => Boolean(env.RESEND_API_KEY || mailpitSendUrl(env));
 
-/** A plain-text email to the organisers (FORMS_TO, default hello@zurichjs.com); replies go to `replyTo`. */
+/**
+ * An email to the organisers (FORMS_TO, default hello@zurichjs.com) in the ZurichJS email layout
+ * (owner, 10th November 2026), with a plain-text part; replies go to `replyTo`. Pass `notice`
+ * for a laid-out email; otherwise the "Label: value" text is laid out as details.
+ */
 export async function sendEmail(
   env: Env,
   subject: string,
   text: string,
   replyTo?: string,
   log: Log = console.log,
-  opts: { fetch?: typeof fetch; idempotencyKey?: string } = {},
+  opts: { fetch?: typeof fetch; idempotencyKey?: string; notice?: BoardNoticeProps } = {},
 ): Promise<void> {
   if (!canSend(env)) return log(`[forms] RESEND_API_KEY missing; email not sent: ${subject}`);
+  const email = renderEmail('board-notice', opts.notice ?? boardNoticeFromText(subject, text, replyTo));
   await deliver(
     env,
-    { from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>', to: [env.FORMS_TO ?? 'hello@zurichjs.com'], subject, text, replyTo, idempotencyKey: opts.idempotencyKey },
+    {
+      from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>',
+      to: [env.FORMS_TO ?? 'hello@zurichjs.com'],
+      subject,
+      html: email.html,
+      text: opts.notice ? email.text : text,
+      replyTo,
+      idempotencyKey: opts.idempotencyKey,
+    },
     opts,
   );
 }

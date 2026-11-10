@@ -26,7 +26,7 @@ export interface AdminCtx {
 
 export async function adminRoute(request: Request, deps: AdminDeps, fn: (ctx: AdminCtx) => Promise<Response>, what: string): Promise<Response> {
   const env = deps.env ?? process.env;
-  if (!adminPassword(env)) return fail(503, 'The admin area is not set up yet (MEMBERSHIP_ADMIN_PASSWORD, 16+ characters).');
+  if (!adminPassword(env)) return fail(503, 'The admin area is not set up yet (ADMIN_PASSWORD).');
   if (!isAdmin(request, env, deps.now)) return fail(401, 'Sign in to the admin area.');
   if (request.method !== 'GET' && !sameOrigin(request)) return fail(403, 'Refused: the request did not come from this site.');
   try {

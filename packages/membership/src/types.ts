@@ -26,7 +26,7 @@ export type Status =
   | 'active'
   /** A Stripe payment failed; dues are outstanding. */
   | 'past_due'
-  /** Imported from the manual process: joined on paper, paid by hand until `paidUntil`. */
+  /** Imported from the manual process: joined on paper, paid manually (cash/bank) until `paidUntil`. */
   | 'imported_manual'
   /** Resigned; ends at the end of the paid period once the board confirms (Art. 5). */
   | 'resigning'

@@ -15,6 +15,7 @@
  * with `agent:`, and the outcome is posted in the thread instead of rewriting the reply).
  */
 import { levelInfo, type Member, type MemberStore } from '@zurichjs/membership';
+import { resignReasonLabels, type ResignReason } from '../lib/membership.ts';
 import { lastDay, longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { confirmResignation, withdrawResignation } from './membership-resignation.ts';
@@ -89,8 +90,16 @@ export async function notify(text: string, deps: { env: Env; slack?: MembershipS
   }
 }
 
-export function resignationCard(m: Member, openDues: number): { text: string; blocks: SlackBlock[] } {
+export function resignationCard(
+  m: Member,
+  openDues: number,
+  why: { reasons: readonly ResignReason[]; note: string } = { reasons: [], note: '' },
+): { text: string; blocks: SlackBlock[] } {
   const level = levelInfo(m.level).name;
+  const reasons =
+    why.reasons.length || why.note
+      ? `\n*Why:* ${[resignReasonLabels(why.reasons).join('; '), why.note && `_“${esc(why.note)}”_`].filter(Boolean).join('\n')}`
+      : '\n_No reason given._';
   return {
     text: `Resignation from ${m.name}`,
     blocks: [
@@ -98,7 +107,7 @@ export function resignationCard(m: Member, openDues: number): { text: string; bl
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `:wave: *Resignation* (bylaws Art. 5)\n${who(m)}\n${level}, ${m.cycle}${m.paidUntil ? `, paid until ${longDate(lastDay(m.paidUntil))}` : ''}`,
+          text: `:wave: *Resignation* (bylaws Art. 5)\n${who(m)}\n${level}, ${m.cycle}${m.paidUntil ? `, paid until ${longDate(lastDay(m.paidUntil))}` : ''}${reasons}`,
         },
       },
       openDues

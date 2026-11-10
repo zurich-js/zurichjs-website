@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { colors } from '@zurichjs/design/tokens';
 import { describe, expect, it } from 'vitest';
-import { render, renderEmail, safeUrl, TEMPLATE_NAMES } from '../src/index.ts';
+import { boardNoticeFromText, render, renderEmail, safeUrl, TEMPLATE_NAMES } from '../src/index.ts';
 
 const root = join(import.meta.dirname, '../../..');
 const application = {
@@ -81,9 +81,39 @@ describe('membership emails', () => {
 
   it('never talks about signing or approval any more', () => {
     for (const name of TEMPLATE_NAMES) {
-      const e = renderEmail(name, { url: link, validMinutes: 15, firstTime: false, ...term, openDues: false, lastDay: null } as never);
+      const e = renderEmail(name, {
+        url: link,
+        validMinutes: 15,
+        firstTime: false,
+        ...term,
+        openDues: false,
+        lastDay: null,
+        subject: 'Subject',
+        heading: 'Heading',
+        paidThrough: '30th September 2027',
+        firstPayment: '1st October 2027',
+      } as never);
       expect(e.text).not.toMatch(/declaration|approv/i);
     }
+  });
+});
+
+describe('emails to the board', () => {
+  it('lays out the forms’ plain text: details as rows, a long message in full, replies named in the footer', () => {
+    const p = boardNoticeFromText('Contact: Sponsoring from Ada', 'Name: Ada\nEmail: ada@example.com\nMessage: First line\nsecond line', 'Ada <ada@example.com>');
+    expect(p).toMatchObject({
+      rows: [
+        ['Name', 'Ada'],
+        ['Email', 'ada@example.com'],
+      ],
+      message: { label: 'Message', text: 'First line\nsecond line' },
+      replyTo: 'Ada',
+    });
+    const e = renderEmail('board-notice', p);
+    expect(e.subject).toBe('Contact: Sponsoring from Ada');
+    expect(e.text).toContain('second line');
+    expect(e.text).toContain('Reply to answer Ada directly.');
+    expect(e.text).not.toContain('Questions? Reply');
   });
 });
 
@@ -104,7 +134,18 @@ describe('layout', () => {
 
   it('follows the brand rules: only token colours, no em or en dashes', () => {
     for (const name of TEMPLATE_NAMES) {
-      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true, ...term, openDues: true, lastDay: '9th November 2027' } as never);
+      const e = renderEmail(name, {
+        url: link,
+        validMinutes: 60,
+        firstTime: true,
+        ...term,
+        openDues: true,
+        lastDay: '9th November 2027',
+        subject: 'Subject',
+        heading: 'Heading',
+        paidThrough: '30th September 2027',
+        firstPayment: '1st October 2027',
+      } as never);
       const used = new Set((e.html.match(/#[0-9a-f]{6}\b/gi) ?? []).map((c) => c.toLowerCase()));
       const allowed = new Set(Object.values(colors).map((c) => c.toLowerCase()));
       expect([...used].filter((c) => !allowed.has(c))).toEqual([]);

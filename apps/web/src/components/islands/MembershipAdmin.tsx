@@ -1,17 +1,19 @@
 /**
- * The membership admin area (/membership/admin) for the board: one shared
- * password (MEMBERSHIP_ADMIN_PASSWORD), enforced by the site on every deploy.
- * Members with search and filters, one member's details, terms, certificates
- * and audit log, confirming resignations, CSV import (dry run first) and export.
+ * The admin area (/admin) for the board (owner, 11th November 2026): the password
+ * first (ADMIN_PASSWORD, enforced by the site on every deploy), then a sub-navigation
+ * of its sections. Memberships (/admin, /admin/memberships): members with search and
+ * filters, one member's details, terms, certificates and audit log, confirming
+ * resignations, adding members who paid manually (cash/bank), and CSV export.
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
-import { TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { badgeClass, cx } from '@zurichjs/design/recipes';
+import { Checkbox, ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
+import { badgeClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
 import type { AdminMember } from '../../server/admin-views.ts';
-import { lastDay, shortDate, shortDateTime } from '../../server/dates.ts';
+import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
+import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { CertificateView } from '../../server/membership.ts';
-import { SubmitButton } from './forms/shared.tsx';
+import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
 
 type Status = AdminMember['status'];
 interface Detail {
@@ -25,7 +27,7 @@ const STATUS_LABEL: Record<Status, string> = {
   pending: 'Waiting for first payment',
   active: 'Active',
   past_due: 'Payment failed',
-  imported_manual: 'Paid by hand',
+  imported_manual: 'Paid manually (cash/bank)',
   resigning: 'Resigning',
   ended: 'Ended',
 };
@@ -44,22 +46,48 @@ async function api<T>(path: string, init?: RequestInit): Promise<{ status: numbe
   return { status: res.status, body: (await res.json().catch(() => ({}))) as T & { ok?: boolean; error?: string } };
 }
 
-export default function MembershipAdmin() {
-  const [state, setState] = useState<'loading' | 'unconfigured' | 'signed-out' | 'ready'>('loading');
+export type AdminSection = 'memberships';
+
+const SECTIONS: { key: AdminSection; label: string; href: string }[] = [{ key: 'memberships', label: 'Memberships', href: '/admin/memberships' }];
+
+export default function MembershipAdmin({ section = 'memberships' }: { section?: AdminSection }) {
+  const [state, setState] = useState<'loading' | 'signed-out' | 'ready'>('loading');
 
   useEffect(() => {
-    void api<{ configured: boolean; signedIn: boolean }>('/api/membership/admin/session').then(({ body }) =>
-      setState(!body.configured ? 'unconfigured' : body.signedIn ? 'ready' : 'signed-out'),
-    );
+    void api<{ signedIn: boolean }>('/api/membership/admin/session').then(({ body }) => setState(body.signedIn ? 'ready' : 'signed-out'));
   }, []);
 
   if (state === 'loading') return <p class="m-0 text-[18px] text-ink-2">Loading…</p>;
-  if (state === 'unconfigured')
-    return (
-      <p class="m-0 text-[18px] text-ink-2 max-w-[640px]">The admin area is not set up yet: MEMBERSHIP_ADMIN_PASSWORD (16+ characters) is missing in the site’s environment.</p>
-    );
   if (state === 'signed-out') return <SignIn onSignedIn={() => setState('ready')} />;
-  return <Admin onSignedOut={() => setState('signed-out')} />;
+  const signOut = async () => {
+    await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
+    setState('signed-out');
+  };
+  return (
+    <div class="flex flex-col gap-8">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Admin" class="flex gap-2 flex-wrap">
+          {SECTIONS.map((s) => (
+            <a
+              key={s.key}
+              href={s.href}
+              aria-current={s.key === section ? 'page' : undefined}
+              class={cx(
+                'no-underline min-h-11 px-5 rounded-pill border border-black font-bold text-base inline-flex items-center',
+                s.key === section ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey',
+              )}
+            >
+              {s.label}
+            </a>
+          ))}
+        </nav>
+        <Button variant="outline-black" size="sm" onClick={() => void signOut()}>
+          Sign out
+        </Button>
+      </div>
+      <Admin onSignedOut={() => setState('signed-out')} />
+    </div>
+  );
 }
 
 function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
@@ -81,7 +109,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
       }}
     >
       <h2 class="m-0 text-[28px] font-bold leading-[1.15]">Sign in</h2>
-      <p class="m-0 text-[17px] text-ink-2">For the board. The password is the site’s admin password.</p>
+      <p class="m-0 text-[17px] text-ink-2">Enter the admin password.</p>
       <TextField
         label="Password"
         type="password"
@@ -109,7 +137,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
+  const [adding, setAdding] = useState(false);
 
   const load = async (query = q, filter = status) => {
     const params = new URLSearchParams({ ...(query ? { q: query } : {}), ...(filter ? { status: filter } : {}) });
@@ -126,42 +154,41 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
   }, []);
 
-  const signOut = async () => {
-    await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
-    onSignedOut();
-  };
-
   return (
     <div class="flex flex-col gap-8">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap gap-3">
-          <Button href="/api/membership/admin/export.csv" variant="black" size="sm" external={false}>
-            Export CSV
-          </Button>
-          <Button variant="outline-black" size="sm" onClick={() => setImporting(!importing)} aria-expanded={importing}>
-            Import members
-          </Button>
-        </div>
-        <Button variant="outline-black" size="sm" onClick={() => void signOut()}>
-          Sign out
+      <div class="flex flex-wrap gap-3">
+        <Button href="/api/membership/admin/export.csv" variant="black" size="sm" external={false}>
+          Export CSV
+        </Button>
+        <Button variant="outline-black" size="sm" onClick={() => setAdding(!adding)} aria-expanded={adding}>
+          Add a member who paid manually (cash/bank)
         </Button>
       </div>
 
-      {importing && <Import onImported={() => void load()} />}
+      {adding && (
+        <AddMember
+          onAdded={(id) => {
+            void load();
+            setSelected(id);
+          }}
+          onSignedOut={onSignedOut}
+        />
+      )}
 
       {counts && (
         <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] gap-3">
           {[
             ['Members', counts.members],
             ['Active', counts.active],
-            ['Paid by hand', counts.imported_manual],
+            ['Paid manually (cash/bank)', counts.imported_manual],
             ['Payment failed', counts.past_due],
             ['Resigning', counts.resigning],
             ['Waiting for payment', counts.pending],
           ].map(([k, v]) => (
-            <div key={k} class="bg-grey rounded-card px-5 py-4 flex flex-col gap-0.5">
+            // Numbers sit at the bottom of every tile, so they line up even when a label wraps.
+            <div key={k} class="bg-grey rounded-card px-5 py-4 flex flex-col justify-between gap-2">
               <dt class="text-[15px] text-grey-text">{k}</dt>
-              <dd class="m-0 text-[28px] font-bold leading-none">{v ?? 0}</dd>
+              <dd class="m-0 text-[28px] font-bold leading-none tabular-nums">{v ?? 0}</dd>
             </div>
           ))}
         </dl>
@@ -183,24 +210,22 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
           onInput={(e) => setQ((e.target as HTMLInputElement).value)}
           class="grow min-w-[min(100%,260px)]"
         />
-        <label class="flex flex-col gap-1.5 font-bold text-[16px]">
-          Status
-          <select
-            class="rounded-[14px] border border-grey-line px-3.5 min-h-[52px] text-[17px] font-normal bg-white"
-            value={status}
-            onChange={(e) => {
-              const v = (e.target as HTMLSelectElement).value as '' | Status;
-              setStatus(v);
-              void load(q, v);
-            }}
-          >
-            {FILTERS.map((f) => (
-              <option key={f.value} value={f.value}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="Status"
+          name="status"
+          value={status}
+          onChange={(e) => {
+            const v = (e.target as HTMLSelectElement).value as '' | Status;
+            setStatus(v);
+            void load(q, v);
+          }}
+        >
+          {FILTERS.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </SelectField>
         <SubmitButton size="md">Search</SubmitButton>
       </form>
 
@@ -317,7 +342,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
     ['Membership', `${m.levelName}, ${m.cycle}`],
     ['Status', STATUS_LABEL[m.status] + (m.endedReason ? ` (${m.endedReason})` : '')],
     ['Category', m.category],
-    ['Payment', m.paymentMode === 'manual' ? 'by hand' : 'automatic (Stripe)'],
+    ['Payment', m.paymentMode === 'manual' ? 'manually (cash/bank)' : 'automatic (Stripe)'],
     ['Paid through', paidThrough(m.paidUntil)],
     ['Joined', date(m.joinedAt)],
     ['Signed in before', m.hasAccount ? 'yes' : 'not yet'],
@@ -356,6 +381,19 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
       )}
       {m.notes && <p class="m-0 text-[16px] bg-white rounded-card px-5 py-4">{m.notes}</p>}
 
+      {['active', 'past_due', 'imported_manual'].includes(m.status) && (
+        <RecordResignation
+          id={id}
+          name={m.name}
+          onDone={(text) => {
+            setNotice(text);
+            onChanged();
+            void load();
+          }}
+          onError={setError}
+          onSignedOut={onSignedOut}
+        />
+      )}
       {m.status === 'resigning' && (
         <div class="flex flex-col gap-3">
           <p class="m-0 text-lg">
@@ -463,79 +501,206 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
   );
 }
 
-function Import({ onImported }: { onImported: () => void }) {
-  const [csv, setCsv] = useState('');
+/** Adds a member who paid manually (cash/bank): recorded, certificate issued, optionally emailed to set up automatic payment. */
+function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; onSignedOut: () => void }) {
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const [f, setF] = useState({
+    kind: 'person' as 'person' | 'organisation',
+    name: '',
+    organisationName: '',
+    email: '',
+    level: 'supporter' as TierKey,
+    cycle: 'yearly' as Cycle,
+    startMonth: thisMonth,
+    notes: '',
+    sendEmail: true,
+  });
   const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<{
-    applied?: boolean;
-    imported?: number;
-    rows?: { line: number; name: string; email: string; level: string; cycle: string; paidUntil: string }[];
-    problems?: { line: number; message: string }[];
-    error?: string;
-  } | null>(null);
-
-  const run = async (apply: boolean) => {
-    setBusy(true);
-    const { body } = await api<NonNullable<typeof result>>('/api/membership/admin/import', { method: 'POST', body: JSON.stringify({ csv, apply }) });
-    setBusy(false);
-    setResult(body);
-    if (apply && body.ok) onImported();
-  };
+  const [error, setError] = useState<{ field?: string; message: string } | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
+  const term = /^\d{4}-\d{2}$/.test(f.startMonth) ? manualTerm(f.startMonth, f.cycle) : null;
+  const err = (field: string) => (error?.field === field ? error.message : undefined);
 
   return (
-    <section aria-labelledby="h-import" class="border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-4">
-      <h2 id="h-import" class="m-0 text-[24px] font-bold">
-        Import members
-      </h2>
-      <p class="m-0 text-[16px] text-ink-2">
-        Members who joined on paper and pay by hand. Columns: kind, name, organisation, email, level, cycle, category, joined_at, paid_until, notes. Check first; nothing is written
-        until you press Import.
-      </p>
-      <label class="flex flex-col gap-1.5 font-bold text-[16px]">
-        CSV file
-        <input
-          type="file"
-          accept=".csv,text/csv"
-          class="font-normal"
-          onChange={async (e) => {
-            const f = (e.target as HTMLInputElement).files?.[0];
-            if (f) setCsv(await f.text());
-            setResult(null);
-          }}
+    <section aria-labelledby="h-add" class="border border-grey-frame rounded-card p-6 md:p-8 flex flex-col gap-5">
+      <div class="flex flex-col gap-1">
+        <h2 id="h-add" class="m-0 text-2xl font-bold">
+          Add a member who paid manually (cash/bank)
+        </h2>
+        <p class="m-0 text-base text-ink-2">
+          For someone who paid in cash or by bank transfer. They are recorded as paid manually until their term ends, get a certificate for it, and can set up automatic payment
+          with Stripe; nothing is charged before the term ends.
+        </p>
+      </div>
+      <form
+        class="flex flex-col gap-5"
+        noValidate
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (busy) return;
+          setBusy(true);
+          setError(null);
+          setDone(null);
+          const { status, body } = await api<{ member?: AdminMember; certificate?: { number: string }; emailed?: boolean; field?: string }>('/api/membership/admin/members', {
+            method: 'POST',
+            body: JSON.stringify(f),
+          });
+          setBusy(false);
+          if (status === 401) return onSignedOut();
+          if (status !== 200 || !body.member) return setError({ field: body.field, message: body.error ?? 'Could not add the member.' });
+          setDone(`${body.member.name} added, certificate ${body.certificate?.number}.${body.emailed ? ` Emailed to ${body.member.email} to set up automatic payment.` : ''}`);
+          onAdded(body.member.id);
+          setF((x) => ({ ...x, name: '', organisationName: '', email: '', notes: '' }));
+        }}
+      >
+        <ChipGroup
+          label="Member"
+          value={f.kind}
+          onChange={(v) => set('kind', v)}
+          options={[
+            { value: 'person', label: 'A person' },
+            { value: 'organisation', label: 'An organisation' },
+          ]}
         />
-      </label>
-      <TextArea label="Or paste the CSV" name="csv" rows={5} value={csv} onInput={(e) => setCsv((e.target as HTMLTextAreaElement).value)} />
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+          <TextField
+            label={f.kind === 'organisation' ? 'Name of the person signing for it' : 'Name'}
+            name="name"
+            value={f.name}
+            invalid={!!err('name')}
+            error={err('name')}
+            onInput={(e) => set('name', (e.target as HTMLInputElement).value)}
+          />
+          {f.kind === 'organisation' && (
+            <TextField
+              label="Organisation"
+              name="organisationName"
+              value={f.organisationName}
+              invalid={!!err('organisationName')}
+              error={err('organisationName')}
+              onInput={(e) => set('organisationName', (e.target as HTMLInputElement).value)}
+            />
+          )}
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={f.email}
+            invalid={!!err('email')}
+            error={err('email')}
+            onInput={(e) => set('email', (e.target as HTMLInputElement).value)}
+          />
+        </div>
+        <ChipGroup label="Membership" value={f.level} onChange={(v) => set('level', v)} options={TIER_KEYS.map((k) => ({ value: k, label: TIERS[k].name }))} />
+        <ChipGroup
+          label="Billing"
+          value={f.cycle}
+          onChange={(v) => set('cycle', v)}
+          options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${feeLabel(TIERS[f.level], c.value)}` }))}
+        />
+        <TextField
+          label="Paid term started"
+          hint={term ? `Paid until ${longDate(lastDay(term.end))}. Their first automatic payment would be on ${longDate(term.end)}.` : 'The month their paid term began.'}
+          name="startMonth"
+          type="month"
+          value={f.startMonth}
+          invalid={!!err('startMonth')}
+          error={err('startMonth')}
+          onInput={(e) => set('startMonth', (e.target as HTMLInputElement).value)}
+          class="max-w-sm"
+        />
+        <TextArea label="Notes for the board (optional)" name="notes" rows={2} value={f.notes} onInput={(e) => set('notes', (e.target as HTMLTextAreaElement).value)} />
+        <Checkbox
+          label="Email them their certificate and the link to set up automatic payment"
+          checked={f.sendEmail}
+          onChange={(e) => set('sendEmail', (e.target as HTMLInputElement).checked)}
+        />
+        {error && !error.field && (
+          <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 font-bold">
+            {error.message}
+          </p>
+        )}
+        {done && (
+          <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 font-bold">
+            {done}
+          </p>
+        )}
+        <SubmitButton busy={busy} class="self-start">
+          {busy ? 'Adding…' : 'Add member'}
+        </SubmitButton>
+      </form>
+    </section>
+  );
+}
+
+/**
+ * For a member who resigned to the board directly (email, in person): recorded like a resignation
+ * on the account page, so renewal stops and the member gets their written copy (owner, 11th November 2026).
+ */
+function RecordResignation({
+  id,
+  name,
+  onDone,
+  onError,
+  onSignedOut,
+}: {
+  id: string;
+  name: string;
+  onDone: (notice: string) => void;
+  onError: (error: string) => void;
+  onSignedOut: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [reasons, setReasons] = useState<ResignReason[]>([]);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (!open)
+    return (
+      <Button variant="outline-black" class="self-start" onClick={() => setOpen(true)}>
+        Record a resignation
+      </Button>
+    );
+  return (
+    <div class="border border-grey-frame rounded-card bg-white p-5 flex flex-col gap-4">
+      <p class="m-0 text-base">
+        For when {name} resigned to the board directly. Renewal stops at once, {name} gets the written copy by email, and the resignation then waits for confirmation as usual.
+      </p>
+      <ChoiceGroup legend="Reasons (optional)" class="flex flex-col gap-2">
+        {RESIGN_REASONS.map((r) => (
+          <label key={r.value} class={optionClass(false, 'self-start')}>
+            <input
+              type="checkbox"
+              value={r.value}
+              checked={reasons.includes(r.value)}
+              onChange={() => setReasons((rs) => (rs.includes(r.value) ? rs.filter((x) => x !== r.value) : [...rs, r.value]))}
+              class={optionInput}
+            />
+            {r.label}
+          </label>
+        ))}
+      </ChoiceGroup>
+      <TextArea label="What they said (optional)" rows={3} value={note} onInput={(e) => setNote((e.target as HTMLTextAreaElement).value)} />
       <div class="flex flex-wrap gap-3">
-        <Button variant="outline-black" disabled={busy || !csv.trim()} onClick={() => void run(false)}>
-          Check
+        <Button
+          variant="danger"
+          disabled={busy}
+          onClick={async () => {
+            setBusy(true);
+            const { status, body } = await api(`/api/membership/admin/members/${id}/resign`, { method: 'POST', body: JSON.stringify({ reasons, note }) });
+            setBusy(false);
+            if (status === 401) return onSignedOut();
+            if (status !== 200) return onError(body.error ?? 'Could not record the resignation.');
+            setOpen(false);
+            onDone(`Resignation recorded. Renewal is stopped and ${name} was emailed a copy; confirm it below when the board agrees.`);
+          }}
+        >
+          {busy ? 'Recording…' : 'Record resignation'}
         </Button>
-        <Button variant="black" disabled={busy || !result?.rows?.length || !!result.problems?.length || result.applied} onClick={() => void run(true)}>
-          {result?.rows?.length ? `Import ${result.rows.length}` : 'Import'}
+        <Button variant="outline-black" onClick={() => setOpen(false)}>
+          Cancel
         </Button>
       </div>
-      {result?.problems?.length ? (
-        <div role="alert" class="bg-danger-soft text-danger rounded-card px-5 py-4 flex flex-col gap-1">
-          <b>Nothing imported. Fix these rows:</b>
-          {result.problems.map((p) => (
-            <span key={`${p.line}${p.message}`}>
-              Line {p.line}: {p.message}
-            </span>
-          ))}
-        </div>
-      ) : result?.error ? (
-        <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 font-bold">
-          {result.error}
-        </p>
-      ) : result?.rows ? (
-        <div role="status" class={cx('rounded-card px-5 py-4 flex flex-col gap-1', result.applied ? 'bg-success-soft text-success' : 'bg-grey')}>
-          <b>{result.applied ? `${result.imported} imported.` : `${result.rows.length} ready to import:`}</b>
-          {result.rows.map((r) => (
-            <span key={r.line}>
-              {r.name} &lt;{r.email}&gt;, {r.level} {r.cycle}, paid until {r.paidUntil}
-            </span>
-          ))}
-        </div>
-      ) : null}
-    </section>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 /**
- * Existing members from the manual process (signed on paper, paid by hand).
+ * Existing members from the manual process (signed on paper, paid manually (cash/bank)).
  * The CSV has one row per member, with a header row:
  *
  *   kind,name,organisation,email,level,cycle,category,joined_at,paid_until,notes
@@ -7,7 +7,7 @@
  * kind: person | organisation (empty = person). level: basic | supporter.
  * cycle: quarterly | yearly. category: passive | active
  * (empty = passive). Dates are YYYY-MM-DD; paid_until is required.
- * Rows become `imported_manual` members paying by hand. Before they can switch
+ * Rows become `imported_manual` members paying manually (cash/bank). Before they can switch
  * to automatic payment they accept the current membership terms in the portal.
  */
 import { isCycle, isLevel } from './levels.ts';

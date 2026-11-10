@@ -43,6 +43,15 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 
 <!-- Scrolled once this leaves the viewport. It sits outside the header, so the header's own height can't flip the state back. -->
 <div data-scroll-sentinel aria-hidden="true" class="absolute top-10 left-0 w-px h-px pointer-events-none"></div>
+<!--
+  Runs before the header paints, so a signed-in member sees "Account" from the first frame instead
+  of "Submit a talk" flickering into it (owner, 11th November 2026). Same key as ../session.ts.
+-->
+<script is:inline>
+  try {
+    if (localStorage.getItem('zurichjs:signed-in') === '1') document.documentElement.setAttribute('data-signed-in', '');
+  } catch {}
+</script>
 <header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white">
   <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
@@ -96,7 +105,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           </>
         )
       }
-      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}>{CTA.label}</a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
 
     <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
@@ -133,7 +142,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           ))
         }
       </ul>
-      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}>{CTA.label}</a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
     {
       social.length > 0 && (
@@ -152,6 +161,17 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 </dialog>
 
 <style>
+  /* The header action's label: "Submit a talk", or "Account" once html[data-signed-in] is set. */
+  [data-cta-member] {
+    display: none;
+  }
+  :global(html[data-signed-in]) [data-cta-member] {
+    display: inline;
+  }
+  :global(html[data-signed-in]) [data-cta-guest] {
+    display: none;
+  }
+
   /*
    * Scrolled: the bar floats as a black pill with space around it (the conference's nav).
    * The header keeps the same height in both states (8 + 12 + 12 = 16 + 16), so the page below never moves,
@@ -209,10 +229,8 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 
   // Signed in: the action goes to the member's account instead of the talk form.
   if (isSignedIn()) {
-    document.querySelectorAll<HTMLAnchorElement>('[data-header-cta]').forEach((a) => {
-      a.href = '/membership/account';
-      a.textContent = 'Account';
-    });
+    // The label is already right (the inline script above set data-signed-in before paint).
+    document.querySelectorAll<HTMLAnchorElement>('[data-header-cta]').forEach((a) => (a.href = '/membership/account'));
   }
 
   // Sticky bar: flat at the top of the page, a floating pill once the sentinel 40px down has scrolled out of view.

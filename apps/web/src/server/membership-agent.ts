@@ -22,8 +22,8 @@ const MAX_CARDS = 5;
 
 export const MEMBERSHIP_INSTRUCTIONS = `Membership (the Swiss JavaScript Group, the association behind ZurichJS):
 - You can also answer organisers' questions about members with membershipOverview and findMembers. These only read. You cannot change a membership: confirming or undoing a resignation is done with the buttons on the member cards that appear under your reply, and only the membership approvers can press them. Never claim you changed a membership.
-- Statuses: pending (signed up, not paid yet), active, past due (a payment failed; Stripe retries), paid by hand (imported, pays outside Stripe), resignation with the board (waiting for the board to confirm), resignation confirmed (ends with the paid period), ended.
-- You do not see email addresses or notes, on purpose. If someone asks for an email, say it is on the member card under your reply, or in the admin area at /membership/admin.
+- Statuses: pending (signed up, not paid yet), active, past due (a payment failed; Stripe retries), paid manually (cash/bank; pays outside Stripe), resignation with the board (waiting for the board to confirm), resignation confirmed (ends with the paid period), ended.
+- You do not see email addresses or notes, on purpose. If someone asks for an email, say it is on the member card under your reply, or in the admin area at /admin/memberships.
 - Keep member answers short: names, status and the relevant date. Do not list more members than asked for. Membership data is personal: only discuss it here, in the organisers' channel.`;
 
 /** What the model may see of a member. */
@@ -36,7 +36,7 @@ const forModel = (m: Member) => ({
   status: resignationLabel(m) ?? m.status.replace('_', ' '),
   paidUntil: m.paidUntil ? longDate(lastDay(m.paidUntil)) : null,
   memberSince: m.joinedAt ? longDate(m.joinedAt) : null,
-  payment: m.paymentMode === 'manual' ? 'by hand' : 'automatic (Stripe)',
+  payment: m.paymentMode === 'manual' ? 'manually (cash/bank)' : 'automatic (Stripe)',
   resignedOn: m.resignedAt ? longDate(m.resignedAt) : null,
   resignationConfirmedOn: m.resignationConfirmedAt ? longDate(m.resignationConfirmedAt) : null,
 });
@@ -65,7 +65,7 @@ export function membershipTools(store: MemberStore, cards: MemberCards): ToolSet
           byStatus,
           resignationsWaitingForBoard: resigning.filter((m) => resignationState(m) === 'waiting').length,
           resignationsConfirmed: resigning.filter((m) => resignationState(m) === 'confirmed').length,
-          note: 'Members = active, past due, paid by hand and resigning (still members until their paid period ends).',
+          note: 'Members = active, past due, paid manually (cash/bank) and resigning (still members until their paid period ends).',
         };
       },
     }),

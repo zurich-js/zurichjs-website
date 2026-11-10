@@ -24,7 +24,7 @@
   },
   "apps/web/src/components/islands/MemberAccount.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 50
+      "count": 45
     }
   },
   "apps/web/src/components/islands/MemberJoin.tsx": {
@@ -34,7 +34,7 @@
   },
   "apps/web/src/components/islands/MembershipAdmin.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 42
+      "count": 32
     }
   },
   "apps/web/src/components/islands/design/IslandsDemo.tsx": {
@@ -74,7 +74,7 @@
   },
   "apps/web/src/components/islands/forms/CfpForm.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 60
+      "count": 55
     }
   },
   "apps/web/src/components/islands/forms/ContactForm.tsx": {
@@ -99,7 +99,7 @@
   },
   "apps/web/src/components/islands/forms/MembershipForm.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 45
+      "count": 34
     }
   },
   "apps/web/src/components/islands/forms/PartnersForm.tsx": {
@@ -263,11 +263,6 @@
     }
   },
   "apps/web/src/pages/membership/account.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    }
-  },
-  "apps/web/src/pages/membership/admin.astro": {
     "better-tailwindcss/no-restricted-classes": {
       "count": 2
     }

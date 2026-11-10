@@ -113,6 +113,87 @@ function membershipWelcome(p: TermProps): EmailContent {
   };
 }
 
+/**
+ * A member who paid manually (cash/bank), added by the board (owner, 11th November 2026): their membership is
+ * on the website now, the certificate for the term they paid is attached, and they are asked to set
+ * up automatic payment, which charges nothing before the paid term ends (Stripe trial).
+ */
+function membershipPorted(p: TermProps): EmailContent {
+  const cycle = p.cycleLabel === 'Quarterly' ? 'every 3 months' : p.cycleLabel === 'Yearly' ? 'once a year' : p.cycleLabel.toLowerCase();
+  return {
+    subject: 'Your ZurichJS membership is now online',
+    preheader: `Your ${p.levelName} membership is on zurichjs.com, with your certificate attached. Set up automatic payment before ${p.nextPayment}.`,
+    heading: `Welcome, ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'badge', text: 'Your membership is active' },
+      {
+        kind: 'p',
+        text: 'We have moved your membership to zurichjs.com. You paid this term manually (cash or bank transfer), so nothing changes until it ends. Your certificate of membership is attached.',
+      },
+      {
+        kind: 'plan',
+        title: p.levelName,
+        price: p.price,
+        per: p.per,
+        rows: [
+          ...(p.organisationName ? ([['Organisation', p.organisationName]] as [string, string][]) : []),
+          ['This term', `${p.term}, paid manually (cash/bank)`],
+          ['From then on', `${p.feeLabel}, ${cycle}, automatically`],
+          ['First automatic payment', p.nextPayment],
+        ],
+      },
+      {
+        kind: 'p',
+        text: `To keep your membership going, set up automatic payment with Stripe. Sign in with this email address, accept the membership terms and add a card. Nothing is charged before ${p.nextPayment}.`,
+      },
+      { kind: 'button', label: 'Set up automatic payment', url: p.accountUrl },
+      {
+        kind: 'small',
+        text: `Your certificate of membership (${p.certificateNumber}) is also on your account page, with every certificate after it.`,
+      },
+      { kind: 'small', text: 'Would you rather keep paying manually (cash or bank transfer), or leave? Reply to this email and the board will sort it out with you.' },
+    ],
+  };
+}
+
+/** A member who paid manually (cash/bank) switched to automatic payment; nothing is charged until their paid term ends. */
+export interface AutomaticPaymentProps extends MembershipProps {
+  /** "30th September 2027": the last day they already paid for. */
+  paidThrough: string;
+  /** "1st October 2027": the first automatic payment. */
+  firstPayment: string;
+}
+
+function automaticPaymentSetUp(p: AutomaticPaymentProps): EmailContent {
+  const cycle = p.cycleLabel === 'Quarterly' ? 'Every 3 months' : p.cycleLabel === 'Yearly' ? 'Once a year' : p.cycleLabel;
+  return {
+    subject: 'Automatic payment is set up',
+    preheader: `Nothing is charged now. Your first automatic payment of ${p.feeLabel} is on ${p.firstPayment}.`,
+    heading: `Thank you, ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'badge', text: 'Automatic payment is on' },
+      { kind: 'p', text: `Your membership now renews automatically. Nothing is charged now: the term you paid manually runs until ${p.paidThrough}.` },
+      {
+        kind: 'plan',
+        title: p.levelName,
+        price: p.price,
+        per: p.per,
+        rows: [
+          ...(p.organisationName ? ([['Organisation', p.organisationName]] as [string, string][]) : []),
+          ['Paid until', p.paidThrough],
+          ['First automatic payment', p.firstPayment],
+          ['Billed', `${cycle}, automatically`],
+        ],
+      },
+      { kind: 'button', label: 'Manage subscription', url: p.accountUrl },
+      {
+        kind: 'small',
+        text: 'Before that first payment you can still change your subscription type on your account page. You get a new certificate of membership with every payment.',
+      },
+    ],
+  };
+}
+
 function membershipRenewed(p: TermProps): EmailContent {
   return {
     subject: 'Your ZurichJS membership is renewed',
@@ -178,19 +259,19 @@ function resignationReceived(p: ResignationProps): EmailContent {
         ? { kind: 'error', text: 'A membership payment is still open. Under the bylaws the resignation takes effect once it is paid.' }
         : { kind: 'p', text: 'You stay a member until the end of the period you already paid for. After that, you will not be charged again.' },
       { kind: 'button', label: 'Open your membership', url: p.accountUrl },
-      { kind: 'small', text: 'Changed your mind? You can undo your resignation on your account page until your membership ends.' },
+      { kind: 'small', text: 'Changed your mind? You can resubscribe on your account page until your membership ends.' },
     ],
   };
 }
 
 function resignationWithdrawn(p: MembershipProps): EmailContent {
   return {
-    subject: 'Your resignation is undone',
-    preheader: 'Your membership continues as before.',
+    subject: 'Welcome back: you are resubscribed',
+    preheader: 'You are resubscribed. Your membership continues as before.',
     heading: `Welcome back, ${firstName(p.name)}`,
     blocks: [
-      { kind: 'badge', text: 'Your membership continues' },
-      { kind: 'p', text: 'Your resignation is undone, and your membership continues as before. Nothing else changes.' },
+      { kind: 'badge', text: 'You are resubscribed' },
+      { kind: 'p', text: 'Good to have you back. You are resubscribed, and your membership continues as before. Nothing else changes.' },
       summary(p),
       { kind: 'button', label: 'Manage subscription', url: p.accountUrl },
       { kind: 'small', text: 'Did not do this? Reply to this email and the board will look into it.' },
@@ -221,14 +302,81 @@ function resignationConfirmed(p: ResignationConfirmedProps): EmailContent {
   };
 }
 
+/** An email to the organisers (FORMS_TO, hello@zurichjs.com): a form, a resignation, a resubscription. */
+export interface BoardNoticeProps {
+  subject: string;
+  heading: string;
+  /** Paragraphs before the details. */
+  intro?: string[];
+  /** The details, as label and value. */
+  rows?: [string, string][];
+  /** Longer free text the person wrote (a message, an abstract), shown in full after the details. */
+  message?: { label: string; text: string };
+  button?: { label: string; url: string };
+  /** Grey small print after the button. */
+  note?: string;
+  /** Who replies reach, for the footer ("Replies go to Ada Lovelace."). */
+  replyTo?: string;
+}
+
+function boardNotice(p: BoardNoticeProps): EmailContent {
+  return {
+    subject: p.subject,
+    preheader: p.intro?.[0] ?? p.heading,
+    heading: p.heading,
+    blocks: [
+      ...(p.intro ?? []).map((text): Block => ({ kind: 'p', text })),
+      ...(p.rows?.length ? [{ kind: 'summary', rows: p.rows } satisfies Block] : []),
+      ...(p.message ? ([{ kind: 'p', text: `${p.message.label}:` }, ...p.message.text.split(/\n+/).map((text): Block => ({ kind: 'p', text }))] satisfies Block[]) : []),
+      ...(p.button ? [{ kind: 'button', label: p.button.label, url: p.button.url } satisfies Block] : []),
+      ...(p.note ? [{ kind: 'small', text: p.note } satisfies Block] : []),
+    ],
+    footer: `Sent by the zurichjs.com website to the organisers.${p.replyTo ? ` Reply to answer ${p.replyTo} directly.` : ''}`,
+  };
+}
+
+/** Free-text label lines ("Message: …") longer than this become the message block, not a detail row. */
+const LONG = 120;
+
+/**
+ * A board notice from the plain text the forms already build ("Name: Ada\nEmail: …\nMessage: …"):
+ * "Label: value" lines become detail rows, a long one becomes the message, other lines paragraphs.
+ */
+export function boardNoticeFromText(subject: string, text: string, replyTo?: string): BoardNoticeProps {
+  const intro: string[] = [];
+  const rows: [string, string][] = [];
+  let message: BoardNoticeProps['message'];
+  let last: 'row' | 'message' | null = null;
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    const m = /^([A-Z][\w ()/'’-]{0,40}):\s+(.*)$/.exec(line);
+    if (m) {
+      if ((m[2]!.length > LONG || /^(message|abstract|bio|notes?)$/i.test(m[1]!)) && !message) {
+        message = { label: m[1]!, text: m[2]! };
+        last = 'message';
+      } else {
+        rows.push([m[1]!, m[2]!]);
+        last = 'row';
+      }
+    } else if (last === 'message') message!.text += `\n${line}`;
+    else if (last === 'row') rows.at(-1)![1] += ` ${line}`;
+    else intro.push(line);
+  }
+  return { subject, heading: subject, intro, rows, ...(message ? { message } : {}), ...(replyTo ? { replyTo: replyTo.replace(/\s*<[^>]+>$/, '') } : {}) };
+}
+
 const TEMPLATES = {
   'login-link': loginLink,
   'membership-welcome': membershipWelcome,
   'membership-renewed': membershipRenewed,
+  'membership-ported': membershipPorted,
+  'automatic-payment-set-up': automaticPaymentSetUp,
   'payment-failed': paymentFailed,
   'resignation-received': resignationReceived,
   'resignation-confirmed': resignationConfirmed,
   'resignation-withdrawn': resignationWithdrawn,
+  'board-notice': boardNotice,
 } satisfies Record<string, (p: never) => EmailContent>;
 
 export type TemplateName = keyof typeof TEMPLATES;

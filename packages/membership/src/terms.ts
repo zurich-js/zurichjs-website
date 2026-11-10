@@ -9,7 +9,7 @@
  * start or switch to automatic payment.
  */
 export const TERMS = {
-  version: '2026-11-10',
+  version: '2026-11-11',
   bylawsVersion: '2025-05-23',
   path: '/membership/terms',
 } as const;

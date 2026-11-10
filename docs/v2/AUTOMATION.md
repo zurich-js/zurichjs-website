@@ -77,7 +77,7 @@ In the same channel the bot answers questions about Verein members, for example:
 
 - **It only reads** (`membershipOverview`, `findMembers` in `apps/web/src/server/membership-agent.ts`). It cannot change a membership.
 - **Resigning members it finds get a card** under the reply, with **Confirm resignation** (while it waits for the board) and **Undo resignation**. These are plain code, not the model, and only `SLACK_MEMBERSHIP_APPROVER_IDS` can press them. The outcome is posted in the thread. The resignation cards the site posts also have Undo now.
-- **The model sees little personal data:** name, organisation, level, cycle, status and dates. It never sees email addresses, notes or Stripe ids; the cards (built by our code) show the email. Even so, member names go to the model provider (`LLM_PROVIDER`); the privacy policy should name that provider (legal pages: owner).
+- **The model sees little personal data:** name, organisation, level, cycle, status and dates. It never sees email addresses, notes or Stripe ids; the cards (built by our code) show the email. Even so, member names go to the model provider (`LLM_PROVIDER`), which the privacy policy names (currently Anthropic); change it there if the provider changes.
 - It needs the membership database (`NETLIFY_DB_URL`, or `MEMBERSHIP_DB_URL` locally). Without it, the bot still does content and says nothing about members.
 
 ### What it cannot do, by design

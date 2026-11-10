@@ -50,7 +50,6 @@ const SOURCE = 'zurichjs.com/membership';
 type Product = { id: string; name: string; metadata: Record<string, string> };
 const products = await api<{ data: Product[] }>('GET', 'products', { active: true, limit: 100 });
 
-const portalProducts: { product: string; prices: string[] }[] = [];
 let complete = true;
 for (const level of TIER_KEYS) {
   const name = `ZurichJS membership: ${TIERS[level].name}`;
@@ -87,11 +86,10 @@ for (const level of TIER_KEYS) {
     });
     prices.push(p.id);
   }
-  if (product && prices.length === CYCLES.length) portalProducts.push({ product: product.id, prices });
-  else complete = false;
+  if (!product || prices.length !== CYCLES.length) complete = false;
 }
 
-console.log('\n+ billing portal configuration (no cancelling; switch level and cycle among the membership prices)');
+console.log('\n+ billing portal configuration (payment method and invoices; no cancelling or plan switching, which happen on the account page)');
 if (apply && complete) {
   const config = await api<{ id: string }>('POST', 'billing_portal/configurations', {
     business_profile: { headline: 'Swiss JavaScript Group: your ZurichJS membership' },
@@ -101,7 +99,9 @@ if (apply && complete) {
       invoice_history: { enabled: true },
       customer_update: { enabled: true, allowed_updates: ['address', 'name', 'tax_id'] },
       subscription_cancel: { enabled: false },
-      subscription_update: { enabled: true, default_allowed_updates: ['price'], proration_behavior: 'none', products: portalProducts },
+      // Level and cycle switches happen on the account page, from the next renewal (owner, 11th November
+      // 2026): the portal would restart the billing period and charge at once when the interval changes.
+      subscription_update: { enabled: false },
     },
     metadata: { source: SOURCE },
   });

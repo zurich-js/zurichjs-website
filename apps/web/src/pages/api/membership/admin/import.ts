@@ -1,11 +1,11 @@
 /**
- * Imports members who joined on paper and pay by hand (CSV format in
+ * Imports members who joined on paper and pay manually (cash/bank) (CSV format in
  * packages/membership/src/import.ts), from the admin area or
  * `pnpm membership:import` (the admin password as a Bearer token). Netlify
  * Database changes to production data go through the application, and member
  * data must not be committed to git as a migration, hence this endpoint.
  *
- * POST /api/membership/admin/import   admin session cookie, or Authorization: Bearer <MEMBERSHIP_ADMIN_PASSWORD>
+ * POST /api/membership/admin/import   admin session cookie, or Authorization: Bearer <ADMIN_PASSWORD>
  *   JSON { csv, apply?: boolean }
  *   200 { ok: true, applied, rows: [{ line, email, name, … }], problems: [] }   dry run unless apply
  *   400 { ok: false, problems }   nothing imported

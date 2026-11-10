@@ -7,8 +7,6 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
 
 // Online membership on (docs/v2/MEMBERSHIP.md): joining goes through /membership/account and Stripe instead of email.
-// Set PUBLIC_MEMBERSHIP_ONLINE=on (build time) once the database, Stripe and Resend are set up.
-const applyOnline = (import.meta.env.PUBLIC_MEMBERSHIP_ONLINE || process.env.PUBLIC_MEMBERSHIP_ONLINE) === 'on';
 
 // What members' fees pay for (owner, 3rd November 2026). Speaker travel is not listed: meetup talks don't cover it (see /cfp).
 const FEES = [
@@ -32,7 +30,7 @@ const FEES = [
     <p class="m-0 text-[17px] text-grey-light max-w-[700px]">Coming to meetups is free and never needs a membership.</p>
   </PageOpening>
   <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
-    <MembershipForm client:load applyOnline={applyOnline} />
+    <MembershipForm client:load />
 
     <section aria-labelledby="h-fees" class="flex flex-col gap-5 max-w-[880px]">
       <h2 id="h-fees" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where the fees go</h2>

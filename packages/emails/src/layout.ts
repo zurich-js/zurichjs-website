@@ -38,6 +38,8 @@ export interface EmailContent {
   preheader: string;
   heading: string;
   blocks: Block[];
+  /** Replaces the footer line (emails to the board say where replies go). */
+  footer?: string;
 }
 
 export interface RenderedEmail {
@@ -114,7 +116,7 @@ function blockText(b: Block): string {
 }
 
 export function render(c: EmailContent): RenderedEmail {
-  const footerText = `${ASSOCIATION.name}, ${ASSOCIATION.address}. Questions? Reply to this email or write to ${ASSOCIATION.email}.`;
+  const footerText = c.footer ?? `${ASSOCIATION.name}, ${ASSOCIATION.address}. Questions? Reply to this email or write to ${ASSOCIATION.email}.`;
   const html = `<!doctype html>
 <html lang="en">
 <head>

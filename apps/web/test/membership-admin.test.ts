@@ -1,6 +1,6 @@
 /**
  * The membership admin area's API: the shared password from
- * MEMBERSHIP_ADMIN_PASSWORD, the signed session cookie, the attempt limit, the
+ * ADMIN_PASSWORD, the signed session cookie, the attempt limit, the
  * same-origin rule for writes, and what signed-in admins can see and do.
  */
 import { memoryStore, type MemberStore, type NewMember } from '@zurichjs/membership';
@@ -11,15 +11,16 @@ import { handleAdminLogin } from '../src/pages/api/membership/admin/login.ts';
 import { handleAdminLogout } from '../src/pages/api/membership/admin/logout.ts';
 import { handleAdminMember } from '../src/pages/api/membership/admin/members/[id]/index.ts';
 import { handleAdminConfirmResignation } from '../src/pages/api/membership/admin/members/[id]/confirm-resignation.ts';
+import { handleAdminResign } from '../src/pages/api/membership/admin/members/[id]/resign.ts';
 import { handleAdminUndoResignation } from '../src/pages/api/membership/admin/members/[id]/undo-resignation.ts';
-import { handleAdminMembers } from '../src/pages/api/membership/admin/members/index.ts';
+import { handleAddMember, handleAdminMembers } from '../src/pages/api/membership/admin/members/index.ts';
 import { handleAdminSession } from '../src/pages/api/membership/admin/session.ts';
 import { ADMIN_COOKIE, MAX_FAILURES, SESSION_SECONDS, isAdmin, memoryAttempts, signSession, verifySession } from '../src/server/admin-auth.ts';
 import { membersCsv } from '../src/server/admin-views.ts';
 
 const PASSWORD = 'correct-horse-battery-staple';
 const SITE = 'https://zurichjs.com';
-const env = { MEMBERSHIP_ADMIN_PASSWORD: PASSWORD, BETTER_AUTH_URL: SITE, STRIPE_SECRET_KEY: 'sk_test_x', RESEND_API_KEY: 're_test' };
+const env = { ADMIN_PASSWORD: PASSWORD, BETTER_AUTH_URL: SITE, STRIPE_SECRET_KEY: 'sk_test_x', RESEND_API_KEY: 're_test' };
 
 const login = (password: string, headers: Record<string, string> = { origin: SITE }) =>
   new Request(`${SITE}/api/membership/admin/login`, {
@@ -61,9 +62,9 @@ beforeEach(() => {
 });
 
 describe('admin sign-in', () => {
-  it('is closed when no password (or a short one) is configured', async () => {
+  it('is closed when no password is configured, and takes any password the owner sets', async () => {
     expect((await handleAdminLogin(login('x'), { env: {}, attempts: memoryAttempts() })).status).toBe(503);
-    expect((await handleAdminLogin(login('short'), { env: { MEMBERSHIP_ADMIN_PASSWORD: 'short' }, attempts: memoryAttempts() })).status).toBe(503);
+    expect((await handleAdminLogin(login('abc'), { env: { ADMIN_PASSWORD: 'abc' }, attempts: memoryAttempts() })).status).toBe(200);
     expect(await (await handleAdminSession(asAdmin('/api/membership/admin/session'), {})).json()).toEqual({ ok: true, configured: false, signedIn: false });
   });
 
@@ -179,7 +180,7 @@ describe('admin API', () => {
     expect((await handleAdminMember(asAdmin('/api/membership/admin/members/nope'), 'nope', { env, store })).status).toBe(404);
   });
 
-  it('confirms a resignation of a member who paid by hand (ends now), and only for resigning members', async () => {
+  it('confirms a resignation of a member who paid manually (ends now), and only for resigning members', async () => {
     expect(
       (
         await handleAdminConfirmResignation(asAdmin(`/api/membership/admin/members/${id}/confirm-resignation`, { method: 'POST', body: {} }), id, {
@@ -231,6 +232,97 @@ describe('admin API', () => {
     const csv = ['kind,name,organisation,email,level,cycle,category,joined_at,paid_until,notes', 'person,Linus,,linus@example.com,basic,quarterly,,,2027-01-01,'].join('\n');
     const res = await handleImport(asAdmin('/api/membership/admin/import', { method: 'POST', body: { csv, apply: true } }), { env, store });
     expect(await res.json()).toMatchObject({ ok: true, applied: true, imported: 1 });
+  });
+
+  it('records a resignation a member gave the board directly: resigning, member emailed, board told who recorded it', async () => {
+    const emails: Record<string, unknown>[] = [];
+    const fetch = (async (url: string, init: RequestInit) => {
+      if (String(url).includes('resend')) emails.push(JSON.parse(String(init.body)));
+      return new Response(String(url).includes('invoices') ? '{"data":[]}' : '{"id":"x"}');
+    }) as unknown as typeof globalThis.fetch;
+    const slack = { post: async () => '1.1', update: async () => {}, reply: async () => {}, ephemeral: async () => {} };
+    const res = await handleAdminResign(
+      asAdmin(`/api/membership/admin/members/${id}/resign`, { method: 'POST', body: { reasons: ['moving'], note: 'Told Nadja at the meetup.' } }),
+      id,
+      { env, store, fetch, slack, log: () => {} },
+    );
+    expect(res.status).toBe(200);
+    expect((await store.get(id))!.status).toBe('resigning');
+    const event = (await store.events(id)).find((e) => e.toStatus === 'resigning')!;
+    expect(event).toMatchObject({ actor: { kind: 'board' }, payload: { reasons: ['moving'], note: 'Told Nadja at the meetup.' } });
+    expect(emails.some((e) => e.subject === 'We received your resignation')).toBe(true);
+    expect(String(emails.find((e) => String(e.subject).startsWith('Resignation from'))!.text)).toContain('The board recorded');
+    expect(
+      (await handleAdminResign(asAdmin(`/api/membership/admin/members/${id}/resign`, { method: 'POST', body: {} }), id, { env, store, fetch, slack, log: () => {} })).status,
+    ).toBe(409);
+  });
+
+  it('adds a member who paid manually (cash/bank): recorded until the term ends, certificate issued, emailed to set up automatic payment', async () => {
+    const emails: Record<string, unknown>[] = [];
+    const fetch = (async (url: string, init: RequestInit) => {
+      if (String(url).includes('resend')) emails.push(JSON.parse(String(init.body)));
+      return new Response('{"id":"x"}');
+    }) as unknown as typeof globalThis.fetch;
+    const notes: string[] = [];
+    const slack = { post: async (text: string) => (notes.push(text), '1.1'), update: async () => {}, reply: async () => {}, ephemeral: async () => {} };
+    const body = {
+      kind: 'person',
+      name: 'Linus Torvalds',
+      email: ' Linus@Example.com ',
+      level: 'basic',
+      cycle: 'quarterly',
+      startMonth: '2026-09',
+      notes: 'Paid cash at the September meetup',
+    };
+    const res = await handleAddMember(asAdmin('/api/membership/admin/members', { method: 'POST', body }), { env, store, fetch, slack, signature: async () => null, log: () => {} });
+    expect(res.status).toBe(200);
+    const out = (await res.json()) as { member: { id: string }; certificate: { number: string }; emailed: boolean };
+    expect(out.emailed).toBe(true);
+    // September to November paid: paid_until is the first unpaid day, 1st December.
+    expect(await store.get(out.member.id)).toMatchObject({
+      email: 'linus@example.com',
+      status: 'imported_manual',
+      paymentMode: 'manual',
+      source: 'imported',
+      joinedAt: '2026-09-01',
+      paidUntil: '2026-12-01',
+      level: 'basic',
+      cycle: 'quarterly',
+    });
+    expect((await store.certificates(out.member.id))[0]).toMatchObject({
+      number: out.certificate.number,
+      periodStart: '2026-09-01',
+      periodEnd: '2026-12-01',
+      stripeInvoiceId: null,
+    });
+    const mail = emails.at(-1)!;
+    expect(mail).toMatchObject({ to: ['linus@example.com'], subject: 'Your ZurichJS membership is now online' });
+    expect(String(mail.text)).toContain('Set up automatic payment');
+    expect(String(mail.text)).toContain('Nothing is charged before 1st December 2026');
+    expect(String(mail.html)).toContain('href="https://zurichjs.com/membership/account"');
+    expect((mail.attachments as { filename: string }[])[0]!.filename).toMatch(/\.pdf$/);
+    expect(notes.at(-1)).toContain('Added, paid manually (cash/bank)');
+    // The same email again is refused: one member per email address.
+    const again = await handleAddMember(asAdmin('/api/membership/admin/members', { method: 'POST', body }), {
+      env,
+      store,
+      fetch,
+      slack,
+      signature: async () => null,
+      log: () => {},
+    });
+    expect(again.status).toBe(409);
+  });
+
+  it('checks the form: names the field that is wrong, and can skip the email', async () => {
+    const post = (body: object) => handleAddMember(asAdmin('/api/membership/admin/members', { method: 'POST', body }), { env, store, signature: async () => null, log: () => {} });
+    const base = { kind: 'organisation', name: 'Grace', organisationName: 'Navy', email: 'navy@example.com', level: 'supporter', cycle: 'yearly', startMonth: '2026-01' };
+    expect(await (await post({ ...base, organisationName: '' })).json()).toMatchObject({ field: 'organisationName' });
+    expect(await (await post({ ...base, startMonth: '2026-13' })).json()).toMatchObject({ field: 'startMonth' });
+    expect(await (await post({ ...base, level: 'gold' })).json()).toMatchObject({ field: 'level' });
+    const res = await post({ ...base, sendEmail: false });
+    expect(await res.json()).toMatchObject({ ok: true, emailed: false });
+    expect((await store.byEmail('navy@example.com'))!.paidUntil).toBe('2027-01-01');
   });
 
   it('exports CSV, neutralising spreadsheet formulas', async () => {

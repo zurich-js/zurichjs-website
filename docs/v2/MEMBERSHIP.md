@@ -10,26 +10,26 @@ This section is the current design. The sections after it are the original inves
 2. **Join:** person or organisation, Basic Member or Supporter, quarterly or yearly (no other cycles), and a tick for the **membership terms** (`/membership/terms`, based on the bylaws; the accepted version is recorded).
 3. **Pay** in Stripe Checkout (subscription). The first payment makes them active.
 4. **Certificate of membership** for every paid term: numbered PDF, signed by Faris Aziz, President of the Board, emailed (welcome or renewal) and downloadable in the portal.
-5. **Portal:** status, paid until, certificates, the Stripe billing portal for payment method, invoices and switching between quarterly and yearly (or level). No cancelling there.
-6. **Resign** on the account page (counts as in writing, bylaws Art. 5; email copy). The board (Nadja, Bogdan, Faris) confirms in Slack; open dues hold it; it ends with the paid period.
-7. **Imported members** (paid by hand): imported through an admin endpoint, linked on first sign-in, accept the terms and switch to automatic payment with no charge before their paid period ends.
+5. **Portal:** status, paid until, certificates, and the Stripe billing portal for payment method and invoices (no cancelling, no plan switching there). **Changing level or cycle** is on the account page and only applies from the next renewal: a Stripe subscription schedule keeps the current term as paid and starts the new price at the renewal date, so nothing is charged or prorated now. A pending switch shows on the account page and can be taken back; resigning drops it. Members paying manually (cash/bank) set up automatic payment first (nothing is charged before their paid term ends, so they can still switch before the first charge).
+6. **Resign** on the account page (counts as in writing, bylaws Art. 5; email copy). The page asks why (one or more reasons and a note, for the board), with a link to resign without a reason, since a reason is never a condition (Art. 5, Swiss Civil Code Art. 70). The board (Nadja, Bogdan, Faris) confirms in Slack or the admin area; open dues hold it; it ends with the paid period. Until then the member can **Resubscribe** on the account page (the board can undo it for them).
+7. **Imported members** (paid manually (cash/bank)): imported through an admin endpoint, linked on first sign-in, accept the terms and switch to automatic payment with no charge before their paid period ends.
 
-| Area         | Choice                                                                                                                                                                           |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosting      | Netlify only                                                                                                                                                                     |
-| Database     | Netlify Database (Postgres, GA since April 2026; `@netlify/database`, `NETLIFY_DB_URL`). Migrations in `apps/web/netlify/database/migrations`, applied by Netlify on each deploy |
-| Sign-in      | Better Auth 1.7 with the magic-link plugin; its tables are the first migration; rate limits stored in the database                                                               |
-| Payments     | Stripe over plain fetch (`apps/web/src/server/membership-stripe.ts`); prices by lookup key; portal configuration without cancelling; webhook `/api/membership/webhook`           |
-| Email        | Resend, templates in `packages/emails` (sign-in link, welcome, renewal, payment failed, resignation received and confirmed)                                                      |
-| Certificates | `pdf-lib` with Figtree, A4 landscape (`apps/web/src/server/certificate.ts`); the signature PNG in the private Netlify Blobs store `membership`                                   |
-| Slack        | notes for new members, renewals and failed payments; Confirm resignation button for the approvers                                                                                |
-| Data         | `packages/membership` (status machine, `postgresStore`); anonymised one year after a membership ends; Stripe keeps the payment records                                           |
-| Admin        | `/membership/admin` for the board, behind the site-level password `MEMBERSHIP_ADMIN_PASSWORD`: members, details and history, confirm resignations, import, export                |
-| Local        | `pnpm local` (Docker): site, Postgres, Mailpit, Stripe test mode with `stripe listen`, optional Studio                                                                           |
+| Area         | Choice                                                                                                                                                                                                              |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hosting      | Netlify only                                                                                                                                                                                                        |
+| Database     | Netlify Database (Postgres, GA since April 2026; `@netlify/database`, `NETLIFY_DB_URL`). Migrations in `apps/web/netlify/database/migrations`, applied by Netlify on each deploy                                    |
+| Sign-in      | Better Auth 1.7 with the magic-link plugin; its tables are the first migration; rate limits stored in the database                                                                                                  |
+| Payments     | Stripe over plain fetch (`apps/web/src/server/membership-stripe.ts`); prices by lookup key; portal configuration without cancelling; webhook `/api/membership/webhook`                                              |
+| Email        | Resend, templates in `packages/emails` (sign-in link, welcome, renewal, payment failed, resignation received, confirmed and withdrawn, and the board notice that every email to hello@zurichjs.com uses)            |
+| Certificates | `pdf-lib` with Figtree, A4 landscape (`apps/web/src/server/certificate.ts`); the signature PNG in the private Netlify Blobs store `membership`                                                                      |
+| Slack        | notes for new members, renewals and failed payments; resignation cards (with the member's reasons) with Confirm and Undo for the approvers; the ZurichJS Bot answers membership questions (`docs/v2/AUTOMATION.md`) |
+| Data         | `packages/membership` (status machine, `postgresStore`); anonymised one year after a membership ends; Stripe keeps the payment records                                                                              |
+| Admin        | `/admin/memberships` for the board, behind the site-level password `ADMIN_PASSWORD`: members, details and history, confirm resignations, import, export                                                             |
+| Local        | `pnpm local` (Docker): site, Postgres, Mailpit, Stripe test mode with `stripe listen`, optional Studio                                                                                                              |
 
 **Status rules** (`packages/membership/src/state.ts`): `pending → active` (Stripe, first payment) · `active ⇄ past_due` (Stripe) · `active / past_due / imported_manual → resigning` (member) · `resigning → ended` (board confirms, or Stripe at period end) · `resigning → active / past_due / imported_manual` (undo, by the member or the board, back to the status before) · `ended → pending` (joins again). A resignation is first **with the board** (`resigned_at`), then **confirmed** (`resignation_confirmed_at`); the member and hello@zurichjs.com get an email at each step, and the board a Slack note. Members are told the board typically gets back to them within 72 hours. Every change is compare-and-set and logged in an append-only audit table.
 
-**Still open:** the basic discount and which paid events are included each year (board; perks wait for it); the scheduled job that runs the one-year anonymisation; the terms page text needs the owner's approval before `PUBLIC_MEMBERSHIP_ONLINE=on`; Swiss bookkeeping retention for payment records (10 years, OR Art. 958f, likely) to confirm with whoever keeps the books.
+**Still open:** the basic discount and which paid events are included each year (board; perks wait for it); the scheduled job that runs the one-year anonymisation; Swiss bookkeeping retention for payment records (10 years, OR Art. 958f, likely) to confirm with whoever keeps the books.
 
 ### Stripe
 
@@ -37,14 +37,14 @@ This section is the current design. The sections after it are the original inves
 
 **Lifecycle** (`apps/web/src/pages/api/membership/webhook.ts`):
 
-| Stripe event                      | What happens                                                                                                                   |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `checkout.session.completed`      | subscription linked; an imported member switching to automatic payment becomes active (no charge until their paid period ends) |
-| `invoice.paid`                    | first payment and every renewal: active, paid until the period end, certificate emailed (welcome or renewal), Slack note       |
-| `invoice.payment_failed`          | declined renewal: active → past due; email with Stripe's payment page and the next retry date (one per attempt); Slack note    |
-| `invoice.payment_action_required` | the bank wants the member to confirm (3D Secure): the same, worded "confirm the payment"                                       |
-| `customer.subscription.updated`   | level or cycle switched in the portal; Stripe reporting `past_due` or `unpaid` marks an active member past due                 |
-| `customer.subscription.deleted`   | ended: resigned (the board confirmed) or lapsed (the retries ran out)                                                          |
+| Stripe event                      | What happens                                                                                                                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `checkout.session.completed`      | subscription linked; an imported member switching to automatic payment becomes active (no charge until their paid period ends)                                                                               |
+| `invoice.paid`                    | first payment and every renewal: active, paid until the period end, certificate emailed (welcome or renewal), Slack note                                                                                     |
+| `invoice.payment_failed`          | declined renewal: active → past due; email with Stripe's payment page and the next retry date (one per attempt); Slack note                                                                                  |
+| `invoice.payment_action_required` | the bank wants the member to confirm (3D Secure): the same, worded "confirm the payment"                                                                                                                     |
+| `customer.subscription.updated`   | a scheduled level or cycle switch took effect at the renewal (`invoice.paid` also reads it, so the certificate shows the new level); Stripe reporting `past_due` or `unpaid` marks an active member past due |
+| `customer.subscription.deleted`   | ended: resigned (the board confirmed) or lapsed (the retries ran out)                                                                                                                                        |
 
 People still in Checkout get no failed-payment email (Checkout shows the error). Disputes and refunds are not handled by the site; Stripe emails the account owner.
 
@@ -117,7 +117,7 @@ Static-first stays. Public pages stay prerendered. The member area is a static s
 - **RLS:** a member can `select` only their own `members`, `declarations`, `perk_entitlements` rows and the documents their level allows. No client-side insert or update. Functions use the service-role key.
 
 **Status machine** (`packages/membership`, pure and unit-tested like `packages/events/src/state.ts`):
-`applied → approved → signed → active → resigning → ended`, plus `rejected`, `past_due` (from Stripe), `imported_manual` (paid by hand, valid until `paidUntil`), and `ended` reasons: resigned, expelled, deceased/dissolved. Every transition goes through one function that checks the allowed edges; the store writes the new status and the `member_events` row in one transaction (a Postgres function).
+`applied → approved → signed → active → resigning → ended`, plus `rejected`, `past_due` (from Stripe), `imported_manual` (paid manually (cash/bank), valid until `paidUntil`), and `ended` reasons: resigned, expelled, deceased/dissolved. Every transition goes through one function that checks the allowed edges; the store writes the new status and the `member_events` row in one transaction (a Postgres function).
 
 Signed PDFs go to a private Storage bucket `declarations`; downloads are signed URLs valid for a few minutes. The SHA-256 on the row proves a stored PDF is unchanged. `packages/membership` defines a `MemberStore` interface with a Supabase implementation and an in-memory one for tests.
 

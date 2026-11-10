@@ -452,14 +452,26 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **No approval and no declaration.** Anyone can join by accepting the membership terms (based on the bylaws) and paying; the first payment makes them a member. The Slack Approve/Reject flow is gone; Slack gets notes, and a Confirm resignation button for the approvers.
 - **Certificate of membership for every paid term,** signed by Faris Aziz, President of the Board, with his signature image (kept out of git, in Netlify Blobs). Emailed and in the portal.
 - **Only quarterly and yearly** cycles; members switch between them (or levels) in the Stripe portal, which cannot cancel. Resignations go through the board (bylaws Art. 5).
-- **Production keeps the email form** until `PUBLIC_MEMBERSHIP_ONLINE=on`.
+- **Production keeps the email form** until `PUBLIC_MEMBERSHIP_ONLINE=on`. (Replaced on 11th November 2026: online joining is always on, with no switch; see below.)
 - **Deploy previews fork production data** (Netlify Database branching). The site protects that copy itself (see the admin area below); no Netlify visitor password.
 - **Existing members are imported through an admin endpoint,** not a data migration, so member data never goes into git.
 - **Local development runs in Docker** (`docker-compose.yml`): Postgres with the migrations, the Stripe mock (now with memberships and signed webhooks), Mailpit for email (via `MAILPIT_URL`, ignored in production; replaced the home-made mail viewer `tools/mock-resend.mjs` on 10th November 2026, owner) and the Sanity Studio against the real project (Sanity has no local backend).
 
 ## Membership admin area behind a site-level password (owner, 11th November 2026)
 
-- **`/membership/admin`** for the board: members with search and filters, one member's details and history, confirming resignations, CSV import and export.
-- **Protected by the site, not by the deploy:** one shared password from `MEMBERSHIP_ADMIN_PASSWORD` (16+ characters), enforced by the API on production and every deploy preview. The earlier advice to password-protect deploy previews in Netlify is dropped.
+- **`/admin/memberships`** for the board: members with search and filters, one member's details and history, confirming resignations, CSV import and export.
+- **Protected by the site, not by the deploy:** one shared password from `ADMIN_PASSWORD` (any length since 11th November 2026, owner), enforced by the API on production and every deploy preview. The earlier advice to password-protect deploy previews in Netlify is dropped.
 - **Session:** httpOnly, SameSite=Strict cookie for the admin API, 8 hours, signed with a key derived from the password (changing it signs everyone out). Writes must come from the site's own origin. 10 wrong passwords per IP block sign-in for 15 minutes, counted in the database (`admin_login_attempts`).
 - **The import CLI uses the same password** (Bearer); `MEMBERSHIP_ADMIN_TOKEN` is gone.
+
+## Admin, membership launch decisions (owner, 11th November 2026)
+
+- **`/admin` asks for the password first, then shows Memberships (`/admin`, `/admin/memberships`)** (a Content section linking to the Sanity Studio was added and removed the same day, owner) (it was `/membership/admin`, never in production). The password variable is `ADMIN_PASSWORD` (was `MEMBERSHIP_ADMIN_PASSWORD`).
+- **Online joining is always on:** the `PUBLIC_MEMBERSHIP_ONLINE` switch and the email request form on `/membership` are gone; `/api/verein-inquiry` stays for anything that still posts to it.
+- **The membership terms are approved** (version of 11th November 2026) and indexed.
+- **Renewal stops when a member resigns,** not when the board confirms, so nothing is charged after a resignation; resubscribing turns it back on.
+- **Resigning asks why** (reasons and a note, for the board), never as a condition: a small red link resigns without a reason. Red for that link is the owner's call.
+- **Soft yellow for one call to action:** members who pay manually (cash/bank) see "Switch to automatic payment" as a status banner right under "Signed in as" on the account page, on the brand yellow at 25% (`surfaceClass('yellow-soft')`). This adds to the yellow rule in AGENTS.md (owner).
+- **"Paid manually (cash/bank)"** replaces "paid by hand" everywhere members and the board read it.
+- **Level and cycle changes apply from the next renewal only** (owner): on the account page, through a Stripe subscription schedule; nothing is charged or prorated now. The billing portal no longer switches plans (`pnpm membership:stripe-setup` turns it off; run it again in each Stripe account).
+- **The admin area has no Content section;** Sanity is reached through the Studio directly.

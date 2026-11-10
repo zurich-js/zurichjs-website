@@ -118,3 +118,42 @@ export function SubmitButton({
     </button>
   );
 }
+
+/** A group of native radios or checkboxes shown as cards or pills; the input itself stays keyboard-operable. */
+export function ChoiceGroup({
+  legend,
+  hint,
+  error,
+  radio,
+  children,
+  class: extra,
+}: {
+  legend: string;
+  hint?: ComponentChildren;
+  error?: string;
+  /** One choice only: the group is a radiogroup, which carries the invalid state (radios cannot). */
+  radio?: boolean;
+  children: ComponentChildren;
+  class?: string;
+}) {
+  const id = `choice-${legend.toLowerCase().replace(/\W+/g, '-')}`;
+  return (
+    <fieldset
+      role={radio ? 'radiogroup' : undefined}
+      aria-invalid={(radio && !!error) || undefined}
+      class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0"
+      aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined}
+    >
+      <legend class="text-base font-bold p-0 mb-1.5">{legend}</legend>
+      {hint && (
+        <p id={`${id}-hint`} class="m-0 mb-1 text-base text-grey-text leading-normal">
+          {hint}
+        </p>
+      )}
+      <div class={extra}>{children}</div>
+      <span id={`${id}-error`} class="text-sm text-danger min-h-5" aria-live="polite">
+        {error}
+      </span>
+    </fieldset>
+  );
+}

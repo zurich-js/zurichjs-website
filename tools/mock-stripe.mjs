@@ -18,6 +18,7 @@
 //   POST /v1/checkout/sessions with line_items[0][price]   a subscription checkout
 //   POST /v1/billing_portal/sessions                       a portal URL (a plain page here)
 //   GET  /v1/invoices                                      no open invoices
+//   GET  /v1/subscriptions?customer=…                      none yet (so Checkout may start)
 //   POST /v1/subscriptions/:id                             cancel_at_period_end
 // With MOCK_STRIPE_WEBHOOK_URL and MOCK_STRIPE_WEBHOOK_SECRET set, Pay on a membership checkout
 // also sends Stripe-signed checkout.session.completed and invoice.paid events to that URL.
@@ -180,6 +181,7 @@ export function startMockStripe(port = 0) {
     if (method === 'POST' && url.pathname === '/v1/billing_portal/sessions')
       return { status: 200, body: { url: `${base}/portal?return=${encodeURIComponent(form.return_url ?? '')}` } };
     if (method === 'GET' && url.pathname === '/v1/invoices') return { status: 200, body: { data: [] } };
+    if (method === 'GET' && url.pathname === '/v1/subscriptions') return { status: 200, body: { data: [] } };
     const sub = url.pathname.match(/^\/v1\/subscriptions\/([\w]+)$/);
     if (method === 'POST' && sub) return { status: 200, body: { id: sub[1], cancel_at_period_end: true, cancel_at: Math.floor(Date.now() / 1000) + 30 * 86_400 } };
     return null;

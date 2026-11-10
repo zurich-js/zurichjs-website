@@ -81,9 +81,24 @@ export function SelectField({ label, hint, error, class: className, children, ..
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} ids={ids}>
-      <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-[52px] px-3', border(false))} {...rest}>
-        {children}
-      </select>
+      {/* The native arrow is tiny and sits on the edge in most browsers: hidden, and drawn here with room around it. */}
+      <span class="relative flex">
+        <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-[52px] pl-3.5 pr-11 appearance-none cursor-pointer', border(false))} {...rest}>
+          {children}
+        </select>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 16 16"
+          class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M3.5 6l4.5 4.5L12.5 6" />
+        </svg>
+      </span>
     </Wrapper>
   );
 }

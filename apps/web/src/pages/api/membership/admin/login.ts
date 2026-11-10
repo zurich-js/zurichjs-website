@@ -1,5 +1,5 @@
 /**
- * Admin sign-in (/membership/admin). POST { password } → sets the admin session
+ * Admin sign-in (/admin/memberships). POST { password } → sets the admin session
  * cookie. At most 10 failed attempts per IP in 15 minutes (429 after that).
  *   200 { ok: true } · 401 wrong password · 403 not from this site · 429 · 503 not set up
  */
@@ -24,7 +24,7 @@ export const prerender = false;
 export async function handleAdminLogin(request: Request, deps: { env?: Env; attempts?: LoginAttempts; now?: number } = {}): Promise<Response> {
   const env = deps.env ?? process.env;
   const password = adminPassword(env);
-  if (!password) return fail(503, 'The admin area is not set up yet (MEMBERSHIP_ADMIN_PASSWORD, 16+ characters).');
+  if (!password) return fail(503, 'The admin area is not set up yet (ADMIN_PASSWORD).');
   if (!sameOrigin(request)) return fail(403, 'Refused: the request did not come from this site.');
   let attempts: LoginAttempts;
   try {

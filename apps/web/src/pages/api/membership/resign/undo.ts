@@ -19,12 +19,12 @@ export const handleUndoResignation = (request: Request, deps: RouteDeps = {}) =>
     request,
     deps,
     async ({ user, member, store, origin, env }) => {
-      if (!member || member.status !== 'resigning') return fail(409, 'There is no resignation to undo.');
+      if (!member || member.status !== 'resigning') return fail(409, 'Your membership is not ending, so there is nothing to resubscribe to.');
       const r = await withdrawResignation(member.id, { kind: 'member', id: user.id }, { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log });
       if (r.result !== 'withdrawn') return fail(409, 'Your membership changed in the meantime. Reload the page.');
       return json(200, { ok: true, member: memberView(r.member) });
     },
-    'undo your resignation',
+    'resubscribe',
   );
 
 export const POST: APIRoute = ({ request }) => handleUndoResignation(request);

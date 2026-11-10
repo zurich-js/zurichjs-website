@@ -13,6 +13,9 @@ export function setSignedIn(on: boolean): void {
   } catch {
     // Storage blocked (private mode, site data off): the header keeps its default action.
   }
+  // The header on this page follows at once (Header.astro shows the label from html[data-signed-in]).
+  document.documentElement.toggleAttribute('data-signed-in', on);
+  document.querySelectorAll<HTMLAnchorElement>('[data-header-cta]').forEach((a) => (a.href = on ? '/membership/account' : '/cfp'));
 }
 
 export function isSignedIn(): boolean {

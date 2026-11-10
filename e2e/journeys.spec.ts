@@ -264,7 +264,7 @@ test.describe('donations and membership', () => {
     await expect(page.getByText('No payment was made.')).toBeVisible();
   });
 
-  test('membership: choosing a tier and billing updates the price and the request button', async ({ page }) => {
+  test('membership: choosing a tier and billing updates the price and the Join link', async ({ page }) => {
     await page.goto('/membership');
     await hydrated(page);
     await expect(page.getByText('Coming to meetups is free and never needs a membership.')).toBeVisible();
@@ -273,113 +273,47 @@ test.describe('donations and membership', () => {
     await expect(page.getByRole('button', { name: /^Choose / })).toHaveCount(0);
     await page.locator('label', { has: page.getByRole('radio', { name: /^Supporter, CHF/ }) }).click();
     await expect(page.getByRole('radio', { name: /^Supporter, CHF/ })).toBeChecked();
-    await page.getByRole('radio', { name: /Yearly, CHF 250/ }).click();
-    await expect(page.locator('[data-request-summary]')).toContainText('Supporter, CHF 250 a year');
-    let sent: Record<string, unknown> | undefined;
-    await page.route('**/api/verein-inquiry', async (route) => {
-      sent = route.request().postDataJSON();
-      await route.fulfill({ json: { ok: true } });
-    });
-    await page.getByLabel('Name').fill('Test Person');
-    await page.getByLabel('Email').fill('test@example.com');
-    await page.getByRole('button', { name: /Send request/ }).click();
-    await expect(page.getByText('Request sent.')).toBeVisible();
-    expect(sent).toMatchObject({ tier: 'Supporter', billingCycle: 'yearly' });
+    await expect(page.locator('[data-join-summary]')).toContainText('Supporter, CHF 250 a year');
+    await expect(page.getByRole('link', { name: 'Join as Supporter' })).toHaveAttribute('href', '/membership/account?level=supporter&cycle=yearly');
+    // Online joining is always on: no request form, nothing posted from this page.
+    await expect(page.locator('input[name="email"]')).toHaveCount(0);
   });
 
-  test('membership: production quarterly and yearly prices, a billing switch, validation, and a request that charges nothing', async ({ page }) => {
+  test('membership: production quarterly and yearly prices, the billing switch, and a Join link for each choice', async ({ page }) => {
     await page.goto('/membership');
     await hydrated(page);
     // Fees as on production (origin/main src/pages/membership.tsx).
-    const PRICES = {
-      'Basic Member': { Quarterly: 'CHF 50', Yearly: 'CHF 175' },
-      Supporter: { Quarterly: 'CHF 75', Yearly: 'CHF 250' },
-    };
-    const UNIT = { Quarterly: 'quarter', Yearly: 'year' };
-    // Supporter and yearly are the defaults; the switch above the cards changes what every card shows.
-    await expect(page.locator('[data-request-summary]')).toContainText('Supporter, CHF 250 a year');
+    const COMBOS = [
+      ['Basic Member', 'basic', 'Quarterly', 'quarterly', 'CHF 50 a quarter'],
+      ['Basic Member', 'basic', 'Yearly', 'yearly', 'CHF 175 a year'],
+      ['Supporter', 'supporter', 'Quarterly', 'quarterly', 'CHF 75 a quarter'],
+      ['Supporter', 'supporter', 'Yearly', 'yearly', 'CHF 250 a year'],
+    ] as const;
+    // Supporter and yearly are the defaults.
+    await expect(page.locator('[data-join-summary]')).toContainText('Supporter, CHF 250 a year');
     await expect(page.getByText('Save CHF 25 compared with paying quarterly.')).toBeVisible();
     await page.getByRole('radio', { name: 'Quarterly', exact: true }).click();
     await expect(page.getByText('CHF 200 over a year.')).toBeVisible();
-    await page.getByRole('radio', { name: 'Yearly', exact: true }).click();
-    for (const [tier, cycles] of Object.entries(PRICES)) {
-      await page.getByRole('radio', { name: tier, exact: true }).click();
-      for (const [cycle, price] of Object.entries(cycles)) {
-        await page.getByRole('radio', { name: `${cycle}, ${price}`, exact: true }).click();
-        await expect(page.locator('[data-request-summary]')).toContainText(`${tier}, ${price} a ${UNIT[cycle as keyof typeof UNIT]}`);
-      }
+    await expect(page.getByRole('radio', { name: /^Monthly/ })).toHaveCount(0);
+    for (const [tier, level, label, cycle, fee] of COMBOS) {
+      await page.getByRole('radio', { name: label, exact: true }).click();
+      await page.locator('label', { has: page.getByRole('radio', { name: new RegExp(`^${tier}, CHF`) }) }).click();
+      await expect(page.locator('[data-join-summary]')).toContainText(`${tier}, ${fee}`);
+      await expect(page.getByRole('link', { name: `Join as ${tier}` })).toHaveAttribute('href', `/membership/account?level=${level}&cycle=${cycle}`);
     }
-    let calls = 0;
-    await page.route('**/api/verein-inquiry', async (route) => {
-      calls++;
-      await route.fulfill({ json: { ok: true } });
-    });
-    await page.getByRole('button', { name: /Send request/ }).click();
-    await expect(page.getByText('Fix the highlighted fields.')).toBeVisible();
-    await expect(page.getByText('Add your name.')).toBeVisible();
-    const name = page.locator('input[name="name"]');
-    const email = page.locator('input[name="email"]');
-    await expect(name).toBeFocused();
-    await name.fill('Test Person');
-    await email.fill('not-an-email');
-    await page.getByRole('button', { name: /Send request/ }).click();
-    await expect(page.getByText('Enter an email like name@example.com.')).toBeVisible();
-    expect(calls).toBe(0);
-    await email.fill('test@example.com');
-    await page.getByRole('button', { name: /Send request/ }).click();
-    await expect(page.getByText('An organiser will reply to test@example.com about joining as Supporter (CHF 250 a year). Nothing has been charged.')).toBeVisible();
-    expect(calls).toBe(1);
   });
 
-  test('membership: quarterly and yearly only, each tier and cycle submits its own values (stubbed API), with the monthly comparison shown', async ({ page }) => {
-    const sent: Record<string, unknown>[] = [];
-    await page.route('**/api/verein-inquiry', async (route) => {
-      sent.push(route.request().postDataJSON());
-      await route.fulfill({ json: { ok: true } });
-    });
+  test('membership: the monthly comparison is shown on each tier', async ({ page }) => {
     await page.goto('/membership');
     await hydrated(page);
     await expect(page.getByText('That’s CHF 14.50 a month, about')).toBeVisible();
     await expect(page.getByText('That’s CHF 21 a month, about')).toBeVisible();
     await expect(page.getByText('… a simple bouquet of tulips')).toBeVisible();
-    await expect(page.getByRole('radio', { name: /^Monthly, / })).toHaveCount(0);
-    await expect(page.locator('input[name="name"]')).toHaveAttribute('required', '');
-    await expect(page.locator('input[name="email"]')).toHaveAttribute('required', '');
-    const COMBOS = [
-      ['Basic Member', 'Quarterly', 'quarterly', 'CHF 50 a quarter'],
-      ['Basic Member', 'Yearly', 'yearly', 'CHF 175 a year'],
-      ['Supporter', 'Quarterly', 'quarterly', 'CHF 75 a quarter'],
-      ['Supporter', 'Yearly', 'yearly', 'CHF 250 a year'],
-    ] as const;
-    for (const [tier, label, cycle, fee] of COMBOS) {
-      await page.getByRole('radio', { name: tier, exact: true }).click();
-      await page.getByRole('radio', { name: new RegExp(`^${label}, `) }).click();
-      await page.locator('input[name="name"]').fill('Test Person');
-      await page.locator('input[name="email"]').fill('test@example.com');
-      await expect(page.locator('[data-request-summary]')).toContainText(`${tier}, ${fee}`);
-      await page.getByRole('button', { name: 'Send request' }).click();
-      await expect(page.getByText(`An organiser will reply to test@example.com about joining as ${tier} (${fee}). Nothing has been charged.`)).toBeVisible();
-      expect(sent.at(-1)).toMatchObject({ name: 'Test Person', email: 'test@example.com', tier, billingCycle: cycle, website_url: '' });
-      await page.getByRole('button', { name: 'Send another request' }).click();
-    }
-    expect(sent).toHaveLength(4);
   });
 
   test('membership is linked from the footer on every page', async ({ page }) => {
     await page.goto('/events');
     await expect(page.locator('footer').getByRole('link', { name: 'Membership' })).toHaveAttribute('href', '/membership');
-  });
-
-  test('membership: a failed request keeps the answers and offers email', async ({ page }) => {
-    await page.route('**/api/verein-inquiry', (route) => route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t send that right now.' } }));
-    await page.goto('/membership');
-    await hydrated(page);
-    await page.getByLabel('Name').fill('Test Person');
-    await page.getByLabel('Email').fill('test@example.com');
-    await page.getByRole('button', { name: /Send request/ }).click();
-    await expect(page.getByRole('alert').filter({ hasText: 'We couldn’t send that' })).toBeVisible();
-    await expect(page.getByLabel('Name')).toHaveValue('Test Person');
-    await expect(page.getByRole('link', { name: 'hello@zurichjs.com' }).first()).toHaveAttribute('href', /^mailto:hello@zurichjs\.com\?subject=Membership/);
   });
 });
 

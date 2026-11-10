@@ -27,6 +27,13 @@ export const STATIC_ROUTES: (SitemapEntry & { title: string; summary: string })[
   { path: '/feedback', priority: 0.4, changefreq: 'monthly', title: 'Feedback', summary: 'Tell us how the last meetup went.' },
   { path: '/membership', priority: 0.5, changefreq: 'monthly', title: 'Membership', summary: 'Join the Swiss JavaScript Group association as a Basic Member or Supporter.' },
   {
+    path: '/membership/terms',
+    priority: 0.3,
+    changefreq: 'yearly',
+    title: 'Membership terms',
+    summary: 'The terms for membership of the Swiss JavaScript Group, the association behind ZurichJS.',
+  },
+  {
     path: '/waitlist/conf',
     priority: 0.5,
     changefreq: 'monthly',

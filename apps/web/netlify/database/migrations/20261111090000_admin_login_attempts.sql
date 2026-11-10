@@ -1,4 +1,4 @@
--- Failed sign-ins to the membership admin area (/membership/admin), per client IP,
+-- Failed sign-ins to the membership admin area (/admin/memberships), per client IP,
 -- so the attempt limit holds across serverless instances. Rows older than a day are
 -- removed by the login route; nothing here identifies a member.
 create table admin_login_attempts (

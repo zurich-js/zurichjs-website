@@ -76,7 +76,7 @@ describe('membership tools for the Slack agent', () => {
     expect(text).toContain('Ada Lovelace');
     expect(text).not.toContain('ada@example.com');
     expect(text).not.toContain('private note');
-    expect(found.members).toEqual([expect.objectContaining({ status: 'active', paidUntil: '9th January 2027', payment: 'by hand' })]);
+    expect(found.members).toEqual([expect.objectContaining({ status: 'active', paidUntil: '9th January 2027', payment: 'manually (cash/bank)' })]);
   });
 
   it('puts the resigning members it found on cards, with Confirm while waiting and Undo always', async () => {

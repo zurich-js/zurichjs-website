@@ -1,9 +1,6 @@
-import { useRef, useState } from 'preact/hooks';
-import { track } from '@zurichjs/design/analytics';
+import { useState } from 'preact/hooks';
 import { cx } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
-import { ChipGroup, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 import { Check } from '@zurichjs/design/islands/Check';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, perYear, type Cycle, type TierKey } from '../../../lib/membership.ts';
 
@@ -11,60 +8,17 @@ import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, perYear, type Cycle, type Tier
 const BILLING = [...CYCLES].reverse();
 
 /**
- * Tier cards plus the membership request on /membership. Nothing is charged.
- * With online membership on (`applyOnline`), "Join" leads to /membership/account
- * with the chosen level and cycle, then Stripe; otherwise the request form
- * posts to /api/verein-inquiry and an organiser replies by email.
+ * Tier cards and the Join step on /membership. "Join" leads to /membership/account with the
+ * chosen level and cycle (sign in, accept the terms), then Stripe. Online joining is always on
+ * (owner, 11th November 2026): the email request form and its PUBLIC_MEMBERSHIP_ONLINE switch
+ * are gone; /api/verein-inquiry stays for anything that still posts to it.
  */
-export default function MembershipForm({ applyOnline = false }: { applyOnline?: boolean }) {
+export default function MembershipForm() {
   const [tier, setTier] = useState<TierKey>('supporter');
   const [cycle, setCycle] = useState<Cycle>('yearly');
-  const [f, setF] = useState({ name: '', email: '', message: '' });
-  const [tried, setTried] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const inFlight = useRef(false);
-  const [sent, setSent] = useState(false);
-  const [serverError, setServerError] = useState('');
-  const formRef = useRef<HTMLFormElement>(null);
-  const formSection = useRef<HTMLElement>(null);
-  const focusError = useFocusFirstError(formRef);
-  const doneRef = useFocusWhen<HTMLDivElement>(sent);
-
-  const errs = { name: f.name.trim() ? '' : 'Add your name.', email: isEmail(f.email) ? '' : 'Enter an email like name@example.com.' };
-  const valid = !errs.name && !errs.email;
   const t = TIERS[tier];
   const fee = feeLabel(t, cycle);
   const unit = CYCLES.find((c) => c.value === cycle)!.unit;
-
-  const submit = async (e: Event) => {
-    e.preventDefault();
-    // One request at a time, even if Enter or the button is pressed twice before the re-render.
-    if (inFlight.current) return;
-    if (!valid) {
-      setTried(true);
-      focusError();
-      return;
-    }
-    inFlight.current = true;
-    setBusy(true);
-    setServerError('');
-    try {
-      const res = await fetch('/api/verein-inquiry', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ ...f, tier: t.name, billingCycle: cycle, website_url: honeypotValue(formRef.current) }),
-      });
-      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (!res.ok || !body.ok) throw new Error(body.error ?? 'We couldn’t send that right now. Please try again or email hello@zurichjs.com.');
-      track('form_submit', { form: 'membership', tier, cycle });
-      setSent(true);
-    } catch (err) {
-      setServerError((err as Error).message || 'We couldn’t send that right now. Please try again or email hello@zurichjs.com.');
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
-    }
-  };
 
   return (
     <div class="flex flex-col gap-[clamp(48px,6vw,80px)]">
@@ -167,107 +121,29 @@ export default function MembershipForm({ applyOnline = false }: { applyOnline?: 
       </section>
 
       <section
-        ref={formSection}
         id="membership-form"
         aria-labelledby="h-join"
         class="scroll-mt-6 grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(32px,5vw,80px)] items-start"
       >
         <div class="flex flex-col gap-3.5">
           <h2 id="h-join" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
-            {applyOnline ? 'Join' : 'Ask to join'}
+            Join
           </h2>
           <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-            {applyOnline
-              ? 'Sign in with your email, accept the membership terms and pay securely with Stripe. Your membership starts with the first payment, and you get a certificate of membership by email.'
-              : 'Nothing is charged here. An organiser replies by email with the next steps and how to pay.'}
+            Sign in with your email, accept the membership terms and pay securely with Stripe. Your membership starts with the first payment, and you get a certificate of
+            membership by email.
           </p>
         </div>
 
-        {applyOnline ? (
-          <div class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-4">
-            <p class="m-0 text-[20px] font-bold leading-[1.3]" aria-live="polite">
-              {t.name}, {fee}
-            </p>
-            <Button href={`/membership/account?level=${tier}&cycle=${cycle}`} variant="black" size="lg" class="self-start">
-              Join as {t.name}
-            </Button>
-            <p class="m-0 text-[16px] text-ink-2">Already a member? Sign in there to see your membership.</p>
-          </div>
-        ) : sent ? (
-          <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
-            <div class="text-[28px] font-bold leading-[1.15]">Request sent.</div>
-            <p class="m-0 text-[18px] leading-[1.55]">
-              An organiser will reply to {f.email} about joining as {t.name} ({fee}). Nothing has been charged.
-            </p>
-            <Button
-              variant="outline-black"
-              class="self-start mt-1.5 text-[17px] border!"
-              onClick={() => {
-                setSent(false);
-                setTried(false);
-                setF({ name: '', email: '', message: '' });
-              }}
-            >
-              Send another request
-            </Button>
-          </div>
-        ) : (
-          <form ref={formRef} onSubmit={submit} noValidate class="relative bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
-            <Honeypot />
-            <ChipGroup label="Membership" value={tier} onChange={setTier} options={TIER_KEYS.map((k) => ({ value: k, label: TIERS[k].name }))} />
-            <ChipGroup label="Billing cycle" value={cycle} onChange={setCycle} options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${chf(t.fees[c.value])}` }))} />
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-3.5">
-              <TextField
-                label="Name"
-                name="name"
-                required
-                autoComplete="name"
-                value={f.name}
-                onInput={(e) => setF({ ...f, name: e.currentTarget.value })}
-                invalid={tried && !!errs.name}
-                error={tried ? errs.name : ''}
-              />
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                value={f.email}
-                onInput={(e) => setF({ ...f, email: e.currentTarget.value })}
-                invalid={tried && !!errs.email}
-                error={tried ? errs.email : ''}
-              />
-            </div>
-            <TextArea label="Message (optional)" name="message" rows={3} maxLength={2000} value={f.message} onInput={(e) => setF({ ...f, message: e.currentTarget.value })} />
-            <div class="flex flex-col gap-2">
-              <SubmitButton variant="yellow" size="lg" busy={busy} class="w-full">
-                {busy ? 'Sending…' : 'Send request'}
-              </SubmitButton>
-              <p data-request-summary aria-live="polite" class="m-0 text-[16px] leading-[1.45] text-ink-2 text-center">
-                <b class="text-black">
-                  {t.name}, {fee}
-                </b>
-                . Nothing is charged now.
-              </p>
-            </div>
-            <span role="alert" class="text-[15px] text-danger empty:hidden">
-              {tried && !valid ? 'Fix the highlighted fields.' : serverError}
-            </span>
-            {serverError && (
-              <p class="m-0 text-[15px] text-ink-2">
-                Your answers are still here. You can also email{' '}
-                <a
-                  href={`mailto:hello@zurichjs.com?subject=${encodeURIComponent(`Membership request: ${t.name}`)}&body=${encodeURIComponent(`Name: ${f.name}\nEmail: ${f.email}\nTier: ${t.name}\nBilling: ${cycle} (${fee})\n\n${f.message}`)}`}
-                  class="font-bold text-black"
-                >
-                  hello@zurichjs.com
-                </a>{' '}
-                with the same details.
-              </p>
-            )}
-          </form>
-        )}
+        <div class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-4">
+          <p data-join-summary class="m-0 text-[20px] font-bold leading-[1.3]" aria-live="polite">
+            {t.name}, {fee}
+          </p>
+          <Button href={`/membership/account?level=${tier}&cycle=${cycle}`} variant="black" size="lg" class="self-start">
+            Join as {t.name}
+          </Button>
+          <p class="m-0 text-[16px] text-ink-2">Already a member? Sign in there to see your membership.</p>
+        </div>
       </section>
     </div>
   );

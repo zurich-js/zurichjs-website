@@ -223,45 +223,59 @@ Settings from `.env.local` reach the `web` service, except the ones `docker-comp
 
 How it works: `docs/v2/MEMBERSHIP.md`. Anyone can join: sign in by email link, choose Basic Member or Supporter and quarterly or yearly, accept the membership terms, pay in Stripe Checkout. The first payment makes them a member; every paid term issues a certificate of membership (PDF, signed by the president), emailed and in the portal. Members manage payment and cycle in the Stripe portal (no cancelling) and resign on their account page; the board confirms resignations in Slack.
 
-**Production stays on the email form** (`/api/verein-inquiry`) until `PUBLIC_MEMBERSHIP_ONLINE=on` is set (build time) and a deploy runs. Set it only after the steps below, the terms page approval and a test on a deploy preview.
+**Online joining is always on** (owner, 11th November 2026): `/membership` leads to sign-in and Stripe, with no switch. So finish the steps below and test on a deploy preview before the branch reaches production.
 
 ### Set up (owner, once)
 
 1. **Database:** Netlify Database is provisioned on deploy because `@netlify/database` is a dependency and `apps/web/netlify/database/migrations` exists; Netlify applies the migrations before each deploy goes live. Check in the Netlify UI that the database exists after the first deploy of this branch. Deploy previews get their own database branch, forked from production data. That copy is protected by the site itself, the same as production: members only ever see their own record (signed in by email link), and everything else is behind the admin password (below). No Netlify visitor password is needed.
-2. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup` (dry run), then `--apply`. It creates the membership product, four prices (lookup keys `member_<level>_<cycle>`, amounts from `apps/web/src/lib/membership.ts`) and the billing portal configuration (no cancelling), and prints `STRIPE_MEMBER_PORTAL_CONFIG`. Then Stripe › Webhooks › Add endpoint: `https://zurichjs.com/api/membership/webhook`, events `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`; copy its secret. Repeat in live mode when going live.
+2. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup --webhook-url https://zurichjs.com/api/membership/webhook` is a dry run; add `--apply` to create, in that Stripe account:
+   - one product per level and four prices (lookup keys `member_<level>_<cycle>`, amounts from `apps/web/src/lib/membership.ts`),
+   - the billing portal configuration without cancelling, which prints `STRIPE_MEMBER_PORTAL_CONFIG`,
+   - the webhook endpoint with the six events (`checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`, `customer.subscription.updated`, `customer.subscription.deleted`) on the API version the site pins. It prints the signing secret once: that is `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`.
+
+   Then set the Billing › Revenue recovery settings in `docs/v2/MEMBERSHIP.md`, "Stripe". Repeat everything with the live key when going live (owner: production change). Test and live are separate endpoints with separate secrets: in Netlify, scope the live `STRIPE_SECRET_KEY`, `STRIPE_MEMBER_PORTAL_CONFIG` and `STRIPE_MEMBERSHIP_WEBHOOK_SECRET` to the production context and the test ones to deploy previews.
+
+   **How the webhook runs on Netlify:** `/api/membership/webhook` is an Astro route (`prerender = false`), so it runs in the site's server function; nothing else is deployed. It verifies Stripe's signature, updates Netlify Database, and sends the emails, Slack notes and (on `invoice.paid`) the certificate before answering. A failure answers 500 and Stripe retries for up to three days; every step is safe to receive twice (handled events are skipped, status changes are compare-and-set, one certificate per invoice, emails have idempotency keys). Netlify stops synchronous functions after about 10 seconds; `invoice.paid` does the most work, so watch its duration in the function logs after launch. If it gets close, move the certificate and emails to a background function. Stripe only calls the URL it was given: to test on a deploy preview, add a test-mode endpoint for that preview's URL, or use `pnpm local` (`stripe listen`).
+
 3. **Signature:** `NETLIFY_AUTH_TOKEN=… pnpm membership:signature signature.png` (the PNG Faris supplied, black ink on transparent). Never commit it.
 4. **Resend:** the sender is `MEMBERSHIP_FROM` (default `ZurichJS <hello@zurichjs.com>`); the domain must be verified in Resend.
 5. **Slack:** invite @ZurichJS Bot to the membership channel.
 6. **Environment variables** (functions unless noted):
 
-| Variable                            | What                                                                                                                                              |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `NETLIFY_DB_URL`                    | set by Netlify                                                                                                                                    |
-| `BETTER_AUTH_SECRET`                | secret; 32+ random characters (`openssl rand -base64 32`)                                                                                         |
-| `BETTER_AUTH_URL`                   | optional; defaults to Netlify's URL (production) or the deploy URL (previews)                                                                     |
-| `STRIPE_SECRET_KEY`                 | already set (donations)                                                                                                                           |
-| `STRIPE_MEMBER_PORTAL_CONFIG`       | from `pnpm membership:stripe-setup`                                                                                                               |
-| `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`  | secret; the membership webhook's signing secret (not the donations one)                                                                           |
-| `RESEND_API_KEY`, `MEMBERSHIP_FROM` | email                                                                                                                                             |
-| `SLACK_MEMBERSHIP_CHANNEL_ID`       | the channel for membership notes and resignation cards (falls back to `SLACK_AGENT_CHANNEL_ID`)                                                   |
-| `SLACK_MEMBERSHIP_APPROVER_IDS`     | who may confirm resignations: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris)                                                        |
-| `MEMBERSHIP_ADMIN_PASSWORD`         | secret; 16+ characters (a passphrase): the board's password for `/membership/admin` and `pnpm membership:import`. Changing it signs everyone out. |
-| `PUBLIC_MEMBERSHIP_ONLINE`          | build time; `on` switches `/membership` to online joining                                                                                         |
+| Variable                            | What                                                                                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NETLIFY_DB_URL`                    | set by Netlify                                                                                                                                   |
+| `BETTER_AUTH_SECRET`                | secret; 32+ random characters (`openssl rand -base64 32`)                                                                                        |
+| `BETTER_AUTH_URL`                   | optional; defaults to Netlify's URL (production) or the deploy URL (previews)                                                                    |
+| `STRIPE_SECRET_KEY`                 | already set (donations)                                                                                                                          |
+| `STRIPE_MEMBER_PORTAL_CONFIG`       | from `pnpm membership:stripe-setup`                                                                                                              |
+| `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`  | secret; the membership webhook's signing secret (not the donations one)                                                                          |
+| `RESEND_API_KEY`, `MEMBERSHIP_FROM` | email                                                                                                                                            |
+| `SLACK_MEMBERSHIP_CHANNEL_ID`       | the channel for membership notes and resignation cards (falls back to `SLACK_AGENT_CHANNEL_ID`)                                                  |
+| `SLACK_MEMBERSHIP_APPROVER_IDS`     | who may confirm resignations: `U08NAFH955M,U08NDGCRYPK,U08MMPMNLKZ` (Nadja, Bogdan, Faris)                                                       |
+| `ADMIN_PASSWORD`                    | secret; the board's password, any length (owner's choice) for `/admin/memberships` and `pnpm membership:import`. Changing it signs everyone out. |
 
-### Import existing members
+### Add members who paid manually (cash/bank)
 
-Members who joined on paper and pay by hand. CSV columns in `packages/membership/src/import.ts`. Easiest in the admin area (`/membership/admin` › Import members: Check, then Import). From the command line, the same endpoint with the admin password (member data never goes into git, and Netlify Database changes go through the application):
+For someone who paid in cash or by transfer (owner, 11th November 2026): `/admin` › Memberships › **Add a member who paid manually (cash/bank)**. Give person or organisation, name, email, level, billing cycle and the month their paid term started; the form shows until when that covers them. Adding them:
+
+1. records them as paid manually (cash/bank) until the term ends (one cycle from the first of the start month),
+2. issues their certificate of membership for that term,
+3. if the box is ticked, emails them the certificate and asks them to set up automatic payment: they sign in with that email, accept the terms and add a card. Stripe charges nothing before the term ends, then renews as usual (and issues the next certificate),
+4. posts a note in the membership Slack channel.
+
+One member per email address: adding the same address twice is refused. Many at once (an old list) still works from the command line with a CSV (columns in `packages/membership/src/import.ts`):
 
 ```bash
-MEMBERSHIP_ADMIN_PASSWORD=… pnpm membership:import members.csv --site https://deploy-preview-78--zurichjs.netlify.app   # dry run on a preview
-MEMBERSHIP_ADMIN_PASSWORD=… pnpm membership:import members.csv --apply                                                 # production
+ADMIN_PASSWORD=… pnpm membership:import members.csv --site https://deploy-preview-78--zurichjs.netlify.app   # dry run on a preview
+ADMIN_PASSWORD=… pnpm membership:import members.csv --apply                                                 # production
 ```
 
-Each becomes "paid by hand until `paid_until`". When they first sign in with the same email, the account links to their record; they accept the terms and switch to automatic payment, with no charge before their paid period ends.
+Each becomes "paid manually (cash/bank) until `paid_until`". When they first sign in with the same email, the account links to their record; they accept the terms and switch to automatic payment, with no charge before their paid period ends.
 
-### Admin area (`/membership/admin`)
+### Admin area (`/admin`: Memberships)
 
-For the board, behind one shared password, `MEMBERSHIP_ADMIN_PASSWORD`. The site checks it on every deploy, production and previews alike, so it does not depend on Netlify's visitor access settings.
+For the board, behind one shared password, `ADMIN_PASSWORD`. The site checks it on every deploy, production and previews alike, so it does not depend on Netlify's visitor access settings.
 
 - **What it shows:** all members with search (name, email, organisation) and a status filter, the totals, and one member's details: terms accepted, certificates, Stripe ids, notes and the full history.
 - **What it does:** confirm resignations (the same as the Slack button), import members (dry run first), export everyone as CSV (formulas neutralised for spreadsheets).

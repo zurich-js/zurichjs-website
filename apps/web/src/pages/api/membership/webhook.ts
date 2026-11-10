@@ -37,12 +37,12 @@ import { TransitionError, levelInfo, type Member, type MemberStore, type Status 
 import type { APIRoute } from 'astro';
 import { siteOrigin } from '../../../server/auth.ts';
 import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
-import { longDate } from '../../../server/dates.ts';
+import { lastDay, longDate } from '../../../server/dates.ts';
 import { issueAndSendCertificate } from '../../../server/membership-certificate.ts';
 import { membershipProps } from '../../../server/membership.ts';
 import { MembershipUnavailable, memberStore } from '../../../server/membership-db.ts';
 import { notify, who, type MembershipSlack } from '../../../server/membership-slack.ts';
-import { MEMBERSHIP_SOURCE, fromLookupKey } from '../../../server/membership-stripe.ts';
+import { currentPlan, fromLookupKey, MEMBERSHIP_SOURCE } from '../../../server/membership-stripe.ts';
 import { verifyStripeSignature } from '../../../server/stripe.ts';
 
 export const prerender = false;
@@ -124,6 +124,9 @@ async function moveTo(
   }
 }
 
+/** An event about a subscription other than the member's current one (a duplicate, or one replaced). */
+const isStale = (m: Member, subscriptionId: string) => !!m.stripeSubscriptionId && m.stripeSubscriptionId !== subscriptionId;
+
 async function memberOf(store: MemberStore, ids: { memberId?: string; subscriptionId?: string }): Promise<Member | null> {
   if (ids.memberId) {
     const m = await store.get(ids.memberId);
@@ -179,9 +182,13 @@ export async function handleMembershipWebhook(request: Request, deps: WebhookDep
         const first = m.status === 'pending';
         if (sub.subscription && m.stripeSubscriptionId !== sub.subscription)
           m = await store.linkStripe(m.id, { subscriptionId: sub.subscription }, { kind: 'stripe', id: event.id });
+        // A switch scheduled for this renewal: the certificate shows the level now paid for, even
+        // if customer.subscription.updated has not arrived yet.
+        const plan = sub.subscription ? await currentPlan(sub.subscription, { env, fetch: deps.fetch }).catch(() => null) : null;
+        const switched = plan && (plan.level !== m.level || plan.cycle !== m.cycle) ? plan : null;
         m = await store.update(
           m.id,
-          { paidUntil: day(period.end), paymentMode: 'automatic', ...(m.joinedAt ? {} : { joinedAt: day(period.start) }) },
+          { paidUntil: day(period.end), paymentMode: 'automatic', ...(m.joinedAt ? {} : { joinedAt: day(period.start) }), ...switched },
           { kind: 'stripe', id: event.id },
         );
         if (m.status === 'pending' || m.status === 'past_due' || m.status === 'imported_manual') m = await moveTo(store, m, 'active', event.id, { payload: { invoice: inv.id } });
@@ -210,6 +217,16 @@ export async function handleMembershipWebhook(request: Request, deps: WebhookDep
           m = await store.update(m.id, { paymentMode: 'automatic' }, { kind: 'stripe', id: event.id });
           m = await moveTo(store, m, 'active', event.id, { payload: { switchedToAutomatic: true } });
           await say(`:credit_card: ${who(m)} switched to automatic payment (first charge when the paid period ends).`);
+          if (m.paidUntil) {
+            const email = renderEmail('automatic-payment-set-up', {
+              ...membershipProps(m, origin),
+              paidThrough: longDate(lastDay(m.paidUntil)),
+              firstPayment: longDate(m.paidUntil),
+            });
+            await sendMemberEmail(env, { to: m.email, ...email }, { idempotencyKey: `member-automatic:${m.id}:${subscriptionId}`, log, fetch: deps.fetch }).catch((e: Error) =>
+              log(`[membership] automatic payment email to ${m!.id} failed: ${e.message}`),
+            );
+          }
         }
         break;
       }
@@ -247,7 +264,7 @@ export async function handleMembershipWebhook(request: Request, deps: WebhookDep
         const s = o as unknown as Subscription;
         if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
         let m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
-        if (!m) break;
+        if (!m || isStale(m, s.id)) break;
         // Catches a missed payment_failed event: Stripe says the subscription is behind.
         if ((s.status === 'past_due' || s.status === 'unpaid') && m.status === 'active')
           m = await moveTo(store, m, 'past_due', event.id, { payload: { subscriptionStatus: s.status } });
@@ -262,7 +279,8 @@ export async function handleMembershipWebhook(request: Request, deps: WebhookDep
         const s = o as unknown as Subscription;
         if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
         const m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
-        if (!m || m.status === 'ended') break;
+        // A duplicate or replaced subscription ending says nothing about the membership.
+        if (!m || m.status === 'ended' || isStale(m, s.id)) break;
         const reason = m.status === 'resigning' ? 'resigned' : 'lapsed';
         const ended = await moveTo(store, m, 'ended', event.id, { reason });
         if (ended.status === 'ended') await say(`:wave: Membership ended (${reason}): ${who(ended)}.`);

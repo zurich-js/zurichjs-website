@@ -1,9 +1,16 @@
-/** Members for the admin area. GET ?q=&status= → { ok, members } (newest first, at most 500). */
+/**
+ * Members for the admin area.
+ *   GET ?q=&status=   → { ok, members, counts } (newest first, at most 500)
+ *   POST { kind, name, organisationName?, email, level, cycle, startMonth: 'YYYY-MM', category?, notes?, sendEmail? }
+ *     adds a member who paid manually, cash/bank (server/membership-manual.ts) → 200 { ok, member, certificate, emailed }
+ *     · 400 { error, field } · 409 already a member
+ */
 import { isMember, type Status } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { adminRoute, type AdminDeps } from '../../../../../server/admin-route.ts';
 import { adminMember } from '../../../../../server/admin-views.ts';
-import { json, methodNotAllowed } from '../../../../../server/http.ts';
+import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../server/http.ts';
+import { addManualMember, parseManualMember, type ManualDeps } from '../../../../../server/membership-manual.ts';
 
 export const prerender = false;
 
@@ -28,5 +35,22 @@ export const handleAdminMembers = (request: Request, deps: AdminDeps = {}) =>
     'load the members',
   );
 
+export const handleAddMember = (request: Request, deps: AdminDeps & Pick<ManualDeps, 'slack' | 'signature'> = {}) =>
+  adminRoute(
+    request,
+    deps,
+    async ({ env, store, origin }) => {
+      const body = await readJsonObject(request);
+      if (!body) return fail(400, 'Send the member as JSON.');
+      const parsed = parseManualMember(body);
+      if (!parsed.ok) return fail(400, parsed.error, { field: parsed.field });
+      const r = await addManualMember(parsed.value, { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log, signature: deps.signature });
+      if (r.result === 'exists') return fail(409, `${r.member.email} is already a member (${r.member.name}).`, { field: 'email', memberId: r.member.id });
+      return json(200, { ok: true, member: adminMember(r.member), certificate: { number: r.certificate.number }, emailed: r.emailed });
+    },
+    'add the member',
+  );
+
 export const GET: APIRoute = ({ request }) => handleAdminMembers(request);
-export const ALL: APIRoute = () => methodNotAllowed('GET');
+export const POST: APIRoute = ({ request }) => handleAddMember(request);
+export const ALL: APIRoute = () => methodNotAllowed('GET, POST');

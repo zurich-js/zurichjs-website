@@ -2,8 +2,8 @@
  * Imports existing members (joined on paper, paid by hand) through the site's
  * admin endpoint (/api/membership/admin/import): member data never goes into
  * git, and production data changes go through the application.
- *   MEMBERSHIP_ADMIN_PASSWORD=… pnpm membership:import members.csv                    # dry run: checks, writes nothing
- *   MEMBERSHIP_ADMIN_PASSWORD=… pnpm membership:import members.csv --apply            # writes
+ *   ADMIN_PASSWORD=… pnpm membership:import members.csv                    # dry run: checks, writes nothing
+ *   ADMIN_PASSWORD=… pnpm membership:import members.csv --apply            # writes
  *   … --site https://deploy-preview-78--zurichjs.netlify.app                       # a preview (its own database branch)
  * The CSV format is in packages/membership/src/import.ts. Nothing is written if
  * any row has a problem or an email is already a member.
@@ -16,9 +16,9 @@ const siteAt = args.indexOf('--site');
 const site = (siteAt >= 0 ? (args[siteAt + 1] ?? '') : 'https://zurichjs.com').replace(/\/+$/, '');
 const file = args.find((a, i) => !a.startsWith('--') && (siteAt < 0 || i !== siteAt + 1));
 const apply = args.includes('--apply');
-const token = process.env.MEMBERSHIP_ADMIN_PASSWORD;
+const token = process.env.ADMIN_PASSWORD;
 if (!file || !token) {
-  console.error('Usage: MEMBERSHIP_ADMIN_PASSWORD=… pnpm membership:import <members.csv> [--apply] [--site <url>]');
+  console.error('Usage: ADMIN_PASSWORD=… pnpm membership:import <members.csv> [--apply] [--site <url>]');
   process.exit(1);
 }
 

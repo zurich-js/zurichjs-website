@@ -15,12 +15,12 @@ export const LEGACY_REDIRECTS = {
   '/success': { status: 301, destination: '/donate' },
   '/checkout/success': { status: 301, destination: '/events' },
   // Production pages that V2 does not have (owner decisions, docs/v2/DECISIONS.md): send visitors and
-  // search ranking to the closest page. Sub-paths (/workshops/*, /admin/*, ...) are in apps/web/netlify.toml.
+  // search ranking to the closest page. Sub-paths (/workshops/*, /profile/*, ...) are in apps/web/netlify.toml.
+  // /admin is the board's admin area again (owner, 11th November 2026), so it no longer redirects.
   // ?from= shows a one-line note that workshops and T-shirt sales have ended (owner decisions).
   '/workshops': { status: 301, destination: '/events?from=workshops' },
   '/tshirt': { status: 301, destination: '/donate?from=tshirt' },
   '/media-demo': { status: 301, destination: '/media' },
-  '/admin': { status: 301, destination: '/' },
   '/profile': { status: 301, destination: '/' },
   '/invite': { status: 301, destination: '/about' },
   // Production's complete sitemap lived here (robots.txt pointed at /sitemap.xml, which was partial).

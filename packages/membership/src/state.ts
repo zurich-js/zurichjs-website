@@ -100,7 +100,7 @@ const LABELS: Record<Status, string> = {
   pending: 'waiting for the first payment',
   active: 'active',
   past_due: 'behind on payment',
-  imported_manual: 'paid by hand',
+  imported_manual: 'paid manually (cash/bank)',
   resigning: 'resigning',
   ended: 'ended',
 };

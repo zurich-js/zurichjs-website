@@ -4,9 +4,9 @@
  * accept when they join. They follow the bylaws (Statuten of 23rd May 2025);
  * where they differ, the bylaws prevail. Fees come from src/lib/membership.ts.
  *
- * DRAFT for the owner's approval (AGENTS.md: legal pages need the owner). Kept
- * noindex until approved. Change TERMS.version with every change of this text,
- * so members accept the new version before their next payment setup.
+ * Approved by the owner on 11th November 2026 (AGENTS.md: legal pages need the owner).
+ * Change TERMS.version with every change of this text, so members accept the new
+ * version before their next payment setup.
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import { TERMS } from '@zurichjs/membership';
@@ -52,7 +52,8 @@ const SECTIONS: [string, string[]][] = [
   [
     'Resigning',
     [
-      'You can resign at any time, provided no membership fees are outstanding (bylaws Art. 5). Resigning on your account page counts as resigning in writing to the board; you receive a copy by email. The board confirms the resignation, and your membership ends at the end of the period you have already paid. Fees already paid are not refunded, and nothing more is charged.',
+      'You can resign at any time, provided no membership fees are outstanding (bylaws Art. 5). Resigning on your account page counts as resigning in writing to the board; you receive a copy by email. We ask why you are leaving, but you do not have to say.',
+      'From the moment you resign, your membership no longer renews and nothing more is charged. The board confirms the resignation, and your membership ends at the end of the period you have already paid. Until then, you can resubscribe on your account page. Fees already paid are not refunded.',
       'Members cannot cancel the payment themselves in Stripe; the resignation goes through the board as the bylaws require.',
     ],
   ],
@@ -77,7 +78,7 @@ const SECTIONS: [string, string[]][] = [
 ];
 ---
 
-<BaseLayout title="Membership terms" description={`The terms for membership of the ${SITE.association}, the association behind ZurichJS.`} noindex>
+<BaseLayout title="Membership terms" description={`The terms for membership of the ${SITE.association}, the association behind ZurichJS.`}>
   <PageOpening slot="opening" title="Membership terms" sub={`For members of the ${SITE.association}. Version of ${version}.`} />
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
     <div class="max-w-[760px] flex flex-col gap-9">

@@ -45,10 +45,6 @@ from = "/checkout/*"
 to = "/donate"
 status = 301
 [[redirects]]
-from = "/admin/*"
-to = "/"
-status = 301
-[[redirects]]
 from = "/profile/*"
 to = "/"
 status = 301

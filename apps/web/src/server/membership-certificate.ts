@@ -56,6 +56,8 @@ export interface IssueDeps {
   log?: Log;
   /** Injected in tests; defaults to the Blobs store. */
   signature?: () => Promise<Uint8Array | null>;
+  /** The email to send instead of welcome or renewal (a member who paid manually, cash/bank, added by the board). */
+  template?: 'membership-ported';
 }
 
 /**
@@ -78,7 +80,7 @@ export async function issueAndSendCertificate(
     certificateNumber: cert.number,
     nextPayment: longDate(cert.periodEnd),
   };
-  const email = renderEmail(first ? 'membership-welcome' : 'membership-renewed', props);
+  const email = renderEmail(deps.template ?? (first ? 'membership-welcome' : 'membership-renewed'), props);
   await sendMemberEmail(
     deps.env,
     { to: m.email, ...email, attachments: [{ filename: certificateFilename(cert), content: pdf }] },

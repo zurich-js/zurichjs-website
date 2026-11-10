@@ -1,10 +1,11 @@
 /**
- * The membership admin area (/membership/admin): one shared password for the
- * board, from MEMBERSHIP_ADMIN_PASSWORD (owner, 11th November 2026). The
+ * The membership admin area (/admin/memberships): one shared password for the
+ * board, from ADMIN_PASSWORD (owner, 11th November 2026). The
  * protection is in the site, so production and every deploy preview (whose
  * database is a copy of production) enforce the same password.
  *
- *   - Sign in: the password, compared in constant time; at least 16 characters.
+ *   - Sign in: the password, compared in constant time. Any length: the owner's choice
+ *     (owner, 11th November 2026).
  *     At most 10 failed attempts per IP in 15 minutes, counted in the database
  *     so the limit holds across serverless instances.
  *   - Session: an httpOnly, Secure, SameSite=Strict cookie for the admin API
@@ -22,11 +23,9 @@ export const ADMIN_COOKIE_PATH = '/api/membership/admin';
 export const SESSION_SECONDS = 8 * 3600;
 export const MAX_FAILURES = 10;
 export const FAILURE_WINDOW_MS = 15 * 60_000;
-const MIN_PASSWORD = 16;
-
 export const adminPassword = (env: Env): string | null => {
-  const p = env.MEMBERSHIP_ADMIN_PASSWORD;
-  return p && p.length >= MIN_PASSWORD ? p : null;
+  const p = env.ADMIN_PASSWORD;
+  return p ? p : null;
 };
 
 const sameText = (a: string, b: string) => {

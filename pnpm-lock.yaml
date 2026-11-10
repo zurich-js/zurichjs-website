@@ -319,6 +319,9 @@ importers:
       '@sanity/client':
         specifier: 7.28.0
         version: 7.28.0
+      '@zurichjs/emails':
+        specifier: workspace:*
+        version: link:../emails
       '@zurichjs/forms':
         specifier: workspace:*
         version: link:../forms

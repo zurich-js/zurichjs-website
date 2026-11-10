@@ -207,6 +207,8 @@ export interface MemberEmail {
   subject: string;
   html: string;
   text: string;
+  /** E.g. the certificate PDF. */
+  attachments?: { filename: string; content: Uint8Array }[];
 }
 
 /**
@@ -238,6 +240,7 @@ export async function sendMemberEmail(
       subject: email.subject,
       html: email.html,
       text: email.text,
+      ...(email.attachments?.length ? { attachments: email.attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString('base64') })) } : {}),
     }),
     signal: AbortSignal.timeout(opts.timeoutMs ?? 10_000),
   });

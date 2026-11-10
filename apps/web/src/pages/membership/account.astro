@@ -1,18 +1,14 @@
 ---
-/** The member area: sign in by email link, see your membership (docs/v2/MEMBERSHIP.md). Private, not indexed. */
+/** The member area: sign in by email link, join, manage the membership (docs/v2/MEMBERSHIP.md). Private, not indexed. */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import MemberAccount from '~/components/islands/MemberAccount';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
-
-// Read at build time: the anon key is public by design (row-level security protects the data).
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL || undefined;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || process.env.PUBLIC_SUPABASE_ANON_KEY || undefined;
 ---
 
-<BaseLayout title="Your membership" description={`Sign in to see your membership of the ${SITE.association}.`} noindex>
+<BaseLayout title="Your membership" description={`Join or manage your membership of the ${SITE.association}.`} noindex>
   <PageOpening slot="opening" title="Your membership" sub={`Your membership of the ${SITE.association}, the association behind ZurichJS.`} />
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
-    <MemberAccount client:load supabaseUrl={supabaseUrl} supabaseAnonKey={supabaseAnonKey} contactEmail={SITE.email} />
+    <MemberAccount client:load contactEmail={SITE.email} />
   </div>
 </BaseLayout>

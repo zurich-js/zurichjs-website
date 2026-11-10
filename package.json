@@ -19,10 +19,12 @@
     "agent": "tsx tools/agent-cli.ts",
     "speaker-link": "tsx tools/speaker-profile-link.ts",
     "membership:import": "tsx tools/membership-import.ts",
-    "membership:review": "tsx tools/membership-review.ts"
+    "membership:stripe-setup": "tsx tools/membership-stripe-setup.ts",
+    "membership:signature": "tsx tools/membership-signature.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
+    "@netlify/blobs": "11.1.7",
     "@playwright/test": "1.63.0",
     "@types/node": "22.15.3",
     "@zurichjs/agent": "workspace:*",

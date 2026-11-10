@@ -63,7 +63,8 @@ export function stripeApiBase(env: Env): string {
   return /^https?:\/\/[^\s/]+$/.test(override) ? override : STRIPE_API;
 }
 
-async function stripe<T>(env: Env, fetchImpl: Fetch, method: 'GET' | 'POST', path: string, params?: URLSearchParams, idempotencyKey?: string): Promise<T> {
+/** One Stripe API call (form-encoded, pinned API version). Shared with the membership code. */
+export async function stripeApi<T>(env: Env, fetchImpl: Fetch, method: 'GET' | 'POST' | 'DELETE', path: string, params?: URLSearchParams, idempotencyKey?: string): Promise<T> {
   const key = env.STRIPE_SECRET_KEY;
   if (!key) throw new StripeUnavailable('STRIPE_SECRET_KEY is not set');
   const url = `${stripeApiBase(env)}/v1/${path}${method === 'GET' && params ? `?${params}` : ''}`;
@@ -108,7 +109,7 @@ export async function createDonationCheckout(d: DonationRequest, deps: { env: En
     metadata: { source: 'zurichjs.com/donate', recurrence: d.recurrence, amount_chf: String(d.amount) },
     ...(monthly ? { subscription_data: { metadata: { source: 'zurichjs.com/donate' } } } : {}),
   });
-  const s = await stripe<{ id: string; url: string }>(env, f, 'POST', 'checkout/sessions', params, deps.idempotencyKey);
+  const s = await stripeApi<{ id: string; url: string }>(env, f, 'POST', 'checkout/sessions', params, deps.idempotencyKey);
   return { url: s.url, id: s.id };
 }
 
@@ -122,7 +123,7 @@ export interface DonationSummary {
 /** What the thanks page shows: amount and whether it is monthly. No personal data. */
 export async function getDonationSession(id: string, deps: { env: Env; fetch?: Fetch }): Promise<DonationSummary | null> {
   if (!/^cs_(test|live)_[A-Za-z0-9]+$/.test(id)) return null;
-  const s = await stripe<{ amount_total?: number; currency?: string; mode?: string; payment_status?: string; status?: string; metadata?: Record<string, string> }>(
+  const s = await stripeApi<{ amount_total?: number; currency?: string; mode?: string; payment_status?: string; status?: string; metadata?: Record<string, string> }>(
     deps.env,
     deps.fetch ?? fetch,
     'GET',

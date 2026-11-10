@@ -3,26 +3,27 @@ import type { ActorKind, EndedReason, Member, Status } from './types.ts';
 /**
  * Every allowed status change, and who may make it. The store refuses anything
  * else, and the database's `member_transition` refuses a change whose `from`
- * no longer matches (two organisers pressing Approve at once).
+ * no longer matches (a retried webhook, two clicks at once).
  *
- * There is no declaration to sign (owner, 10th November 2026): people accept
- * the membership terms, which rest on the bylaws, when they apply. So an
- * approved request becomes active when Stripe confirms the first payment.
+ * Anyone can join (owner, 10th November 2026; bylaws Art. 4: any person who
+ * supports the association's goals may become a member). There is no approval
+ * and no declaration to sign: people accept the membership terms, which rest on
+ * the bylaws, and pay. `pending` becomes `active` when Stripe confirms the first
+ * payment.
  *
  * Bylaws (Art. 5): a member may resign at any time, provided no dues are
  * outstanding. So `resigning → ended` is the board confirming, and the caller
  * checks for open invoices first; the board cannot refuse a resignation, only
- * record that the member withdrew it (`resigning → active`).
+ * record that the member withdrew it (`resigning → active`). The board can also
+ * end a membership (expulsion, death, dissolution).
  */
 export const TRANSITIONS: Readonly<Record<Status, Partial<Record<Status, readonly ActorKind[]>>>> = {
-  applied: { approved: ['board'], rejected: ['board'] },
-  approved: { active: ['stripe'], rejected: ['board'] },
+  pending: { active: ['stripe'] },
   active: { past_due: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   past_due: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board', 'stripe'] },
   imported_manual: { active: ['stripe'], resigning: ['member', 'board'], ended: ['board'] },
   resigning: { ended: ['board', 'stripe'], active: ['board'] },
-  rejected: { applied: ['member'] },
-  ended: { applied: ['member'] },
+  ended: { pending: ['member'] },
 };
 
 /** Reasons the board may give itself; Stripe ending a subscription always means `resigned` or `lapsed`. */
@@ -68,28 +69,27 @@ export const isMember = (s: Status): boolean => s === 'active' || s === 'past_du
 
 /**
  * Whether the member may start (or switch to) automatic payment through Stripe:
- * approved new members, and imported members paying by hand, once they have
- * accepted the current membership terms online. Imported members accept them
- * in the portal first (owner, 6th and 10th November 2026); accepting does not
- * change their status. The caller passes whether that acceptance exists.
+ * people who signed up and have not paid yet, and imported members paying by
+ * hand, once they have accepted the current membership terms online. Imported
+ * members accept them in the portal first (owner, 6th and 10th November 2026);
+ * accepting does not change their status. The caller passes whether that
+ * acceptance exists.
  */
 export function canStartAutomaticPayment(m: Pick<Member, 'status' | 'paymentMode'>, acceptedCurrentTerms: boolean): boolean {
-  if (m.status === 'approved') return acceptedCurrentTerms;
+  if (m.status === 'pending') return acceptedCurrentTerms;
   if (m.status === 'imported_manual') return m.paymentMode === 'manual' && acceptedCurrentTerms;
   return false;
 }
 
-/** Statuses in which a person may start a new application. */
-export const canApply = (s: Status | null): boolean => s === null || s === 'rejected' || s === 'ended';
+/** Whether a person may sign up (again): no membership yet, or an ended one. */
+export const canJoin = (s: Status | null): boolean => s === null || s === 'ended';
 
 const LABELS: Record<Status, string> = {
-  applied: 'waiting for approval',
-  approved: 'approved',
+  pending: 'waiting for the first payment',
   active: 'active',
   past_due: 'behind on payment',
   imported_manual: 'paid by hand',
   resigning: 'resigning',
-  rejected: 'declined',
   ended: 'ended',
 };
 

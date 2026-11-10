@@ -4,12 +4,13 @@
  * the draft. Env: SLACK_SIGNING_SECRET, SLACK_AGENT_BOT_TOKEN, SLACK_AGENT_CHANNEL_ID,
  * SLACK_PUBLISHER_IDS, SANITY_AGENT_TOKEN.
  *
- * Also Approve / Reject on membership requests (src/server/membership-review.ts): a Slack app
- * has one interactivity URL, so both land here. Only SLACK_MEMBERSHIP_APPROVER_IDS decide.
+ * Also Confirm resignation on membership resignations (src/server/membership-slack.ts): a Slack
+ * app has one interactivity URL, so both land here. Only SLACK_MEMBERSHIP_APPROVER_IDS confirm.
  */
 import { allowlist, handleButton, sanityStore, slackApi, verifySlackRequest, type ButtonAction, type ButtonValue } from '@zurichjs/agent';
-import { supabaseStore } from '@zurichjs/membership';
-import { decide, isReviewAction, membershipSlack } from '../../src/server/membership-review.ts';
+import { siteOrigin } from '../../src/server/auth.ts';
+import { memberStore } from '../../src/server/membership-db.ts';
+import { handleMembershipClick, isMembershipAction, membershipSlack } from '../../src/server/membership-slack.ts';
 
 interface Payload {
   type: string;
@@ -24,12 +25,12 @@ export default async (req: Request, context: { waitUntil?: (p: Promise<unknown>)
   if (!(await verifySlackRequest(req.headers, raw, process.env.SLACK_SIGNING_SECRET))) return new Response('Invalid signature', { status: 401 });
   const payload = JSON.parse(new URLSearchParams(raw).get('payload') ?? '{}') as Payload;
   const action = payload.actions?.[0];
-  if (payload.type === 'block_actions' && action && isReviewAction(action.action_id) && payload.channel && payload.message) {
+  if (payload.type === 'block_actions' && action && isMembershipAction(action.action_id) && payload.channel && payload.message) {
     const env = process.env;
     const click = { action: action.action_id, memberId: action.value, user: payload.user.id, channel: payload.channel.id, ts: payload.message.ts };
     const review = (async () => {
       try {
-        const result = await decide(click, { env, store: supabaseStore(env), slack: membershipSlack(env), origin: env.URL ?? 'https://zurichjs.com' });
+        const result = await handleMembershipClick(click, { env, store: memberStore(env), slack: membershipSlack(env), origin: siteOrigin(env) });
         console.log(`[membership] ${click.action} on ${click.memberId} by ${click.user}: ${result}`);
       } catch (err) {
         console.error('[membership] review click failed', err);

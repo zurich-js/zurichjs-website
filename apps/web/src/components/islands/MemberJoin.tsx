@@ -1,15 +1,16 @@
 /**
- * The membership request on /membership/account (phase 3 of docs/v2/MEMBERSHIP.md).
- * Posts to /api/membership/apply with the signed-in person's token. Nothing is charged.
- * The level and cycle chosen on /membership come along (stored in this browser only).
+ * Joining on /membership/account (docs/v2/MEMBERSHIP.md): who joins, level and
+ * cycle (quarterly or yearly only), the membership terms tick, then Stripe
+ * Checkout. Anyone can join; the membership starts with the first payment.
+ * The level and cycle chosen on /membership come along (this browser only).
  */
 import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { TERMS } from '@zurichjs/membership/terms';
+import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { cx } from '@zurichjs/design/recipes';
+import { TERMS } from '@zurichjs/membership/terms';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, type Cycle, type TierKey } from '../../lib/membership.ts';
-import type { MemberView } from '../../pages/api/membership/me.ts';
+import type { MemberView } from '../../server/membership.ts';
 import { SubmitButton, useFocusFirstError } from './forms/shared.tsx';
 
 const CHOICE_KEY = 'zurichjs-membership-choice';
@@ -34,24 +35,65 @@ export function readChoice(): { level: TierKey; cycle: Cycle } {
   }
 }
 
+/** The membership terms tick, shared by joining and by switching to automatic payment. */
+export function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChange: (v: boolean) => void; error?: string }) {
+  return (
+    <div class="flex flex-col gap-1.5">
+      <label class="flex gap-3 items-start text-[17px] leading-[1.5] cursor-pointer">
+        <input
+          type="checkbox"
+          name="terms"
+          checked={checked}
+          onChange={(e) => onChange((e.target as HTMLInputElement).checked)}
+          aria-invalid={!!error || undefined}
+          aria-describedby={error ? 'terms-error' : undefined}
+          class={cx('mt-1 w-5 h-5 flex-none accent-black', error && 'outline-2 outline-danger')}
+        />
+        <span>
+          I accept the{' '}
+          <a href={TERMS.path} target="_blank" rel="noopener" class="font-bold text-black">
+            membership terms
+          </a>
+          , which follow the association’s bylaws.
+        </span>
+      </label>
+      {error && (
+        <span id="terms-error" class="text-[14px] text-danger pl-8" aria-live="polite">
+          {error}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Sends the person to Stripe Checkout; returns an error sentence, or nothing (the page is leaving). */
+export async function startCheckout(body: Record<string, unknown>, onSignedOut: () => void, contactEmail: string): Promise<{ error?: string; field?: string } | void> {
+  const res = await fetch('/api/membership/checkout', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ ...body, termsVersion: TERMS.version }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string; field?: string };
+  if (res.status === 401) return onSignedOut();
+  if (!res.ok || !data.ok || !data.url) return { error: data.error ?? `We couldn’t start the payment. Try again, or write to ${contactEmail}.`, field: data.field };
+  location.assign(data.url);
+}
+
 interface Props {
-  /** A fresh access token, or null when the session ended. */
-  token: () => Promise<string | null>;
-  /** The previous request or membership, if it was declined or ended. */
+  /** An earlier membership that ended, or a sign-up whose payment was not finished. */
   previous: MemberView | null;
   contactEmail: string;
-  onApplied: (m: MemberView) => void;
   onSignedOut: () => void;
 }
 
 type Kind = 'person' | 'organisation';
 
-export default function MemberApply({ token, previous, contactEmail, onApplied, onSignedOut }: Props) {
+export default function MemberJoin({ previous, contactEmail, onSignedOut }: Props) {
   const [choice] = useState(readChoice);
   const [kind, setKind] = useState<Kind>(previous?.organisationName ? 'organisation' : 'person');
   const [level, setLevel] = useState<TierKey>(previous?.level ?? choice.level);
   const [cycle, setCycle] = useState<Cycle>(previous?.cycle ?? choice.cycle);
-  const [f, setF] = useState({ name: previous?.name ?? '', organisationName: previous?.organisationName ?? '', message: '' });
+  const [f, setF] = useState({ name: previous?.name ?? '', organisationName: previous?.organisationName ?? '' });
   const [accepted, setAccepted] = useState(false);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -61,9 +103,9 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
   const focusError = useFocusFirstError(formRef);
 
   const errs = {
-    name: f.name.trim() ? '' : kind === 'organisation' ? 'Add the name of the person who signs for the organisation.' : 'Add your full name.',
+    name: f.name.trim() ? '' : kind === 'organisation' ? 'Add the name of the person who joins for the organisation.' : 'Add your full name.',
     organisationName: kind === 'organisation' && !f.organisationName.trim() ? 'Add the organisation’s name.' : '',
-    terms: accepted ? '' : 'Accept the membership terms to send your request.',
+    terms: accepted ? '' : 'Accept the membership terms to continue.',
   };
   const fieldError = (k: keyof typeof errs) => (tried ? errs[k] : '') || (serverField?.field === k ? serverField.error : '');
   const valid = !errs.name && !errs.organisationName && !errs.terms;
@@ -79,50 +121,31 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
     setBusy(true);
     setServerError('');
     setServerField(null);
-    try {
-      const t = await token();
-      if (!t) return onSignedOut();
-      const res = await fetch('/api/membership/apply', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${t}` },
-        body: JSON.stringify({
-          kind,
-          name: f.name,
-          organisationName: kind === 'organisation' ? f.organisationName : undefined,
-          level,
-          cycle,
-          message: f.message || undefined,
-          termsVersion: TERMS.version,
-        }),
-      });
-      const body = (await res.json().catch(() => ({}))) as { ok?: boolean; member?: MemberView; error?: string; field?: string };
-      if (res.status === 401) return onSignedOut();
-      if (!res.ok || !body.ok || !body.member) {
-        if (body.field && body.error) setServerField({ field: body.field, error: body.error });
-        throw new Error(body.error ?? '');
-      }
-      track('form_submit', { form: 'membership_apply', tier: level, cycle });
-      onApplied(body.member);
-    } catch (err) {
-      setServerError((err as Error).message || `We couldn’t send your request. Try again, or write to ${contactEmail}.`);
-    } finally {
+    track('form_submit', { form: 'membership_join', tier: level, cycle });
+    const result: { error?: string; field?: string } | void = await startCheckout(
+      { kind, name: f.name, organisationName: kind === 'organisation' ? f.organisationName : undefined, level, cycle },
+      onSignedOut,
+      contactEmail,
+    ).catch(() => ({ error: 'We couldn’t start the payment. Check your connection and try again.' }));
+    if (result?.error) {
+      if (result.field) setServerField({ field: result.field, error: result.error });
+      setServerError(result.error);
       setBusy(false);
     }
   };
 
   return (
-    <section aria-labelledby="h-apply" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(32px,5vw,64px)] items-start">
+    <section aria-labelledby="h-join" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(32px,5vw,64px)] items-start">
       <div class="flex flex-col gap-3.5">
-        <h2 id="h-apply" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
-          Ask to join
+        <h2 id="h-join" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
+          {previous?.status === 'pending' ? 'Finish joining' : 'Join'}
         </h2>
-        {previous && (
-          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-            {previous.status === 'rejected' ? 'Your last request was not approved.' : 'Your membership has ended.'} You can ask again here.
-          </p>
+        {previous?.status === 'pending' && (
+          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Your payment was not finished, so nothing was charged. Check your details and continue.</p>
         )}
+        {previous?.status === 'ended' && <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Your membership has ended. You are welcome to join again.</p>}
         <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
-          Nothing is charged now. An organiser looks at your request; if it is approved, you set up payment here and your membership starts.
+          You pay securely with Stripe. Your membership starts with the first payment, and you get your certificate of membership by email.
         </p>
         <p class="m-0 text-[17px] leading-[1.6] text-ink-2 text-pretty">
           Already a member? Sign in with the email you joined with, or write to{' '}
@@ -154,7 +177,7 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
           />
         )}
         <TextField
-          label={kind === 'organisation' ? 'Your full name (you sign for the organisation)' : 'Full name'}
+          label={kind === 'organisation' ? 'Your full name (you join for the organisation)' : 'Full name'}
           name="name"
           autoComplete="name"
           value={f.name}
@@ -169,49 +192,17 @@ export default function MemberApply({ token, previous, contactEmail, onApplied, 
           onChange={setCycle}
           options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${chf(TIERS[level].fees[c.value])}` }))}
         />
-        <TextArea
-          label="Anything you want to tell us (optional)"
-          name="message"
-          rows={3}
-          value={f.message}
-          onInput={(e) => setF({ ...f, message: (e.target as HTMLTextAreaElement).value })}
-          maxLength={1000}
-        />
         <p class="m-0 text-[16px] text-ink-2" aria-live="polite">
-          {TIERS[level].name}, {feeLabel(TIERS[level], cycle)}. Charged only after an organiser approves your request.
+          {TIERS[level].name}, {feeLabel(TIERS[level], cycle)}, renewing automatically. You can switch between quarterly and yearly later.
         </p>
-        <div class="flex flex-col gap-1.5">
-          <label class="flex gap-3 items-start text-[17px] leading-[1.5] cursor-pointer">
-            <input
-              type="checkbox"
-              name="terms"
-              checked={accepted}
-              onChange={(e) => setAccepted((e.target as HTMLInputElement).checked)}
-              aria-invalid={!!fieldError('terms') || undefined}
-              aria-describedby={fieldError('terms') ? 'terms-error' : undefined}
-              class={cx('mt-1 w-5 h-5 flex-none accent-black', fieldError('terms') && 'outline-2 outline-danger')}
-            />
-            <span>
-              I accept the{' '}
-              <a href={TERMS.path} target="_blank" rel="noopener" class="font-bold text-black">
-                membership terms
-              </a>
-              , which follow the association’s bylaws.
-            </span>
-          </label>
-          {fieldError('terms') && (
-            <span id="terms-error" class="text-[14px] text-danger pl-8" aria-live="polite">
-              {fieldError('terms')}
-            </span>
-          )}
-        </div>
-        {serverError && (
+        <TermsCheckbox checked={accepted} onChange={setAccepted} error={fieldError('terms') || undefined} />
+        {serverError && !serverField && (
           <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
             {serverError}
           </p>
         )}
         <SubmitButton busy={busy} class="self-start">
-          {busy ? 'Sending…' : 'Send my request'}
+          {busy ? 'Opening Stripe…' : 'Continue to payment'}
         </SubmitButton>
       </form>
     </section>

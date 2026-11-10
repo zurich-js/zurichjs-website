@@ -12,7 +12,9 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/pg": "8.23.1",
     "@zurichjs/config": "workspace:*",
+    "pg": "8.23.1",
     "typescript": "5.9.3"
   }
 }

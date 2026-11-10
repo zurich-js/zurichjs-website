@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DuplicateEmail,
+  TERMS,
+  TRANSITIONS,
+  TransitionError,
+  acceptedCurrent,
   atLeast,
-  canApply,
+  canJoin,
   canStartAutomaticPayment,
   checkTransition,
   isMember,
@@ -9,22 +14,14 @@ import {
   parseCsv,
   parseImport,
   priceLookupKey,
-  supabaseStore,
-  TERMS,
-  TRANSITIONS,
-  acceptedCurrent,
-  TransitionError,
-  DuplicateEmail,
   type NewMember,
   type Status,
 } from '../src/index.ts';
 
-const board = { kind: 'board', id: 'U123' } as const;
-const member = { kind: 'member', id: 'auth-1' } as const;
+const member = { kind: 'member', id: 'user-1' } as const;
 const stripe = { kind: 'stripe', id: 'evt_1' } as const;
-const script = { kind: 'script', id: 'import' } as const;
 
-const applicant: NewMember = {
+const joiner: NewMember = {
   kind: 'person',
   name: 'Ada Lovelace',
   organisationName: null,
@@ -32,7 +29,7 @@ const applicant: NewMember = {
   level: 'supporter',
   cycle: 'yearly',
   category: 'passive',
-  status: 'applied',
+  status: 'pending',
   source: 'self_serve',
   joinedAt: null,
   paidUntil: null,
@@ -59,24 +56,19 @@ describe('levels', () => {
 });
 
 describe('status machine', () => {
-  it('runs the self-serve path: apply (terms accepted), approve, pay, resign, end', () => {
+  it('runs the self-serve path: sign up (terms accepted), pay, resign, end', () => {
     const path: [Status, Status, 'member' | 'board' | 'stripe'][] = [
-      ['applied', 'approved', 'board'],
-      ['approved', 'active', 'stripe'],
+      ['pending', 'active', 'stripe'],
       ['active', 'resigning', 'member'],
     ];
     for (const [from, to, actor] of path) expect(code(() => checkTransition({ status: from }, to, actor))).toBe('ok');
     expect(checkTransition({ status: 'resigning' }, 'ended', 'board', 'resigned')).toEqual({ from: 'resigning', to: 'ended', endedReason: 'resigned' });
   });
 
-  it('never lets members approve themselves or skip approval', () => {
-    expect(code(() => checkTransition({ status: 'applied' }, 'approved', 'member'))).toBe('wrong_actor');
-    expect(code(() => checkTransition({ status: 'applied' }, 'active', 'stripe'))).toBe('not_allowed');
-    expect(code(() => checkTransition({ status: 'applied' }, 'active', 'board'))).toBe('not_allowed');
-  });
-
-  it('only lets Stripe say a payment happened', () => {
-    expect(code(() => checkTransition({ status: 'approved' }, 'active', 'board'))).toBe('wrong_actor');
+  it('has no approval step: only a Stripe payment makes someone active', () => {
+    expect(Object.keys(TRANSITIONS.pending)).toEqual(['active']);
+    expect(code(() => checkTransition({ status: 'pending' }, 'active', 'board'))).toBe('wrong_actor');
+    expect(code(() => checkTransition({ status: 'pending' }, 'active', 'member'))).toBe('wrong_actor');
     expect(code(() => checkTransition({ status: 'imported_manual' }, 'active', 'member'))).toBe('wrong_actor');
   });
 
@@ -92,23 +84,23 @@ describe('status machine', () => {
     expect(code(() => checkTransition({ status: 'active' }, 'resigning', 'member', 'resigned'))).toBe('reason_not_allowed');
   });
 
-  it('gives organisers a sentence they can read', () => {
-    expect(() => checkTransition({ status: 'applied' }, 'approved', 'member')).toThrow('Only an organiser can change a membership from waiting for approval to approved.');
+  it('gives a sentence a person can read', () => {
+    expect(() => checkTransition({ status: 'pending' }, 'active', 'member')).toThrow('Only Stripe can change a membership from waiting for the first payment to active.');
   });
 
-  it('knows who is a member and who may apply again', () => {
+  it('knows who is a member and who may join (again)', () => {
     expect(isMember('resigning')).toBe(true);
-    expect(isMember('signed')).toBe(false);
-    expect(canApply(null) && canApply('ended') && canApply('rejected')).toBe(true);
-    expect(canApply('applied')).toBe(false);
+    expect(isMember('pending')).toBe(false);
+    expect(canJoin(null) && canJoin('ended')).toBe(true);
+    expect(canJoin('pending') || canJoin('active')).toBe(false);
+    expect(code(() => checkTransition({ status: 'ended' }, 'pending', 'member'))).toBe('ok');
   });
 
-  it('lets approved and imported members pay automatically only after accepting the current terms', () => {
+  it('lets new and imported members pay automatically only after accepting the current terms', () => {
+    expect(canStartAutomaticPayment({ status: 'pending', paymentMode: 'automatic' }, true)).toBe(true);
+    expect(canStartAutomaticPayment({ status: 'pending', paymentMode: 'automatic' }, false)).toBe(false);
     expect(canStartAutomaticPayment({ status: 'imported_manual', paymentMode: 'manual' }, false)).toBe(false);
     expect(canStartAutomaticPayment({ status: 'imported_manual', paymentMode: 'manual' }, true)).toBe(true);
-    expect(canStartAutomaticPayment({ status: 'approved', paymentMode: 'automatic' }, true)).toBe(true);
-    expect(canStartAutomaticPayment({ status: 'approved', paymentMode: 'automatic' }, false)).toBe(false);
-    expect(canStartAutomaticPayment({ status: 'applied', paymentMode: 'automatic' }, true)).toBe(false);
     expect(canStartAutomaticPayment({ status: 'active', paymentMode: 'automatic' }, true)).toBe(false);
   });
 
@@ -120,29 +112,28 @@ describe('status machine', () => {
 describe('memory store', () => {
   it('normalises email, refuses duplicates and logs every change', async () => {
     const s = memoryStore();
-    const m = await s.create(applicant, member);
+    const m = await s.create(joiner, member);
     expect(m.email).toBe('ada@example.com');
-    await expect(s.create({ ...applicant, email: 'ADA@example.com' }, member)).rejects.toBeInstanceOf(DuplicateEmail);
-    await s.transition(m.id, { to: 'approved', actor: board, payload: { ts: '1.2' } });
-    await s.linkStripe(m.id, { customerId: 'cus_1' }, script);
+    await expect(s.create({ ...joiner, email: 'ADA@example.com' }, member)).rejects.toBeInstanceOf(DuplicateEmail);
+    await s.linkStripe(m.id, { customerId: 'cus_1' }, stripe);
+    await s.transition(m.id, { to: 'active', actor: stripe, payload: { invoice: 'in_1' } });
     const events = await s.events(m.id);
-    expect(events.map((e) => e.type)).toEqual(['created', 'status_changed', 'stripe_linked']);
-    expect(events[1]).toMatchObject({ fromStatus: 'applied', toStatus: 'approved', actor: board, payload: { ts: '1.2' } });
+    expect(events.map((e) => e.type)).toEqual(['created', 'stripe_linked', 'status_changed']);
+    expect(events[2]).toMatchObject({ fromStatus: 'pending', toStatus: 'active', actor: stripe, payload: { invoice: 'in_1' } });
     expect((await s.byEmail('ada@EXAMPLE.com'))?.stripeCustomerId).toBe('cus_1');
   });
 
   it('refuses a change when the member is no longer in the status the caller saw', async () => {
     const s = memoryStore();
-    const m = await s.create(applicant, member);
-    await s.transition(m.id, { from: 'applied', to: 'approved', actor: board });
-    // A second approver pressing Reject on the same card: approved → rejected is allowed in general, but not from this card.
-    await expect(s.transition(m.id, { from: 'applied', to: 'rejected', actor: board })).rejects.toMatchObject({ code: 'conflict' });
-    expect((await s.get(m.id))!.status).toBe('approved');
+    const m = await s.create(joiner, member);
+    await s.transition(m.id, { from: 'pending', to: 'active', actor: stripe });
+    // A retried webhook for the first payment.
+    await expect(s.transition(m.id, { from: 'pending', to: 'active', actor: stripe })).rejects.toMatchObject({ code: 'conflict' });
   });
 
   it('records terms acceptances and returns the latest version', async () => {
     const s = memoryStore();
-    const m = await s.create(applicant, member);
+    const m = await s.create(joiner, member);
     expect(await s.acceptedTerms(m.id)).toBeNull();
     await s.acceptTerms(m.id, '2026-01-01', member);
     await s.acceptTerms(m.id, TERMS.version, member);
@@ -151,104 +142,26 @@ describe('memory store', () => {
     expect((await s.events(m.id)).at(-1)).toMatchObject({ type: 'terms_accepted', payload: { version: TERMS.version } });
   });
 
+  it('issues one certificate per paid invoice', async () => {
+    const s = memoryStore();
+    const m = await s.create(joiner, member);
+    const term = { periodStart: '2026-11-10', periodEnd: '2027-11-10', stripeInvoiceId: 'in_1' };
+    const c = await s.issueCertificate(m.id, term, stripe);
+    expect(c).toMatchObject({ number: 'ZJS-2026-0001', level: 'supporter', periodStart: '2026-11-10', periodEnd: '2027-11-10' });
+    expect(await s.issueCertificate(m.id, term, stripe)).toEqual(c);
+    expect(await s.certificates(m.id)).toHaveLength(1);
+  });
+
   it('refuses a change the status machine does not allow, and logs nothing', async () => {
     const s = memoryStore();
-    const m = await s.create(applicant, member);
-    await expect(s.transition(m.id, { to: 'active', actor: stripe })).rejects.toBeInstanceOf(TransitionError);
+    const m = await s.create(joiner, member);
+    await expect(s.transition(m.id, { to: 'resigning', actor: member })).rejects.toBeInstanceOf(TransitionError);
     expect((await s.events(m.id)).length).toBe(1);
   });
 });
 
-describe('supabase store', () => {
-  const row = {
-    id: 'm1',
-    auth_user_id: null,
-    email: 'ada@example.com',
-    kind: 'person',
-    name: 'Ada',
-    organisation_name: null,
-    level: 'supporter',
-    cycle: 'yearly',
-    category: 'passive',
-    status: 'applied',
-    ended_reason: null,
-    source: 'self_serve',
-    joined_at: null,
-    paid_until: null,
-    payment_mode: 'automatic',
-    stripe_customer_id: null,
-    stripe_subscription_id: null,
-    notes: null,
-    created_at: '2026-11-05T12:00:00Z',
-    updated_at: '2026-11-05T12:00:00Z',
-  };
-  const env = { SUPABASE_URL: 'https://abc.supabase.co/', SUPABASE_SERVICE_ROLE_KEY: 'service-key' };
-
-  const fake = (responses: [number, unknown][]) => {
-    const calls: { url: string; method: string; body: unknown; headers: Record<string, string> }[] = [];
-    const f = (async (url: string, init: RequestInit) => {
-      calls.push({ url, method: init.method!, body: init.body ? JSON.parse(String(init.body)) : undefined, headers: init.headers as Record<string, string> });
-      const [status, body] = responses.shift()!;
-      return new Response(JSON.stringify(body), { status });
-    }) as unknown as typeof fetch;
-    return { f, calls };
-  };
-
-  it('needs both variables and an https URL', () => {
-    expect(() => supabaseStore({})).toThrow(/SUPABASE_URL/);
-    expect(() => supabaseStore({ ...env, SUPABASE_URL: 'ftp://x' })).toThrow(/must be https/);
-  });
-
-  it('reads with the service key and maps rows to members', async () => {
-    const { f, calls } = fake([[200, [row]]]);
-    const m = await supabaseStore(env, f).byEmail('Ada@Example.com');
-    expect(calls[0]!.url).toBe('https://abc.supabase.co/rest/v1/members?select=*&email=eq.ada%40example.com&limit=1');
-    expect(calls[0]!.headers.authorization).toBe('Bearer service-key');
-    expect(m).toMatchObject({ id: 'm1', paymentMode: 'automatic', organisationName: null });
-  });
-
-  it('checks the transition before calling the database, and sends the expected from-status', async () => {
-    const { f, calls } = fake([
-      [200, [row]],
-      [200, { ...row, status: 'approved' }],
-    ]);
-    const m = await supabaseStore(env, f).transition('m1', { to: 'approved', actor: board });
-    expect(m.status).toBe('approved');
-    expect(calls[1]).toMatchObject({
-      url: 'https://abc.supabase.co/rest/v1/rpc/member_transition',
-      body: { p_id: 'm1', p_from: 'applied', p_to: 'approved', p_ended_reason: null, p_actor_kind: 'board', p_actor_id: 'U123' },
-    });
-
-    const refused = fake([[200, [row]]]);
-    await expect(supabaseStore(env, refused.f).transition('m1', { to: 'approved', actor: member })).rejects.toThrow(/Only an organiser/);
-    expect(refused.calls).toHaveLength(1);
-  });
-
-  it('refuses a stale expected status before calling the database', async () => {
-    const { f, calls } = fake([[200, [{ ...row, status: 'approved' }]]]);
-    await expect(supabaseStore(env, f).transition('m1', { from: 'applied', to: 'rejected', actor: board })).rejects.toMatchObject({ code: 'conflict' });
-    expect(calls).toHaveLength(1);
-  });
-
-  it('maps a lost race and a duplicate email to the store errors', async () => {
-    const race = fake([
-      [200, [row]],
-      [400, { code: 'P0001', message: 'member_transition_conflict' }],
-    ]);
-    await expect(supabaseStore(env, race.f).transition('m1', { to: 'approved', actor: board })).rejects.toMatchObject({ code: 'conflict' });
-    const dup = fake([[409, { code: '23505', message: 'duplicate key value violates unique constraint "members_email_key"' }]]);
-    await expect(supabaseStore(env, dup.f).create(applicant, member)).rejects.toBeInstanceOf(DuplicateEmail);
-  });
-
-  it('sends only patchable columns to member_update', async () => {
-    const { f, calls } = fake([[200, row]]);
-    await supabaseStore(env, f).update('m1', { paidUntil: '2027-01-31', notes: undefined }, board);
-    expect(calls[0]!.body).toEqual({ p_id: 'm1', p_patch: { paid_until: '2027-01-31' }, p_actor_kind: 'board', p_actor_id: 'U123' });
-  });
-});
-
 describe('import', () => {
-  const header = 'kind,name,organisation,email,level,cycle,category,joined_at,paid_until,declaration_pdf,notes';
+  const header = 'kind,name,organisation,email,level,cycle,category,joined_at,paid_until,notes';
 
   it('parses quoted CSV fields', () => {
     expect(parseCsv('a,"b, c","say ""hi"""\r\n1,2,3\n')).toEqual([
@@ -261,14 +174,13 @@ describe('import', () => {
     const { rows, problems } = parseImport(
       [
         header,
-        'person,Ada Lovelace,,Ada@Example.com,Supporter,yearly,active,2025-05-23,2026-05-22,ada.pdf,"Paid by Twint, 2025"',
-        'organisation,Acme Rep,Acme AG,team@acme.ch,basic,quarterly,,,2026-12-31,,',
+        'person,Ada Lovelace,,Ada@Example.com,Supporter,yearly,active,2025-05-23,2026-05-22,"Paid by Twint, 2025"',
+        'organisation,Acme Rep,Acme AG,team@acme.ch,basic,quarterly,,,2026-12-31,',
       ].join('\n'),
     );
     expect(problems).toEqual([]);
     expect(rows[0]).toMatchObject({
       line: 2,
-      declarationPdf: 'ada.pdf',
       member: {
         email: 'ada@example.com',
         level: 'supporter',
@@ -286,10 +198,10 @@ describe('import', () => {
     const { rows, problems } = parseImport(
       [
         header,
-        'person,,,,gold,monthly,,2025-02-30,,ada.docx,',
-        'organisation,Rep,,rep@x.ch,basic,yearly,,2026-01-01,2025-12-31,,',
-        'person,A,,a@x.ch,basic,yearly,,,2026-01-01,,',
-        'person,A2,,A@x.ch,basic,yearly,,,2026-01-01,,',
+        'person,,,,gold,monthly,,2025-02-30,,',
+        'organisation,Rep,,rep@x.ch,basic,yearly,,2026-01-01,2025-12-31,',
+        'person,A,,a@x.ch,basic,yearly,,,2026-01-01,',
+        'person,A2,,A@x.ch,basic,yearly,,,2026-01-01,',
       ].join('\n'),
     );
     expect(rows.map((r) => r.line)).toEqual([4]);
@@ -300,7 +212,6 @@ describe('import', () => {
       'cycle must be quarterly or yearly, not "monthly".',
       'joined_at "2025-02-30" is not a date like 2025-05-23.',
       'paid_until is empty: say until when they have paid.',
-      'declaration_pdf "ada.docx" is not a .pdf file.',
     ]);
     expect(problems.filter((p) => p.line === 3).map((p) => p.message)).toEqual(['An organisation needs its name in organisation.', 'paid_until is before joined_at.']);
     expect(problems.find((p) => p.line === 5)?.message).toBe('a@x.ch is already on line 4.');

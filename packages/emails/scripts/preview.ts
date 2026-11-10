@@ -7,7 +7,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { renderEmail, type TemplateName, type TemplateProps } from '../src/index.ts';
 
-const application = {
+const base = {
   name: 'Ada Lovelace',
   organisationName: null,
   levelName: 'Supporter',
@@ -15,19 +15,18 @@ const application = {
   feeLabel: 'CHF 250 a year',
   accountUrl: 'https://zurichjs.com/membership/account',
 };
+const term = { ...base, term: '10 November 2026 to 9 November 2027', certificateNumber: 'ZJS-2026-0001' };
 
 const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
-  'application-received': [application, { ...application, name: 'Grace Hopper', organisationName: 'Acme AG' }],
-  'application-approved': [application],
-  'application-declined': [application],
-  'login-link': [
-    {
-      url: 'https://example.supabase.co/auth/v1/verify?token=sampletoken=pkce_sample&type=magiclinktype=magiclink&redirect_to=https%3A%2F%2Fzurichjs.com%2Fmembership%2Faccount',
-      validMinutes: 60,
-      firstTime: false,
-    },
-    { url: 'https://example.supabase.co/auth/v1/verify?token=sample&type=signup&redirect_to=https%3A%2F%2Fzurichjs.com%2Fmembership%2Faccount', validMinutes: 60, firstTime: true },
+  'membership-welcome': [term, { ...term, name: 'Grace Hopper', organisationName: 'Acme AG' }],
+  'membership-renewed': [{ ...term, term: '10 November 2027 to 9 November 2028', certificateNumber: 'ZJS-2027-0042' }],
+  'payment-failed': [base],
+  'resignation-received': [
+    { ...base, openDues: false },
+    { ...base, openDues: true },
   ],
+  'resignation-confirmed': [{ ...base, lastDay: '9 November 2027' }],
+  'login-link': [{ url: 'https://zurichjs.com/api/auth/magic-link/verify?token=sample-token&callbackURL=%2Fmembership%2Faccount', validMinutes: 15, firstTime: false }],
 };
 
 const out = resolve(process.argv[2] ?? 'email-previews');

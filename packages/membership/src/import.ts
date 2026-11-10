@@ -2,24 +2,23 @@
  * Existing members from the manual process (signed on paper, paid by hand).
  * The CSV has one row per member, with a header row:
  *
- *   kind,name,organisation,email,level,cycle,category,joined_at,paid_until,declaration_pdf,notes
+ *   kind,name,organisation,email,level,cycle,category,joined_at,paid_until,notes
  *
  * kind: person | organisation (empty = person). level: basic | supporter.
  * cycle: quarterly | yearly. category: passive | active
  * (empty = passive). Dates are YYYY-MM-DD; paid_until is required.
- * declaration_pdf is the path to the signed paper declaration, relative to the
- * CSV, or empty. Rows become `imported_manual` members paying by hand.
+ * Rows become `imported_manual` members paying by hand. Before they can switch
+ * to automatic payment they accept the current membership terms in the portal.
  */
 import { isCycle, isLevel } from './levels.ts';
 import { normaliseEmail } from './store.ts';
 import type { Category, MemberKind, NewMember } from './types.ts';
 
-export const IMPORT_COLUMNS = ['kind', 'name', 'organisation', 'email', 'level', 'cycle', 'category', 'joined_at', 'paid_until', 'declaration_pdf', 'notes'] as const;
+export const IMPORT_COLUMNS = ['kind', 'name', 'organisation', 'email', 'level', 'cycle', 'category', 'joined_at', 'paid_until', 'notes'] as const;
 
 export interface ImportRow {
   line: number;
   member: NewMember;
-  declarationPdf: string | null;
 }
 
 export interface ImportProblem {
@@ -103,13 +102,10 @@ export function parseImport(text: string): { rows: ImportRow[]; problems: Import
     if (!paidUntil) bad('paid_until is empty: say until when they have paid.');
     else if (!isDate(paidUntil)) bad(`paid_until "${paidUntil}" is not a date like 2026-12-31.`);
     if (joinedAt && paidUntil && isDate(joinedAt) && isDate(paidUntil) && paidUntil < joinedAt) bad('paid_until is before joined_at.');
-    const declarationPdf = get('declaration_pdf') || null;
-    if (declarationPdf && !/\.pdf$/i.test(declarationPdf)) bad(`declaration_pdf "${declarationPdf}" is not a .pdf file.`);
 
     if (problems.length > before) return;
     rows.push({
       line,
-      declarationPdf,
       member: {
         kind,
         name,

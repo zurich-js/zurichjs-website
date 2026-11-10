@@ -1,10 +1,10 @@
 import { checkTransition, TransitionError } from './state.ts';
-import type { Actor, EndedReason, Member, MemberEvent, MemberPatch, NewMember, Status } from './types.ts';
+import type { Actor, Certificate, EndedReason, Member, MemberEvent, MemberPatch, NewMember, Status } from './types.ts';
 
 export interface TransitionInput {
   /**
    * The status the caller saw. When set, the change fails with a `conflict` if the
-   * member is no longer in it (a stale Slack card, two approvers at once).
+   * member is no longer in it (a retried webhook, two clicks at once).
    */
   from?: Status;
   to: Status;
@@ -15,16 +15,16 @@ export interface TransitionInput {
 }
 
 /**
- * Where members live. Functions use the Supabase store (service role); tests
- * and local runs use the in-memory one. Every status change goes through
+ * Where members live. Functions use the Postgres store (Netlify Database,
+ * postgres.ts); unit tests use the in-memory one. Every status change goes through
  * `transition`, which writes the new status and the audit row together.
  */
 export interface MemberStore {
   get(id: string): Promise<Member | null>;
   byEmail(email: string): Promise<Member | null>;
-  byAuthUser(authUserId: string): Promise<Member | null>;
+  byUser(userId: string): Promise<Member | null>;
   byStripeSubscription(subscriptionId: string): Promise<Member | null>;
-  /** Oldest first, at most 200 (e.g. the applications waiting for review). */
+  /** Oldest first, at most 500 (e.g. manual members for the renewal reminders). */
   byStatus(status: Status): Promise<Member[]>;
   /** Fails with `DuplicateEmail` if the email exists. */
   create(m: NewMember, actor: Actor): Promise<Member>;
@@ -36,6 +36,17 @@ export interface MemberStore {
   acceptTerms(id: string, version: string, actor: Actor): Promise<void>;
   /** The latest terms version the member accepted, or null. */
   acceptedTerms(id: string): Promise<string | null>;
+  /**
+   * Issues the certificate for a paid term. Idempotent on the Stripe invoice:
+   * a retried webhook gets the certificate that already exists.
+   */
+  issueCertificate(id: string, term: { periodStart: string; periodEnd: string; stripeInvoiceId: string | null }, actor: Actor): Promise<Certificate>;
+  /** Newest first. */
+  certificates(id: string): Promise<Certificate[]>;
+  /** Whether a Stripe webhook event was already handled. */
+  stripeEventSeen(eventId: string): Promise<boolean>;
+  /** Marks a Stripe event as handled (after it succeeded). */
+  markStripeEvent(eventId: string, type: string): Promise<void>;
   events(id: string): Promise<MemberEvent[]>;
 }
 
@@ -63,6 +74,8 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
   const members = new Map<string, Member>();
   const log: MemberEvent[] = [];
   const acceptances: { memberId: string; version: string; at: string }[] = [];
+  const certs: Certificate[] = [];
+  const stripeEvents = new Set<string>();
 
   const record = (memberId: string, type: string, actor: Actor, extra: Partial<MemberEvent> = {}) =>
     log.push({ id: `e_${log.length + 1}`, memberId, type, fromStatus: null, toStatus: null, actor, payload: {}, at: now().toISOString(), ...extra });
@@ -88,14 +101,14 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
     all: () => [...members.values()].map((m) => ({ ...m })),
     get: (id) => Promise.resolve(members.has(id) ? { ...members.get(id)! } : null),
     byEmail: (email) => find((m) => m.email === normaliseEmail(email)),
-    byAuthUser: (uid) => find((m) => m.authUserId === uid),
+    byUser: (uid) => find((m) => m.userId === uid),
     byStripeSubscription: (sid) => find((m) => m.stripeSubscriptionId === sid),
     byStatus: (status) => Promise.resolve([...members.values()].filter((m) => m.status === status).map((m) => ({ ...m }))),
     async create(input, actor) {
       const email = normaliseEmail(input.email);
       if ([...members.values()].some((m) => m.email === email)) throw new DuplicateEmail(email);
       const at = now().toISOString();
-      const m: Member = { authUserId: null, stripeCustomerId: null, stripeSubscriptionId: null, ...input, email, endedReason: null, id: nextId(), createdAt: at, updatedAt: at };
+      const m: Member = { userId: null, stripeCustomerId: null, stripeSubscriptionId: null, ...input, email, endedReason: null, id: nextId(), createdAt: at, updatedAt: at };
       members.set(m.id, m);
       record(m.id, 'created', actor, { toStatus: m.status, payload: { source: m.source } });
       return { ...m };
@@ -123,6 +136,33 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       record(id, 'terms_accepted', actor, { payload: { version } });
     },
     acceptedTerms: (id) => Promise.resolve(acceptances.filter((a) => a.memberId === id).at(-1)?.version ?? null),
+    async issueCertificate(id, term, actor) {
+      const m = must(id);
+      const existing = term.stripeInvoiceId ? certs.find((c) => c.stripeInvoiceId === term.stripeInvoiceId) : undefined;
+      if (existing) return { ...existing };
+      const c: Certificate = {
+        id: `c_${certs.length + 1}`,
+        memberId: id,
+        number: `ZJS-${term.periodStart.slice(0, 4)}-${String(certs.length + 1).padStart(4, '0')}`,
+        level: m.level,
+        periodStart: term.periodStart,
+        periodEnd: term.periodEnd,
+        stripeInvoiceId: term.stripeInvoiceId,
+        issuedAt: now().toISOString(),
+      };
+      certs.push(c);
+      record(id, 'certificate_issued', actor, { payload: { number: c.number, ...(c.stripeInvoiceId ? { invoice: c.stripeInvoiceId } : {}) } });
+      return { ...c };
+    },
+    certificates: (id) =>
+      Promise.resolve(
+        certs
+          .filter((c) => c.memberId === id)
+          .sort((a, b) => b.periodStart.localeCompare(a.periodStart))
+          .map((c) => ({ ...c })),
+      ),
+    stripeEventSeen: (eventId) => Promise.resolve(stripeEvents.has(eventId)),
+    markStripeEvent: async (eventId) => void stripeEvents.add(eventId),
     events: (id) => Promise.resolve(log.filter((e) => e.memberId === id).map((e) => ({ ...e }))),
   };
 }

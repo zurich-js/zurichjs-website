@@ -1,5 +1,5 @@
 /**
- * A throwaway local Postgres for testing supabase/migrations: initdb in a temp
+ * A throwaway local Postgres for testing apps/web/netlify/database/migrations: initdb in a temp
  * directory, a Unix socket only (no TCP port), stopped and deleted afterwards.
  * Returns null when no Postgres binaries are installed, so the tests skip.
  */
@@ -19,10 +19,12 @@ function pgBin(): string | null {
 }
 
 export interface Pg {
-  /** Runs SQL as the superuser, or as `role` with `uid` as auth.uid(). Returns the unaligned output. */
-  sql(query: string, opts?: { role?: 'anon' | 'authenticated' | 'service_role'; uid?: string }): string;
+  /** For a `pg` client: the Unix socket directory and superuser. */
+  connection: { host: string; user: string; database: string };
+  /** Runs SQL as the superuser. Returns the unaligned output. */
+  sql(query: string): string;
   /** Like sql(), but expects an error and returns its message. */
-  fails(query: string, opts?: { role?: 'anon' | 'authenticated' | 'service_role'; uid?: string }): string;
+  fails(query: string): string;
   stop(): void;
 }
 
@@ -43,19 +45,17 @@ export function startPg(): Pg | null {
   const start = run('pg_ctl', ['-D', data, '-l', join(dir, 'log'), '-w', '-o', `-c listen_addresses='' -c unix_socket_directories=${dir} -c fsync=off`, 'start']);
   if (start.status !== 0) throw new Error(`pg_ctl start failed: ${start.stderr}`);
 
-  const psql = (query: string, opts: { role?: string; uid?: string } = {}) => {
-    const prefix = [opts.uid ? `set "request.jwt.claim.sub" = '${opts.uid}';` : '', opts.role ? `set role ${opts.role};` : ''].join('\n');
-    return run('psql', ['-h', dir, '-U', 'postgres', '-d', 'postgres', '-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1'], `${prefix}\n${query}`);
-  };
+  const psql = (query: string) => run('psql', ['-h', dir, '-U', 'postgres', '-d', 'postgres', '-X', '-q', '-At', '-v', 'ON_ERROR_STOP=1'], query);
 
   return {
-    sql(query, opts) {
-      const r = psql(query, opts);
+    connection: { host: dir, user: 'postgres', database: 'postgres' },
+    sql(query) {
+      const r = psql(query);
       if (r.status !== 0) throw new Error(r.stderr.trim());
       return r.stdout.trim();
     },
-    fails(query, opts) {
-      const r = psql(query, opts);
+    fails(query) {
+      const r = psql(query);
       if (r.status === 0) throw new Error(`Expected an error, got: ${r.stdout}`);
       return r.stderr.trim();
     },

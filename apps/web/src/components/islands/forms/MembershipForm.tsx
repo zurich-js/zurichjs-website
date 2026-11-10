@@ -12,9 +12,9 @@ const BILLING = [...CYCLES].reverse();
 
 /**
  * Tier cards plus the membership request on /membership. Nothing is charged.
- * With member accounts configured (`applyOnline`), "Ask to join" leads to
- * /membership/account with the chosen level and cycle; otherwise the request
- * form posts to /api/verein-inquiry and an organiser replies by email.
+ * With online membership on (`applyOnline`), "Join" leads to /membership/account
+ * with the chosen level and cycle, then Stripe; otherwise the request form
+ * posts to /api/verein-inquiry and an organiser replies by email.
  */
 export default function MembershipForm({ applyOnline = false }: { applyOnline?: boolean }) {
   const [tier, setTier] = useState<TierKey>('supporter');
@@ -174,11 +174,11 @@ export default function MembershipForm({ applyOnline = false }: { applyOnline?: 
       >
         <div class="flex flex-col gap-3.5">
           <h2 id="h-join" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
-            Ask to join
+            {applyOnline ? 'Join' : 'Ask to join'}
           </h2>
           <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
             {applyOnline
-              ? 'Nothing is charged here. Sign in with your email to send your request; an organiser looks at it, and only then you set up payment.'
+              ? 'Sign in with your email, accept the membership terms and pay securely with Stripe. Your membership starts with the first payment, and you get a certificate of membership by email.'
               : 'Nothing is charged here. An organiser replies by email with the next steps and how to pay.'}
           </p>
         </div>
@@ -189,7 +189,7 @@ export default function MembershipForm({ applyOnline = false }: { applyOnline?: 
               {t.name}, {fee}
             </p>
             <Button href={`/membership/account?level=${tier}&cycle=${cycle}`} variant="black" size="lg" class="self-start">
-              Continue to sign in
+              Join as {t.name}
             </Button>
             <p class="m-0 text-[16px] text-ink-2">Already a member? Sign in there to see your membership.</p>
           </div>

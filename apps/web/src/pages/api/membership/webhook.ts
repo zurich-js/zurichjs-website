@@ -1,0 +1,223 @@
+/**
+ * Stripe webhook for memberships (separate from the donations webhook).
+ * Configure in Stripe › Developers › Webhooks: https://zurichjs.com/api/membership/webhook,
+ * events checkout.session.completed, invoice.paid, invoice.payment_failed,
+ * customer.subscription.updated, customer.subscription.deleted; secret in
+ * STRIPE_MEMBERSHIP_WEBHOOK_SECRET. Without the secret every call is refused.
+ *
+ *   invoice.paid (amount > 0)          pending/past_due/imported → active; paid until the period end;
+ *                                       certificate for the term, emailed (welcome or renewal); Slack note
+ *   checkout.session.completed          links the subscription; an imported member switching to automatic
+ *                                       payment (trial until their paid period ends) becomes active
+ *   invoice.payment_failed              active → past_due; email to update the payment method; Slack note
+ *   customer.subscription.updated       level or cycle switched in the billing portal
+ *   customer.subscription.deleted       ended: resigned (after the board confirmed) or lapsed
+ *
+ * Safe to receive twice: handled events are skipped, every status change names
+ * the status it expects, certificates are one per invoice, emails carry
+ * idempotency keys. An event is marked handled only after it succeeded, so
+ * Stripe's retries still work after a failure (answered 500).
+ */
+import { renderEmail } from '@zurichjs/emails';
+import { sendMemberEmail } from '@zurichjs/integrations';
+import { TransitionError, levelInfo, type Member, type MemberStore, type Status } from '@zurichjs/membership';
+import type { APIRoute } from 'astro';
+import { siteOrigin } from '../../../server/auth.ts';
+import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
+import { issueAndSendCertificate, membershipProps } from '../../../server/membership.ts';
+import { MembershipUnavailable, memberStore } from '../../../server/membership-db.ts';
+import { notify, who, type MembershipSlack } from '../../../server/membership-slack.ts';
+import { MEMBERSHIP_SOURCE, fromLookupKey } from '../../../server/membership-stripe.ts';
+import { verifyStripeSignature } from '../../../server/stripe.ts';
+
+export const prerender = false;
+
+interface StripeEvent {
+  id: string;
+  type: string;
+  data: { object: Record<string, unknown> };
+}
+
+interface Invoice {
+  id: string;
+  amount_paid?: number;
+  customer?: string;
+  lines?: { data?: { period?: { start: number; end: number } }[] };
+  parent?: { subscription_details?: { subscription?: string; metadata?: Record<string, string> } };
+}
+
+interface Subscription {
+  id: string;
+  status?: string;
+  metadata?: Record<string, string>;
+  items?: { data?: { price?: { lookup_key?: string | null } }[] };
+}
+
+export interface WebhookDeps {
+  env?: Env;
+  store?: MemberStore;
+  fetch?: typeof fetch;
+  slack?: MembershipSlack;
+  now?: number;
+  log?: (m: string) => void;
+  signature?: () => Promise<Uint8Array | null>;
+}
+
+const day = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
+
+/** Moves the member to `to` from whatever they are in now, when that is allowed; otherwise leaves them. */
+async function moveTo(
+  store: MemberStore,
+  m: Member,
+  to: Status,
+  eventId: string,
+  extra: { reason?: 'resigned' | 'lapsed'; payload?: Record<string, unknown> } = {},
+): Promise<Member> {
+  if (m.status === to) return m;
+  try {
+    return await store.transition(m.id, { from: m.status, to, actor: { kind: 'stripe', id: eventId }, reason: extra.reason, payload: extra.payload });
+  } catch (cause) {
+    if (cause instanceof TransitionError) return (await store.get(m.id)) ?? m;
+    throw cause;
+  }
+}
+
+async function memberOf(store: MemberStore, ids: { memberId?: string; subscriptionId?: string }): Promise<Member | null> {
+  if (ids.memberId) {
+    const m = await store.get(ids.memberId);
+    if (m) return m;
+  }
+  return ids.subscriptionId ? store.byStripeSubscription(ids.subscriptionId) : null;
+}
+
+export async function handleMembershipWebhook(request: Request, deps: WebhookDeps = {}): Promise<Response> {
+  const env = deps.env ?? process.env;
+  const log = deps.log ?? console.log;
+  const secret = env.STRIPE_MEMBERSHIP_WEBHOOK_SECRET;
+  const payload = await request.text();
+  if (!secret) {
+    log('[membership] STRIPE_MEMBERSHIP_WEBHOOK_SECRET missing; webhook refused');
+    return fail(503, 'Webhook not configured.');
+  }
+  if (!verifyStripeSignature(payload, request.headers.get('stripe-signature'), secret, deps.now)) return fail(400, 'Bad signature.');
+  let event: StripeEvent;
+  try {
+    event = JSON.parse(payload) as StripeEvent;
+  } catch {
+    return fail(400, 'Invalid JSON.');
+  }
+
+  let store: MemberStore;
+  try {
+    store = deps.store ?? memberStore(env);
+  } catch (cause) {
+    if (cause instanceof MembershipUnavailable) return fail(503, 'Membership database not configured.');
+    throw cause;
+  }
+  const origin = siteOrigin(env);
+  const say = (text: string) => notify(text, { env, slack: deps.slack, fetch: deps.fetch, log });
+
+  try {
+    if (await store.stripeEventSeen(event.id)) return json(200, { ok: true, duplicate: true });
+    const o = event.data.object;
+
+    switch (event.type) {
+      case 'invoice.paid': {
+        const inv = o as unknown as Invoice;
+        const sub = inv.parent?.subscription_details;
+        if (sub?.metadata?.source !== MEMBERSHIP_SOURCE) break;
+        // The trial invoice of an imported member (nothing charged) is not a paid term.
+        if (!inv.amount_paid) break;
+        let m = await memberOf(store, { memberId: sub.metadata.memberId, subscriptionId: sub.subscription });
+        const period = inv.lines?.data?.[0]?.period;
+        if (!m || !period) {
+          log(`[membership] invoice ${inv.id}: no member or period; skipped`);
+          break;
+        }
+        const first = m.status === 'pending';
+        if (sub.subscription && m.stripeSubscriptionId !== sub.subscription)
+          m = await store.linkStripe(m.id, { subscriptionId: sub.subscription }, { kind: 'stripe', id: event.id });
+        m = await store.update(
+          m.id,
+          { paidUntil: day(period.end), paymentMode: 'automatic', ...(m.joinedAt ? {} : { joinedAt: day(period.start) }) },
+          { kind: 'stripe', id: event.id },
+        );
+        if (m.status === 'pending' || m.status === 'past_due' || m.status === 'imported_manual') m = await moveTo(store, m, 'active', event.id, { payload: { invoice: inv.id } });
+        const cert = await issueAndSendCertificate(m, { periodStart: day(period.start), periodEnd: day(period.end), stripeInvoiceId: inv.id }, first, {
+          env,
+          store,
+          origin,
+          actor: { kind: 'stripe', id: event.id },
+          fetch: deps.fetch,
+          log,
+          signature: deps.signature,
+        });
+        await say(`${first ? ':tada: New member' : ':repeat: Renewed'}: ${who(m)}, ${levelInfo(m.level).name}, ${m.cycle}. Certificate ${cert.number}.`);
+        break;
+      }
+
+      case 'checkout.session.completed': {
+        const meta = o.metadata as Record<string, string> | undefined;
+        if (meta?.source !== MEMBERSHIP_SOURCE) break;
+        let m = await memberOf(store, { memberId: meta.memberId });
+        const subscriptionId = typeof o.subscription === 'string' ? o.subscription : undefined;
+        if (!m || !subscriptionId) break;
+        if (m.stripeSubscriptionId !== subscriptionId) m = await store.linkStripe(m.id, { subscriptionId }, { kind: 'stripe', id: event.id });
+        if (m.status === 'imported_manual') {
+          // Switched to automatic payment; the first charge comes when the paid period ends.
+          m = await store.update(m.id, { paymentMode: 'automatic' }, { kind: 'stripe', id: event.id });
+          m = await moveTo(store, m, 'active', event.id, { payload: { switchedToAutomatic: true } });
+          await say(`:credit_card: ${who(m)} switched to automatic payment (first charge when the paid period ends).`);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const inv = o as unknown as Invoice;
+        const sub = inv.parent?.subscription_details;
+        if (sub?.metadata?.source !== MEMBERSHIP_SOURCE) break;
+        let m = await memberOf(store, { memberId: sub.metadata.memberId, subscriptionId: sub.subscription });
+        if (!m) break;
+        if (m.status === 'active') m = await moveTo(store, m, 'past_due', event.id, { payload: { invoice: inv.id } });
+        await sendMemberEmail(
+          env,
+          { to: m.email, ...renderEmail('payment-failed', membershipProps(m, origin)) },
+          { idempotencyKey: `member-payment-failed:${inv.id}`, log, fetch: deps.fetch },
+        ).catch((e: Error) => log(`[membership] payment-failed email to ${m!.id} failed: ${e.message}`));
+        await say(`:warning: Payment failed for ${who(m)}. Stripe retries; they were emailed.`);
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const s = o as unknown as Subscription;
+        if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
+        const m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
+        const plan = fromLookupKey(s.items?.data?.[0]?.price?.lookup_key);
+        if (!m || !plan || (plan.level === m.level && plan.cycle === m.cycle)) break;
+        await store.update(m.id, { level: plan.level, cycle: plan.cycle }, { kind: 'stripe', id: event.id });
+        await say(`:arrows_counterclockwise: ${who(m)} switched to ${levelInfo(plan.level).name}, ${plan.cycle}.`);
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const s = o as unknown as Subscription;
+        if (s.metadata?.source !== MEMBERSHIP_SOURCE) break;
+        const m = await memberOf(store, { memberId: s.metadata.memberId, subscriptionId: s.id });
+        if (!m || m.status === 'ended') break;
+        const reason = m.status === 'resigning' ? 'resigned' : 'lapsed';
+        const ended = await moveTo(store, m, 'ended', event.id, { reason });
+        if (ended.status === 'ended') await say(`:wave: Membership ended (${reason}): ${who(ended)}.`);
+        break;
+      }
+    }
+
+    await store.markStripeEvent(event.id, event.type);
+    return json(200, { ok: true });
+  } catch (cause) {
+    console.error(`[membership] webhook ${event.type} ${event.id} failed`, cause);
+    return fail(500, 'Webhook handling failed; Stripe will retry.');
+  }
+}
+
+export const POST: APIRoute = ({ request }) => handleMembershipWebhook(request);
+export const ALL: APIRoute = () => methodNotAllowed('POST');

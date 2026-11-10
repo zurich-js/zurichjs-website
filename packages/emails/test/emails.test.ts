@@ -13,7 +13,8 @@ const application = {
   feeLabel: 'CHF 250 a year',
   accountUrl: 'https://zurichjs.com/membership/account',
 };
-const link = 'https://abc.supabase.co/auth/v1/verify?token=t1&type=magiclink&redirect_to=https%3A%2F%2Fzurichjs.com%2Fmembership%2Faccount';
+const term = { ...application, term: '10 November 2026 to 9 November 2027', certificateNumber: 'ZJS-2026-0001' };
+const link = 'https://zurichjs.com/api/auth/magic-link/verify?token=t1&callbackURL=%2Fmembership%2Faccount';
 
 describe('login-link', () => {
   const e = renderEmail('login-link', { url: link, validMinutes: 60, firstTime: false });
@@ -36,27 +37,37 @@ describe('login-link', () => {
   });
 });
 
-describe('application emails', () => {
-  it('confirms the request with what the person chose, and says nothing is charged', () => {
-    const e = renderEmail('application-received', { ...application, organisationName: 'Acme AG' });
-    expect(e.text).toMatch(/^Thanks, Ada\n/);
-    expect(e.text).toContain('Organisation: Acme AG\nMembership: Supporter\nBilling: Yearly\nFee: CHF 250 a year');
-    expect(e.text).toContain('Nothing has been charged.');
-    expect(e.text).toContain('See your request: https://zurichjs.com/membership/account');
-  });
-
-  it('sends the approved member to set up payment', () => {
-    const e = renderEmail('application-approved', application);
-    expect(e.subject).toBe('Your ZurichJS membership is approved');
-    expect(e.text).toContain('Set up payment: https://zurichjs.com/membership/account');
-    expect(e.text).not.toMatch(/declaration|sign the/i);
+describe('membership emails', () => {
+  it('welcomes a new member with the term, the fee and the attached certificate', () => {
+    const e = renderEmail('membership-welcome', { ...term, organisationName: 'Acme AG' });
+    expect(e.subject).toBe('Welcome to the Swiss JavaScript Group');
+    expect(e.text).toMatch(/^Welcome, Ada\n/);
+    expect(e.text).toContain('Organisation: Acme AG\nMembership: Supporter\nBilling: Yearly, CHF 250 a year\nTerm: 10 November 2026 to 9 November 2027');
+    expect(e.text).toContain('(ZJS-2026-0001) is attached');
     expect(e.html).toContain('#dcf0e1'); // the success box, in success-soft
   });
 
-  it('declines neutrally, without a reason, and points to the free meetups', () => {
-    const e = renderEmail('application-declined', application);
-    expect(e.text).toContain('See upcoming meetups: https://zurichjs.com/events');
-    expect(e.text).not.toMatch(/because|reason/i);
+  it('confirms a renewal with the new term', () => {
+    expect(renderEmail('membership-renewed', term).text).toContain('New term: 10 November 2026 to 9 November 2027');
+  });
+
+  it('flags a failed payment in the error colour', () => {
+    const e = renderEmail('payment-failed', application);
+    expect(e.html).toContain('#f6d8d3'); // danger-soft
+    expect(e.text).toContain('Update payment method: https://zurichjs.com/membership/account');
+  });
+
+  it('gives a written copy of a resignation, and says when dues hold it up (Art. 5)', () => {
+    expect(renderEmail('resignation-received', { ...application, openDues: false }).text).toContain('This email is your written copy (bylaws Art. 5).');
+    expect(renderEmail('resignation-received', { ...application, openDues: true }).text).toContain('takes effect once it is paid');
+    expect(renderEmail('resignation-confirmed', { ...application, lastDay: '9 November 2027' }).text).toContain('Your membership ends on 9 November 2027');
+  });
+
+  it('never talks about signing or approval any more', () => {
+    for (const name of TEMPLATE_NAMES) {
+      const e = renderEmail(name, { url: link, validMinutes: 15, firstTime: false, ...term, openDues: false, lastDay: null } as never);
+      expect(e.text).not.toMatch(/declaration|approv/i);
+    }
   });
 });
 
@@ -77,7 +88,7 @@ describe('layout', () => {
 
   it('follows the brand rules: only token colours, no em or en dashes', () => {
     for (const name of TEMPLATE_NAMES) {
-      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true, ...application } as never);
+      const e = renderEmail(name, { url: link, validMinutes: 60, firstTime: true, ...term, openDues: true, lastDay: '9 November 2027' } as never);
       const used = new Set((e.html.match(/#[0-9a-f]{6}\b/gi) ?? []).map((c) => c.toLowerCase()));
       const allowed = new Set(Object.values(colors).map((c) => c.toLowerCase()));
       expect([...used].filter((c) => !allowed.has(c))).toEqual([]);

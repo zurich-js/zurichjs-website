@@ -20,10 +20,8 @@ export type MemberKind = 'person' | 'organisation';
 export type Category = 'passive' | 'active';
 
 export type Status =
-  /** Applied on the site, waiting for an organiser in Slack. */
-  | 'applied'
-  /** Approved, waiting for the first payment (terms were accepted when applying). */
-  | 'approved'
+  /** Signed up and accepted the terms; becomes active with the first Stripe payment. */
+  | 'pending'
   /** Paying automatically through Stripe. */
   | 'active'
   /** A Stripe payment failed; dues are outstanding. */
@@ -32,7 +30,6 @@ export type Status =
   | 'imported_manual'
   /** Resigned; ends at the end of the paid period once the board confirms (Art. 5). */
   | 'resigning'
-  | 'rejected'
   | 'ended';
 
 /** Why a membership ended (Art. 5), plus `lapsed` for a manual member who did not renew. */
@@ -53,7 +50,8 @@ export interface Actor {
 
 export interface Member {
   id: string;
-  authUserId: string | null;
+  /** The Better Auth user that signs in as this member; null for imported members until their first sign-in. */
+  userId: string | null;
   email: string;
   kind: MemberKind;
   /** The person's full name, or the signatory's for an organisation. */
@@ -77,12 +75,12 @@ export interface Member {
 }
 
 /** A new member record, before the store assigns id and timestamps. */
-export type NewMember = Omit<Member, 'id' | 'createdAt' | 'updatedAt' | 'authUserId' | 'endedReason' | 'stripeCustomerId' | 'stripeSubscriptionId'> &
-  Partial<Pick<Member, 'authUserId' | 'stripeCustomerId' | 'stripeSubscriptionId'>>;
+export type NewMember = Omit<Member, 'id' | 'createdAt' | 'updatedAt' | 'userId' | 'endedReason' | 'stripeCustomerId' | 'stripeSubscriptionId'> &
+  Partial<Pick<Member, 'userId' | 'stripeCustomerId' | 'stripeSubscriptionId'>>;
 
 /** Fields that may change without a status transition. Status, Stripe ids and the end reason are not here on purpose. */
 export type MemberPatch = Partial<
-  Pick<Member, 'authUserId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt'>
+  Pick<Member, 'userId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt'>
 >;
 
 /** One row of the append-only audit log (`member_events`). */
@@ -95,4 +93,18 @@ export interface MemberEvent {
   actor: Actor;
   payload: Record<string, unknown>;
   at: string;
+}
+
+/** A certificate of membership for one paid term (bylaws: the association's record that someone is a member). */
+export interface Certificate {
+  id: string;
+  memberId: string;
+  /** ZJS-2026-0001 */
+  number: string;
+  level: Level;
+  /** ISO dates (YYYY-MM-DD); the term covers periodStart up to and including the day before periodEnd. */
+  periodStart: string;
+  periodEnd: string;
+  stripeInvoiceId: string | null;
+  issuedAt: string;
 }

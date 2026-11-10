@@ -6,21 +6,21 @@ These are the instructions for any coding or content agent working in this repos
 
 zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It is a static-first Astro 7 site on Netlify, with content in Sanity (project `viqjrovw`, dataset `production`). The Sanity Studio lives in this repo at `apps/studio` (imported from `zurich-js/zurich-js-website-sanity-studio`, history kept).
 
-| Path                                      | What                                                                                                                                                |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                      |
-| `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`.    |
-| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                     |
-| `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                                 |
-| `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                        |
-| `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                            |
-| `packages/forms`, `packages/integrations` | Form schemas, and where forms go (Sanity, Slack, email).                                                                                            |
-| `packages/agent`                          | The Slack content agent: typed draft-only Sanity tools and a model-agnostic loop.                                                                   |
-| `packages/membership`, `supabase/`        | Verein membership: levels, the status machine, the member store, CSV import; the Supabase schema with row-level security (`docs/v2/MEMBERSHIP.md`). |
-| `agents/`                                 | Playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`) for agents.                                                                  |
-| `tools/`                                  | The SEO parity gate, the local Netlify-like server, the agent CLI, CI helpers.                                                                      |
-| `e2e/`                                    | Playwright: routes, accessibility, redirects, visual regression.                                                                                    |
-| `docs/`                                   | `docs/v2/RUNBOOK.md` (operations), `docs/v2/AUTOMATION.md` (agents and Slack), `docs/v2/DECISIONS.md`, `docs/design-system.md`.                     |
+| Path                                      | What                                                                                                                                                                                    |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                                                          |
+| `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`.                                        |
+| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                                                         |
+| `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                                                                     |
+| `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                                                            |
+| `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                                                                |
+| `packages/forms`, `packages/integrations` | Form schemas, and where forms go (Sanity, Slack, email).                                                                                                                                |
+| `packages/agent`                          | The Slack content agent: typed draft-only Sanity tools and a model-agnostic loop.                                                                                                       |
+| `packages/membership`                     | Verein membership: levels, the status machine, the Postgres member store, CSV import. Schema: `apps/web/netlify/database/migrations` (Netlify Database); docs: `docs/v2/MEMBERSHIP.md`. |
+| `agents/`                                 | Playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`) for agents.                                                                                                      |
+| `tools/`                                  | The SEO parity gate, the local Netlify-like server, the agent CLI, CI helpers.                                                                                                          |
+| `e2e/`                                    | Playwright: routes, accessibility, redirects, visual regression.                                                                                                                        |
+| `docs/`                                   | `docs/v2/RUNBOOK.md` (operations), `docs/v2/AUTOMATION.md` (agents and Slack), `docs/v2/DECISIONS.md`, `docs/design-system.md`.                                                         |
 
 ## Commands
 

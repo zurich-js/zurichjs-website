@@ -114,6 +114,24 @@ The switchover PR replaces the old Next.js app with this site. The steps below c
 
 Organisers can update meetups from a private Slack channel. The agent writes drafts, and an organiser on the publish list presses **Publish**. Setup (the Slack app from `slack/manifest.yml`, a Sanity Editor token, a model API key) and the environment variables are in [AUTOMATION.md](./AUTOMATION.md).
 
+## CFP bot in Slack (optional)
+
+Anyone in the ZurichJS Slack can propose a talk by chatting with **@ZurichJS CFP** in `#cfp` ([CFP-BOT.md](./CFP-BOT.md)). It is a second Slack app (`slack/manifest.cfp.yml`), separate from the organisers' bot. Setup is in [AUTOMATION.md](./AUTOMATION.md), "The CFP bot". Its environment variables:
+
+| Variable                                    | Value                                                                                                    | Used by                                                   |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `SLACK_CFP_BOT_TOKEN`                       | the CFP app's Bot User OAuth Token (`xoxb-…`)                                                            | `slack-cfp-*` functions                                   |
+| `SLACK_CFP_SIGNING_SECRET`                  | the CFP app's Signing Secret (Basic Information)                                                         | `slack-cfp-*` functions; also signs the internal hand-off |
+| `SLACK_CFP_CHANNEL_ID`                      | the public `#cfp` channel's ID, e.g. `C0123ABCD`                                                         | `slack-cfp-events`, `slack-cfp-interactivity`             |
+| `CFP_LLM_MODEL`                             | the cheapest model of `LLM_PROVIDER`. Optional with `LLM_PROVIDER=anthropic`: default `claude-haiku-5-5` | `slack-cfp-background`                                    |
+| `LLM_PROVIDER`, `LLM_API_KEY`               | the same as the organiser bot's (`LLM_BASE_URL` for `openai-compatible`). `LLM_MODEL` is never used here | `slack-cfp-background`                                    |
+| `DATABASE_URL`                              | **already set** for membership: drafts and limits live in the same Neon database (`cfp_*` tables)        | drafts, rate limits, the daily clean-up                   |
+| `CFP_MAX_MODEL_CALLS_PER_DAY`               | optional, default 400: model calls per day for everyone, which caps the cost                             | `slack-cfp-background`                                    |
+| `SANITY_TOKEN`, `SLACK_BOT_TOKEN` + channel | **already set**: Submit uses the website form's own path, so the same token and organiser note           | `slack-cfp-interactivity` (Submit)                        |
+| `SLACK_CFP_APP_TOKEN`                       | local only: the dev app's app-level token (`xapp-…`, `slack/manifest.cfp.dev.yml`)                       | `tools/slack-dev.mjs`                                     |
+
+Without `SLACK_CFP_*` the functions answer Slack with 401 and do nothing; the rest of the site is unaffected. `slack-cfp-cleanup` runs daily and deletes drafts untouched for 14 days.
+
 ## Draft preview site (optional, for editors)
 
 Create a second Netlify site with the same repository and build settings, plus:

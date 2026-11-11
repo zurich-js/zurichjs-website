@@ -1,21 +1,21 @@
-# Talk proposals in Slack: the CFP bot (plan, not built)
+# Talk proposals in Slack: the CFP bot
 
-A plan to build later (owner, 11th November 2026). Anyone in the ZurichJS Slack can propose a talk by chatting with a bot in a public `#cfp` channel. The bot shapes the proposal with them in a thread and submits it as a normal pending talk proposal, the same as the website form at `/cfp`. Organisers review and publish it with the tools they already use.
+**Status: built, not switched on** (11th November 2026). The code, tests and docs are in place; it does nothing until the owner creates the Slack app and sets its variables ("Switch it on" below). The plan follows as it was decided (owner, 11th November 2026), with notes where the build settled a detail. Anyone in the ZurichJS Slack can propose a talk by chatting with a bot in a public `#cfp` channel. The bot shapes the proposal with them in a thread and submits it as a normal pending talk proposal, the same as the website form at `/cfp`. Organisers review and publish it with the tools they already use.
 
 The bot in `#cfp` can do one thing only: help someone write and submit **their own** talk proposal. It cannot read or change events, other people's proposals, speakers, members or anything else.
 
 ## Decisions (owner, 11th November 2026)
 
-| Question                       | Decision                                                                                                                                 |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Where the conversation happens | In a **public thread** in `#cfp`                                                                                                         |
-| Same bot or a new one          | A **second Slack app**, "ZurichJS CFP", installed only in `#cfp`                                                                         |
-| Name, email, photo             | **From the Slack profile:** name prefilled, email read from the profile, photo used only if the person agrees                            |
-| AI model                       | The **cheapest** model, for this path only; the organiser bot keeps its own                                                              |
-| Limits                         | At most **2 submissions per person per day**                                                                                             |
-| Slack guests                   | **May submit**                                                                                                                           |
-| Where the Slack ID is kept     | **Only in the review notes** ("Submitted via Slack by @name"); no schema change                                                          |
-| Still open                     | Privacy policy wording (a legal page, so the owner approves it); how long unfinished drafts are kept (suggestion: deleted after 14 days) |
+| Question                       | Decision                                                                                                                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Where the conversation happens | In a **public thread** in `#cfp`                                                                                                                                                   |
+| Same bot or a new one          | A **second Slack app**, "ZurichJS CFP", installed only in `#cfp`                                                                                                                   |
+| Name, email, photo             | **From the Slack profile:** name prefilled, email read from the profile, photo used only if the person agrees                                                                      |
+| AI model                       | The **cheapest** model, for this path only; the organiser bot keeps its own                                                                                                        |
+| Limits                         | At most **2 submissions per person per day**                                                                                                                                       |
+| Slack guests                   | **May submit**                                                                                                                                                                     |
+| Where the Slack ID is kept     | **Only in the review notes** ("Submitted via Slack by @name"); no schema change                                                                                                    |
+| Still open                     | Privacy policy wording (a legal page, so the owner approves it); how long unfinished drafts are kept (built as 14 days without activity, one constant: `CFP_DRAFT_RETENTION_DAYS`) |
 
 ## How it works
 
@@ -108,6 +108,28 @@ The privacy policy (`apps/web/src/content/policies/privacy-policy.md`) needs a l
 - **Public threads:** they show the draft to the whole channel; the email and the confirmation stay private.
 
 Build it in its own branch and PR, as `AGENTS.md` asks.
+
+## Switch it on (owner)
+
+1. **Create the Slack app:** api.slack.com/apps › Create New App › From a manifest › the ZurichJS workspace › paste `slack/manifest.cfp.yml`. Install it to the workspace.
+2. **Invite @ZurichJS CFP to `#cfp`** only.
+3. **Netlify environment variables** (production): `SLACK_CFP_BOT_TOKEN` (OAuth & Permissions › Bot User OAuth Token), `SLACK_CFP_SIGNING_SECRET` (Basic Information › Signing Secret), `SLACK_CFP_CHANNEL_ID` (`#cfp` › channel details › About). With `LLM_PROVIDER=anthropic` the model defaults to `claude-haiku-5-5`; for another provider, also set `CFP_LLM_MODEL`. Everything else (`LLM_API_KEY`, `DATABASE_URL`, `SANITY_TOKEN`, the organiser note's Slack variables) is already set.
+4. **Approve the privacy policy text** added in `apps/web/src/content/policies/privacy-policy.md` (or change it).
+5. **Confirm** the 14-day retention for unfinished drafts, or say another number.
+6. **Deploy and try it:** the `cfp_drafts` migration runs with the build. Mention the bot in `#cfp`, answer, press Submit on the private confirmation, and check the proposal in the Studio.
+
+Details: [AUTOMATION.md](./AUTOMATION.md), "The CFP bot"; variables: [RUNBOOK.md](./RUNBOOK.md), "CFP bot in Slack".
+
+## As built
+
+- **Code:** `packages/agent/src/cfp/` (`@zurichjs/agent/cfp`): `runCfpTurn`, its prompt, the four tools, the deterministic Submit (`bot.ts`), the draft store and limits, Slack calls and escaping. Functions: `apps/web/netlify/functions/slack-cfp-events.mts`, `slack-cfp-background.mts`, `slack-cfp-interactivity.mts`, and `slack-cfp-cleanup.mts` (daily, deletes expired drafts).
+- **Confirmation:** an ephemeral message (`chat.postEphemeral`). The email is shown masked (`g•••@example.com`, "from your Slack profile"). Without a profile email, an **Add email** button opens a modal only the speaker sees. The speaker terms from the website form ("travel and accommodation can't be covered…") are shown above Submit; pressing Submit accepts them, as the website's checkbox does.
+- **Fields:** checked with `schemas.cfp`. Name, email and job title come from the Slack profile; the model never sees the name, the email or any Slack ID. The website form's extra profile rules (bio and LinkedIn for new speakers) do not apply to Slack proposals; organisers follow up if they need them.
+- **Photo:** `image_original`, else `image_512`, only when they chose Yes, only from Slack's own image hosts, JPEG, PNG or WebP up to 5 MB (the website's rules). Slack's default avatar is never used, and the question is not asked when there is no photo.
+- **Database:** `cfp_drafts` and `cfp_usage` in the same Neon database as membership (`DATABASE_URL`), through their own pool. No separate database role yet; it could be added later, but the CFP code only ever touches its own two tables.
+- **Statuses:** `draft` and `submitting` (a Submit in progress, so a double click sends once). Submitted and expired drafts are deleted rather than kept with a status.
+- **Isolation:** an oxlint `no-restricted-imports` rule for the CFP files and a test that follows every import from them (`packages/agent/test/cfp-boundary.test.ts`), which also pins the four tool names.
+- **Tests:** `packages/agent/test/cfp-*.test.ts` (flow, owner only, limits, email privacy, prompt injection, escaping), `apps/web/test/cfp-bot.test.ts` (the functions end to end with fake Slack, Sanity and model), `apps/web/test/cfp-db.test.ts` (the SQL on Postgres).
 
 ## Key files today
 

@@ -7,9 +7,27 @@
  * Also Confirm and Undo resignation (src/server/membership-slack.ts), on resignation cards and on
  * the member cards under the agent's replies: a Slack app has one interactivity URL, so all land
  * here. Only SLACK_MEMBERSHIP_APPROVER_IDS can press them.
+ *
+ * After a Publish that put a talk proposal on a meetup, it posts a "your talk is scheduled" card per
+ * talk; its Send email (SLACK_PUBLISHER_IDS only) and Not now land here too
+ * (packages/agent/src/speaker-email.ts, src/server/talk-scheduled.ts; RESEND_API_KEY, JWT_SECRET).
  */
-import { allowlist, handleButton, sanityStore, slackApi, verifySlackRequest, type ButtonAction, type ButtonValue, type ButtonValues } from '@zurichjs/agent';
+import {
+  allowlist,
+  handleButton,
+  handleTalkEmailClick,
+  isTalkEmailAction,
+  sanityStore,
+  scheduledTalks,
+  slackApi,
+  talkEmailCard,
+  verifySlackRequest,
+  type ButtonAction,
+  type ButtonValue,
+  type ButtonValues,
+} from '@zurichjs/agent';
 import { siteOrigin } from '../../src/server/auth.ts';
+import { sendTalkScheduledEmails } from '../../src/server/talk-scheduled.ts';
 import { memberStore } from '../../src/server/membership-db.ts';
 import { handleMembershipClick, isMembershipAction, membershipSlack, parseMemberButton } from '../../src/server/membership-slack.ts';
 
@@ -54,6 +72,12 @@ export default async (req: Request, context: { waitUntil?: (p: Promise<unknown>)
     return new Response(null, { status: 200 });
   }
   if (payload.type !== 'block_actions' || !action || payload.channel?.id !== process.env.SLACK_AGENT_CHANNEL_ID) return new Response(null, { status: 200 });
+  if (isTalkEmailAction(action.action_id)) {
+    const work = talkEmailClick(payload, action);
+    if (context?.waitUntil) context.waitUntil(work);
+    else await work;
+    return new Response(null, { status: 200 });
+  }
   if (action.action_id !== 'publish' && action.action_id !== 'discard') return new Response(null, { status: 200 });
 
   const work = (async () => {
@@ -61,14 +85,26 @@ export default async (req: Request, context: { waitUntil?: (p: Promise<unknown>)
     const slack = slackApi(env);
     const threadTs = payload.message?.thread_ts ?? payload.message?.ts ?? '';
     try {
+      const store = sanityStore(env);
       const result = await handleButton(
         action.action_id as ButtonAction,
         JSON.parse(action.value) as ButtonValue | ButtonValues,
         payload.user.id,
         allowlist(env.SLACK_PUBLISHER_IDS),
-        sanityStore(env),
+        store,
       );
       await slack.post(payload.channel!.id, threadTs, result.message);
+      // A talk proposal now on a meetup: offer to tell the speaker (deterministic, from the published documents).
+      if (result.published?.length) {
+        const talks = await scheduledTalks(result.published, store).catch((err: Error) => {
+          console.error('[slack-interactivity] could not check for scheduled talks', err);
+          return [];
+        });
+        for (const t of talks) {
+          const card = talkEmailCard(t);
+          await slack.post(payload.channel!.id, threadTs, card.text, card.blocks);
+        }
+      }
     } catch (err) {
       console.error('[slack-interactivity] failed', err);
       await slack.post(payload.channel!.id, threadTs, `Sorry, that did not work (${(err as Error).message}). Nothing changed on the live site.`);
@@ -79,3 +115,30 @@ export default async (req: Request, context: { waitUntil?: (p: Promise<unknown>)
   else await work;
   return new Response(null, { status: 200 });
 };
+
+/** Send email / Not now on a "your talk is scheduled" card: rewrites the card, or says why not in the thread. */
+async function talkEmailClick(payload: Payload, action: { action_id: string; value: string }) {
+  const env = process.env;
+  const slack = slackApi(env);
+  const channel = payload.channel!.id;
+  const ts = payload.message?.ts ?? '';
+  const threadTs = payload.message?.thread_ts ?? ts;
+  try {
+    const origin = siteOrigin(env);
+    const result = await handleTalkEmailClick({
+      action: action.action_id,
+      value: action.value,
+      user: payload.user.id,
+      publishers: allowlist(env.SLACK_PUBLISHER_IDS),
+      store: sanityStore(env),
+      send: (t, speakers) => sendTalkScheduledEmails(t, speakers, { env, origin }),
+    });
+    if (result.card && ts) await slack.update(channel, ts, result.card.text, result.card.blocks);
+    if (result.message) await slack.post(channel, threadTs, result.message);
+  } catch (err) {
+    console.error('[slack-interactivity] speaker email failed', err);
+    await slack
+      .post(channel, threadTs, `Sorry, that did not work (${(err as Error).message}). Press Send email again in a minute; it never sends the same email twice.`)
+      .catch(() => undefined);
+  }
+}

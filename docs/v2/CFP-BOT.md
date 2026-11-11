@@ -6,16 +6,16 @@ The bot in `#cfp` can do one thing only: help someone write and submit **their o
 
 ## Decisions (owner, 11th November 2026)
 
-| Question                       | Decision                                                                                                                                                                           |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Where the conversation happens | In a **public thread** in `#cfp`                                                                                                                                                   |
-| Same bot or a new one          | A **second Slack app**, "ZurichJS CFP", installed only in `#cfp`                                                                                                                   |
-| Name, email, photo             | **From the Slack profile:** name prefilled, email read from the profile, photo used only if the person agrees                                                                      |
-| AI model                       | The **cheapest** model, for this path only; the organiser bot keeps its own                                                                                                        |
-| Limits                         | At most **2 submissions per person per day**                                                                                                                                       |
-| Slack guests                   | **May submit**                                                                                                                                                                     |
-| Where the Slack ID is kept     | **Only in the review notes** ("Submitted via Slack by @name"); no schema change                                                                                                    |
-| Still open                     | Privacy policy wording (a legal page, so the owner approves it); how long unfinished drafts are kept (built as 14 days without activity, one constant: `CFP_DRAFT_RETENTION_DAYS`) |
+| Question                       | Decision                                                                                                                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Where the conversation happens | In a **public thread** in `#cfp`                                                                                                                                                         |
+| Same bot or a new one          | A **second Slack app**, "ZurichJS CFP", installed only in `#cfp`                                                                                                                         |
+| Name, email, photo             | **From the Slack profile:** name prefilled, email read from the profile, photo used only if the person agrees                                                                            |
+| AI model                       | The **cheapest** model, for this path only; the organiser bot keeps its own                                                                                                              |
+| Limits                         | At most **2 submissions per person per day**                                                                                                                                             |
+| Slack guests                   | **May submit**                                                                                                                                                                           |
+| Where the Slack ID is kept     | **Only in the review notes** ("Submitted via Slack by @name"); no schema change                                                                                                          |
+| Privacy and retention          | Privacy policy section "Talk Proposals in Slack" **approved**, and unfinished drafts deleted after **14 days** without activity (`CFP_DRAFT_RETENTION_DAYS`) (owner, 11th November 2026) |
 
 ## How it works
 
@@ -88,7 +88,7 @@ Optional, later: tell the person in their thread when their proposal is accepted
 
 ## Privacy
 
-The privacy policy (`apps/web/src/content/policies/privacy-policy.md`) needs a line saying that talk proposals written in Slack are processed by the AI provider, and that we read the name, email and photo from the Slack profile. It is a legal page, so the owner approves the wording.
+The privacy policy (`apps/web/src/content/policies/privacy-policy.md`) has a section, "Talk Proposals in Slack": talk proposals written in Slack are processed by the AI provider, and we read the name, email, job title and photo from the Slack profile. Approved by the owner on 11th November 2026.
 
 ## Effort
 
@@ -114,9 +114,7 @@ Build it in its own branch and PR, as `AGENTS.md` asks.
 1. **Create the Slack app:** api.slack.com/apps › Create New App › From a manifest › the ZurichJS workspace › paste `slack/manifest.cfp.yml`. Install it to the workspace.
 2. **Invite @ZurichJS CFP to `#cfp`** only.
 3. **Netlify environment variables** (production): `SLACK_CFP_BOT_TOKEN` (OAuth & Permissions › Bot User OAuth Token), `SLACK_CFP_SIGNING_SECRET` (Basic Information › Signing Secret), `SLACK_CFP_CHANNEL_ID` (`#cfp` › channel details › About). With `LLM_PROVIDER=anthropic` the model defaults to `claude-haiku-5-5`; for another provider, also set `CFP_LLM_MODEL`. Everything else (`LLM_API_KEY`, `DATABASE_URL`, `SANITY_TOKEN`, the organiser note's Slack variables) is already set.
-4. **Approve the privacy policy text** added in `apps/web/src/content/policies/privacy-policy.md` (or change it).
-5. **Confirm** the 14-day retention for unfinished drafts, or say another number.
-6. **Deploy and try it:** the `cfp_drafts` migration runs with the build. Mention the bot in `#cfp`, answer, press Submit on the private confirmation, and check the proposal in the Studio.
+4. **Deploy and try it:** the `cfp_drafts` migration runs with the build. Mention the bot in `#cfp`, answer, press Submit on the private confirmation, and check the proposal in the Studio.
 
 Details: [AUTOMATION.md](./AUTOMATION.md), "The CFP bot"; variables: [RUNBOOK.md](./RUNBOOK.md), "CFP bot in Slack".
 

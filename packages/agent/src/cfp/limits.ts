@@ -10,7 +10,7 @@ export const CFP_MAX_SUBMISSIONS_PER_DAY = 2;
 export const CFP_MAX_MESSAGES_PER_HOUR = 30;
 /** Model calls per day for everyone together: caps the cost. CFP_MAX_MODEL_CALLS_PER_DAY overrides it. */
 export const CFP_MAX_MODEL_CALLS_PER_DAY = 400;
-/** Unfinished drafts are deleted after this many days without activity (suggested; the owner confirms). */
+/** Unfinished drafts are deleted after this many days without activity (owner, 11th November 2026). */
 export const CFP_DRAFT_RETENTION_DAYS = 14;
 
 const HOUR = 3_600_000;

@@ -306,6 +306,8 @@ export interface MemberEmail {
   text: string;
   /** E.g. the certificate PDF. */
   attachments?: { filename: string; content: Uint8Array }[];
+  /** Where replies go when not the sender (talk-scheduled emails: FORMS_TO, default hello@zurichjs.com). */
+  replyTo?: string;
 }
 
 /**
@@ -333,6 +335,7 @@ export async function sendMemberEmail(
       html: email.html,
       text: email.text,
       attachments: email.attachments,
+      replyTo: email.replyTo,
       idempotencyKey: opts.idempotencyKey,
     },
     opts,

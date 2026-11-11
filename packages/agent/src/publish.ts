@@ -4,7 +4,7 @@
  * Publishing fires the normal Sanity webhook → debounced Netlify rebuild (src/server/rebuild.ts).
  */
 import { readiness, type EventDocumentForReadiness } from '@zurichjs/events';
-import { draftIdOf, type ContentStore } from './store.ts';
+import { draftIdOf, publishedIdOf, type ContentStore, type SanityDoc } from './store.ts';
 
 export type ButtonAction = 'publish' | 'discard';
 export interface ButtonValue {
@@ -16,9 +16,19 @@ export interface ButtonValues {
   items: ButtonValue[];
 }
 
+/** One document a Publish press made live: the live version before (null if it was new) and after. */
+export interface PublishedDoc {
+  id: string;
+  type: string;
+  before: SanityDoc | null;
+  after: SanityDoc;
+}
+
 export interface ButtonResult {
   ok: boolean;
   message: string;
+  /** What was published, in order (Publish only). speaker-email.ts reads it to offer the "your talk is scheduled" email. */
+  published?: PublishedDoc[];
 }
 
 /** Referenced documents go live before the documents that point at them. */
@@ -62,15 +72,19 @@ export async function handleButton(action: ButtonAction, value: ButtonValue | Bu
             : `Not published: ${String(d.draft!.title ?? 'the event')} still needs ${missing.map((c) => c.label).join(', ')}. Nothing was published.`,
       };
   }
+  const published: PublishedDoc[] = [];
   for (const d of drafts) {
     const draftId = draftIdOf(d.id);
+    const before = await store.getDocument(publishedIdOf(d.id));
     const fixed = (await strengthen(d.draft, store)) as Record<string, unknown>;
     const set = Object.fromEntries(Object.entries(fixed).filter(([k, v]) => !k.startsWith('_') && JSON.stringify(v) !== JSON.stringify(d.draft![k])));
     if (Object.keys(set).length) await store.patchDraft(draftId, set);
     await store.publish(draftId, d.id);
+    published.push({ id: publishedIdOf(d.id), type: d.type, before, after: { ...(fixed as SanityDoc), _id: publishedIdOf(d.id) } });
   }
   return {
     ok: true,
+    published,
     message: `<@${user}> published ${drafts.length === 1 ? 'it' : `${drafts.length} changes`}. The site rebuilds and shows ${drafts.length === 1 ? 'it' : 'them'} in about 4 minutes.`,
   };
 }

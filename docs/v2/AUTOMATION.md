@@ -65,6 +65,18 @@ Organisers write in plain language in a private ZurichJS Slack channel, and the 
 - **Publishing:** several drafts from one request get one **Publish all** button. It checks every event's readiness first, then publishes speakers, talks, proposals and events in that order, and turns references made to a draft-only talk (weak, `_strengthenOnPublish`) into normal ones (`packages/agent/src/publish.ts`).
 - Speaker emails and review notes never go to the model; emails are only compared in code. Venues: `findVenuesUsedBefore` says which meetups used each venue. The bot cannot see Meetup RSVPs.
 
+### Telling speakers their talk is scheduled
+
+When an organiser presses **Publish** (or **Publish all**) and a published meetup's running order gained a talk made from a talk proposal, the bot offers to email the speaker. This is plain code, not the model: there is no model tool for it (`packages/agent/src/speaker-email.ts`).
+
+1. **The card.** After publishing, the bot compares each published event's talks before and after. A talk that is new on the meetup, whose proposal (`talkSubmission`) points at it with `talkReference` and has the status `scheduled`, gets a card in the thread: "Let Ada Lovelace know “Signals” is on Forms, types and design systems?". Cancelled and postponed meetups get no card. The card previews the email's key lines from Sanity (meetup, date, time, venue) and the speaker's email masked (a•••@example.com). Slack never sees the full address, and the model never sees it at all.
+2. **Send email** (only `SLACK_PUBLISHER_IDS`) reads the talk, its speakers and their emails from Sanity again, and sends each speaker their own email through Resend (`talk-scheduled` in `packages/emails`, sent by `apps/web/src/server/talk-scheduled.ts`). The email says the talk is on the meetup, with the date, the time (doors only when the agenda has a timed doors line, otherwise the start) and the venue. If any of them is not in Sanity yet, it says "We'll confirm the details soon" instead. It has a button to the event page, the speaker's private profile link (30 days, like `pnpm speaker-link`; only when `JWT_SECRET` is set) to check their bio and photo, and a line inviting replies. Replies go to `FORMS_TO` (default hello@zurichjs.com).
+3. **After sending,** the card changes to "Sent to Ada Lovelace by @Faris on …", and a line goes in the proposal's review notes: "Scheduled email sent on … by @Faris for <meetup>". If the proposal has an open draft, the line is added to that draft (published with it later). Otherwise it is published at once.
+4. **Never twice.** Each email has a Resend idempotency key per proposal, meetup and speaker (`talk-scheduled:<proposal>:<event>:<speaker>`, 24 hours at Resend), and Send checks the review notes first, so a second press sends nothing.
+5. **Not now** changes the card to "Not sent (@user)". Anyone in the channel can press it. If no speaker on the talk has an email in Sanity, the card says so and has no Send button: add the email in the Studio, or write to them yourself.
+
+No new environment variables: it uses `RESEND_API_KEY`, `MEMBERSHIP_FROM`, `FORMS_TO` and `JWT_SECRET`, which the site already has. Without `RESEND_API_KEY`, Send says email is not set up and changes nothing. Locally, with `MAILPIT_URL`, the email lands in Mailpit.
+
 ### Membership questions (owner, 10th November 2026)
 
 In the same channel the bot answers questions about Verein members, for example:
@@ -159,6 +171,8 @@ To try membership: join on `localhost:4321/membership` with a test card, resign 
 | `packages/agent/src/model.ts`               | picks the model from the environment variables                                             |
 | `packages/agent/src/slack.ts`               | signatures, the Slack API, Block Kit                                                       |
 | `packages/agent/src/publish.ts`             | the Publish and Discard buttons                                                            |
+| `packages/agent/src/speaker-email.ts`       | the "your talk is scheduled" card, Send email and Not now                                  |
+| `apps/web/src/server/talk-scheduled.ts`     | renders and sends that email (Resend, idempotency key, profile link)                       |
 | `apps/web/netlify/functions/slack-*.mts`    | the three Netlify Functions (not `slack-cfp-*`, the CFP bot below)                         |
 | `packages/agent/test/*`                     | tests with an in-memory Sanity and a scripted model, so CI makes no network or model calls |
 

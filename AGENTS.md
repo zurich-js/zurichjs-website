@@ -6,28 +6,30 @@ These are the instructions for any coding or content agent working in this repos
 
 zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It is a static-first Astro 7 site on Netlify, with content in Sanity (project `viqjrovw`, dataset `production`). The Sanity Studio lives in this repo at `apps/studio` (imported from `zurich-js/zurich-js-website-sanity-studio`, history kept).
 
-| Path                                      | What                                                                                                                                             |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                   |
-| `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`. |
-| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                  |
-| `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                              |
-| `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                     |
-| `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                         |
-| `packages/forms`, `packages/integrations` | Form schemas, and where forms go (Sanity, Slack, email).                                                                                         |
-| `packages/agent`                          | The Slack content agent: typed draft-only Sanity tools and a model-agnostic loop.                                                                |
-| `agents/`                                 | Playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`) for agents.                                                               |
-| `tools/`                                  | The SEO parity gate, the local Netlify-like server, the agent CLI, CI helpers.                                                                   |
-| `e2e/`                                    | Playwright: routes, accessibility, redirects, visual regression.                                                                                 |
-| `docs/`                                   | `docs/v2/RUNBOOK.md` (operations), `docs/v2/AUTOMATION.md` (agents and Slack), `docs/v2/DECISIONS.md`, `docs/design-system.md`.                  |
+| Path                                      | What                                                                                                                                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                                               |
+| `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`.                             |
+| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                                              |
+| `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                                                          |
+| `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                                                 |
+| `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                                                     |
+| `packages/forms`, `packages/integrations` | Form schemas, and where forms go (Sanity, Slack, email).                                                                                                                     |
+| `packages/agent`                          | The Slack content agent: typed draft-only Sanity tools and a model-agnostic loop.                                                                                            |
+| `packages/membership`                     | Verein membership: levels, the status machine, the Postgres member store, CSV import. Schema: `apps/web/database/migrations` (Neon Postgres); docs: `docs/v2/MEMBERSHIP.md`. |
+| `agents/`                                 | Playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`) for agents.                                                                                           |
+| `tools/`                                  | The SEO parity gate, the local Netlify-like server, the agent CLI, CI helpers.                                                                                               |
+| `e2e/`                                    | Playwright: routes, accessibility, redirects, visual regression.                                                                                                             |
+| `docs/`                                   | `docs/v2/RUNBOOK.md` (operations), `docs/v2/AUTOMATION.md` (agents and Slack), `docs/v2/DECISIONS.md`, `docs/design-system.md`.                                              |
 
 ## Commands
 
 ```bash
 pnpm install                               # Node 22.23.4+ (.nvmrc), pnpm 11
 pnpm dev                                   # http://localhost:4321 (CONTENT_SOURCE=sample to work offline)
+pnpm local                                 # Docker: site + Postgres + Mailpit + Stripe test mode (sandbox key in .env or .env.local; docs/v2/RUNBOOK.md, Local development)
 CONTENT_SOURCE=sample BUILD_NOW=2026-11-01T12:00:00+01:00 pnpm build   # the deterministic build CI uses
-pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck && pnpm test
+pnpm lint && pnpm lint:ui && pnpm format:check && pnpm knip && pnpm typecheck && pnpm test
 pnpm e2e                                   # needs a build; includes visual regression
 node tools/serve-dist.mjs 4321 &           # serve the build like Netlify
 node tools/seo/compare.mjs --base http://localhost:4321   # SEO and LLM parity gate
@@ -47,6 +49,56 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 - **Rating and award:** "Rated 4.9/5 on Meetup…" in plain words, in the home page's award section and never in the hero (Bogdan's review, 4th November 2026); where the award is named elsewhere, it links to that section. The rating comes from the `meetupRating` record, updated by hand and never scraped.
 - **No invented facts:** dates, prices, attendee numbers, speakers and venues come from content or from a person, never from the agent.
 - **Copy:** plain, specific, no em dashes. Say "talk proposals" (explain "call for papers (CFP)" once).
+
+## UI and design system rules
+
+These rules are mandatory for every UI change. They override convenience. If a rule blocks you, stop and ask. Do not work around it. (Owner, 10th November 2026. The brand rules above still apply; these say how to build within them.)
+
+### 1. Zero arbitrary values
+
+- Never write Tailwind arbitrary values: no `min-h-[44px]`, `text-[16px]`, `px-[26px]`, `bg-[#abc]`, `w-[calc(...)]`, `z-[999]`, `rounded-[10px]`. Arbitrary variants and properties (`[&>li]:mt-2`, `[grid-area:a]`) count too.
+- The only exceptions are `grid-cols-[...]` track lists and `aspect-[...]` photo ratios, which have no scale equivalent (justified in `eslint.config.mjs`).
+- Never use inline `style={{}}` for spacing, colour, type, radius or shadow. A value that exists only at runtime (a CSS custom property, an image focal point from Sanity) needs an `eslint-disable-next-line no-restricted-syntax -- <reason>` comment.
+- Never hardcode hex, rgb, px or rem values in components.
+- If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/tokens.ts`, with a one-line justification, and wait for approval before using it.
+- Common snaps: 16px = `text-base`, 18px = `text-lg`, 44px = `11`, 48px = `12`. Tailwind 4 spacing takes quarter steps, so 18px = `4.5` and 22px = `5.5` are exact. Prefer the scale over "pixel-perfect" guesses.
+
+### 2. Single source of truth for tokens
+
+- Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read the tokens file before writing any UI. Do not invent tokens that already exist under a different name.
+- Semantic names only: `text-muted`, `bg-surface`, `border-danger`, `space-touch`. Never name tokens after their value (`grey-line-2`).
+- Colours, type scale, spacing, radius, shadow, z-index and breakpoints are all tokenised. The touch target minimum is a token, not a repeated literal.
+
+### 3. Components own variants, pages own layout
+
+- Visual variants (size, intent, state, invalid, disabled) are defined ONCE in a primitive in `packages/design/src/components/ui/`, using cva or tailwind-variants. (The primitives move there during the UI compliance work in `docs/v2/UI-AUDIT.md`; until one has moved, its current home is `packages/design/src/components`, `packages/design/src/islands` or `packages/design/src/recipes.ts`.)
+- No class-string-returning helper functions (like `optionClass()`) outside a primitive. No long `cx(...)` chains in feature components or pages.
+- Feature components compose primitives. They do not restyle them. Passing `class` to override a primitive's tokens is a smell: add a variant instead.
+- A page or feature component may only use layout utilities (flex, grid, gap, padding from the scale, responsive prefixes).
+- Before creating a component, search `packages/design/src` for an existing one. Duplicating a primitive is a failed task.
+
+### 4. Consistency over novelty
+
+- Match existing patterns in the repo. If two patterns exist, use the one in the most files and flag the other for cleanup. Do not add a third.
+- New UI must work at mobile, tablet and desktop, with keyboard focus visible, and with disabled and invalid states, using existing tokens.
+
+### 5. Definition of done (verify, do not assume)
+
+Run and report the results of:
+
+1. `pnpm lint` and `pnpm lint:ui` (the arbitrary-value, inline-style and hex rules; legacy violations are baselined in `eslint-suppressions.json`, new ones fail)
+2. `pnpm typecheck`
+3. `rg '\[[0-9#]|\-\[|style=\{\{' apps/web/src packages/design/src` returns nothing new in files you touched
+4. A screenshot or description of the result at 375px and 1280px
+
+In your summary, list: tokens used, any new token proposed, any primitive added or changed, and anything you could not make fit the system.
+
+The baseline only shrinks. When you fix a legacy violation, run `pnpm lint:ui:prune` and commit the smaller `eslint-suppressions.json`. Never regenerate it with `--suppress-all` to get green.
+
+### 6. Scope discipline
+
+- Change only what the task requires. No drive-by refactors.
+- If you find existing violations in files you touch, list them in the summary. Fix them only if asked.
 
 ## Needs the owner (never do these on your own)
 
@@ -69,7 +121,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
   - A scheduled function builds once publishing has paused for 2 minutes, and at each event's doors and doors + 48 h.
   - There is no nightly rebuild.
 - **Draft preview:** a build with `SANITY_PERSPECTIVE=drafts` shows unpublished changes. It is noindex.
-- **Payments:** only donations, through Stripe Checkout on `/donate` (one-time or monthly, owner decision 2026-11-01). Pro meetups, tickets and merchandise stay removed. Twint (QR from Site settings) and email remain. Membership requests never charge anything.
+- **Payments:** donations through Stripe Checkout on `/donate` (one-time or monthly, owner decision 2026-11-01), and Verein memberships as Stripe subscriptions, quarterly or yearly (owner, 5th and 10th November 2026). Anyone can join: they sign in, accept the membership terms and pay; nobody approves them and there is no declaration to sign (owner, 10th November 2026). Every paid term gets a certificate of membership by email. Members cannot cancel in Stripe: they resign to the board, as the bylaws say (`docs/v2/MEMBERSHIP.md`). Pro meetups, tickets and merchandise stay removed. Twint (QR from Site settings) and email remain.
 
 ## Environment variables
 

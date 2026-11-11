@@ -77,7 +77,6 @@ test('legacy URLs redirect permanently', async ({ request }) => {
     ['/tshirt', '/donate?from=tshirt'],
     ['/checkout/cancel', '/donate'],
     ['/media-demo', '/media'],
-    ['/admin/events', '/'],
     ['/profile/settings', '/'],
     ['/invite/abc123', '/about'],
     ['/api/sitemap.xml', '/sitemap.xml'],

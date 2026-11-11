@@ -143,8 +143,8 @@
       "reason": "Workshops ended (owner); the events page explains it (?from=workshops)."
     },
     "/admin": {
-      "status": "redirect",
-      "to": "/"
+      "status": "ported",
+      "reason": "The board's admin start page again (owner, 11th November 2026), noindex like production's."
     },
     "/profile": {
       "status": "redirect",

@@ -6,6 +6,8 @@ import MembershipForm from '~/components/islands/forms/MembershipForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
 
+// Online membership on (docs/v2/MEMBERSHIP.md): joining goes through /membership/account and Stripe instead of email.
+
 // What members' fees pay for (owner, 3rd November 2026). Speaker travel is not listed: meetup talks don't cover it (see /cfp).
 const FEES = [
   ['Food and drinks', 'On the evenings that no host or sponsor covers.'],

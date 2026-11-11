@@ -26,3 +26,7 @@ dist/
 
 # Vendored package with a security fix (vendor/deepmerge/README.md) ships its dist.
 !/vendor/**/dist
+
+# Local-only files (e.g. the signature for local certificates)
+.local/
+.neon

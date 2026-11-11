@@ -1,0 +1,33 @@
+# Slack app for the ZurichJS CFP bot: people propose a talk by chatting with it in the public #cfp
+# channel (docs/v2/CFP-BOT.md). A second app, separate from the organisers' ZurichJS Bot
+# (slack/manifest.yml), with its own token and signing secret. Create it at api.slack.com/apps ›
+# Create New App › From a manifest, pick the ZurichJS workspace and paste this file, then invite
+# @ZurichJS CFP to #cfp only. Setup: docs/v2/AUTOMATION.md, "The CFP bot".
+display_information:
+  name: ZurichJS CFP
+  description: Helps you write and send a talk proposal for a ZurichJS meetup, in #cfp.
+  background_color: '#000000'
+features:
+  bot_user:
+    display_name: ZurichJS CFP
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - chat:write
+      - channels:history
+      - users:read
+      - users:read.email
+settings:
+  event_subscriptions:
+    request_url: https://zurichjs.com/.netlify/functions/slack-cfp-events
+    bot_events:
+      - app_mention
+      - message.channels
+  interactivity:
+    is_enabled: true
+    request_url: https://zurichjs.com/.netlify/functions/slack-cfp-interactivity
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

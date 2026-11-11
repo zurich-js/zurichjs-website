@@ -2,8 +2,8 @@
 title: Privacy policy
 tab: Privacy
 order: 2
-description: 'How ZurichJS and the Swiss JavaScript Group collect, use and protect your personal data at our events and on this website.'
-updated: 2026-05-20
+description: 'How ZurichJS and the Swiss JavaScript Group collect, use and protect your personal data at our events, on this website and as a member of the association.'
+updated: 2026-11-11
 ---
 
 ## Introduction
@@ -32,6 +32,36 @@ We will only use your personal data when the law allows us to. Most commonly, we
 - To improve our website, products/services, marketing, and your experience.
 - To administer and protect our organization and website.
 
+## Talk Proposals in Slack
+
+You can propose a talk by chatting with our CFP bot in the #cfp channel of the ZurichJS Slack. When you do:
+
+- **Your conversation** in that thread is sent to an AI model provider (currently Anthropic) so the bot can help you write the proposal. It receives what you and others write in the thread, but not your name, email address or Slack ID.
+- **From your Slack profile** we read your name, email address and job title, and your profile photo. We use the photo on your speaker page only if you say yes when you confirm. Your email address is shown only to you, masked, and is never posted in the channel.
+- **Your draft** is kept in our database until you submit it or for 14 days without activity, then deleted. When you submit, your proposal is stored like one sent through our website, with a note that it came from Slack and your Slack member ID, so the organisers can reply to you there.
+
+## Membership of the Association
+
+If you become a member of the Swiss JavaScript Group, we process the following data to run your membership under our bylaws and the membership terms:
+
+- **Membership Data:** your name, email address, the organisation you join for (if any), your membership level and billing cycle, your status and its history, the dates you joined and paid until, and the version of the membership terms you accepted.
+- **Payment Data:** your payments, invoices and subscription in Stripe. Card details go directly to Stripe; we never see or store them.
+- **Certificates:** the certificates of membership we issue for each paid term.
+- **Resignation Data:** if you resign, when you did, and the reasons and note you choose to give. Giving a reason is optional.
+- **Sign-in Data:** the sign-in links we email you, and for security, the IP address and browser of your sessions and of failed sign-ins to our admin area.
+
+We use this data to run your membership, take payments, issue certificates, send you emails about your membership, and keep the accounts the law requires. Only the board sees member data.
+
+We use these service providers, who process the data on our behalf:
+
+- **Stripe** for payments and invoices.
+- **Resend** to send emails.
+- **Netlify** to host this website and the member database.
+- **Slack** for notes to the board about new members, payments and resignations, including your name and email address.
+- **An AI model provider** (currently Anthropic) when board members ask our Slack assistant about members. It receives names, organisations, membership level, status and dates, but never email addresses, notes or payment details.
+
+Some of these providers are based in the United States, so your data may be transferred there. We only use providers that protect it with safeguards recognised under Swiss data protection law, such as the Swiss-US Data Privacy Framework or standard contractual clauses.
+
 ## Data Security
 
 We have put in place appropriate security measures to prevent your personal data from being accidentally lost, used, or accessed in an unauthorized way, altered, or disclosed. We limit access to your personal data to those who have a business need to know.
@@ -39,6 +69,8 @@ We have put in place appropriate security measures to prevent your personal data
 ## Data Retention
 
 We will only retain your personal data for as long as reasonably necessary to fulfill the purposes we collected it for, including for the purposes of satisfying any legal, regulatory, tax, accounting or reporting requirements.
+
+For members: we keep your membership data for one year after your membership ends and then anonymise it. Payment records and invoices are kept for as long as Swiss accounting law requires, generally ten years.
 
 ## Your Legal Rights
 

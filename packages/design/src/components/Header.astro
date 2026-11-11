@@ -15,7 +15,8 @@ interface Props {
 }
 const { social = [] } = Astro.props;
 
-// The header's one action: submitting a talk (owner, 4th November 2026).
+// The header's one action: submitting a talk (owner, 4th November 2026), or "Account" for a
+// signed-in member (swapped in the browser below; the pages are static).
 const CTA = { label: 'Submit a talk', href: '/cfp' };
 const NAV = [
   { label: 'Events', href: '/events', match: ['/events', '/feedback', '/today'] },
@@ -36,16 +37,25 @@ const path = Astro.url.pathname.replace(/\.html$/, '');
 const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p + '/'));
 const involvedCurrent = isCurrent(INVOLVED.map((i) => i.href));
 const barSocial = social.filter((s) => ['linkedin', 'instagram', 'bluesky'].includes(s.kind));
-// Plain white marks (nav review, 5th November 2026), each in a 40px round hit area for the focus ring.
+// White marks as on conf.zurichjs.com: 24px glyphs in a 40px round hit area (for the focus ring).
 const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70';
 ---
 
 <!-- Scrolled once this leaves the viewport. It sits outside the header, so the header's own height can't flip the state back. -->
 <div data-scroll-sentinel aria-hidden="true" class="absolute top-10 left-0 w-px h-px pointer-events-none"></div>
+<!--
+  Runs before the header paints, so a signed-in member sees "Account" from the first frame instead
+  of "Submit a talk" flickering into it (owner, 11th November 2026). Same key as ../session.ts.
+-->
+<script is:inline>
+  try {
+    if (localStorage.getItem('zurichjs:signed-in') === '1') document.documentElement.setAttribute('data-signed-in', '');
+  } catch {}
+</script>
 <header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white">
   <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
-      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" />
+      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" />
     </a>
 
     <nav aria-label="Main" class="hidden md:flex items-center gap-[clamp(14px,1.9vw,28px)] text-[clamp(15px,1.45vw,17px)] whitespace-nowrap">
@@ -86,7 +96,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
               {barSocial.map((s) => (
                 <li>
                   <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class={iconLink}>
-                    <SocialIcon kind={s.kind} size={22} tone="white" />
+                    <SocialIcon kind={s.kind} size={24} tone="white" />
                   </a>
                 </li>
               ))}
@@ -95,7 +105,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           </>
         )
       }
-      <a href={CTA.href} class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}>{CTA.label}</a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
 
     <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
@@ -107,7 +117,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 <dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none bg-black text-white border-0">
   <div class="flex flex-col min-h-full">
     <div class="flex items-center justify-between py-4 px-gut">
-      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" /></a>
+      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" /></a>
       <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
         <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
@@ -132,7 +142,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           ))
         }
       </ul>
-      <a href={CTA.href} class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}>{CTA.label}</a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
     {
       social.length > 0 && (
@@ -151,6 +161,17 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 </dialog>
 
 <style>
+  /* The header action's label: "Submit a talk", or "Account" once html[data-signed-in] is set. */
+  [data-cta-member] {
+    display: none;
+  }
+  :global(html[data-signed-in]) [data-cta-member] {
+    display: inline;
+  }
+  :global(html[data-signed-in]) [data-cta-guest] {
+    display: none;
+  }
+
   /*
    * Scrolled: the bar floats as a black pill with space around it (the conference's nav).
    * The header keeps the same height in both states (8 + 12 + 12 = 16 + 16), so the page below never moves,
@@ -204,6 +225,14 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 </style>
 
 <script>
+  import { isSignedIn } from '../session';
+
+  // Signed in: the action goes to the member's account instead of the talk form.
+  if (isSignedIn()) {
+    // The label is already right (the inline script above set data-signed-in before paint).
+    document.querySelectorAll<HTMLAnchorElement>('[data-header-cta]').forEach((a) => (a.href = '/membership/account'));
+  }
+
   // Sticky bar: flat at the top of the page, a floating pill once the sentinel 40px down has scrolled out of view.
   const header = document.querySelector<HTMLElement>('[data-site-header]');
   const sentinel = document.querySelector('[data-scroll-sentinel]');

@@ -1,3 +1,4 @@
+import { boardNoticeFromText, renderEmail, type BoardNoticeProps } from '@zurichjs/emails';
 import { createHash } from 'node:crypto';
 import { createClient, type SanityClient } from '@sanity/client';
 import { VOLUNTEER_AVAILABILITY, type FormData, type FormKind, type FormResult } from '@zurichjs/forms';
@@ -37,6 +38,8 @@ export interface TalkProposal {
   returning?: boolean;
   /** The person has not given a talk before: organisers offer help preparing. */
   firstTalk?: boolean;
+  /** Sent with the CFP bot in Slack: their Slack member ID, kept only in the review notes. */
+  slackUserId?: string;
 }
 
 /** Seam for talk proposals. Today: Sanity `talkSubmission`. Later: Sane (docs/v2/SANE-READINESS.md). */
@@ -113,6 +116,7 @@ export function speakerFields(p: TalkProposal): SpeakerFieldValues {
 /** Notes for the organisers on the submission (the Studio's internal "Review Notes"). */
 function reviewNotes(p: TalkProposal, matched: boolean): string | undefined {
   const lines: string[] = [];
+  if (p.slackUserId) lines.push(`Submitted via Slack by <@${p.slackUserId}>`);
   if (p.firstTalk) lines.push('First talk: offer help preparing.');
   if (p.returning && !matched) lines.push('Says they have spoken at ZurichJS before, but no speaker has this email. Check for a duplicate speaker.');
   const f = speakerFields(p);
@@ -186,20 +190,157 @@ export const sanityTalkProposals = (client: SanityClient, now = () => new Date()
 
 /* ------------------------------------------------------------------ messages */
 
-export async function sendEmail(env: Env, subject: string, text: string, replyTo?: string, log: Log = console.log): Promise<void> {
-  if (!env.RESEND_API_KEY) return log(`[forms] RESEND_API_KEY missing; email not sent: ${subject}`);
-  const res = await fetch('https://api.resend.com/emails', {
+const RESEND_EMAILS = 'https://api.resend.com/emails';
+
+/**
+ * Local development sends every email to Mailpit (https://mailpit.axllent.org) instead of Resend:
+ * MAILPIT_URL is its web address (the Docker setup's `http://mail:8025`), and the mail shows in its inbox.
+ * Ignored when CONTEXT=production, so production always uses Resend. No Resend key is needed for Mailpit.
+ */
+export function mailpitSendUrl(env: Env): string | undefined {
+  const base = env.MAILPIT_URL?.trim().replace(/\/+$/, '');
+  if (!base || env.CONTEXT === 'production' || !/^https?:\/\/[^\s/]+$/.test(base)) return undefined;
+  return `${base}/api/v1/send`;
+}
+
+/** "ZurichJS <hello@zurichjs.com>" → { Name: 'ZurichJS', Email: 'hello@zurichjs.com' }. */
+const address = (a: string) => {
+  const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(a);
+  return m ? { Name: m[1]!.replace(/^"|"$/g, ''), Email: m[2]! } : { Name: '', Email: a.trim() };
+};
+
+interface Outgoing {
+  from: string;
+  to: string[];
+  subject: string;
+  text: string;
+  html?: string;
+  replyTo?: string;
+  attachments?: { filename: string; content: Uint8Array }[];
+  idempotencyKey?: string;
+}
+
+/** One email to Resend, or to Mailpit when MAILPIT_URL is set outside production. */
+async function deliver(env: Env, m: Outgoing, opts: { fetch?: typeof fetch; timeoutMs?: number } = {}): Promise<void> {
+  const doFetch = opts.fetch ?? fetch;
+  const signal = AbortSignal.timeout(opts.timeoutMs ?? 10_000);
+  const files = m.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString('base64') }));
+  const mailpit = mailpitSendUrl(env);
+  if (mailpit) {
+    const res = await doFetch(mailpit, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        From: address(m.from),
+        To: m.to.map(address),
+        ...(m.replyTo ? { ReplyTo: [address(m.replyTo)] } : {}),
+        Subject: m.subject,
+        Text: m.text,
+        ...(m.html ? { HTML: m.html } : {}),
+        ...(files?.length ? { Attachments: files.map((f) => ({ Filename: f.filename, Content: f.content })) } : {}),
+        // Mailpit has no idempotency; the key is shown as a header so retries are easy to spot.
+        ...(m.idempotencyKey ? { Headers: { 'X-Idempotency-Key': m.idempotencyKey.slice(0, 256) } } : {}),
+      }),
+      signal,
+    });
+    if (!res.ok) throw new Error(`Mailpit ${res.status}`);
+    return;
+  }
+  const res = await doFetch(RESEND_EMAILS, {
     method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      'content-type': 'application/json',
+      ...(m.idempotencyKey ? { 'idempotency-key': m.idempotencyKey.slice(0, 256) } : {}),
+    },
     body: JSON.stringify({
+      from: m.from,
+      to: m.to,
+      subject: m.subject,
+      ...(m.html ? { html: m.html } : {}),
+      text: m.text,
+      ...(m.replyTo ? { reply_to: m.replyTo } : {}),
+      ...(files?.length ? { attachments: files } : {}),
+    }),
+    signal,
+  });
+  if (!res.ok) throw new Error(`Resend ${res.status}`);
+}
+
+const canSend = (env: Env) => Boolean(env.RESEND_API_KEY || mailpitSendUrl(env));
+
+/**
+ * An email to the organisers (FORMS_TO, default hello@zurichjs.com) in the ZurichJS email layout
+ * (owner, 10th November 2026), with a plain-text part; replies go to `replyTo`. Pass `notice`
+ * for a laid-out email; otherwise the "Label: value" text is laid out as details.
+ */
+export async function sendEmail(
+  env: Env,
+  subject: string,
+  text: string,
+  replyTo?: string,
+  log: Log = console.log,
+  opts: { fetch?: typeof fetch; idempotencyKey?: string; notice?: BoardNoticeProps } = {},
+): Promise<void> {
+  if (!canSend(env)) return log(`[forms] RESEND_API_KEY missing; email not sent: ${subject}`);
+  const email = renderEmail('board-notice', opts.notice ?? boardNoticeFromText(subject, text, replyTo));
+  await deliver(
+    env,
+    {
       from: env.FORMS_FROM ?? 'ZurichJS website <website@zurichjs.com>',
       to: [env.FORMS_TO ?? 'hello@zurichjs.com'],
       subject,
-      text,
-      ...(replyTo ? { reply_to: replyTo } : {}),
-    }),
-  });
-  if (!res.ok) throw new Error(`Resend ${res.status}`);
+      html: email.html,
+      text: opts.notice ? email.text : text,
+      replyTo,
+      idempotencyKey: opts.idempotencyKey,
+    },
+    opts,
+  );
+}
+
+export interface MemberEmail {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  /** E.g. the certificate PDF. */
+  attachments?: { filename: string; content: Uint8Array }[];
+  /** Where replies go when not the sender (talk-scheduled emails: FORMS_TO, default hello@zurichjs.com). */
+  replyTo?: string;
+}
+
+/**
+ * Sends one email to a member (rendered by @zurichjs/emails) through Resend, or Mailpit locally.
+ * From MEMBERSHIP_FROM (default hello@zurichjs.com, so replies reach the
+ * organisers). `idempotencyKey` makes a retried send a no-op at Resend (24 h).
+ * Without RESEND_API_KEY (and no Mailpit) it logs a stub line, with the address masked.
+ */
+export async function sendMemberEmail(
+  env: Env,
+  email: MemberEmail,
+  opts: { idempotencyKey?: string; log?: Log; fetch?: typeof fetch; timeoutMs?: number } = {},
+): Promise<{ sent: boolean }> {
+  const log = opts.log ?? console.log;
+  if (!canSend(env)) {
+    log(`[email] RESEND_API_KEY missing; not sent to ${email.to.replace(/^[^@]+/, '***')}: ${email.subject}`);
+    return { sent: false };
+  }
+  await deliver(
+    env,
+    {
+      from: env.MEMBERSHIP_FROM ?? 'ZurichJS <hello@zurichjs.com>',
+      to: [email.to],
+      subject: email.subject,
+      html: email.html,
+      text: email.text,
+      attachments: email.attachments,
+      replyTo: email.replyTo,
+      idempotencyKey: opts.idempotencyKey,
+    },
+    opts,
+  );
+  return { sent: true };
 }
 
 /**
@@ -285,6 +426,11 @@ export interface ForwardDeps {
   now?: () => Date;
   /** A photo sent with a talk proposal (multipart request). */
   photo?: ProposalPhoto;
+  /**
+   * A talk proposal from the CFP bot in Slack (packages/agent/src/cfp). Set by our code from the
+   * verified Slack payload, never from form data, so the public form cannot claim it.
+   */
+  via?: { slackUserId: string };
   /** Who sent it, hashed before storing; used to refuse a second rating of the same talk. */
   client?: { ip?: string; headers?: Record<string, string | undefined> };
 }
@@ -305,11 +451,12 @@ export function clientHashes(client: ForwardDeps['client'] = {}) {
 
 /** A form that was understood but cannot be accepted (duplicate rating, unknown talk). Maps to 409 or 400. */
 export class FormRejected extends Error {
-  constructor(
-    message: string,
-    readonly status: 400 | 409,
-  ) {
+  // A plain field, not a constructor parameter property: Node runs this package's .ts as-is in the
+  // local functions runtime (type stripping only), and parameter properties are not strippable.
+  readonly status: 400 | 409;
+  constructor(message: string, status: 400 | 409) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -343,12 +490,13 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         ...(deps.photo ? { photo: deps.photo } : {}),
         returning: flag(d.returning),
         firstTalk: flag(d.firstTalk),
+        ...(deps.via && /^[UW][A-Z0-9]{2,30}$/.test(deps.via.slackUserId) ? { slackUserId: deps.via.slackUserId } : {}),
       };
       const saved = sink ? await sink.submit(proposal) : (log('[forms] SANITY_WRITE_TOKEN missing; talk proposal not stored'), { id });
       const facts = [`${minutesFor(proposal.format)} min`, proposal.level, proposal.topics?.join(', ')].filter(Boolean).join(', ');
       await postSlack(
         env,
-        `New talk proposal: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}${proposal.photo ? ', with a photo' : ''}`,
+        `New talk proposal${proposal.slackUserId ? ' via Slack' : ''}: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}${proposal.photo ? ', with a photo' : ''}`,
         log,
       );
       return { ok: true, id: saved.id };

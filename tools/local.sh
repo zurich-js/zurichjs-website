@@ -8,7 +8,8 @@
 #   STRIPE_MEMBER_PORTAL_CONFIG=bpc_…      from: STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup --apply
 #   STRIPE_SUPPORT_PRODUCT_ID=prod_…       optional, for /donate
 #
-# Slack: with SLACK_APP_TOKEN (the dev app, slack/manifest.dev.yml) it also starts tools/slack-dev.mjs.
+# Slack: with SLACK_APP_TOKEN (the dev app, slack/manifest.dev.yml) or SLACK_CFP_APP_TOKEN (the CFP
+# bot's dev app, slack/manifest.cfp.dev.yml) it also starts tools/slack-dev.mjs, which bridges both.
 #
 # Arguments go to `docker compose up`; COMPOSE_PROFILES=studio adds the Studio.
 set -eu
@@ -71,11 +72,12 @@ trap stop_listeners EXIT INT TERM
 EVENTS=checkout.session.completed,invoice.paid,invoice.payment_failed,invoice.payment_action_required,customer.subscription.updated,customer.subscription.deleted
 stripe listen --api-key "$STRIPE_SECRET_KEY" --events "$EVENTS" --forward-to "$WEBHOOK" &
 
-# The ZurichJS Bot (dev) in Socket Mode, when its tokens are set (docs/v2/AUTOMATION.md, "Try it locally").
-if [ -n "${SLACK_APP_TOKEN:-}" ]; then
+# The ZurichJS Bot (dev) and the ZurichJS CFP (dev) bot in Socket Mode, when their tokens are set
+# (docs/v2/AUTOMATION.md, "Try it locally"). One bridge serves both.
+if [ -n "${SLACK_APP_TOKEN:-}" ] || [ -n "${SLACK_CFP_APP_TOKEN:-}" ]; then
   node tools/slack-dev.mjs http://localhost:4321 &
 else
-  echo "Slack bot: off (add the dev app's SLACK_APP_TOKEN to .env to talk to it in Slack)."
+  echo "Slack bots: off (add a dev app's SLACK_APP_TOKEN or SLACK_CFP_APP_TOKEN to .env to talk to it in Slack)."
 fi
 
 # --remove-orphans drops the old `stripe` mock container from earlier runs.

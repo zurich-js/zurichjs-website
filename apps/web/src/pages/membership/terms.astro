@@ -1,0 +1,101 @@
+---
+/**
+ * Membership terms (version TERMS.version in @zurichjs/membership): what people
+ * accept when they join. They follow the bylaws (Statuten of 23rd May 2025);
+ * where they differ, the bylaws prevail. Fees come from src/lib/membership.ts.
+ *
+ * Approved by the owner on 11th November 2026 (AGENTS.md: legal pages need the owner).
+ * Change TERMS.version with every change of this text, so members accept the new
+ * version before their next payment setup.
+ */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import { TERMS } from '@zurichjs/membership';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+import { CYCLES, TIERS, TIER_KEYS, feeLabel } from '~/lib/membership';
+import { longDate } from '~/server/dates';
+
+const version = longDate(TERMS.version);
+const fees = TIER_KEYS.map((k) => `${TIERS[k].name}: ${CYCLES.map((c) => feeLabel(TIERS[k], c.value)).join(' or ')}`);
+
+const SECTIONS: [string, string[]][] = [
+  [
+    'The association',
+    [
+      `The ${SITE.association} is an association (Verein) under Art. 60 ff. of the Swiss Civil Code, registered at Alderstrasse 30, 8008 Zurich. It runs ZurichJS. Its bylaws (Statuten) of 23 May 2025 govern membership. These terms explain how membership works on this website; where they differ from the bylaws, the bylaws prevail.`,
+    ],
+  ],
+  [
+    'Joining',
+    [
+      'Any person or organisation that supports the association’s goals may become a member (bylaws Art. 4). You join by signing in on this website, accepting these terms and paying the first membership fee. Your membership starts with the first payment.',
+      'An organisation joins through one person, who confirms they may act for it.',
+    ],
+  ],
+  [
+    'Membership levels and fees',
+    [
+      `Membership fees are voluntary contributions in tiers (bylaws Art. 3 and 4). The fees are: ${fees.join('; ')}.`,
+      'You pay through Stripe, and your membership renews automatically at the end of each quarter or year. You can switch between quarterly and yearly, or between levels, on your account page; the change applies from your next payment.',
+    ],
+  ],
+  [
+    'Passive and active members',
+    [
+      'Members take part in the association as passive or active members (bylaws Art. 4). Active members attend at least 40% of the events in a year. Active members may vote on minor decisions, such as the choice of talk topics; from the Supporter level, they also have a say in event dates and speakers. The benefits of each level are listed on the membership page.',
+    ],
+  ],
+  [
+    'Certificate of membership',
+    ['For every paid term you receive a certificate of membership by email, signed by the President of the Board. You can also download your certificates on your account page.'],
+  ],
+  [
+    'Resigning',
+    [
+      'You can resign at any time, provided no membership fees are outstanding (bylaws Art. 5). Resigning on your account page counts as resigning in writing to the board; you receive a copy by email. We ask why you are leaving, but you do not have to say.',
+      'From the moment you resign, your membership no longer renews and nothing more is charged. The board confirms the resignation, and your membership ends at the end of the period you have already paid. Until then, you can resubscribe on your account page. Fees already paid are not refunded.',
+      'Members cannot cancel the payment themselves in Stripe; the resignation goes through the board as the bylaws require.',
+    ],
+  ],
+  [
+    'Payments that fail',
+    ['If a payment fails, Stripe tries again and we email you. If the fee stays unpaid, the membership lapses at the end of the paid period.'],
+  ],
+  [
+    'Ending a membership for other reasons',
+    ['The board may expel a member who breaks the bylaws or the code of conduct (bylaws Art. 5). Membership also ends with the death of a person or the dissolution of an organisation.'],
+  ],
+  [
+    'Liability',
+    ['Only the association’s assets are liable for its obligations. Members are not personally liable (bylaws Art. 10).'],
+  ],
+  [
+    'Your data',
+    [
+      'We keep your name, email, membership details, payments and certificates to run your membership, and the version of these terms you accepted. Payments are processed by Stripe, emails are sent through Resend, and the data is stored with Netlify. We keep your membership data for one year after your membership ends and then anonymise it; payment records stay with Stripe as accounting law requires. The privacy policy has the details.',
+    ],
+  ],
+];
+---
+
+<BaseLayout title="Membership terms" description={`The terms for membership of the ${SITE.association}, the association behind ZurichJS.`}>
+  <PageOpening slot="opening" title="Membership terms" sub={`For members of the ${SITE.association}. Version of ${version}.`} />
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
+    <div class="max-w-[760px] flex flex-col gap-9">
+      {
+        SECTIONS.map(([h, paras]) => (
+          <section class="flex flex-col gap-3">
+            <h2 class="m-0 text-[clamp(24px,2.4vw,30px)] leading-[1.2] font-bold">{h}</h2>
+            {paras.map((p) => (
+              <p class="m-0 text-[18px] leading-[1.65] text-ink-2 text-pretty">{p}</p>
+            ))}
+          </section>
+        ))
+      }
+      <p class="m-0 text-[17px] text-ink-2">
+        Questions? <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a> · <a href="/policies/privacy-policy" class="font-bold text-black">Privacy policy</a> ·{' '}
+        <a href="/membership/account" class="font-bold text-black">Your membership</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>

@@ -38,10 +38,11 @@ export const COMMUNITY_GRID: { id: string; photo: Photo; sizes: { base: Cells; m
     sizes: { base: { cols: 2, rows: 1 }, md: { cols: 1, rows: 1 } },
     priority: 4,
   },
-  { id: 'team', photo: PAGE_PHOTOS.team, sizes: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 } }, priority: 5 },
+  // Cropped from the top so faces stay in the wide, short tile (owner, 11th November 2026).
+  { id: 'team', photo: { ...PAGE_PHOTOS.team, position: 'center top' }, sizes: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 } }, priority: 5 },
   {
     id: 'speaker',
-    photo: { src: '/images/photos/meetup-jens.webp', alt: 'A speaker presenting at a ZurichJS meetup', position: 'center 30%' },
+    photo: { src: '/images/photos/meetup-jens.webp', alt: 'A speaker presenting at a ZurichJS meetup', position: 'center 15%' },
     sizes: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 } },
     priority: 6,
   },

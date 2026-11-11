@@ -5,7 +5,8 @@
   "description": "Slack content agent: typed Sanity draft tools, model-agnostic agent loop, Slack helpers.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./cfp": "./src/cfp/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
@@ -16,6 +17,7 @@
     "@ai-sdk/openai-compatible": "3.0.80",
     "@sanity/client": "7.28.0",
     "@zurichjs/events": "workspace:*",
+    "@zurichjs/forms": "workspace:*",
     "ai": "7.0.156",
     "zod": "4.6.7"
   },

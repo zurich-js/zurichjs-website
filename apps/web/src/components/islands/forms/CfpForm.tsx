@@ -1,12 +1,11 @@
 import { CFP_AGREE_ERROR, MAX_TOPICS, TALK_LENGTHS, TALK_LEVELS, TALK_TOPICS, submitForm } from '@zurichjs/forms/client';
-import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { cx, surfaceClass, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { SocialLabel } from '@zurichjs/design/islands/SocialLabel';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
+import { ChoiceGroup, Honeypot, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
 const DRAFT_KEY = 'zurichjs-cfp-draft';
 const EMAIL = 'hello@zurichjs.com';
@@ -122,45 +121,6 @@ const asText = (d: Draft) =>
   ]
     .filter((l) => l !== false && l !== '' && l !== undefined)
     .join('\n');
-
-/** A group of native radios or checkboxes shown as cards or pills; the input itself stays keyboard-operable. */
-function ChoiceGroup({
-  legend,
-  hint,
-  error,
-  radio,
-  children,
-  class: extra,
-}: {
-  legend: string;
-  hint?: ComponentChildren;
-  error?: string;
-  /** One choice only: the group is a radiogroup, which carries the invalid state (radios cannot). */
-  radio?: boolean;
-  children: ComponentChildren;
-  class?: string;
-}) {
-  const id = `cfp-${legend.toLowerCase().replace(/\W+/g, '-')}`;
-  return (
-    <fieldset
-      role={radio ? 'radiogroup' : undefined}
-      aria-invalid={(radio && !!error) || undefined}
-      class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0"
-      aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined}
-    >
-      <legend class="text-[16px] font-bold p-0 mb-1.5">{legend}</legend>
-      {hint && (
-        <p id={`${id}-hint`} class="m-0 mb-1 text-[16px] text-grey-text leading-[1.45]">
-          {hint}
-        </p>
-      )}
-      <div class={extra}>{children}</div>
-      <span id={`${id}-error`} class="text-[14px] text-danger min-h-[1.2em]" aria-live="polite">
-        {error}
-      </span>
-    </fieldset>
-  );
-}
 
 /** The native input covers its card or pill, invisible: clicks, taps and the keyboard all reach it. */
 const section = 'border-0 p-0 m-0 flex flex-col gap-4 min-w-0';

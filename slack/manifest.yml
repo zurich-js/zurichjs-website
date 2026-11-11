@@ -21,8 +21,6 @@ settings:
     request_url: https://zurichjs.com/.netlify/functions/slack-events
     bot_events:
       - app_mention
-      - message.groups
-      - message.channels
   interactivity:
     is_enabled: true
     request_url: https://zurichjs.com/.netlify/functions/slack-interactivity

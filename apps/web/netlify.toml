@@ -6,7 +6,8 @@
 # (checked with @netlify/config's resolveConfig).
 
 [build]
-command = "pnpm --filter @zurichjs/web build"
+# The membership database (Neon) is migrated first: scripts/db-migrate.mjs.
+command = "node scripts/db-migrate.mjs && pnpm --filter @zurichjs/web build"
 publish = "dist"
 
 [build.environment]
@@ -43,10 +44,6 @@ status = 301
 [[redirects]]
 from = "/checkout/*"
 to = "/donate"
-status = 301
-[[redirects]]
-from = "/admin/*"
-to = "/"
 status = 301
 [[redirects]]
 from = "/profile/*"

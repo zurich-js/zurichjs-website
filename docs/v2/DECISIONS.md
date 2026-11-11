@@ -412,3 +412,73 @@ The proof sentence now reads "Rated 4.9/5 on Meetup from 199 ratings, and winner
 - **Yellow:** "Speak at a meetup" is the only large yellow section; no yellow text highlights; no yellow footer link.
 - **Footer:** the conference's layout (who we are, link columns, stay in the know, wordmark and social icons).
 - **The conference module** is a development placeholder: shown with `pnpm dev`, or when a build sets `SHOW_PREVIEW_MODULES=true` (use only on password-protected deploy previews), never on the public site.
+
+## Verein membership goes self-serve (owner, 5th November 2026)
+
+Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
+
+- **Signed off by the owner:** the phases in that plan; Supabase Pro for the production member database (about USD 25 a month, the price to confirm when subscribing; the owner subscribes); memberships charged through Stripe, which changes the AGENTS.md payments rule; and updating the privacy policy and terms for it (drafted in a later phase, the owner approves the text).
+- **Member data lives in Supabase,** not Sanity: row-level security, a private bucket for signed declarations, an append-only audit log. Sanity keeps only public content.
+- **Phase 1 is the data layer only:** `@zurichjs/membership` (levels, status machine, store), the first migration and the CSV import. No page, route or email changes yet, so `/membership` still sends requests as before.
+- **The database is tested on a local Postgres** with a stand-in for Supabase's roles and auth (`supabase/tests/supabase-stub.sql`), because Docker (and so `supabase start`) is not available in CI or agent sessions. The tests skip when Postgres is not installed. The real staging project still has to be checked before production.
+
+## Membership answers (owner, 6th November 2026)
+
+- **Resigning from the account counts as "in writing"** (bylaws Art. 5), with an email copy to the member.
+- **Two levels only:** Basic Member and Supporter, one to one with `/membership`. Enthusiast and Advocate (named in Art. 4) do not exist yet and were removed from the model.
+- **Approvers:** Nadja, Bogdan and Faris, through `SLACK_MEMBERSHIP_APPROVER_IDS` (Slack IDs in the runbook).
+- **Imported members re-sign digitally** before switching to automatic payment.
+- **Retention:** one year after a membership ends, then the member is anonymised in the database (`member_anonymise`); Stripe's payment records stay, for the accounts.
+- **Still open:** the basic discount and which paid events are included each year (board).
+
+## Membership phase 2: sign-in and the account page (6th November 2026)
+
+- **`/membership/account`** (noindex, not in the sitemap or `llms.txt`): sign in by emailed link, then see the membership (level, status, billing, paid until, member since). People without a membership are sent to `/membership`. Imported members are linked to their account the first time their email signs in.
+- **Implicit sign-in flow, not PKCE,** so a link requested on one device works on another. The tokens are taken out of the URL without leaving a history entry.
+- **Emails are plain TypeScript templates** on the design tokens, not React Email (deprecated components package, heavy CLI dependencies, React next to Preact). Recorded in `MEMBERSHIP.md`.
+- **The sign-in email comes from Supabase's Send Email Hook** (`/api/membership/auth-email`, Standard Webhooks signature checked without a library). It only sends sign-in links; password and email-change emails are refused, since member accounts have neither.
+
+## Membership phase 3: requests and Slack review (6th November 2026)
+
+- **Requesting membership needs an account:** `/membership/account` has the request form (person or organisation, level, cycle, an optional message). With member accounts configured, `/membership`'s "Ask to join" leads there with the chosen level and cycle; without them, the old email form stays (so CI, previews without Supabase and production behave as before).
+- **Approve and Reject in Slack,** only for Nadja, Bogdan and Faris. Reject asks for confirmation and gives no reason in the email. A click names the status it expects (`applied`), so a stale card or two approvers at once cannot flip an approved member to rejected.
+- **The applicant's message is not stored,** only shown in Slack (data minimisation).
+- **When Slack fails** the request is still taken; the organisers get an email and `pnpm membership:review` re-posts the cards.
+- **Production stays on the email form until payment exists** (phase 5): the `PUBLIC_SUPABASE_*` variables switch the flow, and the runbook says not to set them on production before then.
+
+## Membership on Netlify only, anyone can join, certificates (owner, 10th November 2026)
+
+- **Supabase removed.** The member database is Netlify Database (Postgres; `@netlify/database`), sign-in is Better Auth with an emailed link, everything deploys with the site on Netlify. The old Netlify DB Neon extension is discontinued; Netlify Database is its GA successor.
+- **No approval and no declaration.** Anyone can join by accepting the membership terms (based on the bylaws) and paying; the first payment makes them a member. The Slack Approve/Reject flow is gone; Slack gets notes, and a Confirm resignation button for the approvers.
+- **Certificate of membership for every paid term,** signed by Faris Aziz, President of the Board, with his signature image (kept out of git, in Netlify Blobs). Emailed and in the portal.
+- **Only quarterly and yearly** cycles; members switch between them (or levels) in the Stripe portal, which cannot cancel. Resignations go through the board (bylaws Art. 5).
+- **Production keeps the email form** until `PUBLIC_MEMBERSHIP_ONLINE=on`. (Replaced on 11th November 2026: online joining is always on, with no switch; see below.)
+- **Deploy previews fork production data** (Netlify Database branching). The site protects that copy itself (see the admin area below); no Netlify visitor password.
+- **Existing members are imported through an admin endpoint,** not a data migration, so member data never goes into git.
+- **Local development runs in Docker** (`docker-compose.yml`): Postgres with the migrations, the Stripe mock (now with memberships and signed webhooks), Mailpit for email (via `MAILPIT_URL`, ignored in production; replaced the home-made mail viewer `tools/mock-resend.mjs` on 10th November 2026, owner) and the Sanity Studio against the real project (Sanity has no local backend).
+
+## Membership admin area behind a site-level password (owner, 11th November 2026)
+
+- **`/admin/memberships`** for the board: members with search and filters, one member's details and history, confirming resignations, CSV import and export.
+- **Protected by the site, not by the deploy:** one shared password from `ADMIN_PASSWORD` (any length since 11th November 2026, owner), enforced by the API on production and every deploy preview. The earlier advice to password-protect deploy previews in Netlify is dropped.
+- **Session:** httpOnly, SameSite=Strict cookie for the admin API, 8 hours, signed with a key derived from the password (changing it signs everyone out). Writes must come from the site's own origin. 10 wrong passwords per IP block sign-in for 15 minutes, counted in the database (`admin_login_attempts`).
+- **The import CLI uses the same password** (Bearer); `MEMBERSHIP_ADMIN_TOKEN` is gone.
+
+## Admin, membership launch decisions (owner, 11th November 2026)
+
+- **`/admin` asks for the password first, then shows Memberships (`/admin`, `/admin/memberships`)** (a Content section linking to the Sanity Studio was added and removed the same day, owner) (it was `/membership/admin`, never in production). The password variable is `ADMIN_PASSWORD` (was `MEMBERSHIP_ADMIN_PASSWORD`).
+- **Online joining is always on:** the `PUBLIC_MEMBERSHIP_ONLINE` switch and the email request form on `/membership` are gone; `/api/verein-inquiry` stays for anything that still posts to it.
+- **The membership terms are approved** (version of 11th November 2026) and indexed.
+- **Renewal stops when a member resigns,** not when the board confirms, so nothing is charged after a resignation; resubscribing turns it back on.
+- **Resigning asks why** (reasons and a note, for the board), never as a condition: a small red link resigns without a reason. Red for that link is the owner's call.
+- **Soft yellow for one call to action:** members who pay manually (cash/bank) see "Switch to automatic payment" as a status banner right under "Signed in as" on the account page, on the brand yellow at 25% (`surfaceClass('yellow-soft')`). This adds to the yellow rule in AGENTS.md (owner).
+- **"Paid manually (cash/bank)"** replaces "paid by hand" everywhere members and the board read it.
+- **Level and cycle changes apply from the next renewal only** (owner): on the account page, through a Stripe subscription schedule; nothing is charged or prorated now. The billing portal no longer switches plans (`pnpm membership:stripe-setup` turns it off; run it again in each Stripe account).
+- **The admin area has no Content section;** Sanity is reached through the Studio directly.
+- **The membership database is Postgres on Neon, not Netlify Database** (the team's Netlify plan has no database). Production on the Neon production branch; every deploy preview gets its own empty database on a separate preview branch (no production data in previews), dropped when the PR closes; local development stays on Docker. Migrations run before each Netlify build (`apps/web/scripts/db-migrate.mjs`).
+
+## Talk proposals in Slack (owner, 11th November 2026)
+
+- **The CFP bot** (`docs/v2/CFP-BOT.md`): a second Slack app in a public `#cfp` thread, four tools on the speaker's own draft only, name, email and photo from the Slack profile (the photo only with consent), the cheapest model, at most 2 submissions per person per day, guests allowed, the Slack ID only in the review notes.
+- **Privacy policy** section "Talk Proposals in Slack" approved as written.
+- **Unfinished drafts** are deleted after 14 days without activity.

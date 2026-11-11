@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { readiness, type EventDocumentForReadiness } from '@zurichjs/events';
 import { draftIdOf, publishedIdOf, type ContentStore, type SanityDoc } from './store.ts';
 import { formatZurich, zurichToUtcIso } from './time.ts';
+import { buildProgrammeTools, eventProgramme } from './programme.ts';
 
 export interface FieldChange {
   field: string;
@@ -20,7 +21,8 @@ export interface FieldChange {
 export interface DraftChange {
   /** Published id (without `drafts.`). */
   id: string;
-  type: 'events' | 'siteSettings';
+  /** The Sanity document type (events, siteSettings, talk, talkSubmission, speaker, …). */
+  type: string;
   slug?: string;
   title: string;
   created: boolean;
@@ -153,23 +155,32 @@ const summary = (d: EventDoc) => ({
 
 export function buildTools(store: ContentStore, log: ChangeLog, now: () => Date = () => new Date()): ToolSet {
   return {
+    ...buildProgrammeTools(store, log, now),
     findEvents: tool({
-      description: 'List meetups (drafts included). Use it to find which event the person means before changing anything.',
-      inputSchema: z.object({ when: z.enum(['upcoming', 'past', 'all']).default('upcoming'), text: z.string().optional().describe('Words in the title') }),
-      execute: async ({ when, text }) => {
+      description:
+        'List meetups (drafts included), soonest first for upcoming and newest first for past. Use it to find which event the person means before changing anything. Filter by words in the title or the venue name. Raise limit to see more (it says how many matched in total when there are more).',
+      inputSchema: z.object({
+        when: z.enum(['upcoming', 'past', 'all']).default('upcoming'),
+        text: z.string().optional().describe('Words in the title'),
+        venue: z.string().optional().describe('Part of the venue name, e.g. "SAE"'),
+        limit: z.number().int().min(1).max(200).default(20),
+      }),
+      execute: async ({ when, text, venue, limit }) => {
         const all = preferDrafts(await store.query<(EventDoc & { slug: string })[]>(EVENT_LIST));
         const t = now().getTime();
-        return all
+        const has = (hay: string | undefined, needle: string | undefined) => !needle || (hay ?? '').toLowerCase().includes(needle.toLowerCase());
+        const matched = all
           .filter((e) => when === 'all' || (when === 'upcoming' ? !e.datetime || Date.parse(e.datetime) >= t - 48 * 3600_000 : !!e.datetime && Date.parse(e.datetime) < t))
-          .filter((e) => !text || `${e.title ?? ''} ${e.slug}`.toLowerCase().includes(text.toLowerCase()))
-          .sort((a, b) => (Date.parse(a.datetime ?? '9999') - Date.parse(b.datetime ?? '9999')) * (when === 'past' ? -1 : 1))
-          .slice(0, 12)
-          .map((e) => ({ ...summary(e), slug: e.slug, hasUnpublishedChanges: e.hasDraft }));
+          .filter((e) => has(`${e.title ?? ''} ${e.slug}`, text) && has(e.venue as string | undefined, venue))
+          .sort((a, b) => (Date.parse(a.datetime ?? '9999') - Date.parse(b.datetime ?? '9999')) * (when === 'past' ? -1 : 1));
+        const rows = matched.slice(0, limit).map((e) => ({ ...summary(e), slug: e.slug, hasUnpublishedChanges: e.hasDraft }));
+        return matched.length > limit ? [...rows, { note: `${matched.length - limit} more matched; raise limit to see them (${matched.length} in total).` }] : rows;
       },
     }),
 
     getEvent: tool({
-      description: 'Full details of one meetup by its URL slug, with what the page still needs before publishing.',
+      description:
+        'Full details of one meetup by its URL slug: venue, description, the programme (talks in running order with refs, lengths and speakers, and the schedule with times, estimated when there is no agenda), and what the page still needs before publishing.',
       inputSchema: z.object({ slug: z.string() }),
       execute: async ({ slug }) => {
         const hit = await eventBySlug(store, slug);
@@ -183,7 +194,7 @@ export function buildTools(store: ContentStore, log: ChangeLog, now: () => Date 
           description: d.description ?? null,
           meetupUrl: d.meetupUrl ?? null,
           practical: d.practical ?? [],
-          agenda: d.agenda ?? [],
+          programme: await eventProgramme(store, d),
           hasUnpublishedChanges: hit.hasDraft,
           missingBeforePublishing: readiness(d)
             .filter((c) => !c.ok)
@@ -193,18 +204,29 @@ export function buildTools(store: ContentStore, log: ChangeLog, now: () => Date 
     }),
 
     findVenuesUsedBefore: tool({
-      description: 'Venues of past meetups with their addresses, to reuse the exact name and address.',
-      inputSchema: z.object({}),
-      execute: async () => {
-        const rows = await store.query<{ venue?: { name?: string; street?: string; zip?: string; city?: string }; location?: string; address?: string }[]>(
-          `*[_type == "events" && !(_id in path("drafts.**"))]{ venue, location, address }`,
-        );
-        const seen = new Map<string, unknown>();
+      description:
+        'Venues of published meetups with their addresses and which meetups used them (newest first), to reuse the exact name and address and to say where it came from.',
+      inputSchema: z.object({ name: z.string().optional().describe('Part of the venue name, e.g. "SAE"') }),
+      execute: async ({ name: filter }) => {
+        const rows = await store.query<
+          { title?: string; datetime?: string; eventSlug?: string; venue?: { name?: string; street?: string; zip?: string; city?: string }; location?: string; address?: string }[]
+        >(`*[_type == "events" && !(_id in path("drafts.**"))]{ title, datetime, "eventSlug": id.current, venue, location, address }`);
+        const venues = new Map<string, { venue: unknown; usedBy: { title?: string; when: string; slug?: string; at: number }[] }>();
         for (const r of rows) {
           const name = r.venue?.name ?? r.location;
-          if (name && !seen.has(name)) seen.set(name, r.venue?.name ? r.venue : { name, address: r.address });
+          if (!name || (filter && !name.toLowerCase().includes(filter.toLowerCase()))) continue;
+          const entry = venues.get(name) ?? { venue: r.venue?.name ? r.venue : { name, address: r.address }, usedBy: [] };
+          entry.usedBy.push({ title: r.title, when: r.datetime ? formatZurich(r.datetime) : 'no date', slug: r.eventSlug, at: r.datetime ? Date.parse(r.datetime) : 0 });
+          venues.set(name, entry);
         }
-        return [...seen.values()].slice(0, 30);
+        return [...venues.values()].slice(0, 30).map(({ venue, usedBy }) => ({
+          ...(venue as object),
+          timesUsed: usedBy.length,
+          usedBy: usedBy
+            .sort((a, b) => b.at - a.at)
+            .slice(0, 5)
+            .map(({ at: _at, ...u }) => u),
+        }));
       },
     }),
 

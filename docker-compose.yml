@@ -1,0 +1,174 @@
+# Local development for zurichjs.com: the site and everything it talks to, on your machine.
+#
+#   pnpm local                             site, database, Mailpit, Stripe test mode (tools/local.sh)
+#   pnpm local:studio                      … plus the Sanity Studio
+#   pnpm local:down                        stop (the database keeps its data)
+#   pnpm local:reset                       stop and delete the local database and installs
+#
+#   http://localhost:4321                  the site (membership on: /membership, /membership/account)
+#   http://localhost:8025                  Mailpit: every email the site sends (sign-in links, certificates)
+#   localhost:1025                         Mailpit's SMTP, for anything else you want to test locally
+#   http://localhost:3333                  Sanity Studio (profile `studio`; sign in with your Sanity account)
+#   http://localhost:4321/admin               admin area (ADMIN_PASSWORD from .env, 16+ characters; else local-admin-password-docker)
+#   localhost:54322                        Postgres (user postgres, password postgres, database zurichjs)
+#
+# Payments use Stripe's test mode (a sandbox; nothing is charged): .env.local needs a test-mode
+# STRIPE_SECRET_KEY and STRIPE_MEMBER_PORTAL_CONFIG, and tools/local.sh runs `stripe listen` for the
+# webhooks. Run it through pnpm local, not `docker compose up`, which lacks the webhook secret.
+# Nothing here reaches Resend or Slack. Content comes from the built-in sample by
+# default; put SANITY_TOKEN (read) in .env.local and CONTENT_SOURCE= (empty) for real content.
+# Your own overrides go in .env.local (git-ignored). Details: docs/v2/RUNBOOK.md, "Local development".
+
+name: zurichjs
+
+x-node: &node
+  image: node:22.23.4-bookworm-slim
+  working_dir: /app
+  environment: &node-env
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+    # "localhost" resolves to ::1 first in the container, and Netlify's functions emulation listens
+    # on one address and connects on the other (every function answered 500 ECONNREFUSED).
+    NODE_OPTIONS: --dns-result-order=ipv4first
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zurichjs
+    ports:
+      - '54322:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d zurichjs']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Applies apps/web/database/migrations (the files tools/db-migrate.mjs applies on every Netlify build), each once.
+  migrate:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: zurichjs
+      MIGRATIONS_DIR: /migrations
+    volumes:
+      - ./apps/web/database/migrations:/migrations:ro
+      - ./tools/docker/migrate.sh:/migrate.sh:ro
+    entrypoint: ['sh', '/migrate.sh']
+    restart: 'no'
+
+  # Mailpit (https://mailpit.axllent.org) catches every email the site sends (MAILPIT_URL below); nothing leaves your machine.
+  # The inbox is kept in the mail-data volume, so it survives restarts; `docker compose down -v` clears it.
+  mail:
+    image: axllent/mailpit:v1.33.0
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: '1000'
+    ports:
+      - '8025:8025'
+      - '1025:1025'
+    volumes:
+      - mail-data:/data
+
+  web:
+    <<: *node
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      mail:
+        condition: service_started
+    # Astro's dev lock (.astro/dev.json) lives in the bind mount, so one left by a previous container is always stale here.
+    command:
+      ['sh', '-c', 'corepack enable && pnpm install --frozen-lockfile && rm -f apps/web/.astro/dev.json && pnpm --filter @zurichjs/web exec astro dev --host 0.0.0.0 --port 4321']
+    environment:
+      <<: *node-env
+      CONTENT_SOURCE: sample
+      MEMBERSHIP_DB_URL: postgres://postgres:postgres@db:5432/zurichjs
+      BETTER_AUTH_URL: http://localhost:4321
+      BETTER_AUTH_SECRET: local-docker-only-secret-not-for-production
+      # Stripe test mode, from .env.local through tools/local.sh, which checks the key and sets the
+      # webhook secret from `stripe listen`. Empty here so `docker compose down` works without them.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_MEMBER_PORTAL_CONFIG: ${STRIPE_MEMBER_PORTAL_CONFIG:-}
+      STRIPE_MEMBERSHIP_WEBHOOK_SECRET: ${STRIPE_MEMBERSHIP_WEBHOOK_SECRET:-}
+      STRIPE_SUPPORT_PRODUCT_ID: ${STRIPE_SUPPORT_PRODUCT_ID:-}
+      MAILPIT_URL: http://mail:8025
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-local-admin-password-docker}
+    # .env, then .env.local (which wins); the values set above win over both.
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
+    ports:
+      - '4321:4321'
+    volumes:
+      - .:/app
+      - pnpm-store:/root/.local/share/pnpm
+      # Linux installs stay in the container; your own node_modules (e.g. macOS) are not used.
+      - nm-root:/app/node_modules
+      - nm-web:/app/apps/web/node_modules
+      - nm-studio:/app/apps/studio/node_modules
+      - nm-agent:/app/packages/agent/node_modules
+      - nm-config:/app/packages/config/node_modules
+      - nm-content:/app/packages/content/node_modules
+      - nm-design:/app/packages/design/node_modules
+      - nm-emails:/app/packages/emails/node_modules
+      - nm-events:/app/packages/events/node_modules
+      - nm-forms:/app/packages/forms/node_modules
+      - nm-integrations:/app/packages/integrations/node_modules
+      - nm-membership:/app/packages/membership/node_modules
+      - nm-seo:/app/packages/seo/node_modules
+
+  # The Sanity Studio against the real project (Sanity has no local backend). Sign in with your Sanity account.
+  studio:
+    <<: *node
+    profiles: ['studio']
+    depends_on:
+      web:
+        condition: service_started
+    command: ['sh', '-c', 'corepack enable && pnpm --filter @zurichjs/studio exec sanity dev --host 0.0.0.0 --port 3333']
+    ports:
+      - '3333:3333'
+    volumes:
+      - .:/app
+      - pnpm-store:/root/.local/share/pnpm
+      - nm-root:/app/node_modules
+      - nm-web:/app/apps/web/node_modules
+      - nm-studio:/app/apps/studio/node_modules
+      - nm-agent:/app/packages/agent/node_modules
+      - nm-config:/app/packages/config/node_modules
+      - nm-content:/app/packages/content/node_modules
+      - nm-design:/app/packages/design/node_modules
+      - nm-emails:/app/packages/emails/node_modules
+      - nm-events:/app/packages/events/node_modules
+      - nm-forms:/app/packages/forms/node_modules
+      - nm-integrations:/app/packages/integrations/node_modules
+      - nm-membership:/app/packages/membership/node_modules
+      - nm-seo:/app/packages/seo/node_modules
+
+volumes:
+  db-data:
+  mail-data:
+  pnpm-store:
+  nm-root:
+  nm-web:
+  nm-studio:
+  nm-agent:
+  nm-config:
+  nm-content:
+  nm-design:
+  nm-emails:
+  nm-events:
+  nm-forms:
+  nm-integrations:
+  nm-membership:
+  nm-seo:

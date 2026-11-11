@@ -1,0 +1,472 @@
+{
+  "apps/web/src/components/RetiredNotice.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 4
+    }
+  },
+  "apps/web/src/components/RichText.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 5
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "apps/web/src/components/SponsorTiers.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 10
+    }
+  },
+  "apps/web/src/components/SupporterList.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "apps/web/src/components/islands/MemberAccount.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 45
+    }
+  },
+  "apps/web/src/components/islands/MemberJoin.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 17
+    }
+  },
+  "apps/web/src/components/islands/MembershipAdmin.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 32
+    }
+  },
+  "apps/web/src/components/islands/design/IslandsDemo.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "apps/web/src/components/islands/event/EventActions.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 6
+    }
+  },
+  "apps/web/src/components/islands/event/EventBanner.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "apps/web/src/components/islands/event/EventSummary.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 13
+    }
+  },
+  "apps/web/src/components/islands/event/FeedbackGate.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "apps/web/src/components/islands/event/Programme.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 28
+    }
+  },
+  "apps/web/src/components/islands/event/VenueCard.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 10
+    }
+  },
+  "apps/web/src/components/islands/forms/CfpForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 55
+    }
+  },
+  "apps/web/src/components/islands/forms/ContactForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 13
+    }
+  },
+  "apps/web/src/components/islands/forms/DonateForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 15
+    }
+  },
+  "apps/web/src/components/islands/forms/DonateThanks.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 4
+    }
+  },
+  "apps/web/src/components/islands/forms/FeedbackForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 32
+    }
+  },
+  "apps/web/src/components/islands/forms/MembershipForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 34
+    }
+  },
+  "apps/web/src/components/islands/forms/PartnersForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 12
+    }
+  },
+  "apps/web/src/components/islands/forms/SpeakerProfileForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 13
+    }
+  },
+  "apps/web/src/components/islands/forms/VolunteerForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 14
+    }
+  },
+  "apps/web/src/components/islands/forms/WaitlistForm.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 8
+    }
+  },
+  "apps/web/src/components/islands/forms/shared.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 1
+    }
+  },
+  "apps/web/src/components/islands/home/SpeakerCarousel.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 12
+    },
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "apps/web/src/components/islands/today/Tonight.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 51
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "apps/web/src/layouts/BaseLayout.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 1
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "apps/web/src/pages/404.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 17
+    }
+  },
+  "apps/web/src/pages/about/index.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 104
+    }
+  },
+  "apps/web/src/pages/about/why-zurichjs.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 10
+    }
+  },
+  "apps/web/src/pages/ai-context.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 69
+    }
+  },
+  "apps/web/src/pages/cfp.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 2
+    }
+  },
+  "apps/web/src/pages/cfv.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 32
+    }
+  },
+  "apps/web/src/pages/conferences/tech-conferences-zurich.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 45
+    }
+  },
+  "apps/web/src/pages/contact.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 48
+    }
+  },
+  "apps/web/src/pages/design.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 17
+    },
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "apps/web/src/pages/donate.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 45
+    }
+  },
+  "apps/web/src/pages/donate/thanks.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "apps/web/src/pages/events/[slug].astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 53
+    }
+  },
+  "apps/web/src/pages/events/index.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 13
+    }
+  },
+  "apps/web/src/pages/feedback.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 2
+    }
+  },
+  "apps/web/src/pages/feedback/speaker/[token].astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 31
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "apps/web/src/pages/index.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 13
+    }
+  },
+  "apps/web/src/pages/media.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 25
+    }
+  },
+  "apps/web/src/pages/media/[event].astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 6
+    }
+  },
+  "apps/web/src/pages/meetups/ai-ml-zurich.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 37
+    }
+  },
+  "apps/web/src/pages/meetups/javascript-zurich.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 36
+    }
+  },
+  "apps/web/src/pages/membership.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 17
+    }
+  },
+  "apps/web/src/pages/membership/account.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 2
+    }
+  },
+  "apps/web/src/pages/membership/terms.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 8
+    }
+  },
+  "apps/web/src/pages/partners.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 101
+    }
+  },
+  "apps/web/src/pages/policies/[slug].astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 43
+    }
+  },
+  "apps/web/src/pages/speakers/[id].astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 37
+    }
+  },
+  "apps/web/src/pages/speakers/index.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 20
+    }
+  },
+  "apps/web/src/pages/speakers/profile.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 2
+    }
+  },
+  "apps/web/src/pages/today.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 35
+    }
+  },
+  "apps/web/src/pages/waitlist/conf.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 15
+    }
+  },
+  "packages/design/src/components/AwardSection.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 15
+    }
+  },
+  "packages/design/src/components/ConferenceModule.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 9
+    }
+  },
+  "packages/design/src/components/EventRow.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 8
+    }
+  },
+  "packages/design/src/components/Footer.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 18
+    }
+  },
+  "packages/design/src/components/Header.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 11
+    }
+  },
+  "packages/design/src/components/HomeHero.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 27
+    },
+    "no-restricted-syntax": {
+      "count": 3
+    }
+  },
+  "packages/design/src/components/HostsSection.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 6
+    }
+  },
+  "packages/design/src/components/LogoGrid.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 4
+    }
+  },
+  "packages/design/src/components/PackedGrid.astro": {
+    "no-restricted-syntax": {
+      "count": 2
+    }
+  },
+  "packages/design/src/components/PageOpening.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 14
+    }
+  },
+  "packages/design/src/components/Photo.astro": {
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/design/src/components/ProofSentence.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 4
+    }
+  },
+  "packages/design/src/components/SectionHeading.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "packages/design/src/components/SpeakCta.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 6
+    }
+  },
+  "packages/design/src/components/SpeakerCard.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 2
+    }
+  },
+  "packages/design/src/components/SpeakerCompanies.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 9
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/design/src/components/TalkRow.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 6
+    }
+  },
+  "packages/design/src/components/landing/LandingCta.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 7
+    }
+  },
+  "packages/design/src/components/landing/LandingEvents.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "packages/design/src/components/landing/LandingFaq.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 6
+    }
+  },
+  "packages/design/src/components/landing/PointList.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 4
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/design/src/components/landing/TopicGroups.astro": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    },
+    "no-restricted-syntax": {
+      "count": 1
+    }
+  },
+  "packages/design/src/islands/Check.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 1
+    }
+  },
+  "packages/design/src/islands/Field.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 16
+    }
+  },
+  "packages/design/src/islands/Gallery.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 15
+    }
+  },
+  "packages/design/src/islands/Modal.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 3
+    }
+  },
+  "packages/design/src/islands/RatingSheet.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 9
+    }
+  },
+  "packages/design/src/islands/SocialLabel.tsx": {
+    "no-restricted-syntax": {
+      "count": 17
+    }
+  },
+  "packages/design/src/islands/StarRating.tsx": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 5
+    }
+  },
+  "packages/design/src/recipes.ts": {
+    "better-tailwindcss/no-restricted-classes": {
+      "count": 23
+    }
+  }
+}

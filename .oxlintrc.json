@@ -9,6 +9,42 @@
     "react/no-unknown-property": "off",
     "jsx-a11y/prefer-tag-over-role": "off"
   },
+  "overrides": [
+    {
+      "files": ["packages/agent/src/cfp/**", "apps/web/netlify/functions/slack-cfp-*.mts", "apps/web/src/server/cfp-bot.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              { "name": "@zurichjs/agent", "message": "The CFP bot imports @zurichjs/agent/cfp only: the root holds the organiser bot's tools (docs/v2/CFP-BOT.md)." },
+              { "name": "@zurichjs/membership", "message": "The CFP bot has no membership access (docs/v2/CFP-BOT.md)." }
+            ],
+            "patterns": [
+              {
+                "group": [
+                  "**/tools.ts",
+                  "**/programme.ts",
+                  "**/run.ts",
+                  "**/store.ts",
+                  "**/publish.ts",
+                  "**/prompt.ts",
+                  "**/slack.ts",
+                  "**/playbooks.generated.ts",
+                  "../index.ts",
+                  "**/membership-agent*",
+                  "**/membership-slack*",
+                  "**/membership-db*",
+                  "!./*"
+                ],
+                "message": "The CFP bot must not import the organiser bot or the membership agent (docs/v2/CFP-BOT.md; test/cfp-boundary.test.ts)."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
   "ignorePatterns": [
     "**/dist/**",
     "**/.astro/**",

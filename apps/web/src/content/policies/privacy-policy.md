@@ -32,6 +32,14 @@ We will only use your personal data when the law allows us to. Most commonly, we
 - To improve our website, products/services, marketing, and your experience.
 - To administer and protect our organization and website.
 
+## Talk Proposals in Slack
+
+You can propose a talk by chatting with our CFP bot in the #cfp channel of the ZurichJS Slack. When you do:
+
+- **Your conversation** in that thread is sent to an AI model provider (currently Anthropic) so the bot can help you write the proposal. It receives what you and others write in the thread, but not your name, email address or Slack ID.
+- **From your Slack profile** we read your name, email address and job title, and your profile photo. We use the photo on your speaker page only if you say yes when you confirm. Your email address is shown only to you, masked, and is never posted in the channel.
+- **Your draft** is kept in our database until you submit it or for 14 days without activity, then deleted. When you submit, your proposal is stored like one sent through our website, with a note that it came from Slack and your Slack member ID, so the organisers can reply to you there.
+
 ## Membership of the Association
 
 If you become a member of the Swiss JavaScript Group, we process the following data to run your membership under our bylaws and the membership terms:

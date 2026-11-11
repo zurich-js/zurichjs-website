@@ -42,7 +42,7 @@ export const COMMUNITY_GRID: { id: string; photo: Photo; sizes: { base: Cells; m
   { id: 'team', photo: { ...PAGE_PHOTOS.team, position: 'center top' }, sizes: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 } }, priority: 5 },
   {
     id: 'speaker',
-    photo: { src: '/images/photos/meetup-jens.webp', alt: 'A speaker presenting at a ZurichJS meetup', position: 'center top' },
+    photo: { src: '/images/photos/meetup-jens.webp', alt: 'A speaker presenting at a ZurichJS meetup', position: 'center 15%' },
     sizes: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 } },
     priority: 6,
   },

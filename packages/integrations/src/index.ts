@@ -38,6 +38,8 @@ export interface TalkProposal {
   returning?: boolean;
   /** The person has not given a talk before: organisers offer help preparing. */
   firstTalk?: boolean;
+  /** Sent with the CFP bot in Slack: their Slack member ID, kept only in the review notes. */
+  slackUserId?: string;
 }
 
 /** Seam for talk proposals. Today: Sanity `talkSubmission`. Later: Sane (docs/v2/SANE-READINESS.md). */
@@ -114,6 +116,7 @@ export function speakerFields(p: TalkProposal): SpeakerFieldValues {
 /** Notes for the organisers on the submission (the Studio's internal "Review Notes"). */
 function reviewNotes(p: TalkProposal, matched: boolean): string | undefined {
   const lines: string[] = [];
+  if (p.slackUserId) lines.push(`Submitted via Slack by <@${p.slackUserId}>`);
   if (p.firstTalk) lines.push('First talk: offer help preparing.');
   if (p.returning && !matched) lines.push('Says they have spoken at ZurichJS before, but no speaker has this email. Check for a duplicate speaker.');
   const f = speakerFields(p);
@@ -420,6 +423,11 @@ export interface ForwardDeps {
   now?: () => Date;
   /** A photo sent with a talk proposal (multipart request). */
   photo?: ProposalPhoto;
+  /**
+   * A talk proposal from the CFP bot in Slack (packages/agent/src/cfp). Set by our code from the
+   * verified Slack payload, never from form data, so the public form cannot claim it.
+   */
+  via?: { slackUserId: string };
   /** Who sent it, hashed before storing; used to refuse a second rating of the same talk. */
   client?: { ip?: string; headers?: Record<string, string | undefined> };
 }
@@ -479,12 +487,13 @@ export async function forwardForm<K extends FormKind>(kind: K, data: FormData<K>
         ...(deps.photo ? { photo: deps.photo } : {}),
         returning: flag(d.returning),
         firstTalk: flag(d.firstTalk),
+        ...(deps.via && /^[UW][A-Z0-9]{2,30}$/.test(deps.via.slackUserId) ? { slackUserId: deps.via.slackUserId } : {}),
       };
       const saved = sink ? await sink.submit(proposal) : (log('[forms] SANITY_WRITE_TOKEN missing; talk proposal not stored'), { id });
       const facts = [`${minutesFor(proposal.format)} min`, proposal.level, proposal.topics?.join(', ')].filter(Boolean).join(', ');
       await postSlack(
         env,
-        `New talk proposal: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}${proposal.photo ? ', with a photo' : ''}`,
+        `New talk proposal${proposal.slackUserId ? ' via Slack' : ''}: “${proposal.title}” by ${proposal.name} (${facts})${proposal.returning ? ', has spoken at ZurichJS before' : ''}${proposal.firstTalk ? ', their first talk: offer help preparing' : ''}${proposal.photo ? ', with a photo' : ''}`,
         log,
       );
       return { ok: true, id: saved.id };

@@ -476,3 +476,9 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **Level and cycle changes apply from the next renewal only** (owner): on the account page, through a Stripe subscription schedule; nothing is charged or prorated now. The billing portal no longer switches plans (`pnpm membership:stripe-setup` turns it off; run it again in each Stripe account).
 - **The admin area has no Content section;** Sanity is reached through the Studio directly.
 - **The membership database is Postgres on Neon, not Netlify Database** (the team's Netlify plan has no database). Production on the Neon production branch; every deploy preview gets its own empty database on a separate preview branch (no production data in previews), dropped when the PR closes; local development stays on Docker. Migrations run before each Netlify build (`apps/web/scripts/db-migrate.mjs`).
+
+## Talk proposals in Slack (owner, 11th November 2026)
+
+- **The CFP bot** (`docs/v2/CFP-BOT.md`): a second Slack app in a public `#cfp` thread, four tools on the speaker's own draft only, name, email and photo from the Slack profile (the photo only with consent), the cheapest model, at most 2 submissions per person per day, guests allowed, the Slack ID only in the review notes.
+- **Privacy policy** section "Talk Proposals in Slack" approved as written.
+- **Unfinished drafts** are deleted after 14 days without activity.

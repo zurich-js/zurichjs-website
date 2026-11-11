@@ -14,25 +14,12 @@
  */
 import pg from 'pg';
 import { postgresStore, type MemberStore, type Queryable } from '@zurichjs/membership';
-import target from './db-target.json' with { type: 'json' };
+import { membershipUrl } from './db-url.ts';
 import type { Env } from './http.ts';
 
 export class MembershipUnavailable extends Error {}
 
 let pool: Queryable | undefined;
-
-/** The connection string with another database name (a deploy preview's own database). */
-export function withDatabase(url: string, database: string | null): string {
-  if (!database) return url;
-  const u = new URL(url);
-  u.pathname = `/${database}`;
-  return u.toString();
-}
-
-export function membershipUrl(env: Env, database: string | null = target.database): string | undefined {
-  if (env.MEMBERSHIP_DB_URL) return env.MEMBERSHIP_DB_URL;
-  return env.DATABASE_URL ? withDatabase(env.DATABASE_URL, database) : undefined;
-}
 
 export function membershipDb(env: Env): Queryable {
   const url = membershipUrl(env);

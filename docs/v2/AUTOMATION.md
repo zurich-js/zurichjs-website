@@ -173,5 +173,69 @@ To try membership: join on `localhost:4321/membership` with a test card, resign 
 | `packages/agent/src/publish.ts`             | the Publish and Discard buttons                                                            |
 | `packages/agent/src/speaker-email.ts`       | the "your talk is scheduled" card, Send email and Not now                                  |
 | `apps/web/src/server/talk-scheduled.ts`     | renders and sends that email (Resend, idempotency key, profile link)                       |
-| `apps/web/netlify/functions/slack-*.mts`    | the three Netlify Functions                                                                |
+| `apps/web/netlify/functions/slack-*.mts`    | the three Netlify Functions (not `slack-cfp-*`, the CFP bot below)                         |
 | `packages/agent/test/*`                     | tests with an in-memory Sanity and a scripted model, so CI makes no network or model calls |
+
+## The CFP bot (talk proposals in #cfp)
+
+A second Slack app, **ZurichJS CFP**, lets anyone in the ZurichJS Slack propose a talk in the public `#cfp` channel. The plan and the owner's decisions are in [CFP-BOT.md](./CFP-BOT.md). It is not the organiser bot: it has its own app, token, signing secret, functions, prompt and model, and it can do one thing only, help someone write and send their own talk proposal.
+
+> @ZurichJS CFP I'd like to give a talk about testing without mocks
+
+### What happens
+
+1. **Slack sends the mention** to `slack-cfp-events`. It checks the CFP app's signature, keeps to `SLACK_CFP_CHANNEL_ID`, ignores bots, edits and people from other workspaces (Slack guests are welcome), and hands the message to `slack-cfp-background`. Replies in the thread need no mention.
+2. **The background function** starts a draft for the person who mentioned the bot (one open draft per person, one per thread) and runs one model turn with **exactly four tools**: `getMyDraft`, `updateMyDraft`, `submitMyDraft`, `discardMyDraft`. The tools are bound to that person's draft; the Slack user and thread come from the verified event, never from the model. Other people's messages in the thread reach the model marked as context only, and their mentions do nothing.
+3. **The bot asks short questions** (lightning talk, 10 minutes, or full talk, 20 minutes; beginner, intermediate or advanced) and shows the draft in the thread: title, what people will learn, length and level, topics.
+4. **When the draft is complete,** a confirmation only the speaker sees (`chat.postEphemeral`): their name and their email, masked (`g•••@example.com`, "from your Slack profile"), "Use your Slack photo on your speaker page?" (Yes / No), the speaker terms from the website form, and **Submit** and **Keep editing**. If the profile shows no email, an **Add email** button opens a private field (a modal).
+5. **Submit** (`slack-cfp-interactivity`) is plain code, not the model. Only the person who started the draft can press it. It checks the draft with `schemas.cfp`, downloads the Slack photo only if they said Yes, and sends it through `forwardForm('cfp', …)`: the same speaker and pending `talkSubmission` as the website form, with "Submitted via Slack by <@U…>" in the review notes, and the usual organiser note saying "via Slack". The draft is deleted and the thread gets "Proposal received. The organisers will be in touch."
+
+Organisers review the proposal as any other (the organiser bot's `talkProposals`, the Studio, Publish).
+
+### Safety, in code
+
+- **Isolation:** `packages/agent/src/cfp/` is imported as `@zurichjs/agent/cfp` and never imports the organiser bot (the rest of `packages/agent/src`: its tools, programme, loop, store, publish, prompt and Slack code) or the membership code. An oxlint rule (`.oxlintrc.json`) blocks direct imports, and `packages/agent/test/cfp-boundary.test.ts` follows every import from the CFP code and the `slack-cfp-*` functions and pins the four tool names.
+- **No organiser credentials** on this path: no `SANITY_AGENT_TOKEN`, no organiser Slack token. Drafts live in Postgres (`cfp_drafts`), not Sanity; only Submit writes to Sanity, with the website form's token.
+- **Owner only:** every draft write names its owner in SQL; buttons pressed by anyone else are refused.
+- **Output escaped:** everything the model or a person wrote is escaped before it is posted (`verbatim` text, `&lt;`/`&gt;`, broken `@channel`/`@here` and URLs), so the bot cannot post a broadcast, a mention or a link.
+- **Email private:** the model never sees an email; the confirmation shows it masked; it is never posted in the channel.
+- **Limits** (in Postgres, `cfp_usage`): 2 submissions per person per day, 30 messages per person per hour, and 400 model calls per day for everyone (`CFP_MAX_MODEL_CALLS_PER_DAY`). Unfinished drafts are deleted after 14 days without activity (`slack-cfp-cleanup`, daily).
+- **Cheapest model:** `CFP_LLM_MODEL`, with the organiser bot's `LLM_PROVIDER` and `LLM_API_KEY`. With Anthropic it defaults to `claude-haiku-5-5`. It never falls back to `LLM_MODEL`.
+
+### Switch it on (owner, once)
+
+1. **Slack:** api.slack.com/apps › Create New App › From a manifest › the ZurichJS workspace › paste `slack/manifest.cfp.yml`. Install it, then invite **@ZurichJS CFP** to `#cfp` only. On the free plan it takes one of the 10 app installs.
+2. **Netlify environment variables:** `SLACK_CFP_BOT_TOKEN`, `SLACK_CFP_SIGNING_SECRET`, `SLACK_CFP_CHANNEL_ID`, and `CFP_LLM_MODEL` unless the provider is Anthropic (table in [RUNBOOK.md](./RUNBOOK.md), "CFP bot in Slack"). `LLM_PROVIDER`, `LLM_API_KEY`, `DATABASE_URL` and the form's Sanity and Slack variables are already set.
+3. **Deploy:** the migration `20261111120000_cfp_drafts.sql` runs with the next build.
+4. **Privacy policy:** approve the added text in `apps/web/src/content/policies/privacy-policy.md` (a legal page).
+5. **Try it** in `#cfp`: mention the bot, answer, check the private confirmation, press Submit, and find the proposal in the Studio under talk proposals.
+
+### Try it locally
+
+Like the organiser bot: create a dev app from `slack/manifest.cfp.dev.yml`, add an app-level token with `connections:write`, invite **@ZurichJS CFP (dev)** to a test channel, and put in `.env`:
+
+```
+SLACK_CFP_APP_TOKEN=xapp-…        # the dev app's app-level token
+SLACK_CFP_BOT_TOKEN=xoxb-…
+SLACK_CFP_SIGNING_SECRET=…
+SLACK_CFP_CHANNEL_ID=C…           # the test channel
+LLM_PROVIDER=anthropic            # CFP_LLM_MODEL defaults to claude-haiku-5-5
+LLM_API_KEY=…
+SANITY_DATASET=v2-preview         # Submit writes here; never production from a laptop
+SANITY_WRITE_TOKEN=…
+```
+
+`pnpm local` starts `tools/slack-dev.mjs`, which bridges either app or both. Drafts go to the Docker Postgres.
+
+### Where the code lives
+
+| Path                                                                  | What                                                             |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `packages/agent/src/cfp/tools.ts`, `packages/agent/src/cfp/run.ts`    | the four tools and `runCfpTurn`                                  |
+| `packages/agent/src/cfp/prompt.ts`                                    | its instructions                                                 |
+| `packages/agent/src/cfp/bot.ts`                                       | messages, the buttons, Submit (deterministic)                    |
+| `packages/agent/src/cfp/store.ts`, `packages/agent/src/cfp/limits.ts` | drafts and limits in Postgres                                    |
+| `packages/agent/src/cfp/slack.ts`, `packages/agent/src/cfp/text.ts`   | the CFP app's Slack calls, Block Kit, escaping and email masking |
+| `apps/web/src/server/cfp-bot.ts`                                      | its dependencies from the environment                            |
+| `apps/web/netlify/functions/slack-cfp-*.mts`                          | events, background, interactivity, the daily clean-up            |
+| `apps/web/database/migrations/*_cfp_drafts.sql`                       | `cfp_drafts` and `cfp_usage`                                     |

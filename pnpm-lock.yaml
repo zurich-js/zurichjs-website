@@ -222,6 +222,9 @@ importers:
       '@zurichjs/events':
         specifier: workspace:*
         version: link:../events
+      '@zurichjs/forms':
+        specifier: workspace:*
+        version: link:../forms
       ai:
         specifier: 7.0.156
         version: 7.0.156(zod@4.6.7)

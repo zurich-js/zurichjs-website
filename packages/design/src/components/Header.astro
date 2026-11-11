@@ -53,9 +53,9 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
   } catch {}
 </script>
 <header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white">
-  <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut">
+  <div data-bar class="bar flex items-center justify-between gap-4 p-4 pl-8">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
-      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" />
+      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" />
     </a>
 
     <nav aria-label="Main" class="hidden md:flex items-center gap-[clamp(14px,1.9vw,28px)] text-[clamp(15px,1.45vw,17px)] whitespace-nowrap">
@@ -105,7 +105,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           </>
         )
       }
-      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
+      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! ml-2 py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
 
     <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
@@ -114,14 +114,14 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
   </div>
 </header>
 
-<dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none bg-black text-white border-0">
-  <div class="flex flex-col min-h-full">
-    <div class="flex items-center justify-between py-4 px-gut">
-      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" /></a>
-      <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
-        <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-      </button>
-    </div>
+<dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none open:flex flex-col overflow-hidden bg-black text-white border-0">
+  <div class="flex shrink-0 items-center justify-between py-4 px-gut">
+    <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" /></a>
+    <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </div>
+  <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
     <nav aria-label="Main" class="flex-1 flex flex-col justify-center gap-1 px-gut py-6">
       {
         NAV.map((n) => (

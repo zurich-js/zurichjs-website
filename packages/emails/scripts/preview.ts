@@ -47,6 +47,29 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
       replyTo: 'Ada Lovelace',
     },
   ],
+  'talk-scheduled': [
+    {
+      speakerName: 'Ada Lovelace',
+      talkTitle: 'Signals in practice',
+      eventTitle: 'Forms, types and design systems',
+      date: 'Wed 18th Nov 2026',
+      time: 'Starts 18:30 CET',
+      venue: 'Venue AG, Hardstrasse 201, 8005 Zürich',
+      eventUrl: 'https://zurichjs.com/events/zurichjs-meetup-november-2026',
+      profileUrl: 'https://zurichjs.com/speakers/profile?token=sample-token',
+    },
+    // Not everything in Sanity yet, and no profile link.
+    {
+      speakerName: 'Grace Hopper',
+      talkTitle: 'Compilers for everyone',
+      eventTitle: 'ZurichJS January 2027',
+      date: null,
+      time: null,
+      venue: null,
+      eventUrl: 'https://zurichjs.com/events/zurichjs-meetup-january-2027',
+      profileUrl: null,
+    },
+  ],
   'login-link': [{ url: 'https://zurichjs.com/api/auth/magic-link/verify?token=sample-token&callbackURL=%2Fmembership%2Faccount', validMinutes: 15, firstTime: false }],
 };
 

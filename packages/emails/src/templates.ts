@@ -366,6 +366,51 @@ export function boardNoticeFromText(subject: string, text: string, replyTo?: str
   return { subject, heading: subject, intro, rows, ...(message ? { message } : {}), ...(replyTo ? { replyTo: replyTo.replace(/\s*<[^>]+>$/, '') } : {}) };
 }
 
+/**
+ * To a speaker whose talk proposal is on a meetup (packages/agent/src/speaker-email.ts). Every fact
+ * comes from Sanity; a missing date, time or venue is null, and the email says the details follow.
+ */
+export interface TalkScheduledProps {
+  speakerName: string;
+  talkTitle: string;
+  eventTitle: string;
+  /** "Wed 18th Nov 2026", or null when not set. */
+  date: string | null;
+  /** "Doors 18:00 CET" or "Starts 18:30 CET", or null when not set. */
+  time: string | null;
+  /** "Venue AG, Hardstrasse 201, 8005 Zürich", or null when not set. */
+  venue: string | null;
+  /** The event page on zurichjs.com. */
+  eventUrl: string;
+  /** The speaker's private profile page (works 30 days), or null when it cannot be made here. */
+  profileUrl: string | null;
+}
+
+function talkScheduled(p: TalkScheduledProps): EmailContent {
+  const rows: [string, string][] = [
+    ['Talk', p.talkTitle],
+    ['Meetup', p.eventTitle],
+    ...(p.date ? ([['Date', p.date]] as [string, string][]) : []),
+    ...(p.time ? ([['Time', p.time]] as [string, string][]) : []),
+    ...(p.venue ? ([['Venue', p.venue]] as [string, string][]) : []),
+  ];
+  return {
+    subject: `Your talk is on ${p.eventTitle}`,
+    preheader: `“${p.talkTitle}” is on the programme${p.date ? ` on ${p.date}` : ''}.`,
+    heading: `Hi ${firstName(p.speakerName)}`,
+    blocks: [
+      { kind: 'p', text: `Good news: your talk “${p.talkTitle}” is on ${p.eventTitle}.` },
+      { kind: 'summary', rows },
+      ...(!p.date || !p.time || !p.venue ? [{ kind: 'p', text: "We'll confirm the details soon." } satisfies Block] : []),
+      { kind: 'button', label: 'See the event page', url: p.eventUrl },
+      ...(p.profileUrl
+        ? [{ kind: 'url', text: 'Please check your bio and photo on your private speaker page (the link works for 30 days):', url: p.profileUrl } satisfies Block]
+        : []),
+      { kind: 'p', text: 'Any questions? Reply to this email and the organisers will get back to you.' },
+    ],
+  };
+}
+
 const TEMPLATES = {
   'login-link': loginLink,
   'membership-welcome': membershipWelcome,
@@ -377,6 +422,7 @@ const TEMPLATES = {
   'resignation-confirmed': resignationConfirmed,
   'resignation-withdrawn': resignationWithdrawn,
   'board-notice': boardNotice,
+  'talk-scheduled': talkScheduled,
 } satisfies Record<string, (p: never) => EmailContent>;
 
 export type TemplateName = keyof typeof TEMPLATES;

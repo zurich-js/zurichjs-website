@@ -67,6 +67,21 @@ describe('slack-interactivity: membership button', () => {
     expect((note?.body as { text?: string } | undefined)?.text ?? '').toContain('DATABASE_URL is not set');
   });
 
+  it('sends Send email on a talk card to the speaker-email handler, and answers in the thread when Sanity is not set up', async () => {
+    const res = await handler(signed({ ...click('CAGENT', 'talk_email_send'), actions: [{ action_id: 'talk_email_send', value: '{"s":"p1","e":"evt-nov"}' }] }), {});
+    expect(res.status).toBe(200);
+    expect(calls.some((c) => c.url.includes('api.resend.com'))).toBe(false);
+    const post = calls.find((c) => c.url === 'https://slack.com/api/chat.postMessage');
+    expect(post?.body).toMatchObject({ channel: 'CAGENT', thread_ts: '1700000000.000100' });
+    expect((post?.body as { text?: string } | undefined)?.text ?? '').toContain('SANITY_AGENT_TOKEN is not set');
+  });
+
+  it('ignores talk card buttons outside the organisers’ channel', async () => {
+    const res = await handler(signed({ ...click('CELSEWHERE', 'talk_email_send'), actions: [{ action_id: 'talk_email_send', value: '{"s":"p1","e":"evt-nov"}' }] }), {});
+    expect(res.status).toBe(200);
+    expect(calls).toEqual([]);
+  });
+
   it('leaves other buttons to the content agent (unknown actions do nothing)', async () => {
     const res = await handler(signed(click('CAGENT', 'something_else')), {});
     expect(res.status).toBe(200);

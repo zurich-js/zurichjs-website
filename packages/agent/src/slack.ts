@@ -49,6 +49,8 @@ export interface SlackApi {
   botUserId(): Promise<string>;
   replies(channel: string, ts: string): Promise<SlackMessage[]>;
   post(channel: string, threadTs: string, text: string, blocks?: unknown[]): Promise<void>;
+  /** Rewrites a message the bot posted (a card after its button was pressed). */
+  update(channel: string, ts: string, text: string, blocks: unknown[]): Promise<void>;
   react(channel: string, ts: string, name: string): Promise<void>;
 }
 
@@ -71,6 +73,7 @@ export function slackApi(env: Env, fetchImpl: typeof fetch = fetch): SlackApi {
     botUserId: async () => (me ??= (await call<{ user_id: string }>('auth.test', {})).user_id),
     replies: async (channel, ts) => (await call<{ messages: SlackMessage[] }>('conversations.replies', { channel, ts, limit: 50 }, true)).messages,
     post: async (channel, thread_ts, text, blocks) => void (await call('chat.postMessage', { channel, thread_ts, text, ...(blocks ? { blocks } : {}), unfurl_links: false })),
+    update: async (channel, ts, text, blocks) => void (await call('chat.update', { channel, ts, text, blocks })),
     react: async (channel, timestamp, name) => void (await call('reactions.add', { channel, timestamp, name }).catch(() => undefined)),
   };
 }

@@ -17,6 +17,16 @@ const application = {
 };
 const term = { ...application, term: '10th November 2026 to 9th November 2027', certificateNumber: 'ZJS-2026-0001', nextPayment: '10th November 2027' };
 const link = 'https://zurichjs.com/api/auth/magic-link/verify?token=t1&callbackURL=%2Fmembership%2Faccount';
+const talk = {
+  speakerName: 'Ada  Lovelace',
+  talkTitle: 'Signals in practice',
+  eventTitle: 'Forms, types and design systems',
+  date: 'Wed 18th Nov 2026',
+  time: 'Starts 18:30 CET',
+  venue: 'Venue AG, Hardstrasse 201, 8005 Zürich',
+  eventUrl: 'https://zurichjs.com/events/zurichjs-meetup-november-2026',
+  profileUrl: 'https://zurichjs.com/speakers/profile?token=t2',
+};
 
 describe('login-link', () => {
   const e = renderEmail('login-link', { url: link, validMinutes: 60, firstTime: false });
@@ -92,9 +102,37 @@ describe('membership emails', () => {
         heading: 'Heading',
         paidThrough: '30th September 2027',
         firstPayment: '1st October 2027',
+        ...talk,
       } as never);
       expect(e.text).not.toMatch(/declaration|approv/i);
     }
+  });
+});
+
+describe('talk-scheduled', () => {
+  it('tells the speaker where and when, with the event page, their profile link and a reply line', () => {
+    const e = renderEmail('talk-scheduled', talk);
+    expect(e.subject).toBe('Your talk is on Forms, types and design systems');
+    expect(e.text).toMatch(/^Hi Ada\n/);
+    expect(e.text).toContain('Good news: your talk “Signals in practice” is on Forms, types and design systems.');
+    expect(e.text).toContain(
+      'Talk: Signals in practice\nMeetup: Forms, types and design systems\nDate: Wed 18th Nov 2026\nTime: Starts 18:30 CET\nVenue: Venue AG, Hardstrasse 201, 8005 Zürich',
+    );
+    expect(e.text).toContain('See the event page: https://zurichjs.com/events/zurichjs-meetup-november-2026');
+    expect(e.text).toContain('check your bio and photo on your private speaker page');
+    expect(e.text).toContain('https://zurichjs.com/speakers/profile?token=t2');
+    expect(e.text).toContain('Any questions? Reply to this email');
+    expect(e.text).not.toContain("We'll confirm the details soon");
+    // One yellow button only: the profile link is written out.
+    expect(e.html.split('See the event page').length - 1).toBe(1);
+  });
+
+  it('says the details follow when Sanity has no date, time or venue, and never makes them up', () => {
+    const e = renderEmail('talk-scheduled', { ...talk, date: null, time: null, venue: null, profileUrl: null });
+    expect(e.text).toContain("We'll confirm the details soon.");
+    expect(e.text).not.toMatch(/Date:|Time:|Venue:|speaker page/);
+    expect(e.text).toContain('Meetup: Forms, types and design systems');
+    expect(renderEmail('talk-scheduled', { ...talk, venue: null }).text).toContain("We'll confirm the details soon.");
   });
 });
 
@@ -145,6 +183,7 @@ describe('layout', () => {
         heading: 'Heading',
         paidThrough: '30th September 2027',
         firstPayment: '1st October 2027',
+        ...talk,
       } as never);
       const used = new Set((e.html.match(/#[0-9a-f]{6}\b/gi) ?? []).map((c) => c.toLowerCase()));
       const allowed = new Set(Object.values(colors).map((c) => c.toLowerCase()));

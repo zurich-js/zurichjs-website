@@ -74,7 +74,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
 >
   <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={HERO_PHOTOS} meetupGroupUrl={SITE.meetupGroupUrl} />
   <div class="flex flex-col gap-section pt-section">
-    <div class="flex flex-col gap-10">
+    <div class="flex flex-col gap-4">
       <AwardSection
         award={award}
         photo={PAGE_PHOTOS.award}
@@ -83,7 +83,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
         stats={[
           { value: '1K+', label: 'Meetup members' },
           { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
-          { value: COUNTRIES_REACHED, label: 'countries our speakers and attendees come from' },
+          { value: COUNTRIES_REACHED, label: 'speaker/attendee countries' },
         ]}
       />
       <PackedGrid items={COMMUNITY_GRID.map((g) => ({ id: g.id, sizes: g.sizes, priority: g.priority }))} columns={{ base: 4, md: 6 }} label="Photos from ZurichJS meetups" class="px-gut">

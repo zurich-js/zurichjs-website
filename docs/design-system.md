@@ -58,7 +58,7 @@ Changing any of these needs the owner's approval.
 
 ## Components
 
-Pages pick components and props and never write pixels: no `text-[17px]`, `min-h-[44px]` or `p-[clamp(...)]`.
+Pages pick components and props and never write pixels: no `text-[17px]`, `min-h-[44px]` or `p-[clamp(...)]`. Every value has a token class (`text-body`, `min-h-control`, `p-card-md`, `max-w-reading`, `rounded-tag`); when one is missing, propose a token in `tokens.ts` rather than writing a value. Before building something, check this table and the `/design` gallery: a second version of a component is a bug.
 
 | Component                             | Use                                                                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -116,7 +116,7 @@ Nine roles, each a size with its line height (`tokens.ts` `text`, generated as `
 ## Focus, motion and accessibility
 
 - **Focus ring:** 3px blue, offset 2px. Inside `.on-black` it turns yellow, so it stays visible on black.
-- **Motion:** only colour transitions, of 150ms. No scroll reveals, parallax or autoplay. Under `prefers-reduced-motion`, all transitions and animations are switched off and smooth scrolling is disabled.
+- **Motion:** colour transitions of 150ms by default; logo tiles fade their colour and background over 300ms. The speaker arc on the home page is the one thing that moves on its own: cards slide over 500ms (`transition-all`), it turns every 3.2 seconds only while it is on screen, and it holds while a card is hovered or focused. No scroll reveals or parallax. Under `prefers-reduced-motion`, all transitions and animations are switched off, the arc does not turn, and smooth scrolling is disabled.
 - **Touch targets:** every button, switch and form field is 48px (`min-h-control`); filter chips are 44px (`min-h-chip`); a tag that links has a 44px hit area.
 - **Forms:** labels wrap their controls. Hints and errors are linked with `aria-describedby`, and errors are announced politely.
 - **Placeholders** use `grey-placeholder`. Never use a placeholder in place of a label.

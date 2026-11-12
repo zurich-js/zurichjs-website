@@ -1,6 +1,8 @@
 # UI compliance audit (phase 1)
 
-Status: **audit only, waiting for approval.** Nothing in the UI has changed. The rules are in `AGENTS.md` ("UI and design system rules"). Phase 2 starts only after the owner approves the tokens and primitives below, and the snaps marked **>2px**.
+Status: **done, superseded by the design system migration (owner, 12th November 2026).** The tokens, primitives and snaps below were replaced by the system in `docs/design-system.md`: nine type roles, named spacing and heights, one Card, Button, Tag and logo wall, with variants as component props rather than cva recipes in `components/ui/`. The decisions are in `docs/v2/DECISIONS.md`, "Design system v2". What follows is the original audit, kept for the record.
+
+Original status: audit only, waiting for approval. Nothing in the UI had changed. The rules are in `AGENTS.md` ("UI and design system rules"). Phase 2 starts only after the owner approves the tokens and primitives below, and the snaps marked **>2px**.
 
 Scope: `apps/web/src` and `packages/design/src`, without tests, server code, API routes and the OG image generator. Numbers come from `rg` and from `pnpm lint:ui` (10th November 2026).
 

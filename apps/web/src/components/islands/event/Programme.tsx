@@ -146,7 +146,7 @@ export default function Programme({
                   )}
                 </h3>
                 {(() => {
-                  // The facts row under the title, as on the approved /opus page: the time first and bold
+                  // The facts row under the title (docs/design-system.md, Cards): the time first and bold
                   // (its label read by screen readers only), then the speakers and the format and level.
                   const names = a.talk ? a.talk.speakerIds.map((id) => byId.get(id)?.name).filter((n): n is string => !!n) : [];
                   const items: Fact[] = [

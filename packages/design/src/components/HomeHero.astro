@@ -47,8 +47,8 @@ const art = next?.cover;
     </p>
   </div>
 
-  {/* The square composition: a photo, the loop, and the next meetup as a card. On phones the card spans the width. */}
-  <div class="hero-squares grid gap-3 w-full">
+  {/* The square composition: a photo, the loop, and the next meetup as a card. The card's artwork sits on its left at every width, so it stays short on phones; below 800px the composition stops at the form width. */}
+  <div class="hero-squares grid gap-3 w-full max-md:max-w-form">
     <span class={`${tile} [grid-area:a]`}>
       <img src={srcFor(PHOTOS.audience.src)} srcset={PHOTOS.audience.srcset ?? srcsetFor(PHOTOS.audience.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.audience.alt} loading="eager" fetchpriority="high" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.audience.position ?? 'center' }} />
     </span>
@@ -65,8 +65,8 @@ const art = next?.cover;
     {/* The next meetup: a link card with the artwork flush to its edges, the title first, then date and venue on one wrapping line. */}
     {
       next && p ? (
-        <Card surface="white" level="p" title={next.title} href={eventHref(next)} linkHint="Details and RSVP" linkAttrs={{ 'data-next-meetup': '' }} class="[grid-area:c]">
-          {art && <img slot="media" src={srcFor(art.src)} srcset={srcsetFor(art.src)} sizes="(min-width: 800px) 22vw, 90vw" alt="" loading="eager" decoding="async" />}
+        <Card surface="white" level="p" mediaLayout="side" title={next.title} href={eventHref(next)} linkHint="Details and RSVP" linkAttrs={{ 'data-next-meetup': '' }} class="[grid-area:c]">
+          {art && <img slot="media" src={srcFor(art.src)} srcset={srcsetFor(art.src)} sizes="(min-width: 800px) 15vw, 30vw" alt="" loading="eager" decoding="async" />}
           <Facts
             slot="facts"
             items={[

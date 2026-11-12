@@ -5,7 +5,7 @@
  * Rendered from fixtures, so it looks the same whatever content Sanity has.
  */
 import type { Event, Speaker } from '@zurichjs/events';
-import { breakpoints, colors, gutter, headings, radii } from '@zurichjs/design/tokens';
+import { breakpoints, colors, gutter, radii, text } from '@zurichjs/design/tokens';
 import { cx, headingSizes, type ButtonSize, type ButtonVariant, type MonogramSize, type MonogramTone, type SurfaceTone } from '@zurichjs/design/recipes';
 import Button from '@zurichjs/design/components/Button.astro';
 import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
@@ -75,15 +75,18 @@ const speaker: Speaker = {
 };
 
 const swatch = (c: string) => `background:${c}`;
-const TYPE = [
-  ['Display (opening)', headings.display],
-  ['H1', headings.h1],
-  ['H2 (section, lg)', headings.h2],
-  ['H2 (md)', headings.h2Medium],
-  ['H3 (sm)', headings.h3],
-  ['Body', headings.body],
-  ['Small', headings.small],
-] as const;
+/** The nine type roles, each with its class written out so Tailwind generates it. Headings bold, text regular. */
+const TYPE: { role: keyof typeof text; cls: string; bold: boolean }[] = [
+  { role: 'display', cls: 'text-display', bold: true },
+  { role: 'title', cls: 'text-title', bold: true },
+  { role: 'section', cls: 'text-section', bold: true },
+  { role: 'subsection', cls: 'text-subsection', bold: true },
+  { role: 'card-title', cls: 'text-card-title', bold: true },
+  { role: 'lead', cls: 'text-lead', bold: false },
+  { role: 'body', cls: 'text-body', bold: false },
+  { role: 'compact', cls: 'text-compact', bold: false },
+  { role: 'meta', cls: 'text-meta', bold: false },
+];
 ---
 
 <BaseLayout title="Design system" description="The ZurichJS design system: tokens, components and islands in every variant, for people working on the site." noindex>
@@ -115,14 +118,12 @@ const TYPE = [
       <SectionHeading id="d-type">Type<Fragment slot="sub">Figtree, variable 300–900, self-hosted through the Astro Fonts API.</Fragment></SectionHeading>
       <ul class="list-none m-0 p-0 flex flex-col gap-5">
         {
-          TYPE.map(([label, size]) => (
+          TYPE.map(({ role, cls, bold }) => (
             <li class="flex flex-col gap-1">
-              <code class="text-[14px] text-grey-text">
-                {label} · {size}
+              <code class="text-meta text-grey-text">
+                {cls} · {text[role].size} / {text[role].lineHeight}
               </code>
-              <span class="font-bold leading-[1.1]" style={`font-size:${size}`}>
-                JavaScript in Zurich
-              </span>
+              <span class={cx(cls, bold && 'font-bold')}>JavaScript in Zurich</span>
             </li>
           ))
         }

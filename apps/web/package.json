@@ -37,6 +37,7 @@
     "@astrojs/check": "0.9.12",
     "@types/pg": "8.23.1",
     "@zurichjs/config": "workspace:*",
+    "esbuild": "0.28.2",
     "typescript": "5.9.3"
   }
 }

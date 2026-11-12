@@ -7,8 +7,12 @@
 
 [build]
 # The membership database (Neon) is migrated first: scripts/db-migrate.mjs.
-command = "node scripts/db-migrate.mjs && pnpm --filter @zurichjs/web build"
+command = "node scripts/db-migrate.mjs && node scripts/bundle-functions.mjs && pnpm --filter @zurichjs/web build"
 publish = "dist"
+# Local dev runs the function sources. On Netlify the functions are the esbuild bundles made by
+# scripts/bundle-functions.mjs (the contexts below): Netlify's own packaging (nft) misses the
+# workspace packages' TypeScript, and the functions failed with ERR_MODULE_NOT_FOUND.
+functions = "netlify/functions"
 
 [build.environment]
 # Astro 7.4 needs Node >= 22.23.4 (same as .nvmrc).
@@ -31,9 +35,20 @@ MEDIA_REQUIRE_IMAGEKIT = "0"
 CONTENT_REQUIRE_SANITY = "0"
 MEDIA_REQUIRE_IMAGEKIT = "0"
 
-# The scheduled rebuild (every 2 minutes). The webhook is an Astro endpoint, /api/rebuild.
-[functions]
-directory = "netlify/functions"
+[context.production]
+functions = ".netlify/functions-bundled"
+[context.deploy-preview]
+functions = ".netlify/functions-bundled"
+[context.branch-deploy]
+functions = ".netlify/functions-bundled"
+
+# Schedules, here as well as in the sources, so they never depend on reading a bundled file.
+# The scheduled rebuild (every 2 minutes); the webhook is an Astro endpoint, /api/rebuild.
+[functions."scheduled-rebuild"]
+schedule = "*/2 * * * *"
+# Deletes CFP drafts untouched for 14 days.
+[functions."slack-cfp-cleanup"]
+schedule = "@daily"
 
 # Sub-pages of production sections V2 does not have (the section roots are in src/lib/redirects.mjs).
 [[redirects]]

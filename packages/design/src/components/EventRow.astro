@@ -1,9 +1,14 @@
 ---
 /**
- * One event in the list: date tile, title, then one line of facts (status, talks, venue). The whole row
- * is one link, with the card's arrow on the title's first line.
+ * One event in a list: a small image and text card. The image is the event's cover (its promotional
+ * artwork), else the first photo from the evening, else a grey tile with the date. The title, then one
+ * line of facts that leads with the date (date, status, talks, venue or media). The whole row is one
+ * link, with the card's arrow on the title's first line.
+ * `quiet` (past meetups in a list): the photo is dimmed and the title greyed, full again on hover or focus. Only the
+ * photo fades: every piece of text keeps its contrast, the date tile included.
  */
-import { dateParts, eventHref, presentEvent, talkCount, type Event, type TicketingProvider } from '@zurichjs/events';
+import { dateParts, dateShort, eventHref, presentEvent, talkCount, type Event, type TicketingProvider } from '@zurichjs/events';
+import { srcFor, srcsetFor } from '../images';
 import { cx } from '../recipes';
 import Facts from './Facts.astro';
 
@@ -12,16 +17,18 @@ interface Props {
   /** Reference clock (build time). */
   now: Date;
   ticketing?: TicketingProvider;
+  quiet?: boolean;
 }
-const { ev, now, ticketing } = Astro.props;
+const { ev, now, ticketing, quiet = false } = Astro.props;
 const p = presentEvent(ev, { now, ticketing });
 const upcoming = p.state !== 'past';
+const image = ev.cover ?? ev.photos[0];
 const parts = ev.startsAt ? dateParts(ev.startsAt) : { mon: ev.dateText?.slice(0, 3) ?? 'TBC', day: '?', suffix: '', year: ev.dateText?.slice(-4) ?? '' };
 const status = upcoming ? p.stateLabel : ev.recap ? 'Recap' : 'Past';
 const n = talkCount(ev);
 const facts = [
-  { label: 'Status', value: status, hideLabel: true, strong: true },
-  { label: 'Type', value: 'Meetup', hideLabel: true },
+  { label: 'Date', value: ev.startsAt ? dateShort(ev.startsAt) : (ev.dateText ?? 'Date to be confirmed'), hideLabel: true, strong: true },
+  { label: 'Status', value: status, hideLabel: true },
   { label: 'Talks', value: `${n} talk${n === 1 ? '' : 's'}`, hideLabel: true },
   ...(upcoming ? [{ label: 'Venue', value: p.venueShort, hideLabel: true }, { label: 'Cost', value: 'Free', hideLabel: true }] : ev.photos.length ? [{ label: 'Media', value: 'Photos', hideLabel: true }] : []),
 ];
@@ -32,16 +39,26 @@ const facts = [
   data-event-row
   data-upcoming={String(upcoming)}
   data-search={`${ev.title} ${ev.description} ${ev.venue?.name ?? ''}`.toLowerCase()}
-  class="group no-underline text-black w-full text-left rounded-card bg-white hover:bg-grey-soft transition-colors grid grid-cols-[80px_minmax(0,1fr)] gap-4 lg:gap-7 items-center p-3.5 -mx-3.5 box-content"
+  class="group no-underline text-black w-full text-left rounded-card bg-white hover:bg-grey-soft transition-colors grid grid-cols-[auto_minmax(0,1fr)] gap-4 md:gap-6 items-center p-3 -mx-3 box-content"
 >
-  <span class={cx('flex flex-col items-center justify-center h-20 rounded-nested-min', upcoming ? 'bg-black text-white' : 'bg-grey')}>
-    <span class="text-meta font-bold">{parts.mon}</span>
-    <span class="text-subsection font-bold leading-none">{parts.day}<span class="text-meta align-top">{parts.suffix}</span></span>
-    <span class="text-meta">{parts.year}</span>
+  <span class="relative block w-28 md:w-40 aspect-video overflow-hidden rounded-nested-min bg-grey">
+    {
+      image ? (
+        <img src={srcFor(image.src)} srcset={srcsetFor(image.src)} sizes="160px" alt="" loading="lazy" decoding="async" class={cx('absolute inset-0 size-full object-cover transition-opacity', quiet && 'opacity-50 group-hover:opacity-100 group-focus-visible:opacity-100')} />
+      ) : (
+        <span class="absolute inset-0 flex flex-col items-center justify-center">
+          <span class="text-meta font-bold">{parts.mon}</span>
+          <span class="text-card-title font-bold leading-none">
+            {parts.day}
+            <span class="text-meta align-top">{parts.suffix}</span>
+          </span>
+        </span>
+      )
+    }
   </span>
   <div class="flex flex-col gap-1.5 min-w-0">
     <div class="flex items-start gap-4">
-      <span class="flex-1 min-w-0 text-card-title font-bold text-pretty">{ev.title}</span>
+      <span class={cx('flex-1 min-w-0 text-card-title font-bold text-pretty transition-colors', quiet && 'text-grey-text group-hover:text-black group-focus-visible:text-black')}>{ev.title}</span>
       <span aria-hidden="true" class="text-card-title flex-none flex items-center h-lh">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none transition-transform group-hover:translate-x-1">
           <path d="M5 12h14M13 6l6 6-6 6"></path>

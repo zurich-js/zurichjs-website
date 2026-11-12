@@ -8,7 +8,7 @@ import { SITE } from '~/lib/content';
 
 <BaseLayout title="Your membership" description={`Join or manage your membership of the ${SITE.association}.`} noindex>
   <PageOpening slot="opening" title="Your membership" sub={`Your membership of the ${SITE.association}, the association behind ZurichJS.`} />
-  <div class="px-gut pt-page-top pb-page-end">
+  <div class="px-gut py-section">
     <MemberAccount client:load contactEmail={SITE.email} />
   </div>
 </BaseLayout>

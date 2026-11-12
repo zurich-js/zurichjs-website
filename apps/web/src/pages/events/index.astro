@@ -1,10 +1,10 @@
 ---
 /**
- * Event list. Both tabs (upcoming and past) are prerendered in full so every
- * event link is in the HTML; the Upcoming and Past filter chips are links
- * (?tab=past), and a small script switches between them in place and filters by the
- * search text, keeping the state in the URL (?tab=past, ?q=…; ?search= is
- * accepted as an alias because the WebSite SearchAction points there).
+ * Event list: every meetup on one page, so every event link is in the HTML. Upcoming meetups come first,
+ * in date order; past meetups follow, newest first, dimmed until hovered. A sticky bar jumps between the
+ * two sections (and shows which one you are in) and holds the search, which filters both and keeps its
+ * text in the URL (?q=…; ?search= is accepted as an alias because the WebSite SearchAction points there).
+ * Old links to ?tab=past land on the past section.
  */
 import { pastEvents, upcomingEvents, type Event } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
@@ -39,9 +39,9 @@ const hay = (e: Event) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-const TABS = [
-  { k: 'upcoming', label: 'Upcoming', list: upcoming },
-  { k: 'past', label: 'Past', list: past },
+const SECTIONS = [
+  { k: 'upcoming', label: 'Upcoming', heading: 'Upcoming meetups', list: upcoming },
+  { k: 'past', label: 'Past', heading: 'Past meetups', list: past },
 ] as const;
 ---
 
@@ -55,12 +55,12 @@ const TABS = [
   <PageOpening slot="opening" title="Events" sub="JavaScript meetups in Zurich. Every past event keeps its page, speakers and photos, so the talks live on long after the night." compact />
   <RetiredNotice />
 
-  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-7" data-events>
-    <div class="flex flex-wrap gap-3 items-center">
-      <nav aria-label="When" class="flex flex-wrap gap-2">
+  <div class="py-section flex flex-col gap-7" data-events>
+    <div class="sticky top-header z-40 bg-white px-gut py-3 flex flex-wrap gap-3 items-center">
+      <nav aria-label="Jump to" class="flex flex-wrap gap-2">
         {
-          TABS.map((t, i) => (
-            <a href={t.k === 'past' ? '/events?tab=past' : '/events'} data-tab={t.k} aria-current={i === 0 ? 'true' : undefined} class={chipClass(i === 0)}>
+          SECTIONS.map((t, i) => (
+            <a href={`#${t.k}`} data-jump={t.k} aria-current={i === 0 ? 'true' : undefined} class={chipClass(i === 0)}>
               {t.label}
             </a>
           ))
@@ -73,30 +73,41 @@ const TABS = [
     </div>
 
     {
-      TABS.map((t, i) => (
-        <div id={`panel-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [[hidden]]:hidden">
-          {t.list.map((e) => (
-            <div data-hay={hay(e)}>
-              <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} />
-            </div>
-          ))}
-          <div class="[[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
-            <Card padding="lg">
-              <h2 slot="header" class="m-0 text-card-title font-bold" data-empty-title>
-                {t.k === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.'}
-              </h2>
-              <p class="m-0 text-body text-ink-2" data-empty-sub>
-                The next meetup is being planned. It is announced on Meetup first.
-              </p>
-              <Button slot="footer" variant="secondary" class="[[hidden]]:hidden" data-clear hidden>
-                Clear search
-              </Button>
-              <Button slot="footer" variant="cta" href={SITE.meetupGroupUrl}>
-                Follow the group on Meetup
-              </Button>
-            </Card>
+      SECTIONS.map((t) => (
+        <section id={t.k} data-section={t.k} aria-labelledby={`h-${t.k}`} class="px-gut flex flex-col gap-3 scroll-mt-40">
+          <h2 id={`h-${t.k}`} class="m-0 text-subsection font-bold">
+            {t.heading}
+          </h2>
+          <div class="flex flex-col gap-2">
+            {t.list.map((e) => (
+              <div data-hay={hay(e)}>
+                <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} quiet={t.k === 'past'} />
+              </div>
+            ))}
           </div>
-        </div>
+          <div class="[[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
+            {t.k === 'upcoming' ? (
+              <Card padding="lg">
+                <h3 slot="header" class="m-0 text-card-title font-bold" data-empty-title>
+                  Nothing scheduled yet.
+                </h3>
+                <p class="m-0 text-body text-ink-2" data-empty-sub>
+                  The next meetup is being planned. It is announced on Meetup first.
+                </p>
+                <Button slot="footer" variant="secondary" class="[[hidden]]:hidden" data-clear hidden>
+                  Clear search
+                </Button>
+                <Button slot="footer" variant="cta" href={SITE.meetupGroupUrl}>
+                  Follow the group on Meetup
+                </Button>
+              </Card>
+            ) : (
+              <p class="m-0 text-body text-ink-2" data-empty-title>
+                No past events yet.
+              </p>
+            )}
+          </div>
+        </section>
       ))
     }
   </div>
@@ -106,22 +117,37 @@ const TABS = [
   import { normalizeSearch } from '@zurichjs/events';
   import { chipClass } from '@zurichjs/design/recipes';
 
-  type Tab = 'upcoming' | 'past';
   const root = document.querySelector<HTMLElement>('[data-events]');
   if (root) {
-    const tabs = [...root.querySelectorAll<HTMLAnchorElement>('[data-tab]')];
-    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const jumps = [...root.querySelectorAll<HTMLAnchorElement>('[data-jump]')];
+    const sections = [...root.querySelectorAll<HTMLElement>('[data-section]')];
     const input = root.querySelector<HTMLInputElement>('[data-q]')!;
     const params = new URLSearchParams(location.search);
-    let tab: Tab = params.get('tab') === 'past' ? 'past' : 'upcoming';
     let q = params.get('q') ?? params.get('search') ?? '';
     input.value = q;
+
+    // The chip of the section you are in is the current one.
+    const mark = (k: string) => {
+      for (const j of jumps) {
+        const on = j.dataset.jump === k;
+        if (on) j.setAttribute('aria-current', 'true');
+        else j.removeAttribute('aria-current');
+        j.className = chipClass(on);
+      }
+    };
+    const spy = new IntersectionObserver(
+      (entries) => {
+        const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (top) mark((top.target as HTMLElement).dataset.section!);
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+    for (const s of sections) spy.observe(s);
 
     const syncUrl = () => {
       const u = new URL(location.href);
       u.searchParams.delete('search');
-      if (tab === 'past') u.searchParams.set('tab', 'past');
-      else u.searchParams.delete('tab');
+      u.searchParams.delete('tab');
       if (q) u.searchParams.set('q', q);
       else u.searchParams.delete('q');
       history.replaceState(history.state, '', u.pathname + u.search + u.hash);
@@ -130,43 +156,28 @@ const TABS = [
     const render = () => {
       const tokens = normalizeSearch(q).split(' ').filter(Boolean);
       const needle = tokens.join(' ');
-      for (const t of tabs) {
-        const on = t.dataset.tab === tab;
-        if (on) t.setAttribute('aria-current', 'true');
-        else t.removeAttribute('aria-current');
-        t.className = chipClass(on);
-      }
-      for (const p of panels) {
-        p.hidden = p.dataset.panel !== tab;
+      for (const s of sections) {
         let shown = 0;
-        for (const row of p.querySelectorAll<HTMLElement>('[data-hay]')) {
-          const hay = row.dataset.hay ?? '';
-          const match = tokens.every((t) => hay.includes(t));
+        for (const row of s.querySelectorAll<HTMLElement>('[data-hay]')) {
+          const match = tokens.every((t) => (row.dataset.hay ?? '').includes(t));
           row.hidden = !match;
           if (match) shown++;
         }
-        const empty = p.querySelector<HTMLElement>('[data-empty]')!;
+        const empty = s.querySelector<HTMLElement>('[data-empty]')!;
         empty.hidden = shown > 0;
-        empty.querySelector('[data-empty-title]')!.textContent = needle ? `No events match “${q.trim()}”.` : p.dataset.panel === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.';
-        empty.querySelector('[data-empty-sub]')!.textContent = needle ? 'Try a speaker name or a topic, or clear the search.' : 'The next meetup is being planned. It is announced on Meetup first.';
-        empty.querySelector<HTMLElement>('[data-clear]')!.hidden = !needle;
+        const upcoming = s.dataset.section === 'upcoming';
+        empty.querySelector('[data-empty-title]')!.textContent = needle
+          ? `No ${upcoming ? 'upcoming' : 'past'} events match “${q.trim()}”.`
+          : upcoming
+            ? 'Nothing scheduled yet.'
+            : 'No past events yet.';
+        const sub = empty.querySelector('[data-empty-sub]');
+        if (sub) sub.textContent = needle ? 'Try a speaker name or a topic, or clear the search.' : 'The next meetup is being planned. It is announced on Meetup first.';
+        const clear = empty.querySelector<HTMLElement>('[data-clear]');
+        if (clear) clear.hidden = !needle;
       }
     };
 
-    const select = (next: Tab) => {
-      tab = next;
-      syncUrl();
-      render();
-    };
-
-    // The chips are links (?tab=past); with script they switch in place and keep the search.
-    for (const t of tabs) {
-      t.addEventListener('click', (e) => {
-        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-        e.preventDefault();
-        select(t.dataset.tab as Tab);
-      });
-    }
     input.addEventListener('input', () => {
       q = input.value;
       syncUrl();
@@ -182,5 +193,10 @@ const TABS = [
       });
     }
     render();
+    // Old links (?tab=past) land on the past section.
+    if (params.get('tab') === 'past') {
+      document.getElementById('past')?.scrollIntoView();
+      syncUrl();
+    }
   }
 </script>

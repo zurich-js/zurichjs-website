@@ -5,7 +5,7 @@
  * Rendered from fixtures, so it looks the same whatever content Sanity has.
  */
 import type { Event, Speaker } from '@zurichjs/events';
-import { breakpoints, colors, gutter, radii, spacing, text } from '@zurichjs/design/tokens';
+import { breakpoints, colors, gutter, radii, spacing, text } from '@zurichjs/design/theme';
 import { cx, type ButtonVariant, type MonogramTone, type TagTone } from '@zurichjs/design/recipes';
 import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -87,7 +87,7 @@ const speaker: Speaker = {
 
 const swatch = (c: string) => `background:${c}`;
 /** The nine type roles, each with its class written out so Tailwind generates it. Headings bold, text regular. */
-const TYPE: { role: keyof typeof text; cls: string; bold: boolean }[] = [
+const TYPE: { role: string; cls: string; bold: boolean }[] = [
   { role: 'display', cls: 'text-display', bold: true },
   { role: 'title', cls: 'text-title', bold: true },
   { role: 'section', cls: 'text-section', bold: true },
@@ -109,7 +109,7 @@ const TYPE: { role: keyof typeof text; cls: string; bold: boolean }[] = [
     pills={[{ text: 'Astro 7' }, { text: 'Tailwind 4' }, { text: 'Noindex' }]}
   />
 
-  <div class="flex flex-col gap-section pt-page-top pb-page-end">
+  <div class="flex flex-col gap-section py-section">
     <Section id="d-colour" title="Colour">
       <Fragment slot="sub">#F1E271 is the only accent. Blue is for focus rings and the logo.</Fragment>
       <ul class="list-none m-0 p-0 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -132,7 +132,7 @@ const TYPE: { role: keyof typeof text; cls: string; bold: boolean }[] = [
           TYPE.map(({ role, cls, bold }) => (
             <li class="flex flex-col gap-1">
               <code class="text-meta text-grey-text">
-                {cls} · {text[role].size} / {text[role].lineHeight}
+                {cls} · {text[role]?.size} / {text[role]?.lineHeight}
               </code>
               <span class={cx(cls, bold && 'font-bold')}>JavaScript in Zurich</span>
             </li>

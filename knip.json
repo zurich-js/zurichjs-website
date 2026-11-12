@@ -14,8 +14,8 @@
       "ignoreDependencies": ["preact"]
     },
     "packages/design": {
-      "entry": ["scripts/*.mjs", "test/**/*.ts"],
-      "project": ["src/**/*.{astro,ts,tsx}", "scripts/*.mjs"]
+      "entry": ["test/**/*.ts"],
+      "project": ["src/**/*.{astro,ts,tsx}"]
     },
     "packages/*": {
       "entry": ["test/**/*.ts"]

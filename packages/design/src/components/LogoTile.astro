@@ -37,13 +37,13 @@ const cell = cx(
 );
 const style = { '--logo-bg': bg ?? 'var(--color-white)' };
 const alt = href ? `${name} (opens in a new tab)` : name;
-const size = 'block h-auto w-auto max-w-full max-h-full min-w-0 object-contain [grid-area:1/1]';
-const sized = width ? { width: `${width}px` } : undefined;
+// The width attribute sizes the logo (no w-auto, which would override it); both files share one grid cell.
+const size = 'block h-auto max-w-full max-h-full min-w-0 object-contain col-start-1 row-start-1';
 // Without a black file, the colour logo itself is drawn in black and loses the filter on hover.
 const filtered = cx(
   size,
-  'transition-[filter] duration-300 group-hover:filter-none group-focus-visible:filter-none',
-  opaque || knockout ? '[filter:grayscale(1)_brightness(.54)_contrast(20)]' : 'brightness-0',
+  'transition duration-300 group-hover:filter-none group-focus-visible:filter-none',
+  opaque || knockout ? 'filter-logo-threshold' : 'brightness-0',
   opaque && 'mix-blend-multiply',
 );
 // With a black file, the two files cross-fade.
@@ -53,6 +53,7 @@ const Tag = href ? 'a' : 'div';
 const link = href ? { href, target: '_blank', rel } : {};
 ---
 
+{/* eslint-disable-next-line no-restricted-syntax -- the hover background is the partner's own colour from Sanity, as a CSS custom property */}
 <Tag class={cell} style={style} {...link}>
   <span class="flex h-1/2 max-w-3/4 items-center justify-center gap-2">
     {
@@ -60,11 +61,11 @@ const link = href ? { href, target: '_blank', rel } : {};
         <span class="grid h-full place-items-center">
           {logoBlack ? (
             <>
-              <img src={logoBlack} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={fadeOut} style={sized} />
-              <img src={logo} alt="" aria-hidden="true" width={width} height={height} loading="lazy" decoding="async" class={fadeIn} style={sized} />
+              <img src={logoBlack} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={fadeOut} />
+              <img src={logo} alt="" aria-hidden="true" width={width} height={height} loading="lazy" decoding="async" class={fadeIn} />
             </>
           ) : (
-            <img src={logo} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={filtered} style={sized} />
+            <img src={logo} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={filtered} />
           )}
         </span>
       )

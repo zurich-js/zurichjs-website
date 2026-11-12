@@ -1,0 +1,25 @@
+---
+/** Where we started and where we are now: a full-width panel with the numbers, so it reads apart from the milestones. */
+import Card from '@zurichjs/design/components/Card.astro';
+import Facts from '@zurichjs/design/components/Facts.astro';
+import type { StoryRow } from './story';
+
+interface Props {
+  row: StoryRow;
+}
+const { row } = Astro.props;
+---
+
+<Card surface="filled" padding="lg" title={row.title} level="h4">
+  <Facts slot="facts" items={[{ label: 'Date', value: row.date, hideLabel: true, strong: true }]} />
+  <dl class="m-0 pt-2 grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
+    {
+      (row.stats ?? []).map((st) => (
+        <div class="flex flex-col-reverse justify-end gap-1">
+          <dt class="text-compact text-ink-2">{st.label}</dt>
+          <dd class="m-0 text-section leading-none font-bold">{st.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</Card>

@@ -125,7 +125,7 @@ Plain-language status after each phase. Newest at the bottom.
 **Done**
 
 - **`@zurichjs/design`** (`packages/design`) holds:
-  - the tokens (`src/tokens.ts`), which generate the Tailwind 4 `theme.css` and `fonts.css`
+  - the tokens (the Tailwind 4 `theme.css`, read by TypeScript through `theme.ts`) and `fonts.css`
   - Figtree
   - 22 Astro components and 5 Preact island primitives, moved with `git mv`, so history is kept
 - **Components take props and never load content.** `RatingSheet` takes `onSubmit`. The app keeps only its own islands (event, forms, today, tickets, checkout).

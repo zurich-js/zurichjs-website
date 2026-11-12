@@ -9,7 +9,7 @@ platform/                     own pnpm root (pnpm-workspace.yaml, lockfile, mini
   apps/web/                   Astro 7 site, output 'static', @astrojs/netlify, Preact islands, Tailwind 4
     netlify.toml              read only by a Netlify site whose base directory is apps/web
   packages/
-    design/                   tokens.ts → generated Tailwind 4 theme.css, Figtree, .astro and Preact components
+    design/                   theme.css (the Tailwind 4 tokens, hand-written; read by theme.ts), Figtree, .astro and Preact components
     events/                   framework-free event-state logic (resolveState, presentEvent, formatting, ics)
     content/                  Sanity client, GROQ queries, typegen types, mappers, sample fallback
     seo/                      buildMeta, JSON-LD builders, sitemap and llms.txt helpers
@@ -105,7 +105,7 @@ See [CONTENT-MODEL-DIFF.md](./CONTENT-MODEL-DIFF.md). In short:
 
 Every token and component comes from `v2/src`. Rules and usage: [docs/design-system.md](../design-system.md); gallery at `/design` (noindex).
 
-**Tokens** (`src/tokens.ts`, generated into the Tailwind 4 `@theme` in `src/theme.css`):
+**Tokens** (the Tailwind 4 `@theme` in `src/theme.css`, read by TypeScript through `src/theme.ts`):
 
 - black `#000`, white `#FFF`
 - yellow `#F1E271` (hover `#EDC936`)

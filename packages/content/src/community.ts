@@ -163,6 +163,11 @@ export const MILESTONES: Milestone[] = [
     iso: '2025-06-18',
     title: 'ZurichJS becomes a Swiss nonprofit',
     text: 'ZurichJS becomes official through the Swiss JavaScript Group, a registered Swiss nonprofit association (Verein).',
+    // The group photo from the meetup that evening (the media archive, owner's pick, 12th November 2026).
+    photo: {
+      src: 'https://ik.imagekit.io/farisaziz/zurich-js-meetup-6-june-s-server-solstice/DSC02418_wide.jpg?updatedAt=1752923416958',
+      alt: 'Speakers, organisers and attendees together at the ZurichJS meetup on 18th June 2025',
+    },
     link: { label: 'Membership', href: '/membership' },
     source: 'conf-blog',
   },
@@ -171,7 +176,11 @@ export const MILESTONES: Milestone[] = [
     iso: '2025-11-13',
     title: 'One year of ZurichJS',
     text: 'The first anniversary, back at Pause im Foifi where it started, presented by Digitec Galaxus.',
-    photo: h('history-anniversary', 'The one-year anniversary meetup, November 2025'),
+    // The anniversary cake (the media archive, owner's pick, 12th November 2026).
+    photo: {
+      src: 'https://ik.imagekit.io/farisaziz/zurichjs-10-1st-anniversary-special-edition/2025-11-13-export-002.png?updatedAt=1764918729330',
+      alt: 'A slice of chocolate cake with a yellow birthday candle at the ZurichJS first-anniversary meetup',
+    },
     source: 'old-about',
   },
   {
@@ -179,15 +188,21 @@ export const MILESTONES: Milestone[] = [
     iso: '2025-11-14',
     title: 'ZurichJS Conf announced',
     text: 'The first tickets for ZurichJS Conf 2026 go on sale, a year after the first meetup.',
+    photo: h('history-anniversary', 'The one-year anniversary meetup, November 2025'),
     link: { label: 'conf.zurichjs.com', href: 'https://conf.zurichjs.com' },
     source: 'conf-timeline',
   },
   {
-    // [prospectus]: the conference CFP closed on 3rd April 2026 with 436 submissions, reviewed anonymised by the CFP Review Committee.
+    // [prospectus]: the conference CFP closed on 3rd April 2026, reviewed anonymised by the CFP Review Committee. 434 talk submissions
+    // (owner's correction and the CFP-closed post, 12th November 2026; the prospectus said 436).
     date: '3rd April 2026',
     iso: '2026-04-03',
-    title: '436 talk proposals for ZurichJS Conf',
-    text: 'The call for papers (CFP) for the conference closes with 436 submissions. The review committee reads them anonymised, so every proposal is judged on its content.',
+    title: '434 talk proposals for ZurichJS Conf',
+    text: 'The call for papers (CFP) for the conference closes with 434 talk submissions. The review committee reads them anonymised, so every proposal is judged on its content.',
+    photo: {
+      ...h('history-cfp-closed', 'The CFP-closed announcement: 434 talk submissions, 261 speaker profiles, 40 workshop submissions and 61% non-AI topics'),
+      position: 'center 42%',
+    },
     link: { label: 'conf.zurichjs.com', href: 'https://conf.zurichjs.com' },
     source: 'prospectus',
   },
@@ -205,6 +220,7 @@ export const MILESTONES: Milestone[] = [
     date: '9th–11th September 2026',
     iso: '2026-09-11',
     title: 'The first ZurichJS Conf',
+    photo: { ...h('history-first-conf', 'Attendees, speakers and volunteers in one group photo at ZurichJS Conf 2026, Technopark Zürich') },
     text: 'Our first annual conference on 11th September at Technopark Zürich, after a Community Day on 9th September and the Zurich Engineering Day on 10th September, run with a team of volunteers.',
     link: { label: 'conf.zurichjs.com', href: 'https://conf.zurichjs.com' },
     source: 'conf-timeline',

@@ -9,7 +9,7 @@
 
 | File                     | What it is                                                                                                                                                      |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/tokens.ts`          | **Single source** for colours, radii, breakpoints, gutter, font and heading sizes. Change values here only.                                                     |
+| `src/tokens.ts`          | **Single source** for colours, type roles, spacing roles, radii, widths, grids, breakpoints and font. Change values here only.                                  |
 | `src/theme.css`          | **Generated** from `tokens.ts`: the Tailwind 4 `@theme` block, the `px-gut` and `mx-gut` utilities, and base rules (focus rings, reduced motion, placeholders). |
 | `src/fonts.css`          | **Generated** `@font-face` for sites that do not use the Astro Fonts API.                                                                                       |
 | `src/recipes.ts`         | Class recipes: `buttonClass`, `surfaceClass`, `monogramClass`, `headingSizes`, `cx`.                                                                            |

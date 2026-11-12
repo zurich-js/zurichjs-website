@@ -33,7 +33,7 @@ export const meetupTicketing = (groupUrl: string): TicketingProvider => ({
           label: 'RSVP on Meetup',
           href: ev.meetupUrl ?? groupUrl,
           external: true,
-          note: 'Opens Meetup in a new tab. Your RSVP is confirmed there, not on this site.',
+          note: '',
         };
       case 'full':
         return {

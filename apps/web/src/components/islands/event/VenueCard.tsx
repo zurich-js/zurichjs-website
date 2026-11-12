@@ -1,6 +1,5 @@
 import { directionsUrl, mapEmbedUrl, venueAddress, type Venue } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
-import { Button } from '@zurichjs/design/islands/Button';
 import { cardClass, cx } from '@zurichjs/design/recipes';
 
 interface Props {
@@ -14,8 +13,8 @@ interface Props {
 }
 
 /**
- * Where the meetup is: name, full address, how to get in, and directions.
- * The directions link always works. The map is always shown (owner, 2nd
+ * Where the meetup is: name, full address, how to get in, and the map (Google
+ * Maps gives directions from it; a link takes its place if it fails). The map is always shown (owner, 2nd
  * November 2026) and loads lazily as it scrolls near: the Maps Embed API with a
  * key, otherwise Google Maps' keyless embed of the address (see mapEmbedUrl).
  */
@@ -35,7 +34,7 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
       <H id="h-venue" class="m-0 text-subsection font-bold">
         {heading}
       </H>
-      <div class={cardClass('filled', compact ? 'sm' : 'md')}>
+      <div class={cardClass('outline', compact ? 'sm' : 'md')}>
         <div class="flex flex-col gap-0.5">
           <div class={cx('font-bold', compact ? 'text-body' : 'text-card-title')}>{venue.name}</div>
           <address class={cx('not-italic text-ink-2', compact ? 'text-compact' : 'text-body')}>{address}</address>
@@ -50,15 +49,15 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
             ))}
           </dl>
         )}
-        <div class="flex flex-wrap gap-3 items-center">
-          <Button href={directionsUrl(venue)} external>
-            Get directions
-          </Button>
-        </div>
         {
           <div id="venue-map" class="flex flex-col gap-2">
             {mapFailed ? (
-              <p class="m-0 text-compact text-ink-2">The map didn’t load. The directions link above still works.</p>
+              <p class="m-0 text-compact text-ink-2">
+                The map didn’t load.{' '}
+                <a href={directionsUrl(venue)} target="_blank" rel="noopener" class="font-bold text-black">
+                  Get directions on Google Maps
+                </a>
+              </p>
             ) : (
               <iframe
                 title={`Map of ${venue.name}, ${address}`}

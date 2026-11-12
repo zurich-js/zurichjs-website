@@ -1,0 +1,29 @@
+# Slack app for the ZurichJS content agent. Create it at api.slack.com/apps › Create New App ›
+# From a manifest, pick the ZurichJS workspace and paste this file. Setup: docs/v2/AUTOMATION.md.
+display_information:
+  name: ZurichJS Bot
+  description: Keeps the meetup pages on zurichjs.com up to date. Writes drafts; organisers publish.
+  background_color: '#000000'
+features:
+  bot_user:
+    display_name: ZurichJS Bot
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - chat:write
+      - groups:history
+      - channels:history
+      - reactions:write
+settings:
+  event_subscriptions:
+    request_url: https://zurichjs.com/.netlify/functions/slack-events
+    bot_events:
+      - app_mention
+  interactivity:
+    is_enabled: true
+    request_url: https://zurichjs.com/.netlify/functions/slack-interactivity
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

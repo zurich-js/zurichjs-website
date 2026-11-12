@@ -1,0 +1,21 @@
+{
+  "name": "@zurichjs/content",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Content source: Sanity client, GROQ queries, mappers to @zurichjs/events types, sample fallback.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@zurichjs/events": "workspace:*",
+    "groq": "3.99.0"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

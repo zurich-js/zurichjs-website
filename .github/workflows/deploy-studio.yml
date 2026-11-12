@@ -1,0 +1,54 @@
+name: Deploy Studio
+
+# Deploys the Sanity Studio (apps/studio) when changes to it reach main.
+# Needs the repository secret SANITY_DEPLOY_TOKEN: a Sanity API token with the
+# "Deploy Studio" permission (sanity.io/manage › API › Tokens). Without it the job
+# skips with a notice. Content migrations are never run here; they stay manual.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/studio/**'
+      - '.github/workflows/deploy-studio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer push waits for the running deploy instead of cancelling it.
+concurrency:
+  group: deploy-studio
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: sanity deploy
+    runs-on: ubuntu-latest
+    env:
+      SANITY_AUTH_TOKEN: ${{ secrets.SANITY_DEPLOY_TOKEN }}
+      SANITY_TELEMETRY_DISABLED: '1'
+    steps:
+      - name: Check the deploy token
+        id: token
+        run: |
+          if [ -z "$SANITY_AUTH_TOKEN" ]; then
+            echo "::notice::SANITY_DEPLOY_TOKEN is not set, so the Studio was not deployed. Add it under Settings › Secrets and variables › Actions."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.token.outputs.present == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - if: steps.token.outputs.present == 'true'
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - if: steps.token.outputs.present == 'true'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: '.nvmrc'
+          cache: pnpm
+      - if: steps.token.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      # deployment.appId in apps/studio/sanity.cli.ts names the Studio, so --yes needs no prompts.
+      - if: steps.token.outputs.present == 'true'
+        run: pnpm --filter @zurichjs/studio exec sanity deploy --yes

@@ -1,0 +1,128 @@
+---
+/**
+ * Footer in the conference footer's layout (Bogdan's review, 4th November 2026): who we are on the left,
+ * the link columns and a way to stay in touch on the right, then the wordmark and the social icons.
+ * Links are white with a dotted underline; no yellow text.
+ */
+import { SocialIcon, type Social } from '../islands/SocialLabel';
+import { confLink, trackAttrs } from '../analytics';
+export interface FooterSite {
+  association: string;
+  uid: string;
+  email: string;
+  meetupGroupUrl: string;
+  linkedinUrl: string;
+  blueskyUrl: string;
+  instagramUrl: string;
+  xUrl: string;
+  slackInviteUrl: string;
+}
+interface Props {
+  site: FooterSite;
+  /** Conference lifecycle state, for analytics. */
+  confState: string;
+}
+const { site: SITE, confState } = Astro.props;
+const COLS = [
+  {
+    h: 'Events',
+    links: [
+      { label: 'Upcoming events', href: '/events' },
+      { label: 'Past events', href: '/events?tab=past' },
+      { label: 'Speakers', href: '/speakers' },
+      { label: 'Photos', href: '/media' },
+      { label: 'Today', href: '/today' },
+      { label: 'ZurichJS Conf', href: confLink('/', 'footer'), conf: true },
+    ],
+  },
+  {
+    h: 'Take part',
+    links: [
+      { label: 'Speak at a meetup', href: '/cfp' },
+      { label: 'Volunteer', href: '/cfv' },
+      { label: 'Host or sponsor', href: '/partners' },
+      { label: 'Membership', href: '/membership' },
+      { label: 'Support us', href: '/donate' },
+      { label: 'Contact', href: '/contact' },
+    ],
+  },
+  {
+    h: 'Legal',
+    links: [
+      { label: 'Code of conduct', href: '/policies/code-of-conduct' },
+      { label: 'Privacy policy', href: '/policies/privacy-policy' },
+      { label: 'Terms and conditions', href: '/policies/terms-and-conditions' },
+      { label: 'Refund policy', href: '/policies/refund-policy' },
+      { label: 'For AI assistants', href: '/ai-context' },
+    ],
+  },
+];
+const SOCIAL: { kind: Social; label: string; href: string }[] = [
+  { kind: 'meetup', label: 'Meetup', href: SITE.meetupGroupUrl },
+  { kind: 'slack', label: 'Slack', href: SITE.slackInviteUrl },
+  { kind: 'linkedin', label: 'LinkedIn', href: SITE.linkedinUrl },
+  { kind: 'instagram', label: 'Instagram', href: SITE.instagramUrl },
+  { kind: 'bluesky', label: 'Bluesky', href: SITE.blueskyUrl },
+  { kind: 'x', label: 'X', href: SITE.xUrl },
+];
+const link = 'text-white underline decoration-dotted decoration-1 underline-offset-4 hover:decoration-solid';
+---
+
+<footer class="on-black bg-black text-white px-gut pt-[clamp(64px,8vw,120px)] pb-8 flex flex-col gap-[clamp(48px,6vw,80px)]">
+  <div class="flex flex-col xl:flex-row gap-10">
+    <div class="flex flex-col gap-4 xl:flex-[1_0_0] max-w-[560px]">
+      <h2 class="m-0 text-[clamp(26px,2.6vw,32px)] leading-tight font-bold">Who are we?</h2>
+      <p class="m-0 text-[17px] leading-[1.6] text-grey">
+        ZurichJS is the JavaScript community in Zurich: free monthly meetups with talks and time to meet each other, run by volunteers since November 2024. Everybody is welcome.
+      </p>
+      <p class="m-0 text-[15px] leading-[1.55] text-grey-mid">Part of the {SITE.association}, a non-profit association registered in Switzerland.</p>
+      <a href="/about" class="self-start inline-flex items-center gap-2 text-[17px] font-bold text-white underline decoration-2 underline-offset-4 hover:no-underline">
+        More about us
+        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5" /></svg>
+      </a>
+    </div>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,170px),1fr))] gap-x-8 gap-y-10 xl:flex-[2_0_0] min-w-0">
+      {
+        COLS.map((c) => (
+          <nav aria-label={c.h} class="flex flex-col gap-3">
+            <h2 class="m-0 text-[18px] font-bold">{c.h}</h2>
+            <ul class="m-0 p-0 list-none flex flex-col gap-2 text-[16px]">
+              {c.links.map((l) => (
+                <li>
+                  <a
+                    href={l.href}
+                    class={link}
+                    {...('conf' in l ? { target: '_blank', rel: 'noopener', ...trackAttrs('conf_outbound_click', { placement: 'footer', confstate: confState }) } : {})}
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+      <div class="flex flex-col gap-3">
+        <h2 class="m-0 text-[18px] font-bold">Stay in the know</h2>
+        <p class="m-0 text-[15px] leading-[1.55] text-grey-mid">New meetups are announced on Meetup first. Questions? Write to us.</p>
+        <a href={`mailto:${SITE.email}`} class={`${link} text-[16px] font-bold`}>{SITE.email}</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+    <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" loading="lazy" class="h-7 w-auto self-start max-w-full" />
+    <ul class="m-0 p-0 list-none flex flex-wrap gap-1 -mx-2.5" aria-label="ZurichJS on social media">
+      {
+        SOCIAL.map((s) => (
+          <li>
+            <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class="w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70">
+              <SocialIcon kind={s.kind} size={22} tone="white" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+  <p class="m-0 text-[14px] text-grey-mid">© {new Date().getFullYear()} {SITE.association} ({SITE.uid}). All rights reserved.</p>
+</footer>

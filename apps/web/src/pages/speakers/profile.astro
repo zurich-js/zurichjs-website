@@ -1,0 +1,17 @@
+---
+/** Private page for accepted speakers to complete their profile (see src/server/speaker-profile.ts). Not indexed. */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import SpeakerProfileForm from '~/components/islands/forms/SpeakerProfileForm';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Your speaker profile" description="Complete your ZurichJS speaker profile." noindex>
+  <PageOpening
+    slot="opening"
+    title="Your speaker profile"
+    sub="Thanks for speaking at ZurichJS. Add what you’d like on your speaker page: a photo, a short bio, your role and links. An organiser checks it and publishes it."
+  />
+  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
+    <SpeakerProfileForm client:load />
+  </div>
+</BaseLayout>

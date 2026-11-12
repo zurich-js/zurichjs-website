@@ -1,40 +1,32 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+# Dependencies
+node_modules/
 package-lock.json
 
-# testing
+# Build output
+dist/
+.astro/
+.netlify/
+
+# Test and report output
 /coverage
+/test-results
+/playwright-report
+/.lighthouseci
+/seo-report.json
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
+# Local env files
 .env
+.env*.local
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
+# Editors and OS
+.DS_Store
 .idea/
+*.pem
+*.log
+
+# Vendored package with a security fix (vendor/deepmerge/README.md) ships its dist.
+!/vendor/**/dist
+
+# Local-only files (e.g. the signature for local certificates)
+.local/
+.neon

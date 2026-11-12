@@ -1,0 +1,19 @@
+---
+/**
+ * /admin/memberships: the admin area (components/islands/MembershipAdmin.tsx). The password
+ * first (ADMIN_PASSWORD, enforced by the API on every deploy), then the sections.
+ * This page holds no data itself. Not indexed.
+ */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import MembershipAdmin from '~/components/islands/MembershipAdmin';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+
+---
+
+<BaseLayout title="Memberships · Admin" description={`The ${SITE.association}'s admin area.`} noindex>
+  <PageOpening slot="opening" title="Admin" compact />
+  <div class="px-gut pt-12 pb-24">
+    <MembershipAdmin client:load section="memberships" />
+  </div>
+</BaseLayout>

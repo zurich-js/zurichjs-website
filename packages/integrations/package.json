@@ -1,0 +1,22 @@
+{
+  "name": "@zurichjs/integrations",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Outbound services behind small interfaces: Sanity writes, Resend, Slack, EmailOctopus.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sanity/client": "7.28.0",
+    "@zurichjs/emails": "workspace:*",
+    "@zurichjs/forms": "workspace:*"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

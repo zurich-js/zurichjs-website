@@ -1,0 +1,21 @@
+{
+  "name": "@zurichjs/emails",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ZurichJS emails: one layout from the design tokens, typed templates rendered to HTML and plain text. No React, no build step.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "preview": "tsx scripts/preview.ts"
+  },
+  "dependencies": {
+    "@zurichjs/design": "workspace:*"
+  },
+  "devDependencies": {
+    "@zurichjs/config": "workspace:*",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "@zurichjs/studio",
+  "private": true,
+  "version": "1.0.0",
+  "main": "package.json",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "deploy-graphql": "sanity graphql deploy",
+    "schema": "tsx scripts/extract-schema.ts",
+    "typegen": "pnpm run schema && sanity typegen generate",
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "sanity"
+  ],
+  "dependencies": {
+    "@sanity/vision": "^6.21.0",
+    "react": "^19.2.2",
+    "react-dom": "^19.2.2",
+    "sanity": "^6.21.0",
+    "styled-components": "^6.6.0",
+    "@sanity/icons": "^5.2.3",
+    "@sanity/ui": "^4.4.10",
+    "@sanity/schema": "^6.21.0"
+  },
+  "devDependencies": {
+    "@sanity/eslint-config-studio": "^7.0.0",
+    "@types/react": "^19.2.0",
+    "eslint": "^10.0.0",
+    "prettier": "^3.9.0",
+    "typescript": "5.9.3",
+    "tsx": "4.23.15"
+  },
+  "prettier": {
+    "semi": false,
+    "printWidth": 100,
+    "bracketSpacing": false,
+    "singleQuote": true
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

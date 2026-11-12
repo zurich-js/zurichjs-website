@@ -1,0 +1,41 @@
+---
+/**
+ * "Where our speakers come from" (Bogdan's review, 4th November 2026): the companies' own full-colour logos, each centred in an
+ * equal grey tile, so the wall reads as an even grid at every width.
+ * Every logo gets about the same visual weight: its height follows from its width-to-height
+ * ratio (equal area, capped), so a square mark and a long wordmark read as the same size.
+ */
+interface Props {
+  companies: { name: string; logo: string; ratio: number; label?: boolean }[];
+  headingId: string;
+  as?: 'h2' | 'h3';
+}
+const { companies, headingId, as: Heading = 'h3' } = Astro.props;
+const AREA = 3600; // px² per logo, so the widest wordmark still fits its tile
+const MAX_H = 46;
+const size = (ratio: number) => {
+  const h = Math.min(MAX_H, Math.sqrt(AREA / ratio));
+  return { h: Math.round(h), w: Math.round(h * ratio) };
+};
+---
+
+<div class="flex flex-col gap-6" role="group" aria-labelledby={headingId}>
+  <div class="flex flex-col gap-2">
+    <Heading id={headingId} class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where our speakers come from</Heading>
+    <p class="m-0 text-[18px] leading-[1.55] text-ink-2 max-w-[720px] text-pretty">Speakers of every shape and size: freelancers, open-source maintainers and Google Developer Experts, all the way to engineers at the largest companies in tech.</p>
+  </div>
+  <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,150px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
+    {
+      companies.map((c) => {
+        // A symbol with its name beside it stays small, so the pair fits the tile like a wordmark.
+        const { w, h } = c.label ? { w: Math.round(30 * c.ratio), h: 30 } : size(c.ratio);
+        return (
+          <li class="h-[92px] md:h-[104px] rounded-2xl bg-grey flex items-center justify-center gap-2 px-4">
+            <img src={c.logo} alt={c.label ? '' : c.name} width={w} height={h} loading="lazy" decoding="async" class="block h-auto max-w-[78%] min-w-0" style={{ width: `${w}px` }} />
+            {c.label && <span class="text-[17px] font-bold leading-none text-black">{c.name}</span>}
+          </li>
+        );
+      })
+    }
+  </ul>
+</div>

@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+@import '@zurichjs/design/theme.css';
+
+/* Tailwind scans the design package's components for class names too. */
+@source '../../../../packages/design/src';
+
+/* The header is sticky (about 80px tall when floating): jumps to an anchor land below it. */
+html {
+  scroll-padding-top: 96px;
+}

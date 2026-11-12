@@ -1,0 +1,10 @@
+{
+  "extends": ["astro/tsconfigs/strict", "@zurichjs/config/tsconfig.base.json"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "paths": { "~/*": ["./src/*"] }
+  },
+  "include": [".astro/types.d.ts", "src", "netlify", "test", "astro.config.mjs"],
+  "exclude": ["dist"]
+}

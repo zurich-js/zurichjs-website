@@ -2,6 +2,7 @@ import { CFP_AGREE_ERROR, MAX_TOPICS, TALK_LENGTHS, TALK_LEVELS, TALK_TOPICS, su
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { buttonClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
@@ -195,11 +196,7 @@ function PhotoField({ photo, error, onChange }: { photo: { file: Blob; url: stri
           />
         </label>
         {photo && (
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            class="p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-compact"
-          >
+          <button type="button" onClick={() => onChange(null)} class="p-0 border-0 bg-transparent font-bold text-black underline cursor-pointer text-compact">
             Remove photo
           </button>
         )}
@@ -345,7 +342,7 @@ export default function CfpForm({ nextHref }: Props) {
           <Honeypot />
           {/* Saved answers: a small bar at the bottom of the screen, only while the form holds answers (Bogdan's review). */}
           {(hasAnswers || cleared) && (
-            <div class="on-black fixed bottom-4 inset-x-4 mx-auto z-40 w-fit bg-black text-white rounded-card md:rounded-pill shadow-[0_8px_28px_rgba(0,0,0,0.25)] px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
+            <div class="on-black fixed bottom-4 inset-x-4 mx-auto z-40 w-fit bg-black text-white rounded-card md:rounded-pill shadow-lift px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
               {cleared && !hasAnswers ? (
                 <p role="status" class="m-0 font-bold">
                   Saved answers cleared.
@@ -353,7 +350,7 @@ export default function CfpForm({ nextHref }: Props) {
               ) : (
                 <>
                   <p class="m-0">Your answers are saved in this browser only, until you send or clear them.</p>
-                  <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-white underline underline-offset-[3px] cursor-pointer text-meta">
+                  <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-white underline cursor-pointer text-meta">
                     Clear saved answers
                   </button>
                 </>
@@ -595,12 +592,12 @@ export default function CfpForm({ nextHref }: Props) {
         <aside aria-label="Before you propose" class="flex flex-col gap-7 md:sticky md:top-28">
           {NOTES.map(([h, p]) => (
             <div key={h} class="flex flex-col gap-1.5">
-              <h2 class="m-0 text-card-title font-bold">{h}</h2>
+              <Heading size="card">{h}</Heading>
               <p class="m-0 text-compact text-ink-2">{p}</p>
             </div>
           ))}
           <div class="flex flex-col gap-1.5">
-            <h2 class="m-0 text-card-title font-bold">Spoken here before?</h2>
+            <Heading size="card">Spoken here before?</Heading>
             <p class="m-0 text-compact text-ink-2">
               Use the same email and we match your proposal to your speaker page. Anything new you send, like a photo or links, goes to the organisers, who update your page.
             </p>

@@ -143,7 +143,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
             <>
               {' '}
               To rate individual talks, use{' '}
-              <a href={`${eventHref(ev)}?feedback=true#programme`} class="underline underline-offset-[3px] font-bold text-black">
+              <a href={`${eventHref(ev)}?feedback=true#programme`} class="underline font-bold text-black">
                 Rate the talks
               </a>{' '}
               on the event page.

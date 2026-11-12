@@ -121,7 +121,7 @@ export default function Programme({
             <p class="m-0 text-compact">
               Rate each talk below. Each speaker reads the ratings and comments for their own talk, and the organisers read everything. Nothing is published.
             </p>
-            <a href={`/feedback?event=${ev.slug}`} class="self-start font-bold underline underline-offset-3 text-compact">
+            <a href={`/feedback?event=${ev.slug}`} class="self-start font-bold underline text-compact">
               Tell us about the evening as a whole
             </a>
           </div>
@@ -182,7 +182,7 @@ export default function Programme({
                                 </span>
                               )}
                               <span class="flex flex-col min-w-0">
-                                <span class="text-body font-bold group-hover/sp:underline underline-offset-3">{sp.name}</span>
+                                <span class="text-body font-bold group-hover/sp:underline">{sp.name}</span>
                                 {sp.role && <span class="text-compact text-ink-2">{sp.role}</span>}
                               </span>
                             </a>
@@ -191,7 +191,7 @@ export default function Programme({
                       })}
                     </ul>
                     {a.talk.slidesUrl && (
-                      <a href={a.talk.slidesUrl} class="self-start text-compact font-bold underline underline-offset-3" target="_blank" rel="noopener">
+                      <a href={a.talk.slidesUrl} class="self-start text-compact font-bold underline" target="_blank" rel="noopener">
                         Slides (opens in a new tab)
                       </a>
                     )}

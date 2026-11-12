@@ -121,11 +121,11 @@ const removal = `mailto:${SITE.email}?subject=${encodeURIComponent('Photo remova
           <Gallery client:visible items={toGallery(items)} label={`Photos and videos from ${ev.title}`} max={8} />
           <div class="flex flex-wrap gap-x-5 gap-y-2 text-body">
             {items.length > 8 && (
-              <a href={mediaHref(ev.slug)} class="font-bold underline underline-offset-[3px]">
+              <a href={mediaHref(ev.slug)} class="font-bold underline">
                 {`All ${items.length} from this event`}
               </a>
             )}
-            <a href={`/events/${ev.slug}`} class="underline underline-offset-[3px]">
+            <a href={`/events/${ev.slug}`} class="underline">
               The event page
             </a>
           </div>

@@ -966,4 +966,26 @@ test.describe('home (Bogdan’s review)', () => {
     await page.keyboard.press('ArrowRight');
     await expect(active()).not.toHaveAttribute('href', first!);
   });
+
+  test('the speaker carousel turns on its own, holds while the mouse rests on the active card, then carries on', async ({ page }) => {
+    await page.goto('/');
+    const carousel = page.getByRole('region', { name: 'ZurichJS speakers' });
+    await carousel.scrollIntoViewIfNeeded();
+    await expect(page.locator('astro-island[ssr]', { has: carousel })).toHaveCount(0);
+    const active = () => carousel.locator('a[tabindex="0"]');
+    // The band is the full width of the screen: the mouse anywhere else on it does not hold it.
+    const band = (await carousel.boundingBox())!;
+    await page.mouse.move(band.x + 40, band.y + 40);
+    const first = await active().getAttribute('href');
+    await expect(active()).not.toHaveAttribute('href', first!, { timeout: 6000 });
+    // Resting on the active card holds it.
+    const card = (await active().boundingBox())!;
+    await page.mouse.move(card.x + card.width / 2, card.y + card.height / 2, { steps: 4 });
+    const held = await active().getAttribute('href');
+    await page.waitForTimeout(4500);
+    await expect(active()).toHaveAttribute('href', held!);
+    // Moving off it lets it carry on.
+    await page.mouse.move(band.x + 40, band.y + 40, { steps: 4 });
+    await expect(active()).not.toHaveAttribute('href', held!, { timeout: 6000 });
+  });
 });

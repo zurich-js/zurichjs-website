@@ -112,7 +112,7 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-[18px]">
+    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-4">
       <Honeypot />
       <ChipGroup<Way>
         label="What would you like to talk about?"
@@ -134,7 +134,7 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
         You’re asking about: <b>{intentLabel(f.way, f.tier)}</b>
       </p>
       <TextField label="Organisation" name="org" autoComplete="organization" value={f.org} onInput={set('org')} invalid={bad('org')} error={bad('org') ? errs.org : ''} />
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
+      <div class="grid grid-cols-auto-sm gap-3.5">
         <TextField label="Your name" name="name" autoComplete="name" value={f.name} onInput={set('name')} invalid={bad('name')} error={bad('name') ? errs.name : ''} />
         <TextField
           label="Work email"

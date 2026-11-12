@@ -32,11 +32,11 @@ const facts = [
   data-event-row
   data-upcoming={String(upcoming)}
   data-search={`${ev.title} ${ev.description} ${ev.venue?.name ?? ''}`.toLowerCase()}
-  class="group no-underline text-black w-full text-left rounded-card bg-white hover:bg-grey-soft transition-colors grid grid-cols-[80px_minmax(0,1fr)] gap-[clamp(16px,2vw,28px)] items-center p-3.5 -mx-3.5 box-content"
+  class="group no-underline text-black w-full text-left rounded-card bg-white hover:bg-grey-soft transition-colors grid grid-cols-[80px_minmax(0,1fr)] gap-4 lg:gap-7 items-center p-3.5 -mx-3.5 box-content"
 >
   <span class={cx('flex flex-col items-center justify-center h-20 rounded-nested-min', upcoming ? 'bg-black text-white' : 'bg-grey')}>
     <span class="text-meta font-bold">{parts.mon}</span>
-    <span class="text-[30px] font-bold leading-none">{parts.day}<span class="text-meta align-top">{parts.suffix}</span></span>
+    <span class="text-subsection font-bold leading-none">{parts.day}<span class="text-meta align-top">{parts.suffix}</span></span>
     <span class="text-meta">{parts.year}</span>
   </span>
   <div class="flex flex-col gap-1.5 min-w-0">

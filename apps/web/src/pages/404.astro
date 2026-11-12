@@ -27,8 +27,8 @@ const LINKS = [
     title="We couldn’t find that page"
     sub="The link may be old, or the page moved when we rebuilt the site. Even JavaScript can’t find everything. Try a search or one of the pages below."
   >
-    <div class="flex flex-col gap-4 pt-1 max-w-[640px]">
-      <form action="/events" method="get" role="search" class="flex items-center gap-2.5 bg-ink rounded-pill pl-[22px] pr-2 min-h-[56px]">
+    <div class="flex flex-col gap-4 pt-1 max-w-form">
+      <form action="/events" method="get" role="search" class="flex items-center gap-2.5 bg-ink rounded-pill pl-5 pr-2 min-h-14">
         <label for="nf-q" class="sr-only">Search events, talks and speakers</label>
         <input id="nf-q" type="search" name="q" placeholder="Search events, talks, speakers" class="flex-1 min-w-0 border-0 bg-transparent text-white text-body outline-offset-[6px] placeholder:text-grey-mid" />
         <Button type="submit" variant="cta">Search</Button>
@@ -40,7 +40,7 @@ const LINKS = [
     </div>
   </PageOpening>
 
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[22px]">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-5">
     <h2 class="m-0 text-subsection font-bold">Popular pages</h2>
     <AutoGrid min="sm" gap="sm">
       {

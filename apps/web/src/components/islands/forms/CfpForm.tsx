@@ -148,8 +148,8 @@ async function shrinkPhoto(file: File): Promise<Blob> {
 
 /** How a speaker photo appears on the site (same crops: cover, centred). */
 const PREVIEWS = [
-  { label: 'Speaker page', cls: 'w-[112px] aspect-square rounded-[16px]' },
-  { label: 'Home page card', cls: 'w-[92px] aspect-[4/5.2] rounded-[14px]' },
+  { label: 'Speaker page', cls: 'w-28 aspect-square rounded-card' },
+  { label: 'Home page card', cls: 'w-23 aspect-[4/5.2] rounded-field' },
   { label: 'Talk listings', cls: 'w-11 h-11 rounded-full' },
 ] as const;
 
@@ -330,13 +330,13 @@ export default function CfpForm({ nextHref }: Props) {
   const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(`Talk proposal: ${d.title}`)}&body=${encodeURIComponent(asText(d))}`;
 
   return (
-    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] gap-x-[clamp(40px,6vw,96px)] gap-y-12 items-start">
+    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] gap-x-16 gap-y-12 items-start">
       {!sent && (
-        <form ref={formRef} id="proposal" onSubmit={submit} noValidate class="relative flex flex-col gap-10 min-w-0 max-w-[760px] scroll-mt-6" aria-label="Talk proposal">
+        <form ref={formRef} id="proposal" onSubmit={submit} noValidate class="relative flex flex-col gap-10 min-w-0 max-w-reading scroll-mt-6" aria-label="Talk proposal">
           <Honeypot />
           {/* Saved answers: a small bar at the bottom of the screen, only while the form holds answers (Bogdan's review). */}
           {(hasAnswers || cleared) && (
-            <div class="on-black fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100%-32px)] bg-black text-white rounded-[20px] md:rounded-pill shadow-[0_8px_28px_rgba(0,0,0,0.25)] px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
+            <div class="on-black fixed bottom-4 inset-x-4 mx-auto z-40 w-fit bg-black text-white rounded-card md:rounded-pill shadow-[0_8px_28px_rgba(0,0,0,0.25)] px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
               {cleared && !hasAnswers ? (
                 <p role="status" class="m-0 font-bold">
                   Saved answers cleared.
@@ -353,7 +353,7 @@ export default function CfpForm({ nextHref }: Props) {
           )}
           <fieldset class={section}>
             <legend class={sectionTitle}>About you</legend>
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 items-start">
+            <div class="grid grid-cols-auto-sm gap-4 items-start">
               <TextField
                 label="Name"
                 name="name"
@@ -381,7 +381,7 @@ export default function CfpForm({ nextHref }: Props) {
             <div class="flex flex-col gap-3">
               <Checkbox label="I’ve spoken at ZurichJS before." name="returning" checked={d.returning} onChange={(e) => set('returning', e.currentTarget.checked)} />
               {d.returning && (
-                <p class="m-0 pl-[34px] text-compact text-ink-2">
+                <p class="m-0 pl-8.5 text-compact text-ink-2">
                   Leave your profile below empty to keep your speaker page as it is. Anything you add goes to the organisers, who update your page; it isn’t published straight
                   away.
                 </p>
@@ -398,7 +398,7 @@ export default function CfpForm({ nextHref }: Props) {
           <fieldset class={section}>
             <legend class={sectionTitle}>Speaker profile</legend>
             <p class="m-0 -mt-2 text-compact text-grey-text">What appears on your speaker page if your talk is accepted.</p>
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 items-start">
+            <div class="grid grid-cols-auto-sm gap-4 items-start">
               <TextField
                 label={opt('Job title')}
                 name="jobTitle"
@@ -500,7 +500,7 @@ export default function CfpForm({ nextHref }: Props) {
               error={err('abstract')}
               hint="The key takeaways, and any demos or examples you’ll show. A short paragraph is enough; we use it on the event page."
             />
-            <ChoiceGroup legend="Length" radio class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-2.5">
+            <ChoiceGroup legend="Length" radio class="grid grid-cols-auto-sm gap-2.5">
               {TALK_LENGTHS.map((l) => (
                 <label key={l.value} class={optionClass(false, 'w-full grid! grid-cols-[auto_minmax(0,1fr)] gap-y-0.5 items-center py-3')}>
                   <input type="radio" name="format" value={l.value} checked={d.format === l.value} onChange={() => set('format', l.value)} class={optionInput} />
@@ -551,7 +551,7 @@ export default function CfpForm({ nextHref }: Props) {
                 aria-describedby={bad('agree') ? 'cfp-agree-error' : undefined}
               />
               {bad('agree') && (
-                <p id="cfp-agree-error" class="m-0 pl-[34px] text-meta text-danger">
+                <p id="cfp-agree-error" class="m-0 pl-8.5 text-meta text-danger">
                   {err('agree')}
                 </p>
               )}
@@ -599,7 +599,7 @@ export default function CfpForm({ nextHref }: Props) {
           <Notice tone="success" live focusRef={doneRef} as="h2" title="Thank you very much. Your proposal is in.">
             <p class="m-0 text-body">We’ll reach out in the coming days about your proposal, at {d.email || 'your email'}. Your saved answers were cleared from this browser.</p>
           </Notice>
-          <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-5">
+          <ol class="m-0 p-0 list-none grid grid-cols-auto-sm gap-5">
             {STAGES.map(([label, desc], i) => (
               <li key={label} class="flex flex-col gap-1.5">
                 <span class={cx('w-9 h-9 rounded-full flex items-center justify-center font-bold', i === 0 ? 'bg-black text-white' : 'bg-grey')}>{i + 1}</span>

@@ -1,0 +1,22 @@
+[
+  {
+    "use": "apps/web/src/components/islands/home/SpeakerCarousel.tsx: h-[clamp(380px,46vw,500px)]",
+    "reason": "The carousel stage must be tall enough for its 3:4 cards, whose width is the stage's own --card-w clamp(230px,24vw,320px); the height follows that width, so no spacing token or fixed scale value fits."
+  },
+  {
+    "use": "packages/design/src/islands/Check.tsx: size-[0.9em]",
+    "reason": "The check mark is an inline glyph that must scale with whatever text it sits in (it stands in for a ✓ Figtree lacks); the spacing scale is rem-based, not em."
+  },
+  {
+    "use": "packages/design/src/islands/Gallery.tsx: min-h-[40vh]",
+    "reason": "The lightbox stage is sized against the viewport height, which no token or spacing step expresses."
+  },
+  {
+    "use": "packages/design/src/islands/Gallery.tsx: max-h-[70vh]",
+    "reason": "Photos and videos in the lightbox are capped to a share of the viewport height so the caption and controls stay on screen."
+  },
+  {
+    "use": "packages/design/src/islands/Modal.tsx: max-h-[90vh]",
+    "reason": "The dialog is capped to a share of the viewport height so it scrolls inside instead of overflowing the screen."
+  }
+]

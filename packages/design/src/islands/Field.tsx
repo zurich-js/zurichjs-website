@@ -106,7 +106,7 @@ export function SelectField({ label, hint, error, class: className, children, ..
 export function Checkbox({ label, class: className, ...rest }: { label: ComponentChildren; class?: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label class={cx('flex gap-3 items-start text-body cursor-pointer', className)}>
-      <input type="checkbox" class="w-[22px] h-[22px] mt-[3px] flex-none accent-black cursor-pointer" {...rest} />
+      <input type="checkbox" class="size-5 mt-1 flex-none accent-black cursor-pointer" {...rest} />
       <span>{label}</span>
     </label>
   );

@@ -64,7 +64,7 @@ export function Modal({ open, onClose, labelledBy, children }: Props) {
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        class="bg-white text-black rounded-[28px] w-full max-w-[460px] max-h-[90vh] overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
+        class="bg-white text-black rounded-card w-full max-w-115 max-h-[90vh] overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
       >
         {children}
       </div>

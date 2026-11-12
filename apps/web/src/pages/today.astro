@@ -63,11 +63,11 @@ const description = ev
 ---
 
 <BaseLayout title="Today" description={description}>
-  <section slot="opening" class="px-gut flex flex-col gap-[18px] pt-[clamp(16px,3vw,40px)] pb-[clamp(36px,5vw,64px)]">
+  <section slot="opening" class="px-gut flex flex-col gap-4 pt-4 md:pt-10 pb-9 md:pb-16">
     <Tonight client:load part="opening" ev={ev} names={names} now={BUILD_TIME.toISOString()} />
   </section>
 
-  <div class="flex flex-col gap-[clamp(48px,6vw,88px)] pt-[clamp(40px,5vw,72px)] pb-[clamp(24px,4vw,56px)]">
+  <div class="flex flex-col gap-section pt-page-top pb-6 md:pb-14">
     {
       ev && ev.agenda.length > 0 && (
         <section id="programme" aria-labelledby="h-prog" class="px-gut flex flex-col gap-5 scroll-mt-6">
@@ -106,7 +106,7 @@ const description = ev
     }
 
     {/* Getting there on the left; posting about the evening and staying in touch beside it. */}
-    <div class="px-gut grid grid-cols-1 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-[clamp(28px,4vw,48px)] items-start">
+    <div class="px-gut grid grid-cols-1 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-8 md:gap-12 items-start">
       {ev?.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} heading="Getting there" compact />}
       <section aria-labelledby="h-share" class="flex flex-col gap-4">
         <h2 id="h-share" class="m-0 text-subsection font-bold">Share the evening</h2>

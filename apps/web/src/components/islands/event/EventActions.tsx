@@ -52,7 +52,7 @@ export default function EventActions({ ev, initial, url }: Props) {
   const handoff = p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist';
 
   return (
-    <div class="flex flex-col gap-[18px]">
+    <div class="flex flex-col gap-4">
       <div class="flex flex-wrap gap-3 items-center">
         {p.cta.kind === 'feedback' ? (
           ev.agenda.some((a) => a.talk) ? (

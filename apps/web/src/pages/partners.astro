@@ -121,18 +121,18 @@ const link = 'text-black underline underline-offset-[3px]';
     </div>
   </PageOpening>
 
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <section id="audience" aria-labelledby="h-aud" class="flex flex-col gap-[clamp(24px,3vw,36px)] scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[720px]">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
+    <section id="audience" aria-labelledby="h-aud" class="flex flex-col gap-6 md:gap-9 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-reading">
         <h2 id="h-aud" class="m-0 text-section font-bold">Who you reach</h2>
         <p class="m-0 text-body text-ink-2">Mostly engineers who shape the products they work on.</p>
       </div>
-      <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+      <dl class="m-0 grid grid-cols-auto-sm gap-x-10 gap-y-6">
         {
           AUDIENCE_PROFILE.map((a) => (
             <div class="flex flex-col-reverse justify-end gap-1.5">
-              <dt class="text-[18px] leading-[1.4]">{a.label}</dt>
-              <dd class="m-0 text-[clamp(40px,4.4vw,56px)] leading-none font-bold">{a.value}</dd>
+              <dt class="text-body">{a.label}</dt>
+              <dd class="m-0 text-section leading-none font-bold">{a.value}</dd>
             </div>
           ))
         }
@@ -146,45 +146,45 @@ const link = 'text-black underline underline-offset-[3px]';
         </div>
       </div>
 
-      <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach in {REACH_AS_OF}</h3>
+      <div class="flex flex-col gap-5 md:gap-7">
+        <h3 class="m-0 text-subsection font-bold">Our reach in {REACH_AS_OF}</h3>
         <dl class="m-0 grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-6">
           {
             REACH_STATS.map((r) => (
               <div class="flex flex-col-reverse justify-end gap-1.5">
-                <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
-                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold">{r.value}</dd>
+                <dt class="text-body">{r.label}</dt>
+                <dd class="m-0 text-section leading-none font-bold">{r.value}</dd>
               </div>
             ))
           }
         </dl>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2 max-w-[760px]">{REACH_COUNTRIES}</p>
+        <p class="m-0 text-body text-ink-2 max-w-reading">{REACH_COUNTRIES}</p>
       </div>
     </section>
 
-    <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+    <section aria-labelledby="h-handle" class="grid grid-cols-auto-lg gap-8 md:gap-16 items-center">
       <Photo
         photo={PAGE_PHOTOS.hosted}
         class="aspect-4/3 w-full"
       />
-      <div class="flex flex-col gap-[22px]">
+      <div class="flex flex-col gap-5">
         <h2 id="h-handle" class="m-0 text-section font-bold">What we take care of</h2>
         {
           HANDLE.map(([h, d]) => (
             <div class="flex flex-col gap-1">
-              <div class="text-[20px] font-bold">{h}</div>
-              <div class="text-[17px] leading-[1.55] text-ink-2">{d}</div>
+              <div class="text-card-title font-bold">{h}</div>
+              <div class="text-body text-ink-2">{d}</div>
             </div>
           ))
         }
-        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           We only work with partners we know and trust. When we recommend a sponsor’s product, service or image, it’s because we believe in it ourselves.
         </p>
       </div>
     </section>
 
     <section id="ways" aria-labelledby="h-ways" class="flex flex-col gap-7 scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[760px]">
+      <div class="flex flex-col gap-2.5 max-w-reading">
         <h2 id="h-ways" class="m-0 text-section font-bold">Four ways to partner</h2>
         <p class="m-0 text-body text-ink-2">Sponsorship is the only paid option. Hosting an evening or covering its food and drinks are separate ways to help, and you can combine them.</p>
       </div>
@@ -226,7 +226,7 @@ const link = 'text-black underline underline-offset-[3px]';
     </section>
 
     <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[760px]">
+      <div class="flex flex-col gap-2.5 max-w-reading">
         <h2 id="h-tiers" class="m-0 text-section font-bold">Sponsorship packages</h2>
         <p class="m-0 text-body text-ink-2">
           Pay monthly, yearly or once. Not sure which fits? <a href="#partner-form" class={link}>Start a conversation</a> or <a href={PROSPECTUS_MAILTO} class={link}>request the prospectus</a>.
@@ -253,7 +253,7 @@ const link = 'text-black underline underline-offset-[3px]';
                 <div class="flex flex-col gap-5">
                   {t.prices.map((pr) => (
                     <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
-                      <span class="text-[clamp(30px,2.6vw,38px)] leading-none font-bold">{pr.amount}</span>
+                      <span class="text-subsection leading-none font-bold">{pr.amount}</span>
                       <span class="text-compact text-ink-2">{UNIT[pr.label] ?? ''}</span>
                     </p>
                   ))}
@@ -262,7 +262,7 @@ const link = 'text-black underline underline-offset-[3px]';
                     <ul class="m-0 p-0 list-none flex flex-col gap-2 text-compact">
                       {t.perks.map((perk) => (
                         <li class="flex gap-2.5 items-start">
-                          <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-[11px] font-bold">✓</span>
+                          <span aria-hidden="true" class="mt-0.5 w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-meta font-bold">✓</span>
                           {perk}
                         </li>
                       ))}
@@ -294,21 +294,21 @@ const link = 'text-black underline underline-offset-[3px]';
         groups.sponsorsByTier.length > 0 ? (
           <SponsorTiers groups={groups.sponsorsByTier} />
         ) : (
-          <p class="m-0 text-[17px]">
+          <p class="m-0 text-body">
             No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the packages</a>.
           </p>
         )
       }
     </section>
 
-    <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-[clamp(28px,3vw,40px)] scroll-mt-6">
-      <div class="flex flex-col gap-1.5 max-w-[720px]">
+    <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-7 md:gap-10 scroll-mt-6">
+      <div class="flex flex-col gap-1.5 max-w-reading">
         <h2 id="h-p-community" class="m-0 text-section font-bold">Hosts and partners</h2>
         <p class="m-0 text-body text-ink-2">The venues, conferences, communities and companies we work with.</p>
       </div>
       {
         CATEGORIES.map((g) => (
-          <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-[18px] scroll-mt-6">
+          <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-4 scroll-mt-6">
             <div class="flex flex-col gap-1.5">
               <h3 id={`h-p-${g.id}`} class="m-0 text-card-title font-bold">
                 {g.h}
@@ -318,7 +318,7 @@ const link = 'text-black underline underline-offset-[3px]';
             {g.list.length > 0 ? (
               <LogoRow items={g.list.map((p) => ({ partner: p, caption: [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined }))} />
             ) : (
-              <p class="m-0 text-[17px]">None listed right now.</p>
+              <p class="m-0 text-body">None listed right now.</p>
             )}
           </section>
         ))
@@ -341,7 +341,7 @@ const link = 'text-black underline underline-offset-[3px]';
 
     {
       previous.length > 0 && (
-        <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-[18px] scroll-mt-6">
+        <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-4 scroll-mt-6">
           <div class="flex flex-col gap-1.5">
             <h2 id="h-p-past" class="m-0 text-subsection font-bold">
               Previous partners and sponsors
@@ -354,7 +354,7 @@ const link = 'text-black underline underline-offset-[3px]';
     }
 
     <span id="inquiry-form" aria-hidden="true"></span>
-    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-1 md:grid-cols-2 gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
+    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start scroll-mt-6 outline-hidden">
       <div class="flex flex-col gap-3">
         <h2 id="h-pform" class="m-0 text-section font-bold">Tell us how you’d like to help</h2>
         <p class="m-0 text-body text-ink-2">Choose what you’d like to talk about, and change it any time before you send. An organiser replies from {SITE.email} to plan the details.</p>

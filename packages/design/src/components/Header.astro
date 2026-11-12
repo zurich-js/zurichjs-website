@@ -55,10 +55,10 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 <header data-site-header class="site-header on-black sticky top-0 z-50 box-border h-header -mb-header bg-black text-white">
   <div data-bar class="bar box-border h-full flex items-center justify-between gap-4 px-4 pl-8">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
-      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" />
+      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-4.5 w-auto" />
     </a>
 
-    <nav aria-label="Main" class="hidden md:flex items-center gap-[clamp(14px,1.9vw,28px)] text-[clamp(15px,1.45vw,17px)] whitespace-nowrap">
+    <nav aria-label="Main" class="hidden md:flex items-center gap-4 lg:gap-6 text-compact whitespace-nowrap">
       {
         NAV.map((n) => (
           <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-1.5 font-bold no-underline hover:text-grey-mid', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
@@ -72,7 +72,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           data-involved-toggle
           aria-expanded="false"
           aria-controls="involved-menu"
-          class={cx('flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-[length:inherit] cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
+          class={cx('flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-compact cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
         >
           Get involved
           <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform [[aria-expanded=true]>&]:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
@@ -116,7 +116,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 
 <dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none open:flex flex-col overflow-hidden bg-black text-white border-0">
   <div class="flex shrink-0 items-center justify-between py-4 px-gut">
-    <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-[18px] w-auto" /></a>
+    <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-4.5 w-auto" /></a>
     <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
       <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
     </button>
@@ -125,17 +125,17 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     <nav aria-label="Main" class="flex-1 flex flex-col justify-center gap-1 px-gut py-6">
       {
         NAV.map((n) => (
-          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2 text-[28px] font-bold no-underline', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
+          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2 text-subsection font-bold no-underline', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
             {n.label}
           </a>
         ))
       }
-      <p id="mobile-involved" class="mt-5 mb-1 text-[17px] text-grey-mid">Get involved</p>
+      <p id="mobile-involved" class="mt-5 mb-1 text-body text-grey-mid">Get involved</p>
       <ul aria-labelledby="mobile-involved" class="list-none m-0 p-0 flex flex-col">
         {
           INVOLVED.map((i) => (
             <li>
-              <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block py-1.5 text-[20px] font-bold no-underline', isCurrent([i.href]) ? 'text-white underline decoration-2 underline-offset-4' : 'text-white')}>
+              <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block py-1.5 text-card-title font-bold no-underline', isCurrent([i.href]) ? 'text-white underline decoration-2 underline-offset-4' : 'text-white')}>
                 {i.label}
               </a>
             </li>

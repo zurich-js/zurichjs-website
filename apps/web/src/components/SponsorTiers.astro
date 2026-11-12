@@ -14,15 +14,15 @@ interface Props {
 const { groups } = Astro.props;
 const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer');
 const LOGO: Record<SponsorTier | 'none', { box: string; img: string; cols: string }> = {
-  champion: { box: 'h-28 w-full md:w-[280px]', img: 'max-h-20', cols: 'grid-cols-1' },
-  builder: { box: 'h-24 w-full md:w-[240px]', img: 'max-h-16', cols: 'grid-cols-1' },
-  friend: { box: 'h-16 w-full', img: 'max-h-14', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
-  supporter: { box: 'h-14 w-full', img: 'max-h-12', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
-  none: { box: 'h-14 w-full', img: 'max-h-12', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
+  champion: { box: 'h-28 w-full md:w-70', img: 'max-h-20', cols: 'grid-cols-1' },
+  builder: { box: 'h-24 w-full md:w-60', img: 'max-h-16', cols: 'grid-cols-1' },
+  friend: { box: 'h-16 w-full', img: 'max-h-14', cols: 'grid-cols-auto-md' },
+  supporter: { box: 'h-14 w-full', img: 'max-h-12', cols: 'grid-cols-auto-md' },
+  none: { box: 'h-14 w-full', img: 'max-h-12', cols: 'grid-cols-auto-md' },
 };
 ---
 
-<div class="flex flex-col gap-[clamp(28px,3vw,40px)]">
+<div class="flex flex-col gap-7 md:gap-10">
   {
     groups.map((g) => {
       const z = LOGO[g.tier ?? 'none'];

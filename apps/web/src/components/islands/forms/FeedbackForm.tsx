@@ -133,7 +133,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-[clamp(36px,4vw,52px)] max-w-[760px]">
+    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-9 md:gap-13 max-w-reading">
       <Honeypot />
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-3 min-w-0">
         <legend class="text-subsection font-bold mb-3 p-0">Overall, how was the evening?</legend>
@@ -158,7 +158,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
         )}
       </fieldset>
 
-      <fieldset class="border-0 p-0 m-0 flex flex-col gap-[22px] min-w-0">
+      <fieldset class="border-0 p-0 m-0 flex flex-col gap-5 min-w-0">
         <legend class="text-subsection font-bold mb-1.5 p-0">Help us shape the next one</legend>
         <p class="m-0 text-body text-ink-2">All optional. A sentence is plenty; a paragraph is a gift.</p>
         {OPEN.map(([k, label, hint, rows]) => (
@@ -180,7 +180,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
             autoComplete="given-name"
             value={quoteName}
             onInput={(e) => setQuoteName(e.currentTarget.value)}
-            class="max-w-[440px]"
+            class="max-w-110"
           />
         )}
         <TextField
@@ -192,7 +192,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
           onInput={(e) => setEmail(e.currentTarget.value)}
           invalid={emailBad}
           error={emailBad ? 'Check the email, or leave it empty.' : ''}
-          class="max-w-[440px]"
+          class="max-w-110"
         />
       </div>
 

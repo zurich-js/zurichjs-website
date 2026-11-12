@@ -21,11 +21,11 @@ export function SegmentedControl<T extends string>({ legend, options, value, onC
   return (
     <fieldset class={['m-0 p-0 border-0 min-w-0', extra].filter(Boolean).join(' ')}>
       <legend class="sr-only">{legend}</legend>
-      <div class="inline-flex gap-1 h-12 p-1 rounded-pill bg-grey">
+      <div class="inline-flex gap-1 h-control p-1 rounded-pill bg-grey">
         {options.map((o) => (
           <label
             key={o.value}
-            class="relative inline-flex items-center justify-center h-full px-4 md:min-w-[120px] whitespace-nowrap rounded-pill font-bold text-[16px] cursor-pointer transition-colors hover:bg-grey-hover has-checked:bg-black has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2"
+            class="relative inline-flex items-center justify-center h-full px-4 md:min-w-30 whitespace-nowrap rounded-pill font-bold text-compact cursor-pointer transition-colors hover:bg-grey-hover has-checked:bg-black has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2"
           >
             {o.label}
             <input

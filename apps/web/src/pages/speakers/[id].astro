@@ -79,11 +79,11 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
 >
   <PageOpening slot="opening" title={s.name} crumb={{ label: 'Speakers', href: '/speakers', here: s.name }} sub={roleLine} />
 
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-14 gap-y-7 items-start">
-      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] text-[88px]!" />}
-      <div class="flex flex-col gap-[18px] col-span-full md:col-span-2 min-w-0">
-        <RichText text={s.bio} class="text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty" />
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
+    <div class="grid grid-cols-auto-md gap-x-14 gap-y-7 items-start">
+      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-85" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-85 text-display!" />}
+      <div class="flex flex-col gap-4 col-span-full md:col-span-2 min-w-0">
+        <RichText text={s.bio} class="text-lead text-ink-2 max-w-reading text-pretty" />
         {
           s.links.length > 0 && (
             <div class="flex flex-wrap gap-2">
@@ -143,7 +143,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                   </ul>
                 )}
                 {evs.length > 0 ? (
-                  <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-2.5 mt-1" aria-label="Where this talk was given">
+                  <ul class="m-0 p-0 list-none grid grid-cols-auto-md gap-2.5 mt-1" aria-label="Where this talk was given">
                     {evs.map((e) => {
                       const soon = upcomingIds.has(e.slug);
                       const d = e.startsAt ? dateParts(e.startsAt) : undefined;
@@ -154,29 +154,30 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                             class="group no-underline text-black rounded-(--radius-nested) bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
                           >
                             <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
-                              <span class="text-[12px] font-bold leading-none">{d?.mon ?? 'TBC'}</span>
-                              <span class="text-[21px] font-bold leading-tight">
+                              <span class="text-meta font-bold leading-none">{d?.mon ?? 'TBC'}</span>
+                              <span class="text-card-title font-bold leading-tight">
                                 {d?.day ?? '?'}
-                                <span class="text-[11px] align-top">{d?.suffix}</span>
+                                <span class="text-meta align-top">{d?.suffix}</span>
                               </span>
-                              <span class="text-[11px] leading-none">{d?.year}</span>
+                              <span class="text-meta leading-none">{d?.year}</span>
                             </span>
                             <span class="flex flex-col gap-0.5 min-w-0">
-                              <span class="text-[13px] font-bold text-ink-2">{soon ? 'Coming up at' : 'Given at'}</span>
-                              <span class="text-[16px] font-bold leading-snug text-pretty">{e.title}</span>
-                              <span class="text-[14px] text-ink-2">{e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}</span>
+                              <span class="text-compact font-bold leading-snug text-pretty">{e.title}</span>
+                              <span class="text-meta text-ink-2">
+                                {soon ? 'Coming up' : 'Given'} · {e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}
+                              </span>
                             </span>
-                            <span aria-hidden="true" class="text-[20px] font-bold transition-transform group-hover:translate-x-0.5">→</span>
+                            <span aria-hidden="true" class="text-card-title font-bold transition-transform group-hover:translate-x-0.5">→</span>
                           </a>
                         </li>
                       );
                     })}
                   </ul>
                 ) : (
-                  <p class="m-0 text-[15px] text-ink-2">The event for this talk isn’t linked yet.</p>
+                  <p class="m-0 text-meta text-ink-2">The event for this talk isn’t linked yet.</p>
                 )}
                 {t.slidesUrl && (
-                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-[16px] font-bold underline underline-offset-[3px]">
+                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-compact font-bold underline underline-offset-3">
                     Slides (opens in a new tab)
                   </a>
                 )}

@@ -116,9 +116,9 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
   ].join('\n');
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate aria-label="Volunteer application" class="relative flex flex-col gap-6 max-w-[720px]">
+    <form ref={formRef} onSubmit={submit} noValidate aria-label="Volunteer application" class="relative flex flex-col gap-6 max-w-reading">
       <Honeypot />
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-3.5">
+      <div class="grid grid-cols-auto-sm gap-3.5">
         <TextField
           label="Name"
           name="name"

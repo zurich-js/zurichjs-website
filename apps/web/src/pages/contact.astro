@@ -93,9 +93,9 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
     title="Contact the organisers"
     sub="Questions about a meetup, speaking, hosting or anything else. Real people read these, usually between a day job and the next meetup."
   />
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(40px,5vw,80px)] items-start">
-      <section aria-labelledby="h-routes" class="flex flex-col gap-[18px]">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
+    <div class="grid grid-cols-auto-lg gap-10 md:gap-16 items-start">
+      <section aria-labelledby="h-routes" class="flex flex-col gap-4">
         <h2 id="h-routes" class="m-0 text-subsection font-bold">Faster for these</h2>
         <div class="flex flex-col gap-2.5">
           {
@@ -121,13 +121,13 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
           <a href="/policies/code-of-conduct#reporting-guidelines" class="font-bold self-start">Read the code of conduct</a>
         </Notice>
       </section>
-      <section aria-labelledby="h-cform" class="flex flex-col gap-[18px]">
+      <section aria-labelledby="h-cform" class="flex flex-col gap-4">
         <h2 id="h-cform" class="m-0 text-subsection font-bold">Send a message</h2>
         <ContactForm client:load />
       </section>
     </div>
 
-    <section aria-labelledby="h-reach" class="flex flex-col gap-[18px]">
+    <section aria-labelledby="h-reach" class="flex flex-col gap-4">
       <h2 id="h-reach" class="m-0 text-subsection font-bold">Other ways to reach us</h2>
       <AutoGrid min="sm" gap="sm">
         {
@@ -207,7 +207,7 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
       </AutoGrid>
     </section>
 
-    <section aria-labelledby="h-faq" class="flex flex-col gap-[18px] max-w-[880px]">
+    <section aria-labelledby="h-faq" class="flex flex-col gap-4 max-w-wide">
       <h2 id="h-faq" class="m-0 text-subsection font-bold">Frequently asked questions</h2>
       <div class="flex flex-col gap-3">
         {

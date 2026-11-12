@@ -130,8 +130,8 @@ const aiTalks = pastEvents(events, BUILD_TIME)
     </div>
   </PageOpening>
 
-  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
-    <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
+  <div class="flex flex-col gap-section pt-page-top pb-page-end">
+    <section aria-labelledby="h-why" class="px-gut grid grid-cols-auto-lg gap-8 md:gap-16 items-start">
       <h2 id="h-why" class="m-0 text-section font-bold">Why AI at a JavaScript meetup?</h2>
       <div class="flex flex-col gap-4 text-body text-ink-2 max-w-reading">
         <p class="m-0">
@@ -142,7 +142,7 @@ const aiTalks = pastEvents(events, BUILD_TIME)
       </div>
     </section>
 
-    <section aria-label="What the AI talks are like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+    <section aria-label="What the AI talks are like" class="px-gut grid grid-cols-auto-sm gap-4">
       {
         PILLARS.map((p) => (
           <Card title={p.h}>
@@ -152,8 +152,8 @@ const aiTalks = pastEvents(events, BUILD_TIME)
       }
     </section>
 
-    <section aria-labelledby="h-web" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
-      <div class="flex flex-col gap-4 max-w-[760px]">
+    <section aria-labelledby="h-web" class="px-gut flex flex-col gap-12">
+      <div class="flex flex-col gap-4 max-w-reading">
         <h2 id="h-web" class="m-0 text-section font-bold">What AI looks like for web developers</h2>
         <p class="m-0 text-body text-ink-2">
           We’re not training models. We’re integrating them. The practical reality of AI for most web developers is: call an API, manage prompts, handle streaming, deal with rate limits, build interfaces that users actually understand.
@@ -183,7 +183,7 @@ const aiTalks = pastEvents(events, BUILD_TIME)
         <PointList items={WHO} min={280} />
       </div>
 
-      <div class="flex flex-col gap-4 max-w-[760px]">
+      <div class="flex flex-col gap-4 max-w-reading">
         <h3 class="m-0 text-subsection font-bold">Zurich’s AI ecosystem</h3>
         <p class="m-0 text-body text-ink-2">
           Zurich is emerging as a major AI hub in Europe. ZurichJS connects with the broader AI community including ETH Zurich AI research, Google Zurich’s AI teams, and numerous AI startups. Our meetups bridge academic AI research with practical industry
@@ -199,7 +199,7 @@ const aiTalks = pastEvents(events, BUILD_TIME)
             AI talks from past meetups
             <Fragment slot="sub">A few of the AI talks given at ZurichJS, with the evening they were part of.</Fragment>
           </SectionHeading>
-          <ul class="m-0 p-0 list-none grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]">
+          <ul class="m-0 p-0 list-none grid gap-3 grid-cols-auto-md">
             {aiTalks.map((t) => (
               <Card as="li">
                 <a href={eventHref(t.ev)} class="text-card-title font-bold text-black no-underline hover:underline text-pretty wrap-anywhere">

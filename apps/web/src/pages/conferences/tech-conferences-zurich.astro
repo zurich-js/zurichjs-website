@@ -147,7 +147,7 @@ const h3 = 'm-0 text-subsection font-bold';
     </div>
   </PageOpening>
 
-  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
+  <div class="flex flex-col gap-section pt-page-top pb-page-end">
     <section aria-labelledby="h-partner" class="px-gut flex flex-col gap-7">
       <SectionHeading id="h-partner">
         Why this partnership matters
@@ -156,7 +156,7 @@ const h3 = 'm-0 text-subsection font-bold';
           with it.
         </Fragment>
       </SectionHeading>
-      <ul class="m-0 p-0 list-none grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))]">
+      <ul class="m-0 p-0 list-none grid gap-4 grid-cols-auto-md">
         {
           PARTNERSHIP.map((p) => (
             <Card as="li" title={p.t}>
@@ -167,7 +167,7 @@ const h3 = 'm-0 text-subsection font-bold';
       </ul>
     </section>
 
-    <section aria-label="What ZurichJS offers" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+    <section aria-label="What ZurichJS offers" class="px-gut grid grid-cols-auto-sm gap-4">
       {
         FORMATS.map((f) => (
           <Card title={f.h}>
@@ -182,8 +182,8 @@ const h3 = 'm-0 text-subsection font-bold';
         Understanding meetups vs conferences
         <Fragment slot="sub">Both meetups and conferences serve important roles in the developer community. Here’s how they complement each other:</Fragment>
       </SectionHeading>
-      <div class="overflow-x-auto max-w-[1000px]">
-        <table class="w-full min-w-[300px] border-separate border-spacing-0 text-[16px] md:text-[17px] leading-[1.45]">
+      <div class="overflow-x-auto max-w-wide">
+        <table class="w-full min-w-75 border-separate border-spacing-0 text-compact md:text-body">
           <thead>
             <tr>
               <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-l-2xl">Aspect</th>
@@ -206,7 +206,7 @@ const h3 = 'm-0 text-subsection font-bold';
           </tbody>
         </table>
       </div>
-      <div class="flex flex-col gap-4 max-w-[760px]">
+      <div class="flex flex-col gap-4 max-w-reading">
         <h3 class={h3}>What we’ve learned</h3>
         <p class="m-0 text-body text-ink-2">
           The developers who get the most out of Zurich’s tech scene do both: they attend our monthly meetups for consistent community connection, and they go to conferences for those immersive multi-day experiences.
@@ -220,12 +220,12 @@ const h3 = 'm-0 text-subsection font-bold';
       </div>
     </section>
 
-    <section aria-labelledby="h-guide" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
-      <h2 id="h-guide" class="m-0 text-section font-bold max-w-[900px] text-balance">Complete guide to tech conferences & meetups in Zurich</h2>
+    <section aria-labelledby="h-guide" class="px-gut flex flex-col gap-12">
+      <h2 id="h-guide" class="m-0 text-section font-bold max-w-wide text-balance">Complete guide to tech conferences & meetups in Zurich</h2>
 
       <div class="flex flex-col gap-6">
         <h3 class={h3}>Major tech conferences in Zurich</h3>
-        <div class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))]">
+        <div class="grid gap-4 grid-cols-auto-lg">
           {
             CONFERENCES.map((c) => (
               <Card title={c.name} level="h4" padding="lg">
@@ -246,7 +246,7 @@ const h3 = 'm-0 text-subsection font-bold';
       </div>
 
       <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <div class="flex flex-col gap-2.5 max-w-reading">
           <h3 class={h3}>Why attend ZurichJS meetups?</h3>
           <p class="m-0 text-body text-ink-2">
             As a registered non-profit, ZurichJS is committed to making tech education accessible to everyone. Our regular meetups are free thanks to partners, members and donations:
@@ -256,7 +256,7 @@ const h3 = 'm-0 text-subsection font-bold';
       </div>
 
       <div class="flex flex-col gap-6">
-        <div class="flex flex-col gap-2.5 max-w-[760px]">
+        <div class="flex flex-col gap-2.5 max-w-reading">
           <h3 class={h3}>Topics we cover</h3>
           <p class="m-0 text-body text-ink-2">ZurichJS covers the latest in JavaScript and web development, often featuring topics you’ll see at conferences, but in a more interactive format:</p>
         </div>

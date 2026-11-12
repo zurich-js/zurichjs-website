@@ -958,10 +958,14 @@ test.describe('home (Bogdan’s review)', () => {
     // Focus inside holds the rotation, so the active card only moves when we move it.
     await carousel.getByRole('button', { name: 'Next speaker' }).focus();
     const first = await active().getAttribute('href');
+    // The arc ignores steps asked for while a card is still moving (520ms, by design), so each step waits for the move.
+    const settle = () => page.waitForTimeout(600);
     await carousel.getByRole('button', { name: 'Next speaker' }).click();
     await expect(active()).not.toHaveAttribute('href', first!);
+    await settle();
     await carousel.getByRole('button', { name: 'Previous speaker' }).click();
     await expect(active()).toHaveAttribute('href', first!);
+    await settle();
     await active().focus();
     await page.keyboard.press('ArrowRight');
     await expect(active()).not.toHaveAttribute('href', first!);

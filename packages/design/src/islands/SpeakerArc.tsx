@@ -191,17 +191,17 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               }}
               class={cx(
                 'group absolute left-1/2 top-0 overflow-hidden rounded-card bg-ink no-underline focus-visible:outline-offset-4',
-                'transition-[transform,opacity,box-shadow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+                'transition-[transform,box-shadow,visibility] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
                 isActive ? 'shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)]' : 'shadow-none',
-                // Opacity is set inline; a hovered side card shows in full, so it beats the inline value.
-                opacity === 0 ? 'pointer-events-none' : !isActive && 'hover:opacity-100!',
+                opacity === 0 && 'pointer-events-none',
               )}
               style={{
                 width: `${cardW}px`,
                 height: `${cardH}px`,
                 marginLeft: `${-cardW / 2}px`,
                 transform: `translate(${x}px, ${y}px) scale(${scale})`,
-                opacity,
+                // Fully faded cards are hidden outright; partly washed-out ones get a white veil (below).
+                visibility: opacity === 0 ? 'hidden' : undefined,
                 zIndex: 10 - a,
               }}
             >
@@ -241,6 +241,15 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
                 <span class="text-white font-bold text-card-title">{sp.name}</span>
                 {sp.role && <span class="text-grey-light line-clamp-2 text-compact">{sp.role}</span>}
               </span>
+              {/*
+                The wash: a white veil over side cards rather than the card's own opacity, so on the white page it looks
+                the same while the text underneath keeps its real contrast. A hovered side card shows in full.
+              */}
+              <span
+                aria-hidden="true"
+                class="absolute inset-0 bg-white pointer-events-none transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none group-hover:opacity-0!"
+                style={{ opacity: 1 - opacity }}
+              />
             </a>
           );
         })}

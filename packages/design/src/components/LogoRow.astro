@@ -11,9 +11,11 @@ interface Props {
   items: { partner: Partner; caption?: string }[];
 }
 const { items } = Astro.props;
+// Captions hang under their logos, so captioned logos line up at the bottom; bare logos line up on their middles.
+const captioned = items.some((i) => i.caption);
 ---
 
-<ul class="m-0 p-0 list-none flex flex-wrap items-end gap-x-12 gap-y-8">
+<ul class:list={['m-0 p-0 list-none flex flex-wrap gap-x-12 gap-y-8', captioned ? 'items-end' : 'items-center']}>
   {
     items.map(({ partner: p, caption }) => {
       const size = logoSize(p.logoRatio, 6400, 64) ?? { w: 180, h: 56 };

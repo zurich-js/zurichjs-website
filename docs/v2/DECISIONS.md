@@ -251,6 +251,19 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - The handoff between functions is HMAC-signed with the Slack signing secret.
 - **No model in CI.** Tests use an in-memory Sanity and the AI SDK's scripted mock model.
 
+## Design system v2 (owner, 12th November 2026)
+
+A design audit found the site visually consistent but built from duplicates: four tag versions, several card styles, 51 text sizes and controls from 36 to 56px tall. A proposal was built as a page-only route (`/opus`), reviewed with the owner over many rounds, and then rolled out to the whole site (PR zurich-js/zurichjs-website#82). The page was removed once the site used the system. The rules are in `docs/design-system.md`.
+
+- **Type:** nine roles (display, title, section, subsection, card-title, lead, body 18px, compact 16px, meta 14px). All 17px text became body; Tailwind's default text scale is off.
+- **Buttons:** primary, secondary, cta and plain (interface controls only), one height (48px, also form fields) and no size prop. The yellow hover is `#E3CB16`. A tertiary button is not decided.
+- **Switches** are 48px in total on native radios; **filter chips** 44px; **tags** have 6px corners, not pills (the AGENTS.md brand line changed with it).
+- **Rounding formula:** outer radius = inner radius + padding + border, applied by Card's `edge` prop.
+- **Cards:** one Card with a surface (outline, filled, plain, white) and a behaviour by props (static, link with an arrow, disclosure with a chevron, action with footer buttons). The outline frame is functional, not decoration. No eyebrows: times and labels go in a facts row under the title.
+- **Logos:** walls in a packed grid, black at rest and in colour on hover (with an optional black file and background colour per partner); inline logos keep their colours.
+- **Home page:** the next meetup as a media link card, and the speaker arc (roles, not talk titles; holds on hover; one motion exception, see `docs/design-system.md`).
+- **Variants live as props of design-system components**, not as cva recipes in `components/ui/` as `docs/v2/UI-AUDIT.md` had planned; that audit is marked superseded.
+
 ## Launch restoration after the V2 audit (owner, 2026-11-01)
 
 An audit of V2 against production found missing functionality and inaccurate content. The owner's brief kept workshops, T-shirt sales and accounts removed, and restored the rest.

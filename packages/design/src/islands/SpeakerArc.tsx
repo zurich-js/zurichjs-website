@@ -154,7 +154,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
     <div ref={root} role="region" aria-roledescription="carousel" aria-label="ZurichJS speakers" class="relative w-full flex flex-col items-center">
       <div
         ref={stage}
-        class="relative w-full overflow-hidden touch-pan-y overscroll-x-contain select-none"
+        class="relative w-full overflow-hidden touch-pan-y overscroll-x-contain select-none mask-x-from-90% mask-x-to-100%"
         style={{ height: `${stageH + SHADOW}px` }}
         onPointerDown={onDown}
         onPointerUp={onUp}
@@ -191,7 +191,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               }}
               class={cx(
                 'group absolute left-1/2 top-0 overflow-hidden rounded-card bg-ink no-underline focus-visible:outline-offset-4',
-                'transition-[transform,box-shadow,visibility] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+                'transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
                 isActive ? 'shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)]' : 'shadow-none',
                 opacity === 0 && 'pointer-events-none',
               )}

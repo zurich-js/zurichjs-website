@@ -61,17 +61,17 @@ These rules are mandatory for every UI change. They override convenience. If a r
 - Never use inline `style={{}}` for spacing, colour, type, radius or shadow. A value that exists only at runtime (a CSS custom property, an image focal point from Sanity) needs an `eslint-disable-next-line no-restricted-syntax -- <reason>` comment.
 - Never hardcode hex, rgb, px or rem values in components.
 - If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/tokens.ts`, with a one-line justification, and wait for approval before using it.
-- Common snaps: 16px = `text-base`, 18px = `text-lg`, 44px = `11`, 48px = `12`. Tailwind 4 spacing takes quarter steps, so 18px = `4.5` and 22px = `5.5` are exact. Prefer the scale over "pixel-perfect" guesses.
+- Text sizes come only from the nine type roles (`text-display` … `text-meta`); Tailwind's default text scale is switched off, and 17px is `text-body`. Heights: `min-h-control` (48px: buttons, switches, fields), `min-h-chip` (44px: filter chips), `h-tag-sm` and `h-tag-md`. Spacing: `p-card-sm|md|lg`, `gap-section`, `pt-page-top`, `pb-page-end`, then Tailwind's 4px scale for small layout gaps. Widths: `max-w-reading|wide|form|site`. The full list is in `docs/design-system.md`.
 
 ### 2. Single source of truth for tokens
 
 - Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read the tokens file before writing any UI. Do not invent tokens that already exist under a different name.
-- Semantic names only: `text-muted`, `bg-surface`, `border-danger`, `space-touch`. Never name tokens after their value (`grey-line-2`).
+- Semantic names only, named for their job (`text-card-title`, `min-h-control`, `rounded-tag`, `danger-soft`). Never name tokens after their value (`grey-line-2`).
 - Colours, type scale, spacing, radius, shadow, z-index and breakpoints are all tokenised. The touch target minimum is a token, not a repeated literal.
 
 ### 3. Components own variants, pages own layout
 
-- Visual variants (size, intent, state, invalid, disabled) are defined ONCE in a primitive in `packages/design/src/components/ui/`, using cva or tailwind-variants. (The primitives move there during the UI compliance work in `docs/v2/UI-AUDIT.md`; until one has moved, its current home is `packages/design/src/components`, `packages/design/src/islands` or `packages/design/src/recipes.ts`.)
+- Visual variants (surface, variant, tone, state, invalid, disabled) are defined ONCE, as props of a design-system component: Astro components in `packages/design/src/components`, their Preact twins in `packages/design/src/islands`, and the class recipes they share in `packages/design/src/recipes.ts`. The catalogue is the Components table in `docs/design-system.md` and the `/design` gallery.
 - No class-string-returning helper functions (like `optionClass()`) outside a primitive. No long `cx(...)` chains in feature components or pages.
 - Feature components compose primitives. They do not restyle them. Passing `class` to override a primitive's tokens is a smell: add a variant instead.
 - A page or feature component may only use layout utilities (flex, grid, gap, padding from the scale, responsive prefixes).

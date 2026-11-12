@@ -95,6 +95,14 @@ function saveDraft(d: Draft) {
   }
 }
 
+/** One answer for two saved fields: `returning` and `firstTalk` never both hold. */
+const SPEAKER_HISTORY = [
+  { value: 'new', label: 'No, not yet.' },
+  { value: 'first', label: 'No, and this would be my first talk. I’d like help preparing.' },
+  { value: 'returning', label: 'Yes, I’ve spoken at ZurichJS before.' },
+] as const;
+const history = (d: Draft) => (d.returning ? 'returning' : d.firstTalk ? 'first' : 'new');
+
 const lengthLabel = (v: Length) => TALK_LENGTHS.find((l) => l.value === v)!;
 
 /** The proposal as plain text, for the email fallback. */
@@ -260,13 +268,14 @@ export default function CfpForm({ nextHref }: Props) {
   // Saved on every change, not in an effect, so the last keystroke survives a reload or a closed tab.
   const latest = useRef(d);
   latest.current = d;
-  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => {
-    const next = { ...latest.current, [k]: v };
+  const patch = (change: Partial<Draft>) => {
+    const next = { ...latest.current, ...change };
     latest.current = next;
     setCleared(false);
     setD(next);
     saveDraft(next);
   };
+  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => patch({ [k]: v } as Partial<Draft>);
 
   // The draft lives in this browser only.
   useEffect(() => {
@@ -378,21 +387,26 @@ export default function CfpForm({ nextHref }: Props) {
               />
             </div>
             <p class="m-0 -mt-2 text-compact text-grey-text">Your email is only used to reply, and to find your speaker page if you’ve spoken here before.</p>
-            <div class="flex flex-col gap-3">
-              <Checkbox label="I’ve spoken at ZurichJS before." name="returning" checked={d.returning} onChange={(e) => set('returning', e.currentTarget.checked)} />
-              {d.returning && (
-                <p class="m-0 pl-8.5 text-compact text-ink-2">
-                  Leave your profile below empty to keep your speaker page as it is. Anything you add goes to the organisers, who update your page; it isn’t published straight
-                  away.
-                </p>
-              )}
-              <Checkbox
-                label="This would be my first talk. I’d like help preparing."
-                name="firstTalk"
-                checked={d.firstTalk}
-                onChange={(e) => set('firstTalk', e.currentTarget.checked)}
-              />
-            </div>
+            <ChoiceGroup legend="Have you spoken at ZurichJS before?" radio class="flex flex-col gap-2">
+              {SPEAKER_HISTORY.map((h) => (
+                <label key={h.value} class={optionClass(false, 'w-full')}>
+                  <input
+                    type="radio"
+                    name="history"
+                    value={h.value}
+                    checked={history(d) === h.value}
+                    onChange={() => patch({ returning: h.value === 'returning', firstTalk: h.value === 'first' })}
+                    class={optionInput}
+                  />
+                  {h.label}
+                </label>
+              ))}
+            </ChoiceGroup>
+            {d.returning && (
+              <p class="m-0 text-compact text-ink-2">
+                Leave your profile below empty to keep your speaker page as it is. Anything you add goes to the organisers, who update your page; it isn’t published straight away.
+              </p>
+            )}
           </fieldset>
 
           <fieldset class={section}>
@@ -540,7 +554,7 @@ export default function CfpForm({ nextHref }: Props) {
           </fieldset>
           <fieldset class={section}>
             <legend class={sectionTitle}>Before you send</legend>
-            <div class={cx('rounded-card p-card-md flex flex-col gap-2', bad('agree') ? 'bg-danger-soft' : 'bg-grey')}>
+            <div class="flex flex-col gap-2">
               <Checkbox
                 label="I understand that travel and accommodation can’t be covered for meetup talks, because our events are free, and that acceptance depends on the theme and on the speaking slots at upcoming meetups."
                 name="agree"

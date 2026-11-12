@@ -1,5 +1,4 @@
 import { useState } from 'preact/hooks';
-import { cardClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Check } from '@zurichjs/design/islands/Check';
 import { ChoiceCard } from '@zurichjs/design/islands/ChoiceCard';
@@ -95,11 +94,11 @@ export default function MembershipForm() {
           </p>
         </div>
 
-        <div class={cardClass('outline', 'lg')}>
+        <div class="flex flex-col items-center gap-3 text-center">
           <p data-join-summary class="m-0 text-card-title font-bold" aria-live="polite">
             {t.name}, {fee}
           </p>
-          <Button href={`/membership/account?level=${tier}&cycle=${cycle}`} variant="cta" class="self-start">
+          <Button href={`/membership/account?level=${tier}&cycle=${cycle}`} variant="cta">
             Join as {t.name}
           </Button>
           <p class="m-0 text-compact text-ink-2">Already a member? Sign in there to see your membership.</p>

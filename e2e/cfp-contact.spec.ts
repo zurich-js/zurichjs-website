@@ -58,7 +58,7 @@ test.describe('talk proposals (/cfp)', () => {
     await expect(agree).toHaveAttribute('aria-invalid', 'true');
     await expect(form.getByText('Tick the box to confirm you’ve read this.')).toBeVisible();
     // Returning speakers may leave the profile out.
-    await form.getByLabel('I’ve spoken at ZurichJS before.').check();
+    await form.getByLabel('Yes, I’ve spoken at ZurichJS before.').check();
     await expect(form.getByLabel('Job title (optional)')).not.toHaveAttribute('aria-invalid', 'true');
   });
 

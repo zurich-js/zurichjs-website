@@ -5,7 +5,7 @@ interface Props {
   variant?: ButtonVariant;
   /** On a black surface: the same roles, mirrored. */
   inverse?: boolean;
-  /** Full width on phones, its own width from 800px. */
+  /** Full width on phones (below 480px), its own width from there. */
   grow?: boolean;
   /** An SVG path on a 24 by 24 viewBox. */
   icon?: string;

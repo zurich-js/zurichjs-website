@@ -51,7 +51,8 @@ export const buttonClass = ({ variant = 'primary', inverse = false, iconOnly = f
     (inverse ? buttonInverse : buttonVariants)[variant],
     variant !== 'plain' && buttonDisabled,
     iconOnly ? 'p-0' : cx(variant === 'plain' ? 'px-4' : 'px-6', 'text-body leading-normal'),
-    grow && 'grow basis-full md:grow-0 md:basis-auto',
+    // Full width only on phones: from 480px buttons keep their own width and sit side by side (owner, 12th November 2026).
+    grow && 'max-phone:grow max-phone:basis-full',
     extra,
   );
 

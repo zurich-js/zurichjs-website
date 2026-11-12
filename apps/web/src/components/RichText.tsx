@@ -20,7 +20,7 @@ interface Props {
 const line = (parts: Inline[]) =>
   parts.map((p, i) =>
     'href' in p ? (
-      <a key={i} href={p.href} rel="nofollow noopener" target="_blank" class="underline underline-offset-[3px] break-words">
+      <a key={i} href={p.href} rel="nofollow noopener" target="_blank" class="underline underline-offset-3 break-words">
         {p.text}
       </a>
     ) : (
@@ -89,7 +89,7 @@ export function RichText({ text, class: cls, clampLines, moreLabels = ['Read mor
           aria-expanded={expanded}
           aria-controls={id}
           onClick={() => setExpanded((e) => !e)}
-          class={moreClass ?? 'p-0 bg-transparent border-0 font-bold text-[16px] text-black underline underline-offset-[3px] cursor-pointer'}
+          class={moreClass ?? 'p-0 bg-transparent border-0 font-bold text-compact text-black underline underline-offset-3 cursor-pointer'}
         >
           {expanded ? moreLabels[1] : moreLabels[0]}
         </button>

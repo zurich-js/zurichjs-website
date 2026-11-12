@@ -175,7 +175,18 @@ export type SponsorTier = 'champion' | 'builder' | 'friend' | 'supporter';
 export interface Partner {
   id: string;
   name: string;
+  /** The colour logo. */
   logo?: string;
+  /** A black version for logo walls; without it the colour logo is drawn in black by a filter. */
+  logoBlack?: string;
+  /** The colour behind the colour logo on hover in a logo wall (hex); without it, white. */
+  logoBackground?: string;
+  /** Width / height of `logo`, to size logos to the same visual weight. */
+  logoRatio?: number;
+  /** The logo file has a solid background: the black filter thresholds it and multiplies it into its cell. */
+  logoOpaque?: boolean;
+  /** White shapes inside a coloured one (AXA): the black filter thresholds it so the white parts stay. */
+  logoKnockout?: boolean;
   url?: string;
   kinds: PartnerKind[];
   tier?: SponsorTier;

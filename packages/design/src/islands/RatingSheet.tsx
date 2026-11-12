@@ -69,30 +69,30 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
     <Modal open={!!target} onClose={close} labelledBy="rate-h">
       {target && phase !== 'done' && (
         <div class="flex flex-col gap-4">
-          <h2 id="rate-h" class="m-0 text-[24px] leading-tight font-bold text-pretty">
+          <h2 id="rate-h" class="m-0 text-card-title font-bold text-pretty">
             {target.title}
           </h2>
-          <div class="text-[16px] text-ink-2">{target.sub}</div>
+          <div class="text-compact text-ink-2">{target.sub}</div>
           <StarRating value={stars} onChange={setStars} label="Rating from 1 to 5" />
-          <label class="flex flex-col gap-1.5 text-[15px] font-bold">
+          <label class="flex flex-col gap-1.5 text-compact font-bold">
             {target.key === 'evening' ? 'Anything for the organisers? (optional)' : 'Anything for the speaker? (optional)'}
             <textarea
               value={note}
               onInput={(e) => setNote(e.currentTarget.value)}
               rows={3}
-              class="border border-grey-line rounded-[14px] py-2.5 px-3 text-[16px] font-normal resize-y"
+              class="border border-grey-line rounded-field py-3 px-3.5 text-body font-normal resize-y"
             />
           </label>
           {phase === 'error' && (
-            <p role="alert" class="m-0 text-[15px] text-danger">
+            <p role="alert" class="m-0 text-meta text-danger">
               {error}
             </p>
           )}
           <div class="flex gap-2.5">
-            <Button variant="white" class="flex-1" onClick={close}>
+            <Button variant="secondary" class="flex-1" onClick={close}>
               Later
             </Button>
-            <Button variant="yellow" class="flex-1" onClick={submit} disabled={!stars || phase === 'sending'}>
+            <Button variant="cta" class="flex-1" onClick={submit} disabled={!stars || phase === 'sending'}>
               {phase === 'sending' ? 'Sending…' : 'Send rating'}
             </Button>
           </div>
@@ -100,14 +100,14 @@ export function RatingSheet({ onSubmit, eventId, target, pending, onRated, onNex
       )}
       {target && phase === 'done' && (
         <div role="status" class="flex flex-col gap-3.5">
-          <h2 id="rate-h" class="m-0 text-[26px] font-bold">
+          <h2 id="rate-h" class="m-0 text-card-title font-bold">
             Thanks, that helps.
           </h2>
-          <p class="m-0 text-[17px] leading-[1.55]">
+          <p class="m-0 text-body">
             {target.key === 'evening' ? 'The organisers read every rating.' : 'The speaker and the organisers can read your rating and comment. Nothing is published.'}
           </p>
           <Button
-            variant="yellow"
+            variant="cta"
             onClick={() => {
               const next = pending[0];
               reset();

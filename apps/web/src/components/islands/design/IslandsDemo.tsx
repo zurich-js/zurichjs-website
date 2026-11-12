@@ -28,19 +28,17 @@ export default function IslandsDemo() {
       </div>
       <div class="flex flex-wrap gap-3 items-center">
         <Button onClick={() => setOpen(true)}>Open the modal</Button>
-        <Button variant="outline-black" disabled>
+        <Button variant="secondary" disabled>
           Disabled
         </Button>
       </div>
       <Modal open={open} onClose={() => setOpen(false)} labelledBy="demo-modal-title">
         <div class="flex flex-col gap-4 p-6">
-          <h2 id="demo-modal-title" class="m-0 text-[26px] font-bold">
+          <h2 id="demo-modal-title" class="m-0 text-subsection font-bold">
             A modal
           </h2>
-          <p class="m-0 text-[18px] leading-[1.55]">Focus moves inside, Escape closes it, and focus returns to the button.</p>
-          <Button variant="yellow" onClick={() => setOpen(false)}>
-            Close
-          </Button>
+          <p class="m-0 text-body">Focus moves inside, Escape closes it, and focus returns to the button.</p>
+          <Button onClick={() => setOpen(false)}>Close</Button>
         </div>
       </Modal>
     </div>

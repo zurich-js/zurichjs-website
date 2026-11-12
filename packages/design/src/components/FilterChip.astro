@@ -1,0 +1,17 @@
+---
+/** A filter that is a link with the filter in the URL. 44px, a control, so it is bold and outlined. */
+import { chipClass, cx } from '../recipes';
+
+interface Props {
+  href: string;
+  selected?: boolean;
+  count?: number;
+  class?: string;
+}
+const { href, selected = false, count, class: extra } = Astro.props;
+---
+
+<a href={href} aria-current={selected ? 'true' : undefined} class={chipClass(selected, extra)}>
+  <slot />
+  {count !== undefined && <span class={cx('font-normal', selected ? 'text-grey-light' : 'text-ink-2')}>{count}</span>}
+</a>

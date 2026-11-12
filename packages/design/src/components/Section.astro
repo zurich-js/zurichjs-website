@@ -1,0 +1,34 @@
+---
+/**
+ * A page section. Owns the gutter, the heading block and its width, and the space between the heading
+ * and the content. Pages stack Sections; the space between them is the page's `gap-section`.
+ */
+import { cx } from '../recipes';
+import Heading from './Heading.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  /** "section" for top-level parts of a page, "subsection" for parts inside them. */
+  size?: 'section' | 'subsection';
+  as?: 'h2' | 'h3';
+  width?: 'site' | 'wide' | 'reading';
+  class?: string;
+}
+const { id, title, size = 'section', as = 'h2', width = 'site', class: extra } = Astro.props;
+const WIDTH = { site: '', wide: 'max-w-wide', reading: 'max-w-reading' };
+---
+
+<section aria-labelledby={id} class={cx('px-gut flex flex-col', size === 'section' ? 'gap-8' : 'gap-5', extra)}>
+  <div class="flex flex-col gap-3 max-w-reading">
+    <Heading as={as} size={size} id={id}>{title}</Heading>
+    {
+      Astro.slots.has('sub') && (
+        <div class="text-body text-ink-2 text-pretty">
+          <slot name="sub" />
+        </div>
+      )
+    }
+  </div>
+  {Astro.slots.has('default') && <div class={cx('flex flex-col gap-6 min-w-0', WIDTH[width])}><slot /></div>}
+</section>

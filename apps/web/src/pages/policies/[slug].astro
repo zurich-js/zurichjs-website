@@ -6,7 +6,7 @@ import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
-import { cx } from '@zurichjs/design/recipes';
+import { chipClass } from '@zurichjs/design/recipes';
 
 export async function getStaticPaths() {
   const all = (await getCollection('policies')).sort((a, b) => a.data.order - b.data.order);
@@ -28,7 +28,7 @@ const isCoc = entry.id === 'code-of-conduct';
           <a
             href={`/policies/${p.id}`}
             aria-current={p.id === entry.id ? 'page' : undefined}
-            class={cx('no-underline min-h-[44px] px-5 rounded-pill border border-black font-bold text-[16px] inline-flex items-center', p.id === entry.id ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey')}
+            class={chipClass(p.id === entry.id)}
           >
             {p.data.tab}
           </a>

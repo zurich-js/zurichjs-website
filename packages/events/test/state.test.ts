@@ -91,7 +91,7 @@ describe('presentEvent', () => {
   it('offers the Meetup RSVP handoff while open', () => {
     const p = presentEvent(ev(), { now: at(doors - HOUR), ticketing });
     expect(p.cta).toMatchObject({ kind: 'rsvp', label: 'RSVP on Meetup', external: true });
-    expect(p.pills).toEqual([{ text: 'Meetup' }, { text: 'RSVP open', yellow: true }]);
+    expect(p.pills).toEqual([{ text: 'Meetup' }, { text: 'RSVP open' }]);
     expect(p.whenShort).toBe('Wed 18th Nov 2026, 18:30–21:30');
   });
   it('chains providers so a later one (Sane) can take over single events', () => {

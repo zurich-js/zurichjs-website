@@ -57,41 +57,41 @@ export default function EventActions({ ev, initial, url }: Props) {
         {p.cta.kind === 'feedback' ? (
           ev.agenda.some((a) => a.talk) ? (
             <>
-              <Button href="#programme" variant="yellow">
+              <Button href="#programme" variant="cta">
                 Rate the talks
               </Button>
-              <Button href={`/feedback?event=${ev.slug}`} variant="outline-white">
+              <Button href={`/feedback?event=${ev.slug}`} variant="secondary" inverse>
                 Feedback on the evening
               </Button>
             </>
           ) : (
-            <Button href={`/feedback?event=${ev.slug}`} variant="yellow">
+            <Button href={`/feedback?event=${ev.slug}`} variant="cta">
               Feedback on the evening
             </Button>
           )
         ) : (
           p.cta.href && (
-            <Button href={p.cta.href} variant="yellow" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>
+            <Button href={p.cta.href} variant="cta" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>
               {p.cta.label}
             </Button>
           )
         )}
         {p.dateKnown && state !== 'past' && state !== 'cancelled' && (
-          <Button variant="outline-white" class="text-[17px] px-5" onClick={addToCalendar}>
+          <Button variant="secondary" inverse onClick={addToCalendar}>
             Add to calendar
           </Button>
         )}
-        <Button variant="outline-white" class="text-[17px] px-5" onClick={share}>
+        <Button variant="secondary" inverse onClick={share}>
           Share
         </Button>
       </div>
-      <div role="status" class="text-[15px] text-grey-mid empty:hidden">
+      <div role="status" class="text-compact text-grey-mid empty:hidden">
         {status}
       </div>
       {state === 'past' && initial !== 'past' ? (
-        <div class="text-[15px] text-grey-mid">This meetup has taken place. Reload the page for the recap.</div>
+        <div class="text-compact text-grey-mid">This meetup has taken place. Reload the page for the recap.</div>
       ) : (
-        p.ctaNote && <div class="text-[15px] text-grey-mid">{p.ctaNote}</div>
+        p.ctaNote && <div class="text-compact text-grey-mid">{p.ctaNote}</div>
       )}
     </div>
   );

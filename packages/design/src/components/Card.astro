@@ -1,0 +1,187 @@
+---
+/**
+ * The one card. Its props decide everything; pages never pick a radius, padding or signifier.
+ *
+ * surface: what it sits on and looks like (recipes.ts: outline, filled, plain, white, inverse).
+ *
+ * behaviour: what it does, shown by one signifier that aligns with the title's first line.
+ *   static      nothing to do. No signifier.
+ *   link        the whole card is one link (`href`). Arrow. Nothing else clickable inside.
+ *   disclosure  opens in place (native <details>). Chevron that turns. Actions go in the footer.
+ *   action      buttons in the footer and no signifier: the buttons are the signifier.
+ *
+ * edge: what touches the card's edge, which sets its rounding. Outer radius = inner radius + padding + frame.
+ *   text (default)  24px.
+ *   control         a button touches it: 24px + padding (the default when there is a footer).
+ *   card            a nested card: 24px + padding.
+ *   card-control    a nested card holding buttons: 40px + padding.
+ * A shape nested inside gets `rounded-(--radius-nested)`: the card's radius minus its padding, at least 12px.
+ *
+ * No eyebrows: nothing sits above the title. Times and labels go in the "facts" slot under it (Facts).
+ * Slots: "facts", "icon", default (body; hidden until opened for a disclosure), "footer" (actions).
+ * Without `title`, the "header" slot takes the title's place, for cards that hold a custom heading.
+ * "media": an image flush with the card's edges (left from 800px, on top on phones); only the text side has padding.
+ */
+import { cardPadding, cardSurfaces, cx, opensNewTab, type CardPadding, type CardSurface } from '../recipes';
+
+export type CardEdge = 'text' | 'control' | 'card' | 'card-control';
+interface Props {
+  surface?: CardSurface;
+  padding?: CardPadding;
+  title?: string;
+  /** Heading level of the title. */
+  level?: 'h2' | 'h3' | 'h4' | 'p';
+  /** Makes the whole card one link: the arrow card. */
+  href?: string;
+  /** Opens the link in a new tab (other sites do anyway). */
+  external?: boolean;
+  /** Makes the card open in place: the chevron card. */
+  disclosure?: boolean;
+  open?: boolean;
+  as?: 'div' | 'section' | 'article' | 'li' | 'aside';
+  /** What touches the edge. Defaults to "control" when there is a footer, otherwise "text". */
+  edge?: CardEdge;
+  id?: string;
+  /** Layout only (grid placement, stretching): never sizes or colours. */
+  class?: string;
+}
+const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, disclosure = false, open = false, as: Outer = 'div', edge: edgeProp, id, class: extra } = Astro.props;
+
+const behaviour = href ? 'link' : disclosure ? 'disclosure' : 'other';
+const ext = href ? (external ?? opensNewTab(href)) : false;
+const Title = level;
+const has = {
+  media: Astro.slots.has('media'),
+  facts: Astro.slots.has('facts'),
+  icon: Astro.slots.has('icon'),
+  header: Astro.slots.has('header'),
+  body: Astro.slots.has('default'),
+  footer: Astro.slots.has('footer'),
+};
+
+const edge: CardEdge = edgeProp ?? (has.footer ? 'control' : 'text');
+/** The radius of whatever touches the edge; the card adds its own padding (and frame) to it. */
+const INNER: Record<Exclude<CardEdge, 'text'>, string> = {
+  control: 'var(--radius-control-pill)',
+  card: 'var(--radius-card)',
+  'card-control': 'var(--radius-card-sm-control)',
+};
+const pad = `var(--spacing-card-${padding})`;
+const radius = [
+  `--card-pad: ${pad}`,
+  `--card-border: ${surface === 'outline' ? '1px' : '0px'}`,
+  `--card-radius: ${edge === 'text' ? 'var(--radius-card)' : `calc(${INNER[edge]} + ${pad} + var(--card-border))`}`,
+  '--radius-nested: max(var(--radius-nested-min), calc(var(--card-radius) - var(--card-pad)))',
+].join('; ');
+
+/** Only cards that are themselves a control react to the pointer. */
+const HOVER: Record<CardSurface, string> = {
+  outline: 'hover:border-grey-mid',
+  filled: 'hover:bg-grey',
+  plain: 'hover:bg-grey-soft',
+  white: 'hover:bg-grey-soft',
+  inverse: 'hover:bg-ink-2',
+};
+const interactive = behaviour === 'link' || behaviour === 'disclosure';
+const box = cx(
+  'group relative min-w-0 rounded-(--card-radius) transition-colors',
+  cardSurfaces[surface],
+  interactive && HOVER[surface],
+  interactive && 'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
+  extra,
+);
+const titleSize = padding === 'sm' ? 'text-compact' : 'text-card-title';
+const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-center justify-center', surface === 'filled' ? 'bg-white' : 'bg-grey-soft');
+---
+
+{
+  behaviour === 'disclosure' ? (
+    <Outer id={id} class={cx(Outer === 'li' && 'list-none', 'min-w-0')}>
+      <details class={cx(box, cardPadding[padding], 'block')} style={radius} open={open}>
+        <summary class="flex flex-col gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden focus-visible:outline-none">
+          <div class={cx('flex gap-4', has.icon ? 'items-center' : 'items-start')}>
+            {has.icon && (
+              <span aria-hidden="true" class={iconBox}>
+                <slot name="icon" />
+              </span>
+            )}
+            <div class="flex flex-col gap-1 min-w-0 flex-1">{title ? <Title class={cx('m-0 font-bold text-balance wrap-anywhere', titleSize)}>{title}</Title> : <slot name="header" />}</div>
+            <span aria-hidden="true" class={cx(titleSize, 'flex-none flex items-center h-lh')}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none transition-transform group-open:rotate-180">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </span>
+          </div>
+          {has.facts && (
+            <div class="pr-9">
+              <slot name="facts" />
+            </div>
+          )}
+        </summary>
+        {has.body && (
+          <div class="flex flex-col gap-3 pt-4">
+            <slot />
+          </div>
+        )}
+        {has.footer && (
+          <div class="pt-4 flex flex-wrap items-center gap-2">
+            <slot name="footer" />
+          </div>
+        )}
+      </details>
+    </Outer>
+  ) : (
+    <Outer id={id} class={cx(box, has.media ? 'grid overflow-hidden md:grid-cols-2' : cx('flex flex-col', cardPadding[padding]))} style={radius}>
+      {has.media && (
+        <div class="relative aspect-video md:aspect-auto bg-grey [&>img]:absolute [&>img]:inset-0 [&>img]:size-full [&>img]:object-cover [&>picture>img]:absolute [&>picture>img]:inset-0 [&>picture>img]:size-full [&>picture>img]:object-cover">
+          <slot name="media" />
+        </div>
+      )}
+      <div class={has.media ? cx('flex flex-col min-w-0', cardPadding[padding]) : 'contents'}>
+        {(title || has.header || has.icon) && (
+          <div class={cx('flex gap-4', has.icon ? 'items-center' : 'items-start')}>
+            {has.icon && (
+              <span aria-hidden="true" class={iconBox}>
+                <slot name="icon" />
+              </span>
+            )}
+            <div class="flex flex-col items-start gap-1 min-w-0 flex-1">
+              {title ? (
+                <Title class={cx('m-0 font-bold text-balance wrap-anywhere', titleSize)}>
+                  {href ? (
+                    <a
+                      href={href}
+                      {...(ext ? { target: '_blank', rel: 'noopener' } : {})}
+                      class="text-inherit no-underline focus-visible:outline-none after:absolute after:inset-0 after:rounded-(--card-radius) after:content-['']"
+                    >
+                      {title}
+                      {ext && <span class="sr-only"> (opens in a new tab)</span>}
+                    </a>
+                  ) : (
+                    title
+                  )}
+                </Title>
+              ) : (
+                <slot name="header" />
+              )}
+            </div>
+            {behaviour === 'link' && (
+              <span aria-hidden="true" class={cx(titleSize, 'flex-none flex items-center h-lh')}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none transition-transform group-hover:translate-x-1">
+                  <path d={ext ? 'M7 17L17 7M8 7h9v9' : 'M5 12h14M13 6l6 6-6 6'} />
+                </svg>
+              </span>
+            )}
+          </div>
+        )}
+        {has.facts && <slot name="facts" />}
+        <slot />
+        {has.footer && (
+          <div class="mt-auto pt-1 flex flex-wrap items-center gap-2">
+            <slot name="footer" />
+          </div>
+        )}
+      </div>
+    </Outer>
+  )
+}

@@ -10,7 +10,9 @@ import { SpeakerCarousel, type CarouselSpeaker } from '~/components/islands/home
 import { sizedSrc, srcsetFor } from '@zurichjs/design/images';
 import { COUNTRIES_REACHED, PARTNERS_TO_DATE, SPEAKER_COMPANIES, speakersWithTalks } from '@zurichjs/content';
 import AwardSection from '@zurichjs/design/components/AwardSection.astro';
-import SpeakerCompanies from '@zurichjs/design/components/SpeakerCompanies.astro';
+import CompanyWall from '@zurichjs/design/components/CompanyWall.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
+import Text from '@zurichjs/design/components/Text.astro';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import PackedGrid from '@zurichjs/design/components/PackedGrid.astro';
@@ -122,7 +124,13 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
       </div>
       <SpeakerCarousel client:visible speakers={carousel} />
       <div class="px-gut pt-[clamp(24px,3vw,40px)]">
-        <SpeakerCompanies companies={SPEAKER_COMPANIES} headingId="h-speaker-companies" as="h2" />
+        <div class="flex flex-col gap-6">
+          <div class="flex flex-col gap-2 max-w-reading">
+            <Heading id="h-speaker-companies" size="subsection">Where our speakers come from</Heading>
+            <Text tone="muted">Speakers of every shape and size: freelancers, open-source maintainers and Google Developer Experts, all the way to engineers at the largest companies in tech.</Text>
+          </div>
+          <CompanyWall companies={SPEAKER_COMPANIES} label="Companies our speakers come from" />
+        </div>
       </div>
     </section>
 

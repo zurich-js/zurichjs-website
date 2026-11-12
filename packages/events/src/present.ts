@@ -18,7 +18,7 @@ export interface EventPresentation {
   cta: { kind: TicketingAction['kind'] | 'next' | 'feedback'; label: string; href?: string; external?: boolean };
   ctaNote: string;
   feedbackCloses?: string;
-  pills: { text: string; yellow?: boolean }[];
+  pills: { text: string }[];
 }
 
 export interface PresentOptions {
@@ -53,7 +53,7 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
     venueSub,
     dateKnown,
     ...ctaFrom({ kind: 'rsvp', label: 'RSVP on Meetup', href: ev.meetupUrl, external: true }, 'Opens Meetup in a new tab. Your RSVP is confirmed there, not on this site.'),
-    pills: [{ text: TYPE_LABEL }, { text: 'RSVP open', yellow: true }],
+    pills: [{ text: TYPE_LABEL }, { text: 'RSVP open' }],
   };
 
   switch (state) {
@@ -130,7 +130,7 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
           ? 'Rating closes 48 hours after the start. After that, this page becomes the recap.'
           : 'Feedback closes 48 hours after the start. After that, this page becomes the recap.',
         feedbackCloses: closes,
-        pills: [{ text: TYPE_LABEL }, { text: 'Feedback open', yellow: true }],
+        pills: [{ text: TYPE_LABEL }, { text: 'Feedback open' }],
       };
     }
     case 'past':

@@ -1,0 +1,60 @@
+---
+/**
+ * Partner logos in a packed grid, one cell per logo (LogoTile): grey with the logo in black, white (or
+ * the partner's colour) with the logo in colour on hover. With `byTier`, the sponsorship tier sets the
+ * cell, so the XL and large logos sponsors are promised are bigger cells in the same grid.
+ * Replaces LogoGrid, HostsSection's grids and the speaker-company tiles.
+ */
+import type { Partner } from '@zurichjs/events';
+import PackedGrid from './PackedGrid.astro';
+import LogoTile from './LogoTile.astro';
+import { logoSize, partnerRel } from '../logos';
+
+type Size = 'xl' | 'lg' | 'md';
+interface Props {
+  partners: Partner[];
+  /** The sponsorship tier sets the cell; leave it off for one size for everyone. */
+  byTier?: boolean;
+  /** The group's accessible name. */
+  label: string;
+}
+const { partners, byTier = false, label } = Astro.props;
+const sizeOf = (p: Partner): Size => (!byTier ? 'md' : p.tier === 'champion' ? 'xl' : p.tier === 'builder' ? 'lg' : 'md');
+/** Cells (4 columns on phones, 12 from 800px; a cell is a square), order, and logo area and height cap. */
+const SIZE: Record<Size, { base: { cols: number; rows: number }; md: { cols: number; rows: number }; priority: number; area: number; maxH: number }> = {
+  xl: { base: { cols: 4, rows: 2 }, md: { cols: 4, rows: 2 }, priority: 0, area: 14400, maxH: 92 },
+  lg: { base: { cols: 2, rows: 2 }, md: { cols: 3, rows: 2 }, priority: 1, area: 8100, maxH: 69 },
+  md: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 }, priority: 2, area: 3600, maxH: 46 },
+};
+const byId = new Map(partners.map((p) => [p.id, p]));
+const items = partners.map((p) => {
+  const s = SIZE[sizeOf(p)];
+  return { id: p.id, sizes: { base: s.base, md: s.md }, priority: s.priority };
+});
+---
+
+{
+  partners.length > 0 && (
+    <PackedGrid items={items} columns={{ base: 4, md: 12 }} label={label}>
+      {(id: string) => {
+        const p = byId.get(id)!;
+        const s = SIZE[sizeOf(p)];
+        const wh = logoSize(p.logoRatio, s.area, s.maxH);
+        return (
+          <LogoTile
+            name={p.name}
+            logo={p.logo}
+            logoBlack={p.logoBlack}
+            bg={p.logoBackground}
+            href={p.url}
+            rel={partnerRel(p)}
+            opaque={p.logoOpaque}
+            knockout={p.logoKnockout}
+            width={wh?.w}
+            height={wh?.h}
+          />
+        );
+      }}
+    </PackedGrid>
+  )
+}

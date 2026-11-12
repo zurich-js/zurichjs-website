@@ -1,0 +1,15 @@
+---
+/** The auto-fit card grid. Three minimum column widths (240, 300, 380px) instead of seven hand-written ones. */
+import { cx } from '../recipes';
+
+interface Props {
+  min?: 'sm' | 'md' | 'lg';
+  gap?: 'sm' | 'md';
+  as?: 'div' | 'ul' | 'ol';
+  class?: string;
+}
+const { min = 'md', gap = 'md', as: El = 'div', class: extra } = Astro.props;
+const MIN = { sm: 'grid-cols-auto-sm', md: 'grid-cols-auto-md', lg: 'grid-cols-auto-lg' };
+---
+
+<El class={cx('grid m-0 p-0 list-none', MIN[min], gap === 'sm' ? 'gap-3' : 'gap-5', extra)}><slot /></El>

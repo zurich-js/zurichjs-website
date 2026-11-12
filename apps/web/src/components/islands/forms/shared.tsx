@@ -2,7 +2,7 @@
 import { HONEYPOT, validate, type FormKind } from '@zurichjs/forms/client';
 import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { buttonClass, type ButtonSize, type ButtonVariant } from '@zurichjs/design/recipes';
+import { buttonClass, type ButtonVariant } from '@zurichjs/design/recipes';
 
 /**
  * Hidden field that bots fill in and people never see. The server rejects any
@@ -98,22 +98,20 @@ export function useFocusWhen<T extends HTMLElement>(when: boolean) {
  * not type `type` or `disabled`, so forms use this.)
  */
 export function SubmitButton({
-  variant = 'black',
-  size = 'lg',
+  variant = 'primary',
   grow,
   class: extra,
   busy,
   children,
 }: {
   variant?: ButtonVariant;
-  size?: ButtonSize;
   grow?: boolean;
   class?: string;
   busy?: boolean;
   children: ComponentChildren;
 }) {
   return (
-    <button type="submit" class={buttonClass(variant, size, grow, extra)} disabled={busy} aria-busy={busy || undefined}>
+    <button type="submit" class={buttonClass({ variant, grow }, extra)} disabled={busy} aria-busy={busy || undefined}>
       {children}
     </button>
   );
@@ -144,14 +142,14 @@ export function ChoiceGroup({
       class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0"
       aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined}
     >
-      <legend class="text-base font-bold p-0 mb-1.5">{legend}</legend>
+      <legend class="text-compact font-bold p-0 mb-1.5">{legend}</legend>
       {hint && (
-        <p id={`${id}-hint`} class="m-0 mb-1 text-base text-grey-text leading-normal">
+        <p id={`${id}-hint`} class="m-0 mb-1 text-compact text-grey-text">
           {hint}
         </p>
       )}
       <div class={extra}>{children}</div>
-      <span id={`${id}-error`} class="text-sm text-danger min-h-5" aria-live="polite">
+      <span id={`${id}-error`} class="text-meta text-danger min-h-lh" aria-live="polite">
         {error}
       </span>
     </fieldset>

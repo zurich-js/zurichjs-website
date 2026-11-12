@@ -1,12 +1,13 @@
 ---
 /**
- * One past talk as a card, in the conference's talk-card style (Bogdan's review, 4th November 2026):
- * a grey card per talk, the title as the strongest element, then the speaker, the date and the format,
- * and an arrow that moves on hover. The whole card is one link to the talk on its event page.
+ * One past talk as a filled link card (Bogdan's review, 4th November 2026): the title as the strongest
+ * element with the card's arrow, then the speaker, the date and the format. The whole card is one link to
+ * the talk on its event page.
  */
 import type { Speaker } from '@zurichjs/events';
 import { monogramClass } from '../recipes';
 import { avatarSrc } from '../images';
+import Card from './Card.astro';
 
 export interface TalkRowData {
   title: string;
@@ -22,24 +23,20 @@ const { t } = Astro.props;
 const lead = t.speakers[0];
 ---
 
-<a href={t.href} class="group relative no-underline text-black flex flex-col justify-between gap-5 min-h-[150px] p-5 md:p-6 pr-14 md:pr-16 rounded-card bg-grey-soft hover:bg-grey transition-colors duration-300">
-  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-5 top-5 md:right-6 md:top-6 transition-transform duration-300 group-hover:translate-x-1">
-    <path d="M4 10h12M11 5l5 5-5 5"></path>
-  </svg>
-  <span class="text-[20px] md:text-[23px] font-bold leading-[1.22] text-pretty wrap-anywhere">{t.title}</span>
-  <span class="flex items-center gap-3 min-w-0">
+<Card surface="filled" title={t.title} level="p" href={t.href}>
+  <div class="mt-auto pt-2 flex items-center gap-3 min-w-0">
     {
       lead?.photo ? (
-        <img src={avatarSrc(lead.photo.src, 40)} alt="" width="40" height="40" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-grey flex-none" />
+        <img src={avatarSrc(lead.photo.src, 40)} alt="" width="40" height="40" loading="lazy" decoding="async" class="size-10 rounded-full object-cover bg-grey flex-none" />
       ) : (
-        <span aria-hidden="true" class={monogramClass('white', 'avatar', 'w-10 h-10 flex-none')}>
+        <span aria-hidden="true" class={monogramClass('white', 'avatar', 'size-10 flex-none')}>
           {lead?.initials ?? '?'}
         </span>
       )
     }
-    <span class="flex flex-col min-w-0 text-[15px] leading-[1.35]">
+    <span class="flex flex-col min-w-0 text-compact">
       <span class="font-bold truncate">{t.speakers.map((s) => s.name).join(', ')}</span>
       <span class="text-ink-2">{t.date} · {t.format}</span>
     </span>
-  </span>
-</a>
+  </div>
+</Card>

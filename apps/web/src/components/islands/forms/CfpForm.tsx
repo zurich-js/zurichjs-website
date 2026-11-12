@@ -1,8 +1,9 @@
 import { CFP_AGREE_ERROR, MAX_TOPICS, TALK_LENGTHS, TALK_LEVELS, TALK_TOPICS, submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cx, surfaceClass, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { buttonClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { SocialLabel } from '@zurichjs/design/islands/SocialLabel';
 import { ChoiceGroup, Honeypot, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
@@ -124,7 +125,7 @@ const asText = (d: Draft) =>
 
 /** The native input covers its card or pill, invisible: clicks, taps and the keyboard all reach it. */
 const section = 'border-0 p-0 m-0 flex flex-col gap-4 min-w-0';
-const sectionTitle = 'text-[24px] font-bold mb-3.5 p-0';
+const sectionTitle = 'text-card-title font-bold mb-3.5 p-0';
 
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const PHOTO_MAX_SIDE = 1600;
@@ -156,7 +157,7 @@ const PREVIEWS = [
 function PhotoField({ photo, error, onChange }: { photo: { file: Blob; url: string } | null; error: string; onChange: (f: File | null) => void }) {
   return (
     <div class="flex flex-col gap-3">
-      <span id="cfp-photo-label" class="text-[16px] font-bold">
+      <span id="cfp-photo-label" class="text-compact font-bold">
         {optional('Photo')}
       </span>
       {photo && (
@@ -166,13 +167,13 @@ function PhotoField({ photo, error, onChange }: { photo: { file: Blob; url: stri
               <span class={cx('block overflow-hidden bg-grey', v.cls)}>
                 <img src={photo.url} alt={i === 0 ? 'Preview of your upload' : ''} class="w-full h-full object-cover" />
               </span>
-              <span class="text-[14px] text-grey-text">{v.label}</span>
+              <span class="text-meta text-grey-text">{v.label}</span>
             </li>
           ))}
         </ul>
       )}
       <div class="flex items-center gap-4 flex-wrap">
-        <label class="inline-flex items-center min-h-[44px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer hover:bg-grey has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2">
+        <label class={buttonClass({ variant: 'secondary' }, 'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2')}>
           {photo ? 'Choose another photo' : 'Choose a photo'}
           <input
             type="file"
@@ -186,16 +187,20 @@ function PhotoField({ photo, error, onChange }: { photo: { file: Blob; url: stri
           />
         </label>
         {photo && (
-          <button type="button" onClick={() => onChange(null)} class="p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-[15px]">
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            class="p-0 border-0 bg-transparent font-bold text-black underline underline-offset-[3px] cursor-pointer text-compact"
+          >
             Remove photo
           </button>
         )}
       </div>
-      <span id="cfp-photo-hint" class="text-[16px] text-grey-text leading-[1.45]">
+      <span id="cfp-photo-hint" class="text-compact text-grey-text">
         A photo of your face, centred, works best in every shape: JPEG, PNG or WebP.
       </span>
       {error && (
-        <span role="alert" class="text-[14px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {error}
         </span>
       )}
@@ -331,7 +336,7 @@ export default function CfpForm({ nextHref }: Props) {
           <Honeypot />
           {/* Saved answers: a small bar at the bottom of the screen, only while the form holds answers (Bogdan's review). */}
           {(hasAnswers || cleared) && (
-            <div class="on-black fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100%-32px)] bg-black text-white rounded-[20px] md:rounded-pill shadow-[0_8px_28px_rgba(0,0,0,0.25)] px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[15px] leading-[1.4]">
+            <div class="on-black fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-max max-w-[calc(100%-32px)] bg-black text-white rounded-[20px] md:rounded-pill shadow-[0_8px_28px_rgba(0,0,0,0.25)] px-5 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-meta">
               {cleared && !hasAnswers ? (
                 <p role="status" class="m-0 font-bold">
                   Saved answers cleared.
@@ -339,7 +344,7 @@ export default function CfpForm({ nextHref }: Props) {
               ) : (
                 <>
                   <p class="m-0">Your answers are saved in this browser only, until you send or clear them.</p>
-                  <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-white underline underline-offset-[3px] cursor-pointer text-[15px]">
+                  <button type="button" onClick={clearDraft} class="p-0 border-0 bg-transparent font-bold text-white underline underline-offset-[3px] cursor-pointer text-meta">
                     Clear saved answers
                   </button>
                 </>
@@ -372,11 +377,11 @@ export default function CfpForm({ nextHref }: Props) {
                 error={err('email')}
               />
             </div>
-            <p class="m-0 -mt-2 text-[16px] leading-[1.5] text-grey-text">Your email is only used to reply, and to find your speaker page if you’ve spoken here before.</p>
+            <p class="m-0 -mt-2 text-compact text-grey-text">Your email is only used to reply, and to find your speaker page if you’ve spoken here before.</p>
             <div class="flex flex-col gap-3">
               <Checkbox label="I’ve spoken at ZurichJS before." name="returning" checked={d.returning} onChange={(e) => set('returning', e.currentTarget.checked)} />
               {d.returning && (
-                <p class="m-0 pl-[34px] text-[16px] leading-[1.5] text-ink-2">
+                <p class="m-0 pl-[34px] text-compact text-ink-2">
                   Leave your profile below empty to keep your speaker page as it is. Anything you add goes to the organisers, who update your page; it isn’t published straight
                   away.
                 </p>
@@ -392,7 +397,7 @@ export default function CfpForm({ nextHref }: Props) {
 
           <fieldset class={section}>
             <legend class={sectionTitle}>Speaker profile</legend>
-            <p class="m-0 -mt-2 text-[16px] leading-[1.5] text-grey-text">What appears on your speaker page if your talk is accepted.</p>
+            <p class="m-0 -mt-2 text-compact text-grey-text">What appears on your speaker page if your talk is accepted.</p>
             <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4 items-start">
               <TextField
                 label={opt('Job title')}
@@ -424,7 +429,7 @@ export default function CfpForm({ nextHref }: Props) {
 
           <fieldset class={section}>
             <legend class={sectionTitle}>Socials</legend>
-            <p class="m-0 -mt-2 text-[16px] leading-[1.5] text-grey-text">Usernames, handles or links all work, except LinkedIn, which needs the full link.</p>
+            <p class="m-0 -mt-2 text-compact text-grey-text">Usernames, handles or links all work, except LinkedIn, which needs the full link.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
               <TextField
                 label={<SocialLabel kind="linkedin" text={opt('LinkedIn')} />}
@@ -499,8 +504,8 @@ export default function CfpForm({ nextHref }: Props) {
               {TALK_LENGTHS.map((l) => (
                 <label key={l.value} class={optionClass(false, 'w-full grid! grid-cols-[auto_minmax(0,1fr)] gap-y-0.5 items-center py-3')}>
                   <input type="radio" name="format" value={l.value} checked={d.format === l.value} onChange={() => set('format', l.value)} class={optionInput} />
-                  <span class="font-bold text-[17px]">{l.label}</span>
-                  <span class="col-start-2 text-[15px] text-ink-2">{l.hint}</span>
+                  <span class="font-bold text-compact">{l.label}</span>
+                  <span class="col-start-2 text-meta text-ink-2">{l.hint}</span>
                 </label>
               ))}
             </ChoiceGroup>
@@ -535,7 +540,7 @@ export default function CfpForm({ nextHref }: Props) {
           </fieldset>
           <fieldset class={section}>
             <legend class={sectionTitle}>Before you send</legend>
-            <div class={cx('rounded-card p-5 flex flex-col gap-2', bad('agree') ? 'bg-danger/10' : 'bg-grey')}>
+            <div class={cx('rounded-card p-card-md flex flex-col gap-2', bad('agree') ? 'bg-danger-soft' : 'bg-grey')}>
               <Checkbox
                 label="I understand that travel and accommodation can’t be covered for meetup talks, because our events are free, and that acceptance depends on the theme and on the speaking slots at upcoming meetups."
                 name="agree"
@@ -546,21 +551,21 @@ export default function CfpForm({ nextHref }: Props) {
                 aria-describedby={bad('agree') ? 'cfp-agree-error' : undefined}
               />
               {bad('agree') && (
-                <p id="cfp-agree-error" class="m-0 pl-[34px] text-[15px] text-danger">
+                <p id="cfp-agree-error" class="m-0 pl-[34px] text-meta text-danger">
                   {err('agree')}
                 </p>
               )}
             </div>
           </fieldset>
           <div class="flex flex-wrap gap-4 items-center">
-            <SubmitButton variant="yellow" size="lg" busy={busy}>
+            <SubmitButton variant="cta" busy={busy}>
               {busy ? 'Sending…' : 'Send proposal'}
             </SubmitButton>
-            <span role="alert" class="text-[15px] text-danger">
+            <span role="alert" class="text-meta text-danger">
               {tried && !valid ? 'Fix the highlighted fields.' : serverError}
             </span>
             {serverError && (
-              <span class="text-[15px] text-ink-2 basis-full">
+              <span class="text-meta text-ink-2 basis-full">
                 Your proposal is still here. You can try again, or email it to{' '}
                 <a href={mailto} class="font-bold text-black">
                   {EMAIL}
@@ -576,13 +581,13 @@ export default function CfpForm({ nextHref }: Props) {
         <aside aria-label="Before you propose" class="flex flex-col gap-7 md:sticky md:top-28">
           {NOTES.map(([h, p]) => (
             <div key={h} class="flex flex-col gap-1.5">
-              <h2 class="m-0 text-[20px] font-bold leading-[1.25]">{h}</h2>
-              <p class="m-0 text-[16px] leading-[1.55] text-ink-2">{p}</p>
+              <h2 class="m-0 text-card-title font-bold">{h}</h2>
+              <p class="m-0 text-compact text-ink-2">{p}</p>
             </div>
           ))}
           <div class="flex flex-col gap-1.5">
-            <h2 class="m-0 text-[20px] font-bold leading-[1.25]">Spoken here before?</h2>
-            <p class="m-0 text-[16px] leading-[1.55] text-ink-2">
+            <h2 class="m-0 text-card-title font-bold">Spoken here before?</h2>
+            <p class="m-0 text-compact text-ink-2">
               Use the same email and we match your proposal to your speaker page. Anything new you send, like a photo or links, goes to the organisers, who update your page.
             </p>
           </div>
@@ -590,30 +595,27 @@ export default function CfpForm({ nextHref }: Props) {
       )}
 
       {sent && (
-        <div ref={doneRef} tabIndex={-1} role="status" class="md:col-span-2 max-w-[880px] flex flex-col gap-7 outline-hidden">
-          <div class={surfaceClass('success', 'p-7 flex flex-col gap-2')}>
-            <h2 class="m-0 text-[28px] font-bold">Thank you very much. Your proposal is in.</h2>
-            <p class="m-0 text-[18px] leading-normal">
-              We’ll reach out in the coming days about your proposal, at {d.email || 'your email'}. Your saved answers were cleared from this browser.
-            </p>
-          </div>
+        <div class="md:col-span-2 max-w-wide flex flex-col gap-7">
+          <Notice tone="success" live focusRef={doneRef} as="h2" title="Thank you very much. Your proposal is in.">
+            <p class="m-0 text-body">We’ll reach out in the coming days about your proposal, at {d.email || 'your email'}. Your saved answers were cleared from this browser.</p>
+          </Notice>
           <ol class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fit,minmax(min(100%,180px),1fr))] gap-5">
             {STAGES.map(([label, desc], i) => (
               <li key={label} class="flex flex-col gap-1.5">
                 <span class={cx('w-9 h-9 rounded-full flex items-center justify-center font-bold', i === 0 ? 'bg-black text-white' : 'bg-grey')}>{i + 1}</span>
-                <span class="text-[18px] font-bold">{label}</span>
-                <span class="text-[16px] text-ink-2 leading-[1.45]">{desc}</span>
+                <span class="text-body font-bold">{label}</span>
+                <span class="text-compact text-ink-2">{desc}</span>
               </li>
             ))}
           </ol>
-          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+          <p class="m-0 text-body text-ink-2">
             A question about your proposal? Write to{' '}
             <a href={`mailto:${EMAIL}`} class="font-bold text-black">
               {EMAIL}
             </a>
             .
           </p>
-          <Button href={nextHref} variant="outline-black" class="self-start text-[17px]">
+          <Button href={nextHref} variant="secondary" class="self-start">
             Meanwhile, come to the next meetup
           </Button>
         </div>

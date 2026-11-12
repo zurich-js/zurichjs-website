@@ -14,7 +14,8 @@
     "./session": "./src/session.ts",
     "./fonts/*": "./src/fonts/*",
     "./components/*": "./src/components/*",
-    "./islands/*": "./src/islands/*.tsx"
+    "./islands/*": "./src/islands/*.tsx",
+    "./logos": "./src/logos.ts"
   },
   "scripts": {
     "theme": "node scripts/build-theme.mjs",

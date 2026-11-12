@@ -2,6 +2,7 @@ import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
@@ -59,12 +60,11 @@ export default function ContactForm() {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
-        <div class="text-[28px] font-bold leading-[1.15]">Message sent.</div>
-        <p class="m-0 text-[18px] leading-[1.55]">An organiser will reply to {f.email}.</p>
+      <Notice tone="success" live focusRef={doneRef} title="Message sent.">
+        <p class="m-0 text-body">An organiser will reply to {f.email}.</p>
         <Button
-          variant="outline-black"
-          class="self-start mt-1.5 text-[17px] border!"
+          variant="secondary"
+          class="self-start mt-1.5"
           onClick={() => {
             setSent(false);
             setTried(false);
@@ -73,23 +73,22 @@ export default function ContactForm() {
         >
           Send another message
         </Button>
-      </div>
+      </Notice>
     );
 
   return (
     <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-4">
       <Honeypot />
       {conduct && (
-        <div role="note" class="bg-grey rounded-[20px] p-5 flex flex-col gap-1.5">
-          <strong class="text-[18px]">Reporting a code of conduct concern?</strong>
-          <span class="text-[17px] leading-[1.5]">
+        <Notice title="Reporting a code of conduct concern?">
+          <p class="m-0 text-body">
             Please don’t use this form.{' '}
             <a href="#conduct" class="font-bold text-black">
               Use the private route
             </a>{' '}
             instead: email hello@zurichjs.com or speak to a team member at an event.
-          </span>
-        </div>
+          </p>
+        </Notice>
       )}
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-3.5">
         <TextField
@@ -131,14 +130,14 @@ export default function ContactForm() {
         error={bad('message') ? errs.message : ''}
       />
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="yellow" size="lg" grow busy={busy}>
+        <SubmitButton variant="cta" grow busy={busy}>
           {busy ? 'Sending…' : 'Send message'}
         </SubmitButton>
-        <span role="alert" class="text-[15px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {tried && !valid ? 'Fix the highlighted fields.' : serverError}
         </span>
         {serverError && (
-          <span class="text-[15px] text-ink-2 basis-full">
+          <span class="text-meta text-ink-2 basis-full">
             Your message is still here. Try again, or email it to{' '}
             <a href={`mailto:hello@zurichjs.com?subject=${encodeURIComponent(`${f.topic} from ${f.name}`)}&body=${encodeURIComponent(f.message)}`} class="font-bold text-black">
               hello@zurichjs.com
@@ -147,7 +146,7 @@ export default function ContactForm() {
           </span>
         )}
       </div>
-      <p class="m-0 text-[15px] leading-normal text-ink-2">
+      <p class="m-0 text-meta text-ink-2">
         Messages reach the organisers by email and in their team chat. For a code of conduct concern, use the{' '}
         <a href="#conduct" class="font-bold text-black">
           private route

@@ -113,6 +113,8 @@ export const spacing = {
   'card-sm': '16px',
   'card-md': 'clamp(20px, 2.4vw, 28px)',
   'card-lg': 'clamp(24px, 3vw, 36px)',
+  /** The header's height: 16px around a 48px button. It overlaps the page, and the opening is padded by it. */
+  header: '80px',
   /** Every button, switch and form field (owner, 12th November 2026). */
   control: '48px',
   /** Filter chips: the smallest touch target. */
@@ -127,13 +129,6 @@ export const grids = {
   'auto-sm': 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
   'auto-md': 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
   'auto-lg': 'repeat(auto-fit, minmax(min(100%, 380px), 1fr))',
-} as const;
-
-/** Old heading sizes, still read by recipes.headingSizes until SectionHeading gives way to Heading. */
-export const headings = {
-  h2: 'clamp(30px, 3.4vw, 48px)',
-  h2Medium: 'clamp(26px, 2.8vw, 36px)',
-  h3: 'clamp(24px, 2.4vw, 32px)',
 } as const;
 
 export const motion = {

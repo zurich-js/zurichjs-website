@@ -8,6 +8,8 @@
   --breakpoint-*: initial;
   --breakpoint-md: 800px;
   --breakpoint-lg: 1100px;
+  /* Phones only, for one thing: `grow` buttons go full width below it (owner, 12th November 2026). Layout still switches at md. */
+  --breakpoint-phone: 480px;
 
   --color-black: #000000;
   --color-white: #ffffff;
@@ -62,6 +64,9 @@
   --spacing-card-md: clamp(16px, 1.6vw, 20px);
   --spacing-card-lg: clamp(20px, 2.4vw, 28px);
   --spacing-header: 80px;
+  /* The least height of every page opening (PageOpening, /today), with or without an image (owner, 12th November 2026):
+     with the header above it, the black opening fills the screen, up to 800px. svh, so a phone's address bar never makes it jump. */
+  --spacing-opening: calc(min(100svh, 800px) - var(--spacing-header));
   --spacing-control: 48px;
   --spacing-chip: 44px;
   --spacing-tag-sm: 24px;

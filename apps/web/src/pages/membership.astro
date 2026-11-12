@@ -1,7 +1,7 @@
 ---
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
 import MembershipForm from '~/components/islands/forms/MembershipForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
@@ -27,35 +27,34 @@ const FEES = [
     title="Become a member"
     sub={`ZurichJS is run by the ${SITE.association}, a registered Swiss association (Verein). Members fund the meetups and have a say in how the community grows.`}
   >
-    <p class="m-0 text-[17px] text-grey-light max-w-[700px]">Coming to meetups is free and never needs a membership.</p>
+    <p class="m-0 text-body text-grey-light max-w-reading">Coming to meetups is free and never needs a membership.</p>
   </PageOpening>
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+  <div class="px-gut py-section flex flex-col gap-section">
     <MembershipForm client:load />
 
-    <section aria-labelledby="h-fees" class="flex flex-col gap-5 max-w-[880px]">
-      <h2 id="h-fees" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Where the fees go</h2>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+    <section aria-labelledby="h-fees" class="flex flex-col gap-5 max-w-wide">
+      <h2 id="h-fees" class="m-0 text-subsection font-bold">Where the fees go</h2>
+      <div class="grid grid-cols-auto-sm gap-4">
         {
           FEES.map(([h, d]) => (
-            <Surface class="p-6 flex flex-col gap-1.5">
-              <h3 class="m-0 text-[20px] font-bold">{h}</h3>
-              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{d}</p>
-            </Surface>
+            <Card title={h}>
+              <p class="m-0 text-body text-ink-2">{d}</p>
+            </Card>
           ))
         }
       </div>
     </section>
 
-    <section aria-labelledby="h-free" class="flex flex-col gap-4 max-w-[880px]">
-      <h2 id="h-free" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Membership is optional</h2>
-      <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+    <section aria-labelledby="h-free" class="flex flex-col gap-4 max-w-wide">
+      <h2 id="h-free" class="m-0 text-subsection font-bold">Membership is optional</h2>
+      <p class="m-0 text-body text-ink-2 text-pretty">
         Every meetup stays free and open to everyone, member or not. Members are how we keep it that way: their fees pay for the food and drinks, the tools and the travel behind each evening. If you would rather not join, a one-off or monthly donation helps just as much.
       </p>
       <div class="flex flex-wrap gap-3">
-        <Button href="/donate#donate" variant="black">Donate once or monthly</Button>
-        <Button href="/donate" variant="outline-black">Other ways to help</Button>
+        <Button href="/donate#donate" variant="primary">Donate once or monthly</Button>
+        <Button href="/donate" variant="secondary">Other ways to help</Button>
       </div>
-      <p class="m-0 text-[17px] text-ink-2">
+      <p class="m-0 text-body text-ink-2">
         Questions about membership? <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a>
       </p>
     </section>

@@ -1,0 +1,14 @@
+[
+  {
+    "use": "packages/design/src/islands/Check.tsx: size-[0.9em]",
+    "reason": "The check mark is an inline glyph that must scale with whatever text it sits in (it stands in for a ✓ Figtree lacks); the spacing scale is rem-based, not em."
+  },
+  {
+    "use": "packages/design/src/islands/Gallery.tsx: min-h-[40vh]",
+    "reason": "The lightbox stage is sized against the viewport height, which no token or spacing step expresses."
+  },
+  {
+    "use": "packages/design/src/islands/Gallery.tsx: max-h-[70vh]",
+    "reason": "Photos and videos in the lightbox are capped to a share of the viewport height so the caption and controls stay on screen."
+  }
+]

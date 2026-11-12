@@ -8,7 +8,9 @@ import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import Monogram from '@zurichjs/design/components/Monogram.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import Facts from '@zurichjs/design/components/Facts.astro';
+import TagLink from '@zurichjs/design/components/TagLink.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { Gallery } from '@zurichjs/design/islands/Gallery';
 import { mediaTagged } from '@zurichjs/content';
@@ -77,16 +79,16 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
 >
   <PageOpening slot="opening" title={s.name} crumb={{ label: 'Speakers', href: '/speakers', here: s.name }} sub={roleLine} />
 
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-x-14 gap-y-7 items-start">
-      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-[340px]" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-[340px] text-[88px]!" />}
-      <div class="flex flex-col gap-[18px] col-span-full md:col-span-2 min-w-0">
-        <RichText text={s.bio} class="text-[19px] leading-[1.6] text-ink-2 max-w-[640px] text-pretty" />
+  <div class="px-gut py-section flex flex-col gap-section">
+    <div class="grid grid-cols-auto-md gap-x-14 gap-y-7 items-start">
+      {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-85" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-85 text-display!" />}
+      <div class="flex flex-col gap-4 col-span-full md:col-span-2 min-w-0">
+        <RichText text={s.bio} class="text-lead text-ink-2 max-w-reading text-pretty" />
         {
           s.links.length > 0 && (
             <div class="flex flex-wrap gap-2">
               {s.links.map((l) => (
-                <Button href={l.url} variant="grey" size="sm" class="border-0!">
+                <Button href={l.url} variant="secondary">
                   {l.label}
                 </Button>
               ))}
@@ -98,18 +100,20 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
 
     {
       upcoming && (
-        <Surface tone="yellow" class="py-6 px-7 flex flex-wrap gap-x-7 gap-y-4 items-center justify-between">
-          <div class="flex flex-col gap-1 min-w-0">
-            <div class="text-[17px] font-bold">
-              Speaking next: {upcoming.ev.startsAt ? dateLong(upcoming.ev.startsAt) : upcoming.p.dateLineShort}
-              {upcoming.item.time ? `, talk at ${upcoming.item.time}` : ''} · {upcoming.ev.title}
-            </div>
-            <div class="text-[22px] font-bold leading-tight">{upcoming.item.title}</div>
-          </div>
-          <Button href={`${eventHref(upcoming.ev)}#${talkAnchor(upcoming.talk)}`} variant="black" class="text-[17px]">
+        <Card surface="filled" title={upcoming.item.title} level="p">
+          <Facts
+            slot="facts"
+            items={[
+              {
+                label: 'Speaking next',
+                value: `${upcoming.ev.startsAt ? dateLong(upcoming.ev.startsAt) : upcoming.p.dateLineShort}${upcoming.item.time ? `, talk at ${upcoming.item.time}` : ''} · ${upcoming.ev.title}`,
+              },
+            ]}
+          />
+          <Button slot="footer" href={`${eventHref(upcoming.ev)}#${talkAnchor(upcoming.talk)}`} variant="primary">
             See the meetup
           </Button>
-        </Surface>
+        </Card>
       )
     }
 
@@ -121,28 +125,25 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
         .filter((g) => g.list.length > 0 || g.id === 'h-talks')
         .map((g) => (
           <section class="flex flex-col gap-4" aria-labelledby={g.id}>
-            <h2 id={g.id} class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+            <h2 id={g.id} class="m-0 text-subsection font-bold">
               {g.heading}
             </h2>
-            {g.list.length === 0 && <p class="m-0 text-[17px] text-ink-2">No earlier talks listed yet.</p>}
+            {g.list.length === 0 && <p class="m-0 text-body text-ink-2">No earlier talks listed yet.</p>}
             {g.list.map(({ t, evs, anchorOn }) => (
-              <article class="rounded-[20px] bg-grey-soft flex flex-col gap-2.5 py-5 px-5">
-                <h3 class="m-0 text-[21px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
-                <div class="text-[16px] text-ink-2">{[t.format, t.durationMin ? `${t.durationMin} min` : ''].filter(Boolean).join(' · ')}</div>
-                <RichText text={t.description} class="text-[17px] leading-[1.55] text-ink-2 max-w-[700px]" />
+              <Card as="article" surface="filled" title={t.title}>
+                <div slot="facts" class="text-compact text-ink-2">{[t.format, t.durationMin ? `${t.durationMin} min` : ''].filter(Boolean).join(' · ')}</div>
+                <RichText text={t.description} class="text-body text-ink-2 max-w-reading" />
                 {t.tags.length > 0 && (
                   <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                     {t.tags.map((tag) => (
                       <li>
-                        <a href={`/speakers?topic=${encodeURIComponent(tag)}`} class="text-[14px] px-2.5 py-1 rounded-pill bg-grey text-black no-underline hover:bg-grey-hover inline-flex">
-                          {tag}
-                        </a>
+                        <TagLink href={`/speakers?topic=${encodeURIComponent(tag)}`}>{tag}</TagLink>
                       </li>
                     ))}
                   </ul>
                 )}
                 {evs.length > 0 ? (
-                  <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-2.5 mt-1" aria-label="Where this talk was given">
+                  <ul class="m-0 p-0 list-none grid grid-cols-auto-md gap-2.5 mt-1" aria-label="Where this talk was given">
                     {evs.map((e) => {
                       const soon = upcomingIds.has(e.slug);
                       const d = e.startsAt ? dateParts(e.startsAt) : undefined;
@@ -150,36 +151,37 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                         <li>
                           <a
                             href={`${eventHref(e)}${anchorOn(e)}`}
-                            class="group no-underline text-black rounded-2xl bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
+                            class="group no-underline text-black rounded-(--radius-nested) bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
                           >
-                            <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
-                              <span class="text-[12px] font-bold leading-none">{d?.mon ?? 'TBC'}</span>
-                              <span class="text-[21px] font-bold leading-tight">
+                            <span class={`flex flex-col items-center justify-center h-14 rounded-nested-min ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
+                              <span class="text-meta font-bold leading-none">{d?.mon ?? 'TBC'}</span>
+                              <span class="text-card-title font-bold leading-tight">
                                 {d?.day ?? '?'}
-                                <span class="text-[11px] align-top">{d?.suffix}</span>
+                                <span class="text-meta align-top">{d?.suffix}</span>
                               </span>
-                              <span class="text-[11px] leading-none">{d?.year}</span>
+                              <span class="text-meta leading-none">{d?.year}</span>
                             </span>
                             <span class="flex flex-col gap-0.5 min-w-0">
-                              <span class="text-[13px] font-bold text-ink-2">{soon ? 'Coming up at' : 'Given at'}</span>
-                              <span class="text-[16px] font-bold leading-snug text-pretty">{e.title}</span>
-                              <span class="text-[14px] text-ink-2">{e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}</span>
+                              <span class="text-compact font-bold leading-snug text-pretty">{e.title}</span>
+                              <span class="text-meta text-ink-2">
+                                {soon ? 'Coming up' : 'Given'} · {e.startsAt ? dateLong(e.startsAt) : (e.dateText ?? 'Date to be confirmed')}
+                              </span>
                             </span>
-                            <span aria-hidden="true" class="text-[20px] font-bold transition-transform group-hover:translate-x-0.5">→</span>
+                            <span aria-hidden="true" class="text-card-title font-bold transition-transform group-hover:translate-x-0.5">→</span>
                           </a>
                         </li>
                       );
                     })}
                   </ul>
                 ) : (
-                  <p class="m-0 text-[15px] text-ink-2">The event for this talk isn’t linked yet.</p>
+                  <p class="m-0 text-meta text-ink-2">The event for this talk isn’t linked yet.</p>
                 )}
                 {t.slidesUrl && (
-                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-[16px] font-bold underline underline-offset-[3px]">
+                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-compact font-bold underline">
                     Slides (opens in a new tab)
                   </a>
                 )}
-              </article>
+              </Card>
             ))}
           </section>
         ))
@@ -188,7 +190,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
     {
       stage.length > 0 && (
         <section class="flex flex-col gap-4" aria-labelledby="h-stage">
-          <h2 id="h-stage" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+          <h2 id="h-stage" class="m-0 text-subsection font-bold">
             At ZurichJS
           </h2>
           <Gallery client:visible items={toGallery(stage, events)} label={`Photos of ${s.name} at ZurichJS`} max={6} />
@@ -196,9 +198,9 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
       )
     }
 
-    <Surface class="flex flex-wrap gap-x-6 gap-y-3 justify-between items-center py-6 px-7">
-      <p class="m-0 text-[18px]">Want to give a talk like this? First-time speakers are welcome, and we’ll help you get ready.</p>
-      <Button href="/cfp" variant="yellow" class="text-[17px]">Propose a talk</Button>
-    </Surface>
+    <Card>
+      <p class="m-0 text-body">Want to give a talk like this? First-time speakers are welcome, and we’ll help you get ready.</p>
+      <Button slot="footer" href="/cfp" variant="cta">Propose a talk</Button>
+    </Card>
   </div>
 </BaseLayout>

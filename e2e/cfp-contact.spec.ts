@@ -58,7 +58,7 @@ test.describe('talk proposals (/cfp)', () => {
     await expect(agree).toHaveAttribute('aria-invalid', 'true');
     await expect(form.getByText('Tick the box to confirm you’ve read this.')).toBeVisible();
     // Returning speakers may leave the profile out.
-    await form.getByLabel('I’ve spoken at ZurichJS before.').check();
+    await form.getByLabel('Yes, I’ve spoken at ZurichJS before.').check();
     await expect(form.getByLabel('Job title (optional)')).not.toHaveAttribute('aria-invalid', 'true');
   });
 
@@ -238,6 +238,10 @@ test.describe('/contact', () => {
       'How can I get involved?',
     ])
       await expect(page.getByRole('heading', { name: q })).toBeVisible();
-    await expect(page.getByText(/^No\. Our meetups are free, so we can’t cover travel or accommodation/)).toBeVisible();
+    // The answers are disclosure cards: closed until the question is opened.
+    const answer = page.getByText(/^No\. Our meetups are free, so we can’t cover travel or accommodation/);
+    await expect(answer).toBeHidden();
+    await page.getByRole('heading', { name: 'Do you cover travel and accommodation for speakers?' }).click();
+    await expect(answer).toBeVisible();
   });
 });

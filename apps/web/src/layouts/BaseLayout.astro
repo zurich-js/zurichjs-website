@@ -80,16 +80,19 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-3 focus:left-3 focus:bg-yellow focus:text-black focus:px-4 focus:py-2 focus:rounded-pill focus:font-bold">Skip to content</a>
     {
       PREVIEW && (
-        <div role="status" class="bg-white text-black text-center text-[15px] font-bold px-gut py-2">
+        <div role="status" class="bg-white text-black text-center text-meta font-bold px-gut py-2">
           Draft preview: unpublished changes from Sanity. Not the live site.
         </div>
       )
     }
     <Header social={SOCIAL} />
-    <div class="on-black bg-black text-white">
-      <slot name="opening" />
-    </div>
-    <main id="main" class="flex-1"><slot /></main>
+    <main id="main" class="flex-1">
+      {/* The opening starts at the top of the page, under the header (which overlaps it), and is padded by the header's height. */}
+      <div class="on-black bg-black text-white pt-header">
+        <slot name="opening" />
+      </div>
+      <slot />
+    </main>
     <Footer site={SITE} confState={c.conference.state} />
     <script>
       // One delegated listener for data-track="<event>" elements (see lib/analytics.ts).

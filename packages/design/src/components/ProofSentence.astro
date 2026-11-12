@@ -14,7 +14,7 @@ interface Props {
 const { rating, award } = Astro.props;
 ---
 
-<p class="m-0 text-[clamp(18px,1.6vw,20px)] leading-[1.6] text-white max-w-[560px] text-pretty">
+<p class="m-0 text-lead text-white max-w-140 text-pretty">
   {
     rating && (
       <span>
@@ -27,7 +27,7 @@ const { rating, award } = Astro.props;
   }
   <span>
     {rating ? 'winner' : 'Winner'} of the{' '}
-    <a href="/#award" class="font-bold underline underline-offset-[3px]">2026 Open Source Award</a> for {award.category}{' '}
+    <a href="/#award" class="font-bold underline">2026 Open Source Award</a> for {award.category}{' '}
     globally.
   </span>
 </p>

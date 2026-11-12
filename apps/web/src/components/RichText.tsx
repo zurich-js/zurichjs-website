@@ -10,17 +10,20 @@ interface Props {
    * the text is longer. The full text stays in the page (search engines, screen
    * readers); only its height is limited until someone expands it.
    */
-  clampLines?: number;
+  clampLines?: keyof typeof CLAMP;
   /** Button labels for the clamp, e.g. ['See more', 'See less']. */
   moreLabels?: [string, string];
   /** Classes for the More/Less toggle, when it should look different from the default underlined text. */
   moreClass?: string;
 }
 
+/** Line clamps in use, as static classes so Tailwind sees them. */
+const CLAMP = { 3: 'line-clamp-3', 5: 'line-clamp-5' } as const;
+
 const line = (parts: Inline[]) =>
   parts.map((p, i) =>
     'href' in p ? (
-      <a key={i} href={p.href} rel="nofollow noopener" target="_blank" class="underline underline-offset-[3px] break-words">
+      <a key={i} href={p.href} rel="nofollow noopener" target="_blank" class="underline wrap-break-word">
         {p.text}
       </a>
     ) : (
@@ -53,7 +56,7 @@ export function RichText({ text, class: cls, clampLines, moreLabels = ['Read mor
   const clamped = !!clampLines && !expanded;
   const body = blocks.map((b, i) =>
     b.kind === 'ul' ? (
-      <ul key={i} class="m-0 pl-6 list-disc [&>li+li]:mt-1.5">
+      <ul key={i} class="m-0 pl-6 list-disc space-y-1.5">
         {b.items.map((it, j) => (
           <li key={j}>{line(it)}</li>
         ))}
@@ -75,12 +78,7 @@ export function RichText({ text, class: cls, clampLines, moreLabels = ['Read mor
   // Block children spaced with margins (not flex), so line clamping counts lines across paragraphs and lists.
   return (
     <div class={`flex flex-col items-start gap-1.5 ${cls ?? ''}`}>
-      <div
-        ref={box}
-        id={id}
-        class="[&>*+*]:mt-3"
-        style={clamped ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: String(clampLines), overflow: 'hidden' } : undefined}
-      >
+      <div ref={box} id={id} class={`space-y-3 ${clamped ? CLAMP[clampLines] : ''}`}>
         {body}
       </div>
       {(overflows || expanded) && (
@@ -89,7 +87,7 @@ export function RichText({ text, class: cls, clampLines, moreLabels = ['Read mor
           aria-expanded={expanded}
           aria-controls={id}
           onClick={() => setExpanded((e) => !e)}
-          class={moreClass ?? 'p-0 bg-transparent border-0 font-bold text-[16px] text-black underline underline-offset-[3px] cursor-pointer'}
+          class={moreClass ?? 'p-0 bg-transparent border-0 font-bold text-compact text-black underline cursor-pointer'}
         >
           {expanded ? moreLabels[1] : moreLabels[0]}
         </button>

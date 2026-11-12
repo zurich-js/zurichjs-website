@@ -1,15 +1,16 @@
 ---
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import Notice from '@zurichjs/design/components/Notice.astro';
+import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
 import ContactForm from '~/components/islands/forms/ContactForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink } from '@zurichjs/design/analytics';
 import { SITE, content } from '~/lib/content';
 import Photo from '@zurichjs/design/components/Photo.astro';
-import LineIcon from '~/components/LineIcon.astro';
 import Monogram from '@zurichjs/design/components/Monogram.astro';
 import { SocialIcon, socialKind } from '@zurichjs/design/islands/SocialLabel';
-import { isExternal } from '@zurichjs/design/recipes';
+import { buttonClass } from '@zurichjs/design/recipes';
 import { faqSchema, organizationSchema } from '@zurichjs/seo';
 
 /** Simple line icons (24 px grid, drawn here), one per kind of question. */
@@ -49,7 +50,7 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
   {
     question: 'How can I speak at a ZurichJS meetup?',
     answer:
-      'Send a talk proposal through our call for papers (CFP). It is open all year and needs no account. First-time speakers are welcome: tick the box in the form and an organiser helps you prepare.',
+      'Send a talk proposal through our call for papers (CFP). It is open all year and needs no account. First-time speakers are welcome: say so in the form and an organiser helps you prepare.',
     link: { label: 'Propose a talk', href: '/cfp' },
   },
   {
@@ -91,167 +92,125 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
     title="Contact the organisers"
     sub="Questions about a meetup, speaking, hosting or anything else. Real people read these, usually between a day job and the next meetup."
   />
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(40px,5vw,80px)] items-start">
-      <section aria-labelledby="h-routes" class="flex flex-col gap-[18px]">
-        <h2 id="h-routes" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Faster for these</h2>
+  <div class="px-gut py-section flex flex-col gap-section">
+    <div class="grid grid-cols-auto-lg gap-10 md:gap-16 items-start">
+      <section aria-labelledby="h-routes" class="flex flex-col gap-4">
+        <h2 id="h-routes" class="m-0 text-subsection font-bold">Faster for these</h2>
         <div class="flex flex-col gap-2.5">
           {
             ROUTES.map((r) => (
-              <a
-                href={r.href}
-                {...(isExternal(r.href) ? { target: '_blank', rel: 'noopener' } : {})}
-                class="no-underline text-black text-left rounded-[20px] py-[18px] px-5 grid grid-cols-[minmax(0,1fr)_auto] gap-3 items-center bg-grey hover:bg-grey-hover"
-              >
-                <span class="flex items-center gap-4 min-w-0">
-                  <LineIcon d={r.icon} />
-                  <span class="flex flex-col gap-[3px] min-w-0">
-                    <span class="text-[18px] font-bold">{r.h}</span>
-                    <span class="text-[16px] leading-[1.45] text-ink-2">{r.d}</span>
-                  </span>
-                </span>
-                <span aria-hidden="true" class="w-10 h-10 rounded-pill flex items-center justify-center font-bold bg-white">
-                  →
-                </span>
-              </a>
+              <Card href={r.href} title={r.h} surface="filled">
+                <svg slot="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d={r.icon} />
+                </svg>
+                <p class="m-0 text-compact text-ink-2">{r.d}</p>
+              </Card>
             ))
           }
         </div>
-        <section id="conduct" aria-labelledby="h-conduct" class="scroll-mt-6 rounded-[20px] bg-grey p-[clamp(20px,2.5vw,28px)] flex flex-col gap-2.5">
-          <div class="flex items-center gap-3">
-            <LineIcon d={ICON.conduct} tone="white" />
-            <h3 id="h-conduct" class="m-0 text-[22px] leading-[1.25] font-bold">Report a code of conduct concern</h3>
-          </div>
-          <p class="m-0 text-[17px] leading-[1.55]">
+        <Notice id="conduct" as="h3" title="Report a code of conduct concern" class="scroll-mt-6">
+          <svg slot="icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d={ICON.conduct} />
+          </svg>
+          <p class="m-0">
             Please don’t use the form for this. Email <a href={`mailto:${SITE.email}?subject=${encodeURIComponent('Code of conduct concern')}`} class="font-bold"
               >{SITE.email}</a
             >, or speak to any ZurichJS team member at an event. The organisers review every report and respect the privacy and security of the person reporting.
           </p>
-          <a href="/policies/code-of-conduct#reporting-guidelines" class="font-bold text-[17px] self-start">Read the code of conduct</a>
-        </section>
+          <a href="/policies/code-of-conduct#reporting-guidelines" class="font-bold self-start">Read the code of conduct</a>
+        </Notice>
       </section>
-      <section aria-labelledby="h-cform" class="flex flex-col gap-[18px]">
-        <h2 id="h-cform" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Send a message</h2>
+      <section aria-labelledby="h-cform" class="flex flex-col gap-4">
+        <h2 id="h-cform" class="m-0 text-subsection font-bold">Send a message</h2>
         <ContactForm client:load />
       </section>
     </div>
 
-    <section aria-labelledby="h-reach" class="flex flex-col gap-[18px]">
-      <h2 id="h-reach" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Other ways to reach us</h2>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-3">
+    <section aria-labelledby="h-reach" class="flex flex-col gap-4">
+      <h2 id="h-reach" class="m-0 text-subsection font-bold">Other ways to reach us</h2>
+      <AutoGrid min="sm" gap="sm">
         {
           [
-            { h: 'Email', d: 'For anything at all.', href: `mailto:${SITE.email}`, label: SITE.email, icon: <LineIcon d={ICON.mail} tone="white" /> },
-            {
-              h: 'LinkedIn',
-              d: 'Updates from the community. You can message us there too.',
-              href: SITE.linkedinUrl,
-              label: 'linkedin.com/company/zurichjs',
-              icon: (
-                <span aria-hidden="true" class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center flex-none">
-                  <SocialIcon kind="linkedin" size={20} />
-                </span>
-              ),
-            },
-            { h: 'Meetup', d: 'Join the group to RSVP for meetups and message the organisers.', href: SITE.meetupGroupUrl, label: 'meetup.com/zurich-js', icon: <LineIcon d={ICON.meetup} tone="white" /> },
-            {
-              h: 'Slack',
-              d: 'Talk with the community between meetups.',
-              href: SITE.slackInviteUrl,
-              label: 'Join our Slack',
-              icon: (
-                <span aria-hidden="true" class="w-11 h-11 rounded-2xl bg-white flex items-center justify-center flex-none">
-                  <SocialIcon kind="slack" size={20} />
-                </span>
-              ),
-            },
+            { h: 'Email', d: 'For anything at all.', href: `mailto:${SITE.email}`, label: SITE.email, line: ICON.mail },
+            { h: 'LinkedIn', d: 'Updates from the community. You can message us there too.', href: SITE.linkedinUrl, label: 'linkedin.com/company/zurichjs', social: 'linkedin' as const },
+            { h: 'Meetup', d: 'Join the group to RSVP for meetups and message the organisers.', href: SITE.meetupGroupUrl, label: 'meetup.com/zurich-js', line: ICON.meetup },
+            { h: 'Slack', d: 'Talk with the community between meetups.', href: SITE.slackInviteUrl, label: 'Join our Slack', social: 'slack' as const },
           ].map((c) => (
-            <a
-              href={c.href}
-              {...(c.href.startsWith('http') ? { target: '_blank', rel: 'noopener' } : {})}
-              class="no-underline text-black rounded-card bg-grey hover:bg-grey-hover p-[clamp(20px,2.5vw,28px)] flex flex-col gap-3"
-            >
-              {c.icon}
-              <span class="flex flex-col gap-1">
-                <span class="text-[20px] font-bold">{c.h}</span>
-                <span class="text-[17px] leading-[1.55] text-ink-2">{c.d}</span>
+            // A short title; the destination is the first line under it and in the link's name (linkHint).
+            <Card href={c.href} title={c.h} linkHint={c.label} surface="filled">
+              <span slot="icon" class="flex">
+                {c.social ? (
+                  <SocialIcon kind={c.social} size={20} />
+                ) : (
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d={c.line} />
+                  </svg>
+                )}
               </span>
-              <span class="font-bold text-[17px] break-words underline underline-offset-[3px]">{c.label}</span>
-            </a>
+              <p class="m-0 text-compact font-bold wrap-anywhere" aria-hidden="true">{c.label}</p>
+              <p class="m-0 text-compact text-ink-2">{c.d}</p>
+            </Card>
           ))
         }
-      </div>
-      <h3 class="m-0 mt-4 text-[22px] font-bold">The organisers</h3>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-3">
+      </AutoGrid>
+      <h3 class="m-0 mt-4 text-card-title font-bold">The organisers</h3>
+      {/* The same person cards as the team on /about: photo on top, name, role, then one row of round icon links. */}
+      <ul class="m-0 p-0 list-none grid grid-cols-auto-sm gap-4">
         {
           ORGANISERS.map((o) => {
             const email = EMAIL[o.name];
             const socials = (o.links ?? []).filter((l) => socialKind(l.label));
             return (
-              <Surface class="p-[clamp(20px,2.5vw,28px)] flex flex-col gap-4">
-                <div class="flex items-center gap-4">
-                  <span class="w-16 h-16 flex-none">
-                    {o.photo ? (
-                      <Photo photo={o.photo} class="w-16 h-16 rounded-full!" sizes="64px" />
-                    ) : (
-                      <Monogram initials={o.initials} size="avatar" label={o.name} />
+              <Card as="li" padding="md" title={o.name} level="h4" mediaLayout="stack" mediaRatio="square">
+                {o.photo ? <Photo slot="media" photo={o.photo} sizes="(min-width: 800px) 30vw, 100vw" /> : <Monogram slot="media" initials={o.initials} size="portrait" label={o.name} />}
+                <p class="m-0 text-compact text-ink-2">{o.role}</p>
+                {(email || socials.length > 0) && (
+                  <ul slot="footer" class="m-0 p-0 list-none flex flex-wrap gap-2" aria-label={`${o.name}: email and links`}>
+                    {email && (
+                      <li>
+                        <a href={`mailto:${email}`} title={email} aria-label={`Email ${o.name}: ${email}`} class={buttonClass({ variant: 'secondary', iconOnly: true })}>
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d={ICON.mail} />
+                          </svg>
+                        </a>
+                      </li>
                     )}
-                  </span>
-                  <div class="flex flex-col gap-0.5 min-w-0">
-                    <h4 class="m-0 text-[20px] font-bold">{o.name}</h4>
-                    <p class="m-0 text-[16px] text-ink-2">{o.role}</p>
-                  </div>
-                </div>
-                {/* Email on its own line, then one row of icons: the same two rows on every card, at the bottom. */}
-                <div class="mt-auto flex flex-col gap-2.5">
-                  {email && (
-                    <a href={`mailto:${email}`} class="self-start inline-flex items-center gap-2 min-h-[40px] px-4 rounded-pill bg-white text-black no-underline text-[15px] font-bold hover:bg-grey-hover">
-                      <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-                        <path d={ICON.mail} />
-                      </svg>
-                      {email}
-                    </a>
-                  )}
-                  {socials.length > 0 && (
-                    <ul class="m-0 p-0 list-none flex flex-nowrap items-center gap-2" aria-label={`${o.name} online`}>
-                      {socials.map((l) => (
-                        <li>
-                          <a
-                            href={l.url}
-                            target="_blank"
-                            rel="noopener"
-                            title={l.label}
-                            aria-label={`${o.name} on ${l.label} (opens in a new tab)`}
-                            class="w-10 h-10 rounded-full bg-white hover:bg-grey-hover flex items-center justify-center"
-                          >
-                            <SocialIcon kind={socialKind(l.label)!} size={17} />
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </Surface>
+                    {socials.map((l) => (
+                      <li>
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noopener"
+                          title={l.label}
+                          aria-label={`${o.name} on ${l.label} (opens in a new tab)`}
+                          class={buttonClass({ variant: 'secondary', iconOnly: true })}
+                        >
+                          <SocialIcon kind={socialKind(l.label)!} size={17} />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
             );
           })
         }
-      </div>
+      </ul>
     </section>
 
-    <section aria-labelledby="h-faq" class="flex flex-col gap-[18px] max-w-[880px]">
-      <h2 id="h-faq" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Frequently asked questions</h2>
+    <section aria-labelledby="h-faq" class="flex flex-col gap-4 max-w-wide">
+      <h2 id="h-faq" class="m-0 text-subsection font-bold">Frequently asked questions</h2>
       <div class="flex flex-col gap-3">
         {
           FAQS.map((f) => (
-            <Surface tone="soft" class="p-[clamp(20px,3vw,28px)] flex flex-col gap-2.5">
-              <h3 class="m-0 text-[clamp(19px,1.8vw,22px)] leading-[1.3] font-bold text-pretty">{f.question}</h3>
-              <p class="m-0 text-[17px] leading-[1.6] text-ink-2 text-pretty">{f.answer}</p>
+            <Card title={f.question} disclosure>
+              <p class="m-0 text-body text-ink-2 text-pretty">{f.answer}</p>
               {f.link && (
-                <a href={f.link.href} class="font-bold text-[17px] self-start">
+                <a href={f.link.href} class="font-bold text-body self-start">
                   {f.link.label}
                 </a>
               )}
-            </Surface>
+            </Card>
           ))
         }
       </div>

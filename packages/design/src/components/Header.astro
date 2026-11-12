@@ -37,7 +37,7 @@ const path = Astro.url.pathname.replace(/\.html$/, '');
 const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p + '/'));
 const involvedCurrent = isCurrent(INVOLVED.map((i) => i.href));
 const barSocial = social.filter((s) => ['linkedin', 'instagram', 'bluesky'].includes(s.kind));
-// White marks as on conf.zurichjs.com: 24px glyphs in a 40px round hit area (for the focus ring).
+// Plain white marks (nav review, 5th November 2026), each in a 40px round hit area for the focus ring.
 const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70';
 ---
 
@@ -52,13 +52,13 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     if (localStorage.getItem('zurichjs:signed-in') === '1') document.documentElement.setAttribute('data-signed-in', '');
   } catch {}
 </script>
-<header data-site-header class="site-header on-black sticky top-0 z-50 bg-black text-white">
-  <div data-bar class="bar flex items-center justify-between gap-4 py-4 px-gut">
+<header data-site-header class="site-header on-black sticky top-0 z-50 box-border h-header -mb-header bg-black text-white">
+  <div data-bar class="bar box-border h-full flex items-center justify-between gap-4 px-4 pl-8">
     <a href="/" aria-label="ZurichJS home" class="flex shrink-0">
-      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" />
+      <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-4.5 w-auto" />
     </a>
 
-    <nav aria-label="Main" class="hidden md:flex items-center gap-[clamp(14px,1.9vw,28px)] text-[clamp(15px,1.45vw,17px)] whitespace-nowrap">
+    <nav aria-label="Main" class="hidden md:flex items-center gap-4 lg:gap-6 text-compact whitespace-nowrap">
       {
         NAV.map((n) => (
           <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-1.5 font-bold no-underline hover:text-grey-mid', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
@@ -72,12 +72,12 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           data-involved-toggle
           aria-expanded="false"
           aria-controls="involved-menu"
-          class={cx('flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-[length:inherit] cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
+          class={cx('group flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-compact cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
         >
           Get involved
-          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform [[aria-expanded=true]>&]:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform group-aria-expanded:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
-        <ul id="involved-menu" hidden class="absolute right-0 top-full z-50 mt-3 w-60 list-none m-0 p-3 bg-black rounded-card [&:not([hidden])]:block">
+        <ul id="involved-menu" hidden class="absolute right-0 top-full z-50 mt-3 w-60 list-none m-0 p-3 bg-black rounded-card">
           {
             INVOLVED.map((i) => (
               <li>
@@ -96,16 +96,16 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
               {barSocial.map((s) => (
                 <li>
                   <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class={iconLink}>
-                    <SocialIcon kind={s.kind} size={24} tone="white" />
+                    <SocialIcon kind={s.kind} size={24} />
                   </a>
                 </li>
               ))}
             </ul>
-            <span aria-hidden="true" class="hidden lg:block w-px h-6 bg-grey-text" />
+            <span aria-hidden="true" class="hidden lg:block w-px h-6 -mx-4 bg-grey-text" />
           </>
         )
       }
-      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'min-h-0! py-2.5 px-[clamp(16px,1.6vw,22px)] text-[length:inherit]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
+      <a href={CTA.href} data-header-cta class={buttonClass({ variant: 'cta' }, 'ml-2')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
 
     <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
@@ -114,35 +114,35 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
   </div>
 </header>
 
-<dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none bg-black text-white border-0">
-  <div class="flex flex-col min-h-full">
-    <div class="flex items-center justify-between py-4 px-gut">
-      <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block w-30 h-auto" /></a>
-      <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
-        <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-      </button>
-    </div>
+<dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none open:flex flex-col overflow-hidden bg-black text-white border-0">
+  <div class="flex shrink-0 items-center justify-between py-4 px-gut">
+    <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-4.5 w-auto" /></a>
+    <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </div>
+  <div class="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain">
     <nav aria-label="Main" class="flex-1 flex flex-col justify-center gap-1 px-gut py-6">
       {
         NAV.map((n) => (
-          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2 text-[28px] font-bold no-underline', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
+          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2 text-subsection font-bold no-underline', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
             {n.label}
           </a>
         ))
       }
-      <p id="mobile-involved" class="mt-5 mb-1 text-[17px] text-grey-mid">Get involved</p>
+      <p id="mobile-involved" class="mt-5 mb-1 text-body text-grey-mid">Get involved</p>
       <ul aria-labelledby="mobile-involved" class="list-none m-0 p-0 flex flex-col">
         {
           INVOLVED.map((i) => (
             <li>
-              <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block py-1.5 text-[20px] font-bold no-underline', isCurrent([i.href]) ? 'text-white underline decoration-2 underline-offset-4' : 'text-white')}>
+              <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block py-1.5 text-card-title font-bold no-underline', isCurrent([i.href]) ? 'text-white underline decoration-2 underline-offset-4' : 'text-white')}>
                 {i.label}
               </a>
             </li>
           ))
         }
       </ul>
-      <a href={CTA.href} data-header-cta class={buttonClass('yellow', 'md', false, 'mt-6 self-start text-[17px]')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
+      <a href={CTA.href} data-header-cta class={buttonClass({ variant: 'cta' }, 'mt-6 self-start')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
     {
       social.length > 0 && (
@@ -150,7 +150,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           {social.map((s) => (
             <li>
               <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} class="w-11 h-11 rounded-full flex items-center justify-center text-white hover:opacity-70">
-                <SocialIcon kind={s.kind} size={24} tone="white" />
+                <SocialIcon kind={s.kind} size={24} />
               </a>
             </li>
           ))}
@@ -174,7 +174,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
 
   /*
    * Scrolled: the bar floats as a black pill with space around it (the conference's nav).
-   * The header keeps the same height in both states (8 + 12 + 12 = 16 + 16), so the page below never moves,
+   * The header is always h-header (80px): flat, the bar fills it; floating, 8px above a 72px bar, so the page below never moves,
    * and only the colours, the corners, the shadow and the side inset animate.
    */
   .site-header {
@@ -185,22 +185,19 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     padding: 8px var(--gut) 0;
   }
   .site-header[data-scrolled] .bar {
-    background-color: #000;
-    border-radius: 40px;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    background-color: var(--color-black);
+    /* Rounding formula: a 48px button (24px) plus the 12px around it. */
+    border-radius: calc(var(--radius-control-pill) + 12px);
     box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
   }
   @media (max-width: 799px) {
     /* Phones: the bar stays full width and flat. */
     .site-header[data-scrolled] {
-      background-color: #000;
+      background-color: var(--color-black);
       padding: 0;
     }
     .site-header[data-scrolled] .bar {
       border-radius: 0;
-      padding-top: 16px;
-      padding-bottom: 16px;
     }
   }
   @media (prefers-reduced-motion: no-preference) {
@@ -217,7 +214,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     }
   }
   .mobile-nav::backdrop {
-    background: #000;
+    background: var(--color-black);
   }
   :global(html:has(dialog.mobile-nav[open])) {
     overflow: hidden;

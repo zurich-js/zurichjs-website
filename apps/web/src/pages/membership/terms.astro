@@ -9,6 +9,7 @@
  * version before their next payment setup.
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import { TERMS } from '@zurichjs/membership';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
@@ -80,19 +81,19 @@ const SECTIONS: [string, string[]][] = [
 
 <BaseLayout title="Membership terms" description={`The terms for membership of the ${SITE.association}, the association behind ZurichJS.`}>
   <PageOpening slot="opening" title="Membership terms" sub={`For members of the ${SITE.association}. Version of ${version}.`} />
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
-    <div class="max-w-[760px] flex flex-col gap-9">
+  <div class="px-gut py-section">
+    <div class="max-w-reading flex flex-col gap-9">
       {
         SECTIONS.map(([h, paras]) => (
           <section class="flex flex-col gap-3">
-            <h2 class="m-0 text-[clamp(24px,2.4vw,30px)] leading-[1.2] font-bold">{h}</h2>
+            <Heading size="subsection">{h}</Heading>
             {paras.map((p) => (
-              <p class="m-0 text-[18px] leading-[1.65] text-ink-2 text-pretty">{p}</p>
+              <p class="m-0 text-body text-ink-2 text-pretty">{p}</p>
             ))}
           </section>
         ))
       }
-      <p class="m-0 text-[17px] text-ink-2">
+      <p class="m-0 text-body text-ink-2">
         Questions? <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a> · <a href="/policies/privacy-policy" class="font-bold text-black">Privacy policy</a> ·{' '}
         <a href="/membership/account" class="font-bold text-black">Your membership</a>
       </p>

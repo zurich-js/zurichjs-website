@@ -18,15 +18,16 @@ test.describe('event schedule and venue', () => {
   test('a programme with an agenda shows every line with its own time, including doors and breaks', async ({ page }) => {
     await at(page, '2026-11-01T12:00:00+01:00');
     await page.goto('/events/2026-11-forms-types');
-    const rows = page.locator('#programme li');
+    // The programme's own lines (each talk also lists its speakers, in a nested list).
+    const rows = page.locator('#programme > ol > li');
     await expect(rows).toHaveCount(5);
     await expect(rows.nth(0)).toContainText('18:30');
     await expect(rows.nth(0)).toContainText('Doors open');
     await expect(rows.nth(1)).toContainText('19:00');
     await expect(rows.nth(2)).toContainText('19:35');
     await expect(rows.nth(3)).toContainText('Food and conversation');
-    // The opening distinguishes doors from the first talk, with the winter zone.
-    await expect(page.locator('main, body').first()).toContainText('Doors 18:30 · Talks from 19:00 CET');
+    // The times are the programme's: the opening gives only the date (Bogdan's review, 12th November 2026).
+    await expect(page.getByRole('heading', { level: 1 }).locator('xpath=ancestor::section[1]')).not.toContainText('Talks from');
   });
 
   test('talks without agenda times are listed in order without a made-up time', async ({ page }) => {
@@ -47,12 +48,11 @@ test.describe('event schedule and venue', () => {
     await expect(page.locator('#talk-one-year-retro')).toBeInViewport();
   });
 
-  test('venue: full address and a directions link that works without a map', async ({ page }) => {
+  test('venue: full address and the map, with no separate directions button', async ({ page }) => {
     await page.goto('/events/2026-11-forms-types');
     const venue = page.locator('#venue');
     await expect(venue).toContainText('Musterstrasse 1, 8005 Zürich');
-    const link = venue.getByRole('link', { name: /Get directions/ });
-    await expect(link).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=Sample%20Venue%20AG/);
+    await expect(venue.getByRole('link', { name: /Get directions/ })).toHaveCount(0);
     // No Maps key in this build: the map is Google's keyless embed, always shown (owner), loaded lazily.
     await page.route(/^https:\/\/www\.google\.com\/maps/, (route) => route.fulfill({ body: '<!doctype html><title>map</title>', contentType: 'text/html' }));
     await expect(venue.getByRole('button', { name: /show map|hide map/i })).toHaveCount(0);
@@ -61,8 +61,6 @@ test.describe('event schedule and venue', () => {
     await expect(map).toHaveAttribute('src', 'https://www.google.com/maps?q=Musterstrasse%201%2C%208005%20Z%C3%BCrich&output=embed');
     await expect(map).toHaveAttribute('loading', 'lazy');
     await expect(map).toHaveAttribute('title', /^Map of Sample Venue AG/);
-    // Directions stay next to the map.
-    await expect(link).toBeVisible();
     // Past events keep their venue too.
     await page.goto('/events/2026-09-signals-streams');
     await expect(page.locator('#venue')).toContainText('Sample Venue AG');
@@ -174,7 +172,8 @@ test.describe('Tonight page', () => {
     await at(page, '2026-11-01T12:00:00+01:00');
     await page.goto('/today');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Forms, types and design systems');
-    await expect(page.locator('div').filter({ hasText: /^Next meetup$/ })).toBeVisible();
+    // No eyebrow labels (owner): the page says it becomes the evening's guide on the day, and offers no ratings yet.
+    await expect(page.getByText(/becomes the evening’s guide on the day/)).toBeVisible();
     await expect(page.getByText(/How (was|is) today/)).toHaveCount(0);
     await expect(page.getByText('Wed 18th Nov 2026').first()).toBeVisible();
   });
@@ -182,15 +181,17 @@ test.describe('Tonight page', () => {
   test('on the day: arrival first, and "Find the venue" is a working link', async ({ page }) => {
     await at(page, '2026-11-18T10:00:00+01:00');
     await page.goto('/today');
-    await expect(page.getByText('Doors open at 18:30')).toBeVisible();
-    await expect(page.getByRole('link', { name: /Get directions \(opens Google Maps\)/ })).toHaveAttribute('href', /google\.com\/maps\/dir/);
+    await expect(page.getByText(/Doors 18:30/).first()).toBeVisible();
+    // The opening's first action jumps to the venue section, which has the address and the map.
     await expect(page.getByRole('link', { name: 'Venue and arrival' })).toHaveAttribute('href', '#venue');
+    await expect(page.locator('#venue')).toContainText('Musterstrasse 1, 8005 Zürich');
   });
 
-  test('during the evening: now/next and feedback', async ({ page }) => {
+  test('during the evening: rate the talks and feedback', async ({ page }) => {
     await at(page, '2026-11-18T19:40:00+01:00');
     await page.goto('/today');
-    await expect(page.locator('[aria-current="time"]')).toContainText('What we learned shipping a design system');
+    // A talk has started and is not rated yet: the opening's first action goes to the programme.
+    await expect(page.getByRole('link', { name: 'Rate the talks' }).first()).toHaveAttribute('href', '#programme');
     await expect(page.getByRole('heading', { name: 'How is today’s meetup going?' })).toBeVisible();
   });
 
@@ -500,9 +501,9 @@ test.describe('speakers', () => {
 
   test('event search still finds talks by speaker name, ignoring accents', async ({ page }) => {
     await page.goto('/events?tab=past&q=noah%20probe');
-    await expect(page.locator('[data-panel="past"] [data-hay]:visible')).toHaveCount(1);
+    await expect(page.locator('[data-section="past"] [data-hay]:visible')).toHaveCount(1);
     await page.goto('/events?tab=past&q=entwurf');
-    await expect(page.locator('[data-panel="past"] [data-hay]:visible').first()).toContainText('Signals');
+    await expect(page.locator('[data-section="past"] [data-hay]:visible').first()).toContainText('Signals');
   });
 });
 
@@ -712,7 +713,9 @@ test.describe('partners and sponsors', () => {
     const current = page.locator('#partners-current');
     await expect(current.getByRole('link', { name: /Stripe/ })).toHaveAttribute('href', 'https://stripe.com');
     await expect(page.locator('#partners-venues').getByRole('link', { name: /novu AG/ })).toBeVisible();
-    for (const img of await page.locator('#partners-current img').all()) expect(await img.getAttribute('alt')).toMatch(/\w/);
+    // Each logo card is one link named by the partner; the logo inside is decorative, so it is not read twice.
+    for (const link of await current.getByRole('link').all()) expect(await link.innerText()).toMatch(/\w/);
+    for (const img of await current.locator('img').all()) expect(await img.getAttribute('alt')).toBe('');
   });
 
   test('the packages show production’s prices', async ({ page }) => {
@@ -791,32 +794,22 @@ test.describe('partners and sponsors', () => {
 });
 
 test.describe('community page', () => {
-  test('team photos (including Nadja), bios and links; volunteers are thanked', async ({ page }) => {
+  test('team cards link to speaker profiles in a new tab, keep their social links, and volunteers are thanked', async ({ page }) => {
     await page.goto('/about#team');
     const team = page.locator('#team');
-    await expect(team.getByRole('img', { name: 'Nadja Hesselbjerg' })).toBeVisible();
     await expect(team.getByRole('heading', { name: 'Meetup organisers' })).toBeVisible();
-    await expect(team.getByRole('list', { name: 'Faris Aziz: links' }).getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/farisaziz12');
+    await expect(team.getByRole('link', { name: /Nadja Hesselbjerg/ }).first()).toHaveAttribute('target', '_blank');
+    await expect(team.getByRole('list', { name: 'Faris Aziz: links' }).getByRole('link', { name: /GitHub/ })).toHaveAttribute('href', 'https://github.com/farisaziz12');
     await expect(team.getByText(/ZurichJS Conf 2026 happened thanks to 13 volunteers/)).toBeVisible();
+    await expect(team.getByRole('link', { name: 'Volunteer with us' })).toHaveAttribute('href', '/cfv');
   });
 
-  test('section navigation with shareable anchors, and the first-visit link still works', async ({ page }) => {
+  test('the page says what ZurichJS is about, with no section subnav or first-visit block', async ({ page }) => {
     await page.goto('/about');
-    const nav = page.getByRole('navigation', { name: 'On this page' });
-    for (const [label, id] of [
-      ['Story', 'story'],
-      ['Team', 'team'],
-      ['Values', 'values'],
-      ['Association', 'association'],
-      ['Get involved', 'get-involved'],
-      ['First visit', 'first-visit'],
-    ]) {
-      await expect(nav.getByRole('link', { name: label })).toHaveAttribute('href', `#${id}`);
-      await expect(page.locator(`#${id}`)).toHaveCount(1);
-    }
-    await page.goto('/about#first-visit');
-    await expect(page.locator('#first-visit')).toBeInViewport();
-    await expect(page.getByText(/An example evening\. Times change/)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('A community of developers around JavaScript in Zurich');
+    await expect(page.getByRole('navigation', { name: 'On this page' })).toHaveCount(0);
+    await expect(page.locator('#first-visit')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Values', exact: true })).toBeVisible();
   });
 
   test('timeline runs past November 2025, links out, and membership stays on this site', async ({ page }) => {
@@ -958,10 +951,14 @@ test.describe('home (Bogdan’s review)', () => {
     // Focus inside holds the rotation, so the active card only moves when we move it.
     await carousel.getByRole('button', { name: 'Next speaker' }).focus();
     const first = await active().getAttribute('href');
+    // The arc ignores steps asked for while a card is still moving (520ms, by design), so each step waits for the move.
+    const settle = () => page.waitForTimeout(600);
     await carousel.getByRole('button', { name: 'Next speaker' }).click();
     await expect(active()).not.toHaveAttribute('href', first!);
+    await settle();
     await carousel.getByRole('button', { name: 'Previous speaker' }).click();
     await expect(active()).toHaveAttribute('href', first!);
+    await settle();
     await active().focus();
     await page.keyboard.press('ArrowRight');
     await expect(active()).not.toHaveAttribute('href', first!);

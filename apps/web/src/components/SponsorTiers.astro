@@ -1,51 +1,47 @@
 ---
 /**
- * Current sponsors by tier, each with its logo at the size the tier promises
- * (XL, large, medium, small), its name and its own words, and one "Visit" link. Sponsors who asked for referral
- * analytics (`allowReferrer`) get links without `noreferrer`.
+ * Current sponsors by tier: each one a link card to the sponsor's site, with its logo at the size the tier
+ * promises (XL, large, medium, small), its name and its own words. Sponsors who asked for referral analytics
+ * (`allowReferrer`) get links without `noreferrer`.
  */
 import { TIER_LABEL, type Partner, type SponsorTier } from '@zurichjs/events';
+import Card from '@zurichjs/design/components/Card.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
+import { partnerRel } from '@zurichjs/design/logos';
 
 interface Props {
   groups: { tier?: SponsorTier; partners: Partner[] }[];
 }
 const { groups } = Astro.props;
-const rel = (p: Partner) => (p.allowReferrer ? 'noopener' : 'noopener noreferrer');
 const LOGO: Record<SponsorTier | 'none', { box: string; img: string; cols: string }> = {
-  champion: { box: 'h-28 w-full md:w-[280px]', img: 'max-h-20', cols: 'grid-cols-1' },
-  builder: { box: 'h-24 w-full md:w-[240px]', img: 'max-h-16', cols: 'grid-cols-1' },
-  friend: { box: 'h-16 w-full', img: 'max-h-14', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
-  supporter: { box: 'h-14 w-full', img: 'max-h-12', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
-  none: { box: 'h-14 w-full', img: 'max-h-12', cols: 'grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]' },
+  champion: { box: 'h-28', img: 'max-h-20', cols: 'grid-cols-1' },
+  builder: { box: 'h-24', img: 'max-h-16', cols: 'grid-cols-1' },
+  friend: { box: 'h-16', img: 'max-h-14', cols: 'grid-cols-auto-md' },
+  supporter: { box: 'h-14', img: 'max-h-12', cols: 'grid-cols-auto-md' },
+  none: { box: 'h-14', img: 'max-h-12', cols: 'grid-cols-auto-md' },
 };
 ---
 
-<div class="flex flex-col gap-[clamp(28px,3vw,40px)]">
+<div class="flex flex-col gap-7 md:gap-10">
   {
     groups.map((g) => {
       const z = LOGO[g.tier ?? 'none'];
-      const wide = g.tier === 'champion' || g.tier === 'builder';
       return (
         <div class="flex flex-col gap-4">
-          <h3 class="m-0 text-[24px] font-bold">{g.tier ? TIER_LABEL[g.tier] : 'Sponsors'}</h3>
+          <Heading as="h3" size="card">
+            {g.tier ? TIER_LABEL[g.tier] : 'Sponsors'}
+          </Heading>
           <ul class={`grid ${z.cols} gap-4 list-none m-0 p-0`}>
             {g.partners.map((p) => (
-              // A bounded card with the logo straight on it (no box in a box) and one explicit link (Bogdan's review).
-              <li class={`rounded-card border border-grey-frame bg-white p-[clamp(20px,2.4vw,28px)] flex gap-5 ${wide ? 'flex-col md:flex-row md:items-center' : 'flex-col'}`}>
-                <div class={`${z.box} flex-none flex items-center ${wide ? 'justify-center md:justify-start' : 'justify-start'}`}>
-                  {p.logo ? <img src={p.logo} alt={p.name} width="240" height="96" loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} /> : <span class="font-bold text-[22px]">{p.name}</span>}
-                </div>
-                <div class="flex flex-col gap-2 min-w-0">
-                  <div class="text-[20px] font-bold">{p.name}</div>
-                  {(p.blurb || p.description) && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{p.blurb ?? p.description}</p>}
-                  {p.url && (
-                    <a href={p.url} target="_blank" rel={rel(p)} class="self-start text-[16px] font-bold text-black underline underline-offset-4 hover:no-underline">
-                      Visit {p.name}
-                      <span class="sr-only"> (opens in a new tab)</span>
-                    </a>
-                  )}
-                </div>
-              </li>
+              // The whole card is the link to the sponsor (Bogdan's review, 12th November 2026); the logo leads.
+              <Card as="li" title={p.name} href={p.url} external linkAttrs={p.url ? { rel: partnerRel(p) } : undefined}>
+                {p.logo && (
+                  <div class={`${z.box} order-first flex items-center`}>
+                    <img src={p.logo} alt="" width="240" height="96" loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} />
+                  </div>
+                )}
+                {(p.blurb || p.description) && <p class="m-0 text-body text-ink-2">{p.blurb ?? p.description}</p>}
+              </Card>
             ))}
           </ul>
         </div>

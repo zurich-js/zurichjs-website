@@ -1,43 +1,66 @@
 ---
-/** The black opening of every inner page: breadcrumb, status pills, title, one sentence (slot "sub" or prop), actions (default slot). */
+/**
+ * The black opening of every inner page: breadcrumb, status tags, title, one sentence (slot "sub" or prop), actions (default slot).
+ * Slot "media": an image beside all of that from 800px (an event's artwork), under it on phones. Every opening is at least `min-h-opening` tall, its text centred (owner, 12th November 2026).
+ */
 import { cx } from '../recipes';
+import Tag from './Tag.astro';
 
 interface Props {
   title: string;
   sub?: string;
   crumb?: { label: string; href: string; here: string };
-  pills?: { text: string; yellow?: boolean }[];
+  /** Status tags above the title ("Open", "Today"). */
+  pills?: { text: string }[];
   /** Narrower bottom padding for pages that start with a list right away. */
   compact?: boolean;
 }
 const { title, sub, crumb, pills, compact } = Astro.props;
 // Long titles get smaller type (Bogdan's review: 72px for long titles is too big).
-const titleSize = title.length <= 24 ? 'text-[clamp(36px,5vw,64px)]' : title.length <= 48 ? 'text-[clamp(32px,4vw,52px)]' : 'text-[clamp(28px,3.2vw,44px)]';
+// Long titles step down once, never below a section heading: the page's h1 always leads.
+const titleSize = title.length <= 64 ? 'text-title' : 'text-section';
 const hasSub = !!sub || Astro.slots.has('sub');
+const hasMedia = Astro.slots.has('media');
 ---
 
-<section class={cx('px-gut flex flex-col gap-[18px] pt-[clamp(16px,3vw,40px)]', compact ? 'pb-[clamp(28px,4vw,48px)]' : 'pb-[clamp(36px,5vw,64px)]')}>
-  {
-    crumb && (
-      <nav aria-label="Breadcrumb" class="text-[16px] text-grey-mid flex gap-2 flex-wrap">
-        <a href={crumb.href} class="text-white underline underline-offset-[3px]">
-          {crumb.label}
-        </a>
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{crumb.here}</span>
-      </nav>
-    )
-  }
-  {
-    pills && pills.length > 0 && (
-      <div class="flex flex-wrap gap-2" data-state-pills>
-        {pills.map((p) => (
-          <span class={cx('text-[15px] font-bold px-3.5 py-1.5 rounded-pill text-black', 'bg-white')}>{p.text}</span>
-        ))}
-      </div>
-    )
-  }
-  <h1 class:list={["m-0 leading-[1.1] font-bold max-w-[1000px] text-balance", titleSize]}>{title}</h1>
-  {hasSub && <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[700px] text-pretty">{sub}<slot name="sub" /></p>}
-  <slot />
+<section class={cx('px-gut pt-4 md:pt-6 lg:pt-10', compact ? 'pb-7 md:pb-10 lg:pb-12' : 'pb-9 md:pb-12 lg:pb-16', hasMedia ? 'grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center' : 'flex flex-col', 'min-h-opening justify-center')}>
+  <div class="flex flex-col gap-4 min-w-0">
+    {
+      crumb && (
+        <nav aria-label="Breadcrumb" class="text-compact text-grey-mid flex gap-2 flex-wrap">
+          <a href={crumb.href} class="text-white underline">
+            {crumb.label}
+          </a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{crumb.here}</span>
+        </nav>
+      )
+    }
+    {
+      pills && pills.length > 0 && (
+        <div class="flex flex-wrap gap-2" data-state-pills>
+          {pills.map((p) => (
+            <Tag size="md" tone="white">
+              {p.text}
+            </Tag>
+          ))}
+        </div>
+      )
+    }
+    <h1 class={cx('m-0 font-bold max-w-wide text-balance', titleSize)}>{title}</h1>
+    {
+      hasSub && (
+        <p class="m-0 text-lead max-w-reading text-pretty">
+          {sub}
+          <slot name="sub" />
+        </p>
+      )
+    }
+    <slot />
+  </div>
+  {hasMedia && (
+    <div class="min-w-0">
+      <slot name="media" />
+    </div>
+  )}
 </section>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 interface Profile {
@@ -86,10 +87,10 @@ export default function SpeakerProfileForm() {
     }
   };
 
-  if (state === 'loading') return <p class="m-0 text-[18px] text-ink-2">Loading your profile…</p>;
+  if (state === 'loading') return <p class="m-0 text-body text-ink-2">Loading your profile…</p>;
   if (state === 'invalid')
     return (
-      <p role="alert" class="m-0 text-[18px]">
+      <p role="alert" class="m-0 text-body">
         {error || 'This link is not valid or has expired.'} Write to{' '}
         <a href="mailto:hello@zurichjs.com" class="font-bold text-black">
           hello@zurichjs.com
@@ -99,20 +100,19 @@ export default function SpeakerProfileForm() {
     );
   if (state === 'saved')
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-2 max-w-[720px] outline-hidden">
-        <div class="text-[26px] font-bold">Saved for review.</div>
-        <p class="m-0 text-[18px] leading-[1.55]">An organiser checks your profile and publishes it. You can use the same link to change it again until it expires.</p>
-      </div>
+      <Notice tone="success" live focusRef={doneRef} title="Saved for review." class="max-w-reading">
+        <p class="m-0 text-body">An organiser checks your profile and publishes it. You can use the same link to change it again until it expires.</p>
+      </Notice>
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate encType="multipart/form-data" class="flex flex-col gap-5 max-w-[720px]">
+    <form ref={formRef} onSubmit={submit} noValidate encType="multipart/form-data" class="flex flex-col gap-5 max-w-reading">
       <div class="flex flex-col gap-2">
-        <label class="text-[16px] font-bold" htmlFor="sp-photo">
+        <label class="text-compact font-bold" htmlFor="sp-photo">
           Photo (optional)
         </label>
         <div class="flex items-center gap-4">
-          {preview && <img src={preview} alt="How you appear now" width={96} height={96} class="w-24 h-24 rounded-2xl object-cover bg-grey" />}
+          {preview && <img src={preview} alt="How you appear now" width={96} height={96} class="w-24 h-24 rounded-field object-cover bg-grey" />}
           <input
             id="sp-photo"
             name="photo"
@@ -128,10 +128,10 @@ export default function SpeakerProfileForm() {
               }
               if (f) setPreview(URL.createObjectURL(f));
             }}
-            class="text-[16px]"
+            class="text-compact"
           />
         </div>
-        <span id="sp-photo-hint" class="text-[15px] text-ink-2">
+        <span id="sp-photo-hint" class="text-meta text-ink-2">
           JPEG, PNG or WebP, up to 5 MB. A square photo of your face works best.
         </span>
       </div>
@@ -170,14 +170,14 @@ export default function SpeakerProfileForm() {
         onInput={(e) => setInterests(e.currentTarget.value)}
       />
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="yellow" size="lg" busy={state === 'saving'}>
+        <SubmitButton variant="cta" busy={state === 'saving'}>
           {state === 'saving' ? 'Saving…' : 'Save for review'}
         </SubmitButton>
-        <span role="alert" class="text-[15px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {error}
         </span>
       </div>
-      <p class="m-0 text-[15px] text-ink-2">Nothing is published until an organiser approves it. Your email address is never shown on the site.</p>
+      <p class="m-0 text-meta text-ink-2">Nothing is published until an organiser approves it. Your email address is never shown on the site.</p>
     </form>
   );
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { colors } from '@zurichjs/design/tokens';
+import { colors } from '@zurichjs/design/theme';
 import { describe, expect, it } from 'vitest';
 import { boardNoticeFromText, render, renderEmail, safeUrl, TEMPLATE_NAMES } from '../src/index.ts';
 

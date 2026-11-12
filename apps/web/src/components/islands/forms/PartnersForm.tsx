@@ -2,6 +2,7 @@ import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 import { WAY_LABEL, intentFromQuery, intentLabel, partnerPayload, type Tier, type Way, TIERS, asTier, asWay } from './partners-intent.ts';
@@ -94,25 +95,24 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
-        <div class="text-[28px] font-bold leading-[1.15]">Thanks, we have your inquiry.</div>
-        <p class="m-0 text-[18px] leading-[1.55]">
+      <Notice tone="success" live focusRef={doneRef} title="Thanks, we have your inquiry.">
+        <p class="m-0 text-body">
           You asked about: <b>{intentLabel(f.way, f.tier)}</b>. The organisers have it, and one of us will reply to {f.email} from {email} to plan the next step. Nothing is agreed
           until you confirm.
         </p>
         <div class="flex flex-wrap gap-2.5 mt-1.5">
-          <Button href={nextHref} variant="yellow" class="text-[17px]">
+          <Button href={nextHref} variant="cta">
             See the next meetup
           </Button>
-          <Button href="/about" variant="outline-black" class="text-[17px] border!">
+          <Button href="/about" variant="secondary">
             About ZurichJS
           </Button>
         </div>
-      </div>
+      </Notice>
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-[18px]">
+    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-4">
       <Honeypot />
       <ChipGroup<Way>
         label="What would you like to talk about?"
@@ -130,11 +130,11 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
           ))}
         </SelectField>
       )}
-      <p class="m-0 text-[17px]" data-testid="partner-intent">
+      <p class="m-0 text-body" data-testid="partner-intent">
         You’re asking about: <b>{intentLabel(f.way, f.tier)}</b>
       </p>
       <TextField label="Organisation" name="org" autoComplete="organization" value={f.org} onInput={set('org')} invalid={bad('org')} error={bad('org') ? errs.org : ''} />
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3.5">
+      <div class="grid grid-cols-auto-sm gap-3.5">
         <TextField label="Your name" name="name" autoComplete="name" value={f.name} onInput={set('name')} invalid={bad('name')} error={bad('name') ? errs.name : ''} />
         <TextField
           label="Work email"
@@ -159,14 +159,14 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
       />
       {f.way === 'host' && <TextField label="How many people your space holds (optional)" name="capacity" inputMode="numeric" value={f.capacity} onInput={set('capacity')} />}
       <TextArea label="Anything we should know? (optional)" name="msg" rows={4} value={f.msg} onInput={set('msg')} hint={PROMPTS[f.way]} />
-      <p class="m-0 text-[16px] leading-[1.5] text-ink-2">
+      <p class="m-0 text-compact text-ink-2">
         Sending passes your inquiry to the organisers. One of us replies from {email} to talk it through. Nothing is agreed until you confirm.
       </p>
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="yellow" size="lg" grow busy={busy}>
+        <SubmitButton variant="cta" grow busy={busy}>
           {busy ? 'Sending…' : 'Send inquiry'}
         </SubmitButton>
-        <span role="alert" class="text-[15px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {tried && !valid ? 'Fix the highlighted fields.' : serverError}
         </span>
       </div>

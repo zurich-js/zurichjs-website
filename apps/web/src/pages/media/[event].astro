@@ -32,13 +32,13 @@ const when = ev.startsAt ? dateLong(ev.startsAt) : '';
 >
   <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Photos', href: '/media', here: when || 'Event' }} sub={[when, ev.venue ? `${ev.venue.name}, ${ev.venue.city}` : '', countLabel(items)].filter(Boolean).join(' · ')} compact>
     <div class="flex flex-wrap gap-3 pt-1">
-      <Button href={eventHref(ev)} variant="outline-white">The event page</Button>
+      <Button href={eventHref(ev)} variant="secondary" inverse>The event page</Button>
     </div>
   </PageOpening>
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-6">
+  <div class="px-gut py-section flex flex-col gap-6">
     <Gallery client:load items={toGallery(items)} label={`Photos and videos from ${ev.title}`} />
-    {credits.length > 0 && <p class="m-0 text-[16px] text-ink-2">{credits.join(' · ')}</p>}
-    <p class="m-0 text-[16px] leading-[1.55] text-ink-2 max-w-[720px]">
+    {credits.length > 0 && <p class="m-0 text-compact text-ink-2">{credits.join(' · ')}</p>}
+    <p class="m-0 text-compact text-ink-2 max-w-reading">
       Want a photo of you removed? Email <a href={`mailto:${SITE.email}?subject=${encodeURIComponent(`Photo removal request: ${ev.title}`)}`} class="font-bold text-black">{SITE.email}</a> with a link to it, and we take it down.
     </p>
   </div>

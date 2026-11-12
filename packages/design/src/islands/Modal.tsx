@@ -8,17 +8,41 @@ interface Props {
   children: ComponentChildren;
 }
 
-/** Centred dialog with a dimmed backdrop. Closes on Escape and backdrop click; traps initial focus. */
+// eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector for the focus trap, not classes
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Centred dialog with a dimmed backdrop. Closes on Escape and backdrop click; keeps Tab inside while open. */
 export function Modal({ open, onClose, labelledBy, children }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  // Callers often pass a new onClose on every render; keep the latest in a ref so the effect below runs
+  // once per opening and remembers the element that opened the dialog.
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    const first = ref.current?.querySelector<HTMLElement>('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
-    (first ?? ref.current)?.focus();
+    const focusables = () => [...(ref.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter((el) => el.getClientRects().length > 0);
+    (focusables()[0] ?? ref.current)?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') return closeRef.current();
+      if (e.key !== 'Tab' || !ref.current) return;
+      // Focus trap: Tab and Shift+Tab wrap inside the dialog, since aria-modal hides the page behind it.
+      const els = focusables();
+      const first = els[0];
+      const last = els[els.length - 1];
+      const active = document.activeElement;
+      const inside = ref.current.contains(active);
+      if (!first || !last) {
+        e.preventDefault();
+        ref.current.focus();
+      } else if (e.shiftKey && (active === first || active === ref.current || !inside)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !inside)) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener('keydown', onKey);
     const { overflow } = document.body.style;
@@ -28,7 +52,7 @@ export function Modal({ open, onClose, labelledBy, children }: Props) {
       document.body.style.overflow = overflow;
       prev?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
@@ -41,7 +65,7 @@ export function Modal({ open, onClose, labelledBy, children }: Props) {
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        class="bg-white text-black rounded-[28px] w-full max-w-[460px] max-h-[90vh] overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
+        class="bg-white text-black rounded-card w-full max-w-115 max-h-full overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
       >
         {children}
       </div>

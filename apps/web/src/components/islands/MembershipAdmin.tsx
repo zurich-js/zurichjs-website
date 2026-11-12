@@ -9,7 +9,10 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { badgeClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { Notice } from '@zurichjs/design/islands/Notice';
+import { Tag } from '@zurichjs/design/islands/Tag';
+import { cardClass, chipClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
 import type { AdminMember } from '../../server/admin-views.ts';
 import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
@@ -58,7 +61,7 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
     void api<{ signedIn: boolean }>('/api/membership/admin/session').then(({ body }) => setState(body.signedIn ? 'ready' : 'signed-out'));
   }, []);
 
-  if (state === 'loading') return <p class="m-0 text-[18px] text-ink-2">Loading…</p>;
+  if (state === 'loading') return <p class="m-0 text-body text-ink-2">Loading…</p>;
   if (state === 'signed-out') return <SignIn onSignedIn={() => setState('ready')} />;
   const signOut = async () => {
     await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
@@ -69,20 +72,12 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
       <div class="flex flex-wrap items-center justify-between gap-3">
         <nav aria-label="Admin" class="flex gap-2 flex-wrap">
           {SECTIONS.map((s) => (
-            <a
-              key={s.key}
-              href={s.href}
-              aria-current={s.key === section ? 'page' : undefined}
-              class={cx(
-                'no-underline min-h-11 px-5 rounded-pill border border-black font-bold text-base inline-flex items-center',
-                s.key === section ? 'bg-black text-white' : 'bg-white text-black hover:bg-grey',
-              )}
-            >
+            <a key={s.key} href={s.href} aria-current={s.key === section ? 'page' : undefined} class={chipClass(s.key === section)}>
               {s.label}
             </a>
           ))}
         </nav>
-        <Button variant="outline-black" size="sm" onClick={() => void signOut()}>
+        <Button variant="secondary" onClick={() => void signOut()}>
           Sign out
         </Button>
       </div>
@@ -97,7 +92,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
   const [error, setError] = useState('');
   return (
     <form
-      class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5 max-w-[480px]"
+      class={cardClass('outline', 'lg', 'max-w-form')}
       onSubmit={async (e) => {
         e.preventDefault();
         if (busy) return;
@@ -109,8 +104,8 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         setError(body.error ?? 'Sign-in failed.');
       }}
     >
-      <h2 class="m-0 text-[28px] font-bold leading-[1.15]">Sign in</h2>
-      <p class="m-0 text-[17px] text-ink-2">Enter the admin password.</p>
+      <Heading size="subsection">Sign in</Heading>
+      <p class="m-0 text-body text-ink-2">Enter the admin password.</p>
       <TextField
         label="Password"
         type="password"
@@ -119,11 +114,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         value={password}
         onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
       />
-      {error && (
-        <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-          {error}
-        </p>
-      )}
+      {error && <Notice tone="danger" live title={error} />}
       <SubmitButton busy={busy} class="self-start">
         {busy ? 'Signing in…' : 'Sign in'}
       </SubmitButton>
@@ -158,13 +149,13 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
   return (
     <div class="flex flex-col gap-8">
       <div class="flex flex-wrap gap-3">
-        <Button href="/api/membership/admin/export.csv" variant="black" size="sm" external={false}>
+        <Button href="/api/membership/admin/export.csv" variant="primary" external={false}>
           Export CSV
         </Button>
-        <Button variant="outline-black" size="sm" onClick={() => setPanel(panel === 'invite' ? null : 'invite')} aria-expanded={panel === 'invite'}>
+        <Button variant="secondary" onClick={() => setPanel(panel === 'invite' ? null : 'invite')} aria-expanded={panel === 'invite'}>
           Invite someone to join
         </Button>
-        <Button variant="outline-black" size="sm" onClick={() => setPanel(panel === 'add' ? null : 'add')} aria-expanded={panel === 'add'}>
+        <Button variant="secondary" onClick={() => setPanel(panel === 'add' ? null : 'add')} aria-expanded={panel === 'add'}>
           Add a member who paid manually (cash/bank)
         </Button>
       </div>
@@ -189,7 +180,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
       )}
 
       {counts && (
-        <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,150px),1fr))] gap-3">
+        <dl class="m-0 grid grid-cols-auto-sm gap-3">
           {[
             ['Members', counts.members],
             ['Active', counts.active],
@@ -199,9 +190,9 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
             ['Waiting for payment', counts.pending],
           ].map(([k, v]) => (
             // Numbers sit at the bottom of every tile, so they line up even when a label wraps.
-            <div key={k} class="bg-grey rounded-card px-5 py-4 flex flex-col justify-between gap-2">
-              <dt class="text-[15px] text-grey-text">{k}</dt>
-              <dd class="m-0 text-[28px] font-bold leading-none tabular-nums">{v ?? 0}</dd>
+            <div key={k} class={cardClass('filled', 'sm', 'justify-between')}>
+              <dt class="text-meta text-grey-text">{k}</dt>
+              <dd class="m-0 text-subsection font-bold tabular-nums">{v ?? 0}</dd>
             </div>
           ))}
         </dl>
@@ -221,7 +212,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
           placeholder="Name, email or organisation"
           value={q}
           onInput={(e) => setQ((e.target as HTMLInputElement).value)}
-          class="grow min-w-[min(100%,260px)]"
+          class="grow min-w-0 basis-65"
         />
         <SelectField
           label="Status"
@@ -239,35 +230,31 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
             </option>
           ))}
         </SelectField>
-        <SubmitButton size="md">Search</SubmitButton>
+        <SubmitButton>Search</SubmitButton>
       </form>
 
-      {error && (
-        <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-          {error}
-        </p>
-      )}
+      {error && <Notice tone="danger" live title={error} />}
 
       {members && (
         // Phones: one card per member (a six-column table does not fit).
         <ul class="md:hidden m-0 p-0 list-none flex flex-col gap-3" aria-label="Members">
           {members.length === 0 && <li class="text-ink-2">No members match.</li>}
           {members.map((m) => (
-            <li key={m.id} class={cx('border border-grey-frame rounded-card px-5 py-4 flex flex-col gap-1', selected === m.id && 'bg-grey-soft')}>
+            <li key={m.id} class={cardClass(selected === m.id ? 'filled' : 'outline', 'sm', 'gap-1')}>
               <button
                 type="button"
-                class="bg-transparent border-0 p-0 font-bold text-left text-[17px] underline underline-offset-3 cursor-pointer self-start"
+                class="bg-transparent border-0 p-0 font-bold text-left text-body underline cursor-pointer self-start"
                 onClick={() => setSelected(m.id)}
                 aria-expanded={selected === m.id}
               >
                 {m.name}
               </button>
-              {m.organisationName && <span class="text-[14px] text-grey-text">{m.organisationName}</span>}
-              <span class="text-[15px] break-all">{m.email}</span>
-              <span class="text-[15px]">
+              {m.organisationName && <span class="text-meta text-grey-text">{m.organisationName}</span>}
+              <span class="text-meta break-all">{m.email}</span>
+              <span class="text-meta">
                 {m.levelName}, {m.cycle} · {STATUS_LABEL[m.status]}
               </span>
-              <span class="text-[14px] text-grey-text">
+              <span class="text-meta text-grey-text">
                 Paid through {paidThrough(m.paidUntil)} · joined {date(m.joinedAt)}
               </span>
             </li>
@@ -277,10 +264,10 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
 
       {members && (
         <div class="hidden md:block overflow-x-auto border border-grey-frame rounded-card">
-          <table class="w-full border-collapse text-[16px]">
+          <table class="w-full border-collapse text-compact">
             <caption class="sr-only">Members</caption>
             <thead>
-              <tr class="text-left text-grey-text text-[14px]">
+              <tr class="text-left text-grey-text text-meta">
                 {['Name', 'Email', 'Membership', 'Status', 'Paid through', 'Joined'].map((h) => (
                   <th key={h} scope="col" class="px-4 py-3 font-bold whitespace-nowrap">
                     {h}
@@ -301,13 +288,13 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
                   <td class="px-4 py-3">
                     <button
                       type="button"
-                      class="bg-transparent border-0 p-0 font-bold text-left underline underline-offset-3 cursor-pointer"
+                      class="bg-transparent border-0 p-0 font-bold text-left underline cursor-pointer"
                       onClick={() => setSelected(m.id)}
                       aria-expanded={selected === m.id}
                     >
                       {m.name}
                     </button>
-                    {m.organisationName && <div class="text-[14px] text-grey-text">{m.organisationName}</div>}
+                    {m.organisationName && <div class="text-meta text-grey-text">{m.organisationName}</div>}
                   </td>
                   <td class="px-4 py-3">{m.email}</td>
                   <td class="px-4 py-3 whitespace-nowrap">
@@ -364,25 +351,25 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
   ];
 
   return (
-    <section aria-labelledby="h-member" class="bg-grey rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-6">
+    <section aria-labelledby="h-member" class={cardClass('filled', 'lg', 'gap-6')}>
       <div class="flex flex-wrap items-start justify-between gap-3">
-        <h2 id="h-member" class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.15] font-bold">
+        <h2 id="h-member" class="m-0 text-subsection font-bold">
           {m.organisationName ? `${m.organisationName}, ${m.name}` : m.name}
         </h2>
-        <Button variant="white" size="sm" onClick={onClose}>
+        <Button variant="plain" onClick={onClose}>
           Close
         </Button>
       </div>
-      <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-6 gap-y-3">
+      <dl class="m-0 grid grid-cols-auto-sm gap-x-6 gap-y-3">
         {rows.map(([k, v]) => (
           <div key={k} class="flex flex-col gap-0.5">
-            <dt class="text-[14px] text-grey-text">{k}</dt>
-            <dd class="m-0 text-[17px] font-bold break-words">{v}</dd>
+            <dt class="text-meta text-grey-text">{k}</dt>
+            <dd class="m-0 text-body font-bold break-words">{v}</dd>
           </div>
         ))}
       </dl>
       {(m.stripeCustomerId || m.stripeSubscriptionId) && (
-        <p class="m-0 text-[15px] text-ink-2">
+        <p class="m-0 text-meta text-ink-2">
           Stripe:{' '}
           {m.stripeCustomerId && (
             <a href={`https://dashboard.stripe.com/customers/${m.stripeCustomerId}`} target="_blank" rel="noopener" class="font-bold text-black">
@@ -392,7 +379,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
           {m.stripeSubscriptionId && <> · {m.stripeSubscriptionId}</>}
         </p>
       )}
-      {m.notes && <p class="m-0 text-[16px] bg-white rounded-card px-5 py-4">{m.notes}</p>}
+      {m.notes && <p class="m-0 text-compact bg-white rounded-(--radius-nested) p-card-sm">{m.notes}</p>}
 
       {['active', 'past_due', 'imported_manual'].includes(m.status) && (
         <RecordResignation
@@ -409,7 +396,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
       )}
       {m.status === 'resigning' && (
         <div class="flex flex-col gap-3">
-          <p class="m-0 text-lg">
+          <p class="m-0 text-body">
             {m.resignationConfirmedAt
               ? `Resignation confirmed on ${dateTime(m.resignationConfirmedAt)}${m.resignedAt ? ` (requested ${dateTime(m.resignedAt)})` : ''}. The membership ends with the paid period.`
               : `Resignation requested${m.resignedAt ? ` on ${dateTime(m.resignedAt)}` : ''}, waiting for the board. Confirming ends the membership with the paid period (bylaws Art. 5); open dues hold it.`}
@@ -417,7 +404,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
           <div class="flex flex-wrap gap-3">
             {!m.resignationConfirmedAt && (
               <Button
-                variant="black"
+                variant="primary"
                 disabled={busy}
                 onClick={async () => {
                   setBusy(true);
@@ -440,7 +427,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
               </Button>
             )}
             <Button
-              variant="outline-black"
+              variant="secondary"
               disabled={busy}
               onClick={async () => {
                 setBusy(true);
@@ -461,40 +448,32 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
           </div>
         </div>
       )}
-      {notice && (
-        <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 text-[17px] font-bold">
-          {notice}
-        </p>
-      )}
-      {error && (
-        <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-          {error}
-        </p>
-      )}
+      {notice && <Notice tone="success" live title={notice} />}
+      {error && <Notice tone="danger" live title={error} />}
 
       <div class="flex flex-col gap-2">
-        <h3 class="m-0 text-[20px] font-bold">Certificates</h3>
+        <h3 class="m-0 text-card-title font-bold">Certificates</h3>
         {d.certificates.length ? (
           <ul class="m-0 p-0 list-none flex flex-col gap-1.5">
             {d.certificates.map((c, i) => (
-              <li key={c.id} class="flex flex-wrap items-center gap-2 text-base">
+              <li key={c.id} class="flex flex-wrap items-center gap-2 text-compact">
                 <span>
                   <b>{c.number}</b>, {c.levelName}, {c.term}
                 </span>
-                {i === 0 && <span class={badgeClass('dark')}>Latest</span>}
+                {i === 0 && <Tag tone="black">Latest</Tag>}
               </li>
             ))}
           </ul>
         ) : (
-          <p class="m-0 text-[16px] text-ink-2">None yet.</p>
+          <p class="m-0 text-compact text-ink-2">None yet.</p>
         )}
       </div>
 
       <div class="flex flex-col gap-2">
-        <h3 class="m-0 text-[20px] font-bold">History</h3>
+        <h3 class="m-0 text-card-title font-bold">History</h3>
         <ol class="m-0 p-0 list-none flex flex-col gap-1.5">
           {d.events.map((e) => (
-            <li key={e.id} class="text-[15px]">
+            <li key={e.id} class="text-meta">
               <span class="text-grey-text">{dateTime(e.at)}</span> · {e.type.replace(/_/g, ' ')}
               {e.toStatus && (
                 <>
@@ -532,12 +511,12 @@ function InviteMember({ onInvited, onSignedOut }: { onInvited: (id: string) => v
   const err = (field: string) => (error?.field === field ? error.message : undefined);
 
   return (
-    <section aria-labelledby="h-invite" class="border border-grey-frame rounded-card p-6 md:p-8 flex flex-col gap-5">
+    <section aria-labelledby="h-invite" class={cardClass('outline', 'lg')}>
       <div class="flex flex-col gap-1">
-        <h2 id="h-invite" class="m-0 text-2xl font-bold">
+        <h2 id="h-invite" class="m-0 text-card-title font-bold">
           Invite someone to join
         </h2>
-        <p class="m-0 text-base text-ink-2">
+        <p class="m-0 text-compact text-ink-2">
           For someone who asked to become a member. Choose what they asked for; they get an email to sign in, accept the membership terms and pay with Stripe, renewing
           automatically. They become a member with the first payment.
         </p>
@@ -614,16 +593,8 @@ function InviteMember({ onInvited, onSignedOut }: { onInvited: (id: string) => v
           options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${feeLabel(TIERS[f.level], c.value)}` }))}
         />
         <TextArea label="Notes for the board (optional)" name="notes" rows={2} value={f.notes} onInput={(e) => set('notes', (e.target as HTMLTextAreaElement).value)} />
-        {error && !error.field && (
-          <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 font-bold">
-            {error.message}
-          </p>
-        )}
-        {done && (
-          <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 font-bold break-words">
-            {done}
-          </p>
-        )}
+        {error && !error.field && <Notice tone="danger" live title={error.message} />}
+        {done && <Notice tone="success" live title={done} class="break-words" />}
         <SubmitButton busy={busy} class="self-start">
           {busy ? 'Sending…' : 'Send invitation'}
         </SubmitButton>
@@ -654,12 +625,12 @@ function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; on
   const err = (field: string) => (error?.field === field ? error.message : undefined);
 
   return (
-    <section aria-labelledby="h-add" class="border border-grey-frame rounded-card p-6 md:p-8 flex flex-col gap-5">
+    <section aria-labelledby="h-add" class={cardClass('outline', 'lg')}>
       <div class="flex flex-col gap-1">
-        <h2 id="h-add" class="m-0 text-2xl font-bold">
+        <h2 id="h-add" class="m-0 text-card-title font-bold">
           Add a member who paid manually (cash/bank)
         </h2>
-        <p class="m-0 text-base text-ink-2">
+        <p class="m-0 text-compact text-ink-2">
           For someone who paid in cash or by bank transfer. They are recorded as paid manually until their term ends, get a certificate for it, and can set up automatic payment
           with Stripe; nothing is charged before the term ends.
         </p>
@@ -747,16 +718,8 @@ function AddMember({ onAdded, onSignedOut }: { onAdded: (id: string) => void; on
           checked={f.sendEmail}
           onChange={(e) => set('sendEmail', (e.target as HTMLInputElement).checked)}
         />
-        {error && !error.field && (
-          <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 font-bold">
-            {error.message}
-          </p>
-        )}
-        {done && (
-          <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 font-bold">
-            {done}
-          </p>
-        )}
+        {error && !error.field && <Notice tone="danger" live title={error.message} />}
+        {done && <Notice tone="success" live title={done} />}
         <SubmitButton busy={busy} class="self-start">
           {busy ? 'Adding…' : 'Add member'}
         </SubmitButton>
@@ -788,13 +751,13 @@ function RecordResignation({
   const [busy, setBusy] = useState(false);
   if (!open)
     return (
-      <Button variant="outline-black" class="self-start" onClick={() => setOpen(true)}>
+      <Button variant="secondary" class="self-start" onClick={() => setOpen(true)}>
         Record a resignation
       </Button>
     );
   return (
-    <div class="border border-grey-frame rounded-card bg-white p-5 flex flex-col gap-4">
-      <p class="m-0 text-base">
+    <div class="bg-white rounded-(--radius-nested) p-card-md flex flex-col gap-4">
+      <p class="m-0 text-compact">
         For when {name} resigned to the board directly. Renewal stops at once, {name} gets the written copy by email, and the resignation then waits for confirmation as usual.
       </p>
       <ChoiceGroup legend="Reasons (optional)" class="flex flex-col gap-2">
@@ -814,7 +777,7 @@ function RecordResignation({
       <TextArea label="What they said (optional)" rows={3} value={note} onInput={(e) => setNote((e.target as HTMLTextAreaElement).value)} />
       <div class="flex flex-wrap gap-3">
         <Button
-          variant="danger"
+          variant="primary"
           disabled={busy}
           onClick={async () => {
             setBusy(true);
@@ -828,7 +791,7 @@ function RecordResignation({
         >
           {busy ? 'Recording…' : 'Record resignation'}
         </Button>
-        <Button variant="outline-black" onClick={() => setOpen(false)}>
+        <Button variant="secondary" onClick={() => setOpen(false)}>
           Cancel
         </Button>
       </div>

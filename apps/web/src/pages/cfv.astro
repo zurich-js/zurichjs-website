@@ -6,7 +6,9 @@
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
+import Tag from '@zurichjs/design/components/Tag.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import VolunteerForm from '~/components/islands/forms/VolunteerForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -42,7 +44,7 @@ const STEPS = [
   ['We reply within 7 days', 'Someone from the organising team emails you to talk about next steps.'],
   ['Start helping', 'At the next meetup, or behind the scenes, at your own pace.'],
 ];
-const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
+const h2 = 'm-0 text-subsection font-bold';
 ---
 
 <BaseLayout
@@ -55,64 +57,63 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
     title="Volunteer with us"
     sub="ZurichJS is community-driven and run entirely by volunteers. Help with the evenings, outreach, design, content or the website."
   >
-    <Button href="#apply" variant="yellow" class="self-start text-[17px]">Apply to volunteer</Button>
+    <Button href="#apply" variant="cta" class="self-start">Apply to volunteer</Button>
   </PageOpening>
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,88px)]">
-    <Surface tone="grey" class="p-[clamp(22px,3vw,32px)] flex flex-wrap gap-x-8 gap-y-3 items-center justify-between">
-      <div class="flex flex-col gap-1 max-w-[720px]">
-        <h2 class="m-0 text-[22px] font-bold">You’d be joining an award-winning community</h2>
-        <p class="m-0 text-[17px] leading-[1.55]">
-          ZurichJS won the JavaScript Open Source Award for {award.category} in 2026. We’re a registered nonprofit, and every volunteer helps make that happen.
-        </p>
-      </div>
-      <Button href="https://conf.zurichjs.com/blog/how-zurichjs-got-here" variant="black" size="sm" external>Read the full story</Button>
-    </Surface>
+  <div class="px-gut py-section flex flex-col gap-section">
+    <Card surface="filled" padding="lg" title="You’d be joining an award-winning community" level="h2">
+      <p class="m-0 text-body max-w-reading">
+        ZurichJS won the JavaScript Open Source Award for {award.category} in 2026. We’re a registered nonprofit, and every volunteer helps make that happen.
+      </p>
+      <Button slot="footer" href="https://conf.zurichjs.com/blog/how-zurichjs-got-here" variant="primary" external>Read the full story</Button>
+    </Card>
 
-    <section aria-labelledby="h-gain" class="flex flex-col gap-[18px]">
+    <section aria-labelledby="h-gain" class="flex flex-col gap-4">
       <h2 id="h-gain" class={h2}>What you get out of it</h2>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-4">
+      <AutoGrid min="md">
         {
           GAINS.map((g) => (
-            <Surface class="p-6 flex flex-col gap-2">
-              <h3 class="m-0 text-[20px] font-bold">{g.h}</h3>
-              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{g.d}</p>
-            </Surface>
+            <Card title={g.h}>
+              <p class="m-0 text-body text-ink-2">{g.d}</p>
+            </Card>
           ))
         }
-      </div>
+      </AutoGrid>
     </section>
 
-    <section aria-labelledby="h-roles" class="flex flex-col gap-[18px]">
-      <div class="flex flex-col gap-2 max-w-[760px]">
+    <section aria-labelledby="h-roles" class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2 max-w-reading">
         <h2 id="h-roles" class={h2}>Where you could help</h2>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">Pick one or more in the form. We match you by your experience, your time and what the next meetups need.</p>
+        <p class="m-0 text-body text-ink-2">Pick one or more in the form. We match you by your experience, your time and what the next meetups need.</p>
       </div>
-      <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-3">
+      <AutoGrid as="ul" min="sm" gap="sm">
         {
           ROLES.map(([h, d]) => (
-            <li class="rounded-2xl bg-grey p-5 flex flex-col gap-1">
-              <span class="text-[17px] font-bold">{h}</span>
-              <span class="text-[16px] leading-[1.5] text-ink-2">{d}</span>
-            </li>
+            <Card as="li" padding="sm" title={h} level="p">
+              <p class="m-0 text-compact text-ink-2">{d}</p>
+            </Card>
           ))
         }
-      </ul>
+      </AutoGrid>
     </section>
 
-    <section aria-labelledby="h-time" class="flex flex-col gap-[18px]">
-      <div class="flex flex-col gap-2 max-w-[760px]">
+    <section aria-labelledby="h-time" class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2 max-w-reading">
         <h2 id="h-time" class={h2}>You choose how much time you give</h2>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           Volunteering is unpaid: ZurichJS is run by volunteers and can’t offer financial compensation. We try to make it an experience that helps you grow professionally and
           personally.
         </p>
       </div>
       <ul class="m-0 p-0 list-none flex flex-wrap gap-2">
-        {Object.values(VOLUNTEER_AVAILABILITY).map((v) => <li class="px-4 py-2 rounded-pill bg-grey text-[16px] font-bold">{v}</li>)}
+        {Object.values(VOLUNTEER_AVAILABILITY).map((v) => (
+          <Tag as="li" size="md">
+            {v}
+          </Tag>
+        ))}
       </ul>
     </section>
 
-    <section aria-labelledby="h-how" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+    <section aria-labelledby="h-how" class="grid grid-cols-auto-lg gap-8 md:gap-16 items-center">
       <div class="flex flex-col gap-5">
         <h2 id="h-how" class={h2}>How it works</h2>
         <ol class="m-0 p-0 list-none flex flex-col gap-4">
@@ -121,8 +122,8 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
               <li class="grid grid-cols-[40px_minmax(0,1fr)] gap-3.5 items-start">
                 <span class={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${i === 0 ? 'bg-black text-white' : 'bg-grey'}`}>{i + 1}</span>
                 <span class="flex flex-col gap-0.5 pt-1.5">
-                  <span class="text-[18px] font-bold">{h}</span>
-                  <span class="text-[17px] leading-[1.55] text-ink-2">{d}</span>
+                  <span class="text-body font-bold">{h}</span>
+                  <span class="text-body text-ink-2">{d}</span>
                 </span>
               </li>
             ))
@@ -132,7 +133,7 @@ const h2 = 'm-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold';
       <Photo photo={PAGE_PHOTOS.team} class="aspect-4/3 w-full" />
     </section>
 
-    <section id="apply" aria-labelledby="h-apply" class="flex flex-col gap-[18px] scroll-mt-6">
+    <section id="apply" aria-labelledby="h-apply" class="flex flex-col gap-4 scroll-mt-6">
       <h2 id="h-apply" class={h2}>Apply to volunteer</h2>
       <VolunteerForm client:load nextHref={nextHref} />
     </section>

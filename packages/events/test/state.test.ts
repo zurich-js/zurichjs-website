@@ -3,6 +3,7 @@ import {
   FEEDBACK_WINDOW_MS,
   buildIcs,
   buildSchedule,
+  calendarLinks,
   chainTicketing,
   feedbackAvailability,
   feedbackNotice,
@@ -91,7 +92,7 @@ describe('presentEvent', () => {
   it('offers the Meetup RSVP handoff while open', () => {
     const p = presentEvent(ev(), { now: at(doors - HOUR), ticketing });
     expect(p.cta).toMatchObject({ kind: 'rsvp', label: 'RSVP on Meetup', external: true });
-    expect(p.pills).toEqual([{ text: 'Meetup' }, { text: 'RSVP open', yellow: true }]);
+    expect(p.pills).toEqual([{ text: 'Meetup' }, { text: 'RSVP open' }]);
     expect(p.whenShort).toBe('Wed 18th Nov 2026, 18:30–21:30');
   });
   it('chains providers so a later one (Sane) can take over single events', () => {
@@ -169,6 +170,24 @@ describe('saneTicketing', () => {
       kind: 'waitlist',
       label: 'Join the waitlist on Meetup',
     });
+  });
+});
+
+describe('calendarLinks', () => {
+  it('prefills Google Calendar and Outlook with the same instant as the .ics file', () => {
+    const links = calendarLinks(ev({ title: 'A & B' }), 'https://zurichjs.com/events/forms-types')!;
+    const google = new URL(links.google);
+    expect(google.origin + google.pathname).toBe('https://calendar.google.com/calendar/render');
+    expect(google.searchParams.get('action')).toBe('TEMPLATE');
+    expect(google.searchParams.get('text')).toBe('ZurichJS: A & B');
+    expect(google.searchParams.get('dates')).toMatch(/^20261118T173000Z\/\d{8}T\d{6}Z$/);
+    expect(google.searchParams.get('details')).toContain('https://zurichjs.com/events/forms-types');
+    const outlook = new URL(links.outlook);
+    expect(outlook.searchParams.get('subject')).toBe('ZurichJS: A & B');
+    expect(outlook.searchParams.get('startdt')).toBe('2026-11-18T17:30:00.000Z');
+  });
+  it('returns null without a date', () => {
+    expect(calendarLinks(ev({ startsAt: undefined }), 'u')).toBeNull();
   });
 });
 

@@ -10,7 +10,7 @@ zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It 
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                                               |
 | `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`.                             |
-| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                                              |
+| `packages/design`                         | The design system: the Tailwind 4 theme (`theme.css`, the tokens), Figtree, components. Rules: `docs/design-system.md`.                                                      |
 | `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                                                          |
 | `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                                                 |
 | `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                                                     |
@@ -43,7 +43,7 @@ Before every commit, run the checks for what you touched. The pre-commit hook fo
 - **Structure:** a black opening (header and page opening), black footer and white content.
 - **Typeface:** Figtree only.
 - **Colour:** `#F1E271` is the only accent: small button accents, and one large section on the home page ("Speak at a meetup"); no yellow text highlights (Bogdan's review, 4th November 2026). `#268BCC` is used only for focus rings and the logo. Green (`success`, `success-soft`) is only for success messages, and red (`danger`) only for errors (owner, 3rd November 2026).
-- **Shapes and layout:** rounded pills for buttons and tags, 24px cards, one breakpoint at 800px.
+- **Shapes and layout:** pills for buttons, chips and switches; 6px corners for tags (owner, 12th November 2026); 24px cards, following the rounding formula in `docs/design-system.md`; one breakpoint at 800px.
 - **No decoration:** no kickers or eyebrow labels, no decorative borders, dividers or gradients.
 - **No recordings:** ZurichJS does not record talks. Slides are shown on a talk only when the speaker shared them (owner, 2026-11-01). Short clips from the evening may appear in the media archive, never presented as talk recordings.
 - **Rating and award:** "Rated 4.9/5 on Meetup…" in plain words, in the home page's award section and never in the hero (Bogdan's review, 4th November 2026); where the award is named elsewhere, it links to that section. The rating comes from the `meetupRating` record, updated by hand and never scraped.
@@ -60,18 +60,18 @@ These rules are mandatory for every UI change. They override convenience. If a r
 - The only exceptions are `grid-cols-[...]` track lists and `aspect-[...]` photo ratios, which have no scale equivalent (justified in `eslint.config.mjs`).
 - Never use inline `style={{}}` for spacing, colour, type, radius or shadow. A value that exists only at runtime (a CSS custom property, an image focal point from Sanity) needs an `eslint-disable-next-line no-restricted-syntax -- <reason>` comment.
 - Never hardcode hex, rgb, px or rem values in components.
-- If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/tokens.ts`, with a one-line justification, and wait for approval before using it.
-- Common snaps: 16px = `text-base`, 18px = `text-lg`, 44px = `11`, 48px = `12`. Tailwind 4 spacing takes quarter steps, so 18px = `4.5` and 22px = `5.5` are exact. Prefer the scale over "pixel-perfect" guesses.
+- If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/theme.css`, with a one-line justification, and wait for approval before using it.
+- Text sizes come only from the nine type roles (`text-display` … `text-meta`); Tailwind's default text scale is switched off, and 17px is `text-body`. Heights: `min-h-control` (48px: buttons, switches, fields), `min-h-chip` (44px: filter chips), `h-tag-sm` and `h-tag-md`. Spacing: `p-card-sm|md|lg`, `gap-section`, `pt-page-top`, `pb-page-end`, then Tailwind's 4px scale for small layout gaps. Widths: `max-w-reading|wide|form|site`. The full list is in `docs/design-system.md`.
 
 ### 2. Single source of truth for tokens
 
-- Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read the tokens file before writing any UI. Do not invent tokens that already exist under a different name.
-- Semantic names only: `text-muted`, `bg-surface`, `border-danger`, `space-touch`. Never name tokens after their value (`grey-line-2`).
+- Tokens live in ONE place: `packages/design/src/theme.css` (the Tailwind 4 `@theme` block), edited by hand. TypeScript that needs a value (emails, OG images, the `/design` gallery) reads it through `@zurichjs/design/theme` (`color('yellow')`, `radius('card')`, `space('section')`), never a copied literal. Nothing is generated. Read `theme.css` before writing any UI. Do not invent tokens that already exist under a different name.
+- Semantic names only, named for their job (`text-card-title`, `min-h-control`, `rounded-tag`, `danger-soft`). Never name tokens after their value (`grey-line-2`).
 - Colours, type scale, spacing, radius, shadow, z-index and breakpoints are all tokenised. The touch target minimum is a token, not a repeated literal.
 
 ### 3. Components own variants, pages own layout
 
-- Visual variants (size, intent, state, invalid, disabled) are defined ONCE in a primitive in `packages/design/src/components/ui/`, using cva or tailwind-variants. (The primitives move there during the UI compliance work in `docs/v2/UI-AUDIT.md`; until one has moved, its current home is `packages/design/src/components`, `packages/design/src/islands` or `packages/design/src/recipes.ts`.)
+- Visual variants (surface, variant, tone, state, invalid, disabled) are defined ONCE, as props of a design-system component: Astro components in `packages/design/src/components`, their Preact twins in `packages/design/src/islands`, and the class recipes they share in `packages/design/src/recipes.ts`. The catalogue is the Components table in `docs/design-system.md` and the `/design` gallery.
 - No class-string-returning helper functions (like `optionClass()`) outside a primitive. No long `cx(...)` chains in feature components or pages.
 - Feature components compose primitives. They do not restyle them. Passing `class` to override a primitive's tokens is a smell: add a variant instead.
 - A page or feature component may only use layout utilities (flex, grid, gap, padding from the scale, responsive prefixes).

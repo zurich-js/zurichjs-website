@@ -31,14 +31,14 @@ const list = upcoming.length ? upcoming : pastEvents(events, now).slice(0, limit
       <SectionHeading id={id}>
         {upcoming.length ? title : 'Recent meetups in Zurich'}
         <Fragment slot="sub">{upcoming.length ? sub : 'The next date is announced on Meetup.com first. Here is what happened at the latest meetups.'}</Fragment>
-        <Button slot="action" href="/events" variant="white">
+        <Button slot="action" href="/events" variant="secondary">
           View all events
         </Button>
       </SectionHeading>
-      <div class="flex flex-col gap-1 max-w-[880px]">
+      <div class="flex flex-col gap-1 max-w-wide">
         {list.map((ev) => <EventRow ev={ev} now={now} ticketing={ticketing} />)}
       </div>
-      <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+      <p class="m-0 text-body text-ink-2">
         <a href={meetupGroupUrl} target="_blank" rel="noopener" class="font-bold text-black">RSVP for every meetup in our Meetup.com group</a>
       </p>
     </section>

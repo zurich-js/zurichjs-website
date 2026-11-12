@@ -2,8 +2,9 @@ import { dateLong, eventHref, monthYear } from '@zurichjs/events';
 import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { surfaceClass } from '@zurichjs/design/recipes';
+import { cardClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { Checkbox, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { StarRating } from '@zurichjs/design/islands/StarRating';
 import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
@@ -101,28 +102,27 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4 max-w-[1000px] outline-hidden">
-        <div class={surfaceClass('yellow', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
-          <div class="text-[28px] font-bold leading-[1.15]">Thanks. That helps.</div>
-          <p class="m-0 text-[18px] leading-[1.55]">
+      <div class="grid grid-cols-auto-md gap-4 max-w-wide items-start">
+        <Notice tone="success" live focusRef={doneRef} title="Thanks. That helps.">
+          <p class="m-0 text-body">
             The organisers read every answer and use it to plan the next programme.{quote ? ' We may quote what you wrote on the website, as you allowed.' : ''}
           </p>
-          <Button href={nextHref} variant="yellow" class="self-start mt-1.5 text-[17px]">
+          <Button href={nextHref} variant="cta" class="self-start mt-1.5">
             See the next meetup
           </Button>
-        </div>
+        </Notice>
         {ev && (
-          <div class={surfaceClass('grey', 'rounded-[28px]! p-[clamp(24px,3vw,36px)] flex flex-col gap-3')}>
-            <div class="text-[24px] font-bold leading-[1.2]">Photos from the evening</div>
-            <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+          <div class={cardClass('filled', 'md')}>
+            <p class="m-0 text-card-title font-bold">Photos from the evening</p>
+            <p class="m-0 text-body text-ink-2">
               {ev.hasTalks === false ? 'The event page has photos once they are online.' : 'The event page has the programme, photos once they are online, and the talk ratings.'}
             </p>
             <div class="flex flex-wrap gap-2.5 mt-1.5">
-              <Button href={eventHref(ev)} variant="white" class="text-[17px]">
+              <Button href={eventHref(ev)} variant="secondary">
                 Open the event page
               </Button>
               {ev.hasTalks !== false && (
-                <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="outline-black" class="text-[17px]">
+                <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="secondary">
                   Rate the talks
                 </Button>
               )}
@@ -133,17 +133,17 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-[clamp(36px,4vw,52px)] max-w-[760px]">
+    <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-9 md:gap-13 max-w-reading">
       <Honeypot />
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-3 min-w-0">
-        <legend class="text-[clamp(24px,2.4vw,30px)] font-bold mb-3 p-0">Overall, how was the evening?</legend>
-        <p class="m-0 mb-1 text-[17px] leading-[1.55] text-ink-2">
+        <legend class="text-subsection font-bold mb-3 p-0">Overall, how was the evening?</legend>
+        <p class="m-0 mb-1 text-body text-ink-2">
           The only required question. The open ones below matter more.
           {ev && ev.hasTalks !== false && (
             <>
               {' '}
               To rate individual talks, use{' '}
-              <a href={`${eventHref(ev)}?feedback=true#programme`} class="underline underline-offset-[3px] font-bold text-black">
+              <a href={`${eventHref(ev)}?feedback=true#programme`} class="underline font-bold text-black">
                 Rate the talks
               </a>{' '}
               on the event page.
@@ -152,22 +152,22 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
         </p>
         <StarRating value={overall} onChange={setOverall} label="Overall rating, 1 to 5" invalid={overallBad} size="lg" />
         {overallBad && (
-          <span class="text-[15px] text-danger" role="alert">
+          <span class="text-meta text-danger" role="alert">
             Pick a score from 1 to 5.
           </span>
         )}
       </fieldset>
 
-      <fieldset class="border-0 p-0 m-0 flex flex-col gap-[22px] min-w-0">
-        <legend class="text-[clamp(24px,2.4vw,30px)] font-bold mb-1.5 p-0">Help us shape the next one</legend>
-        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">All optional. A sentence is plenty; a paragraph is a gift.</p>
+      <fieldset class="border-0 p-0 m-0 flex flex-col gap-5 min-w-0">
+        <legend class="text-subsection font-bold mb-1.5 p-0">Help us shape the next one</legend>
+        <p class="m-0 text-body text-ink-2">All optional. A sentence is plenty; a paragraph is a gift.</p>
         {OPEN.map(([k, label, hint, rows]) => (
           <TextArea key={k} name={k} label={label} hint={hint} rows={rows} labelSize="lg" value={text[k] ?? ''} onInput={(e) => setText({ ...text, [k]: e.currentTarget.value })} />
         ))}
       </fieldset>
 
       <div class="flex flex-col gap-3.5">
-        <p class="m-0 text-[16px] leading-[1.55] text-ink-2">
+        <p class="m-0 text-compact text-ink-2">
           Who reads this: the ZurichJS organisers. Speakers don’t see this form; they see only the ratings for their own talk. Nothing here is published unless you tick the box
           below.
         </p>
@@ -180,7 +180,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
             autoComplete="given-name"
             value={quoteName}
             onInput={(e) => setQuoteName(e.currentTarget.value)}
-            class="max-w-[440px]"
+            class="max-w-110"
           />
         )}
         <TextField
@@ -192,15 +192,15 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
           onInput={(e) => setEmail(e.currentTarget.value)}
           invalid={emailBad}
           error={emailBad ? 'Check the email, or leave it empty.' : ''}
-          class="max-w-[440px]"
+          class="max-w-110"
         />
       </div>
 
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="yellow" size="lg" grow busy={busy}>
+        <SubmitButton variant="cta" grow busy={busy}>
           {busy ? 'Sending…' : 'Send feedback'}
         </SubmitButton>
-        <span role="alert" class="text-[15px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {tried && (overallBad || emailBad) ? 'One answer needs attention above.' : serverError}
         </span>
       </div>

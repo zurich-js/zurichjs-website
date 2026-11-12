@@ -12,7 +12,8 @@ import { speakersWithTalks } from '@zurichjs/content';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import { buttonClass, chipClass } from '@zurichjs/design/recipes';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { content } from '~/lib/content';
 
@@ -42,12 +43,12 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
     sub="Half of our speakers travel in from outside Zurich. We’ve hosted contributors from Node.js, Astro and Qwik, alongside Microsoft MVPs and Google Developer Experts. Here they all are, with what they talked about."
     compact
   >
-    <Button href="/cfp" variant="yellow" class="self-start text-[17px]">Speak at a meetup</Button>
+    <Button href="/cfp" variant="cta" class="self-start">Speak at a meetup</Button>
   </PageOpening>
 
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-6" data-speakers>
+  <div class="px-gut py-section flex flex-col gap-6" data-speakers>
     <form role="search" class="flex flex-wrap gap-3 items-center" action="/speakers" method="get" data-search-form>
-      <label class="flex-[1_1_280px] flex min-w-0 relative">
+      <label class="grow basis-70 flex min-w-0 relative">
         <span class="sr-only">Search speakers, talks and topics</span>
         <input
           type="search"
@@ -56,16 +57,16 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
           placeholder="Name, company, talk or topic"
           autocomplete="off"
           enterkeyhint="search"
-          class="flex-1 min-w-0 min-h-[48px] border border-grey-line rounded-pill px-5 text-[17px] bg-white"
+          class="flex-1 min-w-0 min-h-control border border-grey-line rounded-pill px-5 text-body bg-white"
         />
       </label>
-      <button type="button" data-clear hidden class="min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer [[hidden]]:hidden">Clear search</button>
+      <button type="button" data-clear hidden class={buttonClass({ variant: 'secondary' })}>Clear search</button>
     </form>
 
     {
       topics.length > 0 && (
         <div class="flex flex-col gap-2">
-          <h2 id="h-topics" class="m-0 text-[16px] font-bold">
+          <h2 id="h-topics" class="m-0 text-compact font-bold">
             Topics people spoke about
           </h2>
           <ul class="m-0 p-0 list-none flex flex-wrap gap-2" aria-labelledby="h-topics">
@@ -74,10 +75,10 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
                 <a
                   href={`/speakers?topic=${encodeURIComponent(t.topic)}`}
                   data-topic={normalizeSearch(t.topic)}
-                  class="inline-flex items-center gap-1.5 min-h-[40px] px-4 rounded-pill border border-black text-[16px] font-bold no-underline text-black bg-white hover:bg-grey aria-[current=true]:bg-black aria-[current=true]:text-white"
+                  class={chipClass(false)}
                 >
                   {t.topic}
-                  <span class="font-normal opacity-70">{t.count}</span>
+                  <span class="font-normal text-ink-2">{t.count}</span>
                 </a>
               </li>
             ))}
@@ -86,26 +87,27 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
       )
     }
 
-    <p class="m-0 text-[16px] text-ink-2" role="status" aria-live="polite" data-count>{`${ordered.length} speakers`}</p>
+    <p class="m-0 text-compact text-ink-2" role="status" aria-live="polite" data-count>{`${ordered.length} speakers`}</p>
 
     <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-8" data-grid>
-      {ordered.map((s, i) => <SpeakerCard speaker={s} meta={`${s.role}${s.role ? ' · ' : ''}${talkWord(s.talks.length)}`} tone={i % 3 === 0 ? 'yellow' : 'grey'} />)}
+      {ordered.map((s) => <SpeakerCard speaker={s} meta={`${s.role}${s.role ? ' · ' : ''}${talkWord(s.talks.length)}`} />)}
     </div>
-    <Surface class="p-7 flex flex-col gap-2.5 [[hidden]]:hidden" data-empty hidden>
-      <h2 class="m-0 text-[24px] font-bold" data-empty-title>No speakers match.</h2>
-      <p class="m-0 text-[17px] text-ink-2">
+    <div data-empty hidden>
+      <Card padding="lg">
+      <h2 slot="header" class="m-0 text-card-title font-bold" data-empty-title>No speakers match.</h2>
+      <p class="m-0 text-body text-ink-2">
         This list only covers speaker profiles, so a topic can still have come up at a meetup. Try another word, <a href="/events?tab=past" data-events-link class="font-bold text-black">search past events</a>, or propose a talk on it.
       </p>
-      <div class="flex flex-wrap gap-2.5">
-        <Button href="/cfp" variant="yellow">Propose a talk</Button>
-        <button type="button" data-clear-2 class="min-h-[48px] px-5 rounded-pill border-2 border-black bg-white font-bold text-[16px] cursor-pointer">Show all speakers</button>
-      </div>
-    </Surface>
+      <Button slot="footer" href="/cfp" variant="primary">Propose a talk</Button>
+      <Button slot="footer" variant="secondary" data-clear-2>Show all speakers</Button>
+      </Card>
+    </div>
   </div>
 </BaseLayout>
 
 <script>
   import { normalizeSearch } from '@zurichjs/events';
+  import { chipClass } from '@zurichjs/design/recipes';
 
   const root = document.querySelector<HTMLElement>('[data-speakers]');
   if (root) {
@@ -139,8 +141,11 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
       }
       // The selected topic is the current filter (aria-current on links; aria-pressed is for buttons).
       for (const chip of chips) {
-        if (chip.dataset.topic === topic) chip.setAttribute('aria-current', 'true');
+        const on = chip.dataset.topic === topic;
+        if (on) chip.setAttribute('aria-current', 'true');
         else chip.removeAttribute('aria-current');
+        chip.className = chipClass(on);
+        chip.lastElementChild?.setAttribute('class', on ? 'font-normal text-grey-light' : 'font-normal text-ink-2');
       }
       const filtered = tokens.length > 0 || !!topic;
       clear.hidden = !filtered;

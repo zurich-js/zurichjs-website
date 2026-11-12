@@ -8,9 +8,13 @@
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import PartnersForm from '~/components/islands/forms/PartnersForm';
 import Button from '@zurichjs/design/components/Button.astro';
-import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
+import LogoRow from '@zurichjs/design/components/LogoRow.astro';
+import LogoWall from '@zurichjs/design/components/LogoWall.astro';
+import ChoiceCard from '@zurichjs/design/components/ChoiceCard.astro';
+import Tag from '@zurichjs/design/components/Tag.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import SegmentedControl from '@zurichjs/design/components/SegmentedControl.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content, nextMeetupHref } from '~/lib/content';
 import SponsorTiers from '~/components/SponsorTiers.astro';
@@ -24,7 +28,7 @@ import {
   SPONSORSHIP_TIERS,
 } from '@zurichjs/content';
 import { PAGE_PHOTOS } from '~/lib/photos';
-import { groupPartners, partnerPeriod } from '@zurichjs/events';
+import { groupPartners } from '@zurichjs/events';
 
 const { partners } = await content();
 const groups = groupPartners(partners);
@@ -96,7 +100,7 @@ const WAYS = [
     cta: { label: 'Community collaboration', way: 'community' },
   },
 ] as const;
-const link = 'text-black underline underline-offset-[3px]';
+const link = 'text-black underline';
 ---
 
 <BaseLayout
@@ -111,141 +115,128 @@ const link = 'text-black underline underline-offset-[3px]';
     sub="By sponsoring, you help us keep events accessible, bring in international expertise, and create opportunities for developers at all levels."
   >
     <div class="flex flex-wrap gap-3 pt-1.5">
-      <Button href="#ways" variant="yellow" grow>Ways to partner</Button>
-      <Button href={PROSPECTUS_MAILTO} variant="outline-white" grow>Request the prospectus</Button>
-      <Button href="#partner-form" variant="outline-white" grow>Send an inquiry</Button>
+      <Button href="#ways" variant="cta" grow>Ways to partner</Button>
+      <Button href={PROSPECTUS_MAILTO} variant="secondary" inverse grow>Request the prospectus</Button>
+      <Button href="#partner-form" variant="secondary" inverse grow>Send an inquiry</Button>
     </div>
   </PageOpening>
 
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <section id="audience" aria-labelledby="h-aud" class="flex flex-col gap-[clamp(24px,3vw,36px)] scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[720px]">
-        <h2 id="h-aud" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Who you reach</h2>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Mostly engineers who shape the products they work on.</p>
+  <div class="px-gut py-section flex flex-col gap-section">
+    <section id="audience" aria-labelledby="h-aud" class="flex flex-col gap-6 md:gap-9 scroll-mt-6">
+      <div class="flex flex-col gap-2.5 max-w-reading">
+        <h2 id="h-aud" class="m-0 text-section font-bold">Who you reach</h2>
+        <p class="m-0 text-body text-ink-2">Mostly engineers who shape the products they work on.</p>
       </div>
-      <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-10 gap-y-6">
+      <dl class="m-0 grid grid-cols-auto-sm gap-x-10 gap-y-6">
         {
           AUDIENCE_PROFILE.map((a) => (
             <div class="flex flex-col-reverse justify-end gap-1.5">
-              <dt class="text-[18px] leading-[1.4]">{a.label}</dt>
-              <dd class="m-0 text-[clamp(40px,4.4vw,56px)] leading-none font-bold">{a.value}</dd>
+              <dt class="text-body">{a.label}</dt>
+              <dd class="m-0 text-section leading-none font-bold">{a.value}</dd>
             </div>
           ))
         }
       </dl>
       <div class="flex flex-col gap-2.5">
-        <div class="text-[17px] font-bold">What they work with</div>
+        <div class="text-body font-bold">What they work with</div>
         <div class="flex flex-wrap gap-2">
-          {AUDIENCE_INTERESTS.map((i) => <span class="text-[15px] py-1 px-3 rounded-lg bg-grey-soft">{i}</span>)}
+          {AUDIENCE_INTERESTS.map((i) => (
+            <Tag size="md">{i}</Tag>
+          ))}
         </div>
       </div>
 
-      <div class="flex flex-col gap-[clamp(20px,2.4vw,28px)]">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Our reach in {REACH_AS_OF}</h3>
+      <div class="flex flex-col gap-5 md:gap-7">
+        <h3 class="m-0 text-subsection font-bold">Our reach in {REACH_AS_OF}</h3>
         <dl class="m-0 grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-6">
           {
             REACH_STATS.map((r) => (
               <div class="flex flex-col-reverse justify-end gap-1.5">
-                <dt class="text-[17px] leading-[1.4]">{r.label}</dt>
-                <dd class="m-0 text-[clamp(36px,4vw,52px)] leading-none font-bold">{r.value}</dd>
+                <dt class="text-body">{r.label}</dt>
+                <dd class="m-0 text-section leading-none font-bold">{r.value}</dd>
               </div>
             ))
           }
         </dl>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2 max-w-[760px]">{REACH_COUNTRIES}</p>
+        <p class="m-0 text-body text-ink-2 max-w-reading">{REACH_COUNTRIES}</p>
       </div>
     </section>
 
-    <section aria-labelledby="h-handle" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,400px),1fr))] gap-[clamp(32px,5vw,72px)] items-center">
+    <section aria-labelledby="h-handle" class="grid grid-cols-auto-lg gap-8 md:gap-16 items-center">
       <Photo
         photo={PAGE_PHOTOS.hosted}
         class="aspect-4/3 w-full"
       />
-      <div class="flex flex-col gap-[22px]">
-        <h2 id="h-handle" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What we take care of</h2>
+      <div class="flex flex-col gap-5">
+        <h2 id="h-handle" class="m-0 text-section font-bold">What we take care of</h2>
         {
           HANDLE.map(([h, d]) => (
             <div class="flex flex-col gap-1">
-              <div class="text-[20px] font-bold">{h}</div>
-              <div class="text-[17px] leading-[1.55] text-ink-2">{d}</div>
+              <div class="text-card-title font-bold">{h}</div>
+              <div class="text-body text-ink-2">{d}</div>
             </div>
           ))
         }
-        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           We only work with partners we know and trust. When we recommend a sponsor’s product, service or image, it’s because we believe in it ourselves.
         </p>
       </div>
     </section>
 
     <section id="ways" aria-labelledby="h-ways" class="flex flex-col gap-7 scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[760px]">
-        <h2 id="h-ways" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Four ways to partner</h2>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Sponsorship is the only paid option. Hosting an evening or covering its food and drinks are separate ways to help, and you can combine them.</p>
+      <div class="flex flex-col gap-2.5 max-w-reading">
+        <h2 id="h-ways" class="m-0 text-section font-bold">Four ways to partner</h2>
+        <p class="m-0 text-body text-ink-2">Sponsorship is the only paid option. Hosting an evening or covering its food and drinks are separate ways to help, and you can combine them.</p>
       </div>
       <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 list-none m-0 p-0">
         {
           WAYS.map((w) => (
-            <Surface as="li" tone="grey" id={w.id} class="p-7 flex flex-col gap-4 scroll-mt-6">
-              <h3 class="m-0 text-[24px] font-bold">{w.h}</h3>
-              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 flex-1">{w.d}</p>
+            <Card as="li" id={w.id} title={w.h} class="scroll-mt-6">
+              <p class="m-0 text-body text-ink-2">{w.d}</p>
               {'way' in w.cta ? (
-                <Button href={`/partners?way=${w.cta.way}#partner-form`} variant="black" size="sm" class="self-start" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
+                <Button slot="footer" href={`/partners?way=${w.cta.way}#partner-form`} variant="primary" data-partner-way={w.cta.way} aria-label={`Choose this: ${w.cta.label}`}>
                   {w.cta.label}
                 </Button>
               ) : (
-                <Button href={w.cta.href} variant="black" size="sm" class="self-start">
+                <Button slot="footer" href={w.cta.href} variant="primary">
                   {w.cta.label}
                 </Button>
               )}
-            </Surface>
+            </Card>
           ))
         }
       </ul>
-      <Surface id="hosting" tone="grey" class="p-7 grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 scroll-mt-6">
+      <div id="hosting" class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 scroll-mt-6">
         <div class="flex flex-col gap-3">
-          <h3 class="m-0 text-[24px] font-bold">Hosting an evening</h3>
-          <p class="m-0 text-[17px] leading-[1.55] text-ink-2">Hosting is free. In return, your company is recognised at the meetup you host.</p>
+          <h3 class="m-0 text-subsection font-bold">Hosting an evening</h3>
+          <p class="m-0 text-body text-ink-2">Hosting is free. In return, your company is recognised at the meetup you host.</p>
           {
             travel && (
-              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+              <p class="m-0 text-body text-ink-2">
                 If you also cover the speakers’ travel for that evening (about {travel.amount}), you are recognised as a Community Friend sponsor.
               </p>
             )
           }
         </div>
-        <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-[16px] leading-normal self-start">
+        <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-body">
           {hostTier.perks.filter((perk) => !/travel/i.test(perk)).map((perk) => <li>{perk}</li>)}
         </ul>
-      </Surface>
+      </div>
     </section>
 
     <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
-      <div class="flex flex-col gap-2.5 max-w-[760px]">
-        <h2 id="h-tiers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Sponsorship packages</h2>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
+      <div class="flex flex-col gap-2.5 max-w-reading">
+        <h2 id="h-tiers" class="m-0 text-section font-bold">Sponsorship packages</h2>
+        <p class="m-0 text-body text-ink-2">
           Pay monthly, yearly or once. Not sure which fits? <a href="#partner-form" class={link}>Start a conversation</a> or <a href={PROSPECTUS_MAILTO} class={link}>request the prospectus</a>.
         </p>
       </div>
       {/* One billing choice for every package: a pill with a segment per option, monthly first. */}
       <div class="flex flex-col items-center gap-2.5" data-billing>
-        <div role="radiogroup" aria-label="Billing" class="inline-flex p-1 rounded-pill bg-grey">
-          {
-            BILLING.map((b) => (
-              <button
-                type="button"
-                role="radio"
-                aria-checked={b.key === 'Monthly' ? 'true' : 'false'}
-                data-billing-option={b.key}
-                class="min-h-[44px] px-3.5 md:min-w-[110px] md:px-5 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors bg-transparent text-black hover:bg-grey-hover aria-checked:bg-black aria-checked:text-white"
-              >
-                {b.key}
-              </button>
-            ))
-          }
-        </div>
+        <SegmentedControl name="billing" legend="Billing" options={BILLING.map((b) => ({ value: b.key, label: b.key }))} value="Monthly" />
         {
           BILLING.map((b) => (
-            <p class="m-0 text-[16px] text-ink-2" data-billing-show={b.key} hidden={b.key !== 'Monthly'}>
+            <p class="m-0 text-compact text-ink-2" data-billing-show={b.key} hidden={b.key !== 'Monthly'}>
               {b.note}
             </p>
           ))
@@ -257,116 +248,112 @@ const link = 'text-black underline underline-offset-[3px]';
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
           {
             sponsorTiers.map((t) => (
-              <label class="tier-card relative rounded-card bg-white border-[3px] border-grey-frame hover:border-grey-mid has-checked:border-yellow p-6 pr-14 flex flex-col gap-5 cursor-pointer has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2">
-                <input type="radio" name="tier" value={t.id} data-tier-name={t.name} class="sr-only" aria-labelledby={`h-tier-${t.id}`} />
-                <span aria-hidden="true" class="tier-dot absolute top-6 right-6 w-7 h-7 rounded-full border-2 border-grey-line bg-white flex items-center justify-center text-white text-[14px] font-bold">✓</span>
-                <h3 id={`h-tier-${t.id}`} class="m-0 text-[22px] leading-[1.2] font-bold">
-                  {t.name}
-                </h3>
-                {t.prices.map((pr) => (
-                  <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
-                    <span class="text-[clamp(30px,2.6vw,38px)] leading-none font-bold">{pr.amount}</span>
-                    <span class="text-[16px] text-ink-2">{UNIT[pr.label] ?? ''}</span>
-                  </p>
-                ))}
-                <div class="flex flex-col gap-2">
-                  <div class="text-[16px] font-bold">Included</div>
-                  <ul class="m-0 p-0 list-none flex flex-col gap-2 text-[16px] leading-normal">
-                    {t.perks.map((perk) => (
-                      <li class="flex gap-2.5 items-start">
-                        <span aria-hidden="true" class="mt-[3px] w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-[11px] font-bold">✓</span>
-                        {perk}
-                      </li>
-                    ))}
-                  </ul>
+              <ChoiceCard name="tier" value={t.id} title={t.name} level="h3" titleId={`h-tier-${t.id}`} data-tier-name={t.name}>
+                <div class="flex flex-col gap-5">
+                  {t.prices.map((pr) => (
+                    <p class="m-0 flex items-baseline gap-2 flex-wrap" data-billing-show={pr.label} hidden={pr.label !== 'Monthly'}>
+                      <span class="text-subsection leading-none font-bold">{pr.amount}</span>
+                      <span class="text-compact text-ink-2">{UNIT[pr.label] ?? ''}</span>
+                    </p>
+                  ))}
+                  <div class="flex flex-col gap-2">
+                    <div class="text-compact font-bold">Included</div>
+                    <ul class="m-0 p-0 list-none flex flex-col gap-2 text-compact">
+                      {t.perks.map((perk) => (
+                        <li class="flex gap-2.5 items-start">
+                          <span aria-hidden="true" class="mt-0.5 w-5 h-5 flex-none rounded-full bg-black text-white flex items-center justify-center text-meta font-bold">✓</span>
+                          {perk}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </label>
+              </ChoiceCard>
             ))
           }
         </div>
       </fieldset>
       <div class="flex flex-col items-center gap-2 text-center">
-        <Button href="/partners?way=partner#partner-form" variant="yellow" data-partner-way="partner" data-partner-tier="" data-tier-cta>
+        <Button href="/partners?way=partner#partner-form" variant="cta" data-partner-way="partner" data-partner-tier="" data-tier-cta>
           <span data-tier-cta-label>Ask about sponsoring</span>
         </Button>
-        <p class="m-0 text-[16px] text-ink-2" data-tier-cta-note>Choose a package above, or ask us what fits.</p>
+        <p class="m-0 text-compact text-ink-2" data-tier-cta-note>Choose a package above, or ask us what fits.</p>
       </div>
-      <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">
-        Hosting a meetup or covering food and drinks is not a package: see <a href="#ways" class={link}>the ways to partner</a>.
-      </p>
     </section>
 
     <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">
       <div class="flex flex-col gap-1.5">
-        <h2 id="h-p-current" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Our sponsors</h2>
-        <p class="m-0 text-[18px] text-ink-2">These sponsors make ZurichJS possible. Join them in supporting our community.</p>
+        <h2 id="h-p-current" class="m-0 text-section font-bold">Our sponsors</h2>
+        <p class="m-0 text-body text-ink-2">These sponsors make ZurichJS possible. Join them in supporting our community.</p>
       </div>
       {
         groups.sponsorsByTier.length > 0 ? (
           <SponsorTiers groups={groups.sponsorsByTier} />
         ) : (
-          <p class="m-0 text-[17px]">
-            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the packages</a>.
+          <p class="m-0 text-body">
+            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline">See the packages</a>.
           </p>
         )
       }
     </section>
 
-    <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-[clamp(28px,3vw,40px)] scroll-mt-6">
-      <div class="flex flex-col gap-1.5 max-w-[720px]">
-        <h2 id="h-p-community" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Hosts and partners</h2>
-        <p class="m-0 text-[18px] text-ink-2">The venues, conferences, communities and companies we work with.</p>
+    <section id="partners-community" aria-labelledby="h-p-community" class="flex flex-col gap-7 md:gap-10 scroll-mt-6">
+      <div class="flex flex-col gap-1.5 max-w-reading">
+        <h2 id="h-p-community" class="m-0 text-section font-bold">Hosts and partners</h2>
+        <p class="m-0 text-body text-ink-2">The venues, conferences, communities and companies we work with.</p>
       </div>
       {
         CATEGORIES.map((g) => (
-          <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-[18px] scroll-mt-6">
+          <section id={`partners-${g.id}`} aria-labelledby={`h-p-${g.id}`} class="flex flex-col gap-4 scroll-mt-6">
             <div class="flex flex-col gap-1.5">
-              <h3 id={`h-p-${g.id}`} class="m-0 text-[clamp(22px,2.2vw,28px)] leading-[1.2] font-bold">
+              <h3 id={`h-p-${g.id}`} class="m-0 text-card-title font-bold">
                 {g.h}
               </h3>
-              <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[760px]">{g.sub}</p>
+              <p class="m-0 text-body text-ink-2 max-w-reading">{g.sub}</p>
             </div>
             {g.list.length > 0 ? (
-              <LogoGrid partners={g.list} caption={(p) => [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined} />
+              <LogoRow items={g.list.map((p) => ({ partner: p }))} />
             ) : (
-              <p class="m-0 text-[17px]">None listed right now.</p>
+              <p class="m-0 text-body">None listed right now.</p>
             )}
           </section>
         ))
       }
     </section>
 
-    <Surface as="figure" tone="grey" class="m-0 p-7 flex flex-col gap-4 max-w-[860px]">
-      <blockquote class="m-0 text-[19px] leading-[1.55] text-pretty">
+    <Card class="max-w-wide">
+      <figure class="m-0 flex flex-col gap-4">
+      <blockquote class="m-0 text-lead text-pretty">
         “Every meetup feels like a mini-conference, thanks to the impressive depth of expertise in the room. Finding a local group that consistently sets a high technical
         standard while maintaining authentic community spirit is truly uncommon.”
       </blockquote>
-      <figcaption class="text-[16px] leading-[1.4]">
+      <figcaption class="text-compact">
         <b>Colin Schwarz</b>
         <br />
         <span class="text-ink-2">Attendee</span>
       </figcaption>
-    </Surface>
+      </figure>
+    </Card>
 
     {
       previous.length > 0 && (
-        <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-[18px] scroll-mt-6">
+        <section id="partners-past" aria-labelledby="h-p-past" class="flex flex-col gap-4 scroll-mt-6">
           <div class="flex flex-col gap-1.5">
-            <h2 id="h-p-past" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+            <h2 id="h-p-past" class="m-0 text-subsection font-bold">
               Previous partners and sponsors
             </h2>
-            <p class="m-0 text-[17px] text-ink-2">We’re grateful to all the companies and organisations that have supported ZurichJS over the years.</p>
+            <p class="m-0 text-body text-ink-2">We’re grateful to all the companies and organisations that have supported ZurichJS over the years.</p>
           </div>
-          <LogoGrid partners={previous} size="sm" caption={(p) => partnerPeriod(p)} />
+          <LogoWall partners={previous} label="Previous partners and sponsors" />
         </section>
       )
     }
 
     <span id="inquiry-form" aria-hidden="true"></span>
-    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-1 md:grid-cols-2 gap-[clamp(28px,4vw,64px)] items-start scroll-mt-6 outline-hidden">
+    <section id="partner-form" tabindex="-1" aria-labelledby="h-pform" class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-start scroll-mt-6 outline-hidden">
       <div class="flex flex-col gap-3">
-        <h2 id="h-pform" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Tell us how you’d like to help</h2>
-        <p class="m-0 text-[18px] leading-[1.55] text-ink-2">Choose what you’d like to talk about, and change it any time before you send. An organiser replies from {SITE.email} to plan the details.</p>
+        <h2 id="h-pform" class="m-0 text-section font-bold">Tell us how you’d like to help</h2>
+        <p class="m-0 text-body text-ink-2">Choose what you’d like to talk about, and change it any time before you send. An organiser replies from {SITE.email} to plan the details.</p>
       </div>
       <PartnersForm client:load nextHref={nextHref} email={SITE.email} />
     </section>
@@ -399,16 +386,6 @@ const link = 'text-black underline underline-offset-[3px]';
   });
 </script>
 
-<style>
-  .tier-card:has(input:checked) .tier-dot {
-    background: #000;
-    border-color: #000;
-  }
-  .tier-card:not(:has(input:checked)) .tier-dot {
-    color: transparent;
-  }
-</style>
-
 <script>
   // The chosen package goes into the one action below the packages.
   const cta = document.querySelector<HTMLAnchorElement>('[data-tier-cta]');
@@ -420,7 +397,7 @@ const link = 'text-black underline underline-offset-[3px]';
     cta.dataset.partnerTier = input.value;
     cta.href = `/partners?way=partner&tier=${input.value}#partner-form`;
     if (ctaLabel) ctaLabel.textContent = `Ask about ${input.dataset.tierName}`;
-    if (ctaNote) ctaNote.textContent = 'We reply by email. Nothing is agreed until you confirm.';
+    if (ctaNote) ctaNote.hidden = true;
   });
 </script>
 
@@ -428,11 +405,14 @@ const link = 'text-black underline underline-offset-[3px]';
   // Billing switch on the sponsorship packages: shows one price per package (monthly by default).
   const box = document.querySelector<HTMLElement>('#sponsorship-tiers');
   if (box) {
-    const options = [...box.querySelectorAll<HTMLButtonElement>('[data-billing-option]')];
     const choose = (key: string) => {
-      for (const o of options) o.setAttribute('aria-checked', String(o.dataset.billingOption === key));
       for (const el of box.querySelectorAll<HTMLElement>('[data-billing-show]')) el.hidden = el.dataset.billingShow !== key;
     };
-    for (const o of options) o.addEventListener('click', () => choose(o.dataset.billingOption!));
+    // Native radios (arrow keys included): the change event fires for every way of choosing.
+    const radios = [...box.querySelectorAll<HTMLInputElement>('input[name="billing"]')];
+    for (const o of radios) o.addEventListener('change', () => o.checked && choose(o.value));
+    // A restored page (back button) may come back with another option checked.
+    const restored = radios.find((o) => o.checked);
+    if (restored) choose(restored.value);
   }
 </script>

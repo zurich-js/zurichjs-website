@@ -7,17 +7,18 @@
   "exports": {
     "./theme.css": "./src/theme.css",
     "./fonts.css": "./src/fonts.css",
-    "./tokens": "./src/tokens.ts",
+    "./theme": "./src/theme.ts",
+    "./font": "./src/font.ts",
     "./recipes": "./src/recipes.ts",
     "./images": "./src/images.ts",
     "./analytics": "./src/analytics.ts",
     "./session": "./src/session.ts",
     "./fonts/*": "./src/fonts/*",
     "./components/*": "./src/components/*",
-    "./islands/*": "./src/islands/*.tsx"
+    "./islands/*": "./src/islands/*.tsx",
+    "./logos": "./src/logos.ts"
   },
   "scripts": {
-    "theme": "node scripts/build-theme.mjs",
     "typecheck": "astro check"
   },
   "dependencies": {

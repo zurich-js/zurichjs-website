@@ -1,0 +1,76 @@
+---
+/**
+ * One logo in a logo wall (PackedGrid): a grey cell with the logo in black; on hover or focus the cell
+ * turns white (or the partner's own background colour) and the logo shows in colour.
+ *
+ *   logo only               grey cell, logo black   -> hover: white cell, colour logo
+ *   logo + logoBlack        grey cell, black file   -> hover: white cell, colour logo
+ *   logo + logoBlack + bg   grey cell, black file   -> hover: bg cell, colour logo (made for that bg)
+ *
+ * Without a black file the colour logo is drawn black by a filter. Most logos are simply filled black;
+ * `knockout` (white shapes inside a coloured one, like AXA) and `opaque` (a solid background) are
+ * thresholded instead so their white parts stay, and an opaque file is multiplied into the cell so its
+ * background disappears. It fills its grid cell; the cell's size comes from PackedGrid.
+ */
+import { cx } from '../recipes';
+
+interface Props {
+  name: string;
+  logo?: string;
+  logoBlack?: string;
+  bg?: string;
+  href?: string;
+  rel?: string;
+  knockout?: boolean;
+  opaque?: boolean;
+  /** Width and height in px for a logo whose ratio is known (equal visual weight); otherwise it fits the cell. */
+  width?: number;
+  height?: number;
+  /** The company name next to a symbol-only logo. */
+  label?: boolean;
+}
+const { name, logo, logoBlack, bg, href, rel = 'noopener noreferrer', knockout = false, opaque = false, width, height, label = false } = Astro.props;
+
+const cell = cx(
+  'group relative flex size-full items-center justify-center gap-2 rounded-card bg-grey px-4 text-black no-underline',
+  'transition-colors duration-300 hover:bg-(--logo-bg) focus-visible:bg-(--logo-bg)',
+);
+const style = { '--logo-bg': bg ?? 'var(--color-white)' };
+const alt = href ? `${name} (opens in a new tab)` : name;
+// The width attribute sizes the logo (no w-auto, which would override it); both files share one grid cell.
+const size = 'block h-auto max-w-full max-h-full min-w-0 object-contain col-start-1 row-start-1';
+// Without a black file, the colour logo itself is drawn in black and loses the filter on hover.
+const filtered = cx(
+  size,
+  'transition duration-300 group-hover:filter-none group-focus-visible:filter-none',
+  opaque || knockout ? 'filter-logo-threshold' : 'brightness-0',
+  opaque && 'mix-blend-multiply',
+);
+// With a black file, the two files cross-fade.
+const fadeOut = cx(size, 'transition-opacity duration-300 group-hover:opacity-0 group-focus-visible:opacity-0');
+const fadeIn = cx(size, 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100');
+const Tag = href ? 'a' : 'div';
+const link = href ? { href, target: '_blank', rel } : {};
+---
+
+{/* eslint-disable-next-line no-restricted-syntax -- the hover background is the partner's own colour from Sanity, as a CSS custom property */}
+<Tag class={cell} style={style} {...link}>
+  <span class="flex h-1/2 max-w-3/4 items-center justify-center gap-2">
+    {
+      logo && (
+        <span class="grid h-full place-items-center">
+          {logoBlack ? (
+            <>
+              <img src={logoBlack} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={fadeOut} />
+              <img src={logo} alt="" aria-hidden="true" width={width} height={height} loading="lazy" decoding="async" class={fadeIn} />
+            </>
+          ) : (
+            <img src={logo} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={filtered} />
+          )}
+        </span>
+      )
+    }
+    {(label || !logo) && <span class="text-compact leading-tight font-bold text-center">{name}</span>}
+    {label && href && <span class="sr-only"> (opens in a new tab)</span>}
+  </span>
+</Tag>

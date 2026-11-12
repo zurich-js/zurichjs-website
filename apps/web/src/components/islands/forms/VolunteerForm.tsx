@@ -4,6 +4,7 @@ import { useId, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
@@ -88,18 +89,17 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
 
   if (sent)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-hidden">
-        <h2 class="m-0 text-[28px] font-bold leading-[1.15]">Thanks. Your application is in.</h2>
-        <p class="m-0 text-[18px] leading-[1.55]">Someone from the organising team will email you at {f.email} within 7 days to talk about the next steps.</p>
-        <Button href={nextHref} variant="yellow" class="self-start mt-1.5 text-[17px]">
+      <Notice tone="success" live focusRef={doneRef} class="max-w-form" as="h2" title="Thanks. Your application is in.">
+        <p class="m-0 text-body">Someone from the organising team will email you at {f.email} within 7 days to talk about the next steps.</p>
+        <Button href={nextHref} variant="cta" class="self-start mt-1.5">
           See the next meetup
         </Button>
-      </div>
+      </Notice>
     );
 
-  const legend = 'text-[16px] font-bold mb-2 p-0';
+  const legend = 'text-compact font-bold mb-2 p-0';
   const errorLine = (k: keyof Answers, elId: string) => (
-    <span id={elId} class="text-[14px] text-danger min-h-[1.2em]" aria-live="polite">
+    <span id={elId} class="text-meta text-danger min-h-lh" aria-live="polite">
       {err(k)}
     </span>
   );
@@ -116,9 +116,9 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
   ].join('\n');
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate aria-label="Volunteer application" class="relative flex flex-col gap-6 max-w-[720px]">
+    <form ref={formRef} onSubmit={submit} noValidate aria-label="Volunteer application" class="relative flex flex-col gap-6 max-w-reading">
       <Honeypot />
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-3.5">
+      <div class="grid grid-cols-auto-sm gap-3.5">
         <TextField
           label="Name"
           name="name"
@@ -197,7 +197,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
 
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-1.5 min-w-0">
         <legend class={legend}>What would you like to help with?</legend>
-        <p id={`${id}-interests-hint`} class="m-0 mb-1 text-[16px] text-grey-text">
+        <p id={`${id}-interests-hint`} class="m-0 mb-1 text-compact text-grey-text">
           Choose one or more.
         </p>
         <div class="flex flex-wrap gap-2">
@@ -230,14 +230,14 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
       />
 
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="yellow" size="lg" class="self-start" busy={busy}>
+        <SubmitButton variant="cta" class="self-start" busy={busy}>
           {busy ? 'Sending…' : 'Send application'}
         </SubmitButton>
-        <span role="alert" class="text-[15px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {tried && !valid ? 'Fix the highlighted fields.' : serverError}
         </span>
         {serverError && (
-          <span class="text-[15px] text-ink-2 basis-full">
+          <span class="text-meta text-ink-2 basis-full">
             Your answers are still here. You can also email them to{' '}
             <a href={`mailto:hello@zurichjs.com?subject=${encodeURIComponent('Volunteer application')}&body=${encodeURIComponent(mailBody)}`} class="font-bold text-black">
               hello@zurichjs.com

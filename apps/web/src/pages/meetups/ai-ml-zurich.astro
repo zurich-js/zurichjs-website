@@ -10,7 +10,7 @@ import TopicGroups from '@zurichjs/design/components/landing/TopicGroups.astro';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
 
@@ -42,9 +42,9 @@ const faqs = [
 ];
 
 const PILLARS = [
-  { h: 'Production-ready', d: 'Talks from people shipping AI features in real products. Not demos: actual implementation stories with lessons learned.', tone: 'grey' as const },
-  { h: 'Web-first approach', d: 'OpenAI/Claude APIs, LangChain.js, vector databases, streaming responses: the stack web developers actually use.', tone: 'grey' as const },
-  { h: 'Free events', d: 'All AI talks are free. Same non-profit model, same community funding. No barriers to learning this tech.', tone: 'grey' as const },
+  { h: 'Production-ready', d: 'Talks from people shipping AI features in real products. Not demos: actual implementation stories with lessons learned.' },
+  { h: 'Web-first approach', d: 'OpenAI/Claude APIs, LangChain.js, vector databases, streaming responses: the stack web developers actually use.' },
+  { h: 'Free events', d: 'All AI talks are free. Same non-profit model, same community funding. No barriers to learning this tech.' },
 ];
 
 const LEARN = [
@@ -125,15 +125,15 @@ const aiTalks = pastEvents(events, BUILD_TIME)
     sub="When we started ZurichJS in late 2024, we noticed something: most AI meetups in Zurich focused on Python and data science. But web developers needed practical answers for integrating AI into real applications. So we started hosting talks on OpenAI APIs, LangChain, RAG systems: the stuff you actually use in production JavaScript."
   >
     <div class="flex flex-wrap gap-3 pt-1.5">
-      <Button href="/events" variant="yellow" grow>View AI meetups</Button>
-      <Button href="/cfp" variant="outline-white" grow>Share your AI knowledge</Button>
+      <Button href="/events" variant="cta" grow>View AI meetups</Button>
+      <Button href="/cfp" variant="secondary" inverse grow>Share your AI knowledge</Button>
     </div>
   </PageOpening>
 
-  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
-    <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
-      <h2 id="h-why" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Why AI at a JavaScript meetup?</h2>
-      <div class="flex flex-col gap-4 text-[18px] leading-[1.6] text-ink-2 max-w-[680px]">
+  <div class="flex flex-col gap-section py-section">
+    <section aria-labelledby="h-why" class="px-gut grid grid-cols-auto-lg gap-8 md:gap-16 items-start">
+      <h2 id="h-why" class="m-0 text-section font-bold">Why AI at a JavaScript meetup?</h2>
+      <div class="flex flex-col gap-4 text-body text-ink-2 max-w-reading">
         <p class="m-0">
           Because that’s where the real integration happens. Most companies aren’t training their own models. They’re using APIs. They’re building interfaces. They’re connecting LLMs to existing systems. And all of that lives in the web stack.
         </p>
@@ -142,51 +142,50 @@ const aiTalks = pastEvents(events, BUILD_TIME)
       </div>
     </section>
 
-    <section aria-label="What the AI talks are like" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+    <section aria-label="What the AI talks are like" class="px-gut grid grid-cols-auto-sm gap-4">
       {
         PILLARS.map((p) => (
-          <Surface tone={p.tone} class="p-7 flex flex-col gap-2.5">
-            <h3 class="m-0 text-[22px] font-bold">{p.h}</h3>
-            <p class="m-0 text-[17px] leading-[1.55]">{p.d}</p>
-          </Surface>
+          <Card title={p.h}>
+            <p class="m-0 text-body">{p.d}</p>
+          </Card>
         ))
       }
     </section>
 
-    <section aria-labelledby="h-web" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
-      <div class="flex flex-col gap-4 max-w-[760px]">
-        <h2 id="h-web" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">What AI looks like for web developers</h2>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+    <section aria-labelledby="h-web" class="px-gut flex flex-col gap-12">
+      <div class="flex flex-col gap-4 max-w-reading">
+        <h2 id="h-web" class="m-0 text-section font-bold">What AI looks like for web developers</h2>
+        <p class="m-0 text-body text-ink-2">
           We’re not training models. We’re integrating them. The practical reality of AI for most web developers is: call an API, manage prompts, handle streaming, deal with rate limits, build interfaces that users actually understand.
         </p>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           Our AI talks reflect that. They come from people who’ve debugged token limits at 2am. Who’ve figured out how to do RAG without blowing their budget. Who’ve built chat interfaces that don’t feel clunky. This is implementation knowledge, not hype.
         </p>
       </div>
 
       <div class="flex flex-col gap-6">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">What you’ll learn</h3>
+        <h3 class="m-0 text-subsection font-bold">What you’ll learn</h3>
         <TopicGroups groups={LEARN} />
       </div>
 
       <div class="flex flex-col gap-6">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Popular AI topics at ZurichJS</h3>
+        <h3 class="m-0 text-subsection font-bold">Popular AI topics at ZurichJS</h3>
         <PointList items={POPULAR} min={280} />
       </div>
 
       <div class="flex flex-col gap-6">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">AI tech stack we cover</h3>
+        <h3 class="m-0 text-subsection font-bold">AI tech stack we cover</h3>
         <TopicGroups groups={STACK} min={240} />
       </div>
 
       <div class="flex flex-col gap-6">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Who should attend?</h3>
+        <h3 class="m-0 text-subsection font-bold">Who should attend?</h3>
         <PointList items={WHO} min={280} />
       </div>
 
-      <div class="flex flex-col gap-4 max-w-[760px]">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Zurich’s AI ecosystem</h3>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+      <div class="flex flex-col gap-4 max-w-reading">
+        <h3 class="m-0 text-subsection font-bold">Zurich’s AI ecosystem</h3>
+        <p class="m-0 text-body text-ink-2">
           Zurich is emerging as a major AI hub in Europe. ZurichJS connects with the broader AI community including ETH Zurich AI research, Google Zurich’s AI teams, and numerous AI startups. Our meetups bridge academic AI research with practical industry
           applications.
         </p>
@@ -200,13 +199,13 @@ const aiTalks = pastEvents(events, BUILD_TIME)
             AI talks from past meetups
             <Fragment slot="sub">A few of the AI talks given at ZurichJS, with the evening they were part of.</Fragment>
           </SectionHeading>
-          <ul class="m-0 p-0 list-none grid gap-3 grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))]">
+          <ul class="m-0 p-0 list-none grid gap-3 grid-cols-auto-md">
             {aiTalks.map((t) => (
-              <li class="rounded-card bg-grey-soft p-6 flex flex-col gap-2">
-                <a href={eventHref(t.ev)} class="text-[19px] leading-[1.3] font-bold text-black no-underline hover:underline text-pretty wrap-anywhere">
+              <Card as="li">
+                <a href={eventHref(t.ev)} class="text-card-title font-bold text-black no-underline hover:underline text-pretty wrap-anywhere">
                   {t.title}
                 </a>
-                <span class="text-[16px] leading-[1.45] text-ink-2">
+                <span class="text-compact text-ink-2">
                   {t.speakers.map((s, i) => (
                     <>
                       {i > 0 && ', '}
@@ -218,7 +217,7 @@ const aiTalks = pastEvents(events, BUILD_TIME)
                   {t.speakers.length > 0 && ' · '}
                   {t.ev.startsAt ? monthYear(t.ev.startsAt) : t.ev.title}
                 </span>
-              </li>
+              </Card>
             ))}
           </ul>
         </section>
@@ -230,8 +229,8 @@ const aiTalks = pastEvents(events, BUILD_TIME)
     <LandingFaq faqs={faqs} />
 
     <LandingCta id="h-join" title="Join Zurich’s AI developer community" text="Learn practical AI development with JavaScript & TypeScript. Connect with developers building real AI applications.">
-      <Button href="/events" variant="yellow" grow>View AI meetups</Button>
-      <Button href="/cfp" variant="white" grow>Share your AI knowledge</Button>
+      <Button href="/events" variant="cta" grow>View AI meetups</Button>
+      <Button href="/cfp" variant="secondary" grow>Share your AI knowledge</Button>
     </LandingCta>
   </div>
 </BaseLayout>

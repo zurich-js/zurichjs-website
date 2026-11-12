@@ -2,12 +2,39 @@ import { feedbackAvailability, itemMinutes, talkAnchor, talkFormatLine, untimedN
 import { RichText } from '../../RichText.tsx';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cx, monogramClass } from '@zurichjs/design/recipes';
+import { cardClass, cx, monogramClass, noticeClass } from '@zurichjs/design/recipes';
+import type { ComponentChildren } from 'preact';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { useEventState } from '../useEventState.ts';
 import { Check } from '@zurichjs/design/islands/Check';
 import { feedbackRequested } from './feedbackMode.ts';
+
+interface Fact {
+  label: string;
+  value: ComponentChildren;
+  hideLabel?: boolean;
+  strong?: boolean;
+}
+
+/** The Preact twin of Facts.astro: "Label: value · Label: value" as a description list, each dot glued to the item before it. */
+function Facts({ items }: { items: Fact[] }) {
+  return (
+    <dl class="m-0 text-compact text-pretty tabular-nums">
+      {items.map((f, i) => (
+        <div key={f.label} class="inline">
+          {f.hideLabel ? <dt class="sr-only">{f.label}</dt> : <dt class="inline font-bold">{f.label}: </dt>}
+          <dd class={cx('inline m-0', f.strong ? 'font-bold' : 'text-ink-2')}>{f.value}</dd>
+          {i < items.length - 1 && (
+            <span aria-hidden="true" class="text-grey-mid">
+              {'\u00a0· '}
+            </span>
+          )}
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 export interface ProgrammeSpeaker {
   id: string;
@@ -32,9 +59,6 @@ export interface ProgrammeSpeaker {
  * link opens nothing here: FeedbackGate explains when feedback opens. A
  * draft preview build (`preview`) opens the ratings early for organisers.
  */
-/** Talk card padding; doors, breaks and the rest are smaller cards. */
-const CARD_PAD = 'p-[clamp(18px,2.4vw,28px)]';
-
 export default function Programme({
   ev,
   initial,
@@ -85,20 +109,22 @@ export default function Programme({
   return (
     <section id="programme" aria-labelledby="h-programme" class="flex flex-col gap-6 scroll-mt-6">
       <div class="flex flex-col gap-1.5">
-        <h2 id="h-programme" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+        <h2 id="h-programme" class="m-0 text-subsection font-bold">
           {heading}
         </h2>
-        {note && <p class="m-0 text-[16px] text-ink-2">{note}</p>}
+        {note && <p class="m-0 text-compact text-ink-2">{note}</p>}
       </div>
       {forced && state !== 'live' && (
-        <div id="feedback" class="bg-yellow rounded-card p-5 flex flex-col gap-2 scroll-mt-6">
-          <h3 class="m-0 text-[20px] font-bold">Feedback for {ev.title}</h3>
-          <p class="m-0 text-[17px] leading-normal">
-            Rate each talk below. Each speaker reads the ratings and comments for their own talk, and the organisers read everything. Nothing is published.
-          </p>
-          <a href={`/feedback?event=${ev.slug}`} class="self-start font-bold underline underline-offset-[3px] text-[17px]">
-            Tell us about the evening as a whole
-          </a>
+        <div id="feedback" class={noticeClass('note', 'scroll-mt-6')}>
+          <div class="flex flex-col gap-1.5 min-w-0">
+            <h3 class="m-0 font-bold text-card-title">Feedback for {ev.title}</h3>
+            <p class="m-0 text-compact">
+              Rate each talk below. Each speaker reads the ratings and comments for their own talk, and the organisers read everything. Nothing is published.
+            </p>
+            <a href={`/feedback?event=${ev.slug}`} class="self-start font-bold underline text-compact">
+              Tell us about the evening as a whole
+            </a>
+          </div>
         </div>
       )}
       <ol class="m-0 p-0 list-none flex flex-col gap-3">
@@ -108,13 +134,9 @@ export default function Programme({
           const mins = minutes[i];
           return (
             <li key={i} id={anchor} class="scroll-mt-24">
-              {/* Every line is a card, as on the old site: time, kind and length on top, then the content. Talks get the bigger card. */}
-              <div class={cx('flex flex-col gap-2 min-w-0 rounded-card bg-grey-soft', a.talk ? CARD_PAD : 'px-[clamp(16px,2vw,24px)] py-4')}>
-                <div class="flex items-center gap-2 flex-wrap">
-                  {a.time && <time class="px-2.5 py-1 rounded-lg bg-black text-white text-[15px] font-bold tabular-nums leading-none">{a.time}</time>}
-                  {mins && !a.talk && <span class="ml-auto text-[14px] font-bold text-ink-2 tabular-nums">{mins} min</span>}
-                </div>
-                <h3 class={cx('m-0 font-bold leading-[1.3] text-pretty', a.talk ? 'text-[22px]' : 'text-[19px]')}>
+              {/* Talks are outline cards; doors, breaks and the rest are plain rows with the same padding, so every title lines up. Nothing sits above a title. */}
+              <div class={cardClass(a.talk ? 'outline' : 'plain', 'md')}>
+                <h3 class={cx('m-0 font-bold text-pretty', a.talk ? 'text-card-title' : 'text-body')}>
                   {anchor ? (
                     <a href={`#${anchor}`} class="no-underline hover:underline">
                       {a.title}
@@ -123,42 +145,53 @@ export default function Programme({
                     a.title
                   )}
                 </h3>
+                {(() => {
+                  // The facts row under the title (docs/design-system.md, Cards): the time first and bold
+                  // (its label read by screen readers only), then the format and level. The speakers follow the description.
+                  const items: Fact[] = [
+                    ...(a.time ? [{ label: 'Time', value: <time>{a.time}</time>, hideLabel: true, strong: true }] : []),
+                    ...(a.talk
+                      ? [
+                          ...(talkFormatLine(a.talk) ? [{ label: 'Format', value: talkFormatLine(a.talk) }] : []),
+                          ...(a.talk.level ? [{ label: 'Level', value: a.talk.level }] : []),
+                          { label: 'Language', value: a.talk.language ?? 'English' },
+                        ]
+                      : mins
+                        ? [{ label: 'Length', value: `${mins} min` }]
+                        : []),
+                  ];
+                  return items.length ? <Facts items={items} /> : null;
+                })()}
                 {a.talk && (
-                  <div class="flex flex-col gap-2.5">
-                    <div class="flex flex-wrap gap-x-[18px] gap-y-2">
+                  <div class="flex flex-col gap-4">
+                    {summary && <p class="m-0 text-body max-w-form">{summary}</p>}
+                    <RichText text={a.talk.description} clampLines={5} class="text-body text-ink-2 max-w-form" />
+                    {/* The talk first, then who gives it (Bogdan's review, 12th November 2026). */}
+                    <ul class="m-0 p-0 list-none flex flex-wrap gap-x-8 gap-y-3" aria-label={a.talk.speakerIds.length > 1 ? 'Speakers' : 'Speaker'}>
                       {a.talk.speakerIds.map((id) => {
-                        const s = byId.get(id);
-                        if (!s) return null;
+                        const sp = byId.get(id);
+                        if (!sp) return null;
                         return (
-                          <a key={id} href={`/speakers/${id}`} class="no-underline flex items-center gap-2.5 text-[17px] font-bold text-left">
-                            {s.avatar ? (
-                              <img src={s.avatar} alt="" width={36} height={36} loading="lazy" decoding="async" class="w-9 h-9 flex-none rounded-full object-cover bg-grey" />
-                            ) : (
-                              <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'w-9 h-9 flex-none text-[13px]')}>
-                                {s.initials}
+                          <li key={id}>
+                            <a href={`/speakers/${id}`} class="group/sp no-underline text-black flex items-center gap-3">
+                              {sp.avatar ? (
+                                <img src={sp.avatar} alt="" width={48} height={48} loading="lazy" decoding="async" class="size-12 flex-none rounded-full object-cover bg-grey" />
+                              ) : (
+                                <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'size-12 flex-none')}>
+                                  {sp.initials}
+                                </span>
+                              )}
+                              <span class="flex flex-col min-w-0">
+                                <span class="text-body font-bold group-hover/sp:underline">{sp.name}</span>
+                                {sp.role && <span class="text-compact text-ink-2">{sp.role}</span>}
                               </span>
-                            )}
-                            <span>
-                              <span class="underline underline-offset-[3px]">{s.name}</span> <span class="font-normal text-ink-2">{s.role}</span>
-                            </span>
-                          </a>
+                            </a>
+                          </li>
                         );
                       })}
-                    </div>
-                    {summary && <p class="m-0 text-[17px] leading-[1.55] max-w-[640px]">{summary}</p>}
-                    <RichText text={a.talk.description} clampLines={5} class="text-[17px] leading-[1.55] text-ink-2 max-w-[640px]" />
-                    <div class="text-[15px] text-ink-2">{[talkFormatLine(a.talk), a.talk.level, a.talk.language ?? 'English'].filter(Boolean).join(' · ')}</div>
-                    {!!a.talk.tags?.length && (
-                      <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
-                        {a.talk.tags.map((t) => (
-                          <li key={t} class="text-[14px] px-2.5 py-0.5 rounded-pill bg-white">
-                            {t}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    </ul>
                     {a.talk.slidesUrl && (
-                      <a href={a.talk.slidesUrl} class="self-start text-[16px] font-bold underline underline-offset-[3px]" target="_blank" rel="noopener">
+                      <a href={a.talk.slidesUrl} class="self-start text-compact font-bold underline" target="_blank" rel="noopener">
                         Slides (opens in a new tab)
                       </a>
                     )}
@@ -170,7 +203,7 @@ export default function Programme({
                             const who = t.speakerId ? byId.get(t.speakerId)?.name : undefined;
                             const many = a.talk!.speakerIds.length > 1;
                             return (
-                              <Button key={t.key} variant={rated[t.key] ? 'grey' : 'yellow'} size="sm" class="border-black!" onClick={() => setTarget(t)}>
+                              <Button key={t.key} variant={rated[t.key] ? 'secondary' : 'primary'} onClick={() => setTarget(t)}>
                                 {rated[t.key] ? (
                                   <>
                                     Rated{many && who ? ` ${who}` : ''} <Check /> · change
@@ -187,7 +220,7 @@ export default function Programme({
                     )}
                   </div>
                 )}
-                {a.note && <p class="m-0 text-[17px] text-ink-2">{a.note}</p>}
+                {a.note && <p class="m-0 text-body text-ink-2">{a.note}</p>}
               </div>
             </li>
           );

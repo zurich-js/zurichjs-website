@@ -1,114 +1,196 @@
 /**
- * Class recipes shared by .astro components and Preact islands, so each
- * component's look is defined once.
+ * Class recipes shared by .astro components and their Preact twins, so each look is defined once.
+ * Every size comes from a theme token (theme.css): no pixels here.
  */
 export const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
 
-export type ButtonVariant =
-  | 'yellow' // primary on black or white
-  | 'outline-white' // secondary on black
-  | 'black' // primary on white
-  | 'outline-black' // secondary on white
-  | 'white' // white fill, black hairline (on grey or yellow surfaces)
-  | 'grey' // soft grey fill
-  | 'danger'
-  | 'link'; // underlined text, no box
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export const isExternal = (href: string) => /^(https?:|mailto:)/.test(href);
+/** Links to other sites open in a new tab; mail links do not. */
+export const opensNewTab = (href: string | undefined) => !!href && isExternal(href) && !href.startsWith('mailto:');
 
-const buttonBase = 'inline-flex items-center justify-center gap-2 font-bold cursor-pointer select-none transition-colors disabled:cursor-not-allowed box-border text-center';
+/* ------------------------------------------------------------------------------------------------ Buttons */
+
+/**
+ * Four variants, one height (48px, like form fields; owner, 12th November 2026).
+ *   primary    black; on hover the colours flip to white with the black border kept.
+ *   secondary  grey with a subtle border; on hover it turns black.
+ *   cta        yellow, for the one thing a page asks for; hover #E3CB16.
+ *   plain      no fill or border, grey on hover: interface controls (sort, filter, close), never content actions.
+ * `inverse` is for black surfaces, where the same roles are mirrored: primary is white and flips to black,
+ * secondary is dark grey and turns white.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'cta' | 'plain';
+
+const buttonBase =
+  'inline-flex items-center justify-center gap-2 box-border border rounded-pill font-bold text-center no-underline cursor-pointer select-none transition-colors min-h-control min-w-control disabled:cursor-not-allowed';
 const buttonVariants: Record<ButtonVariant, string> = {
-  yellow: 'bg-yellow text-black border border-yellow hover:bg-yellow-hover hover:border-yellow-hover disabled:bg-grey disabled:border-grey disabled:text-grey-text',
-  'outline-white': 'bg-transparent text-white border-2 border-white hover:bg-white hover:text-black',
-  black: 'bg-black text-white border border-black hover:bg-ink-2 hover:border-ink-2 disabled:bg-grey disabled:border-grey disabled:text-grey-text',
-  'outline-black': 'bg-transparent text-black border-2 border-black hover:bg-black hover:text-white',
-  white: 'bg-white text-black border border-black hover:bg-grey',
-  grey: 'bg-grey text-black border border-grey hover:bg-grey-hover hover:border-grey-hover',
-  danger: 'bg-danger text-white border border-danger hover:bg-danger-hover',
-  link: 'bg-transparent border-0 p-0 underline underline-offset-3 hover:text-blue',
+  primary: 'bg-black text-white border-black hover:bg-white hover:text-black',
+  secondary: 'bg-grey text-black border-grey-frame hover:bg-black hover:text-white hover:border-black',
+  cta: 'bg-yellow text-black border-yellow hover:bg-yellow-hover hover:border-yellow-hover',
+  plain: 'bg-transparent text-black border-transparent hover:bg-grey',
 };
-const buttonSizes: Record<ButtonSize, string> = {
-  sm: 'min-h-[44px] px-5 text-[16px]',
-  md: 'min-h-[48px] px-6 text-[18px]',
-  lg: 'min-h-[52px] px-[26px] text-[18px]',
+const buttonInverse: Record<ButtonVariant, string> = {
+  primary: 'bg-white text-black border-white hover:bg-black hover:text-white',
+  secondary: 'bg-ink-2 text-white border-ink-3 hover:bg-white hover:text-black hover:border-white',
+  cta: buttonVariants.cta,
+  plain: 'bg-transparent text-white border-transparent hover:bg-ink-2',
 };
+const buttonDisabled = 'disabled:bg-grey disabled:border-grey disabled:text-grey-text';
 
-export const buttonClass = (variant: ButtonVariant = 'yellow', size: ButtonSize = 'md', grow = false, extra?: string) =>
-  cx(buttonBase, buttonVariants[variant], variant !== 'link' && cx('no-underline rounded-pill', buttonSizes[size]), grow && 'flex-[1_1_100%] md:flex-[0_0_auto]', extra);
+export interface ButtonLook {
+  variant?: ButtonVariant;
+  inverse?: boolean;
+  /** No text, only an icon: a round button (give it a label). */
+  iconOnly?: boolean;
+  /** Full width on phones, its own width from 800px. */
+  grow?: boolean;
+}
+export const buttonClass = ({ variant = 'primary', inverse = false, iconOnly = false, grow = false }: ButtonLook = {}, extra?: string) =>
+  cx(
+    buttonBase,
+    (inverse ? buttonInverse : buttonVariants)[variant],
+    variant !== 'plain' && buttonDisabled,
+    iconOnly ? 'p-0' : cx(variant === 'plain' ? 'px-4' : 'px-6', 'text-body leading-normal'),
+    // Full width only on phones: from 480px buttons keep their own width and sit side by side (owner, 12th November 2026).
+    grow && 'max-phone:grow max-phone:basis-full',
+    extra,
+  );
 
-export type SurfaceTone = 'grey' | 'yellow' | 'black' | 'ink' | 'soft' | 'white' | 'danger' | 'success' | 'yellow-soft';
+/* ------------------------------------------------------------------------------------------------ Tags */
+
+/** A label you read, never press: 6px corners, not a pill (owner, 12th November 2026). */
+export type TagSize = 'sm' | 'md';
 /**
- * Cards (Bogdan's review, 4th November 2026): a Surface is static content, so 'grey' and 'soft' are white with a
- * thin border, never a fill that looks clickable. A card that is a link uses linkCardClass (soft grey, an arrow,
- * a hover state); a choice uses a yellow border when selected.
+ * Pick the tone that contrasts with the parent: grey on white, white on grey, black for times and status.
+ * success and danger label a state (a paid membership, a failed payment): green only for success, red only for errors.
  */
-const surfaceTones: Record<SurfaceTone, string> = {
-  grey: 'bg-white text-black border border-grey-frame',
-  yellow: 'bg-yellow text-black',
-  black: 'bg-black text-white on-black',
-  ink: 'bg-ink text-white on-black',
-  soft: 'bg-white text-black border border-grey-frame',
+export type TagTone = 'grey' | 'white' | 'black' | 'success' | 'danger';
+const tagSizes: Record<TagSize, string> = {
+  sm: 'min-h-tag-sm px-2.5 py-0.5 text-meta',
+  md: 'min-h-tag-md px-3.5 py-1 text-compact',
+};
+const tagTones: Record<TagTone, string> = {
+  grey: 'bg-grey text-black',
   white: 'bg-white text-black',
-  danger: 'bg-danger-soft text-black',
-  /** Confirmations: a form was sent, an action is done. */
-  success: 'bg-success-soft text-black',
-  /** A call to action inside a page, such as switching to automatic payment (owner, 11th November 2026). */
-  'yellow-soft': 'bg-yellow/25 text-black',
+  black: 'bg-black text-white font-bold',
+  success: 'bg-success-soft text-success font-bold',
+  danger: 'bg-danger-soft text-danger font-bold',
 };
-export const surfaceClass = (tone: SurfaceTone = 'grey', extra?: string) => cx('rounded-card', surfaceTones[tone], extra);
+export const tagClass = (size: TagSize = 'sm', tone: TagTone = 'grey', extra?: string) =>
+  cx('inline-flex items-center max-w-full rounded-tag leading-tight', tagSizes[size], tagTones[tone], extra);
+/** A tag that is a link: the same tag plus a hover, and an invisible layer that makes the hit area 44px tall. */
+export const tagLinkClass = (size: TagSize = 'sm', extra?: string) =>
+  cx(
+    tagClass(size, 'grey'),
+    'relative no-underline hover:bg-grey-hover transition-colors after:absolute after:inset-x-0',
+    size === 'sm' ? 'after:-inset-y-2.5' : 'after:-inset-y-1.5',
+    extra,
+  );
+/** A filter that is a control: 44px, bold, outlined; black when selected. */
+export const chipClass = (selected = false, extra?: string) =>
+  cx(
+    'inline-flex items-center gap-2 min-h-chip px-4 rounded-pill border no-underline font-bold text-compact transition-colors cursor-pointer',
+    selected ? 'bg-black border-black text-white' : 'bg-white border-grey-line text-black hover:border-black',
+    extra,
+  );
 
-export type BadgeTone = 'neutral' | 'accent' | 'dark' | 'success' | 'danger';
-export type BadgeSize = 'sm' | 'md';
+/* ------------------------------------------------------------------------------------------------ Cards */
+
 /**
- * Badge (docs/v2/UI-AUDIT.md, "Badge"): a small rounded pill that labels something (a status,
- * "Latest"). Not interactive. Green only for success and red only for errors (brand rules).
+ * One card, chosen by surface (Card.astro adds behaviour: link, disclosure, action).
+ *   outline  white with a frame: lists of items on white. The frame is functional, not decoration.
+ *   filled   soft grey: the card itself is the block (workshops, contact options).
+ *   plain    no box, same padding, so its text lines up with cards around it.
+ *   white    white without a frame, on black or grey.
+ *   inverse  dark, on black.
  */
-const badgeTones: Record<BadgeTone, string> = {
-  neutral: 'bg-grey text-black',
-  accent: 'bg-yellow text-black',
-  dark: 'bg-black text-white',
-  success: 'bg-success-soft text-success',
-  danger: 'bg-danger-soft text-danger',
+export type CardSurface = 'outline' | 'filled' | 'plain' | 'white' | 'inverse';
+export type CardPadding = 'sm' | 'md' | 'lg';
+export const cardSurfaces: Record<CardSurface, string> = {
+  outline: 'bg-white text-black border border-grey-frame',
+  filled: 'bg-grey-soft text-black',
+  plain: 'text-black',
+  white: 'bg-white text-black',
+  inverse: 'bg-ink text-white on-black',
 };
-const badgeSizes: Record<BadgeSize, string> = { sm: 'px-2.5 py-0.5 text-sm', md: 'px-3 py-1 text-base' };
-export const badgeClass = (tone: BadgeTone = 'neutral', size: BadgeSize = 'sm') =>
-  cx('inline-flex items-center rounded-pill font-bold leading-normal whitespace-nowrap', badgeTones[tone], badgeSizes[size]);
+export const cardPadding: Record<CardPadding, string> = {
+  sm: 'p-card-sm gap-2',
+  md: 'p-card-md gap-3',
+  lg: 'p-card-lg gap-5',
+};
+/** A static card for Preact islands (Card.astro is the full component): 24px corners, text touching the edge. */
+export const cardClass = (surface: CardSurface = 'outline', padding: CardPadding = 'md', extra?: string) =>
+  cx('flex flex-col min-w-0 rounded-card', cardSurfaces[surface], cardPadding[padding], extra);
 
-export type MonogramTone = 'grey' | 'yellow' | 'white' | 'blue';
+/** A whole card that is one choice (membership tier, sponsorship package): 3px frame, yellow when chosen. */
+export const choiceCardClass = (extra?: string) =>
+  cx(
+    'group relative flex flex-col gap-3 rounded-card bg-white border-3 border-grey-frame cursor-pointer transition-colors p-card-lg',
+    'hover:border-grey-mid has-checked:border-yellow',
+    'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
+    extra,
+  );
+/** The dot of a choice card: on the title's first line, filled yellow with a tick when chosen. */
+export const choiceDotClass =
+  'size-7 rounded-full border-2 border-grey-line bg-white flex items-center justify-center text-transparent group-has-checked:bg-yellow group-has-checked:border-yellow group-has-checked:text-black';
+
+/** Feedback and important notes. Green only for success, red only for errors. */
+export type NoticeTone = 'note' | 'success' | 'danger';
+const noticeTones: Record<NoticeTone, string> = {
+  note: 'bg-white border border-grey-frame',
+  success: 'bg-success-soft',
+  danger: 'bg-danger-soft',
+};
+export const noticeClass = (tone: NoticeTone = 'note', extra?: string) => cx('flex gap-4 rounded-card text-black p-card-md', noticeTones[tone], extra);
+
+/* ------------------------------------------------------------------------------------------------ Type */
+
+export type HeadingSize = 'display' | 'title' | 'section' | 'subsection' | 'card';
+export const headingClass: Record<HeadingSize, string> = {
+  display: 'text-display',
+  title: 'text-title',
+  section: 'text-section',
+  subsection: 'text-subsection',
+  card: 'text-card-title',
+};
+export type TextSize = 'lead' | 'body' | 'compact' | 'meta';
+export const textClass: Record<TextSize, string> = {
+  lead: 'text-lead',
+  body: 'text-body',
+  compact: 'text-compact',
+  meta: 'text-meta',
+};
+export type TextTone = 'default' | 'muted' | 'inverse' | 'inverse-muted';
+export const textTone: Record<TextTone, string> = {
+  default: 'text-black',
+  muted: 'text-ink-2',
+  inverse: 'text-white',
+  'inverse-muted': 'text-grey-light',
+};
+
+/* ------------------------------------------------------------------------------------------------ Others */
+
+export type MonogramTone = 'grey' | 'white' | 'blue';
 export type MonogramSize = 'avatar' | 'tile' | 'portrait';
-// Yellow is for buttons and one CTA section per page (Bogdan's review): a 'yellow' monogram is grey.
-const monoTones: Record<MonogramTone, string> = { grey: 'bg-grey', yellow: 'bg-grey', white: 'bg-white', blue: 'bg-blue-soft' };
+const monoTones: Record<MonogramTone, string> = { grey: 'bg-grey', white: 'bg-white', blue: 'bg-blue-soft' };
 const monoSizes: Record<MonogramSize, string> = {
-  avatar: 'rounded-full items-center justify-center text-[15px]',
-  tile: 'aspect-square w-full rounded-card items-center justify-center text-[clamp(36px,4vw,56px)]',
-  portrait: 'aspect-square w-full rounded-card items-end p-[18px] text-[44px]',
+  avatar: 'rounded-full items-center justify-center text-meta',
+  tile: 'aspect-square w-full rounded-card items-center justify-center text-title',
+  portrait: 'aspect-square w-full rounded-card items-end p-card-sm text-title',
 };
 export const monogramClass = (tone: MonogramTone = 'grey', size: MonogramSize = 'tile', extra?: string) =>
   cx('flex font-bold text-black box-border', monoTones[tone], monoSizes[size], extra);
 
-export const headingSizes = {
-  lg: 'text-[clamp(30px,3.4vw,48px)] leading-[1.1]',
-  md: 'text-[clamp(26px,2.8vw,36px)] leading-[1.15]',
-  sm: 'text-[clamp(24px,2.4vw,32px)] leading-[1.2]',
-} as const;
-
-export const isExternal = (href: string) => /^(https?:|mailto:)/.test(href);
-
 /**
  * A choice in a form (radio or checkbox): a light bordered option with the native control visible and regular
- * weight, so it never looks like a button (Bogdan's review, 4th November 2026). Selected: black border, soft fill.
+ * weight, so it never looks like a button (Bogdan's review, 4th November 2026). 48px, like every field.
  */
 export const optionClass = (invalid = false, extra?: string) =>
   cx(
-    'inline-flex items-center gap-2.5 min-h-[44px] px-3.5 py-2 rounded-xl border bg-white text-[16px] text-black cursor-pointer select-none',
+    'inline-flex items-center gap-2.5 min-h-control px-3.5 py-2 rounded-field border bg-white text-compact text-black cursor-pointer select-none',
     'hover:border-black has-checked:border-black has-checked:bg-grey-soft has-disabled:opacity-50 has-disabled:cursor-not-allowed',
     invalid ? 'border-danger' : 'border-grey-line',
     extra,
   );
 /** The native radio or checkbox inside an option. */
-export const optionInput = 'w-[18px] h-[18px] m-0 flex-none accent-black cursor-pointer';
-
-/** A card that is one link: soft grey, darker on hover, with an arrow (add `linkCardArrow` inside). */
-export const linkCardClass = (extra?: string) =>
-  cx('group relative block rounded-card bg-grey-soft hover:bg-grey transition-colors no-underline text-black p-5 md:p-6 pr-14 md:pr-16', extra);
-/** The arrow for a link card, top right; it nudges right on hover. */
-export const linkCardArrow = 'absolute right-5 top-5 md:right-6 md:top-6 transition-transform duration-300 group-hover:translate-x-1';
+export const optionInput = 'size-4.5 m-0 flex-none accent-black cursor-pointer';

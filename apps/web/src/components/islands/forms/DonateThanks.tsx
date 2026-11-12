@@ -21,7 +21,7 @@ export default function DonateThanks({ portalUrl, email }: { portalUrl?: string;
 
   const amount = s && s !== 'loading' ? `${s.currency} ${Number.isInteger(s.amount) ? s.amount : s.amount.toFixed(2)}` : '';
   return (
-    <div role="status" class="flex flex-col gap-3 text-[18px] leading-[1.55]">
+    <div role="status" class="flex flex-col gap-3 text-body">
       {s === 'loading' ? (
         <p class="m-0 text-ink-2">Checking your payment with Stripe…</p>
       ) : s && s.status === 'paid' ? (
@@ -35,7 +35,7 @@ export default function DonateThanks({ portalUrl, email }: { portalUrl?: string;
         <p class="m-0">If you completed the payment, Stripe emails you a receipt. If you didn’t, nothing was charged.</p>
       )}
       {s && s !== 'loading' && s.recurrence === 'monthly' && (
-        <p class="m-0 text-[17px] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           You can change or cancel your monthly donation at any time{' '}
           {portalUrl ? (
             <a href={portalUrl} class="font-bold text-black">
@@ -52,7 +52,7 @@ export default function DonateThanks({ portalUrl, email }: { portalUrl?: string;
           .
         </p>
       )}
-      <p class="m-0 text-[17px] text-ink-2">
+      <p class="m-0 text-body text-ink-2">
         A donation supports ZurichJS but isn’t a membership. Questions:{' '}
         <a href={`mailto:${email}`} class="font-bold text-black">
           {email}

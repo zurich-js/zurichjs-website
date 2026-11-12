@@ -17,5 +17,6 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
-  }
+  },
+  "files": ["../design/src/raw.d.ts"]
 }

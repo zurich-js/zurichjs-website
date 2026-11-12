@@ -7,7 +7,8 @@
  * Templates do not write HTML. They return blocks, and this file renders them
  * to HTML (escaped here, in one place) and to plain text.
  */
-import { colors, font, radii } from '@zurichjs/design/tokens';
+import { color, radius } from '@zurichjs/design/theme';
+import { font } from '@zurichjs/design/font';
 
 export const SITE_ORIGIN = 'https://zurichjs.com';
 
@@ -59,39 +60,39 @@ export function safeUrl(url: string): string {
 }
 
 const FONT_STACK = `${font.family}, ${['Helvetica', 'Arial', ...font.fallbacks].join(', ')}`;
-const text = `font-family:${FONT_STACK};font-size:17px;line-height:1.55;color:${colors.black};`;
+const text = `font-family:${FONT_STACK};font-size:17px;line-height:1.55;color:${color('black')};`;
 
 function blockHtml(b: Block): string {
   switch (b.kind) {
     case 'p':
       return `<p style="margin:0 0 18px;${text}">${escapeHtml(b.text)}</p>`;
     case 'small':
-      return `<p style="margin:0 0 14px;${text}font-size:15px;color:${colors['grey-text']};">${escapeHtml(b.text)}</p>`;
+      return `<p style="margin:0 0 14px;${text}font-size:15px;color:${color('grey-text')};">${escapeHtml(b.text)}</p>`;
     case 'success':
-      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radii.card};background:${colors['success-soft']};${text}color:${colors.success};font-weight:700;">${escapeHtml(b.text)}</p>`;
+      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radius('card')};background:${color('success-soft')};${text}color:${color('success')};font-weight:700;">${escapeHtml(b.text)}</p>`;
     case 'badge':
-      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;"><tr><td bgcolor="${colors['success-soft']}" style="border-radius:${radii.pill};background:${colors['success-soft']};padding:8px 16px;font-family:${FONT_STACK};font-size:15px;line-height:1.2;font-weight:700;color:${colors.success};">&#10003;&nbsp; ${escapeHtml(b.text)}</td></tr></table>`;
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;"><tr><td bgcolor="${color('success-soft')}" style="border-radius:${radius('pill')};background:${color('success-soft')};padding:8px 16px;font-family:${FONT_STACK};font-size:15px;line-height:1.2;font-weight:700;color:${color('success')};">&#10003;&nbsp; ${escapeHtml(b.text)}</td></tr></table>`;
     case 'plan':
-      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border-radius:${radii.card};background:${colors.grey};"><tr><td style="padding:24px;">
-<p style="margin:0 0 4px;font-family:${FONT_STACK};font-size:22px;line-height:1.25;font-weight:700;color:${colors.black};">${escapeHtml(b.title)}</p>
-<p style="margin:0 0 18px;font-family:${FONT_STACK};line-height:1.2;color:${colors.black};"><span style="font-size:32px;font-weight:800;">${escapeHtml(b.price)}</span> <span style="font-size:17px;color:${colors['grey-text']};">${escapeHtml(b.per)}</span></p>
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border-radius:${radius('card')};background:${color('grey')};"><tr><td style="padding:24px;">
+<p style="margin:0 0 4px;font-family:${FONT_STACK};font-size:22px;line-height:1.25;font-weight:700;color:${color('black')};">${escapeHtml(b.title)}</p>
+<p style="margin:0 0 18px;font-family:${FONT_STACK};line-height:1.2;color:${color('black')};"><span style="font-size:32px;font-weight:800;">${escapeHtml(b.price)}</span> <span style="font-size:17px;color:${color('grey-text')};">${escapeHtml(b.per)}</span></p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${b.rows
         .map(
           ([k, v]) =>
-            `<tr><td valign="top" style="padding:6px 12px 6px 0;width:40%;font-family:${FONT_STACK};font-size:15px;line-height:1.45;color:${colors['grey-text']};">${escapeHtml(k)}</td><td valign="top" style="padding:6px 0;font-family:${FONT_STACK};font-size:15px;line-height:1.45;font-weight:700;color:${colors.black};">${escapeHtml(v)}</td></tr>`,
+            `<tr><td valign="top" style="padding:6px 12px 6px 0;width:40%;font-family:${FONT_STACK};font-size:15px;line-height:1.45;color:${color('grey-text')};">${escapeHtml(k)}</td><td valign="top" style="padding:6px 0;font-family:${FONT_STACK};font-size:15px;line-height:1.45;font-weight:700;color:${color('black')};">${escapeHtml(v)}</td></tr>`,
         )
         .join('')}</table>
 </td></tr></table>`;
     case 'error':
-      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radii.card};background:${colors['danger-soft']};${text}color:${colors.danger};font-weight:700;">${escapeHtml(b.text)}</p>`;
+      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radius('card')};background:${color('danger-soft')};${text}color:${color('danger')};font-weight:700;">${escapeHtml(b.text)}</p>`;
     case 'url':
-      return `<p style="margin:0 0 18px;${text}font-size:15px;color:${colors['grey-text']};">${escapeHtml(b.text)}<br><a href="${escapeHtml(safeUrl(b.url))}" style="color:${colors.black};word-break:break-all;">${escapeHtml(safeUrl(b.url))}</a></p>`;
+      return `<p style="margin:0 0 18px;${text}font-size:15px;color:${color('grey-text')};">${escapeHtml(b.text)}<br><a href="${escapeHtml(safeUrl(b.url))}" style="color:${color('black')};word-break:break-all;">${escapeHtml(safeUrl(b.url))}</a></p>`;
     case 'button':
       // A table cell with bgcolor: the pill shows in clients that ignore padding on links.
-      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 24px;"><tr><td bgcolor="${colors.yellow}" style="border-radius:${radii.pill};background:${colors.yellow};"><a href="${escapeHtml(safeUrl(b.url))}" style="display:inline-block;padding:15px 30px;border-radius:${radii.pill};font-family:${FONT_STACK};font-size:18px;font-weight:700;line-height:1;color:${colors.black};text-decoration:none;">${escapeHtml(b.label)}</a></td></tr></table>`;
+      return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 24px;"><tr><td bgcolor="${color('yellow')}" style="border-radius:${radius('pill')};background:${color('yellow')};"><a href="${escapeHtml(safeUrl(b.url))}" style="display:inline-block;padding:15px 30px;border-radius:${radius('pill')};font-family:${FONT_STACK};font-size:18px;font-weight:700;line-height:1;color:${color('black')};text-decoration:none;">${escapeHtml(b.label)}</a></td></tr></table>`;
     case 'summary':
-      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;border-radius:${radii.card};background:${colors.grey};"><tr><td style="padding:20px 24px;">${b.rows
-        .map(([k, v]) => `<p style="margin:0 0 6px;${text}"><span style="color:${colors['grey-text']};">${escapeHtml(k)}:</span> <strong>${escapeHtml(v)}</strong></p>`)
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;border-radius:${radius('card')};background:${color('grey')};"><tr><td style="padding:20px 24px;">${b.rows
+        .map(([k, v]) => `<p style="margin:0 0 6px;${text}"><span style="color:${color('grey-text')};">${escapeHtml(k)}:</span> <strong>${escapeHtml(v)}</strong></p>`)
         .join('')}</td></tr></table>`;
   }
 }
@@ -128,20 +129,20 @@ export function render(c: EmailContent): RenderedEmail {
 <style>
 @font-face { font-family: '${font.family}'; font-style: normal; font-weight: 300 900; font-display: swap; src: url('${SITE_ORIGIN}/fonts/${font.file}') format('woff2'); }
 body { margin: 0; padding: 0; }
-a { color: ${colors.black}; }
+a { color: ${color('black')}; }
 </style>
 </head>
-<body style="margin:0;padding:0;background:${colors.black};">
+<body style="margin:0;padding:0;background:${color('black')};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(c.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${colors.black};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${color('black')};">
 <tr><td align="center" style="padding:0 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
-<tr><td style="padding:28px 8px 24px;"><a href="${SITE_ORIGIN}" style="text-decoration:none;"><img src="${SITE_ORIGIN}/images/logo/wordmark-white-email.png" width="206" height="30" alt="ZurichJS" style="display:block;border:0;width:206px;height:30px;color:${colors.white};font-family:${FONT_STACK};font-size:22px;font-weight:700;"></a></td></tr>
-<tr><td style="background:${colors.white};border-radius:${radii.card};padding:36px 32px 18px;">
-<h1 style="margin:0 0 20px;font-family:${FONT_STACK};font-size:28px;line-height:1.2;font-weight:700;color:${colors.black};">${escapeHtml(c.heading)}</h1>
+<tr><td style="padding:28px 8px 24px;"><a href="${SITE_ORIGIN}" style="text-decoration:none;"><img src="${SITE_ORIGIN}/images/logo/wordmark-white-email.png" width="206" height="30" alt="ZurichJS" style="display:block;border:0;width:206px;height:30px;color:${color('white')};font-family:${FONT_STACK};font-size:22px;font-weight:700;"></a></td></tr>
+<tr><td style="background:${color('white')};border-radius:${radius('card')};padding:36px 32px 18px;">
+<h1 style="margin:0 0 20px;font-family:${FONT_STACK};font-size:28px;line-height:1.2;font-weight:700;color:${color('black')};">${escapeHtml(c.heading)}</h1>
 ${c.blocks.map(blockHtml).join('\n')}
 </td></tr>
-<tr><td style="padding:24px 8px 36px;font-family:${FONT_STACK};font-size:14px;line-height:1.55;color:${colors['grey-light']};">${escapeHtml(ASSOCIATION.name)}, ${escapeHtml(ASSOCIATION.address)}<br>Questions? Reply to this email or write to <a href="mailto:${ASSOCIATION.email}" style="color:${colors.white};">${ASSOCIATION.email}</a>.</td></tr>
+<tr><td style="padding:24px 8px 36px;font-family:${FONT_STACK};font-size:14px;line-height:1.55;color:${color('grey-light')};">${escapeHtml(ASSOCIATION.name)}, ${escapeHtml(ASSOCIATION.address)}<br>Questions? Reply to this email or write to <a href="mailto:${ASSOCIATION.email}" style="color:${color('white')};">${ASSOCIATION.email}</a>.</td></tr>
 </table>
 </td></tr>
 </table>

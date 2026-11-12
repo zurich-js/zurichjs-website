@@ -1,16 +1,17 @@
 ---
 /**
- * Event list. Both tabs (upcoming and past) are prerendered in full so every
- * event link is in the HTML; a small script switches tabs and filters by the
- * search text, keeping the state in the URL (?tab=past, ?q=…; ?search= is
- * accepted as an alias because the WebSite SearchAction points there).
+ * Event list: every meetup on one page, so every event link is in the HTML. Upcoming meetups come first,
+ * in date order; past meetups follow, newest first, dimmed until hovered. A sticky bar holds the search, which
+ * filters both and keeps its text in the URL (?q=…; ?search= is accepted as an alias because the WebSite
+ * SearchAction points there). The #upcoming and #past anchors stay for old links.
+ * Old links to ?tab=past land on the past section.
  */
 import { pastEvents, upcomingEvents, type Event } from '@zurichjs/events';
 import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventRow from '@zurichjs/design/components/EventRow.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import RetiredNotice from '~/components/RetiredNotice.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
@@ -37,9 +38,9 @@ const hay = (e: Event) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-const TABS = [
-  { k: 'upcoming', label: 'Upcoming', list: upcoming },
-  { k: 'past', label: 'Past', list: past },
+const SECTIONS = [
+  { k: 'upcoming', heading: 'Upcoming meetups', list: upcoming },
+  { k: 'past', heading: 'Past meetups', list: past },
 ] as const;
 ---
 
@@ -53,81 +54,72 @@ const TABS = [
   <PageOpening slot="opening" title="Events" sub="JavaScript meetups in Zurich. Every past event keeps its page, speakers and photos, so the talks live on long after the night." compact />
   <RetiredNotice />
 
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-7" data-events>
-    <div class="flex flex-wrap gap-3 items-center">
-      <div role="tablist" aria-label="When" class="flex gap-1 bg-grey rounded-pill p-1">
-        {
-          TABS.map((t, i) => (
-            <button
-              type="button"
-              role="tab"
-              id={`tab-${t.k}`}
-              aria-controls={`panel-${t.k}`}
-              aria-selected={i === 0 ? 'true' : 'false'}
-              tabindex={i === 0 ? 0 : -1}
-              data-tab={t.k}
-              class="border-0 cursor-pointer min-h-[40px] px-[18px] rounded-pill font-bold text-[16px] bg-transparent text-black aria-selected:bg-black aria-selected:text-white"
-            >
-              {t.label}
-            </button>
-          ))
-        }
-      </div>
-      <label class="flex-[1_1_240px] flex flex-col min-w-0">
+  <div class="py-section flex flex-col gap-6" data-events>
+    <div class="sticky top-header z-40 bg-white px-gut py-3">
+      <label class="flex flex-col min-w-0">
         <span class="sr-only">Search events, talks and speakers</span>
-        <input type="search" name="q" data-q placeholder="Search events, talks, speakers" autocomplete="off" class="min-h-[48px] border border-grey-line rounded-pill px-5 text-[17px] bg-white min-w-0" />
+        <input type="search" name="q" data-q placeholder="Search events, talks, speakers" autocomplete="off" class="min-h-control border border-grey-line rounded-pill px-5 text-body bg-white min-w-0" />
       </label>
     </div>
 
+    <div class="flex flex-col gap-control">
     {
-      TABS.map((t, i) => (
-        <div role="tabpanel" id={`panel-${t.k}`} aria-labelledby={`tab-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [[hidden]]:hidden">
-          {t.list.map((e) => (
-            <div data-hay={hay(e)}>
-              <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} />
-            </div>
-          ))}
-          <Surface class="p-7 flex flex-col gap-3 [[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
-            <h2 class="m-0 text-[24px] font-bold" data-empty-title>
-              {t.k === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.'}
-            </h2>
-            <p class="m-0 text-[17px] text-ink-2" data-empty-sub>
-              The next meetup is being planned. It is announced on Meetup first.
-            </p>
-            <div class="flex gap-2.5 flex-wrap">
-              <Button variant="white" class="[[hidden]]:hidden" data-clear hidden>
-                Clear search
-              </Button>
-              <Button variant="yellow" href={SITE.meetupGroupUrl}>
-                Follow the group on Meetup
-              </Button>
-            </div>
-          </Surface>
-        </div>
+      SECTIONS.map((t) => (
+        <section id={t.k} data-section={t.k} aria-labelledby={`h-${t.k}`} class="px-gut flex flex-col gap-6 scroll-mt-40">
+          <h2 id={`h-${t.k}`} class="m-0 text-subsection font-bold">
+            {t.heading}
+          </h2>
+          <div class="flex flex-col gap-3">
+            {t.list.map((e) => (
+              <div data-hay={hay(e)}>
+                <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} dim={t.k === 'past'} />
+              </div>
+            ))}
+          </div>
+          <div data-empty hidden={t.list.length > 0}>
+            {t.k === 'upcoming' ? (
+              <Card padding="lg">
+                <h3 slot="header" class="m-0 text-card-title font-bold" data-empty-title>
+                  Nothing scheduled yet.
+                </h3>
+                <p class="m-0 text-body text-ink-2" data-empty-sub>
+                  The next meetup is being planned. It is announced on Meetup first.
+                </p>
+                <Button slot="footer" variant="secondary" data-clear hidden>
+                  Clear search
+                </Button>
+                <Button slot="footer" variant="cta" href={SITE.meetupGroupUrl}>
+                  Follow the group on Meetup
+                </Button>
+              </Card>
+            ) : (
+              <p class="m-0 text-body text-ink-2" data-empty-title>
+                No past events yet.
+              </p>
+            )}
+          </div>
+        </section>
       ))
     }
+    </div>
   </div>
 </BaseLayout>
 
 <script>
   import { normalizeSearch } from '@zurichjs/events';
 
-  type Tab = 'upcoming' | 'past';
   const root = document.querySelector<HTMLElement>('[data-events]');
   if (root) {
-    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const sections = [...root.querySelectorAll<HTMLElement>('[data-section]')];
     const input = root.querySelector<HTMLInputElement>('[data-q]')!;
     const params = new URLSearchParams(location.search);
-    let tab: Tab = params.get('tab') === 'past' ? 'past' : 'upcoming';
     let q = params.get('q') ?? params.get('search') ?? '';
     input.value = q;
 
     const syncUrl = () => {
       const u = new URL(location.href);
       u.searchParams.delete('search');
-      if (tab === 'past') u.searchParams.set('tab', 'past');
-      else u.searchParams.delete('tab');
+      u.searchParams.delete('tab');
       if (q) u.searchParams.set('q', q);
       else u.searchParams.delete('q');
       history.replaceState(history.state, '', u.pathname + u.search + u.hash);
@@ -136,45 +128,28 @@ const TABS = [
     const render = () => {
       const tokens = normalizeSearch(q).split(' ').filter(Boolean);
       const needle = tokens.join(' ');
-      for (const t of tabs) {
-        const on = t.dataset.tab === tab;
-        t.setAttribute('aria-selected', String(on));
-        t.tabIndex = on ? 0 : -1;
-      }
-      for (const p of panels) {
-        p.hidden = p.dataset.panel !== tab;
+      for (const s of sections) {
         let shown = 0;
-        for (const row of p.querySelectorAll<HTMLElement>('[data-hay]')) {
-          const hay = row.dataset.hay ?? '';
-          const match = tokens.every((t) => hay.includes(t));
+        for (const row of s.querySelectorAll<HTMLElement>('[data-hay]')) {
+          const match = tokens.every((t) => (row.dataset.hay ?? '').includes(t));
           row.hidden = !match;
           if (match) shown++;
         }
-        const empty = p.querySelector<HTMLElement>('[data-empty]')!;
+        const empty = s.querySelector<HTMLElement>('[data-empty]')!;
         empty.hidden = shown > 0;
-        empty.querySelector('[data-empty-title]')!.textContent = needle ? `No events match “${q.trim()}”.` : p.dataset.panel === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.';
-        empty.querySelector('[data-empty-sub]')!.textContent = needle ? 'Try a speaker name or a topic, or clear the search.' : 'The next meetup is being planned. It is announced on Meetup first.';
-        empty.querySelector<HTMLElement>('[data-clear]')!.hidden = !needle;
+        const upcoming = s.dataset.section === 'upcoming';
+        empty.querySelector('[data-empty-title]')!.textContent = needle
+          ? `No ${upcoming ? 'upcoming' : 'past'} events match “${q.trim()}”.`
+          : upcoming
+            ? 'Nothing scheduled yet.'
+            : 'No past events yet.';
+        const sub = empty.querySelector('[data-empty-sub]');
+        if (sub) sub.textContent = needle ? 'Try a speaker name or a topic, or clear the search.' : 'The next meetup is being planned. It is announced on Meetup first.';
+        const clear = empty.querySelector<HTMLElement>('[data-clear]');
+        if (clear) clear.hidden = !needle;
       }
     };
 
-    const select = (next: Tab, focus = false) => {
-      tab = next;
-      syncUrl();
-      render();
-      if (focus) tabs.find((t) => t.dataset.tab === next)?.focus();
-    };
-
-    for (const t of tabs) {
-      t.addEventListener('click', () => select(t.dataset.tab as Tab));
-      t.addEventListener('keydown', (e) => {
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
-        e.preventDefault();
-        const i = tabs.indexOf(t);
-        const j = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
-        select(tabs[j]!.dataset.tab as Tab, true);
-      });
-    }
     input.addEventListener('input', () => {
       q = input.value;
       syncUrl();
@@ -190,5 +165,10 @@ const TABS = [
       });
     }
     render();
+    // Old links (?tab=past) land on the past section.
+    if (params.get('tab') === 'past') {
+      document.getElementById('past')?.scrollIntoView();
+      syncUrl();
+    }
   }
 </script>

@@ -6,11 +6,13 @@ import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro
 import HomeHero from '@zurichjs/design/components/HomeHero.astro';
 import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
-import { SpeakerCarousel, type CarouselSpeaker } from '~/components/islands/home/SpeakerCarousel';
+import { SpeakerArc, type ArcSpeaker } from '@zurichjs/design/islands/SpeakerArc';
 import { sizedSrc, srcsetFor } from '@zurichjs/design/images';
 import { COUNTRIES_REACHED, PARTNERS_TO_DATE, SPEAKER_COMPANIES, speakersWithTalks } from '@zurichjs/content';
 import AwardSection from '@zurichjs/design/components/AwardSection.astro';
-import SpeakerCompanies from '@zurichjs/design/components/SpeakerCompanies.astro';
+import CompanyWall from '@zurichjs/design/components/CompanyWall.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
+import Text from '@zurichjs/design/components/Text.astro';
 import TalkRow, { type TalkRowData } from '@zurichjs/design/components/TalkRow.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import PackedGrid from '@zurichjs/design/components/PackedGrid.astro';
@@ -36,18 +38,20 @@ outer: for (const ev of pastEvents(events, BUILD_TIME)) {
     if (talks.length === 4) break outer;
   }
 }
-// The carousel: speakers who gave a talk at an event, most recent first, photos sized for the card.
+// The speaker arc: speakers who gave a talk at an event, most recent first, with their role (never a talk title)
+// and how many talks they gave; photos sized for the card.
 const lastTalk = (s: (typeof speakers)[number]) => s.talks.flatMap((t) => t.eventSlugs.map((x) => events.find((e) => e.slug === x)?.startsAt ?? '')).sort().pop() ?? '';
 const speakerCount = speakersWithTalks(speakers).length;
-const carousel: CarouselSpeaker[] = speakersWithTalks(speakers)
+const arc: ArcSpeaker[] = speakersWithTalks(speakers)
   .sort((a, b) => lastTalk(b).localeCompare(lastTalk(a)) || a.name.localeCompare(b.name))
   .slice(0, 24)
   .map((s) => ({
     id: s.id,
     name: s.name,
-    meta: s.tagline || s.role,
+    role: s.company && !s.role.includes(s.company) ? `${s.role}, ${s.company}` : s.role,
+    talks: s.talks.filter((t) => t.eventSlugs.length > 0).length,
     initials: s.initials,
-    photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), alt: s.photo.alt, position: s.photo.position } : undefined,
+    photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), position: s.photo.position } : undefined,
   }));
 // The hero photos are set by hand in ~/lib/hero.ts (owner), never picked from ImageKit.
 // The section photos are set by hand too (~/lib/photos.ts).
@@ -69,8 +73,8 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
   jsonLd={[organizationSchema(), websiteSchema(), localBusinessSchema()]}
 >
   <HomeHero slot="opening" next={next} now={BUILD_TIME} ticketing={ticketing} photos={HERO_PHOTOS} meetupGroupUrl={SITE.meetupGroupUrl} />
-  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)]">
-    <div class="flex flex-col gap-[clamp(32px,4vw,56px)]">
+  <div class="flex flex-col gap-section pt-section">
+    <div class="flex flex-col gap-4">
       <AwardSection
         award={award}
         photo={PAGE_PHOTOS.award}
@@ -79,7 +83,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
         stats={[
           { value: '1K+', label: 'Meetup members' },
           { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
-          { value: COUNTRIES_REACHED, label: 'countries our speakers and attendees come from' },
+          { value: COUNTRIES_REACHED, label: 'speaker/attendee countries' },
         ]}
       />
       <PackedGrid items={COMMUNITY_GRID.map((g) => ({ id: g.id, sizes: g.sizes, priority: g.priority }))} columns={{ base: 4, md: 6 }} label="Photos from ZurichJS meetups" class="px-gut">
@@ -94,10 +98,10 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
       talks.length > 0 && (
         <section aria-labelledby="h-talks" class="px-gut flex flex-col gap-7">
           <div class="flex justify-between items-baseline gap-4 flex-wrap">
-            <h2 id="h-talks" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
+            <h2 id="h-talks" class="m-0 text-section font-bold">
               Talks from past meetups
             </h2>
-            <a href="/events?tab=past" class="font-bold text-[18px] underline underline-offset-4">
+            <a href="/events?tab=past" class="font-bold text-body underline">
               All past events
             </a>
           </div>
@@ -115,20 +119,26 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
     <section aria-labelledby="h-speakers" class="flex flex-col gap-7 overflow-x-clip">
       <div class="px-gut flex justify-between items-baseline gap-4 flex-wrap">
         <div class="flex flex-col gap-2">
-          <h2 id="h-speakers" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Meet the speakers</h2>
-          <p class="m-0 text-[18px] text-ink-2">{speakerCount} people have spoken at ZurichJS so far.</p>
+          <h2 id="h-speakers" class="m-0 text-section font-bold">Meet the speakers</h2>
+          <p class="m-0 text-body text-ink-2">{speakerCount} people have spoken at ZurichJS so far.</p>
         </div>
-        <a href="/speakers" class="font-bold text-[18px] underline underline-offset-4">All {speakerCount} speakers</a>
+        <a href="/speakers" class="font-bold text-body underline">All {speakerCount} speakers</a>
       </div>
-      <SpeakerCarousel client:visible speakers={carousel} />
-      <div class="px-gut pt-[clamp(24px,3vw,40px)]">
-        <SpeakerCompanies companies={SPEAKER_COMPANIES} headingId="h-speaker-companies" as="h2" />
+      <SpeakerArc client:visible speakers={arc} />
+      <div class="px-gut pt-8">
+        <div class="flex flex-col gap-6">
+          <div class="flex flex-col gap-2 max-w-reading">
+            <Heading id="h-speaker-companies" size="subsection">Where our speakers come from</Heading>
+            <Text tone="muted">Speakers of every shape and size: freelancers, open-source maintainers and Google Developer Experts, all the way to engineers at the largest companies in tech.</Text>
+          </div>
+          <CompanyWall companies={SPEAKER_COMPANIES} label="Companies our speakers come from" />
+        </div>
       </div>
     </section>
 
     <SpeakCta />
   </div>
-  <div class="pt-[clamp(64px,8vw,112px)] pb-[clamp(64px,8vw,112px)]">
+  <div class="py-section">
     <HostsSection
       sponsors={partnerGroups.currentSponsors}
       partners={[...partnerGroups.venues.filter((p) => p.current), ...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]}

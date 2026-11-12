@@ -3,16 +3,22 @@
  * Black hero on the same surface as the header (Bogdan's review, 4th November 2026):
  * "JavaScript meets Zurich." as the H1, the mission as a smaller H2, one line of copy, and a square
  * composition on the right: a meetup photo and the workshop loop as two squares, and the next meetup as a
- * card across the full width below them, with the meetup's artwork from Sanity and the JS corner.
+ * card across the full width below them (a two-column grid; the card spans both), with the meetup's artwork from Sanity.
  *
- * The next-meetup card is one link to the event page ("Details and RSVP"); visitors continue to Meetup
- * from there. Its visible text (date, venue, title, "Details and RSVP") is the link's name. The rating lives in the award section now, not here.
+ * The next-meetup card is one link card to the event page (owner, 12th November 2026): the meetup's artwork
+ * flush to the card's edges, the title first, then date and venue in one wrapping facts row; the arrow is the
+ * signifier, so there is no JS corner and no underlined "Details and RSVP" (screen readers still hear it).
+ * Visitors continue to Meetup from the event page. The rating lives in the award section, not here.
  *
  * The tall tile can carry a short silent `video` loop: its photo is the poster and first paint, and the
  * loop only plays for visitors who allow motion and aren't saving data.
  */
 import { eventHref, presentEvent, type Event, type Photo, type TicketingProvider } from '@zurichjs/events';
 import { srcFor, srcsetFor } from '../images';
+import Card from './Card.astro';
+import Facts from './Facts.astro';
+import Tag from './Tag.astro';
+import Text from './Text.astro';
 type HeroTile = Photo & { video?: string };
 interface Props {
   /** The next meetup, if one is scheduled. */
@@ -27,113 +33,63 @@ const p = next ? presentEvent(next, { now, ticketing }) : null;
 // Only states that change whether to come are shown; "RSVP open" and the price are not (review).
 const NOTICE: Partial<Record<string, string>> = { full: 'Full, waitlist open', postponed: 'Postponed', cancelled: 'Cancelled', live: 'Happening now', tbc: 'Date to be confirmed' };
 const notice = p ? NOTICE[p.state] : undefined;
-const tile = 'relative block min-h-0 rounded-card overflow-hidden bg-ink';
+const tile = 'relative block min-h-0 aspect-square rounded-card overflow-hidden bg-ink';
 // The meetup's own artwork from Sanity, in the card (Bogdan's review: the graphics added so much).
 const art = next?.cover;
 ---
 
-<section class="relative px-gut pt-[clamp(24px,5vw,72px)] pb-[clamp(40px,6vw,88px)] grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-[clamp(36px,5vw,72px)] items-center">
-  <div class="relative z-1 flex flex-col gap-[clamp(14px,1.6vw,20px)] min-w-0">
-    <h1 class="m-0 text-[clamp(44px,7vw,96px)] leading-[1.02] font-bold text-balance">JavaScript meets Zurich.</h1>
-    <h2 class="m-0 text-[clamp(22px,2.4vw,32px)] leading-[1.2] font-bold text-grey text-balance">Shaping the Zurich tech scene.</h2>
-    <p class="m-0 mt-2 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[540px] text-pretty text-grey-mid">
+<section class="relative px-gut pt-page-top pb-page-end grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
+  <div class="relative z-1 flex flex-col gap-4 min-w-0">
+    <h1 class="m-0 text-display font-bold text-balance">JavaScript meets Zurich.</h1>
+    <h2 class="m-0 text-subsection font-bold text-grey text-balance">Shaping the Zurich tech scene.</h2>
+    <p class="m-0 mt-2 text-lead max-w-reading text-pretty text-grey-mid">
       Come for the talks, stay for the people: juniors to CTOs, every framework, and a room full of developers you wouldn’t otherwise meet.
     </p>
   </div>
 
-  {/* The square composition: a photo, the loop, and the next meetup as a card. On phones the card spans the width. */}
-  <div class="hero-squares grid gap-[clamp(8px,1vw,12px)] w-full">
-    <span class={`${tile} [grid-area:a]`}>
+  {/* The square composition: a photo, the loop, and the next meetup as a card. The card's artwork sits on its left at every width, so it stays short on phones; below 800px the composition stops at the form width. */}
+  <div class="grid grid-cols-2 gap-3 w-full max-md:max-w-form">
+    <span class={tile}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
       <img src={srcFor(PHOTOS.audience.src)} srcset={PHOTOS.audience.srcset ?? srcsetFor(PHOTOS.audience.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.audience.alt} loading="eager" fetchpriority="high" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.audience.position ?? 'center' }} />
     </span>
-    <span class={`${tile} [grid-area:v]`}>
+    <span class={tile}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
       <img src={srcFor(PHOTOS.speaker.src)} srcset={PHOTOS.speaker.srcset ?? srcsetFor(PHOTOS.speaker.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.speaker.alt} loading="eager" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }} />
       {
         PHOTOS.speaker.video && (
+          <>
+          {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
           <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }}>
             <source src={PHOTOS.speaker.video} type="video/mp4" />
           </video>
+          </>
         )
       }
     </span>
-    <a
-      href={next ? eventHref(next) : meetupGroupUrl}
-      data-next-meetup
-      {...(next ? {} : { target: '_blank', rel: 'noopener' })}
-      class={`next-card group ${tile} [grid-area:c] bg-white! text-black no-underline focus-visible:outline-offset-4`}
-    >
-      <span class="next-card-inner">
-        {
-          art && (
-            <span class="next-card-art relative block overflow-hidden rounded-[16px] bg-grey">
-              <img src={srcFor(art.src)} srcset={srcsetFor(art.src)} sizes="(min-width: 800px) 22vw, 90vw" alt="" loading="eager" decoding="async" class="absolute inset-0 w-full h-full object-cover" />
-            </span>
-          )
-        }
-        <span class="flex flex-col gap-3 min-w-0 pb-1">
-          {
-            next && p ? (
-              <>
-                <span class="flex flex-col gap-0.5 text-[16px] leading-[1.35]">
-                  <span class="font-bold">{p.dateLineShort}</span>
-                  <span class="text-ink-2">{p.venueShort}</span>
-                </span>
-                {notice && <span class="self-start text-[14px] font-bold px-3 py-1 rounded-pill bg-black text-white">{notice}</span>}
-                <span class="text-[clamp(22px,2vw,28px)] leading-[1.12] font-bold text-pretty">{next.title}</span>
-                <span class="mt-auto pt-2 pr-16 text-[17px] font-bold underline underline-offset-4 decoration-2 group-hover:no-underline">Details and RSVP</span>
-              </>
-            ) : (
-              <>
-                <span class="text-[clamp(22px,2vw,28px)] leading-[1.12] font-bold text-pretty">The next meetup is being planned.</span>
-                <span class="text-[16px] leading-[1.45] text-ink-2">We announce it on Meetup first.</span>
-                <span class="mt-auto pt-2 pr-16 text-[17px] font-bold underline underline-offset-4 decoration-2 group-hover:no-underline">Follow ZurichJS on Meetup</span>
-              </>
-            )
-          }
-        </span>
-      </span>
-      {/* The corner illustration from the V2 design handoff. */}
-      <img src="/images/logo/corner-js.svg" alt="" aria-hidden="true" width="150" height="150" class="absolute right-0 bottom-0 w-[clamp(56px,6vw,80px)] h-auto pointer-events-none" />
-    </a>
+    {/* The next meetup: a link card with the artwork flush to its edges, the title first, then date and venue on one wrapping line. */}
+    {
+      next && p ? (
+        <Card surface="white" level="p" mediaLayout="side" title={next.title} href={eventHref(next)} linkHint="Details and RSVP" linkAttrs={{ 'data-next-meetup': '' }} class="col-span-2">
+          {art && <img slot="media" src={srcFor(art.src)} srcset={srcsetFor(art.src)} sizes="(min-width: 800px) 15vw, 30vw" alt="" loading="eager" decoding="async" />}
+          <Facts
+            slot="facts"
+            items={[
+              { label: 'Date', value: p.dateLineShort, hideLabel: true, strong: true },
+              { label: 'Venue', value: p.venueShort, hideLabel: true },
+            ]}
+          />
+          {notice && <Tag tone="black">{notice}</Tag>}
+        </Card>
+      ) : (
+        <Card surface="white" level="p" title="The next meetup is being planned." href={meetupGroupUrl} linkHint="Follow ZurichJS on Meetup" linkAttrs={{ 'data-next-meetup': '' }} class="col-span-2">
+          <Text size="compact" tone="muted">We announce it on Meetup first.</Text>
+        </Card>
+      )
+    }
   </div>
 </section>
 
-<style>
-  /* Two photo squares on top, the next-meetup card across the full width below, at every size. */
-  .hero-squares {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      'a v'
-      'c c';
-  }
-  .hero-squares > span {
-    aspect-ratio: 1 / 1;
-  }
-  /* The card lays itself out by its own width: artwork above the text when narrow, beside it when wide. */
-  .next-card {
-    container-type: inline-size;
-  }
-  .next-card-inner {
-    display: grid;
-    gap: clamp(14px, 4cqw, 22px);
-    padding: clamp(14px, 4cqw, 22px);
-    height: 100%;
-    box-sizing: border-box;
-  }
-  .next-card-art {
-    aspect-ratio: 16 / 9;
-  }
-  @container (min-width: 500px) {
-    .next-card-inner {
-      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
-      align-items: stretch;
-    }
-    .next-card-art {
-      aspect-ratio: auto;
-      min-height: 190px;
-    }
-  }
-</style>
 
 <script>
   // Play the hero loop shortly after the page has loaded, only when motion is welcome and data isn't being saved.

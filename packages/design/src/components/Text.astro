@@ -1,0 +1,16 @@
+---
+/** Body copy. Size and tone are props; callers never pick pixels or line heights. */
+import { cx, textClass, textTone, type TextSize, type TextTone } from '../recipes';
+
+interface Props {
+  as?: 'p' | 'span' | 'div' | 'li' | 'dd';
+  size?: TextSize;
+  tone?: TextTone;
+  bold?: boolean;
+  id?: string;
+  class?: string;
+}
+const { as: Tag = 'p', size = 'body', tone = 'default', bold = false, id, class: extra } = Astro.props;
+---
+
+<Tag id={id} class={cx('m-0 text-pretty', textClass[size], textTone[tone], bold && 'font-bold', extra)}><slot /></Tag>

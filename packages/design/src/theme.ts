@@ -4,10 +4,12 @@
  * drift and nothing is generated.
  *
  * Lookups throw on an unknown name, so a misspelt token fails the build instead of shipping `undefined`.
- * It loads theme.css through Vite's `?raw` import: it works in the Astro build, server code and Vitest (vitest.config.ts
- * lets theme.css through). Packages that type-check this file outside Astro include src/raw.d.ts for the `?raw` type.
+ * It loads theme.css as text in every bundler: Vite's `?raw` (the Astro build, Vitest; vitest.config.ts lets theme.css
+ * through) and esbuild's `with { type: 'text' }` (the Netlify functions). src/raw.d.ts types the import.
  */
-import css from './theme.css?raw';
+// `?raw` is for Vite (the Astro build, Vitest); the `text` attribute is for esbuild, which bundles the Netlify
+// functions (it ignores the query). Both read the same file as text.
+import css from './theme.css?raw' with { type: 'text' };
 
 const block = (() => {
   const start = css.indexOf('@theme');

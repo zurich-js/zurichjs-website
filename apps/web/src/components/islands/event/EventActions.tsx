@@ -1,9 +1,13 @@
-import { buildIcs, eventDisplayTitle, presentEvent, type Event, type EventState } from '@zurichjs/events';
+import { calendarLinks, eventDisplayTitle, eventHref, presentEvent, type Event, type EventState } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ticketing } from '~/lib/ticketing';
 import { Button } from '@zurichjs/design/islands/Button';
+import { Menu } from '@zurichjs/design/islands/Menu';
 import { useEventState } from '../useEventState.ts';
+
+/** Three connected dots (24 by 24). */
+const SHARE_ICON = 'M18 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM18 22a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98';
 
 interface Props {
   ev: Event;
@@ -38,17 +42,15 @@ export default function EventActions({ ev, initial, url }: Props) {
       () => say(`Couldn’t copy. The link is ${url}`),
     );
   };
-  const addToCalendar = () => {
-    const ics = buildIcs(ev, url);
-    if (!ics) return;
-    track('ics_download', { eventId: ev.id });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
-    a.download = `zurichjs-${ev.slug}.ics`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    say('Calendar file downloaded. Open it to add the meetup.');
-  };
+  // As on conf.zurichjs.com: Google and Outlook open a prefilled entry, Apple and other apps open the event's .ics file.
+  const links = calendarLinks(ev, url);
+  const calendars = links
+    ? [
+        { label: 'Google Calendar', href: links.google, external: true, onSelect: () => track('ics_download', { eventId: ev.id, calendar: 'google' }) },
+        { label: 'Outlook', href: links.outlook, external: true, onSelect: () => track('ics_download', { eventId: ev.id, calendar: 'outlook' }) },
+        { label: 'Apple / iCal', href: `${eventHref(ev)}.ics`, onSelect: () => track('ics_download', { eventId: ev.id, calendar: 'ics' }) },
+      ]
+    : [];
   const handoff = p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist';
 
   return (
@@ -76,14 +78,8 @@ export default function EventActions({ ev, initial, url }: Props) {
             </Button>
           )
         )}
-        {p.dateKnown && state !== 'past' && state !== 'cancelled' && (
-          <Button variant="secondary" inverse onClick={addToCalendar}>
-            Add to calendar
-          </Button>
-        )}
-        <Button variant="secondary" inverse onClick={share}>
-          Share
-        </Button>
+        {p.dateKnown && state !== 'past' && state !== 'cancelled' && calendars.length > 0 && <Menu label="Add to calendar" variant="secondary" inverse items={calendars} />}
+        <Button variant="secondary" inverse icon={SHARE_ICON} label="Share this meetup" onClick={share} />
       </div>
       <div role="status" class="text-compact text-grey-mid empty:hidden">
         {status}

@@ -132,6 +132,6 @@ export const grids = {
 } as const;
 
 export const motion = {
-  /** Colour transitions only; no scroll reveals. Disabled under prefers-reduced-motion. */
+  /** The default transition (colours). Logo tiles use 300ms and the speaker arc 500ms; no scroll reveals. Disabled under prefers-reduced-motion. */
   durationMs: 150,
 } as const;

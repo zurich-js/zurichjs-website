@@ -1,6 +1,7 @@
 import { useState } from 'preact/hooks';
 import { cx } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
+import { SegmentedControl } from '@zurichjs/design/islands/SegmentedControl';
 import { Check } from '@zurichjs/design/islands/Check';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, perYear, type Cycle, type TierKey } from '../../../lib/membership.ts';
 
@@ -27,26 +28,7 @@ export default function MembershipForm() {
           Choose your membership
         </h2>
         {/* One billing choice for the cards and the form below: a single pill with a segment per cycle. */}
-        <div role="radiogroup" aria-label="Billing" class="self-center inline-flex p-1 rounded-pill bg-grey">
-          {BILLING.map((c) => {
-            const on = c.value === cycle;
-            return (
-              <button
-                key={c.value}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                onClick={() => setCycle(c.value)}
-                class={cx(
-                  'min-h-[44px] min-w-[120px] px-6 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors',
-                  on ? 'bg-black text-white' : 'bg-transparent text-black hover:bg-grey-hover',
-                )}
-              >
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedControl legend="Billing" options={BILLING} value={cycle} onChange={setCycle} class="self-center" />
         <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-4 items-stretch">
           {TIER_KEYS.map((k) => {
             const x = TIERS[k];

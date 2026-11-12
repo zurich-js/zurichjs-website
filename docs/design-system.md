@@ -7,16 +7,17 @@
 
 ## What lives where
 
-| File                     | What it is                                                                                                                                                      |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/tokens.ts`          | **Single source** for colours, type roles, spacing roles, radii, widths, grids, breakpoints and font. Change values here only.                                  |
-| `src/theme.css`          | **Generated** from `tokens.ts`: the Tailwind 4 `@theme` block, the `px-gut` and `mx-gut` utilities, and base rules (focus rings, reduced motion, placeholders). |
-| `src/fonts.css`          | **Generated** `@font-face` for sites that do not use the Astro Fonts API.                                                                                       |
-| `src/recipes.ts`         | Class recipes shared by components and their Preact twins: buttons, tags, chips, cards, notices, type roles, options, monograms.                                |
-| `src/components/*.astro` | Static components. They take **props only** and never fetch content.                                                                                            |
-| `src/islands/*.tsx`      | Interactive Preact primitives and twins: Button, Notice, ChoiceCard, Tag, SegmentedControl, Field, Modal, StarRating, RatingSheet, SpeakerArc.                  |
+| File                     | What it is                                                                                                                                                                                                                                                                        |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/theme.css`          | **The single source**, edited by hand: the Tailwind 4 `@theme` block (colours, type roles, spacing, radii, widths, grids, breakpoints, easing, shadow), the `px-gut`, `mx-gut` and `filter-logo-threshold` utilities, and base rules (focus rings, reduced motion, placeholders). |
+| `src/theme.ts`           | Reads `theme.css` for TypeScript: `color()`, `radius()`, `space()` (they throw on an unknown name) and the `colors`, `text`, `spacing` … records. Used by the emails, the OG images and the gallery.                                                                              |
+| `src/font.ts`            | Figtree's file, weights and fallbacks, for the Astro Fonts API and the emails.                                                                                                                                                                                                    |
+| `src/fonts.css`          | `@font-face` for sites that do not use the Astro Fonts API. Kept in step with `font.ts` (a test checks the family).                                                                                                                                                               |
+| `src/recipes.ts`         | Class recipes shared by components and their Preact twins: buttons, tags, chips, cards, notices, type roles, options, monograms.                                                                                                                                                  |
+| `src/components/*.astro` | Static components. They take **props only** and never fetch content.                                                                                                                                                                                                              |
+| `src/islands/*.tsx`      | Interactive Preact primitives and twins: Button, Notice, ChoiceCard, Tag, SegmentedControl, Field, Modal, StarRating, RatingSheet, SpeakerArc.                                                                                                                                    |
 
-**Regenerating:** after changing `tokens.ts`, run `pnpm --filter @zurichjs/design theme`. A test fails when `theme.css` or `fonts.css` is out of date.
+**Changing a value:** edit `theme.css`; the site and every TypeScript reader pick it up, with nothing to regenerate. `theme.ts` loads it with Vite's `?raw` import (Vitest is told to let it through in `vitest.config.ts`).
 
 **Ownership** is enforced by `apps/web/test/stack.test.ts`:
 
@@ -58,7 +59,7 @@ Changing any of these needs the owner's approval.
 
 ## Components
 
-Pages pick components and props and never write pixels: no `text-[17px]`, `min-h-[44px]` or `p-[clamp(...)]`. Every value has a token class (`text-body`, `min-h-control`, `p-card-md`, `max-w-reading`, `rounded-tag`); when one is missing, propose a token in `tokens.ts` rather than writing a value. Before building something, check this table and the `/design` gallery: a second version of a component is a bug.
+Pages pick components and props and never write pixels: no `text-[17px]`, `min-h-[44px]` or `p-[clamp(...)]`. Every value has a token class (`text-body`, `min-h-control`, `p-card-md`, `max-w-reading`, `rounded-tag`); when one is missing, propose a token in `theme.css` rather than writing a value. Before building something, check this table and the `/design` gallery: a second version of a component is a bug.
 
 | Component                             | Use                                                                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -75,7 +76,7 @@ Pages pick components and props and never write pixels: no `text-[17px]`, `min-h
 
 ## Type
 
-Nine roles, each a size with its line height (`tokens.ts` `text`, generated as `text-*` utilities; Tailwind's default scale is off). Approved by the owner on 12th November 2026.
+Nine roles, each a size with its line height (`--text-*` in `theme.css`, so `text-*` utilities; Tailwind's default scale is off). Approved by the owner on 12th November 2026.
 
 | Role         | Size                       | Line height | Where                                 |
 | ------------ | -------------------------- | ----------- | ------------------------------------- |
@@ -97,7 +98,7 @@ Nine roles, each a size with its line height (`tokens.ts` `text`, generated as `
 
 - **One breakpoint: 800px (`md:`).** `lg:` (1100px) is only for grids that need a third or fourth column.
 - **Gutter:** the side padding is `max(var(--px), (100% − 1280px) / 2)`, where `--px` is 20px on phones and 48px from 800px. Use `px-gut` on full-width sections and `mx-gut` on blocks that sit inside the column.
-- **Section rhythm:** `gap-section` between sections; `pt-page-top` and `pb-page-end` around a page's content.
+- **Section rhythm:** `gap-section` between sections, and `py-section` around a page's content, so the space under the opening and above the footer matches the space between sections (owner, 12th November 2026). `page-top` and `page-end` are only for the home hero and the footer.
 - **Widths:** `max-w-reading` (720px) for text, `max-w-wide` (880px), `max-w-form` (640px), `max-w-site` (1280px).
 - **Header:** 80px (`h-header`). It overlaps the top of the page, and the opening is padded by it (`pt-header`), so the black opening starts at the top of the page.
 
@@ -146,7 +147,7 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 @source '../node_modules/@zurichjs/design/src';
 ```
 
-- **Non-Astro stacks (such as Next.js)** can use `tokens`, `theme.css`, `fonts.css` and `recipes` directly.
+- **Non-Astro stacks (such as Next.js)** can use `theme.css`, `fonts.css`, `theme.ts` and `recipes` directly.
 - **Astro components and Preact islands** need Astro 7 and Preact.
 
 ## Visual regression
@@ -171,11 +172,15 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 - **Choices:** a whole card that is a choice is a `ChoiceCard` (3px frame, yellow when chosen, the dot on the title's first line, yellow when checked). Small form options use `optionClass`: bordered, the native control visible, regular weight. Choices never look like buttons.
 - **Page titles** scale with their length (`PageOpening`).
 - **Saved form answers** are announced in a small bar at the bottom of the screen, only while the form holds answers.
-- **Social links** use one scheme everywhere: white or outlined, with each network's own small mark; no brand-coloured buttons.
+- **Padding is kept tight** (`card-sm` 16px, `card-md` 16–20px, `card-lg` 20–28px), because a card's radius is 24px plus its padding when a button touches its edge.
+- **Media cards:** an image in the `media` slot sits flush with the card's edges, with its own corners and background dropped so it meets the text flat. The card is a size container: the image goes beside the text once the card is 512px wide (`@lg`) and on top below that, whatever the screen. `mediaLayout="stack"` keeps it on top (team cards, with `mediaRatio="square"`); a stacked link card shows its arrow as a round button in the image's top-right corner.
+- **Event lists** (`EventRow`): a small image and text card (the event's artwork, else a photo from the evening, else a date tile), the date leading the facts row. Past meetups pass `quiet`: the photo is dimmed and the title greyed, never the text's contrast.
+- **Social links** use one scheme everywhere: white or outlined, with each network's mark in the text colour (black on white, white on black), never its brand colours.
 
 ## Logos (owner, 12th November 2026)
 
 - **Logo walls** (`LogoWall`, `CompanyWall`) use `PackedGrid` with grey cells. Logos are black at rest; on hover the cell turns white, or the partner's `logoBackground`, and the logo shows in colour. With `byTier`, sponsors get the bigger cells their tier promises.
 - **Black logos:** a partner's `logoBlack` file is used when there is one. Without it, the colour logo is drawn black by a filter; `logoKnockout` (white shapes inside a coloured one) and `logoOpaque` (a solid background) are thresholded instead, and an opaque file is multiplied into its cell. iJS Munich and Web Zurich need real black files.
 - **Inline logos** (an event's "Thanks to", `LogoRow`) have no cells and keep their colours.
+- **A partner can have three things:** `logo` (the final colour logo), an optional `logoBlack`, and an optional `logoBackground`. Logo only: black by the filter, colour on a white cell on hover. With `logoBlack`: that file at rest. With both: the colour logo on the partner's colour on hover (so the colour logo must suit that background).
 - **Sizes** come from the logo's ratio (Sanity `metadata.dimensions.aspectRatio`, or the measured value in `packages/content/src/partners.ts`), so every logo has about the same visual weight.

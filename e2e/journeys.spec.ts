@@ -500,9 +500,9 @@ test.describe('speakers', () => {
 
   test('event search still finds talks by speaker name, ignoring accents', async ({ page }) => {
     await page.goto('/events?tab=past&q=noah%20probe');
-    await expect(page.locator('[data-panel="past"] [data-hay]:visible')).toHaveCount(1);
+    await expect(page.locator('[data-section="past"] [data-hay]:visible')).toHaveCount(1);
     await page.goto('/events?tab=past&q=entwurf');
-    await expect(page.locator('[data-panel="past"] [data-hay]:visible').first()).toContainText('Signals');
+    await expect(page.locator('[data-section="past"] [data-hay]:visible').first()).toContainText('Signals');
   });
 });
 
@@ -791,32 +791,22 @@ test.describe('partners and sponsors', () => {
 });
 
 test.describe('community page', () => {
-  test('team photos (including Nadja), bios and links; volunteers are thanked', async ({ page }) => {
+  test('team cards link to speaker profiles in a new tab, keep their social links, and volunteers are thanked', async ({ page }) => {
     await page.goto('/about#team');
     const team = page.locator('#team');
-    await expect(team.getByRole('img', { name: 'Nadja Hesselbjerg' })).toBeVisible();
     await expect(team.getByRole('heading', { name: 'Meetup organisers' })).toBeVisible();
-    await expect(team.getByRole('list', { name: 'Faris Aziz: links' }).getByRole('link', { name: 'GitHub' })).toHaveAttribute('href', 'https://github.com/farisaziz12');
+    await expect(team.getByRole('link', { name: /Nadja Hesselbjerg/ }).first()).toHaveAttribute('target', '_blank');
+    await expect(team.getByRole('list', { name: 'Faris Aziz: links' }).getByRole('link', { name: /GitHub/ })).toHaveAttribute('href', 'https://github.com/farisaziz12');
     await expect(team.getByText(/ZurichJS Conf 2026 happened thanks to 13 volunteers/)).toBeVisible();
+    await expect(team.getByRole('link', { name: 'Volunteer with us' })).toHaveAttribute('href', '/cfv');
   });
 
-  test('section navigation with shareable anchors, and the first-visit link still works', async ({ page }) => {
+  test('the page says what ZurichJS is about, with no section subnav or first-visit block', async ({ page }) => {
     await page.goto('/about');
-    const nav = page.getByRole('navigation', { name: 'On this page' });
-    for (const [label, id] of [
-      ['Story', 'story'],
-      ['Team', 'team'],
-      ['Values', 'values'],
-      ['Association', 'association'],
-      ['Get involved', 'get-involved'],
-      ['First visit', 'first-visit'],
-    ]) {
-      await expect(nav.getByRole('link', { name: label })).toHaveAttribute('href', `#${id}`);
-      await expect(page.locator(`#${id}`)).toHaveCount(1);
-    }
-    await page.goto('/about#first-visit');
-    await expect(page.locator('#first-visit')).toBeInViewport();
-    await expect(page.getByText(/An example evening\. Times change/)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('A community of developers around JavaScript in Zurich');
+    await expect(page.getByRole('navigation', { name: 'On this page' })).toHaveCount(0);
+    await expect(page.locator('#first-visit')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Values', exact: true })).toBeVisible();
   });
 
   test('timeline runs past November 2025, links out, and membership stays on this site', async ({ page }) => {

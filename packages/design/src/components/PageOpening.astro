@@ -14,7 +14,8 @@ interface Props {
 }
 const { title, sub, crumb, pills, compact } = Astro.props;
 // Long titles get smaller type (Bogdan's review: 72px for long titles is too big).
-const titleSize = title.length <= 24 ? 'text-title' : title.length <= 48 ? 'text-section' : 'text-subsection';
+// Long titles step down once, never below a section heading: the page's h1 always leads.
+const titleSize = title.length <= 64 ? 'text-title' : 'text-section';
 const hasSub = !!sub || Astro.slots.has('sub');
 ---
 

@@ -80,7 +80,7 @@ const SECTIONS: [string, string[]][] = [
 
 <BaseLayout title="Membership terms" description={`The terms for membership of the ${SITE.association}, the association behind ZurichJS.`}>
   <PageOpening slot="opening" title="Membership terms" sub={`For members of the ${SITE.association}. Version of ${version}.`} />
-  <div class="px-gut pt-page-top pb-page-end">
+  <div class="px-gut py-section">
     <div class="max-w-reading flex flex-col gap-9">
       {
         SECTIONS.map(([h, paras]) => (

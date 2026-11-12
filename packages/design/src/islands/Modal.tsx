@@ -8,6 +8,7 @@ interface Props {
   children: ComponentChildren;
 }
 
+// eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector for the focus trap, not classes
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /** Centred dialog with a dimmed backdrop. Closes on Escape and backdrop click; keeps Tab inside while open. */
@@ -64,7 +65,7 @@ export function Modal({ open, onClose, labelledBy, children }: Props) {
         aria-modal="true"
         aria-labelledby={labelledBy}
         tabIndex={-1}
-        class="bg-white text-black rounded-card w-full max-w-115 max-h-[90vh] overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
+        class="bg-white text-black rounded-card w-full max-w-115 max-h-full overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
       >
         {children}
       </div>

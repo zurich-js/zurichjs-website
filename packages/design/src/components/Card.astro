@@ -20,7 +20,11 @@
  * No eyebrows: nothing sits above the title. Times and labels go in the "facts" slot under it (Facts).
  * Slots: "facts", "icon", default (body; hidden until opened for a disclosure), "footer" (actions).
  * Without `title`, the "header" slot takes the title's place, for cards that hold a custom heading.
- * "media": an image flush with the card's edges (left from 800px, on top on phones); only the text side has padding.
+ * "media": an image flush with the card's edges; only the text side has padding. The card is a size container, so
+ * the layout follows the card's own width, not the screen: beside the text once the card is 512px wide (@lg),
+ * on top below that. `mediaLayout="stack"` keeps it on top at any width (team cards); `mediaRatio` sets its shape.
+ * The media's own corners and background are dropped, so its bottom edge meets the text flat. A stacked link card
+ * shows its signifier as a round button in the image's top-right corner instead of beside the title.
  */
 import { cardPadding, cardSurfaces, cx, opensNewTab, type CardPadding, type CardSurface } from '../recipes';
 
@@ -43,15 +47,20 @@ interface Props {
   disclosure?: boolean;
   open?: boolean;
   as?: 'div' | 'section' | 'article' | 'li' | 'aside';
+  /** Media beside the text when the card is wide enough ("auto"), or always on top ("stack"). */
+  mediaLayout?: 'auto' | 'stack';
+  /** The media's shape when it sits on top. */
+  mediaRatio?: 'video' | 'square';
   /** What touches the edge. Defaults to "control" when there is a footer, otherwise "text". */
   edge?: CardEdge;
   id?: string;
   /** Layout only (grid placement, stretching): never sizes or colours. */
   class?: string;
 }
-const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, linkHint, linkAttrs, disclosure = false, open = false, as: Outer = 'div', edge: edgeProp, id, class: extra } = Astro.props;
+const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, linkHint, linkAttrs, disclosure = false, open = false, as: Outer = 'div', mediaLayout = 'auto', mediaRatio = 'video', edge: edgeProp, id, class: extra } = Astro.props;
 
 const behaviour = href ? 'link' : disclosure ? 'disclosure' : 'other';
+const cornerSignifier = behaviour === 'link' && Astro.slots.has('media') && mediaLayout === 'stack';
 const ext = href ? (external ?? opensNewTab(href)) : false;
 const Title = level;
 const has = {
@@ -101,8 +110,9 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
 {
   behaviour === 'disclosure' ? (
     <Outer id={id} class={cx(Outer === 'li' && 'list-none', 'min-w-0')}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the radius comes from the edge and padding props (the rounding formula), as CSS custom properties */}
       <details class={cx(box, cardPadding[padding], 'block')} style={radius} open={open}>
-        <summary class="flex flex-col gap-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden focus-visible:outline-none">
+        <summary class="flex flex-col gap-2 cursor-pointer list-none focus-visible:outline-none">
           <div class={cx('flex gap-4', has.icon ? 'items-center' : 'items-start')}>
             {has.icon && (
               <span aria-hidden="true" class={iconBox}>
@@ -135,9 +145,19 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
       </details>
     </Outer>
   ) : (
-    <Outer id={id} class={cx(box, has.media ? 'grid overflow-hidden md:grid-cols-2' : cx('flex flex-col', cardPadding[padding]))} style={radius}>
+    <>
+    {/* eslint-disable-next-line no-restricted-syntax -- the radius comes from the edge and padding props (the rounding formula), as CSS custom properties */}
+    <Outer id={id} class={cx(box, has.media ? '@container overflow-hidden' : cx('flex flex-col', cardPadding[padding]))} style={radius}>
+      {cornerSignifier && (
+        <span aria-hidden="true" class="absolute top-3 right-3 z-10 size-control rounded-full bg-white text-black flex items-center justify-center">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+            <path d={ext ? 'M7 17L17 7M8 7h9v9' : 'M5 12h14M13 6l6 6-6 6'} />
+          </svg>
+        </span>
+      )}
+      <div class={has.media ? cx('grid h-full', mediaLayout === 'auto' && '@lg:grid-cols-2') : 'contents'}>
       {has.media && (
-        <div class="relative aspect-video md:aspect-auto bg-grey [&>img]:absolute [&>img]:inset-0 [&>img]:size-full [&>img]:object-cover [&>picture>img]:absolute [&>picture>img]:inset-0 [&>picture>img]:size-full [&>picture>img]:object-cover">
+        <div class={cx('relative *:absolute *:inset-0 *:rounded-none *:bg-transparent **:size-full **:object-cover', mediaRatio === 'square' ? 'aspect-square' : 'aspect-video', mediaLayout === 'auto' && '@lg:aspect-auto')}>
           <slot name="media" />
         </div>
       )}
@@ -157,7 +177,7 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
                       href={href}
                       {...(ext ? { target: '_blank', rel: 'noopener' } : {})}
                       {...linkAttrs}
-                      class="text-inherit no-underline focus-visible:outline-none after:absolute after:inset-0 after:rounded-(--card-radius) after:content-['']"
+                      class="text-inherit no-underline focus-visible:outline-none after:absolute after:inset-0 after:rounded-(--card-radius)"
                     >
                       {title}
                       {linkHint && <span class="sr-only">. {linkHint}</span>}
@@ -171,7 +191,7 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
                 <slot name="header" />
               )}
             </div>
-            {behaviour === 'link' && (
+            {behaviour === 'link' && !cornerSignifier && (
               <span aria-hidden="true" class={cx(titleSize, 'flex-none flex items-center h-lh')}>
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none transition-transform group-hover:translate-x-1">
                   <path d={ext ? 'M7 17L17 7M8 7h9v9' : 'M5 12h14M13 6l6 6-6 6'} />
@@ -188,6 +208,8 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
           </div>
         )}
       </div>
+      </div>
     </Outer>
+    </>
   )
 }

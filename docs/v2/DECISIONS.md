@@ -251,6 +251,19 @@ Each entry: date · decision · why · who. "Owner" means confirmed in the plann
   - The handoff between functions is HMAC-signed with the Slack signing secret.
 - **No model in CI.** Tests use an in-memory Sanity and the AI SDK's scripted mock model.
 
+## Page reviews after the design system (owner, 12th November 2026)
+
+- **More whitespace everywhere:** `section` spacing is 96–160px, and every page wraps its content in `py-section`, so the space under the opening and above the footer matches the space between sections.
+- **Events (`/events`):** every meetup on one page: upcoming in date order, then past newest first and quieter. Upcoming and Past are a sticky jump bar with the search, no longer tabs (`?tab=past` still lands on the past section). Rows are image and text cards.
+- **About:** it opens with what ZurichJS is about; the first-visit block and the section subnav are gone. The story is a timeline grouped by year, oldest first, with where we started and where we are now as full-width panels with the numbers, and photos chosen by the owner. The CFP count is 434 (the prospectus said 436). Values have a clear heading, name and text hierarchy. Team cards are photo link cards that open the speaker profile in a new tab, with the social links inside.
+- **Page titles never shrink below the section headings** (`PageOpening`: full size up to 64 characters).
+
+## Tokens in CSS, no generator (owner, 12th November 2026)
+
+- **`theme.css` is the single source, edited by hand.** It replaces the 1st November setup (`tokens.ts` plus a script that generated `theme.css` and `fonts.css`, see Phase 2 below). A generated file that people edit is an antipattern: a direct edit worked until the next regeneration silently undid it.
+- **TypeScript reads the CSS** through `packages/design/src/theme.ts` (Vite's `?raw` import, parsed once): `color()`, `radius()` and `space()` throw on an unknown name, so a typo fails the build. The emails, the OG images (which had hex literals) and the `/design` gallery use it.
+- **The font is configuration, not a token:** `font.ts` keeps Figtree's file, weights and fallbacks for the Astro Fonts API (`astro.config.mjs` runs in plain Node and cannot import CSS) and the emails. `fonts.css` is hand-written for other sites. The OG images keep their static TTFs, because satori cannot read woff2.
+
 ## Design system v2 (owner, 12th November 2026)
 
 A design audit found the site visually consistent but built from duplicates: four tag versions, several card styles, 51 text sizes and controls from 36 to 56px tall. A proposal was built as a page-only route (`/opus`), reviewed with the owner over many rounds, and then rolled out to the whole site (PR zurich-js/zurichjs-website#82). The page was removed once the site used the system. The rules are in `docs/design-system.md`.

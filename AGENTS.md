@@ -10,7 +10,7 @@ zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It 
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                                               |
 | `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`.                             |
-| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                                              |
+| `packages/design`                         | The design system: the Tailwind 4 theme (`theme.css`, the tokens), Figtree, components. Rules: `docs/design-system.md`.                                                      |
 | `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                                                          |
 | `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                                                 |
 | `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                                                     |
@@ -60,12 +60,12 @@ These rules are mandatory for every UI change. They override convenience. If a r
 - The only exceptions are `grid-cols-[...]` track lists and `aspect-[...]` photo ratios, which have no scale equivalent (justified in `eslint.config.mjs`).
 - Never use inline `style={{}}` for spacing, colour, type, radius or shadow. A value that exists only at runtime (a CSS custom property, an image focal point from Sanity) needs an `eslint-disable-next-line no-restricted-syntax -- <reason>` comment.
 - Never hardcode hex, rgb, px or rem values in components.
-- If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/tokens.ts`, with a one-line justification, and wait for approval before using it.
+- If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/theme.css`, with a one-line justification, and wait for approval before using it.
 - Text sizes come only from the nine type roles (`text-display` … `text-meta`); Tailwind's default text scale is switched off, and 17px is `text-body`. Heights: `min-h-control` (48px: buttons, switches, fields), `min-h-chip` (44px: filter chips), `h-tag-sm` and `h-tag-md`. Spacing: `p-card-sm|md|lg`, `gap-section`, `pt-page-top`, `pb-page-end`, then Tailwind's 4px scale for small layout gaps. Widths: `max-w-reading|wide|form|site`. The full list is in `docs/design-system.md`.
 
 ### 2. Single source of truth for tokens
 
-- Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read the tokens file before writing any UI. Do not invent tokens that already exist under a different name.
+- Tokens live in ONE place: `packages/design/src/theme.css` (the Tailwind 4 `@theme` block), edited by hand. TypeScript that needs a value (emails, OG images, the `/design` gallery) reads it through `@zurichjs/design/theme` (`color('yellow')`, `radius('card')`, `space('section')`), never a copied literal. Nothing is generated. Read `theme.css` before writing any UI. Do not invent tokens that already exist under a different name.
 - Semantic names only, named for their job (`text-card-title`, `min-h-control`, `rounded-tag`, `danger-soft`). Never name tokens after their value (`grey-line-2`).
 - Colours, type scale, spacing, radius, shadow, z-index and breakpoints are all tokenised. The touch target minimum is a token, not a repeated literal.
 

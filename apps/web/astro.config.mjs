@@ -3,7 +3,7 @@ import netlify from '@astrojs/netlify';
 import preact from '@astrojs/preact';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, fontProviders } from 'astro/config';
-import { font } from '@zurichjs/design/tokens';
+import { font } from '@zurichjs/design/font';
 
 import { appendFileSync, existsSync, readFileSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

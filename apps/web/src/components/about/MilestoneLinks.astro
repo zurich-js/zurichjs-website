@@ -1,0 +1,33 @@
+---
+/** A milestone's links: its event, its photos, and another page about it. */
+import { eventHref } from '@zurichjs/events';
+import type { StoryRow } from './story';
+
+interface Props {
+  row: StoryRow;
+}
+const { row } = Astro.props;
+const ext = (href: string) => /^https?:/.test(href);
+---
+
+{
+  (row.ev || row.gallery || row.link) && (
+    <div class="flex flex-wrap gap-x-4 gap-y-1 text-compact">
+      {row.ev && (
+        <a href={eventHref(row.ev)} class="font-bold underline">
+          The event
+        </a>
+      )}
+      {row.gallery && (
+        <a href={row.gallery} class="font-bold underline">
+          Photos
+        </a>
+      )}
+      {row.link && (
+        <a href={row.link.href} class="font-bold underline" {...(ext(row.link.href) ? { target: '_blank', rel: 'noopener' } : {})}>
+          {row.link.label}
+        </a>
+      )}
+    </div>
+  )
+}

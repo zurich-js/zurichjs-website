@@ -42,8 +42,8 @@ export default [
   },
   {
     files: ['apps/web/src/**/*.{ts,tsx,astro}', 'packages/design/src/**/*.{ts,tsx,astro}'],
-    // Server code, API routes and image generators have no classes; tokens.ts is where literals belong.
-    ignores: ['**/*.test.*', '**/*.d.ts', 'apps/web/src/server/**', 'apps/web/src/pages/api/**', 'apps/web/src/pages/og/**', 'packages/design/src/tokens.ts'],
+    // Server code, API routes and image generators have no classes; theme.css is where literals belong.
+    ignores: ['**/*.test.*', '**/*.d.ts', 'apps/web/src/server/**', 'apps/web/src/pages/api/**', 'apps/web/src/pages/og/**'],
     languageOptions: { parser: tseslint.parser, parserOptions: { ecmaFeatures: { jsx: true } } },
     plugins: { 'better-tailwindcss': betterTailwind },
     settings: {
@@ -57,7 +57,7 @@ export default [
           restrict: [
             {
               pattern: ARBITRARY,
-              message: 'Arbitrary value "$0": snap to a token from packages/design/src/tokens.ts, or propose a new token (AGENTS.md, UI rule 1).',
+              message: 'Arbitrary value "$0": snap to a token from packages/design/src/theme.css, or propose a new token (AGENTS.md, UI rule 1).',
             },
           ],
         },
@@ -71,11 +71,11 @@ export default [
         },
         {
           selector: `Literal[value=${hex}]`,
-          message: 'No hardcoded colours: use a colour token from packages/design/src/tokens.ts (AGENTS.md, UI rule 1).',
+          message: 'No hardcoded colours: use a colour token from packages/design/src/theme.css (AGENTS.md, UI rule 1).',
         },
         {
           selector: `TemplateElement[value.raw=${hex}]`,
-          message: 'No hardcoded colours: use a colour token from packages/design/src/tokens.ts (AGENTS.md, UI rule 1).',
+          message: 'No hardcoded colours: use a colour token from packages/design/src/theme.css (AGENTS.md, UI rule 1).',
         },
       ],
     },

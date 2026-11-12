@@ -1,6 +1,6 @@
 /**
  * Class recipes shared by .astro components and their Preact twins, so each look is defined once.
- * Every size comes from a theme token (tokens.ts): no pixels here.
+ * Every size comes from a theme token (theme.css): no pixels here.
  */
 export const cx = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ');
 

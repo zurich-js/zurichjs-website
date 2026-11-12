@@ -21,7 +21,7 @@ const isCoc = entry.id === 'code-of-conduct';
 
 <BaseLayout title={entry.data.title} description={entry.data.description} jsonLd={[breadcrumbSchema([{ name: 'Policies', path: `/policies/${entry.id}` }, { name: entry.data.title, path: `/policies/${entry.id}` }])]}>
   <PageOpening slot="opening" title={entry.data.title} compact />
-  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-10">
+  <div class="px-gut py-section flex flex-col gap-10">
     <nav aria-label="Policies" class="flex gap-2 flex-wrap">
       {
         all.map((p) => (

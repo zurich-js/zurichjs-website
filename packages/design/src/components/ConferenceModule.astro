@@ -15,7 +15,7 @@ interface Props {
 const { conference, placement = 'home', preview = false } = Astro.props;
 ---
 
-<section aria-labelledby="h-conf-module" class="on-black mx-gut bg-ink text-white rounded-block p-7 md:p-12 lg:p-16 flex flex-col gap-6 max-w-wide">
+<section aria-labelledby="h-conf-module" class="on-black mx-gut bg-ink text-white rounded-block p-7 md:p-12 lg:p-16 flex flex-col gap-6">
   {
     preview && (
       <Tag tone="white" class="self-start font-bold">
@@ -24,14 +24,13 @@ const { conference, placement = 'home', preview = false } = Astro.props;
     )
   }
   <div class="flex flex-col gap-3">
-    <h2 id="h-conf-module" class="m-0 flex flex-col gap-3">
-      <img src="/images/logo/wordmark-conf-white.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-6 lg:h-7.5 w-auto max-w-full self-start" />
-      <span class="text-subsection font-bold text-balance">{conference.copy.headline}</span>
+    <h2 id="h-conf-module" class="m-0 mb-6 flex flex-col gap-3">
+      <img src="/images/logo/wordmark-conf-white.svg" alt="ZurichJS Conf" width="300" height="40" loading="lazy" class="h-6 lg:h-8 w-auto max-w-full self-start" />
     </h2>
+    <span class="text-subsection font-bold text-balance">{conference.copy.headline}</span>
     <p class="m-0 text-body text-grey max-w-form text-pretty">{conference.copy.body}</p>
   </div>
   <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
     <Button href={confLink('/', placement)} variant="cta" {...trackAttrs('conf_outbound_click', { placement, confstate: conference.state })}>{conference.copy.cta}</Button>
-    <span class="text-compact text-grey-mid">conf.zurichjs.com</span>
   </div>
 </section>

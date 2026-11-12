@@ -10,9 +10,5 @@
   {
     "use": "packages/design/src/islands/Gallery.tsx: max-h-[70vh]",
     "reason": "Photos and videos in the lightbox are capped to a share of the viewport height so the caption and controls stay on screen."
-  },
-  {
-    "use": "packages/design/src/islands/Modal.tsx: max-h-[90vh]",
-    "reason": "The dialog is capped to a share of the viewport height so it scrolls inside instead of overflowing the screen."
   }
 ]

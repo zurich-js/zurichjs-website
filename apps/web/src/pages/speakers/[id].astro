@@ -79,7 +79,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
 >
   <PageOpening slot="opening" title={s.name} crumb={{ label: 'Speakers', href: '/speakers', here: s.name }} sub={roleLine} />
 
-  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
+  <div class="px-gut py-section flex flex-col gap-section">
     <div class="grid grid-cols-auto-md gap-x-14 gap-y-7 items-start">
       {s.photo ? <Photo photo={s.photo} class="aspect-square w-full max-w-85" sizes="340px" priority /> : <Monogram initials={s.initials} size="tile" class="max-w-85 text-display!" />}
       <div class="flex flex-col gap-4 col-span-full md:col-span-2 min-w-0">

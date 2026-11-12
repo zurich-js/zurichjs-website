@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
 import type { APIRoute, GetStaticPaths } from 'astro';
 import satori from 'satori';
+import { color } from '@zurichjs/design/theme';
 import { dateLong, dateParts, type Event, type Speaker } from '@zurichjs/events';
 import { mediaForEvent } from '@zurichjs/content';
 import { BUILD_TIME, content } from '~/lib/content';
@@ -22,8 +23,8 @@ import { allPageCards, withoutEmoji, type PageCard } from '~/lib/og';
 
 const W = 1200;
 const H = 630;
-const YELLOW = '#F1E271';
-const GREY_MID = '#A9AAB1';
+const YELLOW = color('yellow');
+const GREY_MID = color('grey-mid');
 
 type Card = { kind: 'page'; page: PageCard } | { kind: 'event'; ev: Event; photos: number; past: boolean } | { kind: 'speaker'; s: Speaker };
 

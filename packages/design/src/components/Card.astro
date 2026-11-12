@@ -11,8 +11,8 @@
  *   action      buttons in the footer and no signifier: the buttons are the signifier.
  *
  * edge: what touches the card's edge, which sets its rounding. Outer radius = inner radius + padding + frame.
- *   text (default)  24px.
- *   control         a button touches it: 24px + padding (the default when there is a footer).
+ *   text (default)  24px, also when the footer holds buttons (owner, 12th November 2026: a better rule for those comes later).
+ *   control         a button touches it: 24px + padding. Opt-in only.
  *   card            a nested card: 24px + padding.
  *   card-control    a nested card holding buttons: 40px + padding.
  * A shape nested inside gets `rounded-(--radius-nested)`: the card's radius minus its padding, at least 12px.
@@ -23,7 +23,10 @@
  * "media": an image flush with the card's edges; only the text side has padding. The card is a size container, so
  * the layout follows the card's own width, not the screen: beside the text once the card is 512px wide (@lg),
  * on top below that. `mediaLayout="stack"` keeps it on top at any width (team cards); `mediaLayout="side"` keeps it beside
- * the text at any width, a third of a narrow card, so a short link card stays short on phones (the next meetup); `mediaRatio` sets its shape.
+ * the text at any width, a third of a narrow card, so a short link card stays short on phones (the next meetup); `mediaLayout="row"`
+ * is for list rows (events): on top below 512px, then a near-square column beside the text (5:4, a quarter of the card, a
+ * fifth from 768px) with the text centred beside it. `mediaRatio` sets its shape.
+ * dim: the whole card at lower opacity until hovered or focused (past meetups in a list; owner, 12th November 2026).
  * The media's own corners and background are dropped, so its bottom edge meets the text flat. A stacked link card
  * shows its signifier as a round button in the image's top-right corner instead of beside the title.
  */
@@ -48,17 +51,19 @@ interface Props {
   disclosure?: boolean;
   open?: boolean;
   as?: 'div' | 'section' | 'article' | 'li' | 'aside';
-  /** Media beside the text when the card is wide enough ("auto"), or always on top ("stack"). */
-  mediaLayout?: 'auto' | 'stack' | 'side';
+  /** Media beside the text when the card is wide enough ("auto"), always on top ("stack"), always beside ("side"), or a narrow column beside it ("row"). */
+  mediaLayout?: 'auto' | 'stack' | 'side' | 'row';
   /** The media's shape when it sits on top. */
   mediaRatio?: 'video' | 'square';
-  /** What touches the edge. Defaults to "control" when there is a footer, otherwise "text". */
+  /** What touches the edge. Defaults to "text" (24px), footer or not. */
   edge?: CardEdge;
   id?: string;
+  /** Lower opacity until hovered or focused. */
+  dim?: boolean;
   /** Layout only (grid placement, stretching): never sizes or colours. */
   class?: string;
 }
-const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, linkHint, linkAttrs, disclosure = false, open = false, as: Outer = 'div', mediaLayout = 'auto', mediaRatio = 'video', edge: edgeProp, id, class: extra } = Astro.props;
+const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, linkHint, linkAttrs, disclosure = false, open = false, as: Outer = 'div', mediaLayout = 'auto', mediaRatio = 'video', edge: edgeProp, dim = false, id, class: extra } = Astro.props;
 
 const behaviour = href ? 'link' : disclosure ? 'disclosure' : 'other';
 const cornerSignifier = behaviour === 'link' && Astro.slots.has('media') && mediaLayout === 'stack';
@@ -73,7 +78,7 @@ const has = {
   footer: Astro.slots.has('footer'),
 };
 
-const edge: CardEdge = edgeProp ?? (has.footer ? 'control' : 'text');
+const edge: CardEdge = edgeProp ?? 'text';
 /** The radius of whatever touches the edge; the card adds its own padding (and frame) to it. */
 const INNER: Record<Exclude<CardEdge, 'text'>, string> = {
   control: 'var(--radius-control-pill)',
@@ -98,8 +103,9 @@ const HOVER: Record<CardSurface, string> = {
 };
 const interactive = behaviour === 'link' || behaviour === 'disclosure';
 const box = cx(
-  'group relative min-w-0 rounded-(--card-radius) transition-colors',
+  'group relative min-w-0 rounded-(--card-radius) transition',
   cardSurfaces[surface],
+  dim && 'opacity-60 hover:opacity-100 has-focus-visible:opacity-100',
   interactive && HOVER[surface],
   interactive && 'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
   extra,
@@ -156,13 +162,13 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
           </svg>
         </span>
       )}
-      <div class={has.media ? cx('grid h-full', mediaLayout === 'auto' && '@lg:grid-cols-2', mediaLayout === 'side' && 'grid-cols-[1fr_2fr] @lg:grid-cols-2') : 'contents'}>
+      <div class={has.media ? cx('grid h-full', mediaLayout === 'auto' && '@lg:grid-cols-2', mediaLayout === 'side' && 'grid-cols-[1fr_2fr] @lg:grid-cols-2', mediaLayout === 'row' && '@lg:grid-cols-4 @3xl:grid-cols-5') : 'contents'}>
       {has.media && (
-        <div class={cx('relative *:absolute *:inset-0 *:rounded-none *:bg-transparent **:size-full **:object-cover', mediaLayout !== 'side' && (mediaRatio === 'square' ? 'aspect-square' : 'aspect-video'), mediaLayout === 'auto' && '@lg:aspect-auto')}>
+        <div class={cx('relative *:absolute *:inset-0 *:rounded-none *:bg-transparent **:size-full **:object-cover', mediaLayout !== 'side' && (mediaRatio === 'square' ? 'aspect-square' : 'aspect-video'), mediaLayout === 'auto' && '@lg:aspect-auto', mediaLayout === 'row' && '@lg:aspect-5/4')}>
           <slot name="media" />
         </div>
       )}
-      <div class={has.media ? cx('flex flex-col min-w-0', cardPadding[padding]) : 'contents'}>
+      <div class={has.media ? cx('flex flex-col min-w-0', cardPadding[padding], mediaLayout === 'row' && '@lg:col-span-3 @3xl:col-span-4 @lg:justify-center') : 'contents'}>
         {(title || has.header || has.icon) && (
           <div class={cx('flex gap-4', has.icon ? 'items-center' : 'items-start')}>
             {has.icon && (

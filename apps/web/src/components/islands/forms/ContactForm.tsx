@@ -90,7 +90,7 @@ export default function ContactForm() {
           </p>
         </Notice>
       )}
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-3.5">
+      <div class="grid grid-cols-auto-sm gap-3.5">
         <TextField
           label="Name"
           name="name"

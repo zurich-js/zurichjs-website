@@ -129,7 +129,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
               />
               {m.kind === 'video' && (
                 <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center">
-                  <span class="w-14 h-14 rounded-full bg-black/75 text-white flex items-center justify-center text-[22px] pl-1">▶</span>
+                  <span class="w-14 h-14 rounded-full bg-black/75 text-white flex items-center justify-center text-card-title pl-1">▶</span>
                 </span>
               )}
             </button>
@@ -141,7 +141,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
         ref={dialog}
         onClose={onClose}
         aria-labelledby={captionId}
-        class="m-auto p-0 border-0 bg-ink rounded-card max-w-[min(1200px,100vw)] w-full max-h-dvh backdrop:bg-black/85 text-white"
+        class="m-auto p-0 border-0 bg-ink rounded-card max-w-site w-full max-h-dvh backdrop:bg-black/85 text-white"
       >
         {cur && open !== null && (
           <figure class="m-0 flex flex-col gap-3 p-3 md:p-6">

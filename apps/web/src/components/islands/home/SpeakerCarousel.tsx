@@ -202,7 +202,7 @@ export function SpeakerCarousel({ speakers }: Props) {
                   style={{ objectPosition: sp.photo.position ?? 'center 25%' }}
                 />
               ) : (
-                <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center text-[72px] font-bold text-white">
+                <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center text-display font-bold text-white">
                   {sp.initials}
                 </span>
               )}

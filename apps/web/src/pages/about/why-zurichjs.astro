@@ -7,9 +7,9 @@ import BaseLayout from '~/layouts/BaseLayout.astro';
 import { nextMeetupHref } from '~/lib/content';
 
 const nextHref = await nextMeetupHref();
-const H = 'm-0 mt-[clamp(28px,3vw,40px)] text-[clamp(24px,2.4vw,30px)] leading-[1.2] font-bold';
-const P = 'm-0 text-[18px] leading-[1.65] text-ink-2 text-pretty';
-const L = 'm-0 pl-5 text-[18px] leading-[1.65] text-ink-2 flex flex-col gap-1';
+const H = 'm-0 mt-7 md:mt-10 text-subsection font-bold';
+const P = 'm-0 text-body text-ink-2 text-pretty';
+const L = 'm-0 pl-5 text-body text-ink-2 flex flex-col gap-1';
 const lists = {
   communities: ['Zürich ReactJS Meetup', 'Angular Zurich', 'Web Zurich', 'Svelte Society Zurich'],
   everywhere: ['Servers with Node.js and new runtimes', 'Infrastructure with tools and cloud SDKs', 'CI/CD pipelines', 'Native desktop and mobile applications', 'CLI applications with tools like Ink', 'Databases and ORMs', 'Edge runtimes', 'Even parts of operating systems'],
@@ -30,8 +30,8 @@ const lists = {
     sub="People ask this surprisingly often. Why ZurichJS? Why not ZurichTS? Why not Zurich Web? Why not Zurich Engineering or Zurich Tech?"
   />
 
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)]">
-    <article class="max-w-[720px] flex flex-col gap-4">
+  <div class="px-gut pt-page-top pb-page-end">
+    <article class="max-w-reading flex flex-col gap-4">
       <p class={P}><b class="text-black">The short answer is simple: JavaScript is the common ground that brought us together.</b></p>
       <p class={P}>The longer answer is more interesting, but what’s even more interesting is that we understood it after we named it.</p>
 

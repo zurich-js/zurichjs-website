@@ -24,7 +24,7 @@ const ev = past[0] ? pick(past[0]) : undefined;
   <PageOpening slot="opening" title={feedbackTitle(ev)} crumb={ev ? { label: 'Past event', href: eventHref(ev), here: 'Feedback' } : undefined}>
     {ev && <span slot="sub" id="feedback-sub">{feedbackSub(ev)}</span>}
   </PageOpening>
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-8">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-8">
     <FeedbackForm client:load events={list} initialId={ev?.id} nextHref={nextHref} />
   </div>
 </BaseLayout>

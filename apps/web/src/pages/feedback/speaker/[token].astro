@@ -45,7 +45,7 @@ const sub = data
 >
   <PageOpening slot="opening" title={data ? `Feedback for ${data.speaker.name}` : 'Speaker feedback'} sub={sub} />
 
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
     {
       !data && (
         <Card as="section" surface="filled" padding="lg" level="h2" title={!r.ok && r.status === 502 ? 'Please try again soon' : 'Ask for a new link'} class="max-w-reading">
@@ -65,17 +65,17 @@ const sub = data
 
     {
       data && data.total > 0 && (
-        <section aria-label="Summary" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
+        <section aria-label="Summary" class="grid grid-cols-auto-sm gap-3">
           <Card surface="filled">
-            <span class="text-[clamp(40px,4vw,56px)] leading-none font-bold">{avg(data.average)}</span>
+            <span class="text-section leading-none font-bold">{avg(data.average)}</span>
             <span class="text-body">average rating</span>
           </Card>
           <Card surface="filled">
-            <span class="text-[clamp(40px,4vw,56px)] leading-none font-bold">{data.total}</span>
+            <span class="text-section leading-none font-bold">{data.total}</span>
             <span class="text-body text-ink-2">{data.total === 1 ? 'response' : 'responses'}</span>
           </Card>
           <Card surface="filled">
-            <span class="text-[clamp(40px,4vw,56px)] leading-none font-bold">{data.talks.reduce((n, t) => n + t.comments.length, 0)}</span>
+            <span class="text-section leading-none font-bold">{data.talks.reduce((n, t) => n + t.comments.length, 0)}</span>
             <span class="text-body text-ink-2">written comments</span>
           </Card>
         </section>
@@ -90,9 +90,9 @@ const sub = data
               {t.title}
             </h2>
             {(t.eventTitle || t.eventDate) && (
-              <p class="m-0 text-[17px] text-ink-2">
+              <p class="m-0 text-body text-ink-2">
                 {t.eventSlug ? (
-                  <a href={`/events/${t.eventSlug}`} class="font-bold text-black underline underline-offset-[3px]">{t.eventTitle}</a>
+                  <a href={`/events/${t.eventSlug}`} class="font-bold text-black underline underline-offset-3">{t.eventTitle}</a>
                 ) : (
                   t.eventTitle
                 )}
@@ -100,17 +100,17 @@ const sub = data
               </p>
             )}
           </div>
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-[clamp(20px,3vw,40px)] items-start">
+          <div class="grid grid-cols-auto-md gap-8 items-start">
             <Card surface="filled">
               <div class="flex items-baseline gap-3 flex-wrap">
-                <span class="text-[44px] leading-none font-bold">{avg(t.average)}</span>
-                <span class="text-[17px] text-ink-2">
+                <span class="text-section leading-none font-bold">{avg(t.average)}</span>
+                <span class="text-body text-ink-2">
                   average from {plural(t.distribution.reduce((a, b) => a + b, 0), 'rating')}
                 </span>
               </div>
               <ul class="m-0 p-0 list-none flex flex-col gap-2" aria-label="Ratings by stars">
                 {[4, 3, 2, 1, 0].map((i) => (
-                  <li class="grid grid-cols-[64px_minmax(0,1fr)_32px] gap-3 items-center text-[16px]">
+                  <li class="grid grid-cols-[64px_minmax(0,1fr)_32px] gap-3 items-center text-compact">
                     <span>{i + 1} {i === 0 ? 'star' : 'stars'}</span>
                     <span class="h-2.5 rounded-pill bg-white overflow-hidden" aria-hidden="true">
                       <span class="block h-full rounded-pill bg-black" style={`width:${share(t, i)}%`} />
@@ -123,7 +123,7 @@ const sub = data
             <div class="flex flex-col gap-3 min-w-0">
               <h3 class="m-0 text-card-title font-bold">Comments</h3>
               {t.comments.length === 0 ? (
-                <p class="m-0 text-[17px] text-ink-2">No written comments for this talk.</p>
+                <p class="m-0 text-body text-ink-2">No written comments for this talk.</p>
               ) : (
                 <ul class="m-0 p-0 list-none flex flex-col gap-2.5">
                   {t.comments.map((c) => (
@@ -144,7 +144,7 @@ const sub = data
 
     {
       data && (
-        <p class="m-0 text-[17px] leading-[1.55] text-ink-2 max-w-[720px]">
+        <p class="m-0 text-body text-ink-2 max-w-reading">
           Questions about this feedback, or want to speak again? Email <a href="mailto:hello@zurichjs.com" class="font-bold text-black">hello@zurichjs.com</a> or <a href="/cfp" class="font-bold text-black">propose another talk</a>.
         </p>
       )

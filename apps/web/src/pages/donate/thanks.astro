@@ -16,7 +16,7 @@ const portalUrl = import.meta.env.PUBLIC_STRIPE_PORTAL_URL || process.env.PUBLIC
 
 <BaseLayout title="Thank you" description="Thank you for supporting ZurichJS." noindex>
   <PageOpening slot="opening" title="Thank you for supporting ZurichJS" sub="Your donation helps keep meetups free." />
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-6 max-w-[760px]">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-6 max-w-reading">
     <DonateThanks client:load portalUrl={portalUrl} email={SITE.email} />
     <div class="flex flex-wrap gap-3">
       <Button href={nextHref} variant="cta">See the next meetup</Button>

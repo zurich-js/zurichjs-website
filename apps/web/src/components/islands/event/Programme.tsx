@@ -3,11 +3,38 @@ import { RichText } from '../../RichText.tsx';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
 import { cardClass, cx, monogramClass, noticeClass, tagClass } from '@zurichjs/design/recipes';
+import type { ComponentChildren } from 'preact';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { useEventState } from '../useEventState.ts';
 import { Check } from '@zurichjs/design/islands/Check';
 import { feedbackRequested } from './feedbackMode.ts';
+
+interface Fact {
+  label: string;
+  value: ComponentChildren;
+  hideLabel?: boolean;
+  strong?: boolean;
+}
+
+/** The Preact twin of Facts.astro: "Label: value · Label: value" as a description list, each dot glued to the item before it. */
+function Facts({ items }: { items: Fact[] }) {
+  return (
+    <dl class="m-0 text-compact text-pretty tabular-nums">
+      {items.map((f, i) => (
+        <div key={f.label} class="inline">
+          {f.hideLabel ? <dt class="sr-only">{f.label}</dt> : <dt class="inline font-bold">{f.label}: </dt>}
+          <dd class={cx('inline m-0', f.strong ? 'font-bold' : 'text-ink-2')}>{f.value}</dd>
+          {i < items.length - 1 && (
+            <span aria-hidden="true" class="text-grey-mid">
+              {'\u00a0· '}
+            </span>
+          )}
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 export interface ProgrammeSpeaker {
   id: string;
@@ -107,7 +134,7 @@ export default function Programme({
           const mins = minutes[i];
           return (
             <li key={i} id={anchor} class="scroll-mt-24">
-              {/* Talks are outline cards; doors, breaks and the rest are plain rows with the same padding, so every title lines up. The time follows the title. */}
+              {/* Talks are outline cards; doors, breaks and the rest are plain rows with the same padding, so every title lines up. Nothing sits above a title. */}
               <div class={cardClass(a.talk ? 'outline' : 'plain', 'md')}>
                 <h3 class={cx('m-0 font-bold text-pretty', a.talk ? 'text-card-title' : 'text-body')}>
                   {anchor ? (
@@ -118,15 +145,28 @@ export default function Programme({
                     a.title
                   )}
                 </h3>
-                {(a.time || (mins && !a.talk)) && (
-                  <div class="flex items-center gap-2 flex-wrap text-compact text-ink-2">
-                    {a.time && <time class={tagClass('sm', 'black', 'tabular-nums')}>{a.time}</time>}
-                    {mins && !a.talk && <span class="tabular-nums">{mins} min</span>}
-                  </div>
-                )}
+                {(() => {
+                  // The facts row under the title, as on the approved /opus page: the time first and bold
+                  // (its label read by screen readers only), then the speakers and the format and level.
+                  const names = a.talk ? a.talk.speakerIds.map((id) => byId.get(id)?.name).filter((n): n is string => !!n) : [];
+                  const items: Fact[] = [
+                    ...(a.time ? [{ label: 'Time', value: <time>{a.time}</time>, hideLabel: true, strong: true }] : []),
+                    ...(names.length ? [{ label: names.length > 1 ? 'Speakers' : 'Speaker', value: names.join(' and ') }] : []),
+                    ...(a.talk
+                      ? [
+                          ...(talkFormatLine(a.talk) ? [{ label: 'Format', value: talkFormatLine(a.talk) }] : []),
+                          ...(a.talk.level ? [{ label: 'Level', value: a.talk.level }] : []),
+                          { label: 'Language', value: a.talk.language ?? 'English' },
+                        ]
+                      : mins
+                        ? [{ label: 'Length', value: `${mins} min` }]
+                        : []),
+                  ];
+                  return items.length ? <Facts items={items} /> : null;
+                })()}
                 {a.talk && (
                   <div class="flex flex-col gap-2.5">
-                    <div class="flex flex-wrap gap-x-[18px] gap-y-2">
+                    <div class="flex flex-wrap gap-x-4 gap-y-2">
                       {a.talk.speakerIds.map((id) => {
                         const s = byId.get(id);
                         if (!s) return null;
@@ -148,7 +188,6 @@ export default function Programme({
                     </div>
                     {summary && <p class="m-0 text-body max-w-form">{summary}</p>}
                     <RichText text={a.talk.description} clampLines={5} class="text-body text-ink-2 max-w-form" />
-                    <div class="text-compact text-ink-2">{[talkFormatLine(a.talk), a.talk.level, a.talk.language ?? 'English'].filter(Boolean).join(' · ')}</div>
                     {!!a.talk.tags?.length && (
                       <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
                         {a.talk.tags.map((t) => (

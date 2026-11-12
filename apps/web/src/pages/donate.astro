@@ -48,11 +48,11 @@ const WAYS = [
     </div>
   </PageOpening>
   <RetiredNotice />
-  <div class="px-gut pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(48px,6vw,80px)] max-w-[1100px]">
-    <section id="donate" aria-labelledby="h-donate" class="flex flex-col gap-[18px] scroll-mt-6 max-w-[760px]">
+  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section max-w-wide">
+    <section id="donate" aria-labelledby="h-donate" class="flex flex-col gap-4 scroll-mt-6 max-w-reading">
       <div class="flex flex-col gap-2">
         <h2 id="h-donate" class="m-0 text-subsection font-bold">Donate</h2>
-        <p class="m-0 text-body text-ink-2 max-w-[640px]">
+        <p class="m-0 text-body text-ink-2 max-w-reading">
           A donation is a gift to ZurichJS; it doesn’t make you a member. To join the association with a vote, see <a href="/membership" class="font-bold text-black">membership</a>.
         </p>
       </div>
@@ -72,7 +72,7 @@ const WAYS = [
       </AutoGrid>
     </section>
 
-    <section id="other-ways" aria-labelledby="h-oneoff" class="flex flex-col gap-[18px] scroll-mt-6">
+    <section id="other-ways" aria-labelledby="h-oneoff" class="flex flex-col gap-4 scroll-mt-6">
       <h2 id="h-oneoff" class="m-0 text-subsection font-bold">Other ways to give</h2>
       {
         qr && (
@@ -84,7 +84,7 @@ const WAYS = [
               height="240"
               loading="eager"
               decoding="async"
-              class="w-[240px] h-[240px] rounded-(--radius-nested) bg-white p-3 box-border shrink-0"
+              class="size-60 rounded-(--radius-nested) bg-white p-3 box-border shrink-0"
               data-twint-qr
             />
             <div class="flex flex-col gap-1.5">
@@ -125,7 +125,7 @@ const WAYS = [
       </AutoGrid>
     </section>
 
-    <section aria-labelledby="h-faq" class="flex flex-col gap-[18px]">
+    <section aria-labelledby="h-faq" class="flex flex-col gap-4">
       <h2 id="h-faq" class="m-0 text-subsection font-bold">Questions</h2>
       <div class="flex flex-col gap-1">
         <h3 class="m-0 text-card-title font-bold">Do I get a receipt?</h3>

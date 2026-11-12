@@ -103,10 +103,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
   if (part === 'feedback') {
     if (!ev || (phase !== 'live' && phase !== 'after')) return null;
     return (
-      <section
-        aria-labelledby="h-rate"
-        class="mx-gut bg-grey-soft rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center"
-      >
+      <section aria-labelledby="h-rate" class="mx-gut bg-grey-soft rounded-block p-card-lg grid grid-cols-auto-md gap-x-10 gap-y-5 items-center">
         <div class="flex flex-col gap-2.5">
           <h2 id="h-rate" class="m-0 text-subsection font-bold text-balance">
             {phase === 'live' ? 'How is today’s meetup going?' : `How was ${ev.title}?`}
@@ -156,7 +153,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
               key={r.i}
               aria-current={isNow ? 'time' : undefined}
               class={cx(
-                'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-start p-card-sm rounded-card',
+                'grid gap-x-3.5 gap-y-2.5 md:gap-4 items-start p-card-sm rounded-card',
                 anyTime ? 'grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[72px_minmax(0,1fr)_auto]' : 'grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_auto]',
                 isNow ? 'bg-white outline-2 outline-black' : done ? 'bg-white' : 'bg-grey-soft',
               )}
@@ -189,7 +186,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                     )}
                     {r.talk.speakerIds.length > 0 && (
                       // Equal-width speaker cards, whatever the length of the name or role.
-                      <ul class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,250px),1fr))] gap-2 max-w-[780px]" aria-label={`Speakers: ${r.title}`}>
+                      <ul class="m-0 p-0 list-none grid grid-cols-auto-sm gap-2 max-w-reading" aria-label={`Speakers: ${r.title}`}>
                         {r.talk.speakerIds.map((id) => {
                           const p = people[id];
                           return (
@@ -259,12 +256,12 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
 }
 
 function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPhase; now: Date; names: Record<string, string>; rated: Record<string, number> }) {
-  const h1 = 'm-0 text-title font-bold max-w-[1000px] text-balance';
-  const sub = 'm-0 text-lead max-w-[700px] text-pretty';
+  const h1 = 'm-0 text-title font-bold max-w-wide text-balance';
+  const sub = 'm-0 text-lead max-w-reading text-pretty';
 
   if (!ev || phase === 'none') {
     return (
-      <div class="flex flex-col gap-[18px]">
+      <div class="flex flex-col gap-4">
         <h1 class={h1}>No meetup on the calendar right now</h1>
         <p class={sub}>The next one is being planned and is announced on Meetup first. Meanwhile, look back at past meetups, propose a talk or offer to host one.</p>
         <div class="flex flex-wrap gap-3 pt-1">
@@ -296,7 +293,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
 
   if (phase === 'upcoming') {
     return (
-      <div class="flex flex-col gap-[18px]">
+      <div class="flex flex-col gap-4">
         <div class="text-compact font-bold text-grey-mid">Next meetup</div>
         <h1 class={h1}>{ev.title}</h1>
         <p class={sub}>
@@ -305,7 +302,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
           <br />
           <span class="text-grey-light">{findVenue}</span>
         </p>
-        <p class="m-0 text-body text-grey-light max-w-[700px]">This page becomes the evening’s guide on the day: arrival, the running order and talk ratings.</p>
+        <p class="m-0 text-body text-grey-light max-w-reading">This page becomes the evening’s guide on the day: arrival, the running order and talk ratings.</p>
         <div class="flex flex-wrap gap-3 pt-1">
           <Button href={href} variant="cta" grow>
             Event details and RSVP
@@ -331,14 +328,14 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   const unratedLast = !!lastTalk && !Object.keys(rated).some((k) => k.startsWith(`${lastTalk.talk!.id ?? lastTalk.title}:`));
 
   return (
-    <div class="flex flex-col gap-[18px]">
+    <div class="flex flex-col gap-4">
       <div class="text-compact font-bold text-grey-mid">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
       <h1 class={h1}>{ev.title}</h1>
       <p class={sub}>
         <b>{date}</b>
         {times && <> · {times}</>}
       </p>
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-3 max-w-[880px]" aria-live="polite">
+      <div class="grid grid-cols-auto-md gap-3 max-w-wide" aria-live="polite">
         {/* The title leads; when it happens follows it (no label above a title). */}
         <div class={cardClass('inverse', 'md')}>
           <div class="text-card-title font-bold text-pretty">

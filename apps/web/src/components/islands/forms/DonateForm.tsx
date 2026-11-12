@@ -157,7 +157,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
           }}
           invalid={preset === null && !!custom && amountBad}
           error={preset === null && !!custom && amountBad ? `Enter an amount from ${MIN} to ${MAX}.` : ''}
-          class="max-w-[260px]"
+          class="max-w-65"
         />
       </fieldset>
       <TextField
@@ -170,7 +170,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
         onInput={(e) => setEmail(e.currentTarget.value)}
         invalid={emailBad}
         error={emailBad ? 'Check the email, or leave it empty.' : ''}
-        class="max-w-[440px]"
+        class="max-w-110"
       />
       <p id="donate-summary" class="m-0 text-body font-bold min-h-lh" aria-live="polite">
         {summary}

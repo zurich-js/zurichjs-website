@@ -41,7 +41,7 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
           <address class={cx('not-italic text-ink-2', compact ? 'text-compact' : 'text-body')}>{address}</address>
         </div>
         {notes.length > 0 && (
-          <dl class={cx('m-0 grid gap-x-8', compact ? 'grid-cols-1 gap-y-2' : 'grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-y-3')}>
+          <dl class={cx('m-0 grid gap-x-8', compact ? 'grid-cols-1 gap-y-2' : 'grid-cols-auto-sm gap-y-3')}>
             {notes.map(([label, value]) => (
               <div key={label} class="flex flex-col gap-0.5">
                 <dt class="text-compact text-ink-2">{label}</dt>
@@ -63,7 +63,7 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
               <iframe
                 title={`Map of ${venue.name}, ${address}`}
                 src={mapEmbedUrl(venue, mapsKey)}
-                class={cx('w-full rounded-nested-min border-0 bg-grey', compact ? 'h-[200px]' : 'aspect-[4/3] md:aspect-[16/9]')}
+                class={cx('w-full rounded-nested-min border-0 bg-grey', compact ? 'h-50' : 'aspect-[4/3] md:aspect-[16/9]')}
                 loading="lazy"
                 referrerpolicy="strict-origin-when-cross-origin"
                 onError={() => setMapFailed(true)}

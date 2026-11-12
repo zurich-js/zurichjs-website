@@ -119,8 +119,8 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
     </div>
   </PageOpening>
 
-  <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
-    <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
+  <div class="flex flex-col gap-section pt-page-top pb-page-end">
+    <section aria-labelledby="h-why" class="px-gut grid grid-cols-auto-lg gap-8 md:gap-16 items-start">
       <h2 id="h-why" class="m-0 text-section font-bold">Why we started this</h2>
       <div class="flex flex-col gap-4 text-body text-ink-2 max-w-reading">
         <p class="m-0">
@@ -135,11 +135,11 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
       </div>
     </section>
 
-    <section aria-label="ZurichJS in numbers" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
+    <section aria-label="ZurichJS in numbers" class="px-gut grid grid-cols-auto-sm gap-4">
       {
         STATS.map((s) => (
           <Card>
-            <div class="text-[clamp(30px,3.2vw,44px)] leading-[1.05] font-bold">{s.n}</div>
+            <div class="text-section font-bold">{s.n}</div>
             <h3 class="m-0 text-card-title font-bold">{s.h}</h3>
             <p class="m-0 text-body">{s.d}</p>
           </Card>
@@ -147,8 +147,8 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
       }
     </section>
 
-    <section aria-labelledby="h-built" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
-      <div class="flex flex-col gap-4 max-w-[760px]">
+    <section aria-labelledby="h-built" class="px-gut flex flex-col gap-12">
+      <div class="flex flex-col gap-4 max-w-reading">
         <h2 id="h-built" class="m-0 text-section font-bold">How we built this</h2>
         <p class="m-0 text-body text-ink-2">
           We started with zero. No social media followers. No sponsors. No speakers. Just a LinkedIn page, an inactive Meetup group with no past events, and relationships that let us host in borrowed spaces.
@@ -177,7 +177,7 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
         <PointList items={WHO} min={280} />
       </div>
 
-      <div class="flex flex-col gap-5 max-w-[880px]">
+      <div class="flex flex-col gap-5 max-w-wide">
         <h3 class="m-0 text-subsection font-bold">Location & accessibility</h3>
         <p class="m-0 text-body text-ink-2">
           Our meetups are hosted in central Zurich at tech company offices, making them easily accessible by public transport. We regularly welcome attendees from:

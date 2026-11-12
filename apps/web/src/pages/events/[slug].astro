@@ -65,7 +65,7 @@ const recapOnly = (ev.recap?.talks ?? []).filter((t) => !eventTalks(ev).some((x)
 const hasTalks = eventTalks(ev).length > 0;
 const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda.some((a) => /\b(tba|tbc|to be announced|open slot)\b/i.test(a.title)));
 // About this meetup on the left and the venue on the right on wide screens; stacked on phones.
-const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] items-start';
+const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-start';
 // "Thanks to": each logo with its name, role and note as a caption (only when there is a role or note).
 const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: string }[]) =>
   items.map(({ partner, role, note }) => ({ partner, caption: role || note ? [partner.name, role ? ROLE_LABEL[role] : '', note].filter(Boolean).join(' · ') : undefined }));
@@ -77,8 +77,8 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} />
     ) : (
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }} pills={p.pills}>
-        <div class="flex flex-col gap-[18px] pt-1">
-          <div class="text-[clamp(18px,1.6vw,21px)] leading-normal">
+        <div class="flex flex-col gap-4 pt-1">
+          <div class="text-lead">
             <b>{p.whenShort}</b>
             {p.dateKnown && times && (
               <>
@@ -97,7 +97,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
 
   {
     isPast ? (
-      <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+      <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
         <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
         {(ev.description || ev.venue) && (
@@ -119,19 +119,19 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
             <h2 class="m-0 text-subsection font-bold">Talks</h2>
             {recapOnly.map((t) => (
               <div class="flex flex-col gap-2">
-                <h3 class="m-0 text-[22px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+                <h3 class="m-0 text-card-title font-bold text-pretty">{t.title}</h3>
                 <div class="flex flex-wrap gap-x-3">
                   {t.speakerIds
                     .map((id) => byId.get(id))
                     .filter((s) => !!s)
                     .map((s) => (
-                      <a href={`/speakers/${s.id}`} class="text-[17px] font-bold underline underline-offset-[3px]">
+                      <a href={`/speakers/${s.id}`} class="text-body font-bold underline underline-offset-3">
                         {s.name}
                       </a>
                     ))}
                 </div>
-                {t.summary && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{t.summary}</p>}
-                <span class="text-[16px] font-bold text-ink-2">{t.format}</span>
+                {t.summary && <p class="m-0 text-body text-ink-2">{t.summary}</p>}
+                <span class="text-compact font-bold text-ink-2">{t.format}</span>
               </div>
             ))}
           </section>
@@ -147,13 +147,13 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
           </section>
         )}
 
-        <section id="photos" aria-labelledby="h-photos" class="flex flex-col gap-[18px] scroll-mt-6">
+        <section id="photos" aria-labelledby="h-photos" class="flex flex-col gap-4 scroll-mt-6">
           <div class="flex justify-between items-baseline flex-wrap gap-2.5">
             <h2 id="h-photos" class="m-0 text-subsection font-bold">
               Photos from the evening
             </h2>
             {gallery.length > 0 && (
-              <a href={mediaHref(ev.slug)} class="font-bold text-[17px] underline underline-offset-[3px]">
+              <a href={mediaHref(ev.slug)} class="font-bold text-body underline underline-offset-3">
                 {`All ${countLabel(gallery)}`}
               </a>
             )}
@@ -161,7 +161,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
           {gallery.length > 0 ? (
             <>
               <Gallery client:visible items={toGallery(gallery)} label={`Photos and videos from ${ev.title}`} max={8} />
-              {ev.photoCredit && <p class="m-0 text-[15px] text-ink-2">{ev.photoCredit}</p>}
+              {ev.photoCredit && <p class="m-0 text-meta text-ink-2">{ev.photoCredit}</p>}
             </>
           ) : (
             <Card>
@@ -179,7 +179,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
           )}
         </section>
 
-        <section class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
+        <section class="grid grid-cols-auto-md gap-4">
           <Card title="Were you there?" level="h2" padding="lg">
             <p class="m-0 text-body text-ink-2">
               {hasTalks
@@ -204,8 +204,8 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
         </section>
       </div>
     ) : (
-      <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(40px,5vw,72px)] items-start">
-        <div class="flex flex-col gap-[clamp(40px,5vw,64px)] col-span-full md:col-[1/-2] min-w-0">
+      <div class="px-gut pt-page-top pb-page-end grid grid-cols-auto-md gap-12 items-start">
+        <div class="flex flex-col gap-section col-span-full md:col-[1/-2] min-w-0">
           <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
           <EventBanner client:load ev={ev} initial={state} />
@@ -249,11 +249,11 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
           {ev.practical.length > 0 && (
             <section class="flex flex-col gap-5">
               <h2 class="m-0 text-subsection font-bold">Good to know</h2>
-              <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-x-10 gap-y-[22px]">
+              <div class="grid grid-cols-auto-sm gap-x-10 gap-y-6">
                 {ev.practical.map((x) => (
                   <div class="flex flex-col gap-1">
-                    <h3 class="m-0 text-[18px] font-bold">{x.label}</h3>
-                    <p class="m-0 text-[17px] leading-normal text-ink-2">
+                    <h3 class="m-0 text-body font-bold">{x.label}</h3>
+                    <p class="m-0 text-body text-ink-2">
                       {x.label === 'Code of conduct' ? (
                         <>
                           All ZurichJS events follow our <a href="/policies/code-of-conduct">code of conduct</a>.

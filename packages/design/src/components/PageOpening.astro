@@ -18,7 +18,7 @@ const titleSize = title.length <= 24 ? 'text-title' : title.length <= 48 ? 'text
 const hasSub = !!sub || Astro.slots.has('sub');
 ---
 
-<section class={cx('px-gut flex flex-col gap-[18px] pt-[clamp(16px,3vw,40px)]', compact ? 'pb-[clamp(28px,4vw,48px)]' : 'pb-[clamp(36px,5vw,64px)]')}>
+<section class={cx('px-gut flex flex-col gap-4 pt-4 md:pt-6 lg:pt-10', compact ? 'pb-7 md:pb-10 lg:pb-12' : 'pb-9 md:pb-12 lg:pb-16')}>
   {
     crumb && (
       <nav aria-label="Breadcrumb" class="text-compact text-grey-mid flex gap-2 flex-wrap">
@@ -41,10 +41,10 @@ const hasSub = !!sub || Astro.slots.has('sub');
       </div>
     )
   }
-  <h1 class={cx('m-0 font-bold max-w-[1000px] text-balance', titleSize)}>{title}</h1>
+  <h1 class={cx('m-0 font-bold max-w-wide text-balance', titleSize)}>{title}</h1>
   {
     hasSub && (
-      <p class="m-0 text-lead max-w-[700px] text-pretty">
+      <p class="m-0 text-lead max-w-reading text-pretty">
         {sub}
         <slot name="sub" />
       </p>

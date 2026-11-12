@@ -14,7 +14,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
   const times = p.dateKnown ? timesLine(ev) : '';
   const handoff = p.cta.kind === 'rsvp' || p.cta.kind === 'waitlist';
   return (
-    <aside aria-label="Event summary" class={cardClass('filled', 'md', 'md:sticky md:top-[104px]')}>
+    <aside aria-label="Event summary" class={cardClass('filled', 'md', 'md:sticky md:top-26')}>
       <div class="flex flex-col gap-0.5">
         <div class="text-compact text-ink-2">When</div>
         <div class="text-body font-bold">{p.whenShort}</div>
@@ -31,12 +31,12 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
         </div>
       </div>
       {p.cta.kind === 'feedback' ? (
-        <Button href={`/feedback?event=${ev.slug}`} variant="cta">
+        <Button href={`/feedback?event=${ev.slug}`} variant="primary">
           Feedback on the evening
         </Button>
       ) : (
         p.cta.href && (
-          <Button href={p.cta.href} variant="cta" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>
+          <Button href={p.cta.href} variant="primary" external={p.cta.external} onClick={handoff ? () => track('rsvp_handoff_click', { eventId: ev.id }) : undefined}>
             {p.cta.label}
           </Button>
         )
@@ -59,7 +59,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
       >
         Copy link
       </button>
-      <div role="status" class={cx('text-compact min-h-[1lh] -mt-2', copied === 'ok' ? 'font-bold text-success' : 'text-ink-2')}>
+      <div role="status" class={cx('text-compact min-h-lh -mt-2', copied === 'ok' ? 'font-bold text-success' : 'text-ink-2')}>
         {copied === 'ok' ? 'Link copied.' : copied === 'fail' ? `Couldn’t copy. The link is ${url}` : ''}
       </div>
     </aside>

@@ -155,6 +155,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
       <div
         ref={stage}
         class="relative w-full overflow-hidden touch-pan-y overscroll-x-contain select-none mask-x-from-90% mask-x-to-100%"
+        // eslint-disable-next-line no-restricted-syntax -- the stage height follows the measured card size and arc
         style={{ height: `${stageH + SHADOW}px` }}
         onPointerDown={onDown}
         onPointerUp={onUp}
@@ -191,10 +192,11 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               }}
               class={cx(
                 'group absolute left-1/2 top-0 overflow-hidden rounded-card bg-ink no-underline focus-visible:outline-offset-4',
-                'transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-                isActive ? 'shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)]' : 'shadow-none',
+                'transition-all duration-500 ease-glide motion-reduce:transition-none',
+                isActive ? 'shadow-lift' : 'shadow-none',
                 opacity === 0 && 'pointer-events-none',
               )}
+              // eslint-disable-next-line no-restricted-syntax -- each card's size and place on the arc are computed from the stage width
               style={{
                 width: `${cardW}px`,
                 height: `${cardH}px`,
@@ -215,6 +217,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
                   decoding="async"
                   draggable={false}
                   class="absolute inset-0 size-full object-cover pointer-events-none"
+                  // eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from Sanity
                   style={{ objectPosition: sp.photo.position ?? 'center 25%' }}
                 />
               ) : (
@@ -236,7 +239,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               <span class="absolute left-4 top-4 inline-flex items-center h-tag-sm px-2 rounded-tag bg-white text-black font-bold text-meta leading-none">
                 {sp.talks === 1 ? '1 talk' : `${sp.talks} talks`}
               </span>
-              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/2 bg-black/70 [mask-image:linear-gradient(to_top,#000_40%,transparent)]" />
+              <span aria-hidden="true" class="absolute inset-x-0 bottom-0 h-1/2 bg-black/70 mask-t-from-40%" />
               <span class="absolute inset-x-0 bottom-0 p-5 flex flex-col gap-1 text-center">
                 <span class="text-white font-bold text-card-title">{sp.name}</span>
                 {sp.role && <span class="text-grey-light line-clamp-2 text-compact">{sp.role}</span>}
@@ -247,7 +250,8 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               */}
               <span
                 aria-hidden="true"
-                class="absolute inset-0 bg-white pointer-events-none transition-opacity duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none group-hover:opacity-0!"
+                class="absolute inset-0 bg-white pointer-events-none transition-opacity duration-500 ease-glide motion-reduce:transition-none group-hover:opacity-0!"
+                // eslint-disable-next-line no-restricted-syntax -- the wash follows the card's computed distance from the centre
                 style={{ opacity: 1 - opacity }}
               />
             </a>
@@ -257,11 +261,13 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
 
       {n > 1 && (
         <>
+          {/* eslint-disable-next-line no-restricted-syntax -- level with the middle of the active card, whose height is measured */}
           <button type="button" aria-label="Previous speaker" onClick={() => go(-1)} class={cx(nav, 'left-4')} style={{ top: `${cardH / 2}px` }}>
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12.5 4.5 7 10l5.5 5.5" />
             </svg>
           </button>
+          {/* eslint-disable-next-line no-restricted-syntax -- level with the middle of the active card, whose height is measured */}
           <button type="button" aria-label="Next speaker" onClick={() => go(1)} class={cx(nav, 'right-4')} style={{ top: `${cardH / 2}px` }}>
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M7.5 4.5 13 10l-5.5 5.5" />

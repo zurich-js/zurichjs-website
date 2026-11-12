@@ -3,7 +3,8 @@ import type { ComponentChildren } from 'preact';
 /**
  * Small brand marks for the social fields, so each one is easy to tell apart.
  * GitHub, X, Bluesky, Instagram and Meetup are from Simple Icons (CC0); LinkedIn, Slack and the website globe are drawn here.
- * Decorative: the field's text label stays its accessible name.
+ * Decorative: the field's text label stays its accessible name. They take the text colour (black on white, white on
+ * black): brand colours only with tone="brand" (owner, 12th November 2026).
  */
 const ICONS = {
   linkedin: {
@@ -116,13 +117,17 @@ const KINDS: Record<string, Social> = {
 };
 export const socialKind = (label: string): Social | undefined => KINDS[label.trim().toLowerCase()];
 
-/** The brand mark alone (decorative: the link around it carries the name). `white` is the plain white mark for black surfaces. */
-export function SocialIcon({ kind, size = 18, tone = 'brand' }: { kind: Social; size?: number; tone?: 'brand' | 'white' }) {
+/**
+ * The mark alone (decorative: the link around it carries the name), in the text colour. `white` is kept as an alias
+ * for the black header and footer; `brand` brings back the network's own colours.
+ */
+export function SocialIcon({ kind, size = 18, tone = 'current' }: { kind: Social; size?: number; tone?: 'current' | 'white' | 'brand' }) {
   const icon: { color: string; body: ComponentChildren; mono?: ComponentChildren } = ICONS[kind];
-  const white = tone === 'white';
+  const brand = tone === 'brand';
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={white ? undefined : { color: icon.color }} class="flex-none">
-      {white ? (icon.mono ?? icon.body) : icon.body}
+    // eslint-disable-next-line no-restricted-syntax -- a network's brand colour, only when asked for
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={brand ? { color: icon.color } : undefined} class="flex-none">
+      {brand ? icon.body : (icon.mono ?? icon.body)}
     </svg>
   );
 }
@@ -132,8 +137,8 @@ export function SocialLabel({ kind, text }: { kind: Social; text: ComponentChild
   const icon = ICONS[kind];
   return (
     <span class="inline-flex items-center gap-2">
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" style={{ color: icon.color }} class="flex-none">
-        {icon.body}
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" class="flex-none">
+        {'mono' in icon ? icon.mono : icon.body}
       </svg>
       {text}
     </span>

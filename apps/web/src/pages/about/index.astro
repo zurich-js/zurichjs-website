@@ -1,24 +1,25 @@
 ---
-/** About: the first visit, the name, the story, values, team, the nonprofit, quotes and ways to take part. */
-import { eventHref, normalizeSearch, zurichDay } from '@zurichjs/events';
+/** About: what ZurichJS is about, the name, the story (a timeline), values, the team, the nonprofit, quotes and ways to take part. */
+import { normalizeSearch, zurichDay } from '@zurichjs/events';
 import { BEGINNINGS, PARTNERS_TO_DATE, REACH_AS_OF, mediaForEvent, mediaTagged, speakersWithTalks } from '@zurichjs/content';
 import { mediaHref } from '~/lib/media';
 import { breadcrumbSchema, organizationSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Monogram from '@zurichjs/design/components/Monogram.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
 import Card from '@zurichjs/design/components/Card.astro';
 import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
+import Monogram from '@zurichjs/design/components/Monogram.astro';
+import StatsPanel from '~/components/about/StatsPanel.astro';
+import MilestoneLinks from '~/components/about/MilestoneLinks.astro';
+import type { StoryRow } from '~/components/about/story';
 import Facts from '@zurichjs/design/components/Facts.astro';
 import Tag from '@zurichjs/design/components/Tag.astro';
-import TagLink from '@zurichjs/design/components/TagLink.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content, nextMeetupHref, slackLink } from '~/lib/content';
-import { PAGE_PHOTOS } from '~/lib/photos';
 import { buttonClass } from '@zurichjs/design/recipes';
-import { RichText } from '~/components/RichText';
 import { SocialIcon, socialKind } from '@zurichjs/design/islands/SocialLabel';
 
 const { events, milestones, team, volunteers, quotes, settings, speakers, media } = await content();
@@ -26,8 +27,8 @@ const slack = slackLink(settings);
 // A milestone links to its event: by slug, or the event held on that day.
 const eventsBySlug = new Map(events.map((e) => [e.slug, e]));
 const eventOn = (iso: string) => (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? events.find((e) => e.startsAt && zurichDay(e.startsAt) === iso) : undefined);
-const timeline = [...milestones]
-  .sort((a, b) => b.iso.localeCompare(a.iso))
+const milestoneRows = [...milestones]
+  .sort((a, b) => a.iso.localeCompare(b.iso))
   .map((m) => {
     const ev = (m.eventSlug && eventsBySlug.get(m.eventSlug)) || eventOn(m.iso);
     const tagged = mediaTagged(media.items, `milestone:${m.iso}`).find((x) => x.kind === 'photo');
@@ -43,24 +44,7 @@ const GROUPS = [
   { k: 'conference', h: 'ZurichJS Conf team' },
   { k: 'contributors', h: 'Contributors' },
 ] as const;
-const SECTIONS = [
-  ['story', 'Story'],
-  ['team', 'Team'],
-  ['values', 'Values'],
-  ['association', 'Association'],
-  ['get-involved', 'Get involved'],
-  ['first-visit', 'First visit'],
-] as const;
 const nextHref = await nextMeetupHref();
-
-// The usual evening (owner, 2nd November 2026): doors around 17:30, close around 21:30; the rest follows in order.
-const FIRST_STEPS = [
-  ['17:30', 'Doors open', 'Doors open around 17:30. Grab a drink and a name tag. Plenty of people come alone. Find us in yellow T-shirts if you’d like an introduction.'],
-  ['Then', 'Welcome', 'A short welcome and opening remarks from the organisers.'],
-  ['Then', 'Talks', 'Two or three talks: full-length slots and quick lightning talks, some on what’s new, some on ideas that last. In English, and not always about JavaScript.'],
-  ['Then', 'Networking', 'Time to meet the speakers and each other. Nobody minds if you just listen.'],
-  ['21:30', 'Close', 'We wrap up around 21:30. Some of us head out for a drink, others call it a night. Free to attend: RSVP on Meetup so the host can plan food and space.'],
-] as const;
 
 const VALUES = [
   ['Trust', 'We act responsibly with the trust that members place in us to execute on our mission.'],
@@ -99,10 +83,17 @@ const NOW = [
   { value: PARTNERS_TO_DATE, label: 'partners and sponsors' },
   { value: String(speakerCount), label: 'speakers' },
 ];
-const THEN_AND_NOW = [
-  { h: 'November 2024', stats: BEGINNINGS },
-  { h: REACH_AS_OF, stats: NOW },
-];
+// The story, oldest first and grouped by year: the beginnings in their place in November 2024, today's reach after the last year.
+type Row = StoryRow;
+// "Where we started" sits at November 2024, before the first meetup that month.
+const sortKey = (r: { key: string }) => (r.key === 'start' ? '2024-11' : r.key);
+const rows: Row[] = [
+  { key: 'start', title: 'Where we started', date: 'November 2024', stats: BEGINNINGS },
+  ...milestoneRows.map(({ m, ev, photo, gallery }) => ({ key: m.iso, title: m.title, date: m.date, text: m.text, photo, ev, gallery, link: m.link })),
+].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+const yearOf = (r: Row) => (r.key === 'start' ? '2024' : r.key.slice(0, 4));
+const now: Row = { key: 'now', title: 'Where we are now', date: REACH_AS_OF, stats: NOW };
+const years = [...new Set(rows.map(yearOf))].map((y) => ({ y, rows: rows.filter((r) => yearOf(r) === y) }));
 ---
 
 <BaseLayout
@@ -114,55 +105,16 @@ const THEN_AND_NOW = [
 >
   <PageOpening
     slot="opening"
-    title="JavaScript is the common ground that brought us together"
-    sub="On 14th November 2024, we hosted our very first event, powered only by personal savings, donated time, and a lot of late nights. People showed up not just for the tech, but for the chance to connect face-to-face, across backgrounds, languages, and experience levels."
+    title="A community of developers around JavaScript in Zurich"
+    sub="We run meetups and workshops for real networking, where everybody feels welcome and included. Our first event was on 14th November 2024, powered only by personal savings, donated time, and a lot of late nights."
   >
     <div class="flex flex-wrap gap-3 pt-1.5">
       <Button href={nextHref} variant="cta" grow>See the next meetup</Button>
-      <Button href="#first-visit" variant="secondary" inverse grow>What a first visit is like</Button>
+      <Button href="#story" variant="secondary" inverse grow>Read our story</Button>
     </div>
   </PageOpening>
 
-  <nav aria-label="On this page" class="px-gut pt-6 -mb-6">
-    <ul class="m-0 p-0 list-none flex flex-wrap gap-2">
-      {
-        SECTIONS.map(([id, label]) => (
-          <li>
-            <TagLink href={`#${id}`} size="md">
-              {label}
-            </TagLink>
-          </li>
-        ))
-      }
-    </ul>
-  </nav>
-
-  <div class="flex flex-col gap-section pt-page-top pb-page-end">
-    <section id="first-visit" aria-labelledby="h-first" class="px-gut grid grid-cols-auto-lg gap-8 md:gap-16 items-center scroll-mt-6">
-      <div class="flex flex-col gap-7">
-        <h2 id="h-first" class="m-0 text-section font-bold">What your first meetup is like</h2>
-        <p class="m-0 text-body text-ink-2">An example evening. Times change from meetup to meetup: your event page has the exact programme.</p>
-        <div class="flex flex-col gap-5">
-          {
-            FIRST_STEPS.map(([t, h, d]) => (
-              <div class="grid grid-cols-[64px_minmax(0,1fr)] gap-4 items-start">
-                <div class="text-body font-bold pt-0.5">{t}</div>
-                <div class="flex flex-col gap-1">
-                  <h3 class="m-0 text-card-title font-bold">{h}</h3>
-                  <p class="m-0 text-body text-ink-2">{d}</p>
-                </div>
-              </div>
-            ))
-          }
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <Button href={nextHref} variant="primary" grow>See the next meetup</Button>
-          <Button href="/policies/code-of-conduct" variant="secondary" grow>Read the code of conduct</Button>
-        </div>
-      </div>
-      <Photo photo={PAGE_PHOTOS.firstVisit} class="aspect-4/3 w-full" />
-    </section>
-
+  <div class="flex flex-col gap-section py-section">
     <section aria-labelledby="h-why" class="px-gut grid grid-cols-auto-lg gap-8 md:gap-16 items-start">
       <div class="flex flex-col gap-4">
         <h2 id="h-why" class="m-0 text-section font-bold">Why it’s called ZurichJS</h2>
@@ -170,9 +122,9 @@ const THEN_AND_NOW = [
         <div class="flex flex-wrap gap-2">
           {['Why not ZurichTS?', 'Why not Zurich Web?', 'Why not Zurich Tech?'].map((q) => <span class="text-body text-ink-2 italic">{q}</span>)}
         </div>
+        <p class="m-0 text-card-title font-bold text-black">The short answer is simple: JavaScript is the common ground that brought us together.</p>
       </div>
       <div class="flex flex-col gap-4 text-body text-ink-2 max-w-reading">
-        <p class="m-0 text-card-title font-bold text-black">The short answer is simple: JavaScript is the common ground that brought us together.</p>
         <p class="m-0">Bogdan and Faris first crossed paths at the Zürich ReactJS Meetup. React is a library. Angular is a framework. All of them orbit the same gravity well. JavaScript.</p>
         <p class="m-0">At the time, it was mostly practical. A neutral home base that wasn’t tied to one framework, and most importantly, the Meetup.com group was free!</p>
         <p class="m-0">In the beginning, ZurichJS was just a name. Now it’s a philosophy: accessibility, experimentation, cross-stack thinking, and a welcoming entry point into software.</p>
@@ -182,93 +134,84 @@ const THEN_AND_NOW = [
     </section>
 
     <section id="story" aria-labelledby="h-story" class="px-gut flex flex-col gap-7 scroll-mt-6">
-      <SectionHeading id="h-story">
-        From a free Meetup group to a Swiss nonprofit and a conference
-        <Fragment slot="sub">We started with personal financial investments, a LinkedIn page, an inactive Meetup group with no past events, and good relationships that allowed us to host events. Here’s what happened next, newest first.</Fragment>
-        <Button slot="action" href="/events?tab=past" variant="secondary">Browse all past events</Button>
-      </SectionHeading>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {
-          THEN_AND_NOW.map((c) => (
-            <Card title={c.h} padding="lg">
-              <dl class="m-0 grid grid-cols-2 gap-x-6 gap-y-5">
-                {c.stats.map((st) => (
-                  <div class="flex flex-col-reverse justify-end gap-1">
-                    <dt class="text-compact">{st.label}</dt>
-                    <dd class="m-0 text-section leading-none font-bold">{st.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Card>
-          ))
-        }
+      <div class="flex flex-col gap-3">
+        <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <Heading as="h2" size="section" id="h-story" class="max-w-wide">From a free Meetup group to a Swiss nonprofit and a conference</Heading>
+          <a href="/events?tab=past" class="font-bold text-body underline underline-offset-4">
+            Browse all past events
+          </a>
+        </div>
+        <p class="m-0 text-body text-ink-2 text-pretty max-w-reading">
+          We started with personal financial investments, a LinkedIn page, an inactive Meetup group with no past events, and good relationships that allowed us to host events. Here’s what happened next.
+        </p>
       </div>
-      <ol class="m-0 p-0 list-none grid grid-cols-auto-sm md:grid-cols-auto-sm gap-x-4 gap-y-8">
-        {
-          timeline.map(({ m, ev, photo, gallery }) => {
-            const links = (
-              <div class="flex flex-wrap gap-x-4 gap-y-1 text-compact">
-                {ev && (
-                  <a href={eventHref(ev)} class="font-bold underline underline-offset-[3px]">
-                    The event
-                  </a>
-                )}
-                {gallery && (
-                  <a href={gallery} class="font-bold underline underline-offset-[3px]">
-                    Photos
-                  </a>
-                )}
-                {m.link && (
-                  <a href={m.link.href} class="font-bold underline underline-offset-[3px]" {...(isExt(m.link.href) ? { target: '_blank', rel: 'noopener' } : {})}>
-                    {m.link.label}
-                  </a>
-                )}
-              </div>
-            );
-            // Without a photo, the milestone is one yellow card (no repeated title).
-            return photo ? (
-              <li id={`story-${m.iso}`} class="flex flex-col gap-3 scroll-mt-6">
-                <Photo photo={photo} class="aspect-4/3 w-full rounded-card!" sizes="(min-width: 800px) 33vw, 100vw" />
-                <div class="flex flex-col gap-1.5">
-                  <h3 class="m-0 text-card-title font-bold text-pretty">{m.title}</h3>
-                  <Facts items={[{ label: 'Date', value: m.date, hideLabel: true }]} />
-                  {m.text && <p class="m-0 text-compact text-ink-2">{m.text}</p>}
-                  {links}
-                </div>
-              </li>
-            ) : (
-              <Card as="li" id={`story-${m.iso}`} title={m.title} class="scroll-mt-6">
-                <Facts slot="facts" items={[{ label: 'Date', value: m.date, hideLabel: true }]} />
-                {m.text && <p class="m-0 text-compact">{m.text}</p>}
-                <div class="mt-auto pt-1">{links}</div>
-              </Card>
-            );
-          })
-        }
-      </ol>
+      {
+        years.map(({ y, rows }) => (
+          <div class="flex flex-col gap-3">
+            <Heading as="h3" size="subsection">{y}</Heading>
+            <ol class="m-0 p-0 list-none flex flex-col gap-2">
+              {rows.map((r) =>
+                r.stats ? (
+                  // The beginnings: a full-width panel with the numbers, unlike the milestones around it.
+                  <li id={`story-${r.key}`} class="py-3 scroll-mt-6">
+                    <StatsPanel row={r} />
+                  </li>
+                ) : (
+                  // The photo takes the first quarter; text always sits in the second column, so every entry lines up.
+                  <li id={`story-${r.key}`} class="grid grid-cols-[1fr_minmax(0,3fr)] gap-4 md:gap-6 items-start py-3 scroll-mt-6">
+                    {r.photo && (
+                      <span class="relative block w-full aspect-video overflow-hidden rounded-nested-min bg-grey">
+                        <Photo photo={r.photo} class="absolute inset-0 size-full" sizes="25vw" />
+                      </span>
+                    )}
+                    {r.key === '2024-07' ? (
+                      // How it began, told like the testimonials: a card with the words set larger.
+                      <Card class="col-span-2" title={r.title} level="h4">
+                        <Facts slot="facts" items={[{ label: 'Date', value: r.date, hideLabel: true, strong: true }]} />
+                        {r.text && <p class="m-0 text-lead text-pretty">{r.text}</p>}
+                        <MilestoneLinks row={r} />
+                      </Card>
+                    ) : (
+                      <div class="col-start-2 flex flex-col gap-1.5 min-w-0">
+                        <h4 class="m-0 text-card-title font-bold text-pretty">{r.title}</h4>
+                        <Facts items={[{ label: 'Date', value: r.date, hideLabel: true, strong: true }]} />
+                        {r.text && <p class="m-0 text-body text-ink-2 text-pretty max-w-reading">{r.text}</p>}
+                        <MilestoneLinks row={r} />
+                      </div>
+                    )}
+                  </li>
+                ),
+              )}
+            </ol>
+          </div>
+        ))
+      }
+      <div id="story-now" class="scroll-mt-6">
+        <StatsPanel row={now} />
+      </div>
     </section>
 
     <section id="values" aria-labelledby="h-values" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <SectionHeading id="h-values">
-        Trust, authenticity, quality
-        <Fragment slot="sub">Our mission is a passionate community of developers around JavaScript in Zurich. We run meetups and workshops for real networking, where everybody feels welcome and included. A healthy developer community relies on three pillars.</Fragment>
+        Values
+        <Fragment slot="sub">A healthy developer community relies on three pillars.</Fragment>
       </SectionHeading>
-      <AutoGrid min="sm">
+      <dl class="m-0 grid grid-cols-auto-sm gap-x-10 gap-y-8">
         {
           VALUES.map(([h, d]) => (
-            <Card title={h}>
-              <p class="m-0 text-body">{d}</p>
-            </Card>
+            <div class="flex flex-col gap-2 max-w-reading">
+              <dt class="text-card-title font-bold">{h}</dt>
+              <dd class="m-0 text-body text-ink-2 text-pretty">{d}</dd>
+            </div>
           ))
         }
-      </AutoGrid>
+      </dl>
     </section>
 
     <section id="team" aria-labelledby="h-team" class="px-gut flex flex-col gap-7 scroll-mt-6">
       <SectionHeading id="h-team">
         The people who run it
         <Fragment slot="sub">We’ve built everything by volunteering our time and effort. Say hello at the next meetup; we’re the ones in yellow T-shirts.</Fragment>
-        <Button slot="action" href="/cfv" variant="primary">Volunteer with us</Button>
       </SectionHeading>
       {
         GROUPS.map((g) => {
@@ -277,61 +220,34 @@ const THEN_AND_NOW = [
           return (
             <div class="flex flex-col gap-4">
               <h3 class="m-0 text-card-title font-bold">{g.h}</h3>
-              <ul class="m-0 p-0 list-none grid grid-cols-auto-sm md:grid-cols-auto-sm gap-x-4 gap-y-7 items-start">
+              <ul class="m-0 p-0 list-none grid grid-cols-auto-sm gap-4">
                 {people.map((m) => {
                   const sp = speakerFor(m);
                   // No team photo: reuse the person's speaker photo when they have one.
                   const pic = m.photo ?? (sp?.photo ? { ...sp.photo, alt: m.name } : undefined);
+                  const social = m.links ?? [];
                   return (
-                    // Subgrid: photo, name, role, bio and links each share a row across the cards, so they line up.
-                    <li class="grid grid-rows-subgrid row-span-5 gap-y-1.5">
-                      {pic ? <Photo photo={pic} class="aspect-square w-full mb-1.5" sizes="(min-width: 800px) 20vw, 50vw" /> : <Monogram initials={m.initials} size="portrait" label={m.name} />}
-                      <h4 class="m-0 text-card-title font-bold self-end">{m.name}</h4>
-                      <div class="text-compact text-ink-2">{m.role}</div>
-                      {m.bio ? (
-                        <RichText
-                          client:visible
-                          text={m.bio}
-                          clampLines={3}
-                          moreLabels={['See more ↓', 'See less ↑']}
-                          moreClass="p-0 bg-transparent border-0 text-meta font-bold text-grey-text hover:text-black cursor-pointer"
-                          class="text-compact text-ink-2"
-                        />
-                      ) : (
-                        <span />
-                      )}
-                        {(m.links?.length ?? 0) > 0 || sp ? (
-                          // Speaker profile as a pill, then one round button per social link: clearly apart from the bio and its See more.
-                          <ul class="m-0 mt-2 p-0 list-none flex flex-wrap items-center gap-2 self-start" aria-label={`${m.name}: links`}>
-                            {sp && (
+                    // One card per person: with a speaker profile, the whole card opens it in a new tab (the arrow says so).
+                    <Card as="li" padding="md" title={m.name} level="h4" href={sp ? `/speakers/${sp.id}` : undefined} external={sp ? true : undefined} mediaLayout="stack" mediaRatio="square">
+                      {pic ? <Photo slot="media" photo={pic} sizes="(min-width: 800px) 30vw, 100vw" /> : <Monogram slot="media" initials={m.initials} size="portrait" label={m.name} />}
+                      <p class="m-0 text-compact text-ink-2">{m.role}</p>
+                      {m.bio && <p class="m-0 text-compact text-ink-2 line-clamp-3">{m.bio.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')}</p>}
+                      {social.length > 0 && (
+                        // Above the card's link, so each one is its own link.
+                        <ul slot="footer" class="relative z-10 m-0 p-0 list-none flex flex-wrap gap-2" aria-label={`${m.name}: links`}>
+                          {social.map((l) => {
+                            const kind = socialKind(l.label);
+                            return (
                               <li>
-                                <Button href={`/speakers/${sp.id}`} variant="secondary">
-                                  Speaker profile
-                                </Button>
+                                <a href={l.url} target="_blank" rel="noopener" title={l.label} aria-label={`${m.name} on ${l.label} (opens in a new tab)`} class={buttonClass({ variant: 'secondary', iconOnly: !!kind })}>
+                                  {kind ? <SocialIcon kind={kind} size={17} /> : l.label}
+                                </a>
                               </li>
-                            )}
-                            {m.links?.map((l) => {
-                              const kind = socialKind(l.label);
-                              return (
-                                <li>
-                                  <a
-                                    href={l.url}
-                                    target="_blank"
-                                    rel="noopener"
-                                    title={l.label}
-                                    aria-label={`${m.name} on ${l.label} (opens in a new tab)`}
-                                    class={buttonClass({ variant: 'secondary', iconOnly: !!kind })}
-                                  >
-                                    {kind ? <SocialIcon kind={kind} size={17} /> : l.label}
-                                  </a>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        ) : (
-                          <span />
-                        )}
-                    </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </Card>
                   );
                 })}
               </ul>
@@ -354,11 +270,15 @@ const THEN_AND_NOW = [
           </div>
         )
       }
+      <div class="flex flex-col items-start gap-4">
+        <p class="m-0 text-body text-ink-2 max-w-reading">On the night, with photos, or with the website: there’s room for you too.</p>
+        <Button href="/cfv" variant="primary">Volunteer with us</Button>
+      </div>
     </section>
 
     <section id="association" aria-labelledby="h-verein" class="mx-gut border border-grey-frame rounded-block p-6 md:p-14 grid grid-cols-auto-lg gap-x-12 gap-y-7 items-start scroll-mt-6">
       <div class="flex flex-col gap-3.5">
-        <h2 id="h-verein" class="m-0 text-section font-bold">A nonprofit, run by volunteers</h2>
+        <h2 id="h-verein" class="m-0 text-subsection font-bold">A nonprofit, run by volunteers</h2>
         <p class="m-0 text-body text-ink-2 text-pretty">
           ZurichJS is a registered non-profit under the Swiss JavaScript Group. All revenue we make goes directly into the conference or venues, speaker travel, workshops, experiences, and the infrastructure that keeps the meetup community running.
         </p>

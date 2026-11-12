@@ -38,7 +38,7 @@ The community page's timeline and team (`packages/content/src/community.ts`), th
 | Nov 2025, one-year anniversary at Pause im Foifi, presented by Digitec Galaxus          | old-about                      |                                                             |
 | 14 Nov 2025, first ZurichJS Conf tickets on sale                                        | conf-timeline                  | **confirm** the date tickets actually went on sale          |
 | Jan 2026, Vue x Stripe meetup with Stripe and GetYourGuide                              | old-about                      |                                                             |
-| 3 Apr 2026, conference CFP closes with 436 submissions, reviewed anonymised             | prospectus                     |                                                             |
+| 3 Apr 2026, conference CFP closes with 434 talk submissions, reviewed anonymised        | owner, CFP-closed post         |                                                             |
 | June 2026, OSS Award at JSNation                                                        | conf-blog, Site settings award |                                                             |
 | Sep 2026, conference warm-up meetup at GetYourGuide with GYFF and FIN                   | old-today                      | **confirm**; linked to event `sep-2026` if that slug exists |
 | 9–12 Sep 2026, the first ZurichJS Conf at Technopark Zürich                             | conf-timeline                  | **confirm** it took place as planned                        |

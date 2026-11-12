@@ -44,8 +44,9 @@ const { award, photo, storyUrl, stats = [], rating } = Astro.props;
       stats.length > 0 && (
         <dl class="m-0 grid grid-cols-3 gap-4">
           {stats.map((st) => (
-            <div class="flex flex-col-reverse justify-end gap-1">
-              <dt class="text-compact text-ink-2">{st.label}</dt>
+            <div class="flex flex-col-reverse justify-end gap-1 min-w-0">
+              {/* A long word ("speaker/attendee") may break, so three columns fit at 320px. */}
+              <dt class="text-compact text-ink-2 wrap-break-word">{st.label}</dt>
               <dd class="m-0 text-section font-bold">{st.value}</dd>
             </div>
           ))}

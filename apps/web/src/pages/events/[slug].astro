@@ -97,7 +97,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
 
   {
     isPast ? (
-      <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
+      <div class="px-gut py-section flex flex-col gap-section">
         <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
         {(ev.description || ev.venue) && (
@@ -204,7 +204,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
         </section>
       </div>
     ) : (
-      <div class="px-gut pt-page-top pb-page-end grid grid-cols-auto-md gap-12 items-start">
+      <div class="px-gut py-section grid grid-cols-auto-md gap-12 items-start">
         <div class="flex flex-col gap-section col-span-full md:col-[1/-2] min-w-0">
           <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 

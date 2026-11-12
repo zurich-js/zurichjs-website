@@ -18,7 +18,7 @@ Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11. Agents (any tool) start w
 | Path                    | What                                                                                                      |
 | ----------------------- | --------------------------------------------------------------------------------------------------------- |
 | `apps/web`              | The Astro 7 site: static output, Netlify adapter, Preact islands, Tailwind 4. `netlify.toml` is here.     |
-| `packages/design`       | The design system: tokens, the generated Tailwind 4 theme, Figtree, Astro components, Preact islands.     |
+| `packages/design`       | The design system: the Tailwind 4 theme (the tokens), Figtree, Astro components, Preact islands.          |
 | `packages/events`       | Domain types, clock-based event state, presentation copy, the ticketing seam, `.ics`.                     |
 | `packages/content`      | Sanity GROQ over `fetch`, types generated from the Studio schema, mappers, sample content.                |
 | `packages/seo`          | Meta tags, JSON-LD, sitemap and `llms.txt` builders.                                                      |

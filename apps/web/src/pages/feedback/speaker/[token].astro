@@ -45,7 +45,7 @@ const sub = data
 >
   <PageOpening slot="opening" title={data ? `Feedback for ${data.speaker.name}` : 'Speaker feedback'} sub={sub} />
 
-  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-section">
+  <div class="px-gut py-section flex flex-col gap-section">
     {
       !data && (
         <Card as="section" surface="filled" padding="lg" level="h2" title={!r.ok && r.status === 502 ? 'Please try again soon' : 'Ask for a new link'} class="max-w-reading">

@@ -35,7 +35,7 @@ const when = ev.startsAt ? dateLong(ev.startsAt) : '';
       <Button href={eventHref(ev)} variant="secondary" inverse>The event page</Button>
     </div>
   </PageOpening>
-  <div class="px-gut pt-page-top pb-page-end flex flex-col gap-6">
+  <div class="px-gut py-section flex flex-col gap-6">
     <Gallery client:load items={toGallery(items)} label={`Photos and videos from ${ev.title}`} />
     {credits.length > 0 && <p class="m-0 text-compact text-ink-2">{credits.join(' · ')}</p>}
     <p class="m-0 text-compact text-ink-2 max-w-reading">

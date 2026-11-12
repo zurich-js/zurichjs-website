@@ -156,6 +156,34 @@ function membershipPorted(p: TermProps): EmailContent {
   };
 }
 
+/**
+ * Someone asked to join and the board invited them from the admin area, with the level and
+ * cycle they asked for (owner, 12th November 2026). `accountUrl` carries that choice.
+ */
+function membershipInvite(p: MembershipProps): EmailContent {
+  return {
+    subject: 'Your invitation to join ZurichJS',
+    preheader: `Finish joining as ${p.levelName}: sign in, accept the membership terms and pay with Stripe.`,
+    heading: `Hi ${firstName(p.name)}`,
+    blocks: [
+      { kind: 'p', text: 'Thank you for asking to join the Swiss JavaScript Group, the association behind ZurichJS. Your membership is ready for you:' },
+      {
+        kind: 'plan',
+        title: p.levelName,
+        price: p.price,
+        per: p.per,
+        rows: [...(p.organisationName ? ([['Organisation', p.organisationName]] as [string, string][]) : []), ['Billing', `${p.cycleLabel}, renewing automatically`]],
+      },
+      {
+        kind: 'p',
+        text: 'To join, sign in with this email address, accept the membership terms and pay with Stripe. Your membership starts with the first payment, and your certificate of membership comes by email.',
+      },
+      { kind: 'button', label: `Join as ${p.levelName}`, url: p.accountUrl },
+      { kind: 'small', text: 'You can still change the level or billing before you pay. Questions? Reply to this email.' },
+    ],
+  };
+}
+
 /** A member who paid manually (cash/bank) switched to automatic payment; nothing is charged until their paid term ends. */
 export interface AutomaticPaymentProps extends MembershipProps {
   /** "30th September 2027": the last day they already paid for. */
@@ -416,6 +444,7 @@ const TEMPLATES = {
   'membership-welcome': membershipWelcome,
   'membership-renewed': membershipRenewed,
   'membership-ported': membershipPorted,
+  'membership-invite': membershipInvite,
   'automatic-payment-set-up': automaticPaymentSetUp,
   'payment-failed': paymentFailed,
   'resignation-received': resignationReceived,

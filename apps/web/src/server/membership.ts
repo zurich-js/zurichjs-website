@@ -25,6 +25,8 @@ export interface MemberView {
   joinedAt: string | null;
   /** Has a Stripe customer, so the payment portal can open. */
   canManagePayment: boolean;
+  /** Invited by the board from the admin area (server/membership-invite.ts). */
+  invited: boolean;
   /** A resignation: waiting for the board or confirmed by it (ISO times); null otherwise. */
   resignation: { state: 'waiting' | 'confirmed'; requestedAt: string | null; confirmedAt: string | null } | null;
 }
@@ -43,6 +45,7 @@ export const memberView = (m: Member): MemberView => ({
   paymentMode: m.paymentMode,
   joinedAt: m.joinedAt,
   canManagePayment: !!m.stripeCustomerId,
+  invited: m.source === 'invited',
   resignation: resignationOf(m),
 });
 

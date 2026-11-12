@@ -3,7 +3,8 @@
  * first (ADMIN_PASSWORD, enforced by the site on every deploy), then a sub-navigation
  * of its sections. Memberships (/admin, /admin/memberships): members with search and
  * filters, one member's details, terms, certificates and audit log, confirming
- * resignations, adding members who paid manually (cash/bank), and CSV export.
+ * resignations, inviting people who asked to join, adding members who paid manually
+ * (cash/bank), and CSV export.
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
@@ -137,7 +138,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
+  const [panel, setPanel] = useState<'invite' | 'add' | null>(null);
 
   const load = async (query = q, filter = status) => {
     const params = new URLSearchParams({ ...(query ? { q: query } : {}), ...(filter ? { status: filter } : {}) });
@@ -160,12 +161,24 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
         <Button href="/api/membership/admin/export.csv" variant="black" size="sm" external={false}>
           Export CSV
         </Button>
-        <Button variant="outline-black" size="sm" onClick={() => setAdding(!adding)} aria-expanded={adding}>
+        <Button variant="outline-black" size="sm" onClick={() => setPanel(panel === 'invite' ? null : 'invite')} aria-expanded={panel === 'invite'}>
+          Invite someone to join
+        </Button>
+        <Button variant="outline-black" size="sm" onClick={() => setPanel(panel === 'add' ? null : 'add')} aria-expanded={panel === 'add'}>
           Add a member who paid manually (cash/bank)
         </Button>
       </div>
 
-      {adding && (
+      {panel === 'invite' && (
+        <InviteMember
+          onInvited={(id) => {
+            void load();
+            setSelected(id);
+          }}
+          onSignedOut={onSignedOut}
+        />
+      )}
+      {panel === 'add' && (
         <AddMember
           onAdded={(id) => {
             void load();
@@ -347,7 +360,7 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
     ['Joined', date(m.joinedAt)],
     ['Signed in before', m.hasAccount ? 'yes' : 'not yet'],
     ['Terms accepted', d.termsVersion ?? 'not yet'],
-    ['Source', m.source === 'imported' ? 'imported' : 'joined online'],
+    ['Source', m.source === 'imported' ? 'imported' : m.source === 'invited' ? 'invited by the board' : 'joined online'],
   ];
 
   return (
@@ -497,6 +510,124 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
           ))}
         </ol>
       </div>
+    </section>
+  );
+}
+
+/** Invites someone who asked to join: the level and cycle they asked for, and an email to finish joining online with automatic payment. */
+function InviteMember({ onInvited, onSignedOut }: { onInvited: (id: string) => void; onSignedOut: () => void }) {
+  const [f, setF] = useState({
+    kind: 'person' as 'person' | 'organisation',
+    name: '',
+    organisationName: '',
+    email: '',
+    level: 'supporter' as TierKey,
+    cycle: 'yearly' as Cycle,
+    notes: '',
+  });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<{ field?: string; message: string } | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+  const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((x) => ({ ...x, [k]: v }));
+  const err = (field: string) => (error?.field === field ? error.message : undefined);
+
+  return (
+    <section aria-labelledby="h-invite" class="border border-grey-frame rounded-card p-6 md:p-8 flex flex-col gap-5">
+      <div class="flex flex-col gap-1">
+        <h2 id="h-invite" class="m-0 text-2xl font-bold">
+          Invite someone to join
+        </h2>
+        <p class="m-0 text-base text-ink-2">
+          For someone who asked to become a member. Choose what they asked for; they get an email to sign in, accept the membership terms and pay with Stripe, renewing
+          automatically. They become a member with the first payment.
+        </p>
+      </div>
+      <form
+        class="flex flex-col gap-5"
+        noValidate
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (busy) return;
+          setBusy(true);
+          setError(null);
+          setDone(null);
+          const { status, body } = await api<{ member?: AdminMember; result?: 'invited' | 'reinvited'; emailed?: boolean; field?: string }>('/api/membership/admin/invite', {
+            method: 'POST',
+            body: JSON.stringify(f),
+          });
+          setBusy(false);
+          if (status === 401) return onSignedOut();
+          if (status !== 200 || !body.member) return setError({ field: body.field, message: body.error ?? 'Could not send the invitation.' });
+          const what = body.result === 'reinvited' ? 'invited again' : 'invited';
+          setDone(
+            body.emailed
+              ? `${body.member.name} ${what}: emailed to ${body.member.email} to join as ${body.member.levelName}.`
+              : `${body.member.name} ${what}, but the email was not sent. Try again later.`,
+          );
+          onInvited(body.member.id);
+          setF((x) => ({ ...x, name: '', organisationName: '', email: '', notes: '' }));
+        }}
+      >
+        <ChipGroup
+          label="Member"
+          value={f.kind}
+          onChange={(v) => set('kind', v)}
+          options={[
+            { value: 'person', label: 'A person' },
+            { value: 'organisation', label: 'An organisation' },
+          ]}
+        />
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+          <TextField
+            label={f.kind === 'organisation' ? 'Name of the person signing for it' : 'Name'}
+            name="name"
+            value={f.name}
+            invalid={!!err('name')}
+            error={err('name')}
+            onInput={(e) => set('name', (e.target as HTMLInputElement).value)}
+          />
+          {f.kind === 'organisation' && (
+            <TextField
+              label="Organisation"
+              name="organisationName"
+              value={f.organisationName}
+              invalid={!!err('organisationName')}
+              error={err('organisationName')}
+              onInput={(e) => set('organisationName', (e.target as HTMLInputElement).value)}
+            />
+          )}
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={f.email}
+            invalid={!!err('email')}
+            error={err('email')}
+            onInput={(e) => set('email', (e.target as HTMLInputElement).value)}
+          />
+        </div>
+        <ChipGroup label="Membership" value={f.level} onChange={(v) => set('level', v)} options={TIER_KEYS.map((k) => ({ value: k, label: TIERS[k].name }))} />
+        <ChipGroup
+          label="Billing"
+          value={f.cycle}
+          onChange={(v) => set('cycle', v)}
+          options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${feeLabel(TIERS[f.level], c.value)}` }))}
+        />
+        <TextArea label="Notes for the board (optional)" name="notes" rows={2} value={f.notes} onInput={(e) => set('notes', (e.target as HTMLTextAreaElement).value)} />
+        {error && !error.field && (
+          <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 font-bold">
+            {error.message}
+          </p>
+        )}
+        {done && (
+          <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 font-bold break-words">
+            {done}
+          </p>
+        )}
+        <SubmitButton busy={busy} class="self-start">
+          {busy ? 'Sending…' : 'Send invitation'}
+        </SubmitButton>
+      </form>
     </section>
   );
 }

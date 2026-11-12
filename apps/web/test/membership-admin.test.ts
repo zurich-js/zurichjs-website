@@ -14,9 +14,11 @@ import { handleAdminConfirmResignation } from '../src/pages/api/membership/admin
 import { handleAdminResign } from '../src/pages/api/membership/admin/members/[id]/resign.ts';
 import { handleAdminUndoResignation } from '../src/pages/api/membership/admin/members/[id]/undo-resignation.ts';
 import { handleAddMember, handleAdminMembers } from '../src/pages/api/membership/admin/members/index.ts';
+import { handleInvite } from '../src/pages/api/membership/admin/invite.ts';
 import { handleAdminSession } from '../src/pages/api/membership/admin/session.ts';
 import { ADMIN_COOKIE, MAX_FAILURES, SESSION_SECONDS, isAdmin, memoryAttempts, signSession, verifySession } from '../src/server/admin-auth.ts';
 import { membersCsv } from '../src/server/admin-views.ts';
+import { memberFor } from '../src/server/member-auth.ts';
 
 const PASSWORD = 'correct-horse-battery-staple';
 const SITE = 'https://zurichjs.com';
@@ -323,6 +325,57 @@ describe('admin API', () => {
     const res = await post({ ...base, sendEmail: false });
     expect(await res.json()).toMatchObject({ ok: true, emailed: false });
     expect((await store.byEmail('navy@example.com'))!.paidUntil).toBe('2027-01-01');
+  });
+
+  it('invites someone who asked to join: pending until they pay, emailed with their choice, linked on first sign-in', async () => {
+    const emails: Record<string, unknown>[] = [];
+    const keys: string[] = [];
+    const fetch = (async (url: string, init: RequestInit) => {
+      if (String(url).includes('resend')) {
+        emails.push(JSON.parse(String(init.body)));
+        keys.push(String(new Headers(init.headers).get('idempotency-key')));
+      }
+      return new Response('{"id":"x"}');
+    }) as unknown as typeof globalThis.fetch;
+    const notes: string[] = [];
+    const slack = { post: async (text: string) => (notes.push(text), '1.1'), update: async () => {}, reply: async () => {}, ephemeral: async () => {} };
+    const post = (body: object) => handleInvite(asAdmin('/api/membership/admin/invite', { method: 'POST', body }), { env, store, fetch, slack, log: () => {} });
+    const body = { kind: 'person', name: 'Margaret Hamilton', email: ' Margaret@Example.com ', level: 'basic', cycle: 'quarterly', notes: 'Asked at the October meetup' };
+
+    const res = await post(body);
+    expect(res.status).toBe(200);
+    const out = (await res.json()) as { member: { id: string }; result: string; emailed: boolean };
+    expect(out).toMatchObject({ result: 'invited', emailed: true });
+    expect(await store.get(out.member.id)).toMatchObject({
+      email: 'margaret@example.com',
+      status: 'pending',
+      source: 'invited',
+      level: 'basic',
+      cycle: 'quarterly',
+      paymentMode: 'automatic',
+      joinedAt: null,
+      paidUntil: null,
+      userId: null,
+      notes: 'Asked at the October meetup',
+    });
+    expect(emails.at(-1)).toMatchObject({ to: ['margaret@example.com'], subject: 'Your invitation to join ZurichJS' });
+    expect(String(emails.at(-1)!.html)).toContain('href="https://zurichjs.com/membership/account?level=basic&amp;cycle=quarterly"');
+    expect(String(emails.at(-1)!.text)).toContain('Join as Basic Member');
+    expect(notes.at(-1)).toContain('Invited to join: *Margaret Hamilton*');
+
+    // Inviting again with another choice updates it and sends a new email (a new idempotency key).
+    const again = await post({ ...body, level: 'supporter', cycle: 'yearly' });
+    expect(await again.json()).toMatchObject({ result: 'reinvited', emailed: true });
+    expect(await store.get(out.member.id)).toMatchObject({ level: 'supporter', cycle: 'yearly', status: 'pending' });
+    expect(new Set(keys).size).toBe(2);
+
+    // Their first sign-in links the record by email, and the account page opens on "Finish joining".
+    const linked = await memberFor({ id: 'user_margaret', email: 'margaret@example.com' }, store);
+    expect(linked).toMatchObject({ id: out.member.id, userId: 'user_margaret', status: 'pending' });
+
+    // Someone who is a member already is not invited.
+    expect((await post({ ...body, email: 'ada@example.com' })).status).toBe(409);
+    expect((await (await post({ ...body, email: 'not-an-email' })).json()) as object).toMatchObject({ field: 'email' });
   });
 
   it('exports CSV, neutralising spreadsheet formulas', async () => {

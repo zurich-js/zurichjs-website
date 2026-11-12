@@ -2,6 +2,7 @@
 import { useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
+import { Menu } from '@zurichjs/design/islands/Menu';
 import { Modal } from '@zurichjs/design/islands/Modal';
 import { StarRating } from '@zurichjs/design/islands/StarRating';
 
@@ -31,6 +32,14 @@ export default function IslandsDemo() {
         <Button variant="secondary" disabled>
           Disabled
         </Button>
+        <Menu
+          label="Add to calendar"
+          items={[
+            { label: 'Google Calendar', href: '#menu-google' },
+            { label: 'Outlook', href: '#menu-outlook' },
+            { label: 'Apple / iCal', href: '#menu-ics' },
+          ]}
+        />
       </div>
       <Modal open={open} onClose={() => setOpen(false)} labelledBy="demo-modal-title">
         <div class="flex flex-col gap-4 p-6">

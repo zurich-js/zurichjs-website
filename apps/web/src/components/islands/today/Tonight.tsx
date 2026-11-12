@@ -4,7 +4,6 @@ import {
   itemMinutes,
   itemStartsAt,
   talkFormatLine,
-  scheduleFacts,
   timesLine,
   todayPhase,
   untimedNote,
@@ -14,7 +13,7 @@ import {
 } from '@zurichjs/events';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cardClass, cx, tagClass } from '@zurichjs/design/recipes';
+import { cx, tagClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { Check } from '@zurichjs/design/islands/Check';
@@ -23,7 +22,7 @@ import { RichText } from '~/components/RichText';
 /**
  * The Tonight page (/today). Several islands from this one module share a
  * tiny store and the clock:
- *   part="opening"   heading, now / next cards and actions, on black
+ *   part="opening"   heading, date, venue and actions, on black
  *   part="programme" the running order with a "Now" marker and per-talk rating
  *   part="feedback"  "How was tonight?", only from the start until feedback closes
  * They server-render as of the build, then follow the browser clock every
@@ -123,7 +122,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
     );
   }
 
-  if (part === 'opening') return <Opening ev={ev} phase={phase} now={now} names={names} rated={rated} />;
+  if (part === 'opening') return <Opening ev={ev} phase={phase} now={now} rated={rated} />;
 
   if (!ev) return null;
   const items = ev.agenda.map((a, i) => ({ ...a, i, at: itemStartsAt(ev, a) }));
@@ -218,7 +217,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                 )}
               </div>
               {mine.length > 0 && (
-                <div class="flex flex-wrap gap-2 justify-self-start md:justify-self-end col-span-full md:col-auto">
+                <div class="flex flex-wrap md:flex-col md:items-end gap-2 justify-self-start md:justify-self-end col-span-full md:col-auto">
                   {mine.map((x) => {
                     const many = mine.length > 1;
                     const name = x.speakerId ? names[x.speakerId] : undefined;
@@ -255,9 +254,9 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
   );
 }
 
-function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPhase; now: Date; names: Record<string, string>; rated: Record<string, number> }) {
+function Opening({ ev, phase, now, rated }: { ev?: Event; phase: TodayPhase; now: Date; rated: Record<string, number> }) {
   const h1 = 'm-0 text-title font-bold max-w-wide text-balance';
-  const sub = 'm-0 text-lead max-w-reading text-pretty';
+  const sub = 'm-0 min-h-12 text-lead max-w-reading text-pretty';
 
   if (!ev || phase === 'none') {
     return (
@@ -283,27 +282,20 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   const date = dateLong(ev.startsAt!);
   const times = timesLine(ev);
   const where = ev.venue ? `${ev.venue.name}, ${venueAddress(ev.venue)}` : 'Venue to be confirmed';
-  const findVenue = ev.venue ? (
-    <a href="#venue" class="text-white underline underline-offset-3">
-      {where}
-    </a>
-  ) : (
-    where
-  );
 
   if (phase === 'upcoming') {
     return (
-      <div class="flex flex-col gap-4">
-        <div class="text-compact font-bold text-grey-mid">Next meetup</div>
-        <h1 class={h1}>{ev.title}</h1>
-        <p class={sub}>
-          <b>{date}</b>
-          {times && <> · {times}</>}
-          <br />
-          <span class="text-grey-light">{findVenue}</span>
-        </p>
-        <p class="m-0 text-body text-grey-light max-w-reading">This page becomes the evening’s guide on the day: arrival, the running order and talk ratings.</p>
-        <div class="flex flex-wrap gap-3 pt-1">
+      <div class="flex flex-col gap-8">
+        <div class="flex flex-col gap-3">
+          <h1 class={h1}>{ev.title}</h1>
+          <p class={sub}>
+            <b>{date}</b>
+            {times && <> · {times}</>}
+          </p>
+          <p class="m-0 text-body text-grey-light max-w-reading">{where}</p>
+          <p class="m-0 text-body text-grey-light max-w-reading">This page becomes the evening’s guide on the day: arrival, the running order and talk ratings.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
           <Button href={href} variant="cta" grow>
             Event details and RSVP
           </Button>
@@ -320,69 +312,18 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   const items = ev.agenda.map((a, i) => ({ ...a, i, at: itemStartsAt(ev, a) }));
   const t = now.getTime();
   const cur = phase === 'live' ? items.reduce((acc, it) => (it.at && it.at.getTime() <= t ? it.i : acc), -1) : -1;
-  const nowItem = cur >= 0 ? items[cur] : undefined;
-  const nextItem = phase === 'live' ? items.slice(cur + 1).find((it) => it.at) : items.find((it) => it.kind !== 'doors' && it.at);
-  const who = (it: { talk?: { speakerIds: string[] }; note?: string }) => (it.talk ? it.talk.speakerIds.map((id) => names[id] ?? id).join(', ') : (it.note ?? ''));
-  const { doors, starts } = scheduleFacts(ev);
   const lastTalk = items.filter((it) => it.talk && (phase === 'after' || it.i <= cur)).pop();
   const unratedLast = !!lastTalk && !Object.keys(rated).some((k) => k.startsWith(`${lastTalk.talk!.id ?? lastTalk.title}:`));
 
   return (
-    <div class="flex flex-col gap-4">
-      <div class="text-compact font-bold text-grey-mid">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
-      <h1 class={h1}>{ev.title}</h1>
-      <p class={sub}>
-        <b>{date}</b>
-        {times && <> · {times}</>}
-      </p>
-      <div class="grid grid-cols-auto-md gap-3 max-w-wide" aria-live="polite">
-        {/* The title leads; when it happens follows it (no label above a title). */}
-        <div class={cardClass('inverse', 'md')}>
-          <div class="text-card-title font-bold text-pretty">
-            {phase === 'today' ? 'Find the venue' : phase === 'after' ? 'Thanks for coming' : nowItem ? nowItem.title : 'Find a seat'}
-          </div>
-          <div class="text-compact font-bold text-white">
-            {phase === 'today'
-              ? doors
-                ? `Doors open at ${doors}`
-                : starts
-                  ? `Starts at ${starts}`
-                  : 'Arriving'
-              : phase === 'after'
-                ? 'That’s a wrap'
-                : nowItem
-                  ? `Now${nowItem.time ? ` · since ${nowItem.time}` : ''}`
-                  : starts
-                    ? `Started at ${starts}`
-                    : 'Under way'}
-          </div>
-          <div class="text-compact text-grey-light">
-            {phase === 'today'
-              ? findVenue
-              : phase === 'after'
-                ? ev.agenda.some((a) => a.talk)
-                  ? 'Rate the talks while they are fresh.'
-                  : 'Tell us how the evening went.'
-                : nowItem
-                  ? who(nowItem)
-                  : findVenue}
-          </div>
-          {phase === 'today' && ev.venue && (
-            <a href={directionsUrl(ev.venue)} target="_blank" rel="noopener" class="text-compact font-bold text-white underline underline-offset-3 mt-1 self-start">
-              Get directions (opens Google Maps)
-            </a>
-          )}
-        </div>
-        {phase !== 'after' && nextItem && (
-          <div class={cardClass('inverse', 'md')}>
-            <div class="text-card-title font-bold text-pretty">{nextItem.title}</div>
-            <div class="text-compact font-bold text-grey-light">
-              {phase === 'today' ? 'First up' : 'Next'}
-              {nextItem.time ? ` · ${nextItem.time}` : ''}
-            </div>
-            <div class="text-compact text-grey-light">{who(nextItem)}</div>
-          </div>
-        )}
+    <div class="flex flex-col gap-8">
+      <div class="flex flex-col gap-3">
+        <h1 class={h1}>{ev.title}</h1>
+        <p class={sub}>
+          <b>{date}</b>
+          {times && <> · {times}</>}
+        </p>
+        <p class="m-0 text-body text-grey-light max-w-reading">{where}</p>
       </div>
       <div class="flex flex-wrap gap-3">
         {phase === 'today' ? (

@@ -32,12 +32,17 @@ const look = (a: number) => (a === 0 ? { op: 1, s: 1 } : a === 1 ? { op: 0.5, s:
  * the arrow keys, swiping on touch screens and horizontal trackpad scrolling. Horizontal gestures are
  * captured here (touch-action and overscroll-behavior), so they never trigger the browser's back or
  * forward navigation. It advances on its own only while visible, and never under reduced motion.
+ *
+ * It holds while the mouse rests on the active card or keyboard focus is inside, and carries on
+ * AUTO_MS after that ends. The band is the full width of the screen, so hovering anywhere on it, the
+ * page scrolling it under a still cursor, or focus left on an arrow after a click must not hold it.
  */
 export function SpeakerCarousel({ speakers }: Props) {
   const n = speakers.length;
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [hold, setHold] = useState(false); // hover or focus inside
+  const [focusHold, setFocusHold] = useState(false); // keyboard focus inside
+  const [hover, setHover] = useState(false); // the mouse moved onto the active card
   const [inView, setInView] = useState(false);
   const [drag, setDrag] = useState(0);
   const root = useRef<HTMLDivElement>(null);
@@ -46,7 +51,11 @@ export function SpeakerCarousel({ speakers }: Props) {
   const wheel = useRef({ acc: 0, until: 0 });
   const moved = useRef(false); // a drag happened: the click that follows must not open a card
 
-  const step = (d: number) => setActive((t) => (((t + d) % n) + n) % n);
+  const step = (d: number) => {
+    setHover(false); // the active card changes, so the mouse is no longer on it
+    setActive((t) => (((t + d) % n) + n) % n);
+  };
+  const hold = focusHold || hover;
   const stepRef = useRef(step);
   stepRef.current = step;
 
@@ -70,30 +79,26 @@ export function SpeakerCarousel({ speakers }: Props) {
       }
     };
     el?.addEventListener('wheel', onWheel, { passive: false });
-    // The arrow keys work anywhere inside; hovering or focusing inside holds the rotation.
+    // The arrow keys work anywhere inside; keyboard focus inside holds the rotation. Focus a mouse
+    // click leaves on an arrow or Pause does not match :focus-visible, so it does not hold.
     const r = root.current;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
       e.preventDefault();
       stepRef.current(e.key === 'ArrowRight' ? 1 : -1);
     };
-    const holdOn = () => setHold(true);
-    const holdOff = () => setHold(false);
+    const focusIn = (e: FocusEvent) => setFocusHold((e.target as Element).matches(':focus-visible'));
     const focusOut = (e: FocusEvent) => {
-      if (!r?.contains(e.relatedTarget as Node | null)) setHold(false);
+      if (!r?.contains(e.relatedTarget as Node | null)) setFocusHold(false);
     };
     r?.addEventListener('keydown', onKey);
-    r?.addEventListener('mouseenter', holdOn);
-    r?.addEventListener('mouseleave', holdOff);
-    r?.addEventListener('focusin', holdOn);
+    r?.addEventListener('focusin', focusIn);
     r?.addEventListener('focusout', focusOut);
     return () => {
       io.disconnect();
       el?.removeEventListener('wheel', onWheel);
       r?.removeEventListener('keydown', onKey);
-      r?.removeEventListener('mouseenter', holdOn);
-      r?.removeEventListener('mouseleave', holdOff);
-      r?.removeEventListener('focusin', holdOn);
+      r?.removeEventListener('focusin', focusIn);
       r?.removeEventListener('focusout', focusOut);
     };
   }, []);
@@ -170,6 +175,12 @@ export function SpeakerCarousel({ speakers }: Props) {
               tabIndex={isActive ? 0 : -1}
               aria-hidden={isActive ? undefined : 'true'}
               draggable={false}
+              // Only a real mouse movement counts: Chromium also fires pointer events when the page
+              // scrolls under a still cursor, and those carry no movement.
+              onPointerMove={(e) => {
+                if (isActive && e.pointerType === 'mouse' && (e.movementX || e.movementY)) setHover(true);
+              }}
+              onPointerLeave={() => setHover(false)}
               onClick={(e) => {
                 swallowClick(e);
                 if (!isActive && !e.defaultPrevented) {

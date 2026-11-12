@@ -59,7 +59,7 @@
   },
   "apps/web/src/pages/events/index.astro": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 3
+      "count": 2
     }
   },
   "apps/web/src/pages/feedback/speaker/[token].astro": {

@@ -15,7 +15,7 @@
 | `src/fonts.css`          | `@font-face` for sites that do not use the Astro Fonts API. Kept in step with `font.ts` (a test checks the family).                                                                                                                                                               |
 | `src/recipes.ts`         | Class recipes shared by components and their Preact twins: buttons, tags, chips, cards, notices, type roles, options, monograms.                                                                                                                                                  |
 | `src/components/*.astro` | Static components. They take **props only** and never fetch content.                                                                                                                                                                                                              |
-| `src/islands/*.tsx`      | Interactive Preact primitives and twins: Button, Notice, ChoiceCard, Tag, SegmentedControl, Field, Modal, StarRating, RatingSheet, SpeakerArc.                                                                                                                                    |
+| `src/islands/*.tsx`      | Interactive Preact primitives and twins: Button, Notice, ChoiceCard, Tag, SegmentedControl, Field, Menu, Modal, StarRating, RatingSheet, SpeakerArc.                                                                                                                              |
 
 **Changing a value:** edit `theme.css`; the site and every TypeScript reader pick it up, with nothing to regenerate. `theme.ts` loads it with Vite's `?raw` import (Vitest is told to let it through in `vitest.config.ts`).
 
@@ -71,6 +71,7 @@ Pages pick components and props and never write pixels: no `text-[17px]`, `min-h
 | `ChoiceCard`                          | A whole card that is one choice (membership tier, sponsorship package), on a native radio.                             |
 | `Notice`                              | Notes, success and error panels. Green only for success, red only for errors.                                          |
 | `SegmentedControl`                    | One pill with segments (billing, how often), on native radios: 48px, a 4px track and 40px options.                     |
+| `Menu` (island)                       | A button that opens a short list of links under it (Add to calendar: Google, Outlook, Apple), menu-button keyboard.    |
 | `LogoWall`, `CompanyWall`, `LogoTile` | Logo walls in a `PackedGrid`: grey cells, logos black at rest, colour on a white (or the partner's) cell on hover.     |
 | `LogoRow`                             | Inline logos (an event's thanks): no cells, own colours, optional caption.                                             |
 
@@ -96,10 +97,11 @@ Nine roles, each a size with its line height (`--text-*` in `theme.css`, so `tex
 
 ## Layout
 
-- **One breakpoint: 800px (`md:`).** `lg:` (1100px) is only for grids that need a third or fourth column.
+- **One breakpoint: 800px (`md:`).** `lg:` (1100px) is only for grids that need a third or fourth column. `max-phone:` (below 480px) is only for `grow` buttons, which go full width on phones and keep their own width from there (owner, 12th November 2026).
 - **Gutter:** the side padding is `max(var(--px), (100% − 1280px) / 2)`, where `--px` is 20px on phones and 48px from 800px. Use `px-gut` on full-width sections and `mx-gut` on blocks that sit inside the column.
 - **Section rhythm:** `gap-section` between sections, and `py-section` around a page's content, so the space under the opening and above the footer matches the space between sections (owner, 12th November 2026). `page-top` and `page-end` are only for the home hero and the footer.
 - **Widths:** `max-w-reading` (720px) for text, `max-w-wide` (880px), `max-w-form` (640px), `max-w-site` (1280px).
+- **Openings:** every page opening is at least `min-h-opening` tall (with the header, the black opening fills the screen, up to 800px: `min(100svh, 800px)`), its text centred, so a short opening never looks empty (owner, 12th November 2026). An event's artwork sits beside the title only when the event has one.
 - **Header:** 80px (`h-header`). It overlaps the top of the page, and the opening is padded by it (`pt-header`), so the black opening starts at the top of the page.
 
 ## Radii
@@ -112,7 +114,7 @@ Nine roles, each a size with its line height (`--text-*` in `theme.css`, so `tex
 | `rounded-card`  | 24px                     | Cards where text touches the edge, photos        |
 | `rounded-block` | `clamp(24px, 3vw, 40px)` | Conference module, the "speak" block, CTA blocks |
 
-**Rounding formula:** outer radius = inner radius + padding + border. A card is 24px when text touches its edge, and 24px + padding when a button touches it. A card holding a small card that has a button is 40px + padding. A shape nested in a card gets the card's radius minus its padding, at least 12px (`rounded-(--radius-nested)`). `Card` works this out from its `edge` prop; pages never pick a card radius.
+**Rounding formula:** outer radius = inner radius + padding + border. A card is 24px when text touches its edge, and also when its footer holds buttons (owner, 12th November 2026; a better rule for cards with buttons comes later). `edge="control"` (24px + padding) is opt-in. A card holding a small card that has a button is 40px + padding. A shape nested in a card gets the card's radius minus its padding, at least 12px (`rounded-(--radius-nested)`). `Card` works this out from its `edge` prop; pages never pick a card radius.
 
 ## Focus, motion and accessibility
 
@@ -174,7 +176,7 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 - **Saved form answers** are announced in a small bar at the bottom of the screen, only while the form holds answers.
 - **Padding is kept tight** (`card-sm` 16px, `card-md` 16–20px, `card-lg` 20–28px), because a card's radius is 24px plus its padding when a button touches its edge.
 - **Media cards:** an image in the `media` slot sits flush with the card's edges, with its own corners and background dropped so it meets the text flat. The card is a size container: the image goes beside the text once the card is 512px wide (`@lg`) and on top below that, whatever the screen. `mediaLayout="stack"` keeps it on top (team cards, with `mediaRatio="square"`); a stacked link card shows its arrow as a round button in the image's top-right corner.
-- **Event lists** (`EventRow`): a small image and text card (the event's artwork, else a photo from the evening, else a date tile), the date leading the facts row. Past meetups pass `quiet`: the photo is dimmed and the title greyed, never the text's contrast.
+- **Event lists** (`EventRow`): the home hero's next-meetup card, a link card with the image flush to its edges (`Card mediaLayout="row"`: on top in a narrow card, a near-square 5:4 column on the left from 512px; the event's artwork, else a photo from the evening, else a date tile), the date leading the facts row. Past meetups are the same card at lower opacity (`dim`), full again on hover or focus; artwork and text keep their colours (owner, 12th November 2026).
 - **Social links** use one scheme everywhere: white or outlined, with each network's mark in the text colour (black on white, white on black), never its brand colours.
 
 ## Logos (owner, 12th November 2026)

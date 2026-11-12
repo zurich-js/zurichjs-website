@@ -53,13 +53,12 @@ describe('tokens', () => {
   });
 });
 
-describe('heading recipes follow the tokens', () => {
-  it('SectionHeading sizes use the h2, h2Medium and h3 tokens', async () => {
-    const { headingSizes } = await import('../src/recipes.ts');
-    const { headings } = await import('../src/tokens.ts');
-    const strip = (s: string) => s.replace(/\s/g, '');
-    expect(headingSizes.lg).toContain(`text-[${strip(headings.h2)}]`);
-    expect(headingSizes.md).toContain(`text-[${strip(headings.h2Medium)}]`);
-    expect(headingSizes.sm).toContain(`text-[${strip(headings.h3)}]`);
+describe('type recipes use the theme roles', () => {
+  it('every heading and text size is a generated role, never a pixel value', async () => {
+    const { headingClass, textClass } = await import('../src/recipes.ts');
+    for (const cls of [...Object.values(headingClass), ...Object.values(textClass)]) {
+      expect(cls).toMatch(/^text-[a-z-]+$/);
+      expect(Object.keys(text)).toContain(cls.slice('text-'.length));
+    }
   });
 });

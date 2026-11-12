@@ -1,0 +1,28 @@
+---
+/**
+ * "Where our speakers come from": the companies' logos as a logo wall (LogoTile in a PackedGrid), black at
+ * rest and in colour on hover, each sized to the same visual weight. A symbol-only logo shows its name.
+ */
+import PackedGrid from './PackedGrid.astro';
+import LogoTile from './LogoTile.astro';
+import { logoSize } from '../logos';
+
+interface Props {
+  companies: { name: string; logo: string; ratio: number; label?: boolean; knockout?: boolean }[];
+  label: string;
+}
+const { companies, label } = Astro.props;
+const items = companies.map((c) => ({ id: c.name, sizes: { base: { cols: 2, rows: 1 }, md: { cols: 2, rows: 1 } } }));
+const byName = new Map(companies.map((c) => [c.name, c]));
+---
+
+<PackedGrid items={items} columns={{ base: 4, md: 12 }} label={label}>
+  {
+    (id: string) => {
+      const c = byName.get(id)!;
+      // A symbol with its name beside it stays small, so the pair fits the cell like a wordmark.
+      const wh = c.label ? { w: Math.round(30 * c.ratio), h: 30 } : logoSize(c.ratio)!;
+      return <LogoTile name={c.name} logo={c.logo} width={wh.w} height={wh.h} label={c.label} knockout={c.knockout} />;
+    }
+  }
+</PackedGrid>

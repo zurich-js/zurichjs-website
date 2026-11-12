@@ -1,0 +1,48 @@
+---
+/**
+ * Logos straight on the page, with no cells, where they belong to the page rather than a wall (an event's
+ * "Thanks to", the partner groups on /partners). Always in their own colours, sized to equal visual
+ * weight, with an optional caption under each. Replaces SupporterList.
+ */
+import type { Partner } from '@zurichjs/events';
+import { logoSize, partnerRel } from '../logos';
+
+interface Props {
+  items: { partner: Partner; caption?: string }[];
+}
+const { items } = Astro.props;
+---
+
+<ul class="m-0 p-0 list-none flex flex-wrap items-end gap-x-12 gap-y-8">
+  {
+    items.map(({ partner: p, caption }) => {
+      const size = logoSize(p.logoRatio, 6400, 64) ?? { w: 180, h: 56 };
+      const logo = p.logo ? (
+        <img
+          src={p.logo}
+          alt={p.url ? `${p.name} (opens in a new tab)` : p.name}
+          width={size.w}
+          height={size.h}
+          loading="lazy"
+          decoding="async"
+          class="block h-auto max-w-full object-contain"
+          style={{ width: `${size.w}px` }}
+        />
+      ) : (
+        <span class="font-bold text-body">{p.name}</span>
+      );
+      return (
+        <li class="flex flex-col gap-2 min-w-0">
+          {p.url ? (
+            <a href={p.url} target="_blank" rel={partnerRel(p)} class="self-start no-underline text-black">
+              {logo}
+            </a>
+          ) : (
+            <div class="self-start">{logo}</div>
+          )}
+          {caption && <span class="text-compact text-ink-2">{caption}</span>}
+        </li>
+      );
+    })
+  }
+</ul>

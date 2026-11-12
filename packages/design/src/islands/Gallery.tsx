@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { sizedSrc, srcsetFor } from '../images.ts';
-import { cx } from '../recipes.ts';
+import { buttonClass, cx } from '../recipes.ts';
 
 export interface GalleryItem {
   id: string;
@@ -146,10 +146,10 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
         {cur && open !== null && (
           <figure class="m-0 flex flex-col gap-3 p-3 md:p-6">
             <div class="flex items-center justify-between gap-3">
-              <span class="text-[15px] font-bold tabular-nums" aria-live="polite">
+              <span class="text-compact font-bold tabular-nums" aria-live="polite">
                 {open + 1} of {items.length}
               </span>
-              <button type="button" onClick={close} class="min-h-[44px] px-5 rounded-pill bg-white text-black font-bold text-[16px] cursor-pointer" autoFocus>
+              <button type="button" onClick={close} class={buttonClass({ inverse: true })} autoFocus>
                 Close
               </button>
             </div>
@@ -185,14 +185,14 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                 />
               )}
             </div>
-            <figcaption id={captionId} class="flex flex-col gap-1 text-[16px] leading-normal">
+            <figcaption id={captionId} class="flex flex-col gap-1 text-compact">
               {cur.caption ? <span>{cur.caption}</span> : <span class="sr-only">{cur.alt}</span>}
               <span class="text-grey-light">
                 {cur.credit}
                 {cur.context && (
                   <>
                     {cur.credit ? ' · ' : ''}
-                    <a href={cur.context.href} class="text-white underline underline-offset-[3px]">
+                    <a href={cur.context.href} class="text-white underline underline-offset-3">
                       {cur.context.label}
                     </a>
                   </>
@@ -201,18 +201,10 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
             </figcaption>
             {items.length > 1 && (
               <div class="flex justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => step(-1)}
-                  class="min-h-[44px] px-5 rounded-pill border-2 border-white text-white bg-transparent font-bold text-[16px] cursor-pointer"
-                >
+                <button type="button" onClick={() => step(-1)} class={buttonClass({ variant: 'plain', inverse: true })}>
                   ← Previous
                 </button>
-                <button
-                  type="button"
-                  onClick={() => step(1)}
-                  class="min-h-[44px] px-5 rounded-pill border-2 border-white text-white bg-transparent font-bold text-[16px] cursor-pointer"
-                >
+                <button type="button" onClick={() => step(1)} class={buttonClass({ variant: 'plain', inverse: true })}>
                   Next →
                 </button>
               </div>

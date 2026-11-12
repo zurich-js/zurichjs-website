@@ -1,6 +1,7 @@
 import { feedbackAvailability, feedbackNotice, type Event, type EventState } from '@zurichjs/events';
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
+import { noticeClass } from '@zurichjs/design/recipes';
 import { useEventState } from '../useEventState.ts';
 import { feedbackRequested } from './feedbackMode.ts';
 
@@ -24,16 +25,18 @@ export default function FeedbackGate({ ev, initial, preview = false }: { ev: Eve
   }, [shown]);
   if (!notice) return null;
   return (
-    <section id="feedback" aria-labelledby="h-feedback-gate" class="bg-yellow rounded-card p-5 flex flex-col gap-2 scroll-mt-6">
-      <h2 id="h-feedback-gate" class="m-0 text-[20px] font-bold">
-        {notice.title}
-      </h2>
-      <p class="m-0 text-[17px] leading-normal">{notice.body}</p>
-      {notice.evening && (
-        <Button href={`/feedback?event=${ev.slug}`} variant="black" class="self-start text-[17px] mt-1">
-          Feedback on the evening
-        </Button>
-      )}
+    <section id="feedback" aria-labelledby="h-feedback-gate" class={noticeClass('note', 'scroll-mt-6')}>
+      <div class="flex flex-col gap-1.5 min-w-0">
+        <h2 id="h-feedback-gate" class="m-0 font-bold text-card-title">
+          {notice.title}
+        </h2>
+        <p class="m-0 text-compact">{notice.body}</p>
+        {notice.evening && (
+          <Button href={`/feedback?event=${ev.slug}`} class="self-start mt-1">
+            Feedback on the evening
+          </Button>
+        )}
+      </div>
     </section>
   );
 }

@@ -58,6 +58,7 @@
   --spacing-card-sm: 16px;
   --spacing-card-md: clamp(20px, 2.4vw, 28px);
   --spacing-card-lg: clamp(24px, 3vw, 36px);
+  --spacing-header: 80px;
   --spacing-control: 48px;
   --spacing-chip: 44px;
   --spacing-tag-sm: 24px;

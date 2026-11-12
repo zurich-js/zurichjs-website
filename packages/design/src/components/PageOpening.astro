@@ -1,26 +1,28 @@
 ---
-/** The black opening of every inner page: breadcrumb, status pills, title, one sentence (slot "sub" or prop), actions (default slot). */
+/** The black opening of every inner page: breadcrumb, status tags, title, one sentence (slot "sub" or prop), actions (default slot). */
 import { cx } from '../recipes';
+import Tag from './Tag.astro';
 
 interface Props {
   title: string;
   sub?: string;
   crumb?: { label: string; href: string; here: string };
-  pills?: { text: string; yellow?: boolean }[];
+  /** Status tags above the title ("Open", "Today"). */
+  pills?: { text: string }[];
   /** Narrower bottom padding for pages that start with a list right away. */
   compact?: boolean;
 }
 const { title, sub, crumb, pills, compact } = Astro.props;
 // Long titles get smaller type (Bogdan's review: 72px for long titles is too big).
-const titleSize = title.length <= 24 ? 'text-[clamp(36px,5vw,64px)]' : title.length <= 48 ? 'text-[clamp(32px,4vw,52px)]' : 'text-[clamp(28px,3.2vw,44px)]';
+const titleSize = title.length <= 24 ? 'text-title' : title.length <= 48 ? 'text-section' : 'text-subsection';
 const hasSub = !!sub || Astro.slots.has('sub');
 ---
 
 <section class={cx('px-gut flex flex-col gap-[18px] pt-[clamp(16px,3vw,40px)]', compact ? 'pb-[clamp(28px,4vw,48px)]' : 'pb-[clamp(36px,5vw,64px)]')}>
   {
     crumb && (
-      <nav aria-label="Breadcrumb" class="text-[16px] text-grey-mid flex gap-2 flex-wrap">
-        <a href={crumb.href} class="text-white underline underline-offset-[3px]">
+      <nav aria-label="Breadcrumb" class="text-compact text-grey-mid flex gap-2 flex-wrap">
+        <a href={crumb.href} class="text-white underline underline-offset-3">
           {crumb.label}
         </a>
         <span aria-hidden="true">/</span>
@@ -32,12 +34,21 @@ const hasSub = !!sub || Astro.slots.has('sub');
     pills && pills.length > 0 && (
       <div class="flex flex-wrap gap-2" data-state-pills>
         {pills.map((p) => (
-          <span class={cx('text-[15px] font-bold px-3.5 py-1.5 rounded-pill text-black', 'bg-white')}>{p.text}</span>
+          <Tag size="md" tone="white">
+            {p.text}
+          </Tag>
         ))}
       </div>
     )
   }
-  <h1 class:list={["m-0 leading-[1.1] font-bold max-w-[1000px] text-balance", titleSize]}>{title}</h1>
-  {hasSub && <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[700px] text-pretty">{sub}<slot name="sub" /></p>}
+  <h1 class={cx('m-0 font-bold max-w-[1000px] text-balance', titleSize)}>{title}</h1>
+  {
+    hasSub && (
+      <p class="m-0 text-lead max-w-[700px] text-pretty">
+        {sub}
+        <slot name="sub" />
+      </p>
+    )
+  }
   <slot />
 </section>

@@ -8,7 +8,8 @@ import PointList from '@zurichjs/design/components/landing/PointList.astro';
 import TopicGroups from '@zurichjs/design/components/landing/TopicGroups.astro';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import Tag from '@zurichjs/design/components/Tag.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, SITE, content, nextMeetupHref, ticketing } from '~/lib/content';
 
@@ -45,9 +46,9 @@ const faqs = [
 ];
 
 const STATS = [
-  { n: '900+', h: 'Active members', d: 'Developers from Zurich, Winterthur, Basel, and beyond. Consistent 70-80% attendance rate.', tone: 'grey' as const },
-  { n: 'Free', h: 'Monthly meetups', d: 'Every meetup is free. A non-profit funded by partners, members and donations.', tone: 'grey' as const },
-  { n: 'Juniors to CTOs', h: 'Real connections', d: 'From juniors to CTOs. Technical exchange and networking that happens naturally.', tone: 'grey' as const },
+  { n: '900+', h: 'Active members', d: 'Developers from Zurich, Winterthur, Basel, and beyond. Consistent 70-80% attendance rate.' },
+  { n: 'Free', h: 'Monthly meetups', d: 'Every meetup is free. A non-profit funded by partners, members and donations.' },
+  { n: 'Juniors to CTOs', h: 'Real connections', d: 'From juniors to CTOs. Technical exchange and networking that happens naturally.' },
 ];
 
 const WORKS = [
@@ -113,15 +114,15 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
       travel from Basel, Winterthur, even across borders, because there’s something powerful about being in the same room with people who don’t look or think exactly like you.
     </Fragment>
     <div class="flex flex-wrap gap-3 pt-1.5">
-      <Button href={nextHref} variant="yellow" grow>See the next meetup</Button>
-      <Button href="/events" variant="outline-white" grow>View upcoming events</Button>
+      <Button href={nextHref} variant="cta" grow>See the next meetup</Button>
+      <Button href="/events" variant="secondary" inverse grow>View upcoming events</Button>
     </div>
   </PageOpening>
 
   <div class="flex flex-col gap-[clamp(64px,8vw,112px)] pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)]">
     <section aria-labelledby="h-why" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-[clamp(28px,5vw,72px)] items-start">
-      <h2 id="h-why" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Why we started this</h2>
-      <div class="flex flex-col gap-4 text-[18px] leading-[1.6] text-ink-2 max-w-[680px]">
+      <h2 id="h-why" class="m-0 text-section font-bold">Why we started this</h2>
+      <div class="flex flex-col gap-4 text-body text-ink-2 max-w-reading">
         <p class="m-0">
           After the pandemic, Zurich’s developer meetup scene had become a piece of history. Monthly gatherings disappeared. The energy was gone. In July 2024, our founders met at a ReactJS meetup and realized: the Zurich tech space is filled with potential, and we
           needed to shape that into reality.
@@ -137,52 +138,56 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
     <section aria-label="ZurichJS in numbers" class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-4">
       {
         STATS.map((s) => (
-          <Surface tone={s.tone} class="p-7 flex flex-col gap-2.5">
+          <Card>
             <div class="text-[clamp(30px,3.2vw,44px)] leading-[1.05] font-bold">{s.n}</div>
-            <h3 class="m-0 text-[22px] font-bold">{s.h}</h3>
-            <p class="m-0 text-[17px] leading-[1.55]">{s.d}</p>
-          </Surface>
+            <h3 class="m-0 text-card-title font-bold">{s.h}</h3>
+            <p class="m-0 text-body">{s.d}</p>
+          </Card>
         ))
       }
     </section>
 
     <section aria-labelledby="h-built" class="px-gut flex flex-col gap-[clamp(40px,5vw,64px)]">
       <div class="flex flex-col gap-4 max-w-[760px]">
-        <h2 id="h-built" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">How we built this</h2>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        <h2 id="h-built" class="m-0 text-section font-bold">How we built this</h2>
+        <p class="m-0 text-body text-ink-2">
           We started with zero. No social media followers. No sponsors. No speakers. Just a LinkedIn page, an inactive Meetup group with no past events, and relationships that let us host in borrowed spaces.
         </p>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           What we did have: a belief that <strong class="text-black">Trust, Authenticity, and Quality</strong> matter more than scale. That conference-level experiences can happen in relaxed meetup spaces. That everyone should feel included, regardless of background
           or experience level.
         </p>
       </div>
 
       <div class="flex flex-col gap-6">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">What makes this work</h3>
+        <h3 class="m-0 text-subsection font-bold">What makes this work</h3>
         <PointList items={WORKS} />
       </div>
 
       <div class="flex flex-col gap-6">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Topics we cover</h3>
+        <h3 class="m-0 text-subsection font-bold">Topics we cover</h3>
         <TopicGroups groups={TOPICS} />
       </div>
 
       <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-2.5">
-          <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Who should join?</h3>
-          <p class="m-0 text-[18px] leading-[1.55] text-ink-2">ZurichJS welcomes everyone interested in JavaScript and web development:</p>
+          <h3 class="m-0 text-subsection font-bold">Who should join?</h3>
+          <p class="m-0 text-body text-ink-2">ZurichJS welcomes everyone interested in JavaScript and web development:</p>
         </div>
         <PointList items={WHO} min={280} />
       </div>
 
       <div class="flex flex-col gap-5 max-w-[880px]">
-        <h3 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">Location & accessibility</h3>
-        <p class="m-0 text-[18px] leading-[1.6] text-ink-2">
+        <h3 class="m-0 text-subsection font-bold">Location & accessibility</h3>
+        <p class="m-0 text-body text-ink-2">
           Our meetups are hosted in central Zurich at tech company offices, making them easily accessible by public transport. We regularly welcome attendees from:
         </p>
         <ul class="m-0 p-0 list-none flex flex-wrap gap-2">
-          {CITIES.map((c) => <li class="text-[17px] font-bold py-2 px-4 rounded-pill bg-grey">{c}</li>)}
+          {CITIES.map((c) => (
+            <Tag as="li" size="md">
+              {c}
+            </Tag>
+          ))}
         </ul>
       </div>
     </section>
@@ -192,8 +197,8 @@ const CITIES = ['Zurich (Zürich)', 'Winterthur', 'Basel', 'Zug', 'St. Gallen', 
     <LandingFaq faqs={faqs} />
 
     <LandingCta id="h-join" title="Ready to join Zurich’s JavaScript community?" text="Don’t miss out on the next JavaScript meetup in Zurich. Join our community today.">
-      <Button href="/events" variant="yellow" grow>View upcoming events</Button>
-      <Button href="/cfp" variant="white" grow>Become a speaker</Button>
+      <Button href="/events" variant="cta" grow>View upcoming events</Button>
+      <Button href="/cfp" variant="secondary" grow>Become a speaker</Button>
     </LandingCta>
   </div>
 </BaseLayout>

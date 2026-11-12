@@ -1,7 +1,8 @@
 ---
 /**
  * Event list. Both tabs (upcoming and past) are prerendered in full so every
- * event link is in the HTML; a small script switches tabs and filters by the
+ * event link is in the HTML; the Upcoming and Past filter chips are links
+ * (?tab=past), and a small script switches between them in place and filters by the
  * search text, keeping the state in the URL (?tab=past, ?q=…; ?search= is
  * accepted as an alias because the WebSite SearchAction points there).
  */
@@ -10,7 +11,8 @@ import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventRow from '@zurichjs/design/components/EventRow.astro';
 import Button from '@zurichjs/design/components/Button.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import { chipClass } from '@zurichjs/design/recipes';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import RetiredNotice from '~/components/RetiredNotice.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
@@ -55,54 +57,45 @@ const TABS = [
 
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-7" data-events>
     <div class="flex flex-wrap gap-3 items-center">
-      <div role="tablist" aria-label="When" class="flex gap-1 bg-grey rounded-pill p-1">
+      <nav aria-label="When" class="flex flex-wrap gap-2">
         {
           TABS.map((t, i) => (
-            <button
-              type="button"
-              role="tab"
-              id={`tab-${t.k}`}
-              aria-controls={`panel-${t.k}`}
-              aria-selected={i === 0 ? 'true' : 'false'}
-              tabindex={i === 0 ? 0 : -1}
-              data-tab={t.k}
-              class="border-0 cursor-pointer min-h-[40px] px-[18px] rounded-pill font-bold text-[16px] bg-transparent text-black aria-selected:bg-black aria-selected:text-white"
-            >
+            <a href={t.k === 'past' ? '/events?tab=past' : '/events'} data-tab={t.k} aria-current={i === 0 ? 'true' : undefined} class={chipClass(i === 0)}>
               {t.label}
-            </button>
+            </a>
           ))
         }
-      </div>
+      </nav>
       <label class="flex-[1_1_240px] flex flex-col min-w-0">
         <span class="sr-only">Search events, talks and speakers</span>
-        <input type="search" name="q" data-q placeholder="Search events, talks, speakers" autocomplete="off" class="min-h-[48px] border border-grey-line rounded-pill px-5 text-[17px] bg-white min-w-0" />
+        <input type="search" name="q" data-q placeholder="Search events, talks, speakers" autocomplete="off" class="min-h-control border border-grey-line rounded-pill px-5 text-body bg-white min-w-0" />
       </label>
     </div>
 
     {
       TABS.map((t, i) => (
-        <div role="tabpanel" id={`panel-${t.k}`} aria-labelledby={`tab-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [[hidden]]:hidden">
+        <div id={`panel-${t.k}`} data-panel={t.k} hidden={i !== 0} class="flex flex-col gap-2 [[hidden]]:hidden">
           {t.list.map((e) => (
             <div data-hay={hay(e)}>
               <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} />
             </div>
           ))}
-          <Surface class="p-7 flex flex-col gap-3 [[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
-            <h2 class="m-0 text-[24px] font-bold" data-empty-title>
-              {t.k === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.'}
-            </h2>
-            <p class="m-0 text-[17px] text-ink-2" data-empty-sub>
-              The next meetup is being planned. It is announced on Meetup first.
-            </p>
-            <div class="flex gap-2.5 flex-wrap">
-              <Button variant="white" class="[[hidden]]:hidden" data-clear hidden>
+          <div class="[[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
+            <Card padding="lg">
+              <h2 slot="header" class="m-0 text-card-title font-bold" data-empty-title>
+                {t.k === 'upcoming' ? 'Nothing scheduled yet.' : 'No past events yet.'}
+              </h2>
+              <p class="m-0 text-body text-ink-2" data-empty-sub>
+                The next meetup is being planned. It is announced on Meetup first.
+              </p>
+              <Button slot="footer" variant="secondary" class="[[hidden]]:hidden" data-clear hidden>
                 Clear search
               </Button>
-              <Button variant="yellow" href={SITE.meetupGroupUrl}>
+              <Button slot="footer" variant="cta" href={SITE.meetupGroupUrl}>
                 Follow the group on Meetup
               </Button>
-            </div>
-          </Surface>
+            </Card>
+          </div>
         </div>
       ))
     }
@@ -111,11 +104,12 @@ const TABS = [
 
 <script>
   import { normalizeSearch } from '@zurichjs/events';
+  import { chipClass } from '@zurichjs/design/recipes';
 
   type Tab = 'upcoming' | 'past';
   const root = document.querySelector<HTMLElement>('[data-events]');
   if (root) {
-    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const tabs = [...root.querySelectorAll<HTMLAnchorElement>('[data-tab]')];
     const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
     const input = root.querySelector<HTMLInputElement>('[data-q]')!;
     const params = new URLSearchParams(location.search);
@@ -138,8 +132,9 @@ const TABS = [
       const needle = tokens.join(' ');
       for (const t of tabs) {
         const on = t.dataset.tab === tab;
-        t.setAttribute('aria-selected', String(on));
-        t.tabIndex = on ? 0 : -1;
+        if (on) t.setAttribute('aria-current', 'true');
+        else t.removeAttribute('aria-current');
+        t.className = chipClass(on);
       }
       for (const p of panels) {
         p.hidden = p.dataset.panel !== tab;
@@ -158,21 +153,18 @@ const TABS = [
       }
     };
 
-    const select = (next: Tab, focus = false) => {
+    const select = (next: Tab) => {
       tab = next;
       syncUrl();
       render();
-      if (focus) tabs.find((t) => t.dataset.tab === next)?.focus();
     };
 
+    // The chips are links (?tab=past); with script they switch in place and keep the search.
     for (const t of tabs) {
-      t.addEventListener('click', () => select(t.dataset.tab as Tab));
-      t.addEventListener('keydown', (e) => {
-        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+      t.addEventListener('click', (e) => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
-        const i = tabs.indexOf(t);
-        const j = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
-        select(tabs[j]!.dataset.tab as Tab, true);
+        select(t.dataset.tab as Tab);
       });
     }
     input.addEventListener('input', () => {

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { optionClass, optionInput } from '@zurichjs/design/recipes';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { SegmentedControl } from '@zurichjs/design/islands/SegmentedControl';
 import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
 
@@ -107,9 +108,9 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
     <form ref={formRef} onSubmit={submit} noValidate class="relative flex flex-col gap-5" aria-describedby="donate-summary">
       <Honeypot />
       {notice === 'canceled' && (
-        <div ref={noticeRef} tabIndex={-1} role="status" class="rounded-[20px] bg-grey p-4 text-[17px] outline-hidden">
-          <b>No payment was made.</b> You left the payment page before paying. You can try again below.
-        </div>
+        <Notice live focusRef={noticeRef} title="No payment was made.">
+          <p class="m-0 text-body">You left the payment page before paying. You can try again below.</p>
+        </Notice>
       )}
       {/* How often: one pill with a segment per option, like the membership and sponsorship switches. */}
       <SegmentedControl
@@ -123,10 +124,10 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
         class="self-start"
       />
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-2.5 min-w-0">
-        <legend class="text-[16px] font-bold mb-2 p-0">Amount in Swiss francs</legend>
+        <legend class="text-compact font-bold mb-2 p-0">Amount in Swiss francs</legend>
         <div class="flex flex-wrap gap-2">
           {PRESETS.map((p) => (
-            <label key={p.amount} class={optionClass(false, 'text-[17px]')}>
+            <label key={p.amount} class={optionClass()}>
               <input
                 type="radio"
                 name="preset"
@@ -143,7 +144,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
             </label>
           ))}
         </div>
-        {preset !== null && <p class="m-0 text-[16px] text-ink-2">{PRESETS.find((p) => p.amount === preset)?.covers}</p>}
+        {preset !== null && <p class="m-0 text-compact text-ink-2">{PRESETS.find((p) => p.amount === preset)?.covers}</p>}
         <TextField
           label="Or another amount (CHF 5 to 1000)"
           name="amount"
@@ -171,14 +172,14 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
         error={emailBad ? 'Check the email, or leave it empty.' : ''}
         class="max-w-[440px]"
       />
-      <p id="donate-summary" class="m-0 text-[18px] font-bold min-h-[1lh]" aria-live="polite">
+      <p id="donate-summary" class="m-0 text-body font-bold min-h-lh" aria-live="polite">
         {summary}
       </p>
       <div class="flex flex-wrap gap-3 items-center">
-        <SubmitButton variant="yellow" size="lg" busy={busy}>
+        <SubmitButton variant="cta" busy={busy}>
           {busy ? 'Opening the payment page…' : 'Continue to secure payment'}
         </SubmitButton>
-        <span role="alert" class="text-[15px] text-danger">
+        <span role="alert" class="text-meta text-danger">
           {error}
           {error && offerOther && (
             <>
@@ -204,7 +205,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
           )}
         </span>
       </div>
-      <p class="m-0 text-[15px] leading-[1.55] text-ink-2">
+      <p class="m-0 text-meta text-ink-2">
         Payment happens on Stripe’s secure page; nothing is charged here. Stripe confirms the payment and emails a receipt.
         {recurrence === 'monthly' && (
           <>

@@ -32,7 +32,7 @@ const when = ev.startsAt ? dateLong(ev.startsAt) : '';
 >
   <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Photos', href: '/media', here: when || 'Event' }} sub={[when, ev.venue ? `${ev.venue.name}, ${ev.venue.city}` : '', countLabel(items)].filter(Boolean).join(' · ')} compact>
     <div class="flex flex-wrap gap-3 pt-1">
-      <Button href={eventHref(ev)} variant="outline-white">The event page</Button>
+      <Button href={eventHref(ev)} variant="secondary" inverse>The event page</Button>
     </div>
   </PageOpening>
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-6">

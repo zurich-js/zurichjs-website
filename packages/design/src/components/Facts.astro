@@ -1,0 +1,31 @@
+---
+/**
+ * The "Label: value · Label: value" row under a card title (time, speaker, venue). A description list,
+ * so screen readers hear the pairs. It flows like text: each dot is glued to the item before it, so a
+ * line only breaks after a dot and never starts with one.
+ */
+import { cx } from '../recipes';
+
+interface Props {
+  /** hideLabel: the label is for screen readers only (a time, a venue). strong: the value is bold. */
+  items: { label: string; value: string; hideLabel?: boolean; strong?: boolean }[];
+  inverse?: boolean;
+}
+const { items, inverse = false } = Astro.props;
+---
+
+<dl class="m-0 text-compact text-pretty">
+  {
+    items.map((f, i) => (
+      <div class="inline">
+        {f.hideLabel ? <dt class="sr-only">{f.label}</dt> : <dt class="inline font-bold">{f.label}: </dt>}
+        <dd class={cx('inline m-0', f.strong ? 'font-bold' : inverse ? 'text-grey-light' : 'text-ink-2')}>{f.value}</dd>
+        {i < items.length - 1 && (
+          <span aria-hidden="true" class="text-grey-mid">
+            &nbsp;·{' '}
+          </span>
+        )}
+      </div>
+    ))
+  }
+</dl>

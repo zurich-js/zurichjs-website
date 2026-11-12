@@ -1,0 +1,17 @@
+---
+/**
+ * A static label (topic, time, status). Never clickable: use TagLink or FilterChip for that.
+ * Pick the tone that contrasts with the parent: grey on white, white on grey, black for times and status.
+ */
+import { tagClass, type TagSize, type TagTone } from '../recipes';
+
+interface Props {
+  size?: TagSize;
+  tone?: TagTone;
+  as?: 'span' | 'li';
+  class?: string;
+}
+const { size = 'sm', tone = 'grey', as: El = 'span', class: extra } = Astro.props;
+---
+
+<El class={tagClass(size, tone, extra)}><slot /></El>

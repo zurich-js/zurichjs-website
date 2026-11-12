@@ -223,12 +223,17 @@ export interface SpeakerCompany {
   logo: string;
   ratio: number;
   label?: boolean;
+  /** White shapes inside a coloured one (checked by eye): the black filter thresholds it so they stay. */
+  knockout?: boolean;
 }
+/** Logos with white shapes inside a coloured one (checked by eye, 12th November 2026). */
+const KNOCKOUTS = new Set(['AXA', 'SBB', 'Digitec Galaxus', 'University of Oxford']);
 const company = (name: string, file: string, ratio: number, label = false): SpeakerCompany => ({
   name,
   logo: `/images/speaker-logos/${file.includes('.') ? file : `${file}.svg`}`,
   ratio,
   ...(label ? { label } : {}),
+  ...(KNOCKOUTS.has(name) ? { knockout: true } : {}),
 });
 export const SPEAKER_COMPANIES: SpeakerCompany[] = [
   company('Google', 'google', 3.036),

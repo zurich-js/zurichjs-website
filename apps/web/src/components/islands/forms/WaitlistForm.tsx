@@ -1,5 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
+import { cardClass } from '@zurichjs/design/recipes';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
 
@@ -45,20 +47,22 @@ export default function WaitlistForm() {
 
   if (done)
     return (
-      <div ref={doneRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 outline-hidden">
-        <div class="text-[28px] font-bold leading-[1.15]">
-          {done.outcome === 'off' ? 'Not saved yet.' : done.outcome === 'already' ? 'You’re already on the list.' : 'You’re on the list.'}
-        </div>
-        <p class="m-0 text-[18px] leading-[1.55]">
+      <Notice
+        tone={done.outcome === 'off' ? 'note' : 'success'}
+        live
+        focusRef={doneRef}
+        title={done.outcome === 'off' ? 'Not saved yet.' : done.outcome === 'already' ? 'You’re already on the list.' : 'You’re on the list.'}
+      >
+        <p class="m-0 text-body">
           {done.outcome === 'off'
             ? 'Signups aren’t switched on yet, so your email wasn’t saved. Email hello@zurichjs.com and we’ll add you by hand.'
             : `We’ll write to ${done.email} when conference tickets and speakers are announced. Every email has an unsubscribe link.`}
         </p>
-      </div>
+      </Notice>
     );
 
   return (
-    <form ref={formRef} onSubmit={submit} noValidate class="relative bg-grey rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-4">
+    <form ref={formRef} onSubmit={submit} noValidate class={cardClass('filled', 'lg', 'relative')}>
       <Honeypot />
       <div ref={inputRef}>
         <TextField
@@ -72,13 +76,13 @@ export default function WaitlistForm() {
           error={bad ? 'Enter an email like name@example.com.' : ''}
         />
       </div>
-      <SubmitButton variant="yellow" size="lg" busy={busy} class="w-full">
+      <SubmitButton variant="cta" busy={busy} class="w-full">
         {busy ? 'Adding you…' : 'Join the waitlist'}
       </SubmitButton>
-      <span role="alert" class="text-[15px] text-danger empty:hidden">
+      <span role="alert" class="text-meta text-danger empty:hidden">
         {serverError}
       </span>
-      <p class="m-0 text-[15px] leading-normal text-ink-2">
+      <p class="m-0 text-meta text-ink-2">
         Your email joins the ZurichJS newsletter, sent with EmailOctopus, which carries conference and meetup news. See the{' '}
         <a href="/policies/privacy-policy" class="font-bold text-black">
           privacy policy

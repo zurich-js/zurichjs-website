@@ -14,7 +14,7 @@ import {
 } from '@zurichjs/events';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cx } from '@zurichjs/design/recipes';
+import { cardClass, cx, tagClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { Check } from '@zurichjs/design/islands/Check';
@@ -105,20 +105,20 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
     return (
       <section
         aria-labelledby="h-rate"
-        class="mx-gut bg-yellow rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center"
+        class="mx-gut bg-grey-soft rounded-block p-[clamp(24px,3.6vw,48px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-x-10 gap-y-5 items-center"
       >
         <div class="flex flex-col gap-2.5">
-          <h2 id="h-rate" class="m-0 text-[clamp(26px,2.8vw,38px)] leading-[1.15] font-bold">
+          <h2 id="h-rate" class="m-0 text-subsection font-bold text-balance">
             {phase === 'live' ? 'How is today’s meetup going?' : `How was ${ev.title}?`}
           </h2>
-          <p class="m-0 text-[18px] leading-[1.55]">
+          <p class="m-0 text-body">
             {ev.agenda.some((a) => a.talk)
               ? 'Rate the talks in the programme above: each speaker reads the ratings and comments for their own talk. For the evening as a whole, answer a few open questions for the organisers.'
               : 'Tell the organisers how the evening went in a few open questions. Only the organisers read your answers.'}
           </p>
         </div>
         <div class="flex flex-wrap gap-2.5 justify-end">
-          <Button href={`/feedback?event=${ev.slug}`} variant="black" grow>
+          <Button href={`/feedback?event=${ev.slug}`} grow>
             Feedback on the evening
           </Button>
         </div>
@@ -144,7 +144,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
 
   return (
     <div class="flex flex-col gap-2">
-      {note && <p class="m-0 mb-2 text-[16px] text-ink-2">{note}</p>}
+      {note && <p class="m-0 mb-2 text-compact text-ink-2">{note}</p>}
       <ol class="m-0 p-0 list-none flex flex-col gap-2">
         {items.map((r) => {
           const isNow = phase === 'live' && r.i === cur;
@@ -156,30 +156,26 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
               key={r.i}
               aria-current={isNow ? 'time' : undefined}
               class={cx(
-                'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-start py-4 px-[18px] rounded-[20px]',
+                'grid gap-x-3.5 gap-y-2.5 md:gap-[18px] items-start p-card-sm rounded-card',
                 anyTime ? 'grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[72px_minmax(0,1fr)_auto]' : 'grid-cols-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_auto]',
                 isNow ? 'bg-white outline-2 outline-black' : done ? 'bg-white' : 'bg-grey-soft',
               )}
             >
               {anyTime && (
                 <div class="flex flex-col gap-1 items-start">
-                  {r.time && (
-                    <time class={cx('px-2.5 py-1 rounded-lg text-[15px] font-bold tabular-nums leading-none', done ? 'bg-grey text-grey-text' : 'bg-black text-white')}>
-                      {r.time}
-                    </time>
-                  )}
-                  {isNow && <span class="text-[13px] font-bold py-0.5 px-2.5 rounded-pill bg-black text-white">Now</span>}
+                  {r.time && <time class={tagClass('sm', done ? 'grey' : 'black', 'tabular-nums font-bold')}>{r.time}</time>}
+                  {isNow && <span class={tagClass('sm', 'black')}>Now</span>}
                 </div>
               )}
               <div class="flex flex-col gap-2 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   {r.talk ? (
-                    <span class="text-[14px] font-bold text-ink-2">{talkFormatLine(r.talk)}</span>
+                    <span class="text-meta font-bold text-ink-2">{talkFormatLine(r.talk)}</span>
                   ) : (
-                    minutes[r.i] && <span class="text-[14px] font-bold text-ink-2 tabular-nums">{minutes[r.i]} min</span>
+                    minutes[r.i] && <span class="text-meta font-bold text-ink-2 tabular-nums">{minutes[r.i]} min</span>
                   )}
                 </div>
-                <span class={cx('font-bold leading-[1.3] text-pretty', r.talk ? 'text-[20px]' : 'text-[17px]', done && 'text-grey-text')}>{r.title}</span>
+                <span class={cx('font-bold text-pretty', r.talk ? 'text-card-title' : 'text-body', done && 'text-grey-text')}>{r.title}</span>
                 {r.talk ? (
                   <>
                     {r.talk.description && (
@@ -187,8 +183,8 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                         text={r.talk.description}
                         clampLines={3}
                         moreLabels={['See more ↓', 'See less ↑']}
-                        moreClass="p-0 bg-transparent border-0 text-[14px] font-bold text-grey-text hover:text-black cursor-pointer"
-                        class="text-[16px] leading-[1.55] text-ink-2 max-w-[720px]"
+                        moreClass="p-0 bg-transparent border-0 text-meta font-bold text-grey-text hover:text-black cursor-pointer"
+                        class="text-compact text-ink-2 max-w-reading"
                       />
                     )}
                     {r.talk.speakerIds.length > 0 && (
@@ -203,15 +199,15 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                                 class="flex w-full h-full items-center gap-2.5 py-1.5 pl-1.5 pr-4 rounded-pill bg-white text-black no-underline hover:bg-grey-hover"
                               >
                                 {p?.avatar ? (
-                                  <img src={p.avatar} alt="" width={36} height={36} loading="lazy" decoding="async" class="w-9 h-9 rounded-full object-cover bg-grey flex-none" />
+                                  <img src={p.avatar} alt="" width={36} height={36} loading="lazy" decoding="async" class="size-9 rounded-full object-cover bg-grey flex-none" />
                                 ) : (
-                                  <span aria-hidden="true" class="w-9 h-9 rounded-full bg-grey flex items-center justify-center text-[13px] font-bold flex-none">
+                                  <span aria-hidden="true" class="size-9 rounded-full bg-grey flex items-center justify-center text-meta font-bold flex-none">
                                     {p?.initials ?? '?'}
                                   </span>
                                 )}
                                 <span class="flex flex-col leading-tight min-w-0">
-                                  <span class="text-[15px] font-bold truncate">{p?.name ?? names[id] ?? id}</span>
-                                  {p?.role && <span class="text-[13px] text-ink-2 truncate">{p.role}</span>}
+                                  <span class="text-compact font-bold truncate">{p?.name ?? names[id] ?? id}</span>
+                                  {p?.role && <span class="text-meta text-ink-2 truncate">{p.role}</span>}
                                 </span>
                               </a>
                             </li>
@@ -221,7 +217,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                     )}
                   </>
                 ) : (
-                  r.note && <span class={cx('text-[16px]', done ? 'text-grey-text' : 'text-ink-2')}>{who(r)}</span>
+                  r.note && <span class={cx('text-compact', done ? 'text-grey-text' : 'text-ink-2')}>{who(r)}</span>
                 )}
               </div>
               {mine.length > 0 && (
@@ -230,7 +226,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                     const many = mine.length > 1;
                     const name = x.speakerId ? names[x.speakerId] : undefined;
                     return (
-                      <Button key={x.key} variant={rated[x.key] ? 'grey' : 'white'} size="sm" class="border-black!" onClick={() => setShared({ target: x })}>
+                      <Button key={x.key} variant={rated[x.key] ? 'secondary' : 'primary'} onClick={() => setShared({ target: x })}>
                         {rated[x.key] ? (
                           <>
                             Rated{many && name ? ` ${name}` : ''} <Check />
@@ -263,8 +259,8 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
 }
 
 function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPhase; now: Date; names: Record<string, string>; rated: Record<string, number> }) {
-  const h1 = 'm-0 text-[clamp(32px,4.4vw,56px)] leading-[1.1] font-bold max-w-[1000px] text-balance';
-  const sub = 'm-0 text-[clamp(18px,1.6vw,21px)] leading-normal max-w-[700px] text-pretty';
+  const h1 = 'm-0 text-title font-bold max-w-[1000px] text-balance';
+  const sub = 'm-0 text-lead max-w-[700px] text-pretty';
 
   if (!ev || phase === 'none') {
     return (
@@ -272,13 +268,13 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
         <h1 class={h1}>No meetup on the calendar right now</h1>
         <p class={sub}>The next one is being planned and is announced on Meetup first. Meanwhile, look back at past meetups, propose a talk or offer to host one.</p>
         <div class="flex flex-wrap gap-3 pt-1">
-          <Button href="/cfp" variant="yellow" grow>
+          <Button href="/cfp" variant="cta" grow>
             Propose a talk
           </Button>
-          <Button href="/events?tab=past" variant="outline-white" grow>
+          <Button href="/events?tab=past" variant="secondary" inverse grow>
             Past meetups
           </Button>
-          <Button href="/partners" variant="outline-white" grow>
+          <Button href="/partners" variant="secondary" inverse grow>
             Host a meetup
           </Button>
         </div>
@@ -291,7 +287,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   const times = timesLine(ev);
   const where = ev.venue ? `${ev.venue.name}, ${venueAddress(ev.venue)}` : 'Venue to be confirmed';
   const findVenue = ev.venue ? (
-    <a href="#venue" class="text-white underline underline-offset-[3px]">
+    <a href="#venue" class="text-white underline underline-offset-3">
       {where}
     </a>
   ) : (
@@ -301,7 +297,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
   if (phase === 'upcoming') {
     return (
       <div class="flex flex-col gap-[18px]">
-        <div class="text-[16px] font-bold text-grey-mid">Next meetup</div>
+        <div class="text-compact font-bold text-grey-mid">Next meetup</div>
         <h1 class={h1}>{ev.title}</h1>
         <p class={sub}>
           <b>{date}</b>
@@ -309,13 +305,13 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
           <br />
           <span class="text-grey-light">{findVenue}</span>
         </p>
-        <p class="m-0 text-[17px] text-grey-light max-w-[700px]">This page becomes the evening’s guide on the day: arrival, the running order and talk ratings.</p>
+        <p class="m-0 text-body text-grey-light max-w-[700px]">This page becomes the evening’s guide on the day: arrival, the running order and talk ratings.</p>
         <div class="flex flex-wrap gap-3 pt-1">
-          <Button href={href} variant="yellow" grow>
+          <Button href={href} variant="cta" grow>
             Event details and RSVP
           </Button>
           {ev.venue && (
-            <Button href={directionsUrl(ev.venue)} variant="outline-white" grow external>
+            <Button href={directionsUrl(ev.venue)} variant="secondary" inverse grow external>
               Directions
             </Button>
           )}
@@ -336,15 +332,19 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
 
   return (
     <div class="flex flex-col gap-[18px]">
-      <div class="text-[16px] font-bold text-grey-mid">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
+      <div class="text-compact font-bold text-grey-mid">{phase === 'after' ? 'Thanks for coming' : 'Today'}</div>
       <h1 class={h1}>{ev.title}</h1>
       <p class={sub}>
         <b>{date}</b>
         {times && <> · {times}</>}
       </p>
       <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,280px),1fr))] gap-3 max-w-[880px]" aria-live="polite">
-        <div class="rounded-card bg-ink text-white py-5 px-[22px] flex flex-col gap-1.5">
-          <div class="text-[15px] font-bold text-white">
+        {/* The title leads; when it happens follows it (no label above a title). */}
+        <div class={cardClass('inverse', 'md')}>
+          <div class="text-card-title font-bold text-pretty">
+            {phase === 'today' ? 'Find the venue' : phase === 'after' ? 'Thanks for coming' : nowItem ? nowItem.title : 'Find a seat'}
+          </div>
+          <div class="text-compact font-bold text-white">
             {phase === 'today'
               ? doors
                 ? `Doors open at ${doors}`
@@ -359,10 +359,7 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
                     ? `Started at ${starts}`
                     : 'Under way'}
           </div>
-          <div class="text-[22px] leading-tight font-bold text-pretty">
-            {phase === 'today' ? 'Find the venue' : phase === 'after' ? 'Thanks for coming' : nowItem ? nowItem.title : 'Find a seat'}
-          </div>
-          <div class="text-[16px] text-grey-light">
+          <div class="text-compact text-grey-light">
             {phase === 'today'
               ? findVenue
               : phase === 'after'
@@ -374,37 +371,37 @@ function Opening({ ev, phase, now, names, rated }: { ev?: Event; phase: TodayPha
                   : findVenue}
           </div>
           {phase === 'today' && ev.venue && (
-            <a href={directionsUrl(ev.venue)} target="_blank" rel="noopener" class="text-[16px] font-bold text-white underline underline-offset-[3px] mt-1 self-start">
+            <a href={directionsUrl(ev.venue)} target="_blank" rel="noopener" class="text-compact font-bold text-white underline underline-offset-3 mt-1 self-start">
               Get directions (opens Google Maps)
             </a>
           )}
         </div>
         {phase !== 'after' && nextItem && (
-          <div class="rounded-card py-5 px-[22px] flex flex-col gap-1.5 shadow-[inset_0_0_0_2px_#19191B]">
-            <div class="text-[15px] font-bold text-grey-mid">
+          <div class={cardClass('inverse', 'md')}>
+            <div class="text-card-title font-bold text-pretty">{nextItem.title}</div>
+            <div class="text-compact font-bold text-grey-light">
               {phase === 'today' ? 'First up' : 'Next'}
               {nextItem.time ? ` · ${nextItem.time}` : ''}
             </div>
-            <div class="text-[20px] leading-tight font-bold text-pretty">{nextItem.title}</div>
-            <div class="text-[16px] text-grey-mid">{who(nextItem)}</div>
+            <div class="text-compact text-grey-light">{who(nextItem)}</div>
           </div>
         )}
       </div>
       <div class="flex flex-wrap gap-3">
         {phase === 'today' ? (
-          <Button href="#venue" variant="yellow" grow>
+          <Button href="#venue" variant="cta" grow>
             Venue and arrival
           </Button>
         ) : unratedLast ? (
-          <Button href="#programme" variant="yellow" grow>
+          <Button href="#programme" variant="cta" grow>
             Rate the talks
           </Button>
         ) : (
-          <Button href={`/feedback?event=${ev.slug}`} variant="yellow" grow>
+          <Button href={`/feedback?event=${ev.slug}`} variant="cta" grow>
             Feedback on the evening
           </Button>
         )}
-        <Button href={href} variant="outline-white" grow>
+        <Button href={href} variant="secondary" inverse grow>
           Event details
         </Button>
       </div>

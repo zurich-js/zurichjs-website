@@ -3,7 +3,7 @@ import type { ComponentChildren, InputHTMLAttributes, SelectHTMLAttributes, Text
 import { useId } from 'preact/hooks';
 import { cx, optionClass, optionInput } from '../recipes.ts';
 
-const control = 'rounded-[14px] border px-3.5 text-[17px] font-normal bg-white text-black w-full box-border';
+const control = 'rounded-field border px-3.5 text-body font-normal bg-white text-black w-full box-border';
 const border = (bad?: boolean) => (bad ? 'border-danger' : 'border-grey-line');
 
 interface Wrap {
@@ -36,16 +36,16 @@ function Wrapper({
   children,
 }: Wrap & { ids: { label: string; hint: string; error: string }; children: ComponentChildren }) {
   return (
-    <label class={cx('flex flex-col gap-1.5 font-bold', labelSize === 'lg' ? 'text-[clamp(19px,1.8vw,22px)] leading-[1.3]' : 'text-[16px]', className)}>
+    <label class={cx('flex flex-col gap-1.5 font-bold', labelSize === 'lg' ? 'text-lead' : 'text-compact', className)}>
       <span id={ids.label}>{label}</span>
       {hint && (
-        <span id={ids.hint} class="text-[16px] font-normal text-grey-text leading-[1.45]">
+        <span id={ids.hint} class="text-compact font-normal text-grey-text">
           {hint}
         </span>
       )}
       {children}
       {error !== undefined && (
-        <span id={ids.error} class="font-normal text-[14px] text-danger min-h-[1.2em]" aria-live="polite">
+        <span id={ids.error} class="font-normal text-meta text-danger min-h-lh" aria-live="polite">
           {error}
         </span>
       )}
@@ -57,7 +57,7 @@ export function TextField({ label, hint, error, class: className, labelSize, inv
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize} ids={ids}>
-      <input aria-labelledby={ids.label} aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-[52px]', border(invalid))} {...rest} />
+      <input aria-labelledby={ids.label} aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-control', border(invalid))} {...rest} />
     </Wrapper>
   );
 }
@@ -83,13 +83,13 @@ export function SelectField({ label, hint, error, class: className, children, ..
     <Wrapper label={label} hint={hint} error={error} class={className} ids={ids}>
       {/* The native arrow is tiny and sits on the edge in most browsers: hidden, and drawn here with room around it. */}
       <span class="relative flex">
-        <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-[52px] pl-3.5 pr-11 appearance-none cursor-pointer', border(false))} {...rest}>
+        <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-control pl-3.5 pr-11 appearance-none cursor-pointer', border(false))} {...rest}>
           {children}
         </select>
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black"
+          class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 size-4 text-black"
           fill="none"
           stroke="currentColor"
           stroke-width="2.2"
@@ -105,20 +105,19 @@ export function SelectField({ label, hint, error, class: className, children, ..
 
 export function Checkbox({ label, class: className, ...rest }: { label: ComponentChildren; class?: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label class={cx('flex gap-3 items-start text-[17px] leading-[1.45] cursor-pointer', className)}>
-      <input type="checkbox" class="w-[22px] h-[22px] mt-px flex-none accent-black cursor-pointer" {...rest} />
+    <label class={cx('flex gap-3 items-start text-body cursor-pointer', className)}>
+      <input type="checkbox" class="w-[22px] h-[22px] mt-[3px] flex-none accent-black cursor-pointer" {...rest} />
       <span>{label}</span>
     </label>
   );
 }
 
-/** Pill-shaped radio chips. */
 /** One choice from a few: native radios shown as light options (never as buttons). */
 export function ChipGroup<T extends string>({ label, options, value, onChange }: { label: string; options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   const id = label.toLowerCase().replace(/\W+/g, '-');
   return (
     <fieldset class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0">
-      <legend class="p-0 mb-2 text-[16px] font-bold">{label}</legend>
+      <legend class="p-0 mb-2 text-compact font-bold">{label}</legend>
       <div class="flex flex-wrap gap-2">
         {options.map((o) => (
           <label key={o.value} class={optionClass()}>

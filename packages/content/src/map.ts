@@ -218,6 +218,10 @@ export const mapPartner = (r: RawPartner): Partner => ({
   name: r.name ?? r.id,
   url: u(r.url),
   logo: u(r.logo),
+  logoBlack: u(r.logoBlack),
+  logoBackground: r.logoBackground && /^#[0-9a-f]{6}$/i.test(r.logoBackground) ? r.logoBackground : undefined,
+  logoRatio: typeof r.logoRatio === 'number' && r.logoRatio > 0 ? r.logoRatio : undefined,
+  logoOpaque: r.logoOpaque === true || undefined,
   kinds: (r.kinds ?? []).filter((k): k is PartnerKind => (KINDS as (string | null | undefined)[]).includes(k)),
   tier: (TIERS as (string | null | undefined)[]).includes(r.tier) ? (r.tier as SponsorTier) : undefined,
   // Never "current" unless an organiser ticked it, and never after its end date.

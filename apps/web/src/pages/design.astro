@@ -5,31 +5,42 @@
  * Rendered from fixtures, so it looks the same whatever content Sanity has.
  */
 import type { Event, Speaker } from '@zurichjs/events';
-import { breakpoints, colors, gutter, radii, text } from '@zurichjs/design/tokens';
-import { cx, headingSizes, type ButtonSize, type ButtonVariant, type MonogramSize, type MonogramTone, type SurfaceTone } from '@zurichjs/design/recipes';
+import { breakpoints, colors, gutter, radii, spacing, text } from '@zurichjs/design/tokens';
+import { cx, type ButtonVariant, type MonogramTone, type TagTone } from '@zurichjs/design/recipes';
+import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
 import Button from '@zurichjs/design/components/Button.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import ChoiceCard from '@zurichjs/design/components/ChoiceCard.astro';
 import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro';
 import EventRow from '@zurichjs/design/components/EventRow.astro';
-import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
+import Facts from '@zurichjs/design/components/Facts.astro';
+import FilterChip from '@zurichjs/design/components/FilterChip.astro';
+import LogoRow from '@zurichjs/design/components/LogoRow.astro';
+import LogoWall from '@zurichjs/design/components/LogoWall.astro';
 import Monogram from '@zurichjs/design/components/Monogram.astro';
+import Notice from '@zurichjs/design/components/Notice.astro';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import ProofSentence from '@zurichjs/design/components/ProofSentence.astro';
-import SectionHeading from '@zurichjs/design/components/SectionHeading.astro';
+import Section from '@zurichjs/design/components/Section.astro';
+import SegmentedControl from '@zurichjs/design/components/SegmentedControl.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
 import SpeakerCard from '@zurichjs/design/components/SpeakerCard.astro';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Tag from '@zurichjs/design/components/Tag.astro';
+import TagLink from '@zurichjs/design/components/TagLink.astro';
 import TalkRow from '@zurichjs/design/components/TalkRow.astro';
+import Text from '@zurichjs/design/components/Text.astro';
 import IslandsDemo from '~/components/islands/design/IslandsDemo';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { content, ticketing } from '~/lib/content';
 
 const { award, rating, conference, partners } = await content();
 
-const VARIANTS: ButtonVariant[] = ['yellow', 'black', 'outline-black', 'white', 'grey', 'danger', 'link'];
-const SIZES: ButtonSize[] = ['sm', 'md', 'lg'];
-const TONES: SurfaceTone[] = ['grey', 'soft', 'yellow', 'white', 'black', 'ink', 'danger'];
-const MONO_TONES: MonogramTone[] = ['grey', 'yellow', 'white', 'blue'];
-const MONO_SIZES: MonogramSize[] = ['avatar', 'tile', 'portrait'];
+const VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'cta', 'plain'];
+const TAG_TONES: TagTone[] = ['grey', 'white', 'black'];
+const SURFACES = ['outline', 'filled', 'plain'] as const;
+const MONO_TONES: MonogramTone[] = ['grey', 'white', 'blue'];
+/** Icon paths on a 24 by 24 grid. */
+const PLUS = 'M12 5v14M5 12h14';
 
 // One fixture event, shown in every state by changing its status and the reference clock.
 const NOW = new Date('2026-11-01T12:00:00+01:00');
@@ -95,27 +106,27 @@ const TYPE: { role: keyof typeof text; cls: string; bold: boolean }[] = [
     title="Design system"
     sub="Every component in @zurichjs/design, in every variant. Rules are in docs/design-system.md."
     crumb={{ label: 'Home', href: '/', here: 'Design system' }}
-    pills={[{ text: 'Astro 7' }, { text: 'Tailwind 4' }, { text: 'Noindex', yellow: true }]}
+    pills={[{ text: 'Astro 7' }, { text: 'Tailwind 4' }, { text: 'Noindex' }]}
   />
 
-  <div class="flex flex-col gap-[clamp(56px,7vw,96px)] py-[clamp(48px,6vw,80px)]">
-    <section aria-labelledby="d-colour" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-colour">Colour<Fragment slot="sub">#F1E271 is the only accent. Blue is for focus rings and the logo.</Fragment></SectionHeading>
+  <div class="flex flex-col gap-section pt-page-top pb-page-end">
+    <Section id="d-colour" title="Colour">
+      <Fragment slot="sub">#F1E271 is the only accent. Blue is for focus rings and the logo.</Fragment>
       <ul class="list-none m-0 p-0 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {
           Object.entries(colors).map(([name, value]) => (
             <li class="flex flex-col gap-2">
               <span class={cx('block h-20 rounded-card', value === colors.white && 'border border-grey-frame')} style={swatch(value)} />
-              <span class="text-[16px] font-bold">{name}</span>
-              <code class="text-[14px] text-grey-text">{value}</code>
+              <span class="text-compact font-bold">{name}</span>
+              <code class="text-meta text-grey-text">{value}</code>
             </li>
           ))
         }
       </ul>
-    </section>
+    </Section>
 
-    <section aria-labelledby="d-type" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-type">Type<Fragment slot="sub">Figtree, variable 300–900, self-hosted through the Astro Fonts API.</Fragment></SectionHeading>
+    <Section id="d-type" title="Type">
+      <Fragment slot="sub">Figtree, variable 300–900. Nine roles, each a size with its line height: pages pick a role, never a pixel value.</Fragment>
       <ul class="list-none m-0 p-0 flex flex-col gap-5">
         {
           TYPE.map(({ role, cls, bold }) => (
@@ -128,112 +139,162 @@ const TYPE: { role: keyof typeof text; cls: string; bold: boolean }[] = [
           ))
         }
       </ul>
-      <div class="flex flex-col gap-3">
+    </Section>
+
+    <Section id="d-shape" title="Space, radius, breakpoint and gutter">
+      <ul class="list-none m-0 p-0 grid gap-2 grid-cols-auto-sm">
         {
-          (Object.keys(headingSizes) as (keyof typeof headingSizes)[]).map((s) => (
-            <SectionHeading size={s}>
-              SectionHeading size="{s}"<Fragment slot="sub">With a sub line.</Fragment>
-            </SectionHeading>
+          Object.entries(spacing).map(([k, v]) => (
+            <li class="text-compact">
+              <code class="font-bold">{k}</code> <code class="text-grey-text">{v}</code>
+            </li>
           ))
         }
-      </div>
-    </section>
-
-    <section aria-labelledby="d-shape" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-shape">Radius, breakpoint and gutter</SectionHeading>
+      </ul>
       <div class="grid gap-4 md:grid-cols-3">
         <div class="bg-grey rounded-pill px-6 py-4 font-bold">pill · {radii.pill}</div>
         <div class="bg-grey rounded-card px-6 py-4 font-bold">card · {radii.card}</div>
-        <div class="bg-grey rounded-block px-6 py-4 font-bold">block · {radii.block}</div>
+        <div class="bg-grey rounded-tag px-6 py-4 font-bold">tag · {radii.tag}</div>
       </div>
-      <p class="m-0 text-[18px] leading-[1.55] max-w-[720px]">
-        One layout breakpoint at <code>{breakpoints.md}</code> (<code>md:</code>); <code>lg:</code> ({breakpoints.lg}) only for wide grids. The side gutter is {gutter.mobile} on phones and {gutter.desktop} from the breakpoint, centring content in a {gutter.column} column.
-      </p>
-      <div class="bg-yellow rounded-card"><div class="bg-white mx-gut py-4 text-center font-bold rounded-card">.mx-gut content edge</div></div>
-    </section>
+      <Text class="max-w-reading">
+        One layout breakpoint at <code>{breakpoints.md}</code> (<code>md:</code>); <code>lg:</code> ({breakpoints.lg}) only for wide grids. The side gutter is {gutter.mobile} on phones and {gutter.desktop} from the breakpoint, centring
+        content in a {gutter.column} column.
+      </Text>
+    </Section>
 
-    <section aria-labelledby="d-button" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-button">Button<Fragment slot="sub">Pills. One yellow primary action per view.</Fragment></SectionHeading>
+    <Section id="d-button" title="Button">
+      <Fragment slot="sub">Four variants, one height (48px). An icon before or after the text, or alone. One yellow (cta) per view.</Fragment>
       {
-        SIZES.map((size) => (
+        VARIANTS.map((v) => (
           <div class="flex flex-wrap gap-3 items-center">
-            {VARIANTS.map((v) => (
-              <Button variant={v} size={size} href="#d-button">
-                {`${v} · ${size}`}
-              </Button>
-            ))}
-            <Button variant="outline-black" size={size} type="button">
-              {`<button> · ${size}`}
+            <Button variant={v} href="#d-button">
+              {v}
             </Button>
+            <Button variant={v} icon={PLUS}>
+              {`${v} with an icon`}
+            </Button>
+            <Button variant={v} icon={PLUS} iconAt="end">
+              Icon after
+            </Button>
+            <Button variant={v} icon={PLUS} label={`Add (${v})`} />
           </div>
         ))
       }
-      <div class="bg-black rounded-block p-[clamp(24px,3vw,40px)] flex flex-wrap gap-3">
-        <Button href="#d-button">yellow on black</Button>
-        <Button variant="outline-white" href="#d-button">outline-white</Button>
-        <Button variant="white" href="#d-button">white</Button>
-        <Button href="https://www.meetup.com/zurich-js/" variant="outline-white">External link</Button>
+      <div class="on-black bg-black rounded-block p-card-lg flex flex-wrap gap-3">
+        <Button variant="cta" href="#d-button">cta on black</Button>
+        <Button variant="primary" inverse href="#d-button">primary inverse</Button>
+        <Button variant="secondary" inverse href="https://www.meetup.com/zurich-js/">secondary inverse, external</Button>
       </div>
-    </section>
+      <SegmentedControl name="d-cycle" legend="Billing" options={[{ value: 'yearly', label: 'Yearly' }, { value: 'quarterly', label: 'Quarterly' }]} />
+    </Section>
 
-    <section aria-labelledby="d-surface" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-surface">Surface<Fragment slot="sub">Groups related content. Never around a single paragraph.</Fragment></SectionHeading>
-      <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {
-          TONES.map((tone) => (
-            <Surface tone={tone} class="p-6 flex flex-col gap-2">
-              <strong class="text-[20px]">{tone}</strong>
-              <span class="text-[16px]">Two related lines grouped together.</span>
-            </Surface>
-          ))
-        }
+    <Section id="d-tags" title="Tags and chips">
+      <Fragment slot="sub">A tag is read, not pressed: 6px corners. A tag that links has a hover. A filter chip is a control: 44px, a pill.</Fragment>
+      {
+        TAG_TONES.map((tone) => (
+          <div class={cx('flex flex-wrap gap-2 p-card-sm rounded-card', tone === 'white' && 'bg-grey')}>
+            <Tag tone={tone}>{`${tone} · sm`}</Tag>
+            <Tag tone={tone} size="md">{`${tone} · md`}</Tag>
+          </div>
+        ))
+      }
+      <div class="flex flex-wrap gap-2">
+        <TagLink href="#d-tags">TagLink</TagLink>
+        <TagLink href="#d-tags" size="md">TagLink md</TagLink>
       </div>
-    </section>
+      <div class="flex flex-wrap gap-2">
+        <FilterChip href="#d-tags" selected>All</FilterChip>
+        <FilterChip href="#d-tags" count={12}>Frontend</FilterChip>
+      </div>
+    </Section>
 
-    <section aria-labelledby="d-mono" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-mono">Monogram</SectionHeading>
+    <Section id="d-cards" title="Cards">
+      <Fragment slot="sub">One card: a surface (outline, filled, plain, white) and a behaviour (static, link, disclosure, action). The signifier sits on the title's first line.</Fragment>
+      {
+        SURFACES.map((surface) => (
+          <AutoGrid min="sm">
+            <Card surface={surface} title={`${surface} · static`}>
+              <Facts slot="facts" items={[{ label: 'Time', value: '19:00', hideLabel: true, strong: true }, { label: 'Speaker', value: 'Ada Example' }]} />
+              <Text size="compact">Nothing to do: no signifier.</Text>
+            </Card>
+            <Card surface={surface} title={`${surface} · link`} href="#d-cards">
+              <Text size="compact">The whole card is one link.</Text>
+            </Card>
+            <Card surface={surface} title={`${surface} · disclosure`} disclosure>
+              <Text size="compact">Opens in place.</Text>
+            </Card>
+            <Card surface={surface} title={`${surface} · action`}>
+              <Text size="compact">The buttons are the signifier.</Text>
+              <Button slot="footer" variant="secondary">
+                Action
+              </Button>
+            </Card>
+          </AutoGrid>
+        ))
+      }
+      <div class="on-black bg-black rounded-block p-card-lg">
+        <Card surface="white" title="white · link, on black" href="#d-cards">
+          <Text size="compact">For cards on black or grey.</Text>
+        </Card>
+      </div>
+      <AutoGrid min="md">
+        <ChoiceCard name="d-choice" value="a" title="ChoiceCard, chosen" checked>
+          <Text size="compact">A native radio: arrow keys move the choice.</Text>
+        </ChoiceCard>
+        <ChoiceCard name="d-choice" value="b" title="Another choice">
+          <Text size="compact">The dot fills yellow when chosen.</Text>
+        </ChoiceCard>
+      </AutoGrid>
+      <AutoGrid min="md">
+        <Notice title="A note">Important, but not a result.</Notice>
+        <Notice tone="success" title="Thanks, we got it">Green only for success.</Notice>
+        <Notice tone="danger" title="That did not send">Red only for errors.</Notice>
+      </AutoGrid>
+    </Section>
+
+    <Section id="d-mono" title="Monogram">
       <div class="grid gap-4 grid-cols-2 md:grid-cols-4 items-start">
         {MONO_TONES.map((tone) => <Monogram initials="ZJ" tone={tone} size="tile" label={`${tone} tile`} />)}
+        <Monogram initials="AE" size="portrait" />
       </div>
       <div class="flex gap-4 items-center">
-        {MONO_SIZES.filter((s) => s === 'avatar').map((size) => MONO_TONES.map((tone) => <Monogram initials="AE" tone={tone} size={size} class="w-[52px] h-[52px]" />))}
-        <div class="w-[200px]"><Monogram initials="AE" size="portrait" tone="yellow" /></div>
+        {MONO_TONES.map((tone) => <Monogram initials="AE" tone={tone} size="avatar" class="size-control" />)}
       </div>
-    </section>
+    </Section>
 
-    <section aria-labelledby="d-events" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-events">EventRow in every state<Fragment slot="sub">State comes from the editorial status and the clock (@zurichjs/events).</Fragment></SectionHeading>
+    <Section id="d-events" title="EventRow in every state">
+      <Fragment slot="sub">State comes from the editorial status and the clock (@zurichjs/events).</Fragment>
       <ul class="list-none m-0 p-0 flex flex-col gap-4">
         {
           STATES.map((s) => (
             <li class="flex flex-col gap-2">
-              <code class="text-[14px] text-grey-text">{s.label}</code>
+              <code class="text-meta text-grey-text">{s.label}</code>
               <EventRow ev={s.ev} now={s.now} ticketing={ticketing} />
             </li>
           ))
         }
       </ul>
-    </section>
+    </Section>
 
-    <section aria-labelledby="d-talks" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-talks">TalkRow and SpeakerCard</SectionHeading>
+    <Section id="d-talks" title="TalkRow and SpeakerCard">
       <TalkRow t={{ title: 'Signals without the hype', speakers: [speaker], date: 'Sep 2026', format: 'Talk', href: '#d-talks' }} />
       <div class="grid gap-4 grid-cols-2 md:grid-cols-4">
         <SpeakerCard speaker={speaker} meta="1 talk" />
-        <SpeakerCard speaker={{ ...speaker, id: 'grace', name: 'Grace Example', initials: 'GE' }} meta="2 talks" tone="yellow" />
+        <SpeakerCard speaker={{ ...speaker, id: 'grace', name: 'Grace Example', initials: 'GE' }} meta="2 talks" />
       </div>
-    </section>
+    </Section>
 
-    <section aria-labelledby="d-proof" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-proof">ProofSentence and LogoGrid<Fragment slot="sub">Rating and award in one sentence. No "/5".</Fragment></SectionHeading>
-      <div class="bg-black text-white rounded-block p-[clamp(24px,3vw,40px)]"><ProofSentence rating={rating} award={award} /></div>
-      <LogoGrid partners={partners.filter((p) => !p.delisted).slice(0, 6)} />
-    </section>
+    <Section id="d-proof" title="ProofSentence and logos">
+      <Fragment slot="sub">Rating and award in one sentence. Logo walls: grey cells, black logos, colour on hover. Inline logos keep their colours.</Fragment>
+      <div class="on-black bg-black text-white rounded-block p-card-lg"><ProofSentence rating={rating} award={award} /></div>
+      <LogoWall partners={partners.filter((p) => !p.delisted).slice(0, 6)} label="Example logo wall" />
+      <LogoRow items={partners.filter((p) => !p.delisted).slice(0, 3).map((partner) => ({ partner, caption: partner.name }))} />
+    </Section>
 
-    <section aria-labelledby="d-islands" class="px-gut flex flex-col gap-6">
-      <SectionHeading id="d-islands">Islands (Preact)<Fragment slot="sub">StarRating, fields with hint and error, Button and Modal.</Fragment></SectionHeading>
+    <Section id="d-islands" title="Islands (Preact)">
+      <Fragment slot="sub">StarRating, fields with hint and error, Button and Modal.</Fragment>
       <IslandsDemo client:visible />
-    </section>
+    </Section>
 
     <ConferenceModule conference={conference} placement="design" />
     <div class="px-gut"><SpeakCta /></div>

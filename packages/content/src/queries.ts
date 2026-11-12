@@ -45,7 +45,10 @@ export const SPEAKERS_QUERY = defineQuery(`
 
 export const PARTNERS_QUERY = defineQuery(`
 *[_type == "partner" && defined(id.current)] | order(name asc) {
-  "id": id.current, name, url, "logo": logo.asset->url, kinds, tier, current, since, until, description, allowReferrer
+  "id": id.current, name, url, "logo": logo.asset->url,
+  "logoRatio": logo.asset->metadata.dimensions.aspectRatio, "logoOpaque": logo.asset->metadata.isOpaque,
+  "logoBlack": logoBlack.asset->url, logoBackground,
+  kinds, tier, current, since, until, description, allowReferrer
 }`);
 
 export const SINGLETONS_QUERY = defineQuery(`{

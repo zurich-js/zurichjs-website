@@ -7,6 +7,7 @@
 import { dateShort } from '@zurichjs/events';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Button from '@zurichjs/design/components/Button.astro';
+import Card from '@zurichjs/design/components/Card.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { loadSpeakerFeedback, type TalkFeedback } from '~/server/speaker-feedback';
 
@@ -47,37 +48,36 @@ const sub = data
   <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(40px,5vw,64px)]">
     {
       !data && (
-        <section class="bg-grey rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-3 max-w-[720px]">
-          <h2 class="m-0 text-[clamp(24px,2.4vw,32px)] leading-[1.2] font-bold">{!r.ok && r.status === 502 ? 'Please try again soon' : 'Ask for a new link'}</h2>
-          <p class="m-0 text-[18px] leading-[1.55] text-ink-2">
+        <Card as="section" surface="filled" padding="lg" level="h2" title={!r.ok && r.status === 502 ? 'Please try again soon' : 'Ask for a new link'} class="max-w-reading">
+          <p class="m-0 text-body text-ink-2">
             {
               !r.ok && r.status === 502
                 ? 'Your link is fine; we couldn’t reach the feedback right now.'
                 : 'Feedback links stop working after a while. Email hello@zurichjs.com and an organiser will send you a fresh one.'
             }
           </p>
-          <Button href="mailto:hello@zurichjs.com" variant="yellow" class="self-start">
+          <Button slot="footer" href="mailto:hello@zurichjs.com" variant="cta">
             Email the organisers
           </Button>
-        </section>
+        </Card>
       )
     }
 
     {
       data && data.total > 0 && (
         <section aria-label="Summary" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3">
-          <div class="bg-grey rounded-card p-6 flex flex-col gap-1">
+          <Card surface="filled">
             <span class="text-[clamp(40px,4vw,56px)] leading-none font-bold">{avg(data.average)}</span>
-            <span class="text-[17px]">average rating</span>
-          </div>
-          <div class="bg-grey rounded-card p-6 flex flex-col gap-1">
+            <span class="text-body">average rating</span>
+          </Card>
+          <Card surface="filled">
             <span class="text-[clamp(40px,4vw,56px)] leading-none font-bold">{data.total}</span>
-            <span class="text-[17px] text-ink-2">{data.total === 1 ? 'response' : 'responses'}</span>
-          </div>
-          <div class="bg-grey rounded-card p-6 flex flex-col gap-1">
+            <span class="text-body text-ink-2">{data.total === 1 ? 'response' : 'responses'}</span>
+          </Card>
+          <Card surface="filled">
             <span class="text-[clamp(40px,4vw,56px)] leading-none font-bold">{data.talks.reduce((n, t) => n + t.comments.length, 0)}</span>
-            <span class="text-[17px] text-ink-2">written comments</span>
-          </div>
+            <span class="text-body text-ink-2">written comments</span>
+          </Card>
         </section>
       )
     }
@@ -86,7 +86,7 @@ const sub = data
       data?.talks.map((t) => (
         <section aria-labelledby={`t-${t.key}`} class="flex flex-col gap-5">
           <div class="flex flex-col gap-1.5">
-            <h2 id={`t-${t.key}`} class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold text-pretty">
+            <h2 id={`t-${t.key}`} class="m-0 text-subsection font-bold text-pretty">
               {t.title}
             </h2>
             {(t.eventTitle || t.eventDate) && (
@@ -101,7 +101,7 @@ const sub = data
             )}
           </div>
           <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-[clamp(20px,3vw,40px)] items-start">
-            <div class="bg-grey rounded-card p-6 flex flex-col gap-4">
+            <Card surface="filled">
               <div class="flex items-baseline gap-3 flex-wrap">
                 <span class="text-[44px] leading-none font-bold">{avg(t.average)}</span>
                 <span class="text-[17px] text-ink-2">
@@ -119,20 +119,20 @@ const sub = data
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card>
             <div class="flex flex-col gap-3 min-w-0">
-              <h3 class="m-0 text-[20px] font-bold">Comments</h3>
+              <h3 class="m-0 text-card-title font-bold">Comments</h3>
               {t.comments.length === 0 ? (
                 <p class="m-0 text-[17px] text-ink-2">No written comments for this talk.</p>
               ) : (
                 <ul class="m-0 p-0 list-none flex flex-col gap-2.5">
                   {t.comments.map((c) => (
-                    <li class="bg-grey-soft rounded-card px-5 py-4 flex flex-col gap-1.5">
-                      <p class="m-0 text-[17px] leading-[1.55] whitespace-pre-line wrap-break-word">“{c.text}”</p>
-                      <span class="text-[15px] text-grey-text">
+                    <Card as="li" surface="filled" padding="sm">
+                      <p class="m-0 text-body whitespace-pre-line wrap-break-word">“{c.text}”</p>
+                      <span class="text-meta text-grey-text">
                         {[c.rating ? `${c.rating} ${c.rating === 1 ? 'star' : 'stars'}` : '', c.submittedAt ? dateShort(c.submittedAt) : ''].filter(Boolean).join(' · ')}
                       </span>
-                    </li>
+                    </Card>
                   ))}
                 </ul>
               )}

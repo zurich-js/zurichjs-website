@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { cx } from '@zurichjs/design/recipes';
+import { buttonClass, cx } from '@zurichjs/design/recipes';
 
 export interface CarouselSpeaker {
   id: string;
@@ -145,8 +145,8 @@ export function SpeakerCarousel({ speakers }: Props) {
   };
 
   const current = speakers[active]!;
-  const arrow =
-    'absolute top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white text-black border-0 shadow-[0_2px_12px_rgba(0,0,0,0.12)] flex items-center justify-center cursor-pointer hover:bg-grey';
+  // Interface controls: round icon-only primary buttons.
+  const arrow = buttonClass({ iconOnly: true }, 'absolute top-1/2 -translate-y-1/2 z-20');
 
   return (
     <div ref={root} role="region" aria-roledescription="carousel" aria-label="ZurichJS speakers" class="relative w-full flex flex-col items-center gap-5">
@@ -208,8 +208,8 @@ export function SpeakerCarousel({ speakers }: Props) {
               )}
               <span class="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(to_top,#000_0%,rgba(0,0,0,0.8)_45%,transparent_100%)]" aria-hidden="true" />
               <span class="absolute inset-x-0 bottom-0 p-5 flex flex-col gap-1 text-center">
-                <span class="text-white font-bold text-[20px] leading-tight">{sp.name}</span>
-                {sp.meta && <span class="text-grey text-[15px] leading-snug line-clamp-2">{sp.meta}</span>}
+                <span class="text-white font-bold text-card-title">{sp.name}</span>
+                {sp.meta && <span class="text-grey text-compact line-clamp-2">{sp.meta}</span>}
               </span>
             </a>
           );
@@ -252,12 +252,7 @@ export function SpeakerCarousel({ speakers }: Props) {
       </div>
 
       {n > 1 && (
-        <button
-          type="button"
-          onClick={() => setPaused((p) => !p)}
-          aria-pressed={paused}
-          class="inline-flex items-center gap-2 min-h-[40px] px-4 rounded-pill bg-transparent border-0 text-[15px] font-bold text-grey-text cursor-pointer hover:text-black"
-        >
+        <button type="button" onClick={() => setPaused((p) => !p)} aria-pressed={paused} class={buttonClass({ variant: 'plain' })}>
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
             {paused ? <path d="M3 1.5v11l9-5.5z" /> : <path d="M3 1.5h3v11H3zM8 1.5h3v11H8z" />}
           </svg>

@@ -2,7 +2,7 @@ import { feedbackAvailability, itemMinutes, talkAnchor, talkFormatLine, untimedN
 import { RichText } from '../../RichText.tsx';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cardClass, cx, monogramClass, noticeClass, tagClass } from '@zurichjs/design/recipes';
+import { cardClass, cx, monogramClass, noticeClass } from '@zurichjs/design/recipes';
 import type { ComponentChildren } from 'preact';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
@@ -147,11 +147,9 @@ export default function Programme({
                 </h3>
                 {(() => {
                   // The facts row under the title (docs/design-system.md, Cards): the time first and bold
-                  // (its label read by screen readers only), then the speakers and the format and level.
-                  const names = a.talk ? a.talk.speakerIds.map((id) => byId.get(id)?.name).filter((n): n is string => !!n) : [];
+                  // (its label read by screen readers only), then the format and level. The speakers follow the description.
                   const items: Fact[] = [
                     ...(a.time ? [{ label: 'Time', value: <time>{a.time}</time>, hideLabel: true, strong: true }] : []),
-                    ...(names.length ? [{ label: names.length > 1 ? 'Speakers' : 'Speaker', value: names.join(' and ') }] : []),
                     ...(a.talk
                       ? [
                           ...(talkFormatLine(a.talk) ? [{ label: 'Format', value: talkFormatLine(a.talk) }] : []),
@@ -165,38 +163,33 @@ export default function Programme({
                   return items.length ? <Facts items={items} /> : null;
                 })()}
                 {a.talk && (
-                  <div class="flex flex-col gap-2.5">
-                    <div class="flex flex-wrap gap-x-4 gap-y-2">
-                      {a.talk.speakerIds.map((id) => {
-                        const s = byId.get(id);
-                        if (!s) return null;
-                        return (
-                          <a key={id} href={`/speakers/${id}`} class="no-underline flex items-center gap-2.5 text-body font-bold text-left">
-                            {s.avatar ? (
-                              <img src={s.avatar} alt="" width={36} height={36} loading="lazy" decoding="async" class="size-9 flex-none rounded-full object-cover bg-grey" />
-                            ) : (
-                              <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'size-9 flex-none')}>
-                                {s.initials}
-                              </span>
-                            )}
-                            <span>
-                              <span class="underline underline-offset-3">{s.name}</span> <span class="font-normal text-ink-2">{s.role}</span>
-                            </span>
-                          </a>
-                        );
-                      })}
-                    </div>
+                  <div class="flex flex-col gap-4">
                     {summary && <p class="m-0 text-body max-w-form">{summary}</p>}
                     <RichText text={a.talk.description} clampLines={5} class="text-body text-ink-2 max-w-form" />
-                    {!!a.talk.tags?.length && (
-                      <ul class="m-0 p-0 list-none flex flex-wrap gap-1.5" aria-label="Topics">
-                        {a.talk.tags.map((t) => (
-                          <li key={t} class={tagClass('sm', 'grey')}>
-                            {t}
+                    {/* The talk first, then who gives it (Bogdan's review, 12th November 2026). */}
+                    <ul class="m-0 p-0 list-none flex flex-wrap gap-x-8 gap-y-3" aria-label={a.talk.speakerIds.length > 1 ? 'Speakers' : 'Speaker'}>
+                      {a.talk.speakerIds.map((id) => {
+                        const sp = byId.get(id);
+                        if (!sp) return null;
+                        return (
+                          <li key={id}>
+                            <a href={`/speakers/${id}`} class="group/sp no-underline text-black flex items-center gap-3">
+                              {sp.avatar ? (
+                                <img src={sp.avatar} alt="" width={48} height={48} loading="lazy" decoding="async" class="size-12 flex-none rounded-full object-cover bg-grey" />
+                              ) : (
+                                <span aria-hidden="true" class={monogramClass('grey', 'avatar', 'size-12 flex-none')}>
+                                  {sp.initials}
+                                </span>
+                              )}
+                              <span class="flex flex-col min-w-0">
+                                <span class="text-body font-bold group-hover/sp:underline underline-offset-3">{sp.name}</span>
+                                {sp.role && <span class="text-compact text-ink-2">{sp.role}</span>}
+                              </span>
+                            </a>
                           </li>
-                        ))}
-                      </ul>
-                    )}
+                        );
+                      })}
+                    </ul>
                     {a.talk.slidesUrl && (
                       <a href={a.talk.slidesUrl} class="self-start text-compact font-bold underline underline-offset-3" target="_blank" rel="noopener">
                         Slides (opens in a new tab)

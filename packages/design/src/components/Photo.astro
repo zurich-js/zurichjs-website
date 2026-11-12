@@ -15,7 +15,7 @@ interface Props {
 const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw, 100vw' } = Astro.props;
 ---
 
-<span class={cx('relative block overflow-hidden rounded-card bg-grey', extra)}>
+<span class={cx('relative block size-full max-lg:aspect-video overflow-hidden rounded-card bg-grey', extra)}>
   <img
     src={srcFor(photo.src)}
     srcset={srcsetFor(photo.src)}
@@ -26,7 +26,7 @@ const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw,
     loading={priority ? 'eager' : 'lazy'}
     fetchpriority={priority ? 'high' : 'auto'}
     decoding="async"
-    class="absolute inset-0 h-full w-full object-cover"
+    class="absolute inset-0 size-full object-cover"
     style={{ objectPosition: photo.position ?? 'center' }}
   />
 </span>

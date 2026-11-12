@@ -52,7 +52,7 @@ export function presentEvent(ev: Event, opts: PresentOptions = {}): EventPresent
     venueStreet,
     venueSub,
     dateKnown,
-    ...ctaFrom({ kind: 'rsvp', label: 'RSVP on Meetup', href: ev.meetupUrl, external: true }, 'Opens Meetup in a new tab. Your RSVP is confirmed there, not on this site.'),
+    ...ctaFrom({ kind: 'rsvp', label: 'RSVP on Meetup', href: ev.meetupUrl, external: true }, ''),
     pills: [{ text: TYPE_LABEL }, { text: 'RSVP open' }],
   };
 

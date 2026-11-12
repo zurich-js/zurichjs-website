@@ -6,7 +6,7 @@
  * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
  */
 import { eventCardAlt } from '~/lib/og';
-import { ROLE_LABEL, type Partner, type SupporterRole, dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
+import { ROLE_LABEL, type Partner, type SupporterRole, dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventActions from '~/components/islands/event/EventActions';
@@ -22,6 +22,7 @@ import { Gallery } from '@zurichjs/design/islands/Gallery';
 import { eventPhotoState, mediaForEvent } from '@zurichjs/content';
 import { countLabel, mediaHref, toGallery } from '~/lib/media';
 import Card from '@zurichjs/design/components/Card.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, MAPS_EMBED_KEY, PREVIEW, SITE, content, ticketing } from '~/lib/content';
 import { clip } from '~/lib/text';
@@ -39,7 +40,7 @@ const url = canonicalUrl(eventHref(ev));
 const byId = new Map(c.speakers.map((s) => [s.id, s]));
 const speakerIds = [...new Set([...eventTalks(ev).flatMap((t) => t.speakerIds), ...(ev.recap?.talks.flatMap((t) => t.speakerIds) ?? [])])];
 const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
-const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 36) : undefined }));
+const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 48) : undefined }));
 const gallery = mediaForEvent(c.media.items, ev.slug);
 // Honest about missing photos: "unavailable" when this build could not read the archive, never "coming soon".
 const evEnd = ev.endsAt ?? ev.startsAt;
@@ -58,7 +59,6 @@ const jsonLd = [eventSchema(ev, c.speakers, hosts), breadcrumbSchema([{ name: 'E
 // The event's own card (with its artwork when it has one), never a random photo (pages/og/[name].png.ts).
 const image = `/og/event-${ev.slug}.png`;
 const imageAlt = eventCardAlt(ev.title, ev.startsAt ? dateLong(ev.startsAt) : ev.dateText, ev.venue?.name);
-const times = timesLine(ev);
 const summaries = Object.fromEntries((ev.recap?.talks ?? []).filter((t) => t.summary).map((t) => [t.title, t.summary]));
 // Recap talks that are not in the programme (older events) still get listed.
 const recapOnly = (ev.recap?.talks ?? []).filter((t) => !eventTalks(ev).some((x) => x.title === t.title));
@@ -76,21 +76,21 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
     isPast ? (
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} />
     ) : (
-      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }} pills={p.pills}>
+      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }}>
         <div class="flex flex-col gap-4 pt-1">
           <div class="text-lead">
             <b>{p.whenShort}</b>
-            {p.dateKnown && times && (
-              <>
-                <br />
-                <span>{times}</span>
-              </>
-            )}
             <br />
-            <a href="#venue" class="text-grey-mid">{`${p.venueShort}${p.venueStreet}`}</a>
+            <a href="#venue" class="text-body text-grey-mid underline hover:text-white">{`${p.venueShort}${p.venueStreet}`}</a>
           </div>
           <EventActions client:load ev={ev} initial={state} url={url} />
         </div>
+        {/* The event's own artwork beside the title from 800px, only when it has one: never the share card, which repeats the title. */}
+        {ev.cover && (
+          <div slot="media" class="aspect-video w-full">
+            <Photo photo={ev.cover} priority class="size-full" />
+          </div>
+        )}
       </PageOpening>
     )
   }
@@ -205,7 +205,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
       </div>
     ) : (
       <div class="px-gut py-section grid grid-cols-auto-md gap-12 items-start">
-        <div class="flex flex-col gap-section col-span-full md:col-[1/-2] min-w-0">
+        <div class="flex flex-col gap-8 col-span-full md:col-[1/-2] min-w-0">
           <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
           <EventBanner client:load ev={ev} initial={state} />

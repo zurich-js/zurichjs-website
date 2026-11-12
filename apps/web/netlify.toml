@@ -96,6 +96,13 @@ for = "/images/*"
 Cache-Control = "public, max-age=604800, stale-while-revalidate=86400"
 
 # Machine-read files change with every build.
+# The calendar files behind "Add to calendar → Apple / iCal": served as calendars, never stale after an edit.
+[[headers]]
+for = "/events/*.ics"
+[headers.values]
+Content-Type = "text/calendar; charset=utf-8"
+Cache-Control = "public, max-age=0, must-revalidate"
+
 [[headers]]
 for = "/state-changes.json"
 [headers.values]

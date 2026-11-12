@@ -35,7 +35,8 @@ export type Status =
 /** Why a membership ended (Art. 5), plus `lapsed` for a manual member who did not renew. */
 export type EndedReason = 'resigned' | 'expelled' | 'deceased' | 'dissolved' | 'lapsed';
 
-export type Source = 'self_serve' | 'imported';
+/** `invited`: added by the board from the admin area, to finish joining online (sign in, terms, Stripe). */
+export type Source = 'self_serve' | 'imported' | 'invited';
 
 export type PaymentMode = 'automatic' | 'manual';
 

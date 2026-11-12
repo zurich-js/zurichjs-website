@@ -35,10 +35,13 @@ export interface ManualMemberInput {
 
 const MONTH = /^(\d{4})-(0[1-9]|1[0-2])$/;
 
-type Parsed = { ok: true; value: ManualMemberInput } | { ok: false; error: string; field: string };
+type Parsed<T> = { ok: true; value: T } | { ok: false; error: string; field: string };
 
-/** Checks the admin form. Errors name the field, in the words the form uses. */
-export function parseManualMember(body: Record<string, unknown>): Parsed {
+/** Who the member is and which membership: the fields the admin forms share (adding a manual member, inviting). */
+export type MemberDetails = Pick<ManualMemberInput, 'kind' | 'name' | 'organisationName' | 'email' | 'level' | 'cycle' | 'notes'>;
+
+/** Checks who the member is and which membership. Errors name the field, in the words the forms use. */
+export function parseMemberDetails(body: Record<string, unknown>): Parsed<MemberDetails> {
   const str = (k: string) => (typeof body[k] === 'string' ? (body[k] as string).trim() : '');
   const kind = str('kind') || 'person';
   if (kind !== 'person' && kind !== 'organisation') return { ok: false, field: 'kind', error: 'Choose person or organisation.' };
@@ -52,13 +55,17 @@ export function parseManualMember(body: Record<string, unknown>): Parsed {
   if (!isLevel(level)) return { ok: false, field: 'level', error: 'Choose a membership level.' };
   const cycle = str('cycle');
   if (!isCycle(cycle)) return { ok: false, field: 'cycle', error: 'Choose quarterly or yearly.' };
-  const startMonth = str('startMonth');
+  return { ok: true, value: { kind, name, organisationName: kind === 'organisation' ? organisationName : null, email, level, cycle, notes: str('notes').slice(0, 2000) || null } };
+}
+
+/** Checks the admin form. Errors name the field, in the words the form uses. */
+export function parseManualMember(body: Record<string, unknown>): Parsed<ManualMemberInput> {
+  const details = parseMemberDetails(body);
+  if (!details.ok) return details;
+  const startMonth = typeof body.startMonth === 'string' ? body.startMonth.trim() : '';
   if (!MONTH.test(startMonth)) return { ok: false, field: 'startMonth', error: 'Choose the month their paid term started.' };
-  const category = str('category') === 'active' ? 'active' : 'passive';
-  return {
-    ok: true,
-    value: { kind, name, organisationName, email, level, cycle, startMonth, category, notes: str('notes').slice(0, 2000) || null, sendEmail: body.sendEmail !== false },
-  };
+  const category = body.category === 'active' ? 'active' : 'passive';
+  return { ok: true, value: { ...details.value, startMonth, category, sendEmail: body.sendEmail !== false } };
 }
 
 export interface ManualDeps {

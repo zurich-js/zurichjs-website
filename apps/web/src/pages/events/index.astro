@@ -1,9 +1,9 @@
 ---
 /**
  * Event list: every meetup on one page, so every event link is in the HTML. Upcoming meetups come first,
- * in date order; past meetups follow, newest first, dimmed until hovered. A sticky bar jumps between the
- * two sections (and shows which one you are in) and holds the search, which filters both and keeps its
- * text in the URL (?q=…; ?search= is accepted as an alias because the WebSite SearchAction points there).
+ * in date order; past meetups follow, newest first, dimmed until hovered. A sticky bar holds the search, which
+ * filters both and keeps its text in the URL (?q=…; ?search= is accepted as an alias because the WebSite
+ * SearchAction points there). The #upcoming and #past anchors stay for old links.
  * Old links to ?tab=past land on the past section.
  */
 import { pastEvents, upcomingEvents, type Event } from '@zurichjs/events';
@@ -12,7 +12,6 @@ import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import EventRow from '@zurichjs/design/components/EventRow.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import Card from '@zurichjs/design/components/Card.astro';
-import { chipClass } from '@zurichjs/design/recipes';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import RetiredNotice from '~/components/RetiredNotice.astro';
 import { BUILD_TIME, SITE, content, ticketing } from '~/lib/content';
@@ -40,8 +39,8 @@ const hay = (e: Event) =>
     .toLowerCase();
 
 const SECTIONS = [
-  { k: 'upcoming', label: 'Upcoming', heading: 'Upcoming meetups', list: upcoming },
-  { k: 'past', label: 'Past', heading: 'Past meetups', list: past },
+  { k: 'upcoming', heading: 'Upcoming meetups', list: upcoming },
+  { k: 'past', heading: 'Past meetups', list: past },
 ] as const;
 ---
 
@@ -55,33 +54,25 @@ const SECTIONS = [
   <PageOpening slot="opening" title="Events" sub="JavaScript meetups in Zurich. Every past event keeps its page, speakers and photos, so the talks live on long after the night." compact />
   <RetiredNotice />
 
-  <div class="py-section flex flex-col gap-7" data-events>
-    <div class="sticky top-header z-40 bg-white px-gut py-3 flex flex-wrap gap-3 items-center">
-      <nav aria-label="Jump to" class="flex flex-wrap gap-2">
-        {
-          SECTIONS.map((t, i) => (
-            <a href={`#${t.k}`} data-jump={t.k} aria-current={i === 0 ? 'true' : undefined} class={chipClass(i === 0)}>
-              {t.label}
-            </a>
-          ))
-        }
-      </nav>
-      <label class="flex-[1_1_240px] flex flex-col min-w-0">
+  <div class="py-section flex flex-col gap-6" data-events>
+    <div class="sticky top-header z-40 bg-white px-gut py-3">
+      <label class="flex flex-col min-w-0">
         <span class="sr-only">Search events, talks and speakers</span>
         <input type="search" name="q" data-q placeholder="Search events, talks, speakers" autocomplete="off" class="min-h-control border border-grey-line rounded-pill px-5 text-body bg-white min-w-0" />
       </label>
     </div>
 
+    <div class="flex flex-col gap-control">
     {
       SECTIONS.map((t) => (
-        <section id={t.k} data-section={t.k} aria-labelledby={`h-${t.k}`} class="px-gut flex flex-col gap-3 scroll-mt-40">
+        <section id={t.k} data-section={t.k} aria-labelledby={`h-${t.k}`} class="px-gut flex flex-col gap-6 scroll-mt-40">
           <h2 id={`h-${t.k}`} class="m-0 text-subsection font-bold">
             {t.heading}
           </h2>
-          <div class="flex flex-col gap-2">
+          <div class="flex flex-col gap-3">
             {t.list.map((e) => (
               <div data-hay={hay(e)}>
-                <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} quiet={t.k === 'past'} />
+                <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} dim={t.k === 'past'} />
               </div>
             ))}
           </div>
@@ -110,39 +101,20 @@ const SECTIONS = [
         </section>
       ))
     }
+    </div>
   </div>
 </BaseLayout>
 
 <script>
   import { normalizeSearch } from '@zurichjs/events';
-  import { chipClass } from '@zurichjs/design/recipes';
 
   const root = document.querySelector<HTMLElement>('[data-events]');
   if (root) {
-    const jumps = [...root.querySelectorAll<HTMLAnchorElement>('[data-jump]')];
     const sections = [...root.querySelectorAll<HTMLElement>('[data-section]')];
     const input = root.querySelector<HTMLInputElement>('[data-q]')!;
     const params = new URLSearchParams(location.search);
     let q = params.get('q') ?? params.get('search') ?? '';
     input.value = q;
-
-    // The chip of the section you are in is the current one.
-    const mark = (k: string) => {
-      for (const j of jumps) {
-        const on = j.dataset.jump === k;
-        if (on) j.setAttribute('aria-current', 'true');
-        else j.removeAttribute('aria-current');
-        j.className = chipClass(on);
-      }
-    };
-    const spy = new IntersectionObserver(
-      (entries) => {
-        const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (top) mark((top.target as HTMLElement).dataset.section!);
-      },
-      { rootMargin: '-45% 0px -50% 0px' },
-    );
-    for (const s of sections) spy.observe(s);
 
     const syncUrl = () => {
       const u = new URL(location.href);

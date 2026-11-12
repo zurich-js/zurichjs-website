@@ -186,20 +186,20 @@ const h3 = 'm-0 text-subsection font-bold';
         <table class="w-full min-w-75 border-separate border-spacing-0 text-compact md:text-body">
           <thead>
             <tr>
-              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-l-2xl">Aspect</th>
+              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-l-field">Aspect</th>
               <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white">Monthly meetups (ZurichJS)</th>
-              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-r-2xl">Annual conferences</th>
+              <th scope="col" class="text-left font-bold p-3 md:p-4 bg-black text-white rounded-r-field">Annual conferences</th>
             </tr>
           </thead>
           <tbody>
             {
               COMPARE.map(([aspect, meetup, conf], i) => (
                 <tr>
-                  <th scope="row" class={cx('text-left font-bold p-3 md:p-4 align-top rounded-l-2xl', i % 2 === 1 && 'bg-grey-soft')}>
+                  <th scope="row" class={cx('text-left font-bold p-3 md:p-4 align-top rounded-l-field', i % 2 === 1 && 'bg-grey-soft')}>
                     {aspect}
                   </th>
                   <td class={cx('p-3 md:p-4 align-top', i % 2 === 1 && 'bg-grey-soft')}>{meetup}</td>
-                  <td class={cx('p-3 md:p-4 align-top text-ink-2 rounded-r-2xl', i % 2 === 1 && 'bg-grey-soft')}>{conf}</td>
+                  <td class={cx('p-3 md:p-4 align-top text-ink-2 rounded-r-field', i % 2 === 1 && 'bg-grey-soft')}>{conf}</td>
                 </tr>
               ))
             }

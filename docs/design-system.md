@@ -15,7 +15,7 @@
 | `src/fonts.css`          | `@font-face` for sites that do not use the Astro Fonts API. Kept in step with `font.ts` (a test checks the family).                                                                                                                                                               |
 | `src/recipes.ts`         | Class recipes shared by components and their Preact twins: buttons, tags, chips, cards, notices, type roles, options, monograms.                                                                                                                                                  |
 | `src/components/*.astro` | Static components. They take **props only** and never fetch content.                                                                                                                                                                                                              |
-| `src/islands/*.tsx`      | Interactive Preact primitives and twins: Button, Notice, ChoiceCard, Tag, SegmentedControl, Field, Menu, Modal, StarRating, RatingSheet, SpeakerArc.                                                                                                                              |
+| `src/islands/*.tsx`      | Interactive Preact primitives and twins: Button, Heading, Notice, ChoiceCard, Tag, SegmentedControl, Field, Menu, Modal, StarRating, RatingSheet, SpeakerArc.                                                                                                                     |
 
 **Changing a value:** edit `theme.css`; the site and every TypeScript reader pick it up, with nothing to regenerate. `theme.ts` loads it with Vite's `?raw` import (Vitest is told to let it through in `vitest.config.ts`).
 
@@ -63,7 +63,7 @@ Pages pick components and props and never write pixels: no `text-[17px]`, `min-h
 
 | Component                             | Use                                                                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `Heading`, `Text`                     | Type roles by prop (`size`, `tone`). Level (`as`) and look (`size`) are separate.                                      |
+| `Heading`, `Text`                     | Type roles by prop (`size`, `tone`). Level (`as`) and look (`size`) are separate. Islands use the `Heading` twin.      |
 | `Section`, `AutoGrid`                 | A page section with its gutter, heading block and width; an auto-fit grid with three minimum widths (240, 300, 380px). |
 | `Button`                              | Four variants, one height. See Buttons.                                                                                |
 | `Tag`, `TagLink`, `FilterChip`        | A label you read (6px corners); a tag that links; a filter control (44px pill).                                        |
@@ -93,6 +93,8 @@ Nine roles, each a size with its line height (`--text-*` in `theme.css`, so `tex
 
 - One `h1` per page, always in the opening.
 - Headings are bold (700); body text is regular.
+- Long-form text written elsewhere (the policies' Markdown) gets the `prose` utility from `theme.css`, which applies the type roles to plain h2, h3, p, lists and links. Never style child elements with arbitrary variants.
+- Text links share one underline offset (3px, set on `a` and `button` in `theme.css`); don't add `underline-offset-*` to a link. Only the header's current-page underline sits further down.
 - Use `text-pretty` on paragraphs and `text-balance` on short headings.
 
 ## Layout

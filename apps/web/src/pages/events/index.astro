@@ -76,7 +76,7 @@ const SECTIONS = [
               </div>
             ))}
           </div>
-          <div class="[[hidden]]:hidden" data-empty hidden={t.list.length > 0}>
+          <div data-empty hidden={t.list.length > 0}>
             {t.k === 'upcoming' ? (
               <Card padding="lg">
                 <h3 slot="header" class="m-0 text-card-title font-bold" data-empty-title>
@@ -85,7 +85,7 @@ const SECTIONS = [
                 <p class="m-0 text-body text-ink-2" data-empty-sub>
                   The next meetup is being planned. It is announced on Meetup first.
                 </p>
-                <Button slot="footer" variant="secondary" class="[[hidden]]:hidden" data-clear hidden>
+                <Button slot="footer" variant="secondary" data-clear hidden>
                   Clear search
                 </Button>
                 <Button slot="footer" variant="cta" href={SITE.meetupGroupUrl}>

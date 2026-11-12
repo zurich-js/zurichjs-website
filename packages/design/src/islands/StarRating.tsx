@@ -23,7 +23,7 @@ export function StarRating({ value, onChange, label, invalid, size = 'md' }: Pro
           <label
             key={n}
             class={cx(
-              'relative flex items-center justify-center rounded-2xl font-bold text-card-title cursor-pointer transition-colors',
+              'relative flex items-center justify-center rounded-field font-bold text-card-title cursor-pointer transition-colors',
               'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
               size === 'lg' ? 'min-h-14' : 'min-h-13',
               value >= n ? 'bg-yellow' : 'bg-grey hover:bg-grey-hover',

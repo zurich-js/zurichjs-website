@@ -1,6 +1,7 @@
 ---
 /** Not found. The search is a plain GET form to /events, so it works without JavaScript. */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import Card from '@zurichjs/design/components/Card.astro';
 import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
@@ -30,7 +31,7 @@ const LINKS = [
     <div class="flex flex-col gap-4 pt-1 max-w-form">
       <form action="/events" method="get" role="search" class="flex items-center gap-2.5 bg-ink rounded-pill pl-5 pr-2 min-h-14">
         <label for="nf-q" class="sr-only">Search events, talks and speakers</label>
-        <input id="nf-q" type="search" name="q" placeholder="Search events, talks, speakers" class="flex-1 min-w-0 border-0 bg-transparent text-white text-body outline-offset-[6px] placeholder:text-grey-mid" />
+        <input id="nf-q" type="search" name="q" placeholder="Search events, talks, speakers" class="flex-1 min-w-0 border-0 bg-transparent text-white text-body outline-offset-6 placeholder:text-grey-mid" />
         <Button type="submit" variant="cta">Search</Button>
       </form>
       <div class="flex flex-wrap gap-3">
@@ -41,7 +42,7 @@ const LINKS = [
   </PageOpening>
 
   <div class="px-gut py-section flex flex-col gap-5">
-    <h2 class="m-0 text-subsection font-bold">Popular pages</h2>
+    <Heading size="subsection">Popular pages</Heading>
     <AutoGrid min="sm" gap="sm">
       {
         LINKS.map((l) => (

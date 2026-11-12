@@ -66,23 +66,23 @@ const SOCIAL: { kind: Social; label: string; href: string }[] = [
   { kind: 'bluesky', label: 'Bluesky', href: SITE.blueskyUrl },
   { kind: 'x', label: 'X', href: SITE.xUrl },
 ];
-const link = 'text-white underline decoration-dotted decoration-1 underline-offset-4 hover:decoration-solid';
+const link = 'text-white underline decoration-dotted decoration-1 hover:decoration-solid';
 ---
 
 <footer class="on-black bg-black text-white px-gut pt-page-end pb-8 flex flex-col gap-section">
   <div class="flex flex-col xl:flex-row gap-10">
-    <div class="flex flex-col gap-4 xl:flex-[1_0_0] max-w-140">
+    <div class="flex flex-col gap-4 xl:grow xl:shrink-0 xl:basis-0 max-w-140">
       <h2 class="m-0 text-subsection font-bold">Who are we?</h2>
       <p class="m-0 text-body text-grey">
         ZurichJS is the JavaScript community in Zurich: free monthly meetups with talks and time to meet each other, run by volunteers since November 2024. Everybody is welcome.
       </p>
       <p class="m-0 text-compact text-grey-mid">Part of the {SITE.association}, a non-profit association registered in Switzerland.</p>
-      <a href="/about" class="self-start inline-flex items-center gap-2 text-body font-bold text-white underline decoration-2 underline-offset-4 hover:no-underline">
+      <a href="/about" class="self-start inline-flex items-center gap-2 text-body font-bold text-white underline decoration-2 hover:no-underline">
         More about us
         <svg aria-hidden="true" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5" /></svg>
       </a>
     </div>
-    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,170px),1fr))] gap-x-8 gap-y-10 xl:flex-[2_0_0] min-w-0">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,170px),1fr))] gap-x-8 gap-y-10 xl:grow-2 xl:shrink-0 xl:basis-0 min-w-0">
       {
         COLS.map((c) => (
           <nav aria-label={c.h} class="flex flex-col gap-3">
@@ -118,7 +118,7 @@ const link = 'text-white underline decoration-dotted decoration-1 underline-offs
         SOCIAL.map((s) => (
           <li>
             <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class={buttonClass({ variant: 'plain', inverse: true, iconOnly: true })}>
-              <SocialIcon kind={s.kind} size={22} tone="white" />
+              <SocialIcon kind={s.kind} size={22} />
             </a>
           </li>
         ))

@@ -112,7 +112,7 @@ export default function SpeakerProfileForm() {
           Photo (optional)
         </label>
         <div class="flex items-center gap-4">
-          {preview && <img src={preview} alt="How you appear now" width={96} height={96} class="w-24 h-24 rounded-2xl object-cover bg-grey" />}
+          {preview && <img src={preview} alt="How you appear now" width={96} height={96} class="w-24 h-24 rounded-field object-cover bg-grey" />}
           <input
             id="sp-photo"
             name="photo"

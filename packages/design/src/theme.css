@@ -108,6 +108,41 @@
   margin-right: var(--gut);
 }
 
+/* Long-form text written elsewhere (the policies' Markdown): the type roles applied to plain h2, h3, p, lists and links. */
+@utility prose {
+  display: flex;
+  flex-direction: column;
+  gap: --spacing(4);
+  & h2 {
+    @apply m-0 mt-4 scroll-mt-6 text-subsection font-bold text-black;
+  }
+  & h3 {
+    @apply m-0 text-card-title font-bold;
+  }
+  & p {
+    @apply m-0 text-body text-ink-2;
+  }
+  & ul,
+  & ol {
+    @apply m-0 pl-6 text-body text-ink-2;
+  }
+  & ul {
+    @apply list-disc;
+  }
+  & ol {
+    @apply list-decimal;
+  }
+  & li {
+    @apply mb-1.5;
+  }
+  & a {
+    @apply font-bold;
+  }
+  & strong {
+    @apply text-black;
+  }
+}
+
 @layer base {
   :root {
     --px: 20px;
@@ -136,20 +171,24 @@
   }
   body {
     margin: 0;
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-white);
+    color: var(--color-black);
     font-family: var(--font-sans);
   }
   ::placeholder {
-    color: #9ca3af;
+    color: var(--color-grey-placeholder);
     opacity: 1;
   }
   a {
     color: inherit;
+  }
+  /* One underline offset for every text link, and for buttons that look like links. */
+  a,
+  button {
     text-underline-offset: 3px;
   }
   :focus-visible {
-    outline: 3px solid #268bcc;
+    outline: 3px solid var(--color-blue);
     outline-offset: 2px;
   }
   /* A disclosure card shows its own chevron; hide the browser's marker (Safari needs this one). */
@@ -158,6 +197,6 @@
   }
   /* Yellow focus ring on black surfaces, where blue would disappear. */
   .on-black :focus-visible {
-    outline-color: #f1e271;
+    outline-color: var(--color-yellow);
   }
 }

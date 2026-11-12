@@ -72,12 +72,12 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           data-involved-toggle
           aria-expanded="false"
           aria-controls="involved-menu"
-          class={cx('flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-compact cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
+          class={cx('group flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-compact cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
         >
           Get involved
-          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform [[aria-expanded=true]>&]:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform group-aria-expanded:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
-        <ul id="involved-menu" hidden class="absolute right-0 top-full z-50 mt-3 w-60 list-none m-0 p-3 bg-black rounded-card [&:not([hidden])]:block">
+        <ul id="involved-menu" hidden class="absolute right-0 top-full z-50 mt-3 w-60 list-none m-0 p-3 bg-black rounded-card">
           {
             INVOLVED.map((i) => (
               <li>
@@ -96,7 +96,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
               {barSocial.map((s) => (
                 <li>
                   <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} title={s.label} class={iconLink}>
-                    <SocialIcon kind={s.kind} size={24} tone="white" />
+                    <SocialIcon kind={s.kind} size={24} />
                   </a>
                 </li>
               ))}
@@ -150,7 +150,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           {social.map((s) => (
             <li>
               <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} class="w-11 h-11 rounded-full flex items-center justify-center text-white hover:opacity-70">
-                <SocialIcon kind={s.kind} size={24} tone="white" />
+                <SocialIcon kind={s.kind} size={24} />
               </a>
             </li>
           ))}
@@ -185,7 +185,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     padding: 8px var(--gut) 0;
   }
   .site-header[data-scrolled] .bar {
-    background-color: #000;
+    background-color: var(--color-black);
     /* Rounding formula: a 48px button (24px) plus the 12px around it. */
     border-radius: calc(var(--radius-control-pill) + 12px);
     box-shadow: 0 6px 24px rgb(0 0 0 / 0.18);
@@ -193,7 +193,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
   @media (max-width: 799px) {
     /* Phones: the bar stays full width and flat. */
     .site-header[data-scrolled] {
-      background-color: #000;
+      background-color: var(--color-black);
       padding: 0;
     }
     .site-header[data-scrolled] .bar {
@@ -214,7 +214,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     }
   }
   .mobile-nav::backdrop {
-    background: #000;
+    background: var(--color-black);
   }
   :global(html:has(dialog.mobile-nav[open])) {
     overflow: hidden;

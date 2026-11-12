@@ -48,7 +48,7 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
 
   <div class="px-gut py-section flex flex-col gap-6" data-speakers>
     <form role="search" class="flex flex-wrap gap-3 items-center" action="/speakers" method="get" data-search-form>
-      <label class="flex-[1_1_280px] flex min-w-0 relative">
+      <label class="grow basis-70 flex min-w-0 relative">
         <span class="sr-only">Search speakers, talks and topics</span>
         <input
           type="search"
@@ -60,7 +60,7 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
           class="flex-1 min-w-0 min-h-control border border-grey-line rounded-pill px-5 text-body bg-white"
         />
       </label>
-      <button type="button" data-clear hidden class={buttonClass({ variant: 'secondary' }, '[[hidden]]:hidden')}>Clear search</button>
+      <button type="button" data-clear hidden class={buttonClass({ variant: 'secondary' })}>Clear search</button>
     </form>
 
     {
@@ -92,7 +92,7 @@ const talkWord = (n: number) => `${n} talk${n === 1 ? '' : 's'}`;
     <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,140px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-x-4 gap-y-8" data-grid>
       {ordered.map((s) => <SpeakerCard speaker={s} meta={`${s.role}${s.role ? ' · ' : ''}${talkWord(s.talks.length)}`} />)}
     </div>
-    <div class="[[hidden]]:hidden" data-empty hidden>
+    <div data-empty hidden>
       <Card padding="lg">
       <h2 slot="header" class="m-0 text-card-title font-bold" data-empty-title>No speakers match.</h2>
       <p class="m-0 text-body text-ink-2">

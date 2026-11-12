@@ -18,7 +18,8 @@ test.describe('event schedule and venue', () => {
   test('a programme with an agenda shows every line with its own time, including doors and breaks', async ({ page }) => {
     await at(page, '2026-11-01T12:00:00+01:00');
     await page.goto('/events/2026-11-forms-types');
-    const rows = page.locator('#programme li');
+    // The programme's own lines (each talk also lists its speakers, in a nested list).
+    const rows = page.locator('#programme > ol > li');
     await expect(rows).toHaveCount(5);
     await expect(rows.nth(0)).toContainText('18:30');
     await expect(rows.nth(0)).toContainText('Doors open');
@@ -171,7 +172,8 @@ test.describe('Tonight page', () => {
     await at(page, '2026-11-01T12:00:00+01:00');
     await page.goto('/today');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Forms, types and design systems');
-    await expect(page.locator('div').filter({ hasText: /^Next meetup$/ })).toBeVisible();
+    // No eyebrow labels (owner): the page says it becomes the evening's guide on the day, and offers no ratings yet.
+    await expect(page.getByText(/becomes the evening’s guide on the day/)).toBeVisible();
     await expect(page.getByText(/How (was|is) today/)).toHaveCount(0);
     await expect(page.getByText('Wed 18th Nov 2026').first()).toBeVisible();
   });
@@ -179,15 +181,17 @@ test.describe('Tonight page', () => {
   test('on the day: arrival first, and "Find the venue" is a working link', async ({ page }) => {
     await at(page, '2026-11-18T10:00:00+01:00');
     await page.goto('/today');
-    await expect(page.getByText('Doors open at 18:30')).toBeVisible();
-    await expect(page.getByRole('link', { name: /Get directions \(opens Google Maps\)/ })).toHaveAttribute('href', /google\.com\/maps\/dir/);
+    await expect(page.getByText(/Doors 18:30/).first()).toBeVisible();
+    // The opening's first action jumps to the venue section, which has the address and the map.
     await expect(page.getByRole('link', { name: 'Venue and arrival' })).toHaveAttribute('href', '#venue');
+    await expect(page.locator('#venue')).toContainText('Musterstrasse 1, 8005 Zürich');
   });
 
-  test('during the evening: now/next and feedback', async ({ page }) => {
+  test('during the evening: rate the talks and feedback', async ({ page }) => {
     await at(page, '2026-11-18T19:40:00+01:00');
     await page.goto('/today');
-    await expect(page.locator('[aria-current="time"]')).toContainText('What we learned shipping a design system');
+    // A talk has started and is not rated yet: the opening's first action goes to the programme.
+    await expect(page.getByRole('link', { name: 'Rate the talks' }).first()).toHaveAttribute('href', '#programme');
     await expect(page.getByRole('heading', { name: 'How is today’s meetup going?' })).toBeVisible();
   });
 
@@ -709,7 +713,9 @@ test.describe('partners and sponsors', () => {
     const current = page.locator('#partners-current');
     await expect(current.getByRole('link', { name: /Stripe/ })).toHaveAttribute('href', 'https://stripe.com');
     await expect(page.locator('#partners-venues').getByRole('link', { name: /novu AG/ })).toBeVisible();
-    for (const img of await page.locator('#partners-current img').all()) expect(await img.getAttribute('alt')).toMatch(/\w/);
+    // Each logo card is one link named by the partner; the logo inside is decorative, so it is not read twice.
+    for (const link of await current.getByRole('link').all()) expect(await link.innerText()).toMatch(/\w/);
+    for (const img of await current.locator('img').all()) expect(await img.getAttribute('alt')).toBe('');
   });
 
   test('the packages show production’s prices', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { sizedSrc, srcsetFor } from '../images.ts';
 import { buttonClass, cx } from '../recipes.ts';
 
@@ -53,12 +53,13 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   // Functional update: fast key presses never read a stale position.
   const step = (d: number) => setOpen((o) => (o === null ? o : (o + d + items.length) % items.length));
 
-  // The open item is in the URL (#media-<id>) so it can be shared.
-  useEffect(() => {
+  // The open item is in the URL (#media-<id>) so it can be shared. Both effects are layout effects, so they run
+  // before the next key press: deferred ones could reopen the viewer, or write the hash back, after Escape closed it.
+  useLayoutEffect(() => {
     if (open !== null) history.replaceState(history.state, '', `#media-${items[open]!.id}`);
   }, [open, items]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const d = dialog.current;
     if (!d) return;
     if (open !== null && !d.open) d.showModal();
@@ -113,7 +114,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
             <button
               type="button"
               onClick={(e) => show(i, e.currentTarget)}
-              class="group relative block w-full aspect-4/3 overflow-hidden rounded-2xl bg-grey p-0 border-0 cursor-zoom-in"
+              class="group relative block w-full aspect-4/3 overflow-hidden rounded-card bg-grey p-0 border-0 cursor-zoom-in"
               aria-label={`${m.kind === 'video' ? 'Play clip' : 'Open photo'}: ${m.alt}`}
             >
               <img
@@ -125,7 +126,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                 decoding="async"
                 width={m.width}
                 height={m.height}
-                class={cx('absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-[1.02]', m.kind === 'video' && !m.poster && 'hidden')}
+                class={cx('absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-102', m.kind === 'video' && !m.poster && 'hidden')}
               />
               {m.kind === 'video' && (
                 <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center">
@@ -164,7 +165,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                   playsInline
                   preload="none"
                   poster={cur.poster ? sizedSrc(cur.poster, 1600) : undefined}
-                  class="max-h-[70vh] max-w-full rounded-2xl bg-black"
+                  class="max-h-[70vh] max-w-full rounded-card bg-black"
                   aria-label={cur.alt}
                 >
                   <source src={cur.src} />
@@ -180,7 +181,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                   srcset={srcsetFor(cur.src)}
                   sizes="(min-width: 1200px) 1152px, 100vw"
                   alt={cur.alt}
-                  class="max-h-[70vh] max-w-full rounded-2xl object-contain"
+                  class="max-h-[70vh] max-w-full rounded-card object-contain"
                   decoding="async"
                 />
               )}
@@ -192,7 +193,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                 {cur.context && (
                   <>
                     {cur.credit ? ' · ' : ''}
-                    <a href={cur.context.href} class="text-white underline underline-offset-3">
+                    <a href={cur.context.href} class="text-white underline">
                       {cur.context.label}
                     </a>
                   </>

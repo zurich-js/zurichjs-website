@@ -2,24 +2,14 @@ import type { ComponentChildren } from 'preact';
 
 /**
  * Small brand marks for the social fields, so each one is easy to tell apart.
- * GitHub, X, Bluesky, Instagram and Meetup are from Simple Icons (CC0); LinkedIn, Slack and the website globe are drawn here.
- * Decorative: the field's text label stays its accessible name. They take the text colour (black on white, white on
- * black): brand colours only with tone="brand" (owner, 12th November 2026).
+ * GitHub, X, Bluesky, Instagram, Meetup and Slack are from Simple Icons (CC0); LinkedIn and the website globe are drawn here.
+ * Decorative: the field's text label stays its accessible name. One colour, the text's (black on white, white on
+ * black); no brand colours (owner, 12th November 2026).
  */
 const ICONS = {
   linkedin: {
-    color: '#0a66c2',
+    // The conference site's mark (conf.zurichjs.com navbar): one path in currentColor, the letters cut out.
     body: (
-      <>
-        <rect width="24" height="24" rx="4" fill="currentColor" />
-        <circle cx="7" cy="7" r="1.9" fill="#fff" />
-        <rect x="5.3" y="9.7" width="3.4" height="9" rx="0.4" fill="#fff" />
-        <path d="M10.7 9.7h3.2v1.3c.5-.9 1.6-1.6 3.1-1.6 2.6 0 3.3 1.6 3.3 4.1v5.2h-3.4v-4.6c0-1.1-.3-1.9-1.4-1.9s-1.5.8-1.5 1.9v4.6h-3.3z" fill="#fff" />
-      </>
-    ),
-    // The conference site's white mark (conf.zurichjs.com navbar): one path in currentColor, the letters cut out
-    // so the black behind shows through, rather than black painted on a white tile.
-    mono: (
       <path
         fill="currentColor"
         d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
@@ -27,7 +17,6 @@ const ICONS = {
     ),
   },
   github: {
-    color: '#181717',
     body: (
       <path
         fill="currentColor"
@@ -36,7 +25,6 @@ const ICONS = {
     ),
   },
   x: {
-    color: '#000000',
     body: (
       <path
         fill="currentColor"
@@ -45,7 +33,6 @@ const ICONS = {
     ),
   },
   bluesky: {
-    color: '#1185fe',
     body: (
       <path
         fill="currentColor"
@@ -54,7 +41,6 @@ const ICONS = {
     ),
   },
   instagram: {
-    color: '#E4405F',
     body: (
       <path
         fill="currentColor"
@@ -63,7 +49,6 @@ const ICONS = {
     ),
   },
   meetup: {
-    color: '#ED1C40',
     body: (
       <path
         fill="currentColor"
@@ -71,19 +56,9 @@ const ICONS = {
       />
     ),
   },
-  // Slack's four-colour mark, simplified (Slack is not in Simple Icons).
+  // The single-colour mark (Simple Icons' former Slack icon, CC0).
   slack: {
-    color: '#4A154B',
     body: (
-      <>
-        <rect x="9.5" y="2" width="3.4" height="9" rx="1.7" fill="#36C5F0" />
-        <rect x="2" y="11.1" width="9" height="3.4" rx="1.7" fill="#2EB67D" />
-        <rect x="11.1" y="13" width="3.4" height="9" rx="1.7" fill="#E01E5A" />
-        <rect x="13" y="9.5" width="9" height="3.4" rx="1.7" fill="#ECB22E" />
-      </>
-    ),
-    // The single-colour mark (Simple Icons' former Slack icon, CC0), for the black header and footer.
-    mono: (
       <path
         fill="currentColor"
         d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"
@@ -91,7 +66,6 @@ const ICONS = {
     ),
   },
   website: {
-    color: '#242528',
     body: (
       <g fill="none" stroke="currentColor" stroke-width="1.8">
         <circle cx="12" cy="12" r="10" />
@@ -117,29 +91,20 @@ const KINDS: Record<string, Social> = {
 };
 export const socialKind = (label: string): Social | undefined => KINDS[label.trim().toLowerCase()];
 
-/**
- * The mark alone (decorative: the link around it carries the name), in the text colour. `white` is kept as an alias
- * for the black header and footer; `brand` brings back the network's own colours.
- */
-export function SocialIcon({ kind, size = 18, tone = 'current' }: { kind: Social; size?: number; tone?: 'current' | 'white' | 'brand' }) {
-  const icon: { color: string; body: ComponentChildren; mono?: ComponentChildren } = ICONS[kind];
-  const brand = tone === 'brand';
+/** The mark alone (decorative: the link around it carries the name), in the text colour. */
+export function SocialIcon({ kind, size = 18 }: { kind: Social; size?: number }) {
   return (
-    // eslint-disable-next-line no-restricted-syntax -- a network's brand colour, only when asked for
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" style={brand ? { color: icon.color } : undefined} class="flex-none">
-      {brand ? icon.body : (icon.mono ?? icon.body)}
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" class="flex-none">
+      {ICONS[kind].body}
     </svg>
   );
 }
 
 /** A social field's label: the brand mark, then the text. */
 export function SocialLabel({ kind, text }: { kind: Social; text: ComponentChildren }) {
-  const icon = ICONS[kind];
   return (
     <span class="inline-flex items-center gap-2">
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false" class="flex-none">
-        {'mono' in icon ? icon.mono : icon.body}
-      </svg>
+      <SocialIcon kind={kind} />
       {text}
     </span>
   );

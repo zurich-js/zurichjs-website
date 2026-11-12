@@ -9,6 +9,7 @@ import { eventCardAlt } from '~/lib/og';
 import { ROLE_LABEL, type Partner, type SupporterRole, dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import EventActions from '~/components/islands/event/EventActions';
 import EventBanner from '~/components/islands/event/EventBanner';
 import EventSummary from '~/components/islands/event/EventSummary';
@@ -104,7 +105,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
           <div class={ABOUT_GRID}>
             {ev.description && (
               <section class="flex flex-col gap-3.5">
-                <h2 class="m-0 text-subsection font-bold">About this meetup</h2>
+                <Heading size="subsection">About this meetup</Heading>
                 <p class="m-0 text-body text-ink-2 max-w-reading text-pretty">{ev.description}</p>
               </section>
             )}
@@ -116,7 +117,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
 
         {recapOnly.length > 0 && (
           <section class="flex flex-col gap-6">
-            <h2 class="m-0 text-subsection font-bold">Talks</h2>
+            <Heading size="subsection">Talks</Heading>
             {recapOnly.map((t) => (
               <div class="flex flex-col gap-2">
                 <h3 class="m-0 text-card-title font-bold text-pretty">{t.title}</h3>
@@ -125,7 +126,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
                     .map((id) => byId.get(id))
                     .filter((s) => !!s)
                     .map((s) => (
-                      <a href={`/speakers/${s.id}`} class="text-body font-bold underline underline-offset-3">
+                      <a href={`/speakers/${s.id}`} class="text-body font-bold underline">
                         {s.name}
                       </a>
                     ))}
@@ -153,7 +154,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
               Photos from the evening
             </h2>
             {gallery.length > 0 && (
-              <a href={mediaHref(ev.slug)} class="font-bold text-body underline underline-offset-3">
+              <a href={mediaHref(ev.slug)} class="font-bold text-body underline">
                 {`All ${countLabel(gallery)}`}
               </a>
             )}
@@ -205,13 +206,13 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
       </div>
     ) : (
       <div class="px-gut py-section grid grid-cols-auto-md gap-12 items-start">
-        <div class="flex flex-col gap-8 col-span-full md:col-[1/-2] min-w-0">
+        <div class="flex flex-col gap-8 col-span-full md:col-start-1 md:-col-end-2 min-w-0">
           <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
           <EventBanner client:load ev={ev} initial={state} />
 
           <section class="flex flex-col gap-3.5">
-            <h2 class="m-0 text-subsection font-bold">About this meetup</h2>
+            <Heading size="subsection">About this meetup</Heading>
             <p class="m-0 text-body text-ink-2 max-w-reading text-pretty">{ev.description}</p>
           </section>
 
@@ -248,7 +249,7 @@ const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: strin
 
           {ev.practical.length > 0 && (
             <section class="flex flex-col gap-5">
-              <h2 class="m-0 text-subsection font-bold">Good to know</h2>
+              <Heading size="subsection">Good to know</Heading>
               <div class="grid grid-cols-auto-sm gap-x-10 gap-y-6">
                 {ev.practical.map((x) => (
                   <div class="flex flex-col gap-1">

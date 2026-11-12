@@ -153,7 +153,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                             href={`${eventHref(e)}${anchorOn(e)}`}
                             class="group no-underline text-black rounded-(--radius-nested) bg-white hover:bg-grey grid grid-cols-[56px_minmax(0,1fr)_auto] gap-3.5 items-center p-2.5 pr-4"
                           >
-                            <span class={`flex flex-col items-center justify-center h-14 rounded-xl ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
+                            <span class={`flex flex-col items-center justify-center h-14 rounded-nested-min ${soon ? 'bg-black text-white' : 'bg-grey'}`} aria-hidden="true">
                               <span class="text-meta font-bold leading-none">{d?.mon ?? 'TBC'}</span>
                               <span class="text-card-title font-bold leading-tight">
                                 {d?.day ?? '?'}
@@ -177,7 +177,7 @@ const jsonLd = [personSchema(s), breadcrumbSchema([{ name: 'Speakers', path: '/s
                   <p class="m-0 text-meta text-ink-2">The event for this talk isn’t linked yet.</p>
                 )}
                 {t.slidesUrl && (
-                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-compact font-bold underline underline-offset-3">
+                  <a href={t.slidesUrl} target="_blank" rel="noopener" class="self-start text-compact font-bold underline">
                     Slides (opens in a new tab)
                   </a>
                 )}

@@ -1,27 +1,4 @@
 {
-  "apps/web/src/components/RetiredNotice.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 1
-    }
-  },
-  "apps/web/src/components/RichText.tsx": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    },
-    "no-restricted-syntax": {
-      "count": 1
-    }
-  },
-  "apps/web/src/components/islands/forms/CfpForm.tsx": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 3
-    }
-  },
-  "apps/web/src/components/islands/forms/FeedbackForm.tsx": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 1
-    }
-  },
   "apps/web/src/components/islands/forms/shared.tsx": {
     "better-tailwindcss/no-restricted-classes": {
       "count": 1
@@ -32,77 +9,14 @@
       "count": 1
     }
   },
-  "apps/web/src/pages/404.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 1
-    }
-  },
-  "apps/web/src/pages/about/index.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 1
-    }
-  },
-  "apps/web/src/pages/ai-context.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 3
-    }
-  },
   "apps/web/src/pages/design.astro": {
     "no-restricted-syntax": {
       "count": 1
     }
   },
-  "apps/web/src/pages/events/[slug].astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 1
-    }
-  },
-  "apps/web/src/pages/events/index.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    }
-  },
   "apps/web/src/pages/feedback/speaker/[token].astro": {
     "no-restricted-syntax": {
       "count": 1
-    }
-  },
-  "apps/web/src/pages/media.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    }
-  },
-  "apps/web/src/pages/partners.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    }
-  },
-  "apps/web/src/pages/policies/[slug].astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 23
-    }
-  },
-  "apps/web/src/pages/speakers/index.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 3
-    }
-  },
-  "packages/design/src/components/Footer.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    }
-  },
-  "packages/design/src/components/Header.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 2
-    }
-  },
-  "packages/design/src/components/HomeHero.astro": {
-    "better-tailwindcss/no-restricted-classes": {
-      "count": 4
-    },
-    "no-restricted-syntax": {
-      "count": 3
     }
   },
   "packages/design/src/components/PackedGrid.astro": {
@@ -122,12 +36,7 @@
   },
   "packages/design/src/islands/Gallery.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 4
-    }
-  },
-  "packages/design/src/islands/SocialLabel.tsx": {
-    "no-restricted-syntax": {
-      "count": 15
+      "count": 3
     }
   }
 }

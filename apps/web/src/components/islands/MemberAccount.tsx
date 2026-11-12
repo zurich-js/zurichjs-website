@@ -13,6 +13,7 @@ import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass, noticeClass, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
 import { ChipGroup, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { setSignedIn } from '@zurichjs/design/session';
 import { lastDay, longDate } from '../../server/dates.ts';
@@ -182,7 +183,7 @@ export default function MemberAccount({ contactEmail }: Props) {
     return (
       <div class="grid grid-cols-auto-lg gap-12 items-start">
         <div class="flex flex-col gap-3.5">
-          <h2 class="m-0 text-section font-bold">Sign in</h2>
+          <Heading>Sign in</Heading>
           <p class="m-0 text-body text-ink-2 text-pretty">
             Sign in with your email to join or to manage your membership. We email you a link, so there is no password to remember.
           </p>

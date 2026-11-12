@@ -92,7 +92,7 @@ const sub = data
             {(t.eventTitle || t.eventDate) && (
               <p class="m-0 text-body text-ink-2">
                 {t.eventSlug ? (
-                  <a href={`/events/${t.eventSlug}`} class="font-bold text-black underline underline-offset-3">{t.eventTitle}</a>
+                  <a href={`/events/${t.eventSlug}`} class="font-bold text-black underline">{t.eventTitle}</a>
                 ) : (
                   t.eventTitle
                 )}

@@ -2,12 +2,12 @@
 /** The owner's full "Why it's called ZurichJS" post, lightly edited for the page. */
 import { breadcrumbSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { nextMeetupHref } from '~/lib/content';
 
 const nextHref = await nextMeetupHref();
-const H = 'm-0 mt-7 md:mt-10 text-subsection font-bold';
 const P = 'm-0 text-body text-ink-2 text-pretty';
 const L = 'm-0 pl-5 text-body text-ink-2 flex flex-col gap-1';
 const lists = {
@@ -35,7 +35,7 @@ const lists = {
       <p class={P}><b class="text-black">The short answer is simple: JavaScript is the common ground that brought us together.</b></p>
       <p class={P}>The longer answer is more interesting, but what’s even more interesting is that we understood it after we named it.</p>
 
-      <h2 class={H}>It started with something simple</h2>
+      <Heading size="subsection" class="mt-7 md:mt-10">It started with something simple</Heading>
       <p class={P}>Bogdan and Faris first crossed paths at the Zürich ReactJS Meetup. At the time, the ecosystem in Zurich already had a few communities:</p>
       <ul class={L}>{lists.communities.map((i) => <li>{i}</li>)}</ul>
       <p class={P}>All great communities, with a rich history, and each focused on a specific slice of the web ecosystem. But it felt like something was missing.</p>
@@ -43,25 +43,25 @@ const lists = {
       <p class={P}>And for Bogdan and Faris, JavaScript is also the language we built our careers on. So the name was born from this connection. ZurichJS.</p>
       <p class={P}>At the time, it was mostly practical. A neutral home base that wasn’t tied to one framework, and most importantly, the Meetup.com group was free! What we didn’t fully realise then is how much that name would come to represent later.</p>
 
-      <h2 class={H}>JavaScript is bigger than the browser</h2>
+      <Heading size="subsection" class="mt-7 md:mt-10">JavaScript is bigger than the browser</Heading>
       <p class={P}>For a long time JavaScript meant one thing. The browser. But over the past decade that boundary completely disappeared. JavaScript moved everywhere:</p>
       <ul class={L}>{lists.everywhere.map((i) => <li>{i}</li>)}</ul>
       <p class={P}>
         For better or worse, JavaScript is everywhere now. You can argue about performance. You can argue about multi-threading (Matteo Collina will happily argue about all of that). But none of that changes one thing: JavaScript became the most accessible programming language on the planet. You can start with a browser tab and end up building distributed systems.
       </p>
 
-      <h2 class={H}>Accessibility changes who gets to build</h2>
+      <Heading size="subsection" class="mt-7 md:mt-10">Accessibility changes who gets to build</Heading>
       <p class={P}>One of the reasons we leaned into the JavaScript identity is that it lowers barriers. People can move across the stack more easily. Frontend developers write backend services. Backend engineers explore UI. People build tools, scripts, and infrastructure.</p>
       <p class={P}>Seldom because JavaScript is the best tool for everything. But because it’s approachable. And that approachability expands who gets to participate. That philosophy naturally shaped the meetup, and now it is shaping the conference.</p>
 
-      <h2 class={H}>ZurichJS isn’t just about JavaScript talks</h2>
+      <Heading size="subsection" class="mt-7 md:mt-10">ZurichJS isn’t just about JavaScript talks</Heading>
       <p class={P}>People sometimes ask before submitting a talk: “Does it have to be about JavaScript?” Not really. We’ve had talks about:</p>
       <ul class={L}>{lists.talks.map((i) => <li>{i}</li>)}</ul>
       <p class={P}>
         One of our favourite moments was when Bert De Swaef came and gave a Laravel talk at a JavaScript meetup. And it worked perfectly. We’ve come to learn that most of the ideas developers care about are beyond the scope of a single language. They are about building systems, running teams, shipping software and learning from each other. JavaScript simply happens to be the bridge connecting a lot of those worlds.
       </p>
 
-      <h2 class={H}>The name ended up meaning more than we expected</h2>
+      <Heading size="subsection" class="mt-7 md:mt-10">The name ended up meaning more than we expected</Heading>
       <p class={P}>In the beginning, ZurichJS was just a name. Now it’s a philosophy. JavaScript represents something larger than the language itself: accessibility, experimentation, cross-stack thinking, a welcoming entry point into software.</p>
       <p class={P}>That’s the spirit we want ZurichJS to embody. A place where people from different backgrounds can show up, share ideas, and learn from each other.</p>
       <p class={P}><b class="text-black">JavaScript just happens to be the banner we stand under. And it turns out that banner is wide enough to welcome everyone.</b></p>

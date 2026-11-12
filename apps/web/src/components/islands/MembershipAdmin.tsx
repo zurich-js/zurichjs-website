@@ -12,6 +12,7 @@ import { Checkbox, ChipGroup, SelectField, TextArea, TextField } from '@zurichjs
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass, chipClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
 import type { AdminMember } from '../../server/admin-views.ts';
 import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
@@ -103,7 +104,7 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         setError(body.error ?? 'Sign-in failed.');
       }}
     >
-      <h2 class="m-0 text-subsection font-bold">Sign in</h2>
+      <Heading size="subsection">Sign in</Heading>
       <p class="m-0 text-body text-ink-2">Enter the admin password.</p>
       <TextField
         label="Password"
@@ -242,7 +243,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
             <li key={m.id} class={cardClass(selected === m.id ? 'filled' : 'outline', 'sm', 'gap-1')}>
               <button
                 type="button"
-                class="bg-transparent border-0 p-0 font-bold text-left text-body underline underline-offset-3 cursor-pointer self-start"
+                class="bg-transparent border-0 p-0 font-bold text-left text-body underline cursor-pointer self-start"
                 onClick={() => setSelected(m.id)}
                 aria-expanded={selected === m.id}
               >
@@ -287,7 +288,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
                   <td class="px-4 py-3">
                     <button
                       type="button"
-                      class="bg-transparent border-0 p-0 font-bold text-left underline underline-offset-3 cursor-pointer"
+                      class="bg-transparent border-0 p-0 font-bold text-left underline cursor-pointer"
                       onClick={() => setSelected(m.id)}
                       aria-expanded={selected === m.id}
                     >

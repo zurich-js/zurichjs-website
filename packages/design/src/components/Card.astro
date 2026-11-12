@@ -27,6 +27,7 @@
  * is for list rows (events): on top below 512px, then a near-square column beside the text (5:4, a quarter of the card, a
  * fifth from 768px) with the text centred beside it. `mediaRatio` sets its shape.
  * dim: the whole card at lower opacity until hovered or focused (past meetups in a list; owner, 12th November 2026).
+ * 70%, the lowest that keeps the facts text above 4.5:1 contrast (axe).
  * The media's own corners and background are dropped, so its bottom edge meets the text flat. A stacked link card
  * shows its signifier as a round button in the image's top-right corner instead of beside the title.
  */
@@ -105,7 +106,7 @@ const interactive = behaviour === 'link' || behaviour === 'disclosure';
 const box = cx(
   'group relative min-w-0 rounded-(--card-radius) transition',
   cardSurfaces[surface],
-  dim && 'opacity-60 hover:opacity-100 has-focus-visible:opacity-100',
+  dim && 'opacity-70 hover:opacity-100 has-focus-visible:opacity-100',
   interactive && HOVER[surface],
   interactive && 'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
   extra,

@@ -238,6 +238,10 @@ test.describe('/contact', () => {
       'How can I get involved?',
     ])
       await expect(page.getByRole('heading', { name: q })).toBeVisible();
-    await expect(page.getByText(/^No\. Our meetups are free, so we can’t cover travel or accommodation/)).toBeVisible();
+    // The answers are disclosure cards: closed until the question is opened.
+    const answer = page.getByText(/^No\. Our meetups are free, so we can’t cover travel or accommodation/);
+    await expect(answer).toBeHidden();
+    await page.getByRole('heading', { name: 'Do you cover travel and accommodation for speakers?' }).click();
+    await expect(answer).toBeVisible();
   });
 });

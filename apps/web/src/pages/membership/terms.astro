@@ -9,6 +9,7 @@
  * version before their next payment setup.
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import { TERMS } from '@zurichjs/membership';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
@@ -85,7 +86,7 @@ const SECTIONS: [string, string[]][] = [
       {
         SECTIONS.map(([h, paras]) => (
           <section class="flex flex-col gap-3">
-            <h2 class="m-0 text-subsection font-bold">{h}</h2>
+            <Heading size="subsection">{h}</Heading>
             {paras.map((p) => (
               <p class="m-0 text-body text-ink-2 text-pretty">{p}</p>
             ))}

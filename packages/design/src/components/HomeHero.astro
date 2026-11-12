@@ -3,7 +3,7 @@
  * Black hero on the same surface as the header (Bogdan's review, 4th November 2026):
  * "JavaScript meets Zurich." as the H1, the mission as a smaller H2, one line of copy, and a square
  * composition on the right: a meetup photo and the workshop loop as two squares, and the next meetup as a
- * card across the full width below them, with the meetup's artwork from Sanity.
+ * card across the full width below them (a two-column grid; the card spans both), with the meetup's artwork from Sanity.
  *
  * The next-meetup card is one link card to the event page (owner, 12th November 2026): the meetup's artwork
  * flush to the card's edges, the title first, then date and venue in one wrapping facts row; the arrow is the
@@ -33,7 +33,7 @@ const p = next ? presentEvent(next, { now, ticketing }) : null;
 // Only states that change whether to come are shown; "RSVP open" and the price are not (review).
 const NOTICE: Partial<Record<string, string>> = { full: 'Full, waitlist open', postponed: 'Postponed', cancelled: 'Cancelled', live: 'Happening now', tbc: 'Date to be confirmed' };
 const notice = p ? NOTICE[p.state] : undefined;
-const tile = 'relative block min-h-0 rounded-card overflow-hidden bg-ink';
+const tile = 'relative block min-h-0 aspect-square rounded-card overflow-hidden bg-ink';
 // The meetup's own artwork from Sanity, in the card (Bogdan's review: the graphics added so much).
 const art = next?.cover;
 ---
@@ -48,24 +48,29 @@ const art = next?.cover;
   </div>
 
   {/* The square composition: a photo, the loop, and the next meetup as a card. The card's artwork sits on its left at every width, so it stays short on phones; below 800px the composition stops at the form width. */}
-  <div class="hero-squares grid gap-3 w-full max-md:max-w-form">
-    <span class={`${tile} [grid-area:a]`}>
+  <div class="grid grid-cols-2 gap-3 w-full max-md:max-w-form">
+    <span class={tile}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
       <img src={srcFor(PHOTOS.audience.src)} srcset={PHOTOS.audience.srcset ?? srcsetFor(PHOTOS.audience.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.audience.alt} loading="eager" fetchpriority="high" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.audience.position ?? 'center' }} />
     </span>
-    <span class={`${tile} [grid-area:v]`}>
+    <span class={tile}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
       <img src={srcFor(PHOTOS.speaker.src)} srcset={PHOTOS.speaker.srcset ?? srcsetFor(PHOTOS.speaker.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.speaker.alt} loading="eager" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }} />
       {
         PHOTOS.speaker.video && (
+          <>
+          {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
           <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }}>
             <source src={PHOTOS.speaker.video} type="video/mp4" />
           </video>
+          </>
         )
       }
     </span>
     {/* The next meetup: a link card with the artwork flush to its edges, the title first, then date and venue on one wrapping line. */}
     {
       next && p ? (
-        <Card surface="white" level="p" mediaLayout="side" title={next.title} href={eventHref(next)} linkHint="Details and RSVP" linkAttrs={{ 'data-next-meetup': '' }} class="[grid-area:c]">
+        <Card surface="white" level="p" mediaLayout="side" title={next.title} href={eventHref(next)} linkHint="Details and RSVP" linkAttrs={{ 'data-next-meetup': '' }} class="col-span-2">
           {art && <img slot="media" src={srcFor(art.src)} srcset={srcsetFor(art.src)} sizes="(min-width: 800px) 15vw, 30vw" alt="" loading="eager" decoding="async" />}
           <Facts
             slot="facts"
@@ -77,7 +82,7 @@ const art = next?.cover;
           {notice && <Tag tone="black">{notice}</Tag>}
         </Card>
       ) : (
-        <Card surface="white" level="p" title="The next meetup is being planned." href={meetupGroupUrl} linkHint="Follow ZurichJS on Meetup" linkAttrs={{ 'data-next-meetup': '' }} class="[grid-area:c]">
+        <Card surface="white" level="p" title="The next meetup is being planned." href={meetupGroupUrl} linkHint="Follow ZurichJS on Meetup" linkAttrs={{ 'data-next-meetup': '' }} class="col-span-2">
           <Text size="compact" tone="muted">We announce it on Meetup first.</Text>
         </Card>
       )
@@ -85,18 +90,6 @@ const art = next?.cover;
   </div>
 </section>
 
-<style>
-  /* Two photo squares on top, the next-meetup card across the full width below, at every size. */
-  .hero-squares {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-areas:
-      'a v'
-      'c c';
-  }
-  .hero-squares > span {
-    aspect-ratio: 1 / 1;
-  }
-</style>
 
 <script>
   // Play the hero loop shortly after the page has loaded, only when motion is welcome and data isn't being saved.

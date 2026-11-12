@@ -100,7 +100,7 @@ const WAYS = [
     cta: { label: 'Community collaboration', way: 'community' },
   },
 ] as const;
-const link = 'text-black underline underline-offset-[3px]';
+const link = 'text-black underline';
 ---
 
 <BaseLayout
@@ -291,7 +291,7 @@ const link = 'text-black underline underline-offset-[3px]';
           <SponsorTiers groups={groups.sponsorsByTier} />
         ) : (
           <p class="m-0 text-body">
-            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline underline-offset-[3px]">See the packages</a>.
+            No sponsors are listed right now. <a href="#sponsorship-tiers" class="underline">See the packages</a>.
           </p>
         )
       }

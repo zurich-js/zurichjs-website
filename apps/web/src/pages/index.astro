@@ -101,7 +101,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
             <h2 id="h-talks" class="m-0 text-section font-bold">
               Talks from past meetups
             </h2>
-            <a href="/events?tab=past" class="font-bold text-body underline underline-offset-4">
+            <a href="/events?tab=past" class="font-bold text-body underline">
               All past events
             </a>
           </div>
@@ -122,7 +122,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
           <h2 id="h-speakers" class="m-0 text-section font-bold">Meet the speakers</h2>
           <p class="m-0 text-body text-ink-2">{speakerCount} people have spoken at ZurichJS so far.</p>
         </div>
-        <a href="/speakers" class="font-bold text-body underline underline-offset-4">All {speakerCount} speakers</a>
+        <a href="/speakers" class="font-bold text-body underline">All {speakerCount} speakers</a>
       </div>
       <SpeakerArc client:visible speakers={arc} />
       <div class="px-gut pt-8">

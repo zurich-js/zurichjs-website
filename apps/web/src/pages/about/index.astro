@@ -137,7 +137,7 @@ const years = [...new Set(rows.map(yearOf))].map((y) => ({ y, rows: rows.filter(
       <div class="flex flex-col gap-3">
         <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <Heading as="h2" size="section" id="h-story" class="max-w-wide">From a free Meetup group to a Swiss nonprofit and a conference</Heading>
-          <a href="/events?tab=past" class="font-bold text-body underline underline-offset-4">
+          <a href="/events?tab=past" class="font-bold text-body underline">
             Browse all past events
           </a>
         </div>
@@ -311,7 +311,7 @@ const years = [...new Set(rows.map(yearOf))].map((y) => ({ y, rows: rows.filter(
                 {q.url && (
                   <>
                     <br />
-                    <a href={q.url} target="_blank" rel="noopener" class="inline-block mt-1.5 text-compact font-bold underline underline-offset-[3px]">
+                    <a href={q.url} target="_blank" rel="noopener" class="inline-block mt-1.5 text-compact font-bold underline">
                       Read the post on LinkedIn ↗
                     </a>
                   </>

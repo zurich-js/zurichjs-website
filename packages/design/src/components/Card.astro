@@ -22,7 +22,8 @@
  * Without `title`, the "header" slot takes the title's place, for cards that hold a custom heading.
  * "media": an image flush with the card's edges; only the text side has padding. The card is a size container, so
  * the layout follows the card's own width, not the screen: beside the text once the card is 512px wide (@lg),
- * on top below that. `mediaLayout="stack"` keeps it on top at any width (team cards); `mediaRatio` sets its shape.
+ * on top below that. `mediaLayout="stack"` keeps it on top at any width (team cards); `mediaLayout="side"` keeps it beside
+ * the text at any width, a third of a narrow card, so a short link card stays short on phones (the next meetup); `mediaRatio` sets its shape.
  * The media's own corners and background are dropped, so its bottom edge meets the text flat. A stacked link card
  * shows its signifier as a round button in the image's top-right corner instead of beside the title.
  */
@@ -48,7 +49,7 @@ interface Props {
   open?: boolean;
   as?: 'div' | 'section' | 'article' | 'li' | 'aside';
   /** Media beside the text when the card is wide enough ("auto"), or always on top ("stack"). */
-  mediaLayout?: 'auto' | 'stack';
+  mediaLayout?: 'auto' | 'stack' | 'side';
   /** The media's shape when it sits on top. */
   mediaRatio?: 'video' | 'square';
   /** What touches the edge. Defaults to "control" when there is a footer, otherwise "text". */
@@ -155,9 +156,9 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
           </svg>
         </span>
       )}
-      <div class={has.media ? cx('grid h-full', mediaLayout === 'auto' && '@lg:grid-cols-2') : 'contents'}>
+      <div class={has.media ? cx('grid h-full', mediaLayout === 'auto' && '@lg:grid-cols-2', mediaLayout === 'side' && 'grid-cols-[1fr_2fr] @lg:grid-cols-2') : 'contents'}>
       {has.media && (
-        <div class={cx('relative *:absolute *:inset-0 *:rounded-none *:bg-transparent **:size-full **:object-cover', mediaRatio === 'square' ? 'aspect-square' : 'aspect-video', mediaLayout === 'auto' && '@lg:aspect-auto')}>
+        <div class={cx('relative *:absolute *:inset-0 *:rounded-none *:bg-transparent **:size-full **:object-cover', mediaLayout !== 'side' && (mediaRatio === 'square' ? 'aspect-square' : 'aspect-video'), mediaLayout === 'auto' && '@lg:aspect-auto')}>
           <slot name="media" />
         </div>
       )}

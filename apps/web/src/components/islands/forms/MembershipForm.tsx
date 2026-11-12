@@ -84,8 +84,8 @@ export default function MembershipForm() {
         </div>
       </section>
 
-      <section id="membership-form" aria-labelledby="h-join" class="scroll-mt-6 grid grid-cols-auto-lg gap-8 md:gap-16 items-start">
-        <div class="flex flex-col gap-3.5">
+      <section id="membership-form" aria-labelledby="h-join" class="scroll-mt-6 w-full max-w-form self-center flex flex-col gap-6">
+        <div class="flex flex-col gap-3.5 text-center">
           <h2 id="h-join" class="m-0 text-section font-bold">
             Join
           </h2>

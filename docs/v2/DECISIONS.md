@@ -482,3 +482,8 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **The CFP bot** (`docs/v2/CFP-BOT.md`): a second Slack app in a public `#cfp` thread, four tools on the speaker's own draft only, name, email and photo from the Slack profile (the photo only with consent), the cheapest model, at most 2 submissions per person per day, guests allowed, the Slack ID only in the review notes.
 - **Privacy policy** section "Talk Proposals in Slack" approved as written.
 - **Unfinished drafts** are deleted after 14 days without activity.
+
+## Donations are one-time only (owner, 12th November 2026)
+
+- **`/donate` offers one-time donations only.** The Monthly switch is gone. Under the form, "Want to support monthly?" points to `/membership`: regular support goes through the Verein.
+- **Existing monthly donors** can still manage or cancel (portal link or email, the FAQ, the cancellation webhook). The checkout API still accepts `recurrence: 'monthly'`; the form no longer sends it.

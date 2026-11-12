@@ -3,10 +3,11 @@
  * Support ZurichJS at the production URL /donate (301s from /buy-us-a-coffee
  * and /support keep working, with their query strings).
  *
- * Online donations, one-time or monthly, go through Stripe Checkout (owner
- * decision 2026-11-01, docs/v2/DECISIONS.md). Twint (QR from Sanity Site
- * settings) and email stay as alternatives. Membership of the association is
- * separate: /membership.
+ * Online donations are one-time, through Stripe Checkout (owner decision
+ * 2026-11-01, docs/v2/DECISIONS.md). Regular support goes through membership
+ * of the Verein: /membership (owner, 12th November 2026). Existing monthly
+ * donors can still manage or cancel. Twint (QR from Sanity Site settings) and
+ * email stay as alternatives.
  */
 import DonateForm from '~/components/islands/forms/DonateForm';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
@@ -38,7 +39,7 @@ const WAYS = [
 <BaseLayout
   title="Support ZurichJS"
   fullTitle="Support ZurichJS · Help the JavaScript Community in Zurich"
-  description="Donate to ZurichJS once or monthly, or support it as a member, host, sponsor, speaker or volunteer. Meetups are free and run by volunteers."
+  description="Donate to ZurichJS, or support it as a member, host, sponsor, speaker or volunteer. Meetups are free and run by volunteers."
   keywords={['donate ZurichJS', 'support ZurichJS', 'sponsor ZurichJS', 'JavaScript community Zurich', 'ZurichJS membership', 'non-profit meetup Switzerland']}
 >
   <PageOpening slot="opening" title="Support ZurichJS" sub="Meetups are free to attend. We started on personal savings; donations, members and partners now cover the evenings.">
@@ -56,7 +57,14 @@ const WAYS = [
           A donation is a gift to ZurichJS; it doesn’t make you a member. To join the association with a vote, see <a href="/membership" class="font-bold text-black">membership</a>.
         </p>
       </div>
-      <DonateForm client:load portalUrl={portalUrl} email={SITE.email} twint={!!qr} />
+      <DonateForm client:load email={SITE.email} twint={!!qr} />
+      <Surface class="p-6 flex flex-col gap-3 items-start" data-verein-cta>
+        <div class="flex flex-col gap-1.5">
+          <h3 class="m-0 text-xl font-bold">Want to support monthly?</h3>
+          <p class="m-0 text-lg text-ink-2">Join the Verein. Members fund the meetups all year and get a vote in how the community grows.</p>
+        </div>
+        <Button href="/membership" variant="black">Become a member</Button>
+      </Surface>
     </section>
 
     <section aria-labelledby="h-goes" class="flex flex-col gap-5">

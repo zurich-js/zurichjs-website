@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { optionClass, optionInput } from '@zurichjs/design/recipes';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
-
-type Recurrence = 'once' | 'monthly';
 
 /** Production's preset amounts and what each one pays for (origin/main: buy-us-a-coffee). */
 const PRESETS: { amount: number; covers: string }[] = [
@@ -19,15 +17,16 @@ const MAX = 1000;
 const chf = (n: number) => `CHF ${Number.isInteger(n) ? n : n.toFixed(2)}`;
 
 /**
- * Online donation on /donate: one-time or monthly, in Swiss francs, paid on
- * Stripe's hosted page. Nothing is charged here; the button hands over to
- * Stripe, which confirms the payment. Separate from membership.
+ * Online donation on /donate: one-time, in Swiss francs, paid on Stripe's
+ * hosted page. Nothing is charged here; the button hands over to Stripe,
+ * which confirms the payment. Regular support goes through membership
+ * (owner, 12th November 2026), linked under the form on the page.
  *
  * When Stripe can't be reached, the error names only the alternatives the
  * page really shows: Twint when `twint` (a QR in Site settings), always email.
  */
-export default function DonateForm({ portalUrl, email: contactEmail, twint = false }: { portalUrl?: string; email: string; twint?: boolean }) {
-  const [recurrence, setRecurrence] = useState<Recurrence>('once');
+export default function DonateForm({ email: contactEmail, twint = false }: { email: string; twint?: boolean }) {
+  const recurrence = 'once';
   const [preset, setPreset] = useState<number | null>(20);
   const [custom, setCustom] = useState('');
   const [email, setEmail] = useState('');
@@ -63,7 +62,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
   const amount = preset ?? customNum;
   const amountBad = !Number.isFinite(amount) || amount < MIN || amount > MAX;
   const emailBad = !!email && !isEmail(email);
-  const summary = amountBad ? '' : recurrence === 'monthly' ? `You’ll give ${chf(amount)} every month until you cancel.` : `You’ll give ${chf(amount)} once.`;
+  const summary = amountBad ? '' : `You’ll give ${chf(amount)} once.`;
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -110,29 +109,6 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
           <b>No payment was made.</b> You left the payment page before paying. You can try again below.
         </div>
       )}
-      {/* How often: one pill with a segment per option, like the membership and sponsorship switches. */}
-      <div role="radiogroup" aria-label="How often" class="self-start inline-flex p-1 rounded-pill bg-grey">
-        {(
-          [
-            ['once', 'One-time'],
-            ['monthly', 'Monthly'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={recurrence === value}
-            onClick={() => setRecurrence(value)}
-            class={cx(
-              'min-h-[44px] px-4 md:min-w-[120px] md:px-6 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors',
-              recurrence === value ? 'bg-black text-white' : 'bg-transparent text-black hover:bg-grey-hover',
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-2.5 min-w-0">
         <legend class="text-[16px] font-bold mb-2 p-0">Amount in Swiss francs</legend>
         <div class="flex flex-wrap gap-2">
@@ -215,25 +191,7 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
           )}
         </span>
       </div>
-      <p class="m-0 text-[15px] leading-[1.55] text-ink-2">
-        Payment happens on Stripe’s secure page; nothing is charged here. Stripe confirms the payment and emails a receipt.
-        {recurrence === 'monthly' && (
-          <>
-            {' '}
-            You can cancel a monthly donation at any time{portalUrl ? ' ' : ' by writing to '}
-            {portalUrl ? (
-              <a href={portalUrl} class="font-bold text-black">
-                in the Stripe customer portal
-              </a>
-            ) : (
-              <a href={`mailto:${contactEmail}?subject=${encodeURIComponent('Cancel my monthly donation')}`} class="font-bold text-black">
-                {contactEmail}
-              </a>
-            )}
-            .
-          </>
-        )}
-      </p>
+      <p class="m-0 text-[15px] leading-[1.55] text-ink-2">Payment happens on Stripe’s secure page; nothing is charged here. Stripe confirms the payment and emails a receipt.</p>
     </form>
   );
 }

@@ -121,7 +121,7 @@ The baseline only shrinks. When you fix a legacy violation, run `pnpm lint:ui:pr
   - A scheduled function builds once publishing has paused for 2 minutes, and at each event's doors and doors + 48 h.
   - There is no nightly rebuild.
 - **Draft preview:** a build with `SANITY_PERSPECTIVE=drafts` shows unpublished changes. It is noindex.
-- **Payments:** donations through Stripe Checkout on `/donate` (one-time or monthly, owner decision 2026-11-01), and Verein memberships as Stripe subscriptions, quarterly or yearly (owner, 5th and 10th November 2026). Anyone can join: they sign in, accept the membership terms and pay; nobody approves them and there is no declaration to sign (owner, 10th November 2026). Every paid term gets a certificate of membership by email. Members cannot cancel in Stripe: they resign to the board, as the bylaws say (`docs/v2/MEMBERSHIP.md`). Pro meetups, tickets and merchandise stay removed. Twint (QR from Site settings) and email remain.
+- **Payments:** one-time donations through Stripe Checkout on `/donate` (owner decision 2026-11-01; monthly removed from the form on 12th November 2026, regular support goes through membership), and Verein memberships as Stripe subscriptions, quarterly or yearly (owner, 5th and 10th November 2026). Anyone can join: they sign in, accept the membership terms and pay; nobody approves them and there is no declaration to sign (owner, 10th November 2026). Every paid term gets a certificate of membership by email. Members cannot cancel in Stripe: they resign to the board, as the bylaws say (`docs/v2/MEMBERSHIP.md`). Pro meetups, tickets and merchandise stay removed. Twint (QR from Site settings) and email remain.
 
 ## Environment variables
 

@@ -84,7 +84,7 @@
   },
   "apps/web/src/components/islands/forms/DonateForm.tsx": {
     "better-tailwindcss/no-restricted-classes": {
-      "count": 15
+      "count": 12
     }
   },
   "apps/web/src/components/islands/forms/DonateThanks.tsx": {

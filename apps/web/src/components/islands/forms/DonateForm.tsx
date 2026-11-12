@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { optionClass, optionInput } from '@zurichjs/design/recipes';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
+import { SegmentedControl } from '@zurichjs/design/islands/SegmentedControl';
 import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
 
 type Recurrence = 'once' | 'monthly';
@@ -111,28 +112,16 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
         </div>
       )}
       {/* How often: one pill with a segment per option, like the membership and sponsorship switches. */}
-      <div role="radiogroup" aria-label="How often" class="self-start inline-flex p-1 rounded-pill bg-grey">
-        {(
-          [
-            ['once', 'One-time'],
-            ['monthly', 'Monthly'],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            role="radio"
-            aria-checked={recurrence === value}
-            onClick={() => setRecurrence(value)}
-            class={cx(
-              'min-h-[44px] px-4 md:min-w-[120px] md:px-6 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors',
-              recurrence === value ? 'bg-black text-white' : 'bg-transparent text-black hover:bg-grey-hover',
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        legend="How often"
+        options={[
+          { value: 'once', label: 'One-time' },
+          { value: 'monthly', label: 'Monthly' },
+        ]}
+        value={recurrence}
+        onChange={setRecurrence}
+        class="self-start"
+      />
       <fieldset class="border-0 p-0 m-0 flex flex-col gap-2.5 min-w-0">
         <legend class="text-[16px] font-bold mb-2 p-0">Amount in Swiss francs</legend>
         <div class="flex flex-wrap gap-2">

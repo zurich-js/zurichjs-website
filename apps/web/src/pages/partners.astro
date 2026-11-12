@@ -11,6 +11,7 @@ import Button from '@zurichjs/design/components/Button.astro';
 import LogoGrid from '@zurichjs/design/components/LogoGrid.astro';
 import Photo from '@zurichjs/design/components/Photo.astro';
 import Surface from '@zurichjs/design/components/Surface.astro';
+import SegmentedControl from '@zurichjs/design/components/SegmentedControl.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE, content, nextMeetupHref } from '~/lib/content';
 import SponsorTiers from '~/components/SponsorTiers.astro';
@@ -228,21 +229,7 @@ const link = 'text-black underline underline-offset-[3px]';
       </div>
       {/* One billing choice for every package: a pill with a segment per option, monthly first. */}
       <div class="flex flex-col items-center gap-2.5" data-billing>
-        <div role="radiogroup" aria-label="Billing" class="inline-flex p-1 rounded-pill bg-grey">
-          {
-            BILLING.map((b) => (
-              <button
-                type="button"
-                role="radio"
-                aria-checked={b.key === 'Monthly' ? 'true' : 'false'}
-                data-billing-option={b.key}
-                class="min-h-[44px] px-3.5 md:min-w-[110px] md:px-5 rounded-pill border-0 font-bold text-[16px] cursor-pointer transition-colors bg-transparent text-black hover:bg-grey-hover aria-checked:bg-black aria-checked:text-white"
-              >
-                {b.key}
-              </button>
-            ))
-          }
-        </div>
+        <SegmentedControl name="billing" legend="Billing" options={BILLING.map((b) => ({ value: b.key, label: b.key }))} value="Monthly" />
         {
           BILLING.map((b) => (
             <p class="m-0 text-[16px] text-ink-2" data-billing-show={b.key} hidden={b.key !== 'Monthly'}>
@@ -428,11 +415,14 @@ const link = 'text-black underline underline-offset-[3px]';
   // Billing switch on the sponsorship packages: shows one price per package (monthly by default).
   const box = document.querySelector<HTMLElement>('#sponsorship-tiers');
   if (box) {
-    const options = [...box.querySelectorAll<HTMLButtonElement>('[data-billing-option]')];
     const choose = (key: string) => {
-      for (const o of options) o.setAttribute('aria-checked', String(o.dataset.billingOption === key));
       for (const el of box.querySelectorAll<HTMLElement>('[data-billing-show]')) el.hidden = el.dataset.billingShow !== key;
     };
-    for (const o of options) o.addEventListener('click', () => choose(o.dataset.billingOption!));
+    // Native radios (arrow keys included): the change event fires for every way of choosing.
+    const radios = [...box.querySelectorAll<HTMLInputElement>('input[name="billing"]')];
+    for (const o of radios) o.addEventListener('change', () => o.checked && choose(o.value));
+    // A restored page (back button) may come back with another option checked.
+    const restored = radios.find((o) => o.checked);
+    if (restored) choose(restored.value);
   }
 </script>

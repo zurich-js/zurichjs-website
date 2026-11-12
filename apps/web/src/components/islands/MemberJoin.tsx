@@ -7,7 +7,8 @@
 import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
-import { cx } from '@zurichjs/design/recipes';
+import { Notice } from '@zurichjs/design/islands/Notice';
+import { cardClass, cx } from '@zurichjs/design/recipes';
 import { TERMS } from '@zurichjs/membership/terms';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, type Cycle, type TierKey } from '../../lib/membership.ts';
 import type { MemberView } from '../../server/membership.ts';
@@ -39,7 +40,7 @@ export function readChoice(): { level: TierKey; cycle: Cycle } {
 export function TermsCheckbox({ checked, onChange, error }: { checked: boolean; onChange: (v: boolean) => void; error?: string }) {
   return (
     <div class="flex flex-col gap-1.5">
-      <label class="flex gap-3 items-start text-[17px] leading-[1.5] cursor-pointer">
+      <label class="flex gap-3 items-start text-body cursor-pointer">
         <input
           type="checkbox"
           name="terms"
@@ -58,7 +59,7 @@ export function TermsCheckbox({ checked, onChange, error }: { checked: boolean; 
         </span>
       </label>
       {error && (
-        <span id="terms-error" class="text-[14px] text-danger pl-8" aria-live="polite">
+        <span id="terms-error" class="text-meta text-danger pl-8" aria-live="polite">
           {error}
         </span>
       )}
@@ -135,24 +136,24 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
   };
 
   return (
-    <section aria-labelledby="h-join" class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(32px,5vw,64px)] items-start">
+    <section aria-labelledby="h-join" class="grid grid-cols-auto-md gap-12 items-start">
       <div class="flex flex-col gap-3.5">
-        <h2 id="h-join" class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">
+        <h2 id="h-join" class="m-0 text-section font-bold">
           {previous?.status === 'pending' ? 'Finish joining' : 'Join'}
         </h2>
         {previous?.status === 'pending' && (
-          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+          <p class="m-0 text-body text-ink-2 text-pretty">
             {/* Invited by the board and not at Stripe yet: nothing was started, so nothing "was not finished". */}
             {previous.invited && !previous.canManagePayment
               ? 'The board invited you to join, with the membership you asked for. Check your details, accept the membership terms and continue to payment.'
               : 'Your payment was not finished, so nothing was charged. Check your details and continue.'}
           </p>
         )}
-        {previous?.status === 'ended' && <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">Your membership has ended. You are welcome to join again.</p>}
-        <p class="m-0 text-[18px] leading-[1.6] text-grey-text text-pretty">
+        {previous?.status === 'ended' && <p class="m-0 text-body text-ink-2 text-pretty">Your membership has ended. You are welcome to join again.</p>}
+        <p class="m-0 text-body text-grey-text text-pretty">
           You pay securely with Stripe. Your membership starts with the first payment, and you get your certificate of membership by email.
         </p>
-        <p class="m-0 text-[17px] leading-[1.6] text-ink-2 text-pretty">
+        <p class="m-0 text-body text-ink-2 text-pretty">
           Already a member? Sign in with the email you joined with, or write to{' '}
           <a href={`mailto:${contactEmail}`} class="font-bold text-black">
             {contactEmail}
@@ -160,7 +161,7 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
           .
         </p>
       </div>
-      <form ref={formRef} onSubmit={submit} noValidate class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
+      <form ref={formRef} onSubmit={submit} noValidate class={cardClass('outline', 'lg', 'gap-5')}>
         <ChipGroup<Kind>
           label="Joining as"
           value={kind}
@@ -197,15 +198,11 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
           onChange={setCycle}
           options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${chf(TIERS[level].fees[c.value])}` }))}
         />
-        <p class="m-0 text-[16px] text-grey-text" aria-live="polite">
+        <p class="m-0 text-compact text-grey-text" aria-live="polite">
           {TIERS[level].name}, {feeLabel(TIERS[level], cycle)}, renewing automatically. You can switch between quarterly and yearly later.
         </p>
         <TermsCheckbox checked={accepted} onChange={setAccepted} error={fieldError('terms') || undefined} />
-        {serverError && !serverField && (
-          <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-            {serverError}
-          </p>
-        )}
+        {serverError && !serverField && <Notice tone="danger" live title={serverError} />}
         <SubmitButton busy={busy} class="self-start">
           {busy ? 'Opening Stripe…' : 'Continue to payment'}
         </SubmitButton>

@@ -59,8 +59,11 @@ export const buttonClass = ({ variant = 'primary', inverse = false, iconOnly = f
 
 /** A label you read, never press: 6px corners, not a pill (owner, 12th November 2026). */
 export type TagSize = 'sm' | 'md';
-/** Pick the tone that contrasts with the parent: grey on white, white on grey, black for times and status. */
-export type TagTone = 'grey' | 'white' | 'black';
+/**
+ * Pick the tone that contrasts with the parent: grey on white, white on grey, black for times and status.
+ * success and danger label a state (a paid membership, a failed payment): green only for success, red only for errors.
+ */
+export type TagTone = 'grey' | 'white' | 'black' | 'success' | 'danger';
 const tagSizes: Record<TagSize, string> = {
   sm: 'min-h-tag-sm px-2.5 py-0.5 text-meta',
   md: 'min-h-tag-md px-3.5 py-1 text-compact',
@@ -69,6 +72,8 @@ const tagTones: Record<TagTone, string> = {
   grey: 'bg-grey text-black',
   white: 'bg-white text-black',
   black: 'bg-black text-white font-bold',
+  success: 'bg-success-soft text-success font-bold',
+  danger: 'bg-danger-soft text-danger font-bold',
 };
 export const tagClass = (size: TagSize = 'sm', tone: TagTone = 'grey', extra?: string) =>
   cx('inline-flex items-center max-w-full rounded-tag leading-tight', tagSizes[size], tagTones[tone], extra);

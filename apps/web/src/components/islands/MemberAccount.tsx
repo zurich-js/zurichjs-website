@@ -10,7 +10,9 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
-import { badgeClass, optionClass, optionInput, surfaceClass } from '@zurichjs/design/recipes';
+import { Notice } from '@zurichjs/design/islands/Notice';
+import { Tag } from '@zurichjs/design/islands/Tag';
+import { cardClass, noticeClass, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { ChipGroup, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { setSignedIn } from '@zurichjs/design/session';
 import { lastDay, longDate } from '../../server/dates.ts';
@@ -136,14 +138,14 @@ export default function MemberAccount({ contactEmail }: Props) {
 
   if (view.kind === 'loading')
     return (
-      <p class="m-0 text-[18px] text-ink-2" aria-busy="true">
+      <p class="m-0 text-body text-ink-2" aria-busy="true">
         Loading your account…
       </p>
     );
 
   if (view.kind === 'unavailable')
     return (
-      <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[640px]">
+      <p class="m-0 text-body text-ink-2 max-w-form">
         Member accounts are not available yet. To join or ask about your membership, write to{' '}
         <a href={`mailto:${contactEmail}`} class="font-bold text-black">
           {contactEmail}
@@ -154,11 +156,9 @@ export default function MemberAccount({ contactEmail }: Props) {
 
   if (view.kind === 'error')
     return (
-      <div class="flex flex-col gap-4 max-w-[640px]">
-        <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-          {view.message}
-        </p>
-        <Button variant="outline-black" class="self-start" onClick={() => location.reload()}>
+      <div class="flex flex-col gap-4 max-w-form">
+        <Notice tone="danger" live title={view.message} />
+        <Button variant="secondary" class="self-start" onClick={() => location.reload()}>
           Try again
         </Button>
       </div>
@@ -166,30 +166,29 @@ export default function MemberAccount({ contactEmail }: Props) {
 
   if (view.kind === 'sent')
     return (
-      <div ref={sentRef} tabIndex={-1} role="status" class="bg-success-soft rounded-card p-[clamp(24px,3vw,36px)] flex flex-col gap-3 max-w-[640px] outline-hidden">
-        <h2 class="m-0 text-[28px] font-bold leading-[1.15]">Check your email</h2>
-        <p class="m-0 text-[18px] leading-[1.55]">We sent a sign-in link to {view.email}. It works once, for 15 minutes.</p>
-        <Button variant="link" class="self-start text-[17px]" onClick={() => setView({ kind: 'signed-out' })}>
+      <Notice tone="success" live as="h2" focusRef={sentRef} title="Check your email" class="max-w-form">
+        <p class="m-0 text-body">We sent a sign-in link to {view.email}. It works once, for 15 minutes.</p>
+        <button
+          type="button"
+          class="self-start p-0 bg-transparent border-0 text-body font-bold text-black underline cursor-pointer"
+          onClick={() => setView({ kind: 'signed-out' })}
+        >
           Use another email
-        </Button>
-      </div>
+        </button>
+      </Notice>
     );
 
   if (view.kind === 'signed-out')
     return (
-      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(32px,5vw,80px)] items-start">
+      <div class="grid grid-cols-auto-lg gap-12 items-start">
         <div class="flex flex-col gap-3.5">
-          <h2 class="m-0 text-[clamp(30px,3.4vw,48px)] leading-[1.1] font-bold">Sign in</h2>
-          <p class="m-0 text-[18px] leading-[1.6] text-ink-2 text-pretty">
+          <h2 class="m-0 text-section font-bold">Sign in</h2>
+          <p class="m-0 text-body text-ink-2 text-pretty">
             Sign in with your email to join or to manage your membership. We email you a link, so there is no password to remember.
           </p>
         </div>
-        <form onSubmit={requestLink} noValidate class="bg-white border border-grey-frame rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
-          {view.notice && (
-            <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-              {view.notice}
-            </p>
-          )}
+        <form onSubmit={requestLink} noValidate class={cardClass('outline', 'lg', 'gap-5')}>
+          {view.notice && <Notice tone="danger" live title={view.notice} />}
           <TextField
             label="Email"
             type="email"
@@ -201,7 +200,7 @@ export default function MemberAccount({ contactEmail }: Props) {
             error={tried ? emailError : undefined}
           />
           {formError && (
-            <p role="alert" class="m-0 text-danger text-[16px]">
+            <p role="alert" class="m-0 text-danger text-compact">
               {formError}
             </p>
           )}
@@ -215,37 +214,38 @@ export default function MemberAccount({ contactEmail }: Props) {
   const { me } = view;
   const m = me.member;
   return (
-    <div class="flex flex-col gap-8 max-w-[960px]">
+    <div class="flex flex-col gap-8 max-w-wide">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <p class="m-0 text-[17px] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           Signed in as <strong class="text-black">{me.email}</strong>
         </p>
-        <Button variant="outline-black" size="sm" onClick={() => void signOut()}>
+        <Button variant="secondary" onClick={() => void signOut()}>
           Sign out
         </Button>
       </div>
       {notice.checkout === 'done' && m && m.status !== 'pending' && (
-        <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 text-[17px] font-bold">
-          Payment received, thank you. Your certificate is on its way by email.
-        </p>
+        <Notice tone="success" live title="Payment received, thank you.">
+          <p class="m-0">Your certificate is on its way by email.</p>
+        </Notice>
       )}
       {notice.checkout === 'done' && m?.status === 'pending' && (
-        <p role="status" class="m-0 bg-grey rounded-card px-5 py-4 text-[17px]">
+        <p role="status" class={noticeClass('note', 'm-0 text-body')}>
           Stripe is confirming your payment. This page updates in a moment, and your certificate follows by email.
         </p>
       )}
       {notice.checkout === 'automatic' && m && m.status !== 'imported_manual' && (
-        <p role="status" class="m-0 bg-success-soft text-success rounded-card px-5 py-4 text-base font-bold">
-          Automatic payment is set up. Nothing is charged now: your next payment{m.paidUntil ? ` is on ${longDate(m.paidUntil)},` : ' comes when your paid period ends,'}{' '}
-          {m.feeLabel}.
-        </p>
+        <Notice tone="success" live title="Automatic payment is set up.">
+          <p class="m-0">
+            Nothing is charged now: your next payment{m.paidUntil ? ` is on ${longDate(m.paidUntil)},` : ' comes when your paid period ends,'} {m.feeLabel}.
+          </p>
+        </Notice>
       )}
       {notice.checkout === 'automatic' && m?.status === 'imported_manual' && (
-        <p role="status" class="m-0 bg-grey rounded-card px-5 py-4 text-base">
+        <p role="status" class={noticeClass('note', 'm-0 text-body')}>
           Stripe is confirming your automatic payment. This page updates in a moment.
         </p>
       )}
-      {notice.checkout === 'cancelled' && <p class="m-0 bg-grey rounded-card px-5 py-4 text-[17px]">The payment was not finished, so nothing was charged.</p>}
+      {notice.checkout === 'cancelled' && <p class={noticeClass('note', 'm-0 text-body')}>The payment was not finished, so nothing was charged.</p>}
       {me.canJoin || m?.status === 'pending' ? (
         <MemberJoin previous={m} contactEmail={contactEmail} onSignedOut={() => setView({ kind: 'signed-out' })} />
       ) : (
@@ -334,13 +334,12 @@ function MemberPortal({
     <div class="flex flex-col gap-8">
       {canChangePlan && pendingPlan && (
         // A scheduled level or cycle switch, as a status banner under "Signed in as" (owner, 11th November 2026).
-        <section aria-label="Scheduled change" class={surfaceClass('yellow-soft', 'flex flex-wrap items-center justify-between gap-3 p-5 md:p-6')}>
-          <p role="status" class="m-0 text-base">
+        <section aria-label="Scheduled change" class={noticeClass('note', 'flex-wrap items-center justify-between')}>
+          <p role="status" class="m-0 text-body">
             From <strong>{longDate(pendingPlan.from)}</strong>, your membership is {TIERS[pendingPlan.level].name}, {feeLabel(TIERS[pendingPlan.level], pendingPlan.cycle)}.
           </p>
           <Button
-            variant="outline-black"
-            size="sm"
+            variant="secondary"
             disabled={!!busy}
             onClick={async () => {
               if (await post('/api/membership/plan', 'plan', { level: m.level, cycle: m.cycle })) onChanged();
@@ -352,11 +351,11 @@ function MemberPortal({
       )}
       {m.status === 'imported_manual' && (
         // A status banner right under "Signed in as" (owner, 11th November 2026): the one thing a member paying manually should do next.
-        <section aria-labelledby="h-switch" class={surfaceClass('yellow-soft', 'flex flex-col gap-3 p-5 md:p-6')}>
-          <h2 id="h-switch" class="m-0 text-xl font-bold">
+        <section aria-labelledby="h-switch" class={noticeClass('note', 'flex-col')}>
+          <h2 id="h-switch" class="m-0 text-card-title font-bold">
             Switch to automatic payment
           </h2>
-          <p class="m-0 text-base leading-relaxed text-ink-2 text-pretty">
+          <p class="m-0 text-body text-ink-2 text-pretty">
             You pay manually today (cash or bank transfer). Set up automatic payment with Stripe: nothing is charged before your paid period ends
             {m.paidUntil ? ` (${lastPaidDay(m.paidUntil)})` : ''}, then {m.feeLabel}. You can set up automatic payment now and change your subscription type afterwards, before you
             are charged.
@@ -364,7 +363,7 @@ function MemberPortal({
           <div class="flex flex-wrap items-center justify-between gap-4">
             <TermsCheckbox checked={accepted} onChange={setAccepted} error={triedSwitch && !accepted ? 'Accept the membership terms to continue.' : undefined} />
             <Button
-              variant="black"
+              variant="primary"
               disabled={!!busy}
               onClick={async () => {
                 if (!accepted) return setTriedSwitch(true);
@@ -381,29 +380,25 @@ function MemberPortal({
           </div>
         </section>
       )}
-      <section aria-labelledby="h-membership" class="bg-grey rounded-card p-[clamp(22px,3vw,36px)] flex flex-col gap-5">
-        <h2 id="h-membership" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+      <section aria-labelledby="h-membership" class={cardClass('filled', 'lg')}>
+        <h2 id="h-membership" class="m-0 text-subsection font-bold">
           {m.organisationName ? `${m.organisationName}, ${m.name}` : m.name}
         </h2>
-        <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-x-6 gap-y-4">
+        <dl class="m-0 grid grid-cols-auto-sm gap-x-6 gap-y-4">
           {rows.map(([k, v]) => (
             <div key={k} class="flex flex-col gap-0.5">
-              <dt class="text-[15px] text-grey-text">{k}</dt>
-              <dd class="m-0 text-[19px] font-bold">{v}</dd>
+              <dt class="text-meta text-grey-text">{k}</dt>
+              <dd class="m-0 text-lead font-bold">{v}</dd>
             </div>
           ))}
         </dl>
-        {m.resignation && <p class="m-0 text-lg leading-relaxed text-ink-2">{resignationNote(m)}</p>}
-        {NOTES[m.status] && (
-          <p class={m.status === 'past_due' ? 'm-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold' : 'm-0 text-[17px] leading-[1.55] text-ink-2'}>
-            {NOTES[m.status]}
-          </p>
-        )}
+        {m.resignation && <p class="m-0 text-body text-ink-2">{resignationNote(m)}</p>}
+        {NOTES[m.status] && (m.status === 'past_due' ? <Notice tone="danger" title={NOTES[m.status]} /> : <p class="m-0 text-body text-ink-2">{NOTES[m.status]}</p>)}
         {(m.resignation || m.canManagePayment || canChangePlan) && (
           <div class="flex flex-wrap gap-3">
             {m.resignation && (
               <Button
-                variant="yellow"
+                variant="cta"
                 disabled={!!busy}
                 onClick={async () => {
                   const r = await post('/api/membership/resign/undo', 'undo');
@@ -415,7 +410,7 @@ function MemberPortal({
             )}
             {m.canManagePayment && (
               <Button
-                variant="black"
+                variant="primary"
                 disabled={!!busy}
                 onClick={async () => {
                   const r = await post('/api/membership/portal', 'portal');
@@ -426,7 +421,13 @@ function MemberPortal({
               </Button>
             )}
             {canChangePlan && (
-              <Button variant="yellow" disabled={!!busy} onClick={() => setChangingPlan(!changingPlan)} aria-expanded={changingPlan} aria-controls="change-plan">
+              <Button
+                variant={m.resignation ? 'secondary' : 'cta'}
+                disabled={!!busy}
+                onClick={() => setChangingPlan(!changingPlan)}
+                aria-expanded={changingPlan}
+                aria-controls="change-plan"
+              >
                 Update subscription type
               </Button>
             )}
@@ -449,45 +450,43 @@ function MemberPortal({
       </section>
 
       <section aria-labelledby="h-certificates" class="flex flex-col gap-4">
-        <h2 id="h-certificates" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">
+        <h2 id="h-certificates" class="m-0 text-subsection font-bold">
           Certificates of membership
         </h2>
         {certificates.length ? (
           <ul class="m-0 p-0 list-none flex flex-col gap-3">
             {certificates.map((c, i) => (
-              <li key={c.id} class="flex flex-wrap items-center justify-between gap-3 border border-grey-frame rounded-card px-5 py-4">
-                <div class="flex flex-col gap-0.5">
-                  <span class="flex flex-wrap items-center gap-2">
-                    <span class="text-[17px] font-bold">{c.term}</span>
-                    {i === 0 && <span class={badgeClass('dark')}>Latest</span>}
-                  </span>
-                  <span class="text-[15px] text-grey-text">
-                    {c.levelName}, certificate {c.number}
-                  </span>
+              <li key={c.id} class={cardClass('outline', 'sm')}>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="flex flex-wrap items-center gap-2">
+                      <span class="text-body font-bold">{c.term}</span>
+                      {i === 0 && <Tag tone="black">Latest</Tag>}
+                    </span>
+                    <span class="text-meta text-grey-text">
+                      {c.levelName}, certificate {c.number}
+                    </span>
+                  </div>
+                  <Button href={`/api/membership/certificates/${c.id}`} variant="secondary" external={false}>
+                    Download PDF
+                  </Button>
                 </div>
-                <Button href={`/api/membership/certificates/${c.id}`} variant="outline-black" size="sm" external={false}>
-                  Download PDF
-                </Button>
               </li>
             ))}
           </ul>
         ) : (
-          <p class="m-0 text-[17px] text-grey-text">You get a certificate with every paid term, by email and here.</p>
+          <p class="m-0 text-body text-grey-text">You get a certificate with every paid term, by email and here.</p>
         )}
       </section>
 
-      {error && (
-        <p role="alert" class="m-0 bg-danger-soft text-danger rounded-card px-5 py-4 text-[17px] font-bold">
-          {error}
-        </p>
-      )}
+      {error && <Notice tone="danger" live title={error} />}
 
       {['active', 'past_due', 'imported_manual'].includes(m.status) && (
-        <section aria-labelledby="h-resign" class="flex flex-col gap-3 max-w-[720px]">
-          <h2 id="h-resign" class="m-0 text-[22px] leading-[1.2] font-bold">
+        <section aria-labelledby="h-resign" class="flex flex-col gap-3 max-w-reading">
+          <h2 id="h-resign" class="m-0 text-card-title font-bold">
             Leaving
           </h2>
-          <p class="m-0 text-[17px] leading-[1.6] text-grey-text text-pretty">
+          <p class="m-0 text-body text-grey-text text-pretty">
             You can resign at any time (bylaws Art. 5). Your request goes to the board, which typically gets back to you within 72 hours. You stay a member until the end of the
             period you already paid for, and you can resubscribe until then. After that, you will not be charged again. Nothing is refunded.
           </p>
@@ -499,7 +498,7 @@ function MemberPortal({
               onCancel={() => setConfirmResign(false)}
             />
           ) : (
-            <Button variant="outline-black" class="self-start" onClick={() => setConfirmResign(true)}>
+            <Button variant="secondary" class="self-start" onClick={() => setConfirmResign(true)}>
               Resign from the association
             </Button>
           )}
@@ -562,16 +561,16 @@ function ResignForm({
         onInput={(e) => setNote((e.target as HTMLTextAreaElement).value)}
       />
       <div class="flex flex-wrap gap-3">
-        <Button type="submit" variant="danger" disabled={disabled}>
+        <Button type="submit" variant="primary" disabled={disabled}>
           {busy ? 'Sending…' : 'Send my resignation'}
         </Button>
-        <Button variant="outline-black" onClick={onCancel}>
+        <Button variant="secondary" onClick={onCancel}>
           Keep my membership
         </Button>
       </div>
       <button
         type="button"
-        class="self-start p-0 bg-transparent border-0 text-sm text-danger underline cursor-pointer disabled:opacity-50"
+        class="self-start p-0 bg-transparent border-0 text-meta text-danger underline cursor-pointer disabled:opacity-50"
         disabled={disabled}
         onClick={() => onSend({ reasons: [], note: '' })}
       >
@@ -604,16 +603,16 @@ function ChangePlan({
   const target = pending ?? { level: m.level, cycle: m.cycle };
   const unchanged = level === target.level && cycle === target.cycle;
   return (
-    <section id="change-plan" aria-labelledby="h-plan" class="border border-grey-frame rounded-card bg-white p-5 md:p-6 flex flex-col gap-4">
-      <h3 id="h-plan" class="m-0 text-xl font-bold">
+    <section id="change-plan" aria-labelledby="h-plan" class="bg-white rounded-(--radius-nested) p-card-md flex flex-col gap-4">
+      <h3 id="h-plan" class="m-0 text-card-title font-bold">
         Update subscription type
       </h3>
       {pending && (
-        <div role="status" class="bg-grey rounded-card px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-          <p class="m-0 text-base">
+        <div role="status" class="bg-grey rounded-(--radius-nested) p-card-sm flex flex-wrap items-center justify-between gap-3">
+          <p class="m-0 text-body">
             From <strong>{longDate(pending.from)}</strong>: {TIERS[pending.level].name}, {feeLabel(TIERS[pending.level], pending.cycle)}.
           </p>
-          <Button variant="outline-black" size="sm" disabled={disabled} onClick={() => onChange({ level: m.level, cycle: m.cycle })}>
+          <Button variant="secondary" disabled={disabled} onClick={() => onChange({ level: m.level, cycle: m.cycle })}>
             Keep my current membership
           </Button>
         </div>
@@ -621,10 +620,10 @@ function ChangePlan({
       <ChipGroup label="Membership" value={level} onChange={setLevel} options={TIER_KEYS.map((k) => ({ value: k, label: TIERS[k].name }))} />
       <ChipGroup label="Billing" value={cycle} onChange={setCycle} options={CYCLES.map((c) => ({ value: c.value, label: `${c.label}, ${feeLabel(TIERS[level], c.value)}` }))} />
       <div class="flex flex-col gap-2">
-        <Button variant="black" class="self-start" disabled={disabled || unchanged} onClick={() => onChange({ level, cycle })}>
+        <Button variant="primary" class="self-start" disabled={disabled || unchanged} onClick={() => onChange({ level, cycle })}>
           {busy ? 'Confirming…' : 'Confirm'}
         </Button>
-        <p class="m-0 text-sm text-grey-text">
+        <p class="m-0 text-meta text-grey-text">
           The change applies from your next billing cycle{renewal ? `, on ${renewal}` : ''}. Until then nothing changes, and nothing is charged now.
         </p>
       </div>

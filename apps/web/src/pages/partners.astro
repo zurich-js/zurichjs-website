@@ -28,7 +28,7 @@ import {
   SPONSORSHIP_TIERS,
 } from '@zurichjs/content';
 import { PAGE_PHOTOS } from '~/lib/photos';
-import { groupPartners, partnerPeriod } from '@zurichjs/events';
+import { groupPartners } from '@zurichjs/events';
 
 const { partners } = await content();
 const groups = groupPartners(partners);
@@ -206,9 +206,9 @@ const link = 'text-black underline underline-offset-[3px]';
           ))
         }
       </ul>
-      <Card id="hosting" title="Hosting an evening" padding="lg" class="scroll-mt-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
+      <div id="hosting" class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5 scroll-mt-6">
         <div class="flex flex-col gap-3">
+          <h3 class="m-0 text-subsection font-bold">Hosting an evening</h3>
           <p class="m-0 text-body text-ink-2">Hosting is free. In return, your company is recognised at the meetup you host.</p>
           {
             travel && (
@@ -218,11 +218,10 @@ const link = 'text-black underline underline-offset-[3px]';
             )
           }
         </div>
-        <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-compact self-start">
+        <ul class="m-0 pl-5 list-disc flex flex-col gap-1.5 text-body">
           {hostTier.perks.filter((perk) => !/travel/i.test(perk)).map((perk) => <li>{perk}</li>)}
         </ul>
-        </div>
-      </Card>
+      </div>
     </section>
 
     <section id="sponsorship-tiers" aria-labelledby="h-tiers" class="flex flex-col gap-7 scroll-mt-6">
@@ -280,9 +279,6 @@ const link = 'text-black underline underline-offset-[3px]';
         </Button>
         <p class="m-0 text-compact text-ink-2" data-tier-cta-note>Choose a package above, or ask us what fits.</p>
       </div>
-      <p class="m-0 text-body text-ink-2 max-w-reading">
-        Hosting a meetup or covering food and drinks is not a package: see <a href="#ways" class={link}>the ways to partner</a>.
-      </p>
     </section>
 
     <section id="partners-current" aria-labelledby="h-p-current" class="flex flex-col gap-6 scroll-mt-6">
@@ -316,7 +312,7 @@ const link = 'text-black underline underline-offset-[3px]';
               <p class="m-0 text-body text-ink-2 max-w-reading">{g.sub}</p>
             </div>
             {g.list.length > 0 ? (
-              <LogoRow items={g.list.map((p) => ({ partner: p, caption: [p.description, partnerPeriod(p)].filter(Boolean).join(' · ') || undefined }))} />
+              <LogoRow items={g.list.map((p) => ({ partner: p }))} />
             ) : (
               <p class="m-0 text-body">None listed right now.</p>
             )}
@@ -401,7 +397,7 @@ const link = 'text-black underline underline-offset-[3px]';
     cta.dataset.partnerTier = input.value;
     cta.href = `/partners?way=partner&tier=${input.value}#partner-form`;
     if (ctaLabel) ctaLabel.textContent = `Ask about ${input.dataset.tierName}`;
-    if (ctaNote) ctaNote.textContent = 'We reply by email. Nothing is agreed until you confirm.';
+    if (ctaNote) ctaNote.hidden = true;
   });
 </script>
 

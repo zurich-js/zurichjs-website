@@ -3,7 +3,6 @@ import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import Card from '@zurichjs/design/components/Card.astro';
 import Notice from '@zurichjs/design/components/Notice.astro';
 import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
-import Button from '@zurichjs/design/components/Button.astro';
 import ContactForm from '~/components/islands/forms/ContactForm';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { confLink } from '@zurichjs/design/analytics';
@@ -51,7 +50,7 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
   {
     question: 'How can I speak at a ZurichJS meetup?',
     answer:
-      'Send a talk proposal through our call for papers (CFP). It is open all year and needs no account. First-time speakers are welcome: tick the box in the form and an organiser helps you prepare.',
+      'Send a talk proposal through our call for papers (CFP). It is open all year and needs no account. First-time speakers are welcome: say so in the form and an organiser helps you prepare.',
     link: { label: 'Propose a talk', href: '/cfp' },
   },
   {
@@ -137,8 +136,8 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
             { h: 'Meetup', d: 'Join the group to RSVP for meetups and message the organisers.', href: SITE.meetupGroupUrl, label: 'meetup.com/zurich-js', line: ICON.meetup },
             { h: 'Slack', d: 'Talk with the community between meetups.', href: SITE.slackInviteUrl, label: 'Join our Slack', social: 'slack' as const },
           ].map((c) => (
-            // The destination is part of the title, so the link's name says where it goes.
-            <Card href={c.href} title={`${c.h}: ${c.label}`} surface="filled">
+            // A short title; the destination is the first line under it and in the link's name (linkHint).
+            <Card href={c.href} title={c.h} linkHint={c.label} surface="filled">
               <span slot="icon" class="flex">
                 {c.social ? (
                   <SocialIcon kind={c.social} size={20} />
@@ -148,63 +147,55 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
                   </svg>
                 )}
               </span>
+              <p class="m-0 text-compact font-bold wrap-anywhere" aria-hidden="true">{c.label}</p>
               <p class="m-0 text-compact text-ink-2">{c.d}</p>
             </Card>
           ))
         }
       </AutoGrid>
       <h3 class="m-0 mt-4 text-card-title font-bold">The organisers</h3>
-      <AutoGrid min="md" gap="sm">
+      {/* The same person cards as the team on /about: photo on top, name, role, then one row of round icon links. */}
+      <ul class="m-0 p-0 list-none grid grid-cols-auto-sm gap-4">
         {
           ORGANISERS.map((o) => {
             const email = EMAIL[o.name];
             const socials = (o.links ?? []).filter((l) => socialKind(l.label));
             return (
-              <Card>
-                <div class="flex items-center gap-4">
-                  <span class="w-16 h-16 flex-none">
-                    {o.photo ? (
-                      <Photo photo={o.photo} class="w-16 h-16 rounded-full!" sizes="64px" />
-                    ) : (
-                      <Monogram initials={o.initials} size="avatar" label={o.name} />
+              <Card as="li" padding="md" title={o.name} level="h4" mediaLayout="stack" mediaRatio="square">
+                {o.photo ? <Photo slot="media" photo={o.photo} sizes="(min-width: 800px) 30vw, 100vw" /> : <Monogram slot="media" initials={o.initials} size="portrait" label={o.name} />}
+                <p class="m-0 text-compact text-ink-2">{o.role}</p>
+                {(email || socials.length > 0) && (
+                  <ul slot="footer" class="m-0 p-0 list-none flex flex-wrap gap-2" aria-label={`${o.name}: email and links`}>
+                    {email && (
+                      <li>
+                        <a href={`mailto:${email}`} title={email} aria-label={`Email ${o.name}: ${email}`} class={buttonClass({ variant: 'secondary', iconOnly: true })}>
+                          <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d={ICON.mail} />
+                          </svg>
+                        </a>
+                      </li>
                     )}
-                  </span>
-                  <div class="flex flex-col gap-0.5 min-w-0">
-                    <h4 class="m-0 text-card-title font-bold">{o.name}</h4>
-                    <p class="m-0 text-compact text-ink-2">{o.role}</p>
-                  </div>
-                </div>
-                {/* Email on its own line, then one row of icons: the same two rows on every card, at the bottom. */}
-                <div slot="footer" class="w-full flex flex-col items-start gap-2.5">
-                  {email && (
-                    <Button href={`mailto:${email}`} variant="secondary" icon={ICON.mail}>
-                      {email}
-                    </Button>
-                  )}
-                  {socials.length > 0 && (
-                    <ul class="m-0 p-0 list-none flex flex-nowrap items-center gap-2" aria-label={`${o.name} online`}>
-                      {socials.map((l) => (
-                        <li>
-                          <a
-                            href={l.url}
-                            target="_blank"
-                            rel="noopener"
-                            title={l.label}
-                            aria-label={`${o.name} on ${l.label} (opens in a new tab)`}
-                            class={buttonClass({ variant: 'secondary', iconOnly: true })}
-                          >
-                            <SocialIcon kind={socialKind(l.label)!} size={17} />
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                    {socials.map((l) => (
+                      <li>
+                        <a
+                          href={l.url}
+                          target="_blank"
+                          rel="noopener"
+                          title={l.label}
+                          aria-label={`${o.name} on ${l.label} (opens in a new tab)`}
+                          class={buttonClass({ variant: 'secondary', iconOnly: true })}
+                        >
+                          <SocialIcon kind={socialKind(l.label)!} size={17} />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </Card>
             );
           })
         }
-      </AutoGrid>
+      </ul>
     </section>
 
     <section aria-labelledby="h-faq" class="flex flex-col gap-4 max-w-wide">
@@ -212,7 +203,7 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
       <div class="flex flex-col gap-3">
         {
           FAQS.map((f) => (
-            <Card title={f.question}>
+            <Card title={f.question} disclosure>
               <p class="m-0 text-body text-ink-2 text-pretty">{f.answer}</p>
               {f.link && (
                 <a href={f.link.href} class="font-bold text-body self-start">

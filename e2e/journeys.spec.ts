@@ -25,8 +25,8 @@ test.describe('event schedule and venue', () => {
     await expect(rows.nth(1)).toContainText('19:00');
     await expect(rows.nth(2)).toContainText('19:35');
     await expect(rows.nth(3)).toContainText('Food and conversation');
-    // The opening distinguishes doors from the first talk, with the winter zone.
-    await expect(page.locator('main, body').first()).toContainText('Doors 18:30 · Talks from 19:00 CET');
+    // The times are the programme's: the opening gives only the date (Bogdan's review, 12th November 2026).
+    await expect(page.getByRole('heading', { level: 1 }).locator('xpath=ancestor::section[1]')).not.toContainText('Talks from');
   });
 
   test('talks without agenda times are listed in order without a made-up time', async ({ page }) => {
@@ -47,12 +47,11 @@ test.describe('event schedule and venue', () => {
     await expect(page.locator('#talk-one-year-retro')).toBeInViewport();
   });
 
-  test('venue: full address and a directions link that works without a map', async ({ page }) => {
+  test('venue: full address and the map, with no separate directions button', async ({ page }) => {
     await page.goto('/events/2026-11-forms-types');
     const venue = page.locator('#venue');
     await expect(venue).toContainText('Musterstrasse 1, 8005 Zürich');
-    const link = venue.getByRole('link', { name: /Get directions/ });
-    await expect(link).toHaveAttribute('href', /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=Sample%20Venue%20AG/);
+    await expect(venue.getByRole('link', { name: /Get directions/ })).toHaveCount(0);
     // No Maps key in this build: the map is Google's keyless embed, always shown (owner), loaded lazily.
     await page.route(/^https:\/\/www\.google\.com\/maps/, (route) => route.fulfill({ body: '<!doctype html><title>map</title>', contentType: 'text/html' }));
     await expect(venue.getByRole('button', { name: /show map|hide map/i })).toHaveCount(0);
@@ -61,8 +60,6 @@ test.describe('event schedule and venue', () => {
     await expect(map).toHaveAttribute('src', 'https://www.google.com/maps?q=Musterstrasse%201%2C%208005%20Z%C3%BCrich&output=embed');
     await expect(map).toHaveAttribute('loading', 'lazy');
     await expect(map).toHaveAttribute('title', /^Map of Sample Venue AG/);
-    // Directions stay next to the map.
-    await expect(link).toBeVisible();
     // Past events keep their venue too.
     await page.goto('/events/2026-09-signals-streams');
     await expect(page.locator('#venue')).toContainText('Sample Venue AG');

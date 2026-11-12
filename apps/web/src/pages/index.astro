@@ -6,7 +6,7 @@ import ConferenceModule from '@zurichjs/design/components/ConferenceModule.astro
 import HomeHero from '@zurichjs/design/components/HomeHero.astro';
 import HostsSection from '@zurichjs/design/components/HostsSection.astro';
 import SpeakCta from '@zurichjs/design/components/SpeakCta.astro';
-import { SpeakerCarousel, type CarouselSpeaker } from '~/components/islands/home/SpeakerCarousel';
+import { SpeakerArc, type ArcSpeaker } from '@zurichjs/design/islands/SpeakerArc';
 import { sizedSrc, srcsetFor } from '@zurichjs/design/images';
 import { COUNTRIES_REACHED, PARTNERS_TO_DATE, SPEAKER_COMPANIES, speakersWithTalks } from '@zurichjs/content';
 import AwardSection from '@zurichjs/design/components/AwardSection.astro';
@@ -38,18 +38,20 @@ outer: for (const ev of pastEvents(events, BUILD_TIME)) {
     if (talks.length === 4) break outer;
   }
 }
-// The carousel: speakers who gave a talk at an event, most recent first, photos sized for the card.
+// The speaker arc: speakers who gave a talk at an event, most recent first, with their role (never a talk title)
+// and how many talks they gave; photos sized for the card.
 const lastTalk = (s: (typeof speakers)[number]) => s.talks.flatMap((t) => t.eventSlugs.map((x) => events.find((e) => e.slug === x)?.startsAt ?? '')).sort().pop() ?? '';
 const speakerCount = speakersWithTalks(speakers).length;
-const carousel: CarouselSpeaker[] = speakersWithTalks(speakers)
+const arc: ArcSpeaker[] = speakersWithTalks(speakers)
   .sort((a, b) => lastTalk(b).localeCompare(lastTalk(a)) || a.name.localeCompare(b.name))
   .slice(0, 24)
   .map((s) => ({
     id: s.id,
     name: s.name,
-    meta: s.tagline || s.role,
+    role: s.company && !s.role.includes(s.company) ? `${s.role}, ${s.company}` : s.role,
+    talks: s.talks.filter((t) => t.eventSlugs.length > 0).length,
     initials: s.initials,
-    photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), alt: s.photo.alt, position: s.photo.position } : undefined,
+    photo: s.photo ? { src: sizedSrc(s.photo.src, 720), srcset: srcsetFor(s.photo.src), position: s.photo.position } : undefined,
   }));
 // The hero photos are set by hand in ~/lib/hero.ts (owner), never picked from ImageKit.
 // The section photos are set by hand too (~/lib/photos.ts).
@@ -122,7 +124,7 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
         </div>
         <a href="/speakers" class="font-bold text-body underline underline-offset-4">All {speakerCount} speakers</a>
       </div>
-      <SpeakerCarousel client:visible speakers={carousel} />
+      <SpeakerArc client:visible speakers={arc} />
       <div class="px-gut pt-8">
         <div class="flex flex-col gap-6">
           <div class="flex flex-col gap-2 max-w-reading">

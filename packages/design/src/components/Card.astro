@@ -35,6 +35,10 @@ interface Props {
   href?: string;
   /** Opens the link in a new tab (other sites do anyway). */
   external?: boolean;
+  /** Read after the title by screen readers only, to say where the link goes ("Details and RSVP"). */
+  linkHint?: string;
+  /** Extra attributes for the link (data-* hooks). */
+  linkAttrs?: Record<string, string>;
   /** Makes the card open in place: the chevron card. */
   disclosure?: boolean;
   open?: boolean;
@@ -45,7 +49,7 @@ interface Props {
   /** Layout only (grid placement, stretching): never sizes or colours. */
   class?: string;
 }
-const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, disclosure = false, open = false, as: Outer = 'div', edge: edgeProp, id, class: extra } = Astro.props;
+const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, linkHint, linkAttrs, disclosure = false, open = false, as: Outer = 'div', edge: edgeProp, id, class: extra } = Astro.props;
 
 const behaviour = href ? 'link' : disclosure ? 'disclosure' : 'other';
 const ext = href ? (external ?? opensNewTab(href)) : false;
@@ -152,9 +156,11 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
                     <a
                       href={href}
                       {...(ext ? { target: '_blank', rel: 'noopener' } : {})}
+                      {...linkAttrs}
                       class="text-inherit no-underline focus-visible:outline-none after:absolute after:inset-0 after:rounded-(--card-radius) after:content-['']"
                     >
                       {title}
+                      {linkHint && <span class="sr-only">. {linkHint}</span>}
                       {ext && <span class="sr-only"> (opens in a new tab)</span>}
                     </a>
                   ) : (

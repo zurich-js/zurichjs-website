@@ -28,5 +28,8 @@ overrides:
   js-yaml@3: ^3.15.2
   smol-toml@1: ^1.9.1
   undici@7: ^7.30.1
+  # astro 7.4.12 (GHSA-r3h5-4585-7x3w): pnpm fills @napi-rs/wasm-runtime's @emnapi/runtime peer with the
+  # 2.0.0 beta, which breaks `astro check` next to @emnapi/core 1.x. Every package that names it wants 1.x.
+  '@emnapi/runtime': ^1.11.3
   # No patched deepmerge release exists; vendor/deepmerge carries the fix (see its README).
   deepmerge: link:./vendor/deepmerge

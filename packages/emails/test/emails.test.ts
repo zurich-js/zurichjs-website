@@ -176,6 +176,14 @@ describe('layout', () => {
     expect(e.html).not.toContain('<script>');
   });
 
+  it('keeps the line breaks a person typed: blank lines make paragraphs, single ones a <br>', () => {
+    const e = render({ subject: 's', preheader: 'p', heading: 'h', blocks: [{ kind: 'p', text: 'Hi Grace,\r\n\r\nAs discussed:\n- slides <b>\n- logo\n\n\nBest,\nFaris' }] });
+    expect(e.html).toContain('>Hi Grace,</p>');
+    expect(e.html).toContain('>As discussed:<br>- slides &lt;b&gt;<br>- logo</p>');
+    expect(e.html).toContain('>Best,<br>Faris</p>');
+    expect(e.text).toContain('As discussed:\n- slides <b>\n- logo');
+  });
+
   it('refuses links that are not https', () => {
     expect(() => safeUrl('javascript:alert(1)')).toThrow(/https/);
     expect(() => safeUrl('http://zurichjs.com')).toThrow(/https/);
@@ -246,6 +254,12 @@ describe('sponsor emails', () => {
     const bundle = renderEmail('sponsor-invite', { ...sponsor, meetups: ['December, 9th December 2026', 'January, 13th January 2027'], message: null, contractOnFile: true });
     expect(bundle.text).toContain('Meetups: December, 9th December 2026; January, 13th January 2027');
     expect(bundle.text).toContain('Your signed contract is on file.');
+  });
+
+  it('keeps the line breaks in our own words', () => {
+    const e = renderEmail('sponsor-invite', { ...sponsor, message: 'As discussed on our call.\nThe logo goes up next week.\n\nThanks!' });
+    expect(e.html).toContain('>As discussed on our call.<br>The logo goes up next week.</p>');
+    expect(e.html).toContain('>Thanks!</p>');
   });
 
   it('asks the sponsor to confirm a change we agreed, with a link that fills it in', () => {

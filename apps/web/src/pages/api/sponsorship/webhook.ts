@@ -2,32 +2,48 @@
  * Stripe webhook for sponsorships (its own endpoint and secret, apart from memberships and
  * donations). Stripe › Developers › Webhooks: https://zurichjs.com/api/sponsorship/webhook,
  * the events in SPONSOR_WEBHOOK_EVENTS; secret in STRIPE_SPONSORSHIP_WEBHOOK_SECRET.
- * `pnpm sponsorship:stripe-setup --webhook-url …` creates it.
+ * `pnpm sponsorship:stripe-setup --webhook-url …` creates it. Card only.
  *
- *   checkout.session.completed      links the subscription; a one-meetup card payment starts the
- *                                   sponsorship; a sponsorship paid directly that moved to card
- *                                   switches its payment mode (charged when its paid period ends)
- *   invoice.paid                    first payment and every renewal (subscriptions), or a one-meetup
- *                                   invoice: active, paid until the term end; welcome email the first time
- *   invoice.payment_failed          a declined card: past due, email with Stripe's page, Slack
- *   invoice.payment_action_required the bank wants a confirmation (3D Secure): the same
- *   invoice.overdue                 an invoice past its due date: past due, reminder email, Slack
+ *   checkout.session.completed      a one-time card payment (Checkout or a payment link) starts the
+ *                                   sponsorship; a subscription is linked (a second live one for the
+ *                                   same sponsor is cancelled and flagged: never charge twice)
+ *   invoice.paid                    the first payment and every renewal: active, paid until the term
+ *                                   end, with the tier and cycle Stripe actually charged; welcome once
+ *   invoice.payment_failed          a declined card: payment overdue, email with Stripe's page, Slack
+ *   invoice.payment_action_required the bank wants a confirmation (3D Secure): the same, worded so
  *   customer.subscription.updated   a change scheduled for the renewal took effect; Stripe reporting
- *                                   past_due or unpaid marks the sponsorship past due
- *   customer.subscription.deleted   ended: as agreed (ending) or lapsed (Stripe gave up on payment)
+ *                                   past_due or unpaid marks the payment overdue
+ *   customer.subscription.deleted   ended: as agreed (ending), lapsed (unpaid), or never paid
  *
  * Safe to receive twice: handled events are skipped (sponsor_stripe_events), status changes are
- * compare-and-set, emails carry idempotency keys. An event is marked handled only after it worked.
+ * compare-and-set and only the call that made a change sends its emails, which also carry
+ * idempotency keys. An event is marked handled only after it worked. A payment for a sponsorship
+ * that has ended changes nothing and is flagged in Slack.
  */
-import { TransitionError, feeLabel, fromLookupKey, isRecurring, tierInfo, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { TransitionError, fromLookupKey, isRecurring, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { siteOrigin } from '../../../server/auth.ts';
 import { longDate } from '../../../server/dates.ts';
 import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
 import { MembershipUnavailable } from '../../../server/membership-db.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
-import { adminUrl, emailBoard, emailSponsor, note, planLabel, sponsorStore, termLabel, tierBenefits, who, type NotifyDeps } from '../../../server/sponsor.ts';
-import { SPONSOR_SOURCE } from '../../../server/sponsor-stripe.ts';
+import {
+  adminUrl,
+  afterLastMeetup,
+  emailSponsor,
+  note,
+  planLabel,
+  slackText,
+  sponsorFee,
+  sponsorStore,
+  termLabel,
+  tierBenefits,
+  who,
+  zurichDay,
+  zurichDayOf,
+  type NotifyDeps,
+} from '../../../server/sponsor.ts';
+import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription } from '../../../server/sponsor-stripe.ts';
 import { verifyStripeSignature } from '../../../server/stripe.ts';
 
 export const prerender = false;
@@ -41,11 +57,12 @@ interface StripeEvent {
 interface Invoice {
   id: string;
   amount_paid?: number;
+  billing_reason?: string | null;
   attempt_count?: number;
   next_payment_attempt?: number | null;
   hosted_invoice_url?: string | null;
   metadata?: Record<string, string> | null;
-  lines?: { data?: { period?: { start: number; end: number } }[] };
+  lines?: { data?: { period?: { start: number; end: number }; price?: { lookup_key?: string | null } | null; pricing?: { price_details?: { price?: string } } }[] };
   parent?: { subscription_details?: { subscription?: string | { id: string }; metadata?: Record<string, string> | null } | null } | null;
   subscription?: string | { id: string } | null;
   subscription_details?: { metadata?: Record<string, string> | null } | null;
@@ -67,11 +84,9 @@ export interface SponsorWebhookDeps {
   log?: (m: string) => void;
 }
 
-const day = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
 const safeStripeUrl = (url: string | null | undefined) => (url?.startsWith('https://invoice.stripe.com/') ? url : null);
-const nextDay = (iso: string) => new Date(Date.parse(`${iso}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 
-/** The invoice's subscription and its metadata (both API shapes), or the invoice's own metadata (one meetup). */
+/** The invoice's subscription and its metadata (both API shapes), or the invoice's own metadata (one-time). */
 function sourceOf(inv: Invoice): { subscription: string | null; metadata: Record<string, string> } | null {
   const details = inv.parent?.subscription_details ?? (inv.subscription ? { subscription: inv.subscription, metadata: inv.subscription_details?.metadata } : null);
   if (details?.subscription) {
@@ -85,57 +100,59 @@ function termOf(inv: Invoice) {
   return (inv.lines?.data ?? []).map((l) => l.period).reduce<{ start: number; end: number } | undefined>((best, p) => (p && (!best || p.end > best.end) ? p : best), undefined);
 }
 
-async function sponsorOf(store: SponsorStore, ids: { sponsorId?: string; subscriptionId?: string | null }): Promise<Sponsor | null> {
+async function sponsorOf(store: SponsorStore, ids: { sponsorId?: string; subscriptionId?: string | null; paymentLinkId?: string | null }): Promise<Sponsor | null> {
   if (ids.sponsorId) {
     const s = await store.get(ids.sponsorId);
     if (s) return s;
   }
-  return ids.subscriptionId ? store.byStripeSubscription(ids.subscriptionId) : null;
+  if (ids.subscriptionId) {
+    const s = await store.byStripeSubscription(ids.subscriptionId);
+    if (s) return s;
+  }
+  return ids.paymentLinkId ? store.byPaymentLink(ids.paymentLinkId) : null;
 }
 
+/** Moves to `to` when allowed. `changed` is true only for the call that made the change. */
 async function moveTo(store: SponsorStore, s: Sponsor, to: Status, eventId: string, extra: { reason?: 'cancelled' | 'lapsed'; payload?: Record<string, unknown> } = {}) {
-  if (s.status === to) return s;
+  if (s.status === to) return { sponsor: s, changed: false };
   try {
-    return await store.transition(s.id, { from: s.status, to, actor: { kind: 'stripe', id: eventId }, reason: extra.reason, payload: extra.payload });
+    return { sponsor: await store.transition(s.id, { from: s.status, to, actor: { kind: 'stripe', id: eventId }, reason: extra.reason, payload: extra.payload }), changed: true };
   } catch (cause) {
-    if (cause instanceof TransitionError) return (await store.get(s.id)) ?? s;
+    if (cause instanceof TransitionError) return { sponsor: (await store.get(s.id)) ?? s, changed: false };
     throw cause;
   }
 }
 
 const isStale = (s: Sponsor, subscriptionId: string) => !!s.stripeSubscriptionId && s.stripeSubscriptionId !== subscriptionId;
 
-/** The first payment (or the board's start) of a sponsorship: welcome every contact, tell the board. */
-async function welcome(s: Sponsor, term: string, nextPayment: string | null, eventId: string, deps: NotifyDeps) {
+/** The first payment of a sponsorship: welcome every confirmed contact, one Slack note with what to deliver. */
+async function welcome(s: Sponsor, term: string | null, nextPayment: string | null, eventId: string, deps: NotifyDeps) {
+  const meetups = s.cycle === 'once' ? await deps.store.meetups(s.id) : [];
   const needsLogo = !(await deps.store.logos(s.id)).length;
-  await emailSponsor(s, 'sponsor-welcome', (base) => ({ ...base, term, nextPayment, needsLogo }), { ...deps, key: `sponsor-welcome:${s.id}:${eventId}` });
+  await emailSponsor(s, 'sponsor-welcome', (base) => ({ ...base, term, nextPayment, needsLogo }), { ...deps, meetups, key: `sponsor-welcome:${s.id}` });
   const deliver = tierBenefits(s.tier)
     .map((b) => `• ${b}`)
     .join('\n');
-  await note(`:tada: New sponsor: ${who(s)}, ${feeLabel(s.tier, s.cycle)}.${needsLogo ? ' No logo yet.' : ''}${deliver ? `\n*To deliver:*\n${deliver}` : ''}`, deps);
-  await emailBoard(
-    `New sponsor: ${s.companyName}`,
-    [`${s.companyName} paid for its ${tierInfo(s.tier).name} sponsorship.`, ...(tierBenefits(s.tier).length ? [`To deliver: ${tierBenefits(s.tier).join('; ')}.`] : [])],
-    [
-      ['Plan', planLabel(s)],
-      ['Term', term],
-    ],
-    {
-      ...deps,
-      key: `sponsor-board-new:${s.id}`,
-      url: adminUrl(deps.origin, s.id),
-    },
+  await note(
+    `:tada: New sponsor: ${who(s)}, ${sponsorFee(s, meetups)}${meetups.length ? ` (${meetups.map((m) => slackText(`${m.title}, ${longDate(m.date)}`)).join('; ')})` : ''}.${needsLogo ? ' No logo yet.' : ''} Add them to Sanity as a current sponsor.${deliver ? `\n*To deliver:*\n${deliver}` : ''}\n${adminUrl(deps.origin, s.id)}`,
+    deps,
   );
 }
 
-/** A one-meetup sponsorship is paid: it runs until the day after the meetup. */
-async function startOnce(s: Sponsor, eventId: string, store: SponsorStore, deps: NotifyDeps) {
+/** A one-time sponsorship is paid: it runs until the day after its last meetup. */
+async function startOnce(s: Sponsor, eventId: string, today: string, deps: NotifyDeps) {
+  if (s.status === 'ended') return anomaly(s, `A one-time payment arrived for ${who(s)}, which has ended. Check it in Stripe and refund if needed.`, deps);
   if (s.status !== 'pending') return;
-  const today = new Date().toISOString().slice(0, 10);
-  let m = await store.update(s.id, { startedAt: today, paidUntil: s.eventDate ? nextDay(s.eventDate) : null }, { kind: 'stripe', id: eventId });
-  m = await moveTo(store, m, 'active', eventId);
-  if (m.status === 'active') await welcome(m, s.eventTitle ? `${s.eventTitle}${s.eventDate ? `, ${longDate(s.eventDate)}` : ''}` : 'one meetup', null, eventId, deps);
+  const meetups = await deps.store.meetups(s.id);
+  const m = await deps.store.update(s.id, { startedAt: today, paidUntil: afterLastMeetup(meetups) }, { kind: 'stripe', id: eventId });
+  const r = await moveTo(deps.store, m, 'active', eventId);
+  if (r.changed) {
+    await closePaymentLink(r.sponsor, deps.store, { env: deps.env, fetch: deps.fetch });
+    await welcome(r.sponsor, null, null, eventId, deps);
+  }
 }
+
+const anomaly = (s: Sponsor, text: string, deps: NotifyDeps) => note(`:rotating_light: ${text} ${adminUrl(deps.origin, s.id)}`, deps);
 
 export async function handleSponsorWebhook(request: Request, deps: SponsorWebhookDeps = {}): Promise<Response> {
   const env = deps.env ?? process.env;
@@ -161,7 +178,9 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
     throw cause;
   }
   const notify: NotifyDeps = { env, store, origin: siteOrigin(env), fetch: deps.fetch, slack: deps.slack, log };
+  const stripeDeps = { env, fetch: deps.fetch };
   const actor = { kind: 'stripe', id: event.id } as const;
+  const today = zurichDay(deps.now ? new Date(deps.now) : new Date());
 
   try {
     if (await store.stripeEventSeen(event.id)) return json(200, { ok: true, duplicate: true });
@@ -170,20 +189,28 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
     switch (event.type) {
       case 'checkout.session.completed': {
         const meta = o.metadata as Record<string, string> | undefined;
-        if (meta?.source !== SPONSOR_SOURCE) break;
-        let s = await sponsorOf(store, { sponsorId: meta.sponsorId });
+        const paymentLink = typeof o.payment_link === 'string' ? o.payment_link : null;
+        if (meta?.source !== SPONSOR_SOURCE && !paymentLink) break;
+        let s = await sponsorOf(store, { sponsorId: meta?.source === SPONSOR_SOURCE ? meta.sponsorId : undefined, paymentLinkId: paymentLink });
         if (!s) break;
+        if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
         if (o.mode === 'payment') {
-          if (o.payment_status === 'paid' && s.cycle === 'once') await startOnce(s, event.id, store, notify);
+          if (o.payment_status === 'paid' && s.cycle === 'once') await startOnce(s, event.id, today, notify);
           break;
         }
         const subscriptionId = typeof o.subscription === 'string' ? o.subscription : null;
         if (!subscriptionId) break;
-        if (s.stripeSubscriptionId !== subscriptionId) s = await store.linkStripe(s.id, { subscriptionId }, actor);
-        if (s.paymentMode === 'manual') {
-          s = await store.update(s.id, { paymentMode: 'card' }, actor);
-          await note(`:credit_card: ${who(s)} moved to card payment (first charge when the paid period ends).`, notify);
+        // Never two live subscriptions: an old tab paid after another payment was set up.
+        if (s.stripeSubscriptionId && s.stripeSubscriptionId !== subscriptionId) {
+          const live = s.stripeCustomerId ? await liveSubscriptions(s.stripeCustomerId, stripeDeps) : [];
+          if (live.includes(s.stripeSubscriptionId)) {
+            await cancelNow(subscriptionId, stripeDeps);
+            await anomaly(s, `${who(s)} paid a second card subscription (an old payment page). It was cancelled; refund its first payment in Stripe.`, notify);
+            break;
+          }
         }
+        if (s.stripeSubscriptionId !== subscriptionId) s = await store.linkStripe(s.id, { subscriptionId, checkoutSessionId: null }, actor);
+        if (s.paymentMode === 'manual') s = await store.update(s.id, { paymentMode: 'card' }, actor);
         break;
       }
 
@@ -197,43 +224,60 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
           break;
         }
         if (!src.subscription) {
-          // A one-meetup invoice (or its Checkout receipt, already handled above).
-          if (s.cycle === 'once') await startOnce(s, event.id, store, notify);
+          // A one-time payment's receipt (Checkout was handled above).
+          if (s.cycle === 'once') await startOnce(s, event.id, today, notify);
           break;
         }
+        if (s.status === 'ended') {
+          await anomaly(s, `A payment arrived for ${who(s)}, which has ended. Check the subscription in Stripe and refund if needed.`, notify);
+          break;
+        }
+        if (isStale(s, src.subscription)) break;
+        // Only a new term moves paid through on: a proration for an upgrade is not one.
+        const newTerm = !inv.billing_reason || inv.billing_reason === 'subscription_create' || inv.billing_reason === 'subscription_cycle';
         const period = termOf(inv);
-        if (!period) break;
+        if (!period || !newTerm) break;
         const first = s.status === 'pending';
-        if (s.stripeSubscriptionId !== src.subscription) s = await store.linkStripe(s.id, { subscriptionId: src.subscription }, actor);
-        const paidUntil = day(period.end);
-        s = await store.update(s.id, { ...(s.paidUntil && s.paidUntil > paidUntil ? {} : { paidUntil }), ...(s.startedAt ? {} : { startedAt: day(period.start) }) }, actor);
-        if (s.status === 'pending' || s.status === 'past_due') s = await moveTo(store, s, 'active', event.id, { payload: { invoice: inv.id } });
-        if (first) await welcome(s, termLabel(day(period.start), paidUntil), isRecurring(s.cycle) ? longDate(paidUntil) : null, event.id, notify);
-        else await note(`:repeat: Paid: ${who(s)}, ${termLabel(day(period.start), paidUntil)}.`, notify);
+        if (s.stripeSubscriptionId !== src.subscription) s = await store.linkStripe(s.id, { subscriptionId: src.subscription, checkoutSessionId: null }, actor);
+        // The plan Stripe charged is the truth (two payment pages with different tiers, an applied switch).
+        const charged = fromLookupKey(inv.lines?.data?.map((l) => l.price?.lookup_key).find(Boolean));
+        const paidUntil = zurichDayOf(period.end);
+        s = await store.update(
+          s.id,
+          {
+            ...(s.paidUntil && s.paidUntil > paidUntil ? {} : { paidUntil }),
+            ...(s.startedAt ? {} : { startedAt: zurichDayOf(period.start) }),
+            ...(charged && (charged.tier !== s.tier || charged.cycle !== s.cycle) ? charged : {}),
+            paymentMode: 'card',
+          },
+          actor,
+        );
+        const moved =
+          s.status === 'pending' || s.status === 'past_due' ? await moveTo(store, s, 'active', event.id, { payload: { invoice: inv.id } }) : { sponsor: s, changed: false };
+        s = moved.sponsor;
+        if (first && moved.changed) await welcome(s, termLabel(zurichDayOf(period.start), paidUntil), isRecurring(s.cycle) ? longDate(paidUntil) : null, event.id, notify);
+        else if (!first) await note(`:repeat: Paid: ${who(s)}, ${termLabel(zurichDayOf(period.start), paidUntil)}.`, notify);
         break;
       }
 
       case 'invoice.payment_failed':
-      case 'invoice.payment_action_required':
-      case 'invoice.overdue': {
+      case 'invoice.payment_action_required': {
         const inv = o as unknown as Invoice;
         const src = sourceOf(inv);
         if (!src || src.metadata.source !== SPONSOR_SOURCE) break;
         let s = await sponsorOf(store, { sponsorId: src.metadata.sponsorId, subscriptionId: src.subscription });
         // Someone still in Checkout fixes the card there; only running sponsorships concern us.
-        if (!s || !(s.status === 'active' || s.status === 'past_due' || s.status === 'ending' || (s.status === 'pending' && event.type === 'invoice.overdue'))) break;
-        if (s.status === 'active') s = await moveTo(store, s, 'past_due', event.id, { payload: { invoice: inv.id, event: event.type } });
-        const problem = event.type === 'invoice.overdue' ? 'overdue' : event.type === 'invoice.payment_action_required' ? 'confirm' : 'declined';
-        const nextAttempt = inv.next_payment_attempt ? longDate(day(inv.next_payment_attempt)) : null;
+        if (!s || !(s.status === 'active' || s.status === 'past_due' || s.status === 'ending')) break;
+        if (s.status === 'active') s = (await moveTo(store, s, 'past_due', event.id, { payload: { invoice: inv.id, event: event.type } })).sponsor;
+        const problem = event.type === 'invoice.payment_action_required' ? 'confirm' : 'declined';
+        const nextAttempt = inv.next_payment_attempt ? longDate(zurichDayOf(inv.next_payment_attempt)) : null;
         await emailSponsor(s, 'sponsor-payment-problem', (base) => ({ ...base, problem, payUrl: safeStripeUrl(inv.hosted_invoice_url), nextAttempt }), {
           ...notify,
           to: 'billing',
           key: `sponsor-payment:${inv.id}:${inv.attempt_count ?? 0}:${problem}`,
         });
         await note(
-          problem === 'overdue'
-            ? `:warning: Invoice overdue for ${who(s)}. Their billing contact was emailed.`
-            : `:warning: Payment ${problem === 'confirm' ? 'needs a bank confirmation' : 'failed'} for ${who(s)}${nextAttempt ? `; Stripe tries again on ${nextAttempt}` : ''}. They were emailed.`,
+          `:warning: Payment ${problem === 'confirm' ? 'needs a bank confirmation' : 'failed'} for ${who(s)}${nextAttempt ? `; Stripe tries again on ${nextAttempt}` : ''}. Their billing contact was emailed.`,
           notify,
         );
         break;
@@ -243,16 +287,19 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
         const sub = o as unknown as Subscription;
         if (sub.metadata?.source !== SPONSOR_SOURCE) break;
         let s = await sponsorOf(store, { sponsorId: sub.metadata.sponsorId, subscriptionId: sub.id });
-        if (!s || isStale(s, sub.id)) break;
+        if (!s || s.status === 'ended' || isStale(s, sub.id)) break;
         if ((sub.status === 'past_due' || sub.status === 'unpaid') && s.status === 'active')
-          s = await moveTo(store, s, 'past_due', event.id, { payload: { subscriptionStatus: sub.status } });
-        const plan = fromLookupKey(sub.items?.data?.[0]?.price?.lookup_key);
-        if (!plan || (plan.tier === s.tier && plan.cycle === s.cycle)) break;
+          s = (await moveTo(store, s, 'past_due', event.id, { payload: { subscriptionStatus: sub.status } })).sponsor;
+        const plan = planOfSubscription(sub);
+        if (!plan || (plan.tier === s.tier && plan.cycle === s.cycle) || s.status === 'pending') break;
         const previous = planLabel(s);
         const before = who(s);
         s = await store.update(s.id, plan, actor);
-        await emailSponsor(s, 'sponsor-change', (base) => ({ ...base, timing: 'applied', from: null, previous }), { ...notify, key: `sponsor-change-applied:${event.id}` });
-        await note(`:arrows_counterclockwise: ${before} is now ${planLabel(s)}, as scheduled at the renewal.`, notify);
+        await emailSponsor(s, 'sponsor-change', (base) => ({ ...base, timing: 'applied', from: null, previous, manual: false }), {
+          ...notify,
+          key: `sponsor-change-applied:${event.id}`,
+        });
+        await note(`:arrows_counterclockwise: ${before} is now ${planLabel(s)}, as scheduled at the renewal. Update the tier in Sanity if the logo size changes.`, notify);
         break;
       }
 
@@ -260,12 +307,22 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
         const sub = o as unknown as Subscription;
         if (sub.metadata?.source !== SPONSOR_SOURCE) break;
         const s = await sponsorOf(store, { sponsorId: sub.metadata.sponsorId, subscriptionId: sub.id });
-        if (!s || s.status === 'ended' || isStale(s, sub.id)) break;
+        if (!s || isStale(s, sub.id)) break;
+        if (s.status === 'ended') {
+          if (s.stripeSubscriptionId === sub.id) await store.linkStripe(s.id, { subscriptionId: null }, actor);
+          break;
+        }
         const reason = s.status === 'ending' ? 'cancelled' : 'lapsed';
         const ended = await moveTo(store, s, 'ended', event.id, { reason });
-        if (ended.status !== 'ended') break;
-        await emailSponsor(ended, 'sponsor-ended', (base) => ({ ...base, reason }), { ...notify, key: `sponsor-ended:${s.id}:${event.id}` });
-        await note(`:wave: Sponsorship ended (${reason === 'cancelled' ? 'as agreed' : 'unpaid'}): ${who(ended)}. Mark them as a past sponsor in Sanity.`, notify);
+        await store.linkStripe(s.id, { subscriptionId: null, checkoutSessionId: null }, actor);
+        if (!ended.changed) break;
+        if (s.status !== 'pending') await emailSponsor(ended.sponsor, 'sponsor-ended', (base) => ({ ...base, reason }), { ...notify, key: `sponsor-ended:${s.id}:${event.id}` });
+        await note(
+          s.status === 'pending'
+            ? `:hourglass: ${who(s)} never paid; the sponsorship was closed.`
+            : `:wave: Sponsorship ended (${reason === 'cancelled' ? 'as agreed' : 'unpaid'}): ${who(ended.sponsor)}. Mark them as a past sponsor in Sanity.`,
+          notify,
+        );
         break;
       }
     }

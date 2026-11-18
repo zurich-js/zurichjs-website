@@ -8,7 +8,7 @@ import {
   fromLookupKey,
   memoryStore,
   priceLookupKey,
-  ProposalOpen,
+  bundleLabel,
   DuplicateContact,
   TIERS,
   type NewSponsor,
@@ -22,14 +22,12 @@ const acme: NewSponsor = {
   website: null,
   tier: 'friend',
   cycle: 'quarterly',
-  paymentMode: 'invoice',
+  paymentMode: 'card',
   status: 'pending',
   source: 'invited',
   startedAt: null,
   paidUntil: null,
-  eventId: null,
-  eventTitle: null,
-  eventDate: null,
+  pricePerMeetup: null,
   notes: null,
 };
 const board = { kind: 'board', id: 'admin' } as const;
@@ -83,7 +81,9 @@ describe('memory store', () => {
     expect(contact.email).toBe('ada@acme.ch');
     expect((await store.contactByEmail('ADA@acme.ch'))?.sponsorId).toBe(s.id);
     await expect(store.addContact(s.id, { email: 'ada@acme.ch', name: 'x', role: 'other' }, board)).rejects.toBeInstanceOf(DuplicateContact);
-    expect((await store.search({ q: 'ada' })).map((x) => x.id)).toEqual([s.id]);
+    // Search is by company only: contact details never match.
+    expect(await store.search({ q: 'ada' })).toEqual([]);
+    expect((await store.search({ q: 'acm' })).map((x) => x.id)).toEqual([s.id]);
   });
   it('records ending dates and clears them on undo', async () => {
     const store = memoryStore();
@@ -96,12 +96,20 @@ describe('memory store', () => {
     expect(back).toMatchObject({ endsAt: null, endRequestedAt: null });
     await expect(store.transition(s.id, { from: 'ending', to: 'active', actor: sponsor })).rejects.toThrow(/changed/);
   });
-  it('allows one open proposal, answered once', async () => {
+  it('keeps a bundle of meetups in date order, one row per meetup', async () => {
     const store = memoryStore();
-    const { sponsor: s } = await store.create(acme, { email: 'a@acme.ch', name: 'A', role: 'primary' }, board);
-    const p = await store.propose(s.id, { kind: 'plan', tier: 'builder', cycle: 'quarterly', message: null, expiresAt: '2026-12-02T00:00:00Z' }, board);
-    await expect(store.propose(s.id, { kind: 'end', tier: null, cycle: null, message: null, expiresAt: '2026-12-02T00:00:00Z' }, board)).rejects.toBeInstanceOf(ProposalOpen);
-    await store.decideProposal(p.id, 'accepted', 'a@acme.ch', sponsor);
-    await expect(store.decideProposal(p.id, 'declined', 'a@acme.ch', sponsor)).rejects.toThrow(/changed/);
+    const { sponsor: s } = await store.create({ ...acme, cycle: 'once', pricePerMeetup: 500 }, { email: 'a@acme.ch', name: 'A', role: 'primary' }, board);
+    await store.setMeetups(
+      s.id,
+      [
+        { eventId: 'e2', title: 'January', date: '2027-01-13' },
+        { eventId: 'e1', title: 'December', date: '2026-12-09' },
+        { eventId: 'e1', title: 'December', date: '2026-12-09' },
+      ],
+      board,
+    );
+    expect((await store.meetups(s.id)).map((m) => m.eventId)).toEqual(['e1', 'e2']);
+    expect(bundleLabel('friend', 2, 500)).toBe('CHF 1’000 for 2 meetups (CHF 500 each)');
+    expect(bundleLabel('champion', 1, null)).toBe('CHF 1’000 for one meetup');
   });
 });

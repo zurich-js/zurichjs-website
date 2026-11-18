@@ -12,11 +12,11 @@ export type Cycle = 'monthly' | 'quarterly' | 'yearly' | 'once';
 export type RecurringCycle = Exclude<Cycle, 'once'>;
 
 /**
- * How they pay: by card (Stripe Checkout, charged automatically), by invoice (Stripe
- * emails an invoice, due in 30 days; bank transfer or card), or manually (paid outside
- * Stripe, recorded by the board; e.g. an existing sponsorship brought into the system).
+ * How they pay: by card (Stripe Checkout or a payment link, charged automatically), or
+ * manually (paid outside Stripe, e.g. by bank transfer against the board's own invoice,
+ * recorded by the board). Stripe invoices are off for now (owner, 18th November 2026).
  */
-export type PaymentMode = 'card' | 'invoice' | 'manual';
+export type PaymentMode = 'card' | 'manual';
 
 export type Status =
   /** Invited or started; becomes active with the first payment (or the board recording one). */
@@ -66,14 +66,17 @@ export interface Sponsor {
   /** ISO dates (YYYY-MM-DD). `paidUntil` is the first day not paid for. */
   startedAt: string | null;
   paidUntil: string | null;
-  /** One-time sponsorships: the meetup (Sanity event id), its title and date. */
-  eventId: string | null;
-  eventTitle: string | null;
-  eventDate: string | null;
+  /** One-time sponsorships: a custom price per meetup (CHF) the board agreed; null = the list price. */
+  pricePerMeetup: number | null;
   /** The Sanity partner document that shows them on the site. */
   partnerId: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
+  /** The latest Stripe Checkout session, closed when a new one is opened (never two payment pages). */
+  checkoutSessionId: string | null;
+  /** A Stripe payment link the board created for a one-time sponsorship (with a contract on file). */
+  paymentLinkId: string | null;
+  paymentLinkUrl: string | null;
   /** Board-only notes. */
   notes: string | null;
   /** While `ending`: when it was agreed, and the day it ends (first day without it). */
@@ -97,9 +100,7 @@ export type NewSponsor = Pick<
   | 'source'
   | 'startedAt'
   | 'paidUntil'
-  | 'eventId'
-  | 'eventTitle'
-  | 'eventDate'
+  | 'pricePerMeetup'
   | 'notes'
 >;
 
@@ -107,25 +108,18 @@ export type NewSponsor = Pick<
 export type SponsorPatch = Partial<
   Pick<
     Sponsor,
-    | 'companyName'
-    | 'legalName'
-    | 'billingAddress'
-    | 'vatId'
-    | 'website'
-    | 'tier'
-    | 'cycle'
-    | 'paymentMode'
-    | 'startedAt'
-    | 'paidUntil'
-    | 'eventId'
-    | 'eventTitle'
-    | 'eventDate'
-    | 'partnerId'
-    | 'notes'
+    'companyName' | 'legalName' | 'billingAddress' | 'vatId' | 'website' | 'tier' | 'cycle' | 'paymentMode' | 'startedAt' | 'paidUntil' | 'pricePerMeetup' | 'partnerId' | 'notes'
   >
 >;
 
 export type ContactRole = 'primary' | 'billing' | 'other';
+
+/**
+ * Who added a contact: the board, a colleague on the sponsorship page, or the person
+ * themselves (starting a sponsorship). A contact a colleague added is only linked to a
+ * sign-in once that person accepts the invitation, and gets no email before then.
+ */
+export type ContactSource = 'board' | 'sponsor' | 'self';
 
 /** Someone who signs in for a sponsor. An email belongs to one sponsor. */
 export interface Contact {
@@ -136,10 +130,35 @@ export interface Contact {
   role: ContactRole;
   /** The Better Auth user, linked on their first sign-in. */
   userId: string | null;
+  addedBy: ContactSource;
   createdAt: string;
 }
 
-export type NewContact = Pick<Contact, 'email' | 'name' | 'role'>;
+export type NewContact = Pick<Contact, 'email' | 'name' | 'role'> & { addedBy?: ContactSource };
+
+/** A meetup a one-time sponsorship covers. */
+export interface SponsorMeetup {
+  /** The Sanity event id. */
+  eventId: string;
+  title: string;
+  /** YYYY-MM-DD, Zurich. */
+  date: string;
+}
+
+/** A contract signed outside the site (PDF), kept with the sponsorship. */
+export interface SponsorDocument {
+  id: string;
+  sponsorId: string;
+  kind: 'contract';
+  /** In the private Netlify Blobs store `sponsors`. */
+  blobKey: string;
+  filename: string;
+  bytes: number;
+  /** When it was signed (YYYY-MM-DD), if known. */
+  signedOn: string | null;
+  uploadedBy: string;
+  uploadedAt: string;
+}
 
 /** A signed sponsorship agreement: who accepted which version, for what. */
 export interface Agreement {
@@ -149,36 +168,12 @@ export interface Agreement {
   signerName: string;
   signerTitle: string;
   signerEmail: string;
-  /** `start`: the sponsorship; `change`: a plan change; `proposal`: accepting the board's proposal. */
-  context: 'start' | 'change' | 'proposal';
+  /** `start`: the sponsorship (full signature); `change`: a plan change or end, confirmed under the agreement. */
+  context: 'start' | 'change';
   /** "Community Builder, quarterly, by invoice" at the time. */
   summary: string;
   acceptedAt: string;
 }
-
-export type ProposalStatus = 'open' | 'accepted' | 'declined' | 'withdrawn' | 'expired';
-
-/**
- * A change the board proposes after talking with the sponsor (a new tier or cycle, or
- * ending the sponsorship). Nothing changes until a contact accepts it in the portal.
- */
-export interface Proposal {
-  id: string;
-  sponsorId: string;
-  kind: 'plan' | 'end';
-  tier: Tier | null;
-  cycle: Cycle | null;
-  /** The board's words to the sponsor, shown in the email and the portal. */
-  message: string | null;
-  status: ProposalStatus;
-  createdBy: string;
-  createdAt: string;
-  expiresAt: string;
-  decidedBy: string | null;
-  decidedAt: string | null;
-}
-
-export type LogoReview = 'pending' | 'approved' | 'rejected';
 
 export interface Logo {
   id: string;
@@ -190,9 +185,6 @@ export interface Logo {
   filename: string;
   uploadedBy: string;
   uploadedAt: string;
-  review: LogoReview;
-  reviewNote: string | null;
-  reviewedAt: string | null;
 }
 
 export interface SponsorEvent {

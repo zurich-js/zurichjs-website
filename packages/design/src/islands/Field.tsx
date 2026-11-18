@@ -77,13 +77,19 @@ export function TextArea({ label, hint, error, class: className, labelSize, inva
   );
 }
 
-export function SelectField({ label, hint, error, class: className, children, ...rest }: Wrap & SelectHTMLAttributes<HTMLSelectElement>) {
+export function SelectField({ label, hint, error, class: className, children, invalid, ...rest }: Wrap & SelectHTMLAttributes<HTMLSelectElement> & { invalid?: boolean }) {
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} ids={ids}>
       {/* The native arrow is tiny and sits on the edge in most browsers: hidden, and drawn here with room around it. */}
       <span class="relative flex">
-        <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-[52px] pl-3.5 pr-11 appearance-none cursor-pointer', border(false))} {...rest}>
+        <select
+          aria-labelledby={ids.label}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          class={cx(control, 'min-h-[52px] pl-3.5 pr-11 appearance-none cursor-pointer', border(invalid))}
+          {...rest}
+        >
           {children}
         </select>
         <svg
@@ -100,6 +106,74 @@ export function SelectField({ label, hint, error, class: className, children, ..
         </svg>
       </span>
     </Wrapper>
+  );
+}
+
+/**
+ * A file picker that looks like the site's pill buttons: the native input is visually hidden (it
+ * stays focusable and works with the keyboard), its label is the button, and the chosen file's
+ * name is shown beside it. `onFile` gets the file, or null when the choice is cleared.
+ */
+export function FileField({
+  label,
+  button = 'Choose a file',
+  hint,
+  error,
+  invalid,
+  accept,
+  fileName,
+  onFile,
+  disabled,
+}: {
+  label: ComponentChildren;
+  button?: string;
+  hint?: ComponentChildren;
+  error?: string;
+  invalid?: boolean;
+  accept?: string;
+  fileName?: string | null;
+  onFile: (file: File | null) => void;
+  disabled?: boolean;
+}) {
+  const { ids, describedBy } = useDescribedBy(hint, error);
+  return (
+    <div class="flex flex-col gap-1.5">
+      <span id={ids.label} class="text-base font-bold">
+        {label}
+      </span>
+      {hint && (
+        <span id={ids.hint} class="text-base leading-normal text-grey-text">
+          {hint}
+        </span>
+      )}
+      <div class="flex flex-wrap items-center gap-3 min-w-0">
+        <label
+          class={cx(
+            'inline-flex min-h-11 items-center rounded-pill border px-5 text-base font-bold cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue',
+            invalid ? 'border-danger' : 'border-black',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'bg-white hover:bg-grey',
+          )}
+        >
+          <input
+            type="file"
+            class="sr-only"
+            accept={accept}
+            disabled={disabled}
+            aria-labelledby={ids.label}
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
+            onChange={(e) => onFile((e.target as HTMLInputElement).files?.[0] ?? null)}
+          />
+          {button}
+        </label>
+        <span class="min-w-0 text-base text-ink-2 break-all">{fileName || 'No file chosen'}</span>
+      </div>
+      {error !== undefined && (
+        <span id={ids.error} class="text-sm text-danger" aria-live="polite">
+          {error}
+        </span>
+      )}
+    </div>
   );
 }
 

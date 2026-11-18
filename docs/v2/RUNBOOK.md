@@ -327,25 +327,26 @@ For the board, behind one shared password, `ADMIN_PASSWORD`. The site checks it 
 
 ## Sponsorship (online)
 
-How it works: `docs/v2/SPONSORSHIP.md`. Sponsors sign in at `/partners/account` (the same email sign-in as members), sign the agreement and pay by card or invoice; the board works in `/admin/sponsors`. It uses the membership database, sign-in, Resend and Slack bot set up above.
+How it works: `docs/v2/SPONSORSHIP.md`. Sponsors sign in at `/partners/account` (the same email sign-in as members), sign the agreement and pay by card; the board works in `/admin/sponsors`. It uses the membership database, sign-in, Resend and Slack bot set up above.
 
 ### Set up (owner, once)
 
-1. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm sponsorship:stripe-setup --webhook-url https://zurichjs.com/api/sponsorship/webhook` is a dry run; add `--apply` to create one product per tier, 16 prices (lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`), the billing portal configuration (prints `STRIPE_SPONSOR_PORTAL_CONFIG`) and the webhook endpoint (prints `STRIPE_SPONSORSHIP_WEBHOOK_SECRET` once). Repeat with the live key when going live (production change).
-2. **Stripe settings:** keep "Email finalized invoices to customers" and receipts on (they are the invoices sponsors pay); revenue recovery as for memberships.
+1. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm sponsorship:stripe-setup --webhook-url https://zurichjs.com/api/sponsorship/webhook` is a dry run; add `--apply` to create one product per tier, 16 prices (lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`) and the webhook endpoint (prints `STRIPE_SPONSORSHIP_WEBHOOK_SECRET` once). Repeat with the live key when going live (production change).
+2. **Stripe settings:** receipts on; failed-payment emails and revenue recovery as for memberships. The billing portal reuses the membership configuration (add `--portal` to the setup for a sponsor-only one).
 3. **Slack:** optionally a sponsors channel with @ZurichJS Bot in it.
-4. **Approve the agreement** at `/partners/agreement` before inviting anyone.
+4. **Approve the agreement** at `/partners/agreement`, then set `SPONSORSHIP_ENABLED=true`. Until then nobody can pay.
 
 | Variable                            | What                                                                                   |
 | ----------------------------------- | -------------------------------------------------------------------------------------- |
-| `STRIPE_SPONSOR_PORTAL_CONFIG`      | from `pnpm sponsorship:stripe-setup`                                                   |
+| `SPONSORSHIP_ENABLED`               | `true` once the agreement is approved; anything else keeps payments closed             |
+| `STRIPE_SPONSOR_PORTAL_CONFIG`      | optional; from `--portal` (default: `STRIPE_MEMBER_PORTAL_CONFIG`)                     |
 | `STRIPE_SPONSORSHIP_WEBHOOK_SECRET` | secret; the sponsorship webhook's signing secret (not the membership or donations one) |
 | `SLACK_SPONSORSHIP_CHANNEL_ID`      | optional; the channel for sponsor notes (falls back to the membership channel)         |
-| `SPONSORSHIP_BOARD_EMAIL`           | optional; where board copies go (default hello@zurichjs.com)                           |
 
 ### Day to day
 
 - **Invite a company** after agreeing the sponsorship: `/admin/sponsors` › Add a sponsor › Invite. They get an email, sign in with that address, sign and pay.
 - **An existing sponsorship** (paid by bank transfer, say): Add a sponsor › Import existing, with the date it is paid until. Record later transfers with **Record a payment**. Slack reminds you 30 and 7 days before it runs out.
-- **Move a sponsor up, down or out** after talking to them: open the sponsor › **Propose a change**. They confirm in the portal; until then nothing changes. Use **End outright** only when they did not agree (terminated) or an invitation never started (withdrawn).
-- **Logos:** Slack says when one is uploaded; approve or send it back in the admin area, then add it to the partner document in Sanity and publish.
+- **Move a sponsor up, down or out** after talking to them: open the sponsor › **Send a change to confirm**. They get a link that fills it in; until they confirm nothing changes. Use **End outright** only when they did not agree (terminated) or an invitation never started (withdrawn).
+- **Bundles:** Add a sponsor with billing one-time, the meetups and a price per meetup; attach the signed contract; **Create payment link** and send it to them.
+- **Logos:** Slack says when one is uploaded; add it to the partner document in Sanity and publish.

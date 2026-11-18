@@ -1,12 +1,12 @@
 /**
  * One sponsor for the admin area.
- *   GET → { ok, sponsor, contacts, agreements, proposals, logos, events, pendingChange }
+ *   GET → { ok, sponsor, attention, contacts, agreements, logos, contracts, events, pendingChange }
  *   POST { companyName?, legalName?, billingAddress?, vatId?, website?, notes?, partnerId? } → { ok, sponsor } (details; synced to Stripe)
  */
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../../../../server/http.ts';
-import { adminSponsorView, agreementView, contactView, logoView, proposalView } from '../../../../../../server/sponsor.ts';
-import { BOARD, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
+import { adminSponsorView, agreementView, contactView, documentView, logoView, zurichDay } from '../../../../../../server/sponsor.ts';
+import { BOARD, attention, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
 import { parseDetails } from '../../../../../../server/sponsor-input.ts';
 import { ensureCustomer, pendingChange } from '../../../../../../server/sponsor-stripe.ts';
 
@@ -19,21 +19,25 @@ export const handleAdminSponsor = (request: Request, id: string, deps: SponsorAd
     async ({ store, lifecycle }) => {
       const s = await store.get(id);
       if (!s) return fail(404, 'No such sponsor.');
-      const [contacts, agreements, proposals, logos, events, pending] = await Promise.all([
+      const today = zurichDay(deps.now ? new Date(deps.now) : new Date());
+      const [contacts, agreements, logos, documents, meetups, events, needs, pending] = await Promise.all([
         store.contacts(s.id),
         store.agreements(s.id),
-        store.proposals(s.id),
         store.logos(s.id),
+        store.documents(s.id),
+        store.meetups(s.id),
         store.events(s.id),
+        attention(s, store, today),
         s.stripeSubscriptionId && s.status !== 'ended' ? pendingChange(s.stripeSubscriptionId, lifecycle.stripe).catch(() => null) : null,
       ]);
       return json(200, {
         ok: true,
-        sponsor: adminSponsorView(s),
+        sponsor: adminSponsorView(s, meetups, documents.length > 0),
+        attention: needs,
         contacts: contacts.map(contactView),
         agreements: agreements.map(agreementView),
-        proposals: proposals.map(proposalView),
         logos: logos.map(logoView),
+        contracts: documents.map(documentView),
         events: events.reverse(),
         pendingChange: pending,
       });
@@ -65,7 +69,7 @@ export const handleUpdateSponsor = (request: Request, id: string, deps: SponsorA
       }
       const updated = await store.update(s.id, patch, BOARD);
       if (updated.stripeCustomerId && Object.keys(parsed.value).length) await ensureCustomer(updated, await store.contacts(s.id), store, lifecycle.stripe);
-      return json(200, { ok: true, sponsor: adminSponsorView(updated) });
+      return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id), (await store.documents(s.id)).length > 0) });
     },
     'save the sponsor',
   );

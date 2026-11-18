@@ -10,15 +10,18 @@
  * with the same amount is kept; a changed amount gets a new price that takes over the key
  * (running subscriptions keep their old price until changed).
  *
- * The portal configuration only updates payment methods, billing details and shows invoices:
- * plan changes and endings happen on /partners/account, under the agreement. Prints
- * STRIPE_SPONSOR_PORTAL_CONFIG and, with --webhook-url, STRIPE_SPONSORSHIP_WEBHOOK_SECRET.
+ * The billing portal reuses the membership configuration (STRIPE_MEMBER_PORTAL_CONFIG) by
+ * default. With --portal it also creates a sponsor-only configuration (payment method, billing
+ * address and invoice history; plan changes and endings stay on /partners/account, under the
+ * agreement) and prints STRIPE_SPONSOR_PORTAL_CONFIG. With --webhook-url it prints
+ * STRIPE_SPONSORSHIP_WEBHOOK_SECRET (its own endpoint, so it has its own secret).
  */
 import { CYCLES, TIERS, priceLookupKey } from '@zurichjs/sponsorship';
 import { SPONSOR_SOURCE, SPONSOR_WEBHOOK_EVENTS } from '../apps/web/src/server/sponsor-stripe.ts';
 import { STRIPE_API_VERSION, stripeApi, stripeForm } from '../apps/web/src/server/stripe.ts';
 
 const apply = process.argv.includes('--apply');
+const portal = process.argv.includes('--portal');
 const webhookArg = process.argv.indexOf('--webhook-url');
 const webhookUrl = webhookArg > 0 ? process.argv[webhookArg + 1] : undefined;
 if (webhookArg > 0 && !webhookUrl?.startsWith('https://')) {
@@ -79,22 +82,23 @@ for (const tier of TIERS) {
   }
 }
 
-console.log('\n+ billing portal configuration (payment method, billing details, invoices; no cancelling or plan changes)');
-if (apply && complete) {
+if (!portal) console.log('\n= billing portal: the membership configuration (STRIPE_MEMBER_PORTAL_CONFIG). Pass --portal for a sponsor-only one.');
+else console.log('\n+ billing portal configuration (payment method, billing address, invoices; no cancelling or plan changes)');
+if (portal && apply && complete) {
   const config = await api<{ id: string }>('POST', 'billing_portal/configurations', {
     business_profile: { headline: 'Swiss JavaScript Group: your ZurichJS sponsorship' },
     default_return_url: 'https://zurichjs.com/partners/account',
     features: {
       payment_method_update: { enabled: true },
       invoice_history: { enabled: true },
-      customer_update: { enabled: true, allowed_updates: ['address', 'name', 'email', 'tax_id'] },
+      customer_update: { enabled: true, allowed_updates: ['address'] },
       subscription_cancel: { enabled: false },
       subscription_update: { enabled: false },
     },
     metadata: { source: SPONSOR_SOURCE },
   });
   console.log(`\nSet STRIPE_SPONSOR_PORTAL_CONFIG=${config.id} on Netlify (functions).`);
-} else if (apply) console.log('  (skipped: run --apply again once every price exists)');
+} else if (portal && apply) console.log('  (skipped: run --apply again once every price exists)');
 
 if (webhookUrl) {
   const endpoints = await api<{ data: { id: string; url: string; status: string }[] }>('GET', 'webhook_endpoints', { limit: 100 });

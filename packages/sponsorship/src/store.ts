@@ -1,20 +1,5 @@
 import { checkTransition, TransitionError } from './state.ts';
-import type {
-  Actor,
-  Agreement,
-  Contact,
-  EndedReason,
-  Logo,
-  LogoReview,
-  NewContact,
-  NewSponsor,
-  Proposal,
-  ProposalStatus,
-  Sponsor,
-  SponsorEvent,
-  SponsorPatch,
-  Status,
-} from './types.ts';
+import type { Actor, Agreement, Contact, EndedReason, Logo, NewContact, NewSponsor, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch, Status } from './types.ts';
 
 export interface TransitionInput {
   /** The status the caller saw: a different one now is a `conflict` (double click, retried webhook). */
@@ -27,9 +12,18 @@ export interface TransitionInput {
   payload?: Record<string, unknown>;
 }
 
+/** Stripe links. A key that is present is written (null clears it); a missing key is kept. */
+export interface StripeLinks {
+  customerId?: string;
+  subscriptionId?: string | null;
+  checkoutSessionId?: string | null;
+  paymentLinkId?: string | null;
+  paymentLinkUrl?: string | null;
+}
+
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
-export type NewProposal = Pick<Proposal, 'kind' | 'tier' | 'cycle' | 'message' | 'expiresAt'>;
 export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename' | 'uploadedBy'>;
+export type NewDocument = Pick<SponsorDocument, 'blobKey' | 'filename' | 'bytes' | 'signedOn' | 'uploadedBy'>;
 
 /**
  * Where sponsors live: Postgres in functions (postgres.ts), memory in tests. Every
@@ -38,19 +32,25 @@ export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename
 export interface SponsorStore {
   get(id: string): Promise<Sponsor | null>;
   byStripeSubscription(id: string): Promise<Sponsor | null>;
-  /** Newest first; `q` matches the company, legal name or a contact's name or email. */
+  byPaymentLink(id: string): Promise<Sponsor | null>;
+  /** Newest first; `q` matches the company or legal name only (never contact details). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Sponsor[]>;
   /** A sponsor with its first contact. Fails with DuplicateContact when the email belongs to a sponsor already. */
   create(s: NewSponsor, contact: NewContact, actor: Actor): Promise<{ sponsor: Sponsor; contact: Contact }>;
   update(id: string, patch: SponsorPatch, actor: Actor): Promise<Sponsor>;
-  linkStripe(id: string, ids: { customerId?: string; subscriptionId?: string }, actor: Actor): Promise<Sponsor>;
+  linkStripe(id: string, links: StripeLinks, actor: Actor): Promise<Sponsor>;
   transition(id: string, input: TransitionInput): Promise<Sponsor>;
+
+  /** The meetups of a one-time sponsorship, by date. */
+  meetups(sponsorId: string): Promise<SponsorMeetup[]>;
+  /** Replaces the meetups (the board moves or bundles them; a sponsor picks one). */
+  setMeetups(sponsorId: string, meetups: SponsorMeetup[], actor: Actor): Promise<SponsorMeetup[]>;
 
   contacts(sponsorId: string): Promise<Contact[]>;
   contactByUser(userId: string): Promise<Contact | null>;
   contactByEmail(email: string): Promise<Contact | null>;
   addContact(sponsorId: string, c: NewContact, actor: Actor): Promise<Contact>;
-  /** Links a contact to the account that signed in with its email (first sign-in). */
+  /** Links a contact to the account that signed in with its email. */
   linkContact(contactId: string, userId: string): Promise<Contact>;
   removeContact(contactId: string, actor: Actor): Promise<void>;
 
@@ -58,37 +58,28 @@ export interface SponsorStore {
   /** Newest first. */
   agreements(sponsorId: string): Promise<Agreement[]>;
 
-  /** Fails with ProposalOpen while another proposal waits for an answer. */
-  propose(sponsorId: string, p: NewProposal, actor: Actor): Promise<Proposal>;
-  getProposal(id: string): Promise<Proposal | null>;
-  /** Newest first. */
-  proposals(sponsorId: string): Promise<Proposal[]>;
-  /** Only from `open` (compare-and-set): a second answer is a `conflict`. */
-  decideProposal(id: string, to: Exclude<ProposalStatus, 'open'>, by: string, actor: Actor): Promise<Proposal>;
-
   addLogo(sponsorId: string, logo: NewLogo, actor: Actor): Promise<Logo>;
   getLogo(id: string): Promise<Logo | null>;
   /** Newest first. */
   logos(sponsorId: string): Promise<Logo[]>;
-  reviewLogo(id: string, review: Exclude<LogoReview, 'pending'>, note: string | null, actor: Actor): Promise<Logo>;
+
+  addDocument(sponsorId: string, doc: NewDocument, actor: Actor): Promise<SponsorDocument>;
+  getDocument(id: string): Promise<SponsorDocument | null>;
+  /** Newest first. */
+  documents(sponsorId: string): Promise<SponsorDocument[]>;
 
   stripeEventSeen(eventId: string): Promise<boolean>;
   markStripeEvent(eventId: string, type: string): Promise<void>;
   /** Oldest first. */
   events(sponsorId: string): Promise<SponsorEvent[]>;
+  /** Appends a note to the audit log (e.g. a payment the board recorded, a change link sent). */
+  log(sponsorId: string, type: string, actor: Actor, payload?: Record<string, unknown>): Promise<void>;
 }
 
 export class DuplicateContact extends Error {
   constructor(email: string) {
     super(`${email} is already a contact of a sponsor.`);
     this.name = 'DuplicateContact';
-  }
-}
-
-export class ProposalOpen extends Error {
-  constructor() {
-    super('A proposal is already waiting for an answer. Withdraw it first.');
-    this.name = 'ProposalOpen';
   }
 }
 
@@ -113,16 +104,19 @@ export function transitionFields(s: Sponsor, to: Status, endedReason: EndedReaso
   };
 }
 
+const byDate = (a: SponsorMeetup, b: SponsorMeetup) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId);
+
 /** In-memory store with the same rules as the database. */
 export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { all(): Sponsor[] } {
   const now = () => (opts.now ?? (() => new Date()))().toISOString();
   let n = 0;
   const id = (p: string) => `${p}_${++n}`;
   const sponsors = new Map<string, Sponsor>();
+  const meetups = new Map<string, SponsorMeetup[]>();
   const contacts = new Map<string, Contact>();
   const agreements: Agreement[] = [];
-  const proposals = new Map<string, Proposal>();
   const logos = new Map<string, Logo>();
+  const documents = new Map<string, SponsorDocument>();
   const log: SponsorEvent[] = [];
   const stripeEvents = new Set<string>();
 
@@ -139,23 +133,20 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     return { ...saved };
   };
   const emailTaken = (email: string) => [...contacts.values()].some((c) => c.email === email);
-  const newest = <T extends { createdAt?: string; acceptedAt?: string; uploadedAt?: string }>(a: T[]) => [...a].reverse();
+  const findBy = async (pred: (s: Sponsor) => boolean) => {
+    const s = [...sponsors.values()].find(pred);
+    return s ? { ...s } : null;
+  };
 
   return {
     all: () => [...sponsors.values()].map((s) => ({ ...s })),
     get: async (sid) => (sponsors.has(sid) ? { ...sponsors.get(sid)! } : null),
-    byStripeSubscription: async (sub) => {
-      const s = [...sponsors.values()].find((x) => x.stripeSubscriptionId === sub);
-      return s ? { ...s } : null;
-    },
+    byStripeSubscription: (sub) => findBy((x) => x.stripeSubscriptionId === sub),
+    byPaymentLink: (pl) => findBy((x) => x.paymentLinkId === pl),
     search: async ({ q, status, limit = 200 }) => {
       const needle = q?.trim().toLowerCase();
-      const hit = (s: Sponsor) =>
-        !needle ||
-        [s.companyName, s.legalName ?? ''].some((v) => v.toLowerCase().includes(needle)) ||
-        [...contacts.values()].some((c) => c.sponsorId === s.id && (c.name.toLowerCase().includes(needle) || c.email.includes(needle)));
       return [...sponsors.values()]
-        .filter((s) => (!status || s.status === status) && hit(s))
+        .filter((s) => (!status || s.status === status) && (!needle || [s.companyName, s.legalName ?? ''].some((v) => v.toLowerCase().includes(needle))))
         .reverse()
         .slice(0, limit)
         .map((s) => ({ ...s }));
@@ -171,13 +162,16 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         partnerId: null,
         stripeCustomerId: null,
         stripeSubscriptionId: null,
+        checkoutSessionId: null,
+        paymentLinkId: null,
+        paymentLinkUrl: null,
         endRequestedAt: null,
         endsAt: null,
         createdAt: at,
         updatedAt: at,
       };
       sponsors.set(s.id, s);
-      const contact: Contact = { id: id('c'), sponsorId: s.id, email, name: c.name, role: c.role, userId: null, createdAt: at };
+      const contact: Contact = { id: id('c'), sponsorId: s.id, email, name: c.name, role: c.role, userId: null, addedBy: c.addedBy ?? 'board', createdAt: at };
       contacts.set(contact.id, contact);
       record(s.id, 'created', actor, { toStatus: s.status, payload: { source: s.source } });
       return { sponsor: { ...s }, contact: { ...contact } };
@@ -187,10 +181,22 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       record(sid, 'updated', actor, { payload: { fields: Object.keys(patch) } });
       return save({ ...s, ...patch });
     },
-    async linkStripe(sid, ids, actor) {
+    async linkStripe(sid, links, actor) {
       const s = must(sid);
-      record(sid, 'stripe_linked', actor, { payload: { ...ids } });
-      return save({ ...s, stripeCustomerId: ids.customerId ?? s.stripeCustomerId, stripeSubscriptionId: ids.subscriptionId ?? s.stripeSubscriptionId });
+      record(sid, 'stripe_linked', actor, { payload: { ...links } });
+      const column = {
+        customerId: 'stripeCustomerId',
+        subscriptionId: 'stripeSubscriptionId',
+        checkoutSessionId: 'checkoutSessionId',
+        paymentLinkId: 'paymentLinkId',
+        paymentLinkUrl: 'paymentLinkUrl',
+      } as const;
+      const set = Object.fromEntries(
+        Object.entries(links)
+          .filter(([, v]) => v !== undefined)
+          .map(([k, v]) => [column[k as keyof StripeLinks], v]),
+      );
+      return save({ ...s, ...set });
     },
     async transition(sid, input) {
       const s = must(sid);
@@ -202,6 +208,14 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         payload: { ...input.payload, ...(t.endedReason ? { reason: t.endedReason } : {}), ...(input.endsAt ? { endsAt: input.endsAt } : {}) },
       });
       return save({ ...s, ...transitionFields(s, t.to, t.endedReason, input.endsAt, now()) });
+    },
+    meetups: async (sid) => [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+    async setMeetups(sid, list, actor) {
+      must(sid);
+      const unique = [...new Map(list.map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
+      meetups.set(sid, unique);
+      record(sid, 'meetups_set', actor, { payload: { events: unique.map((m) => m.eventId) } });
+      return unique.map((m) => ({ ...m }));
     },
     contacts: async (sid) => [...contacts.values()].filter((c) => c.sponsorId === sid).map((c) => ({ ...c })),
     contactByUser: async (uid) => {
@@ -216,9 +230,9 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       must(sid);
       const email = normaliseEmail(c.email);
       if (emailTaken(email)) throw new DuplicateContact(email);
-      const contact: Contact = { id: id('c'), sponsorId: sid, email, name: c.name, role: c.role, userId: null, createdAt: now() };
+      const contact: Contact = { id: id('c'), sponsorId: sid, email, name: c.name, role: c.role, userId: null, addedBy: c.addedBy ?? 'board', createdAt: now() };
       contacts.set(contact.id, contact);
-      record(sid, 'contact_added', actor, { payload: { contactId: contact.id, role: c.role } });
+      record(sid, 'contact_added', actor, { payload: { contactId: contact.id, role: c.role, addedBy: contact.addedBy } });
       return { ...contact };
     },
     async linkContact(cid, userId) {
@@ -241,45 +255,43 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       record(sid, 'agreement_accepted', actor, { payload: { version: a.version, context: a.context } });
       return { ...ag };
     },
-    agreements: async (sid) => newest(agreements.filter((a) => a.sponsorId === sid)).map((a) => ({ ...a })),
-    async propose(sid, p, actor) {
-      must(sid);
-      if ([...proposals.values()].some((x) => x.sponsorId === sid && x.status === 'open')) throw new ProposalOpen();
-      const pr: Proposal = { ...p, id: id('p'), sponsorId: sid, status: 'open', createdBy: actor.id, createdAt: now(), decidedBy: null, decidedAt: null };
-      proposals.set(pr.id, pr);
-      record(sid, 'proposal_created', actor, { payload: { proposalId: pr.id, kind: p.kind, tier: p.tier, cycle: p.cycle } });
-      return { ...pr };
-    },
-    getProposal: async (pid) => (proposals.has(pid) ? { ...proposals.get(pid)! } : null),
-    proposals: async (sid) => newest([...proposals.values()].filter((p) => p.sponsorId === sid)).map((p) => ({ ...p })),
-    async decideProposal(pid, to, by, actor) {
-      const p = proposals.get(pid);
-      if (!p) throw new NotFound('proposal');
-      if (p.status !== 'open') throw conflict();
-      const decided = { ...p, status: to, decidedBy: by, decidedAt: now() };
-      proposals.set(pid, decided);
-      record(p.sponsorId, `proposal_${to}`, actor, { payload: { proposalId: pid } });
-      return { ...decided };
-    },
+    agreements: async (sid) =>
+      agreements
+        .filter((a) => a.sponsorId === sid)
+        .reverse()
+        .map((a) => ({ ...a })),
     async addLogo(sid, l, actor) {
       must(sid);
-      const logo: Logo = { ...l, id: id('l'), sponsorId: sid, uploadedAt: now(), review: 'pending', reviewNote: null, reviewedAt: null };
+      const logo: Logo = { ...l, id: id('l'), sponsorId: sid, uploadedAt: now() };
       logos.set(logo.id, logo);
       record(sid, 'logo_uploaded', actor, { payload: { logoId: logo.id } });
       return { ...logo };
     },
     getLogo: async (lid) => (logos.has(lid) ? { ...logos.get(lid)! } : null),
-    logos: async (sid) => newest([...logos.values()].filter((l) => l.sponsorId === sid)).map((l) => ({ ...l })),
-    async reviewLogo(lid, review, note, actor) {
-      const l = logos.get(lid);
-      if (!l) throw new NotFound('logo');
-      const done = { ...l, review, reviewNote: note, reviewedAt: now() };
-      logos.set(lid, done);
-      record(l.sponsorId, `logo_${review}`, actor, { payload: { logoId: lid } });
-      return { ...done };
+    logos: async (sid) =>
+      [...logos.values()]
+        .filter((l) => l.sponsorId === sid)
+        .reverse()
+        .map((l) => ({ ...l })),
+    async addDocument(sid, d, actor) {
+      must(sid);
+      const doc: SponsorDocument = { ...d, id: id('d'), sponsorId: sid, kind: 'contract', uploadedAt: now() };
+      documents.set(doc.id, doc);
+      record(sid, 'contract_attached', actor, { payload: { documentId: doc.id } });
+      return { ...doc };
     },
+    getDocument: async (did) => (documents.has(did) ? { ...documents.get(did)! } : null),
+    documents: async (sid) =>
+      [...documents.values()]
+        .filter((d) => d.sponsorId === sid)
+        .reverse()
+        .map((d) => ({ ...d })),
     stripeEventSeen: async (e) => stripeEvents.has(e),
     markStripeEvent: async (e) => void stripeEvents.add(e),
     events: async (sid) => log.filter((e) => e.sponsorId === sid).map((e) => ({ ...e })),
+    log: async (sid, type, actor, payload = {}) => {
+      must(sid);
+      record(sid, type, actor, { payload });
+    },
   };
 }

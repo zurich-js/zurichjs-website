@@ -1,8 +1,8 @@
 ---
 /**
  * The sponsorship agreement (version AGREEMENT.version in @zurichjs/sponsorship): what a
- * sponsor's signer accepts in the portal (/partners/account) when they start, change or end
- * a sponsorship. Fees and benefits come from packages/sponsorship and packages/content, the
+ * sponsor's signer accepts on /partners/account when they start a sponsorship, and confirms
+ * with one tick when they change or end it. Fees and benefits come from packages/sponsorship and packages/content, the
  * same tables /partners and Stripe use.
  *
  * DRAFT, written by an agent on 18th November 2026: it needs the owner's approval before
@@ -11,7 +11,7 @@
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content';
-import { AGREEMENT, CYCLES, INVOICE_DAYS, TIERS, feeLabel } from '@zurichjs/sponsorship';
+import { AGREEMENT, CYCLES, TIERS, feeLabel } from '@zurichjs/sponsorship';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { SITE } from '~/lib/content';
 import { longDate } from '~/server/dates';
@@ -41,23 +41,23 @@ const SECTIONS: [string, string[]][] = [
   [
     'Term and payment',
     [
-      'A monthly, quarterly or yearly sponsorship starts with the first payment and renews automatically for the same period until it ends. A one-meetup sponsorship covers the one meetup you chose and ends after it.',
-      `Fees are in Swiss francs. By card, Stripe charges the fee at the start of each period. By invoice, Stripe emails an invoice at the start of each period, due within ${INVOICE_DAYS} days. A sponsorship paid directly to the association runs until the date we confirm in writing.`,
-      'If a payment fails or an invoice is overdue, we remind you. If it stays unpaid, the sponsorship ends and its benefits stop.',
+      'A monthly, quarterly or yearly sponsorship starts with the first payment and renews automatically for the same period until it ends. A one-time sponsorship covers the meetups named in it and ends after the last of them.',
+      'Fees are in Swiss francs. Paid by card, Stripe charges the fee at the start of each period. A sponsorship paid by bank transfer to the association runs until the date we confirm in writing after each payment.',
+      'If a card payment fails, we remind you and Stripe tries again. If it stays unpaid, the sponsorship ends and its benefits stop.',
     ],
   ],
   [
     'Changing the sponsorship',
     [
       'You can change the tier or the billing period on your sponsorship page. A higher tier on the same billing period applies at once, and you pay only the difference for the rest of the current period. Any other change applies from your next renewal; nothing is refunded or charged twice.',
-      'We may propose a change we agreed with you, for example a different tier or an end date. A proposal changes nothing until someone from your company accepts it on the sponsorship page.',
+      'We may send you a change we agreed with you, for example a different tier or an end. It changes nothing until someone from your company confirms it on the sponsorship page.',
     ],
   ],
   [
     'Ending the sponsorship',
     [
       'You can end a recurring sponsorship at any time on your sponsorship page. It ends with the period you have already paid for; fees already paid are not refunded. Until then you can take the end back.',
-      'If we cancel the meetup of a one-meetup sponsorship, we move the sponsorship to another meetup you choose, or refund it if none suits you.',
+      'If we cancel a meetup of a one-time sponsorship, we move it to another meetup you choose, or refund that meetup if none suits you.',
       'We may end a sponsorship with written notice if you seriously breach this agreement or our code of conduct. In that case we refund the unused part of the current period, unless the breach is of the code of conduct.',
     ],
   ],
@@ -83,8 +83,9 @@ const SECTIONS: [string, string[]][] = [
   [
     'Liability and law',
     [
-      'Only the association’s assets are liable for its obligations. Neither party is liable for indirect damage. Swiss law applies; the courts of Zurich are competent.',
+      'Only the association’s assets are liable for its obligations. Neither party is liable for indirect damage. Swiss law applies, and the courts of Zurich have jurisdiction.',
       'If we change this agreement, you accept the new version the next time you change your sponsorship. Until then the version you accepted applies.',
+      'If you signed a separate written contract with us for this sponsorship, that contract applies where it differs from this agreement.',
     ],
   ],
 ];

@@ -15,12 +15,12 @@ export {
 export type {
   SponsorAgreementProps,
   SponsorChangeProps,
+  SponsorChangeRequestProps,
   SponsorEndedProps,
   SponsorEndingProps,
   SponsorInviteProps,
-  SponsorLogoProps,
   SponsorPaymentProblemProps,
-  SponsorProposalProps,
+  SponsorPaymentRecordedProps,
   SponsorProps,
   SponsorWelcomeProps,
 } from './sponsors.ts';

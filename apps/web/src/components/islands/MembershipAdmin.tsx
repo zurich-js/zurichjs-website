@@ -14,6 +14,7 @@ import type { AdminMember } from '../../server/admin-views.ts';
 import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { CertificateView } from '../../server/membership.ts';
+import { api } from './admin-api.ts';
 import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
 import { SponsorsAdmin } from './SponsorsAdmin.tsx';
 
@@ -42,11 +43,6 @@ const date = (iso: string | null) => (iso ? shortDate(iso) : '–');
 const dateTime = shortDateTime;
 /** paid_until is the first unpaid day: show the last paid one. */
 const paidThrough = (iso: string | null) => (iso ? shortDate(lastDay(iso)) : '–');
-
-async function api<T>(path: string, init?: RequestInit): Promise<{ status: number; body: T & { ok?: boolean; error?: string } }> {
-  const res = await fetch(path, { credentials: 'same-origin', ...init, headers: { 'content-type': 'application/json', ...init?.headers } });
-  return { status: res.status, body: (await res.json().catch(() => ({}))) as T & { ok?: boolean; error?: string } };
-}
 
 export type AdminSection = 'memberships' | 'sponsors';
 

@@ -52,6 +52,16 @@ export const chf = (n: number) => `CHF ${String(n).replace(/\B(?=(\d{3})+(?!\d))
 /** "CHF 840 a quarter", "CHF 400 for one meetup". */
 export const feeLabel = (t: Tier, c: Cycle) => (c === 'once' ? `${chf(fee(t, c))} for one meetup` : `${chf(fee(t, c))} a ${cycleInfo(c).unit}`);
 
+/** One meetup of a one-time sponsorship: the board's custom price, else the tier's list price (CHF). */
+export const meetupPrice = (t: Tier, pricePerMeetup: number | null) => pricePerMeetup ?? fee(t, 'once');
+
+/** "CHF 1’000 for one meetup", "CHF 1’500 for 3 meetups (CHF 500 each)". */
+export function bundleLabel(t: Tier, meetups: number, pricePerMeetup: number | null): string {
+  const each = meetupPrice(t, pricePerMeetup);
+  const n = Math.max(meetups, 1);
+  return n === 1 ? `${chf(each)} for one meetup` : `${chf(each * n)} for ${n} meetups (${chf(each)} each)`;
+}
+
 /** The Stripe Price lookup key: sponsor_builder_quarterly, sponsor_friend_once. */
 export const priceLookupKey = (t: Tier, c: Cycle) => `sponsor_${t}_${c}`;
 

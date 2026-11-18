@@ -3,27 +3,31 @@
  * behind the same ADMIN_PASSWORD session as memberships: the cookie is scoped to
  * /api/membership/admin, so the sponsor admin API lives there too).
  *
- *   invite        a company to sponsor: a `pending` sponsorship with the plan agreed, emailed to
- *                 the contact to accept the agreement and pay (card or invoice)
- *   import        an existing sponsorship paid outside Stripe: `active`, paid directly until a
- *                 date; the contact is emailed to take it over online (and move to Stripe later)
- *   record        a payment made outside Stripe (extends paid until; starts a pending one)
- *   propose       a change agreed in conversation; the sponsor confirms it in the portal
- *   end           outright (terminated, or an invitation withdrawn); logged
- *   logos         review: approve or ask for another file
+ *   invite      a company to sponsor: `pending`, with the plan agreed; the contact is emailed
+ *               to sign (unless a contract is attached) and pay by card
+ *   import      an existing sponsorship paid outside Stripe: `active`, paid by bank transfer
+ *               through a date; the contact is emailed to take it over online
+ *   bundle      a one-time sponsorship for several meetups at a price per meetup (or moved)
+ *   contract    a contract signed outside the site, attached as a PDF (replaces signing online)
+ *   link        a Stripe payment link for a one-time sponsorship with a contract on file
+ *   record      a bank transfer received (sponsorships paid outside Stripe)
+ *   suggest     email a change agreed in conversation; the sponsor confirms it on their page
+ *   end         outright (terminated, or an invitation withdrawn); logged
+ *   to do       what needs someone: see `attention`
  */
-import { DuplicateContact, feeLabel, isCycle, isRecurring, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorStore } from '@zurichjs/sponsorship';
+import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
 import { fail, isEmail, text, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
-import { emailSponsor, note, sponsorStore, who } from './sponsor.ts';
-import { parseDetails, type Parsed } from './sponsor-input.ts';
-import { type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { afterLastMeetup, emailSponsor, meetupLabel, note, planLabel, slackText, sponsorStore, who, zurichDay } from './sponsor.ts';
+import { isDate, parseDetails, parsePrice, type Parsed } from './sponsor-input.ts';
+import { SponsorshipError, type LifecycleDeps } from './sponsor-lifecycle.ts';
 import type { LogoStore } from './sponsor-logo.ts';
 import { knownFailure, lifecycleDeps, type Meetup } from './sponsor-route.ts';
+import { closeCheckout } from './sponsor-stripe.ts';
 import { StripeUnavailable } from './stripe.ts';
 
 export interface SponsorAdminDeps {
@@ -57,7 +61,7 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
     const now = deps.now === undefined ? undefined : () => new Date(deps.now!);
     return await fn({ env, store, origin, lifecycle: lifecycleDeps(env, store, origin, { fetch: deps.fetch, slack: deps.slack, log: deps.log, now }) });
   } catch (cause) {
-    const known = knownFailure(cause) ?? adminFailure(cause);
+    const known = knownFailure(cause);
     if (known) return known;
     if (cause instanceof MembershipUnavailable || cause instanceof StripeUnavailable) return fail(503, `Not configured: ${(cause as Error).message}`);
     console.error(`[sponsorship-admin] ${what} failed`, cause);
@@ -65,7 +69,6 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
   }
 }
 
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const no = (error: string, field: string) => ({ ok: false as const, error, field });
 
 export interface NewSponsorInput {
@@ -74,12 +77,14 @@ export interface NewSponsorInput {
   contact: { name: string; email: string };
   tier: Sponsor['tier'];
   cycle: Sponsor['cycle'];
-  eventId: string | null;
-  /** Import: the first day not paid for, and when it started. */
-  paidUntil: string | null;
+  /** One-time: the Sanity event ids of the meetups. */
+  eventIds: string[];
+  pricePerMeetup: number | null;
+  /** Import: when it started, and the first day not paid for. */
   startedAt: string | null;
+  paidUntil: string | null;
   notes: string | null;
-  /** The organiser's words in the email. */
+  /** Our words in the email. */
   message: string | null;
   sendEmail: boolean;
 }
@@ -90,18 +95,24 @@ export function parseNewSponsor(body: Record<string, unknown>): Parsed<NewSponso
   const details = parseDetails(body, true);
   if (!details.ok) return details;
   const name = text(body.contactName, 200);
-  if (!name) return no('Add the contact’s name.', 'contactName');
+  if (!name || /:\/\/|www\./i.test(name)) return no('Add the contact’s name.', 'contactName');
   const email = text(body.contactEmail, 254);
   if (!email || !isEmail(email)) return no('Add the contact’s email.', 'contactEmail');
   if (!isTier(body.tier)) return no('Choose a tier.', 'tier');
-  if (!isCycle(body.cycle)) return no('Choose the billing.', 'cycle');
-  const eventId = typeof body.eventId === 'string' && body.eventId ? body.eventId : null;
-  if (body.cycle === 'once' && !eventId) return no('Choose the meetup for a one-meetup sponsorship.', 'eventId');
-  const paidUntil = typeof body.paidUntil === 'string' && body.paidUntil ? body.paidUntil : null;
-  const startedAt = typeof body.startedAt === 'string' && body.startedAt ? body.startedAt : null;
-  if (paidUntil && !DATE.test(paidUntil)) return no('Give the date as YYYY-MM-DD.', 'paidUntil');
-  if (startedAt && !DATE.test(startedAt)) return no('Give the date as YYYY-MM-DD.', 'startedAt');
-  if (mode === 'import' && isRecurring(body.cycle) && !paidUntil) return no('Say until when it is paid (the first day not paid for).', 'paidUntil');
+  if (!isCycle(body.cycle)) return no('Choose how often they pay.', 'cycle');
+  const once = body.cycle === 'once';
+  const eventIds = Array.isArray(body.eventIds) ? [...new Set(body.eventIds.filter((x): x is string => typeof x === 'string' && x.length > 0 && x.length <= 200))] : [];
+  if (once && !eventIds.length) return no('Choose at least one meetup.', 'eventIds');
+  const price = parsePrice(body.pricePerMeetup);
+  if (!price.ok) return price;
+  if (!once && price.value !== null) return no('A custom price is only for one-time sponsorships.', 'pricePerMeetup');
+  const startedAt = body.startedAt ? (isDate(body.startedAt) ? body.startedAt : null) : null;
+  const paidUntil = body.paidUntil ? (isDate(body.paidUntil) ? body.paidUntil : null) : null;
+  if (body.startedAt && !startedAt) return no('Give the date as YYYY-MM-DD.', 'startedAt');
+  if (body.paidUntil && !paidUntil) return no('Give the date as YYYY-MM-DD.', 'paidUntil');
+  if (mode === 'import' && !startedAt) return no('Say when the sponsorship started.', 'startedAt');
+  if (mode === 'import' && !once && !paidUntil) return no('Say until when it is paid (the first day not paid for).', 'paidUntil');
+  if (startedAt && paidUntil && paidUntil <= startedAt) return no('Paid until must be after the start.', 'paidUntil');
   const notes = text(body.notes, 4000);
   if (notes === false) return no('Keep the notes under 4000 characters, without < or >.', 'notes');
   const message = text(body.message, 2000);
@@ -120,9 +131,10 @@ export function parseNewSponsor(body: Record<string, unknown>): Parsed<NewSponso
       contact: { name, email: email.toLowerCase() },
       tier: body.tier,
       cycle: body.cycle,
-      eventId,
-      paidUntil,
+      eventIds: once ? eventIds : [],
+      pricePerMeetup: once ? price.value : null,
       startedAt,
+      paidUntil,
       notes: notes ?? null,
       message: message ?? null,
       sendEmail: body.sendEmail !== false,
@@ -130,11 +142,20 @@ export function parseNewSponsor(body: Record<string, unknown>): Parsed<NewSponso
   };
 }
 
-/** Emails a contact the invitation (new) or the "now online" note (imported). */
+/** The meetups for these event ids, from the upcoming published ones. Refuses unknown or past ones. */
+export async function resolveMeetups(eventIds: string[], meetups: () => Promise<Meetup[]>): Promise<SponsorMeetup[]> {
+  const upcoming = await meetups();
+  const out = eventIds.map((id) => upcoming.find((m) => m.id === id));
+  if (out.some((m) => !m)) throw new SponsorshipError('A chosen meetup is not upcoming (or not published). Reload the list.', 400, 'eventIds');
+  return out.map((m) => ({ eventId: m!.id, title: m!.title, date: m!.date }));
+}
+
+/** Emails the invitation (new) or the "now online" note (imported) to these contacts. */
 export async function sendInvitation(s: Sponsor, contacts: Contact[], message: string | null, deps: LifecycleDeps): Promise<number> {
-  const day = (deps.now?.() ?? new Date()).toISOString().slice(0, 10);
-  const existing = s.source === 'imported' && s.paidUntil ? longDate(lastDay(s.paidUntil)) : null;
-  return emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing }), {
+  const day = zurichDay(deps.now?.() ?? new Date());
+  const existing = s.source === 'imported' && s.paidUntil && s.cycle !== 'once' ? longDate(lastDay(s.paidUntil)) : null;
+  const contractOnFile = (await deps.store.documents(s.id)).length > 0;
+  return emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing, contractOnFile }), {
     ...deps,
     contacts,
     key: `sponsor-invite:${s.id}:${s.tier}-${s.cycle}:${day}`,
@@ -147,15 +168,11 @@ export async function createSponsor(
 ): Promise<{ result: 'created'; sponsor: Sponsor; contact: Contact; emailed: number } | { result: 'exists'; contact: Contact }> {
   const { store } = deps;
   const existing = await store.contactByEmail(input.contact.email);
-  if (existing) return { result: 'exists', contact: existing };
-  let event: Pick<Sponsor, 'eventId' | 'eventTitle' | 'eventDate'> = { eventId: null, eventTitle: null, eventDate: null };
-  if (input.cycle === 'once') {
-    const m = (await deps.meetups()).find((x) => x.id === input.eventId);
-    if (!m) throw new SponsorAdminError('That meetup is not upcoming (or not published).', 'eventId');
-    event = { eventId: m.id, eventTitle: m.title, eventDate: m.date };
-  }
+  // A colleague-added contact nobody accepted does not block the board: it is removed and re-added here.
+  if (existing && !(existing.addedBy === 'sponsor' && !existing.userId)) return { result: 'exists', contact: existing };
+  const meetups = input.cycle === 'once' ? await resolveMeetups(input.eventIds, deps.meetups) : [];
+  if (existing) await store.removeContact(existing.id, BOARD);
   const imported = input.mode === 'import';
-  const today = (deps.now?.() ?? new Date()).toISOString().slice(0, 10);
   let created: { sponsor: Sponsor; contact: Contact };
   try {
     created = await store.create(
@@ -163,15 +180,15 @@ export async function createSponsor(
         ...input.details,
         tier: input.tier,
         cycle: input.cycle,
-        paymentMode: imported ? 'manual' : 'invoice',
+        paymentMode: imported ? 'manual' : 'card',
         status: 'pending',
         source: imported ? 'imported' : 'invited',
-        startedAt: imported ? (input.startedAt ?? today) : null,
-        paidUntil: imported ? (input.cycle === 'once' && event.eventDate ? nextDay(event.eventDate) : input.paidUntil) : null,
-        ...event,
+        startedAt: imported ? input.startedAt : null,
+        paidUntil: imported ? (input.cycle === 'once' ? afterLastMeetup(meetups) : input.paidUntil) : null,
+        pricePerMeetup: input.pricePerMeetup,
         notes: input.notes,
       },
-      { email: input.contact.email, name: input.contact.name, role: 'primary' },
+      { email: input.contact.email, name: input.contact.name, role: 'primary', addedBy: 'board' },
       BOARD,
     );
   } catch (cause) {
@@ -179,43 +196,64 @@ export async function createSponsor(
     throw cause;
   }
   let sponsor = created.sponsor;
+  if (meetups.length) await store.setMeetups(sponsor.id, meetups, BOARD);
   if (imported) sponsor = await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: BOARD, payload: { imported: true } });
   const emailed = input.sendEmail ? await sendInvitation(sponsor, [created.contact], input.message, deps) : 0;
   await note(
-    `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${feeLabel(sponsor.tier, sponsor.cycle)}${imported && sponsor.paidUntil ? `, paid through ${longDate(lastDay(sponsor.paidUntil))}` : ''}. ${emailed ? `${input.contact.name} was emailed.` : 'No email sent.'}`,
+    `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${planLabel(sponsor, meetups.length)}${
+      meetups.length ? ` (${meetups.map((m) => slackText(meetupLabel(m))).join('; ')})` : ''
+    }${imported && sponsor.paidUntil && sponsor.cycle !== 'once' ? `, paid through ${longDate(lastDay(sponsor.paidUntil))}` : ''}. ${emailed ? `${slackText(input.contact.name)} was emailed.` : 'No email sent.'}`,
     deps,
   );
   return { result: 'created', sponsor, contact: created.contact, emailed };
 }
 
-export class SponsorAdminError extends Error {
-  readonly field: string;
-  constructor(message: string, field: string) {
-    super(message);
-    this.field = field;
-  }
-}
-
-const nextDay = (iso: string) => new Date(Date.parse(`${iso}T12:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
-
-/**
- * A payment made outside Stripe (bank transfer agreed directly): paid until moves on, and a
- * sponsorship that had not started starts now (the board's word for it).
- */
-export async function recordPayment(s: Sponsor, paidUntil: string, deps: LifecycleDeps): Promise<Sponsor> {
-  if (!DATE.test(paidUntil)) throw new SponsorAdminError('Give the date as YYYY-MM-DD.', 'paidUntil');
-  if (s.status === 'ended') throw new SponsorAdminError('This sponsorship has ended. Invite them again instead.', 'paidUntil');
-  const today = (deps.now?.() ?? new Date()).toISOString().slice(0, 10);
-  let updated = await deps.store.update(
-    s.id,
-    { paidUntil, ...(s.startedAt ? {} : { startedAt: today }), ...(s.stripeSubscriptionId ? {} : { paymentMode: 'manual' as const }) },
-    BOARD,
-  );
-  if (updated.status === 'pending' || updated.status === 'past_due')
-    updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor: BOARD, payload: { recorded: true } });
-  await note(`:moneybag: Payment recorded by the board for ${who(updated)}: paid through ${longDate(lastDay(paidUntil))}.`, deps);
+/** The plan of an invitation nobody has paid yet, changed directly (no confirmation needed: they confirm by paying). */
+export async function changeInvitedPlan(s: Sponsor, plan: { tier: Sponsor['tier']; cycle: Sponsor['cycle'] }, deps: LifecycleDeps): Promise<Sponsor> {
+  if (s.status !== 'pending') throw new SponsorshipError('It has started: send them a change to confirm instead.');
+  if (plan.cycle === 'once' && s.cycle !== 'once') throw new SponsorshipError('To make it one-time, withdraw this invitation and invite them for the meetups.', 400, 'cycle');
+  if (s.cycle === 'once' && plan.cycle !== 'once') throw new SponsorshipError('To make it recurring, withdraw this invitation and invite them again.', 400, 'cycle');
+  await closeCheckout(s, deps.store, deps.stripe);
+  const updated = await deps.store.update(s.id, { tier: plan.tier, cycle: plan.cycle }, BOARD);
+  await note(`:pencil2: Invitation to ${who(s)} changed to ${planLabel(updated)}.`, deps);
   return updated;
 }
 
-/** Turns a SponsorAdminError into a 400 with its field. */
-export const adminFailure = (cause: unknown): Response | null => (cause instanceof SponsorAdminError ? fail(400, cause.message, { field: cause.field }) : null);
+/* ------------------------------------------------------------------ what needs someone */
+
+export type Attention = 'payment_overdue' | 'manual_overdue' | 'manual_due_soon' | 'invite_waiting' | 'new_logo' | 'meetup_passed_unpaid';
+
+export const ATTENTION_LABEL: Record<Attention, string> = {
+  payment_overdue: 'Payment overdue',
+  manual_overdue: 'Bank transfer overdue',
+  manual_due_soon: 'Bank transfer due soon',
+  invite_waiting: 'Invitation not answered',
+  new_logo: 'New logo for Sanity',
+  meetup_passed_unpaid: 'Meetup passed, unpaid',
+};
+
+const days = (from: string, to: string) => Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
+
+/** What a sponsorship needs from the board today, most urgent first. */
+export async function attention(s: Sponsor, store: SponsorStore, today: string): Promise<Attention[]> {
+  const out: Attention[] = [];
+  if (s.status === 'past_due') out.push('payment_overdue');
+  const manual = s.paymentMode === 'manual' && !s.stripeSubscriptionId && s.cycle !== 'once';
+  if ((s.status === 'active' || s.status === 'past_due') && manual && s.paidUntil) {
+    const left = days(today, s.paidUntil);
+    if (left <= 0) out.push('manual_overdue');
+    else if (left <= 30) out.push('manual_due_soon');
+  }
+  if (s.status === 'pending') {
+    if (s.cycle === 'once') {
+      const meetups = await store.meetups(s.id);
+      if (meetups.some((m) => m.date < today)) out.push('meetup_passed_unpaid');
+    }
+    if (days(s.createdAt.slice(0, 10), today) >= 7) out.push('invite_waiting');
+  }
+  if (s.status !== 'ended') {
+    const logo = (await store.logos(s.id))[0];
+    if (logo && days(logo.uploadedAt.slice(0, 10), today) <= 14) out.push('new_logo');
+  }
+  return out;
+}

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startPg, type Pg } from '../../membership/test/pg.ts';
-import { DuplicateContact, NotFound, ProposalOpen, TransitionError, postgresStore, type NewSponsor, type SponsorStore } from '../src/index.ts';
+import { DuplicateContact, TransitionError, postgresStore, type NewSponsor, type SponsorStore } from '../src/index.ts';
 
 const migrations = join(import.meta.dirname, '../../../apps/web/database/migrations');
 const db = startPg();
@@ -25,14 +25,12 @@ const acme: NewSponsor = {
   website: 'https://acme.ch',
   tier: 'friend',
   cycle: 'quarterly',
-  paymentMode: 'invoice',
+  paymentMode: 'card',
   status: 'pending',
   source: 'invited',
   startedAt: null,
   paidUntil: null,
-  eventId: null,
-  eventTitle: null,
-  eventDate: null,
+  pricePerMeetup: null,
   notes: 'Met at the conference',
 };
 
@@ -67,7 +65,8 @@ d('sponsorship database', () => {
     const c = (await store.contactByEmail('ada@acme.ch'))!;
     await store.linkContact(c.id, 'u-ada');
     expect((await store.contactByUser('u-ada'))?.id).toBe(c.id);
-    expect(await store.search({ q: 'Ada' })).toHaveLength(1);
+    expect(await store.search({ q: 'Ada' })).toHaveLength(0);
+    expect(await store.search({ q: 'switzerland' })).toHaveLength(1);
     expect(await store.search({ q: 'nobody' })).toHaveLength(0);
     expect(await store.get('not-a-uuid')).toBeNull();
   });
@@ -90,11 +89,42 @@ d('sponsorship database', () => {
     expect(last).toMatchObject({ fromStatus: 'ending', toStatus: 'ended', actor: stripe, payload: { reason: 'cancelled' } });
   });
 
+  it('replaces a bundle of meetups, and links and clears Stripe ids', async () => {
+    const s = (await store.search({ q: 'acme' }))[0]!;
+    await store.setMeetups(
+      s.id,
+      [
+        { eventId: 'e1', title: 'December', date: '2026-12-09' },
+        { eventId: 'e2', title: 'January', date: '2027-01-13' },
+      ],
+      board,
+    );
+    const moved = await store.setMeetups(
+      s.id,
+      [
+        { eventId: 'e2', title: 'January (moved)', date: '2027-01-20' },
+        { eventId: 'e3', title: 'February', date: '2027-02-10' },
+      ],
+      board,
+    );
+    expect(moved).toEqual([
+      { eventId: 'e2', title: 'January (moved)', date: '2027-01-20' },
+      { eventId: 'e3', title: 'February', date: '2027-02-10' },
+    ]);
+    const linked = await store.linkStripe(s.id, { checkoutSessionId: 'cs_test_1', paymentLinkId: 'plink_1', paymentLinkUrl: 'https://buy.stripe.com/x' }, stripe);
+    expect(linked).toMatchObject({ checkoutSessionId: 'cs_test_1', stripeSubscriptionId: 'sub_acme', paymentLinkId: 'plink_1' });
+    expect((await store.byPaymentLink('plink_1'))?.id).toBe(s.id);
+    const cleared = await store.linkStripe(s.id, { subscriptionId: null, checkoutSessionId: null }, stripe);
+    expect(cleared).toMatchObject({ stripeSubscriptionId: null, checkoutSessionId: null, stripeCustomerId: 'cus_acme' });
+    await store.log(s.id, 'payment_recorded', board, { amount: 840 });
+    expect((await store.events(s.id)).at(-1)).toMatchObject({ type: 'payment_recorded', payload: { amount: 840 } });
+  });
+
   it('keeps the audit log append-only', () => {
     expect(pgdb.fails('delete from sponsor_events')).toMatch(/append-only/);
   });
 
-  it('records agreements, one open proposal at a time, and logos', async () => {
+  it('records agreements, logos and contracts', async () => {
     const s = (await store.search({ q: 'acme' }))[0]!;
     const ag = await store.acceptAgreement(
       s.id,
@@ -104,20 +134,15 @@ d('sponsorship database', () => {
     expect(ag.acceptedAt).toMatch(/T/);
     expect((await store.agreements(s.id))[0]?.version).toBe('2026-11-18');
 
-    const p = await store.propose(s.id, { kind: 'plan', tier: 'builder', cycle: 'quarterly', message: 'As discussed', expiresAt: '2026-12-02T00:00:00Z' }, board);
-    await expect(store.propose(s.id, { kind: 'end', tier: null, cycle: null, message: null, expiresAt: '2026-12-02T00:00:00Z' }, board)).rejects.toBeInstanceOf(ProposalOpen);
-    const decided = await store.decideProposal(p.id, 'accepted', 'ada@acme.ch', sponsorActor);
-    expect(decided.status).toBe('accepted');
-    await expect(store.decideProposal(p.id, 'declined', 'ada@acme.ch', sponsorActor)).rejects.toBeInstanceOf(TransitionError);
-    await expect(store.decideProposal('00000000-0000-0000-0000-000000000000', 'declined', 'x', sponsorActor)).rejects.toBeInstanceOf(NotFound);
-
     const logo = await store.addLogo(
       s.id,
       { blobKey: `logos/${s.id}/1.svg`, contentType: 'image/svg+xml', bytes: 1200, filename: 'acme.svg', uploadedBy: 'ada@acme.ch' },
       sponsorActor,
     );
-    expect(logo.review).toBe('pending');
-    expect((await store.reviewLogo(logo.id, 'approved', null, board)).review).toBe('approved');
+    expect((await store.getLogo(logo.id))?.filename).toBe('acme.svg');
+    const doc = await store.addDocument(s.id, { blobKey: `contracts/${s.id}/1.pdf`, filename: 'contract.pdf', bytes: 5000, signedOn: '2026-11-10', uploadedBy: 'board' }, board);
+    expect(doc).toMatchObject({ kind: 'contract', signedOn: '2026-11-10' });
+    expect((await store.documents(s.id)).map((d) => d.id)).toEqual([doc.id]);
     expect(pgdb.fails(`insert into sponsor_logos (sponsor_id, blob_key, content_type, bytes, filename, uploaded_by) values ('${s.id}', 'x', 'text/html', 10, 'x', 'x')`)).toMatch(
       /check/,
     );

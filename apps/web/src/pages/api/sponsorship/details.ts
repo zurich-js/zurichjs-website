@@ -27,7 +27,7 @@ export const handleDetails = (request: Request, deps: SponsorRouteDeps = {}) =>
       if (!parsed.ok) return fail(400, parsed.error, { field: parsed.field });
       const s = await store.update(sponsor.id, parsed.value, { kind: 'sponsor', id: user.id });
       if (s.stripeCustomerId) await ensureCustomer(s, await store.contacts(s.id), store, lifecycle.stripe);
-      return json(200, { ok: true, sponsor: sponsorView(s) });
+      return json(200, { ok: true, sponsor: sponsorView(s, await store.meetups(s.id), (await store.documents(s.id)).length > 0) });
     },
     'save the details',
   );

@@ -27,8 +27,8 @@ const sponsor = {
   feeLabel: 'CHF 1’400 a quarter',
   price: 'CHF 1’400',
   per: 'a quarter',
-  paymentLabel: 'By invoice (due in 30 days)',
-  meetup: null,
+  paymentLabel: 'By card',
+  meetups: [] as string[],
   accountUrl: 'https://zurichjs.com/partners/account',
   benefits: [
     'Large logo on our site and partner list',
@@ -41,12 +41,12 @@ const sponsor = {
 };
 const once = {
   ...sponsor,
-  cycleLabel: 'One meetup',
-  feeLabel: 'CHF 700 for one meetup',
-  price: 'CHF 700',
-  per: 'for one meetup',
+  cycleLabel: 'One-time',
+  feeLabel: 'CHF 1’500 for 3 meetups (CHF 500 each)',
+  price: 'CHF 1’500',
+  per: 'for 3 meetups',
   paymentLabel: 'By card',
-  meetup: 'ZurichJS Meetup, 9th December 2026',
+  meetups: ['ZurichJS Meetup December, 9th December 2026', 'ZurichJS Meetup January, 13th January 2027', 'ZurichJS Meetup February, 10th February 2027'],
 };
 
 const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
@@ -115,58 +115,55 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
   ],
   'sponsor-invite': [
     { ...sponsor, message: 'Great talking to you at the conference. Here is the Builder package we discussed.' },
-    { ...once, message: null },
-    { ...sponsor, paymentLabel: 'Paid directly to the association', message: null, existingPaidThrough: '31st March 2027' },
+    { ...once, message: 'As agreed, CHF 500 per meetup for the next three meetups.', contractOnFile: true },
+    { ...sponsor, paymentLabel: 'By bank transfer to ZurichJS', message: null, existingPaidThrough: '31st March 2027' },
   ],
   'sponsor-agreement': [
     {
       ...sponsor,
       signerName: 'Grace Hopper',
       signerTitle: 'Head of Developer Relations',
-      acceptedAt: '18th Nov 2026, 14:05',
-      agreementVersion: '2026-11-18',
+      acceptedAt: '18th November 2026, 14:05 (Zurich time)',
+      agreementVersion: '18th November 2026',
       agreementUrl: 'https://zurichjs.com/partners/agreement',
-      invoiceUrl: 'https://invoice.stripe.com/i/sample',
     },
   ],
   'sponsor-welcome': [
     { ...sponsor, term: '18th November 2026 to 17th February 2027', nextPayment: '18th February 2027', needsLogo: true },
-    { ...once, term: 'ZurichJS Meetup, 9th December 2026', nextPayment: null, needsLogo: false },
+    { ...once, term: null, nextPayment: null, needsLogo: false },
   ],
   'sponsor-payment-problem': [
-    { ...sponsor, problem: 'overdue', payUrl: 'https://invoice.stripe.com/i/sample', nextAttempt: null },
-    { ...sponsor, paymentLabel: 'By card', problem: 'declined', payUrl: 'https://invoice.stripe.com/i/sample', nextAttempt: '21st November 2026' },
+    { ...sponsor, problem: 'declined', payUrl: 'https://invoice.stripe.com/i/sample', nextAttempt: '21st November 2026' },
+    { ...sponsor, problem: 'confirm', payUrl: 'https://invoice.stripe.com/i/sample', nextAttempt: null },
   ],
-  'sponsor-proposal': [
+  'sponsor-change-request': [
     {
       ...sponsor,
       kind: 'plan',
       newPlan: {
         tierName: 'Community Champion',
         feeLabel: 'CHF 2’100 a quarter',
-        applies: 'now (only the difference is charged for this term)',
+        applies: 'now (Stripe charges only the difference for this term)',
         benefits: ['XL logo on our site and partner list', 'Branded photos of the event', 'Sponsor slides or video at each meetup', 'Personal shoutout and introduction at events'],
       },
       lastDay: null,
       message: 'As agreed on our call, moving you up for the conference season.',
-      expires: '2nd December 2026',
+      url: 'https://zurichjs.com/partners/account?change=champion-quarterly',
     },
-    { ...sponsor, kind: 'end', newPlan: null, lastDay: '17th February 2027', message: null, expires: '2nd December 2026' },
+    { ...sponsor, kind: 'end', newPlan: null, lastDay: '17th February 2027', message: null, url: 'https://zurichjs.com/partners/account?change=end' },
   ],
   'sponsor-change': [
-    { ...sponsor, timing: 'renewal', from: '18th February 2027', previous: 'Community Champion, CHF 2’100 a quarter' },
-    { ...sponsor, timing: 'now', from: null, previous: 'Community Friend, CHF 840 a quarter' },
+    { ...sponsor, timing: 'renewal', from: '18th February 2027', previous: 'Community Champion, CHF 2’100 a quarter', manual: false },
+    { ...sponsor, timing: 'now', from: null, previous: 'Community Friend, CHF 840 a quarter', manual: false },
   ],
-  'sponsor-ending': [{ ...sponsor, lastDay: '17th February 2027' }],
+  'sponsor-ending': [{ ...sponsor, lastDay: '17th February 2027', droppedChange: 'Community Friend, CHF 840 a quarter' }],
   'sponsor-resumed': [sponsor],
   'sponsor-ended': [
     { ...sponsor, reason: 'cancelled' },
     { ...once, reason: 'completed' },
+    { ...sponsor, reason: 'terminated' },
   ],
-  'sponsor-logo': [
-    { ...sponsor, approved: true, note: null },
-    { ...sponsor, approved: false, note: 'The PNG is too small for the slides. Could you send an SVG?' },
-  ],
+  'sponsor-payment-recorded': [{ ...sponsor, paymentLabel: 'By bank transfer to ZurichJS', amount: 'CHF 1’400', paidThrough: '17th May 2027', reference: 'RF18 5390 0754 7034' }],
   'login-link': [{ url: 'https://zurichjs.com/api/auth/magic-link/verify?token=sample-token&callbackURL=%2Fmembership%2Faccount', validMinutes: 15, firstTime: false }],
 };
 

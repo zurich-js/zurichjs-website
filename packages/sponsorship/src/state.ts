@@ -6,12 +6,14 @@ import type { ActorKind, EndedReason, Sponsor, Status } from './types.ts';
  *
  * Changes to a running sponsorship need the sponsor's agreement (owner, 18th November
  * 2026): the board proposes, a contact accepts in the portal, and only then does the
- * status move (an accepted end proposal is the sponsor ending it). The board can still
+ * status move (a confirmed end is the sponsor ending it). The board can still
  * end one outright for a reason the sponsor does not agree to (`terminated`) or take
  * back an invitation (`withdrawn`); both are logged.
  */
 export const TRANSITIONS: Readonly<Record<Status, Partial<Record<Status, readonly ActorKind[]>>>> = {
-  pending: { active: ['stripe', 'board'], ended: ['board'] },
+  // A sponsorship that never started: withdrawn by the board, its payment given up by Stripe, or
+  // its meetups over before it was paid (the daily check).
+  pending: { active: ['stripe', 'board'], ended: ['board', 'stripe', 'script'] },
   active: { past_due: ['stripe'], ending: ['sponsor', 'board'], ended: ['board', 'stripe', 'script'] },
   past_due: { active: ['stripe', 'board'], ending: ['sponsor', 'board'], ended: ['board', 'stripe'] },
   // Undo, while it still runs: back to active (Stripe moves it to past due if a payment is open).
@@ -22,7 +24,7 @@ export const TRANSITIONS: Readonly<Record<Status, Partial<Record<Status, readonl
 const REASONS_BY_ACTOR: Record<ActorKind, readonly EndedReason[]> = {
   board: ['cancelled', 'completed', 'lapsed', 'terminated', 'withdrawn'],
   stripe: ['cancelled', 'lapsed'],
-  script: ['cancelled', 'completed'],
+  script: ['cancelled', 'completed', 'withdrawn'],
   sponsor: [],
 };
 
@@ -63,7 +65,7 @@ export const canChange = (s: Pick<Sponsor, 'status' | 'cycle'>) => (s.status ===
 const LABELS: Record<Status, string> = {
   pending: 'waiting for the first payment',
   active: 'active',
-  past_due: 'behind on payment',
+  past_due: 'payment overdue',
   ending: 'ending',
   ended: 'ended',
 };
@@ -72,10 +74,11 @@ export const label = (s: Status) => LABELS[s];
 
 const actorLabel = (a: ActorKind) => ({ sponsor: 'the sponsor', board: 'an organiser', stripe: 'Stripe', script: 'the daily check' })[a];
 
+/** How sponsors read why it ended (glossary: docs/v2/SPONSORSHIP.md). */
 export const ENDED_REASON_LABEL: Record<EndedReason, string> = {
-  cancelled: 'ended by the sponsor',
+  cancelled: 'you ended it',
   completed: 'completed',
-  lapsed: 'lapsed (unpaid)',
-  terminated: 'ended by the board',
+  lapsed: 'unpaid',
+  terminated: 'ended by ZurichJS',
   withdrawn: 'withdrawn before it started',
 };

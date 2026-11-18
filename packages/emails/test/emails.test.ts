@@ -27,6 +27,7 @@ const sponsor = {
   paymentLabel: 'By invoice (due in 30 days)',
   meetup: null,
   accountUrl: 'https://zurichjs.com/partners/account',
+  benefits: ['Large logo on our site and partner list', '2 sponsor slides in rotation at meetups'],
 };
 const link = 'https://zurichjs.com/api/auth/magic-link/verify?token=t1&callbackURL=%2Fmembership%2Faccount';
 const talk = {
@@ -241,6 +242,8 @@ describe('sponsor emails', () => {
     expect(e.text).toContain('Community Builder: CHF 1’400 a quarter\nSponsor: Acme AG\nPayment: By invoice (due in 30 days)');
     expect(e.text).toContain('As discussed on our call.');
     expect(e.text).toContain('Nothing is charged until you accept the agreement');
+    expect(e.text).toContain('What Community Builder includes:\n\n- Large logo on our site and partner list\n- 2 sponsor slides in rotation at meetups');
+    expect(e.html).toContain('<li style=');
   });
 
   it('keeps a copy of the accepted agreement and says what happens next', () => {
@@ -260,13 +263,14 @@ describe('sponsor emails', () => {
     const e = renderEmail('sponsor-proposal', {
       ...sponsor,
       kind: 'plan',
-      newPlan: { tierName: 'Community Friend', feeLabel: 'CHF 840 a quarter', applies: 'from 18th February 2027' },
+      newPlan: { tierName: 'Community Friend', feeLabel: 'CHF 840 a quarter', applies: 'from 18th February 2027', benefits: ['Medium logo on our site and partner list'] },
       lastDay: null,
       message: null,
       expires: '2nd December 2026',
     });
     expect(e.text).toContain('As discussed, we propose to move Acme AG to Community Friend, CHF 840 a quarter, from 18th February 2027.');
     expect(e.text).toContain('Nothing changes until someone at Acme AG confirms.');
+    expect(e.text).toContain('What Community Friend includes:\n\n- Medium logo on our site and partner list');
     expect(renderEmail('sponsor-proposal', { ...sponsor, kind: 'end', newPlan: null, lastDay: '17th February 2027', message: null, expires: 'x' }).text).toContain(
       'end the Community Builder sponsorship after 17th February 2027',
     );

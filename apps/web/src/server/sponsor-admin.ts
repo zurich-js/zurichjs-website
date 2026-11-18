@@ -12,14 +12,14 @@
  *   end           outright (terminated, or an invitation withdrawn); logged
  *   logos         review: approve or ask for another file
  */
-import { DuplicateContact, isCycle, isRecurring, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorStore } from '@zurichjs/sponsorship';
+import { DuplicateContact, feeLabel, isCycle, isRecurring, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorStore } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
 import { fail, isEmail, text, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
-import { emailSponsor, note, planLabel, sponsorStore, who } from './sponsor.ts';
+import { emailSponsor, note, sponsorStore, who } from './sponsor.ts';
 import { parseDetails, type Parsed } from './sponsor-input.ts';
 import { type LifecycleDeps } from './sponsor-lifecycle.ts';
 import type { LogoStore } from './sponsor-logo.ts';
@@ -182,7 +182,7 @@ export async function createSponsor(
   if (imported) sponsor = await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: BOARD, payload: { imported: true } });
   const emailed = input.sendEmail ? await sendInvitation(sponsor, [created.contact], input.message, deps) : 0;
   await note(
-    `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${planLabel(sponsor)}${imported && sponsor.paidUntil ? `, paid through ${longDate(lastDay(sponsor.paidUntil))}` : ''}. ${emailed ? `${input.contact.name} was emailed.` : 'No email sent.'}`,
+    `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${feeLabel(sponsor.tier, sponsor.cycle)}${imported && sponsor.paidUntil ? `, paid through ${longDate(lastDay(sponsor.paidUntil))}` : ''}. ${emailed ? `${input.contact.name} was emailed.` : 'No email sent.'}`,
     deps,
   );
   return { result: 'created', sponsor, contact: created.contact, emailed };

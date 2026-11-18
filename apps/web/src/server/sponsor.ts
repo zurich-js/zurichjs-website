@@ -5,6 +5,7 @@
  * email or Slack post is logged and never blocks a payment or a change.
  */
 import { renderEmail, type SponsorProps, type TemplateName, type TemplateProps } from '@zurichjs/emails';
+import { SPONSORSHIP_TIERS } from '@zurichjs/content/partners';
 import { sendMemberEmail } from '@zurichjs/integrations';
 import {
   AGREEMENT,
@@ -43,6 +44,9 @@ export const PAYMENT_LABEL: Record<Sponsor['paymentMode'], string> = {
   manual: 'Paid directly to the association',
 };
 
+/** A tier's benefits, as /partners lists them (packages/content/src/partners.ts). */
+export const tierBenefits = (tier: Sponsor['tier']): string[] => SPONSORSHIP_TIERS.find((t) => t.id === tier)?.perks ?? [];
+
 export const planLabel = (s: Pick<Sponsor, 'tier' | 'cycle'>) => `${tierInfo(s.tier).name}, ${feeLabel(s.tier, s.cycle)}`;
 
 const meetupLabel = (s: Sponsor) => (s.cycle === 'once' && s.eventTitle ? `${s.eventTitle}${s.eventDate ? `, ${longDate(s.eventDate)}` : ''}` : null);
@@ -60,6 +64,7 @@ export function sponsorProps(s: Sponsor, contact: Pick<Contact, 'name'>, origin:
     paymentLabel: PAYMENT_LABEL[s.paymentMode],
     meetup: meetupLabel(s),
     accountUrl: accountUrl(origin),
+    benefits: tierBenefits(s.tier),
   };
 }
 
@@ -74,6 +79,8 @@ export interface SponsorView {
   website: string | null;
   tier: Sponsor['tier'];
   tierName: string;
+  /** What the tier includes (/partners). */
+  benefits: string[];
   cycle: Sponsor['cycle'];
   cycleLabel: string;
   feeLabel: string;
@@ -103,6 +110,7 @@ export const sponsorView = (s: Sponsor): SponsorView => ({
   website: s.website,
   tier: s.tier,
   tierName: tierInfo(s.tier).name,
+  benefits: tierBenefits(s.tier),
   cycle: s.cycle,
   cycleLabel: cycleInfo(s.cycle).label,
   feeLabel: feeLabel(s.tier, s.cycle),

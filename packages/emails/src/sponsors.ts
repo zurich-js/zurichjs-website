@@ -25,9 +25,20 @@ export interface SponsorProps {
   meetup: string | null;
   /** https://zurichjs.com/partners/account (or the preview's). */
   accountUrl: string;
+  /** The tier's benefits, as /partners lists them. */
+  benefits: string[];
 }
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? name;
+
+/** "What Community Builder includes" and the list, or nothing when there are no benefits. */
+const benefits = (tierName: string, items: string[], intro = `What ${tierName} includes:`): Block[] =>
+  items.length
+    ? [
+        { kind: 'p', text: intro },
+        { kind: 'list', items },
+      ]
+    : [];
 
 const plan = (p: SponsorProps, rows: [string, string][] = []): Block => ({
   kind: 'plan',
@@ -53,6 +64,7 @@ function sponsorInvite(p: SponsorInviteProps): EmailContent {
       blocks: [
         { kind: 'p', text: `Thank you for sponsoring ZurichJS. We have moved your sponsorship to zurichjs.com, so you can manage it yourself:` },
         plan(p, [['Paid through', p.existingPaidThrough]]),
+        ...benefits(p.tierName, p.benefits),
         ...(p.message ? ([{ kind: 'p', text: p.message }] satisfies Block[]) : []),
         {
           kind: 'p',
@@ -69,6 +81,7 @@ function sponsorInvite(p: SponsorInviteProps): EmailContent {
     blocks: [
       { kind: 'p', text: `Thank you for supporting ZurichJS. We have set up the sponsorship we talked about for ${p.companyName}:` },
       plan(p),
+      ...benefits(p.tierName, p.benefits),
       ...(p.message ? ([{ kind: 'p', text: p.message }] satisfies Block[]) : []),
       {
         kind: 'p',
@@ -136,6 +149,7 @@ function sponsorWelcome(p: SponsorWelcomeProps): EmailContent {
       { kind: 'badge', text: 'Your sponsorship is active' },
       { kind: 'p', text: `${p.companyName} now supports ZurichJS as a ${p.tierName}. Your payment keeps our meetups free and brings speakers to Zurich.` },
       plan(p, [[p.nextPayment ? 'Current term' : 'Covers', p.term], ...(p.nextPayment ? ([['Next payment', p.nextPayment]] as [string, string][]) : [])]),
+      ...benefits(p.tierName, p.benefits, `As a ${p.tierName}, you get:`),
       ...(p.needsLogo
         ? ([{ kind: 'p', text: 'One thing we still need: your logo (SVG preferred, or a PNG at least 1000 pixels wide), for the site and the sponsor slides.' }] satisfies Block[])
         : []),
@@ -180,7 +194,7 @@ function sponsorPaymentProblem(p: SponsorPaymentProblemProps): EmailContent {
 export interface SponsorProposalProps extends SponsorProps {
   kind: 'plan' | 'end';
   /** For a plan proposal: the new tier, fee and when it applies. */
-  newPlan: { tierName: string; feeLabel: string; applies: string } | null;
+  newPlan: { tierName: string; feeLabel: string; applies: string; benefits: string[] } | null;
   /** For an end proposal: the last day. */
   lastDay: string | null;
   message: string | null;
@@ -214,6 +228,7 @@ function sponsorProposal(p: SponsorProposalProps): EmailContent {
           ...(p.kind === 'end' && p.lastDay ? ([['Last day', p.lastDay]] as [string, string][]) : []),
         ],
       },
+      ...(p.newPlan ? benefits(p.newPlan.tierName, p.newPlan.benefits) : []),
       { kind: 'button', label: 'Review and confirm', url: p.accountUrl },
       { kind: 'small', text: `Nothing changes until someone at ${p.companyName} confirms. The proposal is open until ${p.expires}; you can also decline it there.` },
     ],
@@ -239,7 +254,12 @@ function sponsorChange(p: SponsorChangeProps): EmailContent {
     subject: p.timing === 'renewal' ? `Sponsorship change scheduled: ${p.tierName}` : `Your sponsorship is now ${p.tierName}`,
     preheader: line,
     heading: p.timing === 'renewal' ? 'Change scheduled' : 'Sponsorship updated',
-    blocks: [{ kind: 'success', text: line }, plan(p, [['Before', p.previous]]), { kind: 'button', label: 'Open your sponsorship', url: p.accountUrl }],
+    blocks: [
+      { kind: 'success', text: line },
+      plan(p, [['Before', p.previous]]),
+      ...benefits(p.tierName, p.benefits, p.timing === 'renewal' ? `From ${p.from ?? 'your next renewal'}, ${p.tierName} includes:` : `${p.tierName} includes:`),
+      { kind: 'button', label: 'Open your sponsorship', url: p.accountUrl },
+    ],
   };
 }
 

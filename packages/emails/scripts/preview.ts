@@ -30,6 +30,14 @@ const sponsor = {
   paymentLabel: 'By invoice (due in 30 days)',
   meetup: null,
   accountUrl: 'https://zurichjs.com/partners/account',
+  benefits: [
+    'Large logo on our site and partner list',
+    '2 sponsor slides in rotation at meetups',
+    'Social media mentions and shoutouts',
+    'Name-drop and recognition at events',
+    'Access to post job opportunities',
+    'Swag distribution at events',
+  ],
 };
 const once = {
   ...sponsor,
@@ -108,6 +116,7 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
   'sponsor-invite': [
     { ...sponsor, message: 'Great talking to you at the conference. Here is the Builder package we discussed.' },
     { ...once, message: null },
+    { ...sponsor, paymentLabel: 'Paid directly to the association', message: null, existingPaidThrough: '31st March 2027' },
   ],
   'sponsor-agreement': [
     {
@@ -132,7 +141,12 @@ const SAMPLES: { [N in TemplateName]: TemplateProps<N>[] } = {
     {
       ...sponsor,
       kind: 'plan',
-      newPlan: { tierName: 'Community Champion', feeLabel: 'CHF 2’100 a quarter', applies: 'now (only the difference is charged for this term)' },
+      newPlan: {
+        tierName: 'Community Champion',
+        feeLabel: 'CHF 2’100 a quarter',
+        applies: 'now (only the difference is charged for this term)',
+        benefits: ['XL logo on our site and partner list', 'Branded photos of the event', 'Sponsor slides or video at each meetup', 'Personal shoutout and introduction at events'],
+      },
       lastDay: null,
       message: 'As agreed on our call, moving you up for the conference season.',
       expires: '2nd December 2026',

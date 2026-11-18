@@ -19,14 +19,14 @@
  * Safe to receive twice: handled events are skipped (sponsor_stripe_events), status changes are
  * compare-and-set, emails carry idempotency keys. An event is marked handled only after it worked.
  */
-import { TransitionError, fromLookupKey, isRecurring, tierInfo, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { TransitionError, feeLabel, fromLookupKey, isRecurring, tierInfo, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { siteOrigin } from '../../../server/auth.ts';
 import { longDate } from '../../../server/dates.ts';
 import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
 import { MembershipUnavailable } from '../../../server/membership-db.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
-import { adminUrl, emailBoard, emailSponsor, note, planLabel, sponsorStore, termLabel, who, type NotifyDeps } from '../../../server/sponsor.ts';
+import { adminUrl, emailBoard, emailSponsor, note, planLabel, sponsorStore, termLabel, tierBenefits, who, type NotifyDeps } from '../../../server/sponsor.ts';
 import { SPONSOR_SOURCE } from '../../../server/sponsor-stripe.ts';
 import { verifyStripeSignature } from '../../../server/stripe.ts';
 
@@ -109,10 +109,13 @@ const isStale = (s: Sponsor, subscriptionId: string) => !!s.stripeSubscriptionId
 async function welcome(s: Sponsor, term: string, nextPayment: string | null, eventId: string, deps: NotifyDeps) {
   const needsLogo = !(await deps.store.logos(s.id)).length;
   await emailSponsor(s, 'sponsor-welcome', (base) => ({ ...base, term, nextPayment, needsLogo }), { ...deps, key: `sponsor-welcome:${s.id}:${eventId}` });
-  await note(`:tada: New sponsor: ${who(s)}, ${planLabel(s)}.${needsLogo ? ' No logo yet.' : ''}`, deps);
+  const deliver = tierBenefits(s.tier)
+    .map((b) => `• ${b}`)
+    .join('\n');
+  await note(`:tada: New sponsor: ${who(s)}, ${feeLabel(s.tier, s.cycle)}.${needsLogo ? ' No logo yet.' : ''}${deliver ? `\n*To deliver:*\n${deliver}` : ''}`, deps);
   await emailBoard(
     `New sponsor: ${s.companyName}`,
-    [`${s.companyName} paid for its ${tierInfo(s.tier).name} sponsorship.`],
+    [`${s.companyName} paid for its ${tierInfo(s.tier).name} sponsorship.`, ...(tierBenefits(s.tier).length ? [`To deliver: ${tierBenefits(s.tier).join('; ')}.`] : [])],
     [
       ['Plan', planLabel(s)],
       ['Term', term],
@@ -246,9 +249,10 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
         const plan = fromLookupKey(sub.items?.data?.[0]?.price?.lookup_key);
         if (!plan || (plan.tier === s.tier && plan.cycle === s.cycle)) break;
         const previous = planLabel(s);
+        const before = who(s);
         s = await store.update(s.id, plan, actor);
         await emailSponsor(s, 'sponsor-change', (base) => ({ ...base, timing: 'applied', from: null, previous }), { ...notify, key: `sponsor-change-applied:${event.id}` });
-        await note(`:arrows_counterclockwise: ${who(s)} is now ${planLabel(s)} (was ${previous}).`, notify);
+        await note(`:arrows_counterclockwise: ${before} is now ${planLabel(s)}, as scheduled at the renewal.`, notify);
         break;
       }
 

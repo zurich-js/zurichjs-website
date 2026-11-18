@@ -29,7 +29,7 @@ import {
   type Tier,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate, shortDateTime } from './dates.ts';
-import { adminUrl, agreementUrl, emailBoard, emailSponsor, note, planLabel, who, type NotifyDeps } from './sponsor.ts';
+import { adminUrl, agreementUrl, emailBoard, emailSponsor, note, planLabel, tierBenefits, who, type NotifyDeps } from './sponsor.ts';
 import {
   cancelAtPeriodEnd,
   cancelNow,
@@ -270,7 +270,7 @@ export async function propose(s: Sponsor, input: ProposalInput, actor: Actor, de
     (base) => ({
       ...base,
       kind: p.kind,
-      newPlan: p.kind === 'plan' ? { tierName: tierInfo(p.tier!).name, feeLabel: feeLabel(p.tier!, p.cycle!), applies: applies!.text } : null,
+      newPlan: p.kind === 'plan' ? { tierName: tierInfo(p.tier!).name, feeLabel: feeLabel(p.tier!, p.cycle!), applies: applies!.text, benefits: tierBenefits(p.tier!) } : null,
       lastDay: p.kind === 'end' && periodLast ? longDate(lastDay(periodLast)) : null,
       message: p.message,
       expires: longDate(p.expiresAt),

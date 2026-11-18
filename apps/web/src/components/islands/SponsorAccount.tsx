@@ -14,6 +14,7 @@ import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, SelectField, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { badgeClass, cx, headingSizes, surfaceClass, type BadgeTone, type SurfaceTone } from '@zurichjs/design/recipes';
 import { setSignedIn } from '@zurichjs/design/session';
+import { SPONSORSHIP_TIERS } from '@zurichjs/content/partners';
 import { AGREEMENT, CYCLES, INVOICE_DAYS, RECURRING, TIERS, changeTiming, cycleInfo, feeLabel, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, logoView, proposalView } from '../../server/sponsor.ts';
@@ -226,6 +227,23 @@ function Notice({ tone, alert, children }: { tone: SurfaceTone; alert?: boolean;
   return (
     <div role={alert ? 'alert' : 'status'} class={surfaceClass(tone, 'flex flex-col gap-3 px-5 py-4 text-base font-bold leading-normal')}>
       {children}
+    </div>
+  );
+}
+
+/** What a tier includes, as /partners lists it. */
+const benefitsOf = (t: Tier) => SPONSORSHIP_TIERS.find((o) => o.id === t)?.perks ?? [];
+
+function Benefits({ title, items }: { title: string; items: string[] }) {
+  if (!items.length) return null;
+  return (
+    <div class="flex flex-col gap-2">
+      <p class="m-0 text-base font-bold">{title}</p>
+      <ul class="m-0 flex list-disc flex-col gap-1 pl-5 text-base leading-normal text-ink-2">
+        {items.map((b) => (
+          <li key={b}>{b}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -606,6 +624,7 @@ function StartForm({ me, ctx, onInvoice }: { me: Me; ctx: Ctx; onInvoice: (url: 
           <legend class="mb-2 p-0 text-xl font-bold">Plan</legend>
           <ChipGroup<Cycle> label="Billing" value={cycle} onChange={setCycle} options={CYCLES.map((c) => ({ value: c.key, label: c.label }))} />
           <ChipGroup<Tier> label="Tier" value={tier} onChange={setTier} options={TIERS.map((t) => ({ value: t.key, label: `${t.name}, ${feeLabel(t.key, cycle)}` }))} />
+          <Benefits title={`${tierInfo(tier).name} includes`} items={benefitsOf(tier)} />
           {cycle === 'once' &&
             (meetups === null ? (
               <p class={hint} aria-busy="true">
@@ -699,6 +718,7 @@ function Summary({ s, ctx, children }: { s: SponsorView; ctx: Ctx; children?: Co
         {ctx.company}
       </h2>
       <Rows rows={rows} />
+      {s.status !== 'ended' && <Benefits title="What your sponsorship includes" items={s.benefits} />}
       {children}
     </section>
   );
@@ -873,6 +893,7 @@ function Proposal({ p, s, ctx }: { p: ProposalView; s: SponsorView; ctx: Ctx }) 
       </h2>
       <p class="m-0 text-lg font-bold leading-relaxed">{what}</p>
       {p.message && <p class="m-0 text-lg leading-relaxed whitespace-pre-line text-ink-2">{p.message}</p>}
+      {p.kind === 'plan' && p.tier && <Benefits title={`${tierInfo(p.tier).name} includes`} items={benefitsOf(p.tier)} />}
       <p class={hint}>
         Sent on {longDate(p.createdAt)}. Answer by {longDate(p.expiresAt)}. Nothing changes unless you accept it.
       </p>
@@ -981,6 +1002,7 @@ function ChangePlan({ s, pending, ctx, onDone, onCancel }: { s: SponsorView; pen
       </h3>
       <ChipGroup<Cycle> label="New billing" value={cycle} onChange={setCycle} options={RECURRING.map((c) => ({ value: c as Cycle, label: cycleInfo(c).label }))} />
       <ChipGroup<Tier> label="New tier" value={tier} onChange={setTier} options={TIERS.map((t) => ({ value: t.key, label: `${t.name}, ${feeLabel(t.key, cycle)}` }))} />
+      {tier !== s.tier && <Benefits title={`${tierInfo(tier).name} includes`} items={benefitsOf(tier)} />}
       <p class={cx(hint, 'font-bold text-black')} aria-live="polite">
         {timing === 'none'
           ? 'This is your current plan.'

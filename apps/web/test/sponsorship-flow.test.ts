@@ -226,6 +226,8 @@ describe('sponsorship flow', () => {
     const welcome = w.emails.find((e) => e.subject === 'Welcome, Acme: your ZurichJS sponsorship is active')!;
     expect(welcome.to).toEqual(['grace@acme.ch']);
     expect(welcome.text).toContain('One thing we still need: your logo');
+    expect(welcome.text).toContain('As a Community Friend, you get:\n\n- Medium logo on our site and partner list');
+    expect(w.slackPosts.find((t) => t.startsWith(':tada:'))).toContain('*To deliver:*\n• Medium logo on our site and partner list');
     expect(w.emails.at(-1)).toMatchObject({ to: ['hello@zurichjs.com'], subject: 'New sponsor: Acme' });
     // The same event again changes nothing.
     expect(await (await webhook(stripeEvent('evt_1', 'invoice.paid', {}))).json()).toMatchObject({ duplicate: true });

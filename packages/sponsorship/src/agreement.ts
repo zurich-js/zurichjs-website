@@ -5,7 +5,8 @@
  * outside the site and attached by the board replaces the online signature. Change the
  * version whenever the text changes; every acceptance stores the version it accepted.
  *
- * DRAFT until the owner approves the text (legal wording is owner-only, AGENTS.md).
+ * Approved by the owner on 18th November 2026. Legal wording is owner-only (AGENTS.md): any change
+ * needs the owner and a new version.
  */
 export const AGREEMENT = {
   version: '2026-11-18',

@@ -15,8 +15,8 @@
  *   - A higher tier on the same cycle applies now and charges the prorated difference; everything
  *     else is a subscription schedule that switches at the renewal.
  *
- * Environment: STRIPE_SECRET_KEY, STRIPE_SPONSOR_PORTAL_CONFIG (optional),
- * STRIPE_SPONSORSHIP_WEBHOOK_SECRET.
+ * Environment: STRIPE_SECRET_KEY, STRIPE_SPONSOR_PORTAL_CONFIG (optional). Events arrive on the
+ * site's one webhook (STRIPE_WEBHOOK_SECRET, server/stripe-webhook.ts).
  */
 import {
   fromLookupKey,
@@ -37,15 +37,6 @@ import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
 type Fetch = typeof fetch;
 
 export const SPONSOR_SOURCE = 'zurichjs.com/partners';
-
-export const SPONSOR_WEBHOOK_EVENTS = [
-  'checkout.session.completed',
-  'invoice.paid',
-  'invoice.payment_failed',
-  'invoice.payment_action_required',
-  'customer.subscription.updated',
-  'customer.subscription.deleted',
-] as const;
 
 export interface StripeDeps {
   env: Env;

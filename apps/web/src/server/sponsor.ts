@@ -41,8 +41,6 @@ type Log = (m: string) => void;
 export const sponsorStore = (env: Env): SponsorStore => postgresStore(membershipDb(env));
 
 /** Sponsors can start and pay only once the owner switches this on (after approving the agreement). */
-export const sponsorshipEnabled = (env: Env) => env.SPONSORSHIP_ENABLED === 'true';
-
 export const accountUrl = (origin: string) => new URL('/partners/account', origin).toString();
 export const agreementUrl = (origin: string) => new URL(AGREEMENT.path, origin).toString();
 

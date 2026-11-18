@@ -34,21 +34,7 @@ import {
   type Tier,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
-import {
-  accountUrl,
-  afterLastMeetup,
-  agreementUrl,
-  emailSponsor,
-  meetupLabel,
-  note,
-  planLabel,
-  slackText,
-  sponsorshipEnabled,
-  tierBenefits,
-  who,
-  zurichDay,
-  type NotifyDeps,
-} from './sponsor.ts';
+import { accountUrl, afterLastMeetup, agreementUrl, emailSponsor, meetupLabel, note, planLabel, slackText, tierBenefits, who, zurichDay, type NotifyDeps } from './sponsor.ts';
 import {
   cancelAtPeriodEnd,
   cancelNow,
@@ -138,7 +124,6 @@ export async function resolveSigner(
  * Stripe that moves to card (charged when its paid period ends). Returns Stripe Checkout's URL.
  */
 export async function startSponsorship(s: Sponsor, signer: Signer, actor: Actor, deps: LifecycleDeps): Promise<{ checkoutUrl: string; sponsor: Sponsor }> {
-  if (!sponsorshipEnabled(deps.env)) throw new SponsorshipError('Online sponsorship opens soon. Write to hello@zurichjs.com in the meantime.', 503);
   const switching = s.status === 'active' && s.paymentMode === 'manual';
   if (s.status !== 'pending' && !switching) throw new SponsorshipError('Payment is already set up for this sponsorship.');
   const meetups = s.cycle === 'once' ? await deps.store.meetups(s.id) : [];

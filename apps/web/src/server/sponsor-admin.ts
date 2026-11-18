@@ -253,7 +253,8 @@ export async function attention(s: Sponsor, store: SponsorStore, today: string):
   }
   if (s.status !== 'ended') {
     const logo = (await store.logos(s.id))[0];
-    if (logo && days(logo.uploadedAt.slice(0, 10), today) <= 14) out.push('new_logo');
+    // A logo the board uploaded itself needs no reminder.
+    if (logo && logo.uploadedBy !== 'board' && days(logo.uploadedAt.slice(0, 10), today) <= 14) out.push('new_logo');
   }
   return out;
 }

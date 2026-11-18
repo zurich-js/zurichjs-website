@@ -7,7 +7,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
-import { SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
+import { FileField, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { badgeClass, buttonClass, surfaceClass } from '@zurichjs/design/recipes';
 import { RECURRING, TIERS, chf, cycleInfo, tierInfo, type EndedReason, type SponsorEvent, type Status, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate, shortDateTime } from '../../../server/dates.ts';
@@ -208,7 +208,7 @@ export function SponsorDetail({
       </section>
 
       <Contacts contacts={d.contacts} sponsor={s} {...ctx} />
-      <Logos logos={d.logos} {...ctx} />
+      <Logos logos={d.logos} ended={s.status === 'ended'} {...ctx} />
       <Contracts contracts={d.contracts} {...ctx} />
       <Records d={d} />
       <EditDetails sponsor={s} {...ctx} />
@@ -591,10 +591,59 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
 
 /* ------------------------------------------------------------------ logos and contracts */
 
-function Logos({ logos, id }: Ctx & { logos: Logo[] }) {
+const LOGO_TYPES = 'image/svg+xml,image/png,image/webp';
+
+function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo[]; ended: boolean }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [picker, setPicker] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState('');
+
+  const upload = async (e: Event) => {
+    e.preventDefault();
+    if (busy) return;
+    if (!file) return setError('Choose a logo file.');
+    setBusy(true);
+    setError('');
+    setDone('');
+    const data = new FormData();
+    data.set('file', file);
+    const { status, body } = await api(`${BASE}/${id}/logos`, { method: 'POST', body: data });
+    setBusy(false);
+    if (status === 401) return onSignedOut();
+    if (status !== 200) return setError(body.error ?? 'Could not upload the logo.');
+    setFile(null);
+    setPicker((n) => n + 1);
+    setDone('Logo uploaded. The sponsor sees it on their page.');
+    onChanged();
+  };
+
   return (
-    <Block id="h-logos" title="Logos" intro="Files the sponsor uploaded, newest first. Add it to their partner document in Sanity.">
+    <Block id="h-logos" title="Logos" intro="Newest first. The newest one is shown on the sponsor's page. Add it to their partner document in Sanity.">
       {logos.length === 0 && <p class="m-0 text-base text-ink-2">None uploaded yet.</p>}
+      {!ended && (
+        <form class={surfaceClass('grey', 'flex max-w-xl flex-col gap-4 p-5 md:p-6')} noValidate onSubmit={upload}>
+          <FileField
+            key={picker}
+            label="Upload a logo for them"
+            hint="SVG, PNG or WebP, up to 2 MB."
+            accept={LOGO_TYPES}
+            fileName={file?.name ?? null}
+            invalid={!!error}
+            error={error || undefined}
+            onFile={(f) => {
+              setFile(f);
+              setError('');
+              setDone('');
+            }}
+          />
+          <SubmitButton busy={busy} size="sm" grow class="self-start">
+            {busy ? 'Uploading…' : 'Upload logo'}
+          </SubmitButton>
+        </form>
+      )}
+      {done && <Notice kind="done">{done}</Notice>}
       <ul class="m-0 flex list-none flex-col gap-6 p-0">
         {logos.map((l) => {
           const src = `${BASE}/${id}/logos/${l.id}`;
@@ -612,7 +661,7 @@ function Logos({ logos, id }: Ctx & { logos: Logo[] }) {
               <div class="flex flex-col gap-1">
                 <span class="font-bold break-all">{l.filename}</span>
                 <span class="text-sm text-grey-text">
-                  {kb(l.bytes)}, uploaded {shortDateTime(l.uploadedAt)} by {l.uploadedBy}
+                  {kb(l.bytes)}, uploaded {shortDateTime(l.uploadedAt)} by {l.uploadedBy === 'board' ? 'the board' : l.uploadedBy}
                 </span>
                 <a href={src} download={l.filename} class={buttonClass('link', 'sm', false, 'self-start')}>
                   Download
@@ -841,10 +890,12 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             onChanged();
           }}
         >
-          <p class="m-0 text-base text-ink-2">Company and billing details are copied to Stripe when they have a Stripe customer.</p>
+          <p class="m-0 text-base text-ink-2">
+            The company name is shown on the site and in emails, the legal name on invoices. Company and billing details are copied to Stripe when they have a Stripe customer.
+          </p>
           <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
-            {text('companyName', 'Company name', 'As shown on the site and in emails.')}
-            {text('legalName', optional('Legal name'), 'For invoices, when it differs.')}
+            {text('companyName', 'Company name')}
+            {text('legalName', optional('Legal name'))}
             {text('vatId', optional('VAT number'))}
             {text('website', optional('Website'))}
           </div>

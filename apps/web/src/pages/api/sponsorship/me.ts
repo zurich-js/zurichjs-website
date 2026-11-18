@@ -3,7 +3,7 @@
  *
  * GET /api/sponsorship/me   (session cookie)
  *   200 {
- *     ok, email, enabled,
+ *     ok, email,
  *     contact, sponsor | null, contacts, agreements, logos, contracts, pendingChange,
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
@@ -16,7 +16,7 @@
 import { AGREEMENT, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { json, methodNotAllowed } from '../../../server/http.ts';
-import { agreementView, contactView, documentView, logoView, sponsorView, sponsorshipEnabled } from '../../../server/sponsor.ts';
+import { agreementView, contactView, documentView, logoView, sponsorView } from '../../../server/sponsor.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 import { pendingChange } from '../../../server/sponsor-stripe.ts';
 import { tierInfo } from '@zurichjs/sponsorship';
@@ -33,7 +33,7 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
     request,
     deps,
     async ({ user, contact, sponsor: s, invitation, store, env }) => {
-      const base = { ok: true, email: user.email, enabled: sponsorshipEnabled(env), agreementVersion: AGREEMENT.version };
+      const base = { ok: true, email: user.email, agreementVersion: AGREEMENT.version };
       if (!s || !contact)
         return json(200, {
           ...base,

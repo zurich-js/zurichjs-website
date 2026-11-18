@@ -6,7 +6,7 @@
  */
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed } from '../../../../../../server/http.ts';
-import { note, sponsorshipEnabled, who } from '../../../../../../server/sponsor.ts';
+import { note, who } from '../../../../../../server/sponsor.ts';
 import { sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
 import { createPaymentLink } from '../../../../../../server/sponsor-stripe.ts';
 
@@ -16,10 +16,9 @@ export const handlePaymentLink = (request: Request, id: string, deps: SponsorAdm
   sponsorAdminRoute(
     request,
     deps,
-    async ({ store, env, origin, lifecycle }) => {
+    async ({ store, origin, lifecycle }) => {
       const s = await store.get(id);
       if (!s) return fail(404, 'No such sponsor.');
-      if (!sponsorshipEnabled(env)) return fail(503, 'Online sponsorship is not switched on yet (SPONSORSHIP_ENABLED).');
       if (s.cycle !== 'once') return fail(409, 'Payment links are for one-time sponsorships. Recurring ones pay on their sponsorship page.');
       if (s.status !== 'pending') return fail(409, 'This sponsorship is already paid or has ended.');
       if (!(await store.documents(s.id)).length) return fail(409, 'Attach the signed contract first: without it they sign and pay on their sponsorship page.');

@@ -1,8 +1,6 @@
 /**
- * Stripe webhook for sponsorships (its own endpoint and secret, apart from memberships and
- * donations). Stripe › Developers › Webhooks: https://zurichjs.com/api/sponsorship/webhook,
- * the events in SPONSOR_WEBHOOK_EVENTS; secret in STRIPE_SPONSORSHIP_WEBHOOK_SECRET.
- * `pnpm sponsorship:stripe-setup --webhook-url …` creates it. Card only.
+ * Sponsorship events from the shared Stripe webhook (POST /api/stripe/webhook, server/stripe-webhook.ts):
+ * it verifies the signature and calls processSponsorEvent with every event. Card only.
  *
  *   checkout.session.completed      a one-time card payment (Checkout or a payment link) starts the
  *                                   sponsorship; a subscription is linked (a second live one for the
@@ -21,12 +19,11 @@
  * that has ended changes nothing and is flagged in Slack.
  */
 import { TransitionError, fromLookupKey, isRecurring, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
-import type { APIRoute } from 'astro';
-import { siteOrigin } from '../../../server/auth.ts';
-import { longDate } from '../../../server/dates.ts';
-import { fail, json, methodNotAllowed, type Env } from '../../../server/http.ts';
-import { MembershipUnavailable } from '../../../server/membership-db.ts';
-import type { MembershipSlack } from '../../../server/membership-slack.ts';
+import { siteOrigin } from './auth.ts';
+import { longDate } from './dates.ts';
+import { fail, json, type Env } from './http.ts';
+import { MembershipUnavailable } from './membership-db.ts';
+import type { MembershipSlack } from './membership-slack.ts';
 import {
   adminUrl,
   afterLastMeetup,
@@ -42,17 +39,9 @@ import {
   zurichDay,
   zurichDayOf,
   type NotifyDeps,
-} from '../../../server/sponsor.ts';
-import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription } from '../../../server/sponsor-stripe.ts';
-import { verifyStripeSignature } from '../../../server/stripe.ts';
-
-export const prerender = false;
-
-interface StripeEvent {
-  id: string;
-  type: string;
-  data: { object: Record<string, unknown> };
-}
+} from './sponsor.ts';
+import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription } from './sponsor-stripe.ts';
+import type { StripeEvent } from './stripe-webhook.ts';
 
 interface Invoice {
   id: string;
@@ -154,22 +143,10 @@ async function startOnce(s: Sponsor, eventId: string, today: string, deps: Notif
 
 const anomaly = (s: Sponsor, text: string, deps: NotifyDeps) => note(`:rotating_light: ${text} ${adminUrl(deps.origin, s.id)}`, deps);
 
-export async function handleSponsorWebhook(request: Request, deps: SponsorWebhookDeps = {}): Promise<Response> {
+/** One verified Stripe event for sponsorships; events that are not a sponsor's are skipped. */
+export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebhookDeps = {}): Promise<Response> {
   const env = deps.env ?? process.env;
   const log = deps.log ?? console.log;
-  const secret = env.STRIPE_SPONSORSHIP_WEBHOOK_SECRET;
-  const payload = await request.text();
-  if (!secret) {
-    log('[sponsorship] STRIPE_SPONSORSHIP_WEBHOOK_SECRET missing; webhook refused');
-    return fail(503, 'Webhook not configured.');
-  }
-  if (!verifyStripeSignature(payload, request.headers.get('stripe-signature'), secret, deps.now)) return fail(400, 'Bad signature.');
-  let event: StripeEvent;
-  try {
-    event = JSON.parse(payload) as StripeEvent;
-  } catch {
-    return fail(400, 'Invalid JSON.');
-  }
   let store: SponsorStore;
   try {
     store = deps.store ?? sponsorStore(env);
@@ -334,6 +311,3 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
     return fail(500, 'Webhook handling failed; Stripe will retry.');
   }
 }
-
-export const POST: APIRoute = ({ request }) => handleSponsorWebhook(request);
-export const ALL: APIRoute = () => methodNotAllowed('POST');

@@ -3,7 +3,6 @@
  * configuration in Stripe (owner, once per Stripe account; test mode first).
  *   STRIPE_SECRET_KEY=sk_test_… pnpm sponsorship:stripe-setup           # dry run
  *   STRIPE_SECRET_KEY=sk_test_… pnpm sponsorship:stripe-setup --apply
- *   … --apply --webhook-url https://zurichjs.com/api/sponsorship/webhook   # also the webhook endpoint
  *
  * Prices come from packages/sponsorship/src/tiers.ts and get lookup keys
  * sponsor_<tier>_<monthly|quarterly|yearly|once>. A lookup key that already points at a price
@@ -13,21 +12,15 @@
  * The billing portal reuses the membership configuration (STRIPE_MEMBER_PORTAL_CONFIG) by
  * default. With --portal it also creates a sponsor-only configuration (payment method, billing
  * address and invoice history; plan changes and endings stay on /partners/account, under the
- * agreement) and prints STRIPE_SPONSOR_PORTAL_CONFIG. With --webhook-url it prints
- * STRIPE_SPONSORSHIP_WEBHOOK_SECRET (its own endpoint, so it has its own secret).
+ * agreement) and prints STRIPE_SPONSOR_PORTAL_CONFIG. Sponsorship events arrive on the site's one
+ * webhook endpoint, which `pnpm membership:stripe-setup --webhook-url …` creates.
  */
 import { CYCLES, TIERS, priceLookupKey } from '@zurichjs/sponsorship';
-import { SPONSOR_SOURCE, SPONSOR_WEBHOOK_EVENTS } from '../apps/web/src/server/sponsor-stripe.ts';
-import { STRIPE_API_VERSION, stripeApi, stripeForm } from '../apps/web/src/server/stripe.ts';
+import { SPONSOR_SOURCE } from '../apps/web/src/server/sponsor-stripe.ts';
+import { stripeApi, stripeForm } from '../apps/web/src/server/stripe.ts';
 
 const apply = process.argv.includes('--apply');
 const portal = process.argv.includes('--portal');
-const webhookArg = process.argv.indexOf('--webhook-url');
-const webhookUrl = webhookArg > 0 ? process.argv[webhookArg + 1] : undefined;
-if (webhookArg > 0 && !webhookUrl?.startsWith('https://')) {
-  console.error('--webhook-url needs an https:// URL, e.g. https://zurichjs.com/api/sponsorship/webhook');
-  process.exit(1);
-}
 const env = process.env;
 if (!env.STRIPE_SECRET_KEY) {
   console.error('Set STRIPE_SECRET_KEY (sk_test_… first).');
@@ -100,22 +93,4 @@ if (portal && apply && complete) {
   console.log(`\nSet STRIPE_SPONSOR_PORTAL_CONFIG=${config.id} on Netlify (functions).`);
 } else if (portal && apply) console.log('  (skipped: run --apply again once every price exists)');
 
-if (webhookUrl) {
-  const endpoints = await api<{ data: { id: string; url: string; status: string }[] }>('GET', 'webhook_endpoints', { limit: 100 });
-  const existing = endpoints.data.find((e) => e.url === webhookUrl);
-  if (existing) console.log(`\n= webhook endpoint ${existing.id} (${existing.status}) for ${webhookUrl}. Its secret is in the Stripe dashboard.`);
-  else {
-    console.log(`\n+ webhook endpoint ${webhookUrl} (${SPONSOR_WEBHOOK_EVENTS.join(', ')}; API ${STRIPE_API_VERSION})`);
-    if (apply) {
-      const e = await api<{ id: string; secret: string }>('POST', 'webhook_endpoints', {
-        url: webhookUrl,
-        enabled_events: [...SPONSOR_WEBHOOK_EVENTS],
-        api_version: STRIPE_API_VERSION,
-        description: 'zurichjs.com sponsorship lifecycle',
-        metadata: { source: SPONSOR_SOURCE },
-      });
-      console.log(`Set STRIPE_SPONSORSHIP_WEBHOOK_SECRET=${e.secret} on Netlify (functions). Stripe shows it only now.`);
-    }
-  }
-}
 if (!apply) console.log('\nDry run: nothing created. Add --apply.');

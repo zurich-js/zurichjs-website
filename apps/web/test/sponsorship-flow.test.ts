@@ -8,6 +8,7 @@
  * safety checks; and what the Slack agent sees.
  */
 import { createHmac } from 'node:crypto';
+import { memoryStore as memoryMembers } from '@zurichjs/membership';
 import { AGREEMENT, memoryStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleAddSponsor, handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/index.ts';
@@ -15,6 +16,7 @@ import { handleAdminSponsor } from '../src/pages/api/membership/admin/sponsors/[
 import { handleBoardEnd } from '../src/pages/api/membership/admin/sponsors/[id]/end.ts';
 import { handleBundle } from '../src/pages/api/membership/admin/sponsors/[id]/bundle.ts';
 import { handleAttachContract } from '../src/pages/api/membership/admin/sponsors/[id]/contracts/index.ts';
+import { handleAdminLogoUpload } from '../src/pages/api/membership/admin/sponsors/[id]/logos/index.ts';
 import { handlePaymentLink } from '../src/pages/api/membership/admin/sponsors/[id]/payment-link.ts';
 import { handleRecordPayment } from '../src/pages/api/membership/admin/sponsors/[id]/payment.ts';
 import { handleSuggest } from '../src/pages/api/membership/admin/sponsors/[id]/suggest.ts';
@@ -26,7 +28,7 @@ import { handleLogoUpload } from '../src/pages/api/sponsorship/logo/index.ts';
 import { handleSponsorMe } from '../src/pages/api/sponsorship/me.ts';
 import { handlePlan } from '../src/pages/api/sponsorship/plan.ts';
 import { handleStart } from '../src/pages/api/sponsorship/start.ts';
-import { handleSponsorWebhook } from '../src/pages/api/sponsorship/webhook.ts';
+import { handleStripeWebhook } from '../src/pages/api/stripe/webhook.ts';
 import { parseChange } from '../src/server/sponsor-lifecycle.ts';
 import { checkContract, checkLogo, type LogoStore } from '../src/server/sponsor-logo.ts';
 import { stripeAddress } from '../src/server/sponsor-stripe.ts';
@@ -38,12 +40,11 @@ const ADMIN = 'admin-password-for-tests';
 const env = {
   STRIPE_SECRET_KEY: 'sk_test_x',
   STRIPE_MEMBER_PORTAL_CONFIG: 'bpc_members',
-  STRIPE_SPONSORSHIP_WEBHOOK_SECRET: WHSEC,
+  STRIPE_WEBHOOK_SECRET: WHSEC,
   RESEND_API_KEY: 're_test',
   SLACK_SPONSORSHIP_CHANNEL_ID: 'CSPONSORS',
   BETTER_AUTH_URL: 'https://zurichjs.com',
   ADMIN_PASSWORD: ADMIN,
-  SPONSORSHIP_ENABLED: 'true',
 };
 const grace = { id: 'user-grace', email: 'grace@acme.ch' };
 const NOW = new Date('2026-11-18T10:00:00Z');
@@ -144,7 +145,7 @@ function stripeEvent(id: string, type: string, object: unknown) {
   const payload = JSON.stringify({ id, type, data: { object } });
   const t = Math.floor(NOW.getTime() / 1000);
   const sig = createHmac('sha256', WHSEC).update(`${t}.${payload}`).digest('hex');
-  return new Request('https://zurichjs.com/api/sponsorship/webhook', { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${sig}` }, body: payload });
+  return new Request('https://zurichjs.com/api/stripe/webhook', { method: 'POST', headers: { 'stripe-signature': `t=${t},v1=${sig}` }, body: payload });
 }
 
 const paidInvoice = (id: string, sponsorId: string, start: string, end: string, lookupKey = 'sponsor_friend_quarterly', reason = 'subscription_create') => ({
@@ -182,7 +183,9 @@ describe('sponsorship flow', () => {
   let w: ReturnType<typeof world>;
   const user = (u = grace) => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => u, now: () => NOW });
   const adminDeps = () => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
-  const webhook = (req: Request) => handleSponsorWebhook(req, { env, store, fetch: w.f, slack: w.slack, now: NOW.getTime() });
+  // Sponsor events arrive on the site's one webhook, next to memberships and donations.
+  const webhook = (req: Request) =>
+    handleStripeWebhook(req, { env, sponsorStore: store, memberStore: memoryMembers({ now: () => NOW }), fetch: w.f, slack: w.slack, now: NOW.getTime() });
   const me = async (u = grace) => (await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), user(u))).json() as Promise<Record<string, any>>;
 
   beforeEach(() => {
@@ -210,7 +213,7 @@ describe('sponsorship flow', () => {
     expect(invite.text).toContain('Community Friend includes:');
     expect(w.slackPosts.at(-1)).toContain('Invited to sponsor: *Acme*');
 
-    expect(await me()).toMatchObject({ sponsor: { status: 'pending', feeLabel: 'CHF 840 a quarter' }, signedCurrent: false, enabled: true });
+    expect(await me()).toMatchObject({ sponsor: { status: 'pending', feeLabel: 'CHF 840 a quarter' }, signedCurrent: false });
     // The first time needs a full signature; one tick is not enough yet.
     expect(await (await handleStart(post('/api/sponsorship/start', tick), user())).json()).toMatchObject({ field: 'signerName' });
 
@@ -242,7 +245,10 @@ describe('sponsorship flow', () => {
     expect(welcome[0]!.text).toContain('To plan your sponsor slides, swag or job posts, reply to this email.');
     expect(w.slackPosts.find((t) => t.startsWith(':tada:'))).toContain('*To deliver:*\n• Medium logo on our site and partner list');
     expect(w.emails.some((e) => e.to[0] === 'hello@zurichjs.com')).toBe(false);
-    expect(await (await webhook(stripeEvent('evt_1', 'invoice.paid', {}))).json()).toMatchObject({ duplicate: true });
+    // The same event again (Stripe retries) is accepted and changes nothing.
+    const sent = w.emails.length;
+    expect((await webhook(stripeEvent('evt_1', 'invoice.paid', {}))).status).toBe(200);
+    expect(w.emails).toHaveLength(sent);
 
     // Upgrade on the same cycle, one tick: now, prorated, and the card must pay it.
     expect(await (await handlePlan(post('/api/sponsorship/plan', { ...tick, tier: 'builder', cycle: 'quarterly' }), user())).json()).toMatchObject({
@@ -520,20 +526,13 @@ describe('sponsorship flow', () => {
     expect(await dailyCheck(deps)).toEqual({ completed: 0, ended: 0, closed: 0, reminded: 1 });
   });
 
-  it('guards writes, the switch, files, the board’s end and the webhook', async () => {
+  it('guards writes, files, the board’s end and the webhook', async () => {
     // Writes must come from the site.
     const noOrigin = new Request('https://zurichjs.com/api/sponsorship/start', { method: 'POST', body: '{}' });
     expect((await handleStart(noOrigin, user())).status).toBe(403);
-    // Until the owner switches sponsorship on, nobody can pay.
-    const off = await handleStart(post('/api/sponsorship/start', { ...full, companyName: 'X', tier: 'friend', cycle: 'monthly' }), {
-      ...user(),
-      env: { ...env, SPONSORSHIP_ENABLED: undefined },
-    });
-    expect(off.status).toBe(503);
-    expect(w.calls.filter((c) => c.path === 'checkout/sessions')).toHaveLength(0);
 
     expect((await handleAdminSponsors(new Request('https://zurichjs.com/api/membership/admin/sponsors'), adminDeps())).status).toBe(401);
-    const bad = new Request('https://zurichjs.com/api/sponsorship/webhook', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=00' }, body: '{}' });
+    const bad = new Request('https://zurichjs.com/api/stripe/webhook', { method: 'POST', headers: { 'stripe-signature': 't=1,v1=00' }, body: '{}' });
     expect((await webhook(bad)).status).toBe(400);
 
     // Logos: a clean SVG is kept, a sneaky one is refused.
@@ -547,6 +546,23 @@ describe('sponsorship flow', () => {
     expect(await (await upload(new TextEncoder().encode('<svg><animate attributeName="href" values="jav&#x61;script:x"/></svg>'), 'b.svg')).json()).toMatchObject({
       field: 'file',
     });
+
+    // The board can upload one on their behalf: checked the same way, shown first on the sponsor's page, no reminder.
+    const boardUpload = (bytes: Uint8Array, name: string) => {
+      const form = new FormData();
+      form.set('file', new File([bytes as Uint8Array<ArrayBuffer>], name));
+      return handleAdminLogoUpload(
+        new Request('https://zurichjs.com/x', { method: 'POST', headers: { authorization: `Bearer ${ADMIN}`, origin: 'https://zurichjs.com' }, body: form }),
+        sponsor.id,
+        adminDeps(),
+      );
+    };
+    expect((await boardUpload(new TextEncoder().encode('<svg><script>x</script></svg>'), 'c.svg')).status).toBe(400);
+    expect(await (await boardUpload(new TextEncoder().encode('<svg viewBox="0 0 1 1"><circle r="1"/></svg>'), 'board.svg')).json()).toMatchObject({
+      logo: { filename: 'board.svg', uploadedBy: 'board' },
+    });
+    expect((await me()).logos[0]).toMatchObject({ filename: 'board.svg', uploadedBy: 'board' });
+    expect(((await (await handleAdminSponsor(asAdmin('/x'), sponsor.id, adminDeps())).json()) as { attention: string[] }).attention).not.toContain('new_logo');
 
     // The board ends outright: our record first, then Stripe; nothing claims "unpaid" afterwards.
     await store.linkStripe(sponsor.id, { subscriptionId: 'sub_acme' }, { kind: 'stripe', id: 'x' });

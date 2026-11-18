@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # pnpm local (and local:studio): the Docker stack in docker-compose.yml, with payments in
-# Stripe's test mode. `stripe listen` forwards the membership lifecycle events (the list the
-# production endpoint gets) to http://localhost:4321/api/membership/webhook.
+# Stripe's test mode. `stripe listen` forwards the events the production endpoint gets to the
+# site's one webhook, http://localhost:4321/api/stripe/webhook (memberships, sponsorships, donations).
 #
 # Needs the Stripe CLI (brew install stripe/stripe-cli/stripe) and, in .env or .env.local:
 #   STRIPE_SECRET_KEY=sk_test_…            the sandbox's secret key (Developers › API keys); a live key is refused
@@ -45,8 +45,8 @@ command -v stripe > /dev/null || {
   exit 1
 }
 
-STRIPE_MEMBERSHIP_WEBHOOK_SECRET=$(stripe listen --api-key "$STRIPE_SECRET_KEY" --print-secret)
-export STRIPE_SECRET_KEY STRIPE_MEMBER_PORTAL_CONFIG STRIPE_MEMBERSHIP_WEBHOOK_SECRET
+STRIPE_WEBHOOK_SECRET=$(stripe listen --api-key "$STRIPE_SECRET_KEY" --print-secret)
+export STRIPE_SECRET_KEY STRIPE_MEMBER_PORTAL_CONFIG STRIPE_WEBHOOK_SECRET
 
 # Members linked to the old Docker Stripe mock (cus_mock_…, sub_mock_…) would make Stripe answer
 # "No such customer": unlink them, so their next checkout creates a real test customer.
@@ -61,9 +61,10 @@ end \$\$;"
 # One listener only: each extra one delivers every event again, at the same moment. The CLI is
 # a Node wrapper around the stripe binary, so stopping the wrapper's PID alone leaves the binary
 # running; match on the forward URL instead, before starting and on exit.
-WEBHOOK=http://localhost:4321/api/membership/webhook
+WEBHOOK=http://localhost:4321/api/stripe/webhook
 stop_listeners() {
-  pkill -f "stripe listen.*--forward-to $WEBHOOK" 2> /dev/null || true
+  # Also listeners for the old per-part endpoints, from earlier runs.
+  pkill -f "stripe listen.*--forward-to http://localhost:4321/api/" 2> /dev/null || true
   pkill -f "node tools/slack-dev.mjs" 2> /dev/null || true
 }
 stop_listeners

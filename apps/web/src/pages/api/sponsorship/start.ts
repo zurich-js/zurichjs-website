@@ -16,7 +16,7 @@ import { DuplicateContact, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
-import { sponsorshipEnabled, sponsorView } from '../../../server/sponsor.ts';
+import { sponsorView } from '../../../server/sponsor.ts';
 import { parseDetails, parsePlan, parseSignature } from '../../../server/sponsor-input.ts';
 import { resolveSigner, startSponsorship } from '../../../server/sponsor-lifecycle.ts';
 import { upcomingMeetups } from '../../../server/sponsor-meetups.ts';
@@ -30,7 +30,6 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
     request,
     deps,
     async ({ user, contact, sponsor, invitation, store, env, lifecycle }) => {
-      if (!sponsorshipEnabled(env)) return fail(503, 'Online sponsorship opens soon. Write to hello@zurichjs.com in the meantime.');
       if (invitation) return fail(409, `A colleague added you to ${invitation.sponsor.companyName}'s sponsorship. Accept or decline that first.`);
       const body = await readJsonObject(request);
       if (!body) return fail(400, 'Send the form as JSON.');

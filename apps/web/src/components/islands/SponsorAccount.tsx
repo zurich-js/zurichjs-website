@@ -40,7 +40,6 @@ interface PendingChange {
 /** GET /api/sponsorship/me. */
 interface Me {
   email: string;
-  enabled: boolean;
   agreementVersion: string;
   contact: ContactView | null;
   sponsor: SponsorView | null;
@@ -227,15 +226,6 @@ function Mail({ email }: { email: string }) {
 }
 
 /** Starting and paying wait until the owner switches online sponsorship on. */
-function ClosedLine({ ctx, id }: { ctx: Ctx; id: string }) {
-  if (ctx.me.enabled) return null;
-  return (
-    <p id={id} class={hint}>
-      Online sponsorship opens soon. Write to <Mail email={ctx.contactEmail} /> in the meantime.
-    </p>
-  );
-}
-
 /** Stripe's billing portal: the card, the billing email and receipts. */
 function PortalButton({ ctx, variant = 'outline-black' }: { ctx: Ctx; variant?: ButtonVariant }) {
   const [busy, setBusy] = useState(false);
@@ -1111,7 +1101,7 @@ function AddCard({ ctx, s, cancelled, onCancel }: { ctx: Ctx; s: SponsorView; ca
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (busy || !ctx.me.enabled) return;
+    if (busy) return;
     if (!sig.valid) {
       errs.setTried(true);
       focusError();
@@ -1146,14 +1136,13 @@ function AddCard({ ctx, s, cancelled, onCancel }: { ctx: Ctx; s: SponsorView; ca
       <Signature sig={sig} ctx={ctx} company={s.companyName} errorOf={errorOf} />
       <ResultNotice result={result} />
       <Actions>
-        <Button type="submit" variant="black" disabled={busy || !ctx.me.enabled} aria-describedby={ctx.me.enabled ? undefined : 'closed-card'}>
+        <Button type="submit" variant="black" disabled={busy}>
           {busy ? 'Opening Stripe…' : signedLabel(sig, 'Sign and add a card', 'Add a card')}
         </Button>
         <Button variant="outline-black" onClick={onCancel}>
           Cancel
         </Button>
       </Actions>
-      <ClosedLine ctx={ctx} id="closed-card" />
     </form>
   );
 }
@@ -1190,7 +1179,7 @@ function DetailFields({ value, onChange, errorOf }: { value: Details; onChange: 
     <div class="flex flex-col gap-5">
       <TextField label="Company name" name="companyName" autoComplete="organization" hint="As it should appear on zurichjs.com." {...field('companyName')} />
       <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-        <TextField label={optional('Legal name')} name="legalName" hint="If it differs, for the receipts." {...field('legalName')} />
+        <TextField label={optional('Legal name')} name="legalName" {...field('legalName')} />
         <TextField label={optional('Website')} name="website" type="url" autoComplete="url" inputMode="url" placeholder="https://" {...field('website')} />
       </div>
       <TextArea label={optional('Billing address')} name="billingAddress" autoComplete="street-address" rows={4} hint="Shown on your receipts." {...field('billingAddress')} />
@@ -1240,7 +1229,7 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
 
   const submit = async (e: Event) => {
     e.preventDefault();
-    if (busy || !ctx.me.enabled) return;
+    if (busy) return;
     if (!Object.values(local).every((v) => !v)) {
       errs.setTried(true);
       focusError();
@@ -1344,7 +1333,7 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
 
         <ResultNotice result={result} />
         <Actions>
-          <Button type="submit" variant="black" size="lg" disabled={busy || !ctx.me.enabled} aria-describedby={ctx.me.enabled ? undefined : 'closed-start'}>
+          <Button type="submit" variant="black" size="lg" disabled={busy}>
             {busy ? 'Opening Stripe…' : sig.mode === 'contract' ? 'Continue to payment' : signedLabel(sig, 'Sign and continue to payment', 'Confirm and continue to payment')}
           </Button>
           {onCancel && (
@@ -1353,7 +1342,6 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
             </Button>
           )}
         </Actions>
-        <ClosedLine ctx={ctx} id="closed-start" />
       </form>
     </section>
   );
@@ -1535,7 +1523,7 @@ function LogoSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
             <figcaption class="flex min-w-0 flex-col gap-1 text-base">
               <span class="font-bold break-all">{latest.filename}</span>
               <span class="break-words text-grey-text">
-                Uploaded on {shortDate(latest.uploadedAt)} by {latest.uploadedBy}
+                Uploaded on {shortDate(latest.uploadedAt)} by {latest.uploadedBy === 'board' ? 'ZurichJS' : latest.uploadedBy}
               </span>
             </figcaption>
           </figure>

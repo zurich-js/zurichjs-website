@@ -1,11 +1,8 @@
 /**
- * Stripe webhook for memberships (separate from the donations webhook).
- * Configure in Stripe › Developers › Webhooks: https://zurichjs.com/api/membership/webhook,
- * events checkout.session.completed, invoice.paid, invoice.payment_failed,
- * invoice.payment_action_required, customer.subscription.updated,
- * customer.subscription.deleted; secret in STRIPE_MEMBERSHIP_WEBHOOK_SECRET.
- * Without the secret every call is refused. `pnpm membership:stripe-setup`
- * creates the endpoint (docs/v2/MEMBERSHIP.md, "Stripe").
+ * Membership events. They arrive on the site's one Stripe webhook, /api/stripe/webhook
+ * (server/stripe-webhook.ts), which verifies the signature and calls processMembershipEvent.
+ * This route is the old membership-only endpoint (STRIPE_MEMBERSHIP_WEBHOOK_SECRET), kept until
+ * production's Stripe sends to the shared one (docs/v2/RUNBOOK.md); then delete the route.
  *
  *   invoice.paid (amount > 0)          the first payment and every renewal: pending/past_due/imported → active;
  *                                       paid until the period end; certificate for the term, emailed
@@ -43,15 +40,9 @@ import { membershipProps } from '../../../server/membership.ts';
 import { MembershipUnavailable, memberStore } from '../../../server/membership-db.ts';
 import { notify, who, type MembershipSlack } from '../../../server/membership-slack.ts';
 import { currentPlan, fromLookupKey, MEMBERSHIP_SOURCE } from '../../../server/membership-stripe.ts';
-import { verifyStripeSignature } from '../../../server/stripe.ts';
+import { readStripeEvent, type StripeEvent } from '../../../server/stripe-webhook.ts';
 
 export const prerender = false;
-
-interface StripeEvent {
-  id: string;
-  type: string;
-  data: { object: Record<string, unknown> };
-}
 
 interface SubscriptionDetails {
   subscription?: string | { id: string };
@@ -135,22 +126,19 @@ async function memberOf(store: MemberStore, ids: { memberId?: string; subscripti
   return ids.subscriptionId ? store.byStripeSubscription(ids.subscriptionId) : null;
 }
 
+/**
+ * The old membership-only endpoint, with its own secret (STRIPE_MEMBERSHIP_WEBHOOK_SECRET). Kept so
+ * production keeps working until Stripe sends to /api/stripe/webhook; then delete this route.
+ */
 export async function handleMembershipWebhook(request: Request, deps: WebhookDeps = {}): Promise<Response> {
+  const read = await readStripeEvent(request, deps.env ?? process.env, 'STRIPE_MEMBERSHIP_WEBHOOK_SECRET', 'membership', deps);
+  return 'response' in read ? read.response : processMembershipEvent(read.event, deps);
+}
+
+/** One verified Stripe event for memberships (the shared webhook, server/stripe-webhook.ts, calls it). */
+export async function processMembershipEvent(event: StripeEvent, deps: WebhookDeps = {}): Promise<Response> {
   const env = deps.env ?? process.env;
   const log = deps.log ?? console.log;
-  const secret = env.STRIPE_MEMBERSHIP_WEBHOOK_SECRET;
-  const payload = await request.text();
-  if (!secret) {
-    log('[membership] STRIPE_MEMBERSHIP_WEBHOOK_SECRET missing; webhook refused');
-    return fail(503, 'Webhook not configured.');
-  }
-  if (!verifyStripeSignature(payload, request.headers.get('stripe-signature'), secret, deps.now)) return fail(400, 'Bad signature.');
-  let event: StripeEvent;
-  try {
-    event = JSON.parse(payload) as StripeEvent;
-  } catch {
-    return fail(400, 'Invalid JSON.');
-  }
 
   let store: MemberStore;
   try {

@@ -5,9 +5,8 @@
  * with one tick when they change or end it. Fees and benefits come from packages/sponsorship and packages/content, the
  * same tables /partners and Stripe use.
  *
- * DRAFT, written by an agent on 18th November 2026: it needs the owner's approval before
- * any sponsor signs it (AGENTS.md: legal wording needs the owner). Points to confirm are in
- * docs/v2/SPONSORSHIP.md, "Open". Change AGREEMENT.version with every change of this text.
+ * Approved by the owner on 18th November 2026, including the section on leads and attendee data.
+ * Any change needs the owner (AGENTS.md: legal wording) and a new AGREEMENT.version.
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content';
@@ -23,7 +22,11 @@ const tiers = [...TIERS].reverse().map((t) => ({
   perks: SPONSORSHIP_TIERS.find((o) => o.id === t.key)?.perks ?? [],
 }));
 
-const SECTIONS: [string, string[]][] = [
+/** A paragraph: plain text, or text with links ([text, href] pairs). */
+type Para = string | (string | [string, string])[];
+const PRIVACY_USE = '/policies/privacy-policy#how-we-use-your-information';
+
+const SECTIONS: [string, Para[]][] = [
   [
     'The parties',
     [
@@ -75,9 +78,22 @@ const SECTIONS: [string, string[]][] = [
     ],
   ],
   [
+    'Leads and attendee data',
+    [
+      'A sponsorship supports the community. It does not guarantee leads, sign-ups, hires, sales or any other result, and we do not promise a number of attendees.',
+      [
+        'We do not give, sell or exchange attendee data for a sponsorship. That includes attendee lists, names, email addresses and anything else from registrations, check-in or feedback. We use attendee data only as our ',
+        ['privacy policy', PRIVACY_USE],
+        ' describes.',
+      ],
+      'You may only use attendee data that a person chose to give you directly, through an opt-in such as a raffle, a sign-up at your table or your own QR code. You organise and pay for these, and agree them with us beforehand. Tell people clearly that your company collects their data and what for, and handle it as data protection law requires. Your company is responsible for that data. Data obtained any other way, for example from event photos, our Meetup page or attendee lists, may not be used.',
+    ],
+  ],
+  [
     'Your data',
     [
-      'We keep the names and email addresses of your contacts, your company and billing details, the agreements accepted and the payment history to run the sponsorship. Payments are processed by Stripe, emails are sent through Resend, and the data is stored with Netlify and Neon. Payment records stay with Stripe as accounting law requires. The privacy policy has the details.',
+      [
+        'We keep the names and email addresses of your contacts, your company and billing details, the agreements accepted and the payment history to run the sponsorship. Payments are processed by Stripe, emails are sent through Resend, and the data is stored with Netlify and Neon. Payment records stay with Stripe as accounting law requires. The ', ['privacy policy', '/policies/privacy-policy'], ' has the details.'],
     ],
   ],
   [
@@ -100,7 +116,19 @@ const SECTIONS: [string, string[]][] = [
           <section class="flex flex-col gap-3">
             <h2 class="m-0 text-3xl leading-tight font-bold">{h}</h2>
             {paras.map((p) => (
-              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">{p}</p>
+              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">
+                {typeof p === 'string'
+                  ? p
+                  : p.map((part) =>
+                      typeof part === 'string' ? (
+                        part
+                      ) : (
+                        <a href={part[1]} class="font-bold text-black">
+                          {part[0]}
+                        </a>
+                      ),
+                    )}
+              </p>
             ))}
           </section>
         ))
@@ -124,7 +152,19 @@ const SECTIONS: [string, string[]][] = [
           <section class="flex flex-col gap-3">
             <h2 class="m-0 text-3xl leading-tight font-bold">{h}</h2>
             {paras.map((p) => (
-              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">{p}</p>
+              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">
+                {typeof p === 'string'
+                  ? p
+                  : p.map((part) =>
+                      typeof part === 'string' ? (
+                        part
+                      ) : (
+                        <a href={part[1]} class="font-bold text-black">
+                          {part[0]}
+                        </a>
+                      ),
+                    )}
+              </p>
             ))}
           </section>
         ))

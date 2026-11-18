@@ -16,7 +16,6 @@ The same idea as Verein membership (`docs/v2/MEMBERSHIP.md`) for companies that 
 | Changes by the board | A pre-filled link (`/partners/account?change=builder-yearly` or `?change=end`) emailed to the confirmed contacts; nothing changes until a contact confirms. The board can still end one outright (logged)          |
 | Logos                | Uploaded and announced in Slack, no review step; an organiser puts it on the partner document in Sanity                                                                                                            |
 | Board notices        | Slack only (no board emails)                                                                                                                                                                                       |
-| Switch               | Nothing can be paid until `SPONSORSHIP_ENABLED=true` (after the owner approves the agreement)                                                                                                                      |
 
 Assumed (not asked, change if wrong): no minimum term, so a sponsor can end at any time with effect at the end of the paid period; one email belongs to one sponsor.
 
@@ -42,7 +41,7 @@ Assumed (not asked, change if wrong): no minimum term, so a sponsor can end at a
 | Lifecycle | `apps/web/src/server/sponsor-lifecycle.ts` (start, change, end, undo, suggest, record payment, bundles, board end); emails and Slack in `server/sponsor.ts`                                                                        |
 | Portal    | `/partners/account` (`SponsorAccount.tsx`), API `/api/sponsorship/*`, agreement `/partners/agreement`                                                                                                                              |
 | Admin     | `/admin/sponsors` (`SponsorsAdmin.tsx`), API `/api/membership/admin/sponsors/*` (under the admin cookie's path; same `ADMIN_PASSWORD`); "Needs you" lists what needs the board                                                     |
-| Webhook   | `/api/sponsorship/webhook` (`STRIPE_SPONSORSHIP_WEBHOOK_SECRET`), its own endpoint and idempotency table                                                                                                                           |
+| Webhook   | the site's one Stripe webhook, `/api/stripe/webhook` (`STRIPE_WEBHOOK_SECRET`), shared with memberships and donations; its own idempotency table (`apps/web/src/server/sponsor-webhook.ts`)                                        |
 | Emails    | `packages/emails/src/sponsors.ts`: invite, agreement copy, welcome, payment problem, change to confirm, change, ending, resumed, ended, payment recorded. Every email names the tier's benefits                                    |
 | Slack     | notes in `SLACK_SPONSORSHIP_CHANNEL_ID` (else the membership channel); the bot reads sponsors (`server/sponsor-agent.ts`, read only, company-level facts, names marked as data)                                                    |
 | Daily     | `netlify/functions/sponsorship-daily.mts` (07:15 UTC): completes one-time sponsorships, closes unpaid ones whose meetup passed, ends agreed bank-transfer ones, reminds 30/7/0 days before they run out                            |
@@ -58,7 +57,6 @@ Assumed (not asked, change if wrong): no minimum term, so a sponsor can end at a
 
 ## Open (owner)
 
-- **Approve the agreement text** (`/partners/agreement`, noindex until approved), then set `SPONSORSHIP_ENABLED=true`. In particular: the refund rules (none for the current period on ending; unused part refunded when the board ends it, except for code of conduct breaches), moving or refunding a meetup we cancel, the logo licence, a separate contract taking precedence, Swiss law and Zurich courts.
 - **VAT:** the site and receipts say nothing about VAT. If the association is or becomes VAT registered, the prices and the Stripe tax settings change.
 - **Privacy policy:** it should name sponsor contacts (names, emails, roles) and contracts as data we keep (legal page, owner).
 - **`/partners` copy:** the page still shows monthly, yearly and one-time only. Adding the quarterly price and a "Sponsor online" or "Already a sponsor? Sign in" link is a public copy change for the owner.

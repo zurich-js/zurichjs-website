@@ -30,7 +30,9 @@ const { speaker, meta, tag, tone = 'grey' } = Astro.props;
   data-name={normalizeSearch(speaker.name)}
   data-topics={[...new Set(speaker.talks.flatMap((t) => t.tags).map(normalizeSearch))].join('|')}
 >
-  <span class="relative block aspect-square w-full rounded-card bg-grey-light">
+  <span class="relative block aspect-square w-full">
+    {/* The grey card sits 2px inside the photo's edge, so it never shows through the photo's antialiased corners. */}
+    <span aria-hidden="true" class="absolute inset-0.5 rounded-card bg-grey-light"></span>
     <span class="absolute inset-0 transition-transform duration-drift ease-in-out group-odd:-rotate-3 group-even:rotate-3 group-hover:rotate-0 group-focus-visible:rotate-0">
       {speaker.photo ? <Photo photo={speaker.photo} ratio="square" zoom sizes="(min-width: 800px) 25vw, 50vw" /> : <Monogram initials={speaker.initials} size="tile" tone={tone} />}
       {

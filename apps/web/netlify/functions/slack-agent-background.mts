@@ -5,11 +5,14 @@
  * Env: SLACK_SIGNING_SECRET, SLACK_AGENT_BOT_TOKEN, SANITY_AGENT_TOKEN, LLM_PROVIDER, LLM_MODEL,
  * LLM_API_KEY (LLM_BASE_URL), SANITY_STUDIO_URL, DRAFT_PREVIEW_URL (optional).
  * With the membership database (DATABASE_URL or MEMBERSHIP_DB_URL), it also answers questions
- * about members (read-only; src/server/membership-agent.ts) and adds cards with buttons.
+ * about members (read-only; src/server/membership-agent.ts) and adds cards with buttons, and
+ * about sponsors (read-only; src/server/sponsor-agent.ts).
  */
 import { changeBlocks, helpText, isHelpRequest, modelFromEnv, runTurn, sanityStore, slackApi, threadToMessages, verifyInternal } from '@zurichjs/agent';
 import { MEMBERSHIP_INSTRUCTIONS, MemberCards, memberCardBlocks, membershipTools } from '../../src/server/membership-agent.ts';
 import { memberStore } from '../../src/server/membership-db.ts';
+import { sponsorStore } from '../../src/server/sponsor.ts';
+import { SPONSORSHIP_INSTRUCTIONS, sponsorshipTools } from '../../src/server/sponsor-agent.ts';
 
 interface Job {
   channel: string;
@@ -54,7 +57,9 @@ export default async (req: Request) => {
       model: modelFromEnv(env),
       store: sanityStore(env),
       messages: threadToMessages(thread, bot, job.ts),
-      extra: members ? { tools: membershipTools(members, cards), instructions: MEMBERSHIP_INSTRUCTIONS } : undefined,
+      extra: members
+        ? { tools: { ...membershipTools(members, cards), ...sponsorshipTools(sponsorStore(env)) }, instructions: `${MEMBERSHIP_INSTRUCTIONS}\n\n${SPONSORSHIP_INSTRUCTIONS}` }
+        : undefined,
     });
     const studioUrl = env.SANITY_STUDIO_URL ?? 'https://zurichjs.sanity.studio';
     const memberBlocks = memberCardBlocks(cards.list());

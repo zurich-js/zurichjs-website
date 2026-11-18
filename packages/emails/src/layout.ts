@@ -30,7 +30,9 @@ export type Block =
    * ("CHF 250" with "a year" beside it), then label and value rows.
    */
   | { kind: 'plan'; title: string; price: string; per: string; rows: [string, string][] }
-  | { kind: 'error'; text: string };
+  | { kind: 'error'; text: string }
+  /** A short bulleted list (a sponsorship tier's benefits). */
+  | { kind: 'list'; items: string[] };
 
 export interface EmailContent {
   subject: string;
@@ -82,6 +84,8 @@ function blockHtml(b: Block): string {
         )
         .join('')}</table>
 </td></tr></table>`;
+    case 'list':
+      return `<ul style="margin:0 0 22px;padding:0 0 0 22px;">${b.items.map((i) => `<li style="margin:0 0 6px;${text}">${escapeHtml(i)}</li>`).join('')}</ul>`;
     case 'error':
       return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radii.card};background:${colors['danger-soft']};${text}color:${colors.danger};font-weight:700;">${escapeHtml(b.text)}</p>`;
     case 'url':
@@ -112,6 +116,8 @@ function blockText(b: Block): string {
       return `${b.text}\n${safeUrl(b.url)}`;
     case 'summary':
       return b.rows.map(([k, v]) => `${k}: ${v}`).join('\n');
+    case 'list':
+      return b.items.map((i) => `- ${i}`).join('\n');
   }
 }
 

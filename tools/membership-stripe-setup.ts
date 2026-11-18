@@ -3,7 +3,7 @@
  * configuration in Stripe (owner, once per Stripe account; test mode first).
  *   STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup           # dry run: shows what it would do
  *   STRIPE_SECRET_KEY=sk_test_… pnpm membership:stripe-setup --apply
- *   … --apply --webhook-url https://zurichjs.com/api/membership/webhook   # also the webhook endpoint
+ *   … --apply --webhook-url https://zurichjs.com/api/stripe/webhook   # also the webhook endpoint
  *
  * Prices come from apps/web/src/lib/membership.ts (the table /membership shows)
  * and get lookup keys member_<level>_<cycle>. Only quarterly and yearly exist.
@@ -15,22 +15,22 @@
  * invoices and switch level and cycle among those four prices; cancelling is off (members
  * resign through the board, bylaws Art. 5). Prints STRIPE_MEMBER_PORTAL_CONFIG.
  *
- * With --webhook-url it also creates the webhook endpoint for the lifecycle
- * events the site handles (apps/web/src/pages/api/membership/webhook.ts), on the
- * API version the site pins, and prints STRIPE_MEMBERSHIP_WEBHOOK_SECRET (Stripe
- * shows the secret only when the endpoint is created). Locally, `stripe listen`
+ * With --webhook-url it also creates the site's one webhook endpoint (memberships,
+ * sponsorships and donations: apps/web/src/pages/api/stripe/webhook.ts) for every
+ * event the site handles, on the API version the site pins, and prints
+ * STRIPE_WEBHOOK_SECRET (Stripe shows the secret only when the endpoint is created). Locally, `stripe listen`
  * replaces the endpoint (pnpm local).
  */
 import { priceLookupKey } from '@zurichjs/membership';
 import { CYCLES, TIERS, TIER_KEYS } from '../apps/web/src/lib/membership.ts';
-import { MEMBERSHIP_WEBHOOK_EVENTS } from '../apps/web/src/server/membership-stripe.ts';
+import { STRIPE_WEBHOOK_EVENTS } from '../apps/web/src/server/stripe-webhook.ts';
 import { STRIPE_API_VERSION, stripeApi, stripeForm } from '../apps/web/src/server/stripe.ts';
 
 const apply = process.argv.includes('--apply');
 const webhookArg = process.argv.indexOf('--webhook-url');
 const webhookUrl = webhookArg > 0 ? process.argv[webhookArg + 1] : undefined;
 if (webhookArg > 0 && !webhookUrl?.startsWith('https://')) {
-  console.error('--webhook-url needs an https:// URL, e.g. https://zurichjs.com/api/membership/webhook');
+  console.error('--webhook-url needs an https:// URL, e.g. https://zurichjs.com/api/stripe/webhook');
   process.exit(1);
 }
 const env = process.env;
@@ -113,16 +113,16 @@ if (webhookUrl) {
   const existing = endpoints.data.find((e) => e.url === webhookUrl);
   if (existing) console.log(`\n= webhook endpoint ${existing.id} (${existing.status}) for ${webhookUrl}. Its secret is in the Stripe dashboard.`);
   else {
-    console.log(`\n+ webhook endpoint ${webhookUrl} (${MEMBERSHIP_WEBHOOK_EVENTS.join(', ')}; API ${STRIPE_API_VERSION})`);
+    console.log(`\n+ webhook endpoint ${webhookUrl} (${STRIPE_WEBHOOK_EVENTS.join(', ')}; API ${STRIPE_API_VERSION})`);
     if (apply) {
       const e = await api<{ id: string; secret: string }>('POST', 'webhook_endpoints', {
         url: webhookUrl,
-        enabled_events: [...MEMBERSHIP_WEBHOOK_EVENTS],
+        enabled_events: [...STRIPE_WEBHOOK_EVENTS],
         api_version: STRIPE_API_VERSION,
-        description: 'zurichjs.com membership lifecycle',
-        metadata: { source: 'zurichjs.com/membership' },
+        description: 'zurichjs.com: memberships, sponsorships and donations',
+        metadata: { source: 'zurichjs.com' },
       });
-      console.log(`Set STRIPE_MEMBERSHIP_WEBHOOK_SECRET=${e.secret} on Netlify (functions). Stripe shows it only now.`);
+      console.log(`Set STRIPE_WEBHOOK_SECRET=${e.secret} on Netlify (functions). Stripe shows it only now.`);
     }
   }
 }

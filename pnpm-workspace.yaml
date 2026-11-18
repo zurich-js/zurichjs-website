@@ -30,3 +30,11 @@ overrides:
   undici@7: ^7.30.1
   # No patched deepmerge release exists; vendor/deepmerge carries the fix (see its README).
   deepmerge: link:./vendor/deepmerge
+
+auditConfig:
+  # Temporary (owner, 18th November 2026): Astro advisories fixed in 7.4.7+, ignored until the Astro
+  # 7.4.4 → 7.4.13 bump lands in its own PR. Remove these lines with that bump. Neither applies to us:
+  # we don't render dynamic tag names from user input, and we use the Netlify adapter, not @astrojs/node.
+  ignoreGhsas:
+    - GHSA-mh32-jxcr-mh9f
+    - GHSA-r3h5-4585-7x3w

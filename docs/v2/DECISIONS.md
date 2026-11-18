@@ -482,3 +482,12 @@ Plan and bylaws analysis: `docs/v2/MEMBERSHIP.md`.
 - **The CFP bot** (`docs/v2/CFP-BOT.md`): a second Slack app in a public `#cfp` thread, four tools on the speaker's own draft only, name, email and photo from the Slack profile (the photo only with consent), the cheapest model, at most 2 submissions per person per day, guests allowed, the Slack ID only in the review notes.
 - **Privacy policy** section "Talk Proposals in Slack" approved as written.
 - **Unfinished drafts** are deleted after 14 days without activity.
+
+## Self-serve sponsorships (owner, 18th November 2026)
+
+- **What:** sponsors get the same self-serve system as members: the board invites a company or brings an existing sponsorship onto the site, a contact signs the sponsorship agreement and pays, and the sponsor manages tier, billing, payment details, logo and colleagues at `/partners/account`. The board works in `/admin/sponsors`; the Slack bot can answer questions about sponsors (read only). Design and open points: `docs/v2/SPONSORSHIP.md`.
+- **Billing:** monthly, quarterly, yearly or one meetup. Quarterly prices: Supporter CHF 420, Friend 840, Builder 1’400, Champion 2’100 (round numbers, about 7% under three months). A one-time sponsorship covers one meetup (or a bundle the board sets up, see round 2).
+- **Payment:** card (Stripe Checkout); sponsorships paid by bank transfer can be recorded by the board.
+- **Changes:** a higher tier on the same billing applies now with a prorated charge; anything else from the next renewal. Changes the board agrees with a sponsor apply only when the sponsor confirms.
+- **Round 2 (owner, 18th November 2026, after the review):** card only (invoices removed; bank transfers recorded by the board); bundles of meetups at a custom price per meetup, pegged to a tier, paid through one single-use payment link; contracts signed outside the site can be attached and replace signing online; the board sends a pre-filled link instead of proposals; sign once, then confirm changes with one tick; logos upload with no review; board notices in Slack only; the billing portal reuses the membership configuration.
+- **Agent's assumptions to confirm:** no minimum term; the agreement text (`/partners/agreement`, noindex until approved); `/partners` does not show quarterly prices or a sign-in link yet.

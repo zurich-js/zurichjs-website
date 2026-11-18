@@ -98,7 +98,7 @@ services:
       # webhook secret from `stripe listen`. Empty here so `docker compose down` works without them.
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_MEMBER_PORTAL_CONFIG: ${STRIPE_MEMBER_PORTAL_CONFIG:-}
-      STRIPE_MEMBERSHIP_WEBHOOK_SECRET: ${STRIPE_MEMBERSHIP_WEBHOOK_SECRET:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_SUPPORT_PRODUCT_ID: ${STRIPE_SUPPORT_PRODUCT_ID:-}
       MAILPIT_URL: http://mail:8025
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-local-admin-password-docker}

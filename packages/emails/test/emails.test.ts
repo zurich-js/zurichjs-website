@@ -16,6 +16,19 @@ const application = {
   accountUrl: 'https://zurichjs.com/membership/account',
 };
 const term = { ...application, term: '10th November 2026 to 9th November 2027', certificateNumber: 'ZJS-2026-0001', nextPayment: '10th November 2027' };
+const sponsor = {
+  companyName: 'Acme AG',
+  contactName: 'Grace  Hopper',
+  tierName: 'Community Builder',
+  cycleLabel: 'Quarterly',
+  feeLabel: 'CHF 1’400 a quarter',
+  price: 'CHF 1’400',
+  per: 'a quarter',
+  paymentLabel: 'By card',
+  meetups: [] as string[],
+  accountUrl: 'https://zurichjs.com/partners/account',
+  benefits: ['Large logo on our site and partner list', '2 sponsor slides in rotation at meetups'],
+};
 const link = 'https://zurichjs.com/api/auth/magic-link/verify?token=t1&callbackURL=%2Fmembership%2Faccount';
 const talk = {
   speakerName: 'Ada  Lovelace',
@@ -90,7 +103,7 @@ describe('membership emails', () => {
   });
 
   it('never talks about signing or approval any more', () => {
-    for (const name of TEMPLATE_NAMES) {
+    for (const name of TEMPLATE_NAMES.filter((n) => !n.startsWith('sponsor-'))) {
       const e = renderEmail(name, {
         url: link,
         validMinutes: 15,
@@ -184,6 +197,26 @@ describe('layout', () => {
         paidThrough: '30th September 2027',
         firstPayment: '1st October 2027',
         ...talk,
+        ...sponsor,
+        newPlan: null,
+        message: null,
+        signerName: 'Grace Hopper',
+        signerTitle: 'CTO',
+        acceptedAt: '18th Nov 2026, 14:05',
+        agreementVersion: '2026-11-18',
+        agreementUrl: 'https://zurichjs.com/partners/agreement',
+        payUrl: null,
+        nextAttempt: null,
+        problem: 'declined',
+        kind: 'plan',
+        timing: 'renewal',
+        from: '18th February 2027',
+        previous: 'Community Friend, CHF 840 a quarter',
+        manual: false,
+        reason: 'cancelled',
+        needsLogo: true,
+        amount: null,
+        reference: null,
       } as never);
       const used = new Set((e.html.match(/#[0-9a-f]{6}\b/gi) ?? []).map((c) => c.toLowerCase()));
       const allowed = new Set(Object.values(colors).map((c) => c.toLowerCase()));
@@ -197,5 +230,63 @@ describe('layout', () => {
     const design = readFileSync(join(root, 'packages/design/src/fonts/figtree-var.woff2'));
     expect(site.equals(design)).toBe(true);
     expect(render({ subject: 's', preheader: 'p', heading: 'h', blocks: [] }).html).toContain("url('https://zurichjs.com/fonts/figtree-var.woff2')");
+  });
+});
+
+describe('sponsor emails', () => {
+  it('invites a contact to their sponsorship page, with our words first and the benefits', () => {
+    const e = renderEmail('sponsor-invite', { ...sponsor, message: 'As discussed on our call.' });
+    expect(e.subject).toBe('Acme AG’s ZurichJS sponsorship is ready to confirm');
+    expect(e.text).toMatch(/^Hi Grace\n/);
+    expect(e.text.indexOf('As discussed on our call.')).toBeLessThan(e.text.indexOf('Community Builder: CHF 1’400'));
+    expect(e.text).toContain('Community Builder: CHF 1’400 a quarter\nSponsor: Acme AG\n');
+    expect(e.text).not.toContain('Payment:');
+    expect(e.text).toContain('Community Builder includes:\n\n- Large logo on our site and partner list\n- 2 sponsor slides in rotation at meetups');
+    expect(e.html).toContain('<li style=');
+    const bundle = renderEmail('sponsor-invite', { ...sponsor, meetups: ['December, 9th December 2026', 'January, 13th January 2027'], message: null, contractOnFile: true });
+    expect(bundle.text).toContain('Meetups: December, 9th December 2026; January, 13th January 2027');
+    expect(bundle.text).toContain('Your signed contract is on file.');
+  });
+
+  it('asks the sponsor to confirm a change we agreed, with a link that fills it in', () => {
+    const e = renderEmail('sponsor-change-request', {
+      ...sponsor,
+      kind: 'plan',
+      newPlan: { tierName: 'Community Friend', feeLabel: 'CHF 840 a quarter', applies: 'from 18th February 2027', benefits: ['Medium logo on our site and partner list'] },
+      lastDay: null,
+      message: null,
+      url: 'https://zurichjs.com/partners/account?change=friend-quarterly',
+    });
+    expect(e.subject).toBe('Please confirm: Acme AG moves to Community Friend');
+    expect(e.text).toContain('Review and confirm: https://zurichjs.com/partners/account?change=friend-quarterly');
+    expect(e.text).toContain('Community Friend includes:\n\n- Medium logo on our site and partner list');
+    expect(e.text).toContain('Nothing changes until someone at Acme AG confirms');
+    const end = renderEmail('sponsor-change-request', {
+      ...sponsor,
+      kind: 'end',
+      newPlan: null,
+      lastDay: '17th February 2027',
+      message: null,
+      url: 'https://zurichjs.com/partners/account?change=end',
+    });
+    expect(end.text).toContain('Your benefits continue until 17th February 2027, and nothing more is charged.');
+  });
+
+  it('words payment problems, changes, endings and recorded payments plainly', () => {
+    expect(renderEmail('sponsor-payment-problem', { ...sponsor, problem: 'confirm', payUrl: null, nextAttempt: null }).text).toMatch(/^Please confirm your payment/);
+    expect(renderEmail('sponsor-payment-problem', { ...sponsor, problem: 'declined', payUrl: null, nextAttempt: null }).text).toContain(
+      'Your sponsorship and its benefits continue',
+    );
+    expect(renderEmail('sponsor-change', { ...sponsor, timing: 'now', from: null, previous: 'x', manual: true }).text).toContain(
+      'We will be in touch about the difference in fees.',
+    );
+    expect(renderEmail('sponsor-ended', { ...sponsor, meetups: ['ZurichJS Meetup, 9th December 2026'], reason: 'completed' }).text).toContain(
+      'ZurichJS Meetup, 9th December 2026 is behind us',
+    );
+    expect(renderEmail('sponsor-ended', { ...sponsor, reason: 'completed' }).text).toContain('The Community Builder sponsorship for Acme AG is complete.');
+    const ended = renderEmail('sponsor-ended', { ...sponsor, reason: 'terminated' });
+    expect(ended.text).not.toMatch(/welcome back|Sponsor again/);
+    expect(renderEmail('sponsor-payment-recorded', { ...sponsor, amount: 'CHF 840', paidThrough: '17th May 2027', reference: null }).text).toContain('Amount: CHF 840');
+    expect(renderEmail('sponsor-welcome', { ...sponsor, term: null, nextPayment: null, needsLogo: false }).text).not.toMatch(/speakers|change your tier/);
   });
 });

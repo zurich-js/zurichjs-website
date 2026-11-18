@@ -14,7 +14,9 @@ import type { AdminMember } from '../../server/admin-views.ts';
 import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { CertificateView } from '../../server/membership.ts';
+import { api } from './admin-api.ts';
 import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
+import { SponsorsAdmin } from './SponsorsAdmin.tsx';
 
 type Status = AdminMember['status'];
 interface Detail {
@@ -42,14 +44,12 @@ const dateTime = shortDateTime;
 /** paid_until is the first unpaid day: show the last paid one. */
 const paidThrough = (iso: string | null) => (iso ? shortDate(lastDay(iso)) : '–');
 
-async function api<T>(path: string, init?: RequestInit): Promise<{ status: number; body: T & { ok?: boolean; error?: string } }> {
-  const res = await fetch(path, { credentials: 'same-origin', ...init, headers: { 'content-type': 'application/json', ...init?.headers } });
-  return { status: res.status, body: (await res.json().catch(() => ({}))) as T & { ok?: boolean; error?: string } };
-}
+export type AdminSection = 'memberships' | 'sponsors';
 
-export type AdminSection = 'memberships';
-
-const SECTIONS: { key: AdminSection; label: string; href: string }[] = [{ key: 'memberships', label: 'Memberships', href: '/admin/memberships' }];
+const SECTIONS: { key: AdminSection; label: string; href: string }[] = [
+  { key: 'memberships', label: 'Memberships', href: '/admin/memberships' },
+  { key: 'sponsors', label: 'Sponsors', href: '/admin/sponsors' },
+];
 
 export default function MembershipAdmin({ section = 'memberships' }: { section?: AdminSection }) {
   const [state, setState] = useState<'loading' | 'signed-out' | 'ready'>('loading');
@@ -86,7 +86,7 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
           Sign out
         </Button>
       </div>
-      <Admin onSignedOut={() => setState('signed-out')} />
+      {section === 'sponsors' ? <SponsorsAdmin onSignedOut={() => setState('signed-out')} /> : <Admin onSignedOut={() => setState('signed-out')} />}
     </div>
   );
 }

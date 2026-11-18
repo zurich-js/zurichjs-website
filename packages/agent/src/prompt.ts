@@ -13,22 +13,25 @@ const HELP_LINES = [
   ['Talk proposals', 'how many are waiting, by status; spot duplicates and tidy up statuses; put a proposal on a meetup'],
   ['Speakers', 'find profiles; spot and merge duplicate profiles of the same person (old URLs keep working)'],
 ] as const;
-const MEMBERSHIP_LINE = ['Membership', 'member counts by status; find members; resignations waiting for the board, with Confirm and Undo buttons'] as const;
-const HELP_TOPICS = [...HELP_LINES, MEMBERSHIP_LINE].map(([k, v]) => `  - ${k}: ${v}`).join('\n');
+const MEMBERSHIP_LINES = [
+  ['Membership', 'member counts by status; find members; resignations waiting for the board, with Confirm and Undo buttons'],
+  ['Sponsors', 'sponsor counts by status and tier; find a sponsor, its plan, payment status, open proposal and logo (read only)'],
+] as const;
+const HELP_TOPICS = [...HELP_LINES, ...MEMBERSHIP_LINES].map(([k, v]) => `  - ${k}: ${v}`).join('\n');
 
 /** True when the message (bot mention removed) only asks for help. */
 export const isHelpRequest = (text: string) => /^\s*(help|\?|commands|what can you do\??)\s*$/i.test(text.replace(/<@[A-Z0-9]+>/g, ''));
 
 /** The "@bot help" reply, in Slack mrkdwn. */
 export function helpText(membership: boolean): string {
-  const lines = membership ? [...HELP_LINES, MEMBERSHIP_LINE] : HELP_LINES;
+  const lines = membership ? [...HELP_LINES, ...MEMBERSHIP_LINES] : HELP_LINES;
   return [
     '*What I can do*',
     ...lines.map(([k, v]) => `• *${k}:* ${v}`),
     '',
     'Everything I change is a draft: nothing is live until an organiser presses *Publish* under my message. I cannot publish, delete, change a URL, or see Meetup RSVPs.',
     'Try: _what are the talks at the next meetup?_ · _put the Signals proposal on the December meetup as the second talk_ · _which speakers have duplicate profiles?_ · _how many talk proposals are pending?_' +
-      (membership ? ' · _who is resigning?_' : ''),
+      (membership ? ' · _who is resigning?_ · _which sponsors are behind on payment?_' : ''),
   ].join('\n');
 }
 

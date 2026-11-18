@@ -4,7 +4,7 @@ import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
+import { Appear, fieldErrors, Honeypot, honeypotValue, SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
 import { WAY_LABEL, intentFromQuery, intentLabel, partnerPayload, type Tier, type Way, TIERS, asTier, asWay } from './partners-intent.ts';
 
 const MESSAGES = { org: 'Add your company or organisation.', name: 'Add your name so we know who to reply to.', email: 'Enter an email like name@company.com.' };
@@ -167,7 +167,7 @@ export default function PartnersForm({ nextHref, email }: { nextHref: string; em
           {busy ? 'Sending…' : 'Send inquiry'}
         </SubmitButton>
         <span role="alert" class="text-meta text-danger">
-          {tried && !valid ? 'Fix the highlighted fields.' : serverError}
+          <Appear text={tried && !valid ? 'Fix the highlighted fields.' : serverError} />
         </span>
       </div>
     </form>

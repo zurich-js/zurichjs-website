@@ -13,7 +13,8 @@ interface Props<T extends string> {
 
 /**
  * One pill with segments (billing cycle, one-time or monthly). Native radios, so arrow keys move the
- * choice without script of our own. 48px in total, like a button: a 4px track around 40px options.
+ * choice without script of our own. 48px in total, like a button: a 4px track around 40px options,
+ * all as wide as the widest, and one black thumb that slides to the checked option (`segmented`, motion.css).
  * The Astro twin is components/SegmentedControl.astro.
  */
 export function SegmentedControl<T extends string>({ legend, options, value, onChange, name, class: extra }: Props<T>) {
@@ -21,11 +22,11 @@ export function SegmentedControl<T extends string>({ legend, options, value, onC
   return (
     <fieldset class={['m-0 p-0 border-0 min-w-0', extra].filter(Boolean).join(' ')}>
       <legend class="sr-only">{legend}</legend>
-      <div class="inline-flex gap-1 h-control p-1 rounded-pill bg-grey">
+      <div class="segmented inline-grid grid-flow-col auto-cols-fr gap-1 h-control p-1 rounded-pill bg-grey">
         {options.map((o) => (
           <label
             key={o.value}
-            class="relative inline-flex items-center justify-center h-full px-4 md:min-w-30 whitespace-nowrap rounded-pill font-bold text-compact cursor-pointer transition-colors hover:bg-grey-hover has-checked:bg-black has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2"
+            class="relative inline-flex items-center justify-center h-full px-4 md:min-w-30 whitespace-nowrap rounded-pill font-bold text-compact cursor-pointer transition-colors not-has-checked:hover:bg-grey-hover has-checked:text-white has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2"
           >
             {o.label}
             <input

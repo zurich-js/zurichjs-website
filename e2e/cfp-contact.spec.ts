@@ -57,6 +57,8 @@ test.describe('talk proposals (/cfp)', () => {
     const agree = form.getByRole('checkbox', { name: /travel and accommodation can’t be covered/ });
     await expect(agree).toHaveAttribute('aria-invalid', 'true');
     await expect(form.getByText('Tick the box to confirm you’ve read this.')).toBeVisible();
+    // "No, not yet." is chosen until the person picks another answer.
+    await expect(form.getByLabel('No, not yet.')).toBeChecked();
     // Returning speakers may leave the profile out.
     await form.getByLabel('Yes, I’ve spoken at ZurichJS before.').check();
     await expect(form.getByLabel('Job title (optional)')).not.toHaveAttribute('aria-invalid', 'true');

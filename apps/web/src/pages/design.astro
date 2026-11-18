@@ -5,7 +5,7 @@
  * Rendered from fixtures, so it looks the same whatever content Sanity has.
  */
 import type { Event, Speaker } from '@zurichjs/events';
-import { breakpoints, colors, gutter, radii, spacing, text } from '@zurichjs/design/theme';
+import { breakpoints, colors, durations, easings, gutter, radii, spacing, text } from '@zurichjs/design/theme';
 import { cx, type ButtonVariant, type MonogramTone, type TagTone } from '@zurichjs/design/recipes';
 import AutoGrid from '@zurichjs/design/components/AutoGrid.astro';
 import Button from '@zurichjs/design/components/Button.astro';
@@ -162,6 +162,36 @@ const TYPE: { role: string; cls: string; bold: boolean }[] = [
       </Text>
     </Section>
 
+    <Section id="d-motion" title="Motion">
+      <Fragment slot="sub">CSS only, no library. Three durations by job and one easing; browsers without a feature keep the instant behaviour, and reduced motion switches it all off.</Fragment>
+      <ul class="list-none m-0 p-0 grid gap-2 grid-cols-auto-sm">
+        {
+          Object.entries(durations).map(([k, v]) => (
+            <li class="text-compact">
+              <code class="font-bold">duration-{k}</code> <code class="text-grey-text">{v}</code>
+            </li>
+          ))
+        }
+        {
+          Object.entries(easings).map(([k, v]) => (
+            <li class="text-compact">
+              <code class="font-bold">ease-{k}</code> <code class="text-grey-text">{v}</code>
+            </li>
+          ))
+        }
+      </ul>
+      <Text class="max-w-reading">
+        <b>feedback</b> for hover, focus, press, colour and every exit; <b>reveal</b> for anything that opens, slides or swaps in, and page transitions; <b>drift</b> for the speaker arc and speaker cards straightening on hover. Try the
+        thumb, the disclosure and the header's "Get involved" below; follow any link for the page transition. <b>entrance</b> is for scroll reveals and page openings: each block rises in once as it scrolls into view.
+      </Text>
+      <div class="grid gap-4 md:grid-cols-2 items-start">
+        <SegmentedControl name="d-motion-cycle" legend="Motion demo" options={[{ value: 'one', label: 'One-time' }, { value: 'month', label: 'Monthly' }, { value: 'year', label: 'Yearly' }]} />
+        <Card disclosure title="A disclosure grows open">
+          <Text>Its body grows and fades in where the browser supports ::details-content, and shrinks closed faster.</Text>
+        </Card>
+      </div>
+    </Section>
+
     <Section id="d-button" title="Button">
       <Fragment slot="sub">Four variants, one height (48px). An icon before or after the text, or alone. One yellow (cta) per view.</Fragment>
       {
@@ -279,8 +309,8 @@ const TYPE: { role: string; cls: string; bold: boolean }[] = [
     <Section id="d-talks" title="TalkRow and SpeakerCard">
       <TalkRow t={{ title: 'Signals without the hype', speakers: [speaker], date: 'Sep 2026', format: 'Talk', href: '#d-talks' }} />
       <div class="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <SpeakerCard speaker={speaker} meta="1 talk" />
-        <SpeakerCard speaker={{ ...speaker, id: 'grace', name: 'Grace Example', initials: 'GE' }} meta="2 talks" />
+        <SpeakerCard speaker={speaker} meta={speaker.role} tag="1 talk" />
+        <SpeakerCard speaker={{ ...speaker, id: 'grace', name: 'Grace Example', initials: 'GE' }} meta={speaker.role} tag="2 talks" />
       </div>
     </Section>
 

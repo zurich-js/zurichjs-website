@@ -2,12 +2,12 @@ import { dateLong, eventHref, monthYear } from '@zurichjs/events';
 import { submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { cardClass } from '@zurichjs/design/recipes';
+import { cardClass, cx, motion } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Checkbox, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { StarRating } from '@zurichjs/design/islands/StarRating';
-import { Honeypot, SubmitButton, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
+import { Appear, Honeypot, honeypotValue, SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 export interface FeedbackEvent {
   id: string;
@@ -152,7 +152,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
         </p>
         <StarRating value={overall} onChange={setOverall} label="Overall rating, 1 to 5" invalid={overallBad} size="lg" />
         {overallBad && (
-          <span class="text-meta text-danger" role="alert">
+          <span class={cx(motion.enter, 'text-meta text-danger')} role="alert">
             Pick a score from 1 to 5.
           </span>
         )}
@@ -201,7 +201,7 @@ export default function FeedbackForm({ events, initialId, nextHref }: Props) {
           {busy ? 'Sending…' : 'Send feedback'}
         </SubmitButton>
         <span role="alert" class="text-meta text-danger">
-          {tried && (overallBad || emailBad) ? 'One answer needs attention above.' : serverError}
+          <Appear text={tried && (overallBad || emailBad) ? 'One answer needs attention above.' : serverError} />
         </span>
       </div>
     </form>

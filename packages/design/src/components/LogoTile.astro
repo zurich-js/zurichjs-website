@@ -7,7 +7,7 @@
  *   logo + logoBlack        grey cell, black file   -> hover: white cell, colour logo
  *   logo + logoBlack + bg   grey cell, black file   -> hover: bg cell, colour logo (made for that bg)
  *
- * Without a black file the colour logo is drawn black by a filter. Most logos are simply filled black;
+ * Without a black file the colour logo is drawn black by a filter, and cross-fades to an unfiltered copy (the same file). Most logos are simply filled black;
  * `knockout` (white shapes inside a coloured one, like AXA) and `opaque` (a solid background) are
  * thresholded instead so their white parts stay, and an opaque file is multiplied into the cell so its
  * background disappears. It fills its grid cell; the cell's size comes from PackedGrid.
@@ -33,22 +33,18 @@ const { name, logo, logoBlack, bg, href, rel = 'noopener noreferrer', knockout =
 
 const cell = cx(
   'group relative flex size-full items-center justify-center gap-2 rounded-card bg-grey px-4 text-black no-underline',
-  'transition-colors duration-300 hover:bg-(--logo-bg) focus-visible:bg-(--logo-bg)',
+  'transition-colors duration-reveal ease-in-out hover:bg-(--logo-bg) focus-visible:bg-(--logo-bg)',
 );
 const style = { '--logo-bg': bg ?? 'var(--color-white)' };
 const alt = href ? `${name} (opens in a new tab)` : name;
 // The width attribute sizes the logo (no w-auto, which would override it); both files share one grid cell.
 const size = 'block h-auto max-w-full max-h-full min-w-0 object-contain col-start-1 row-start-1';
-// Without a black file, the colour logo itself is drawn in black and loses the filter on hover.
-const filtered = cx(
-  size,
-  'transition duration-300 group-hover:filter-none group-focus-visible:filter-none',
-  opaque || knockout ? 'filter-logo-threshold' : 'brightness-0',
-  opaque && 'mix-blend-multiply',
-);
-// With a black file, the two files cross-fade.
-const fadeOut = cx(size, 'transition-opacity duration-300 group-hover:opacity-0 group-focus-visible:opacity-0');
-const fadeIn = cx(size, 'opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100');
+// On hover the black logo cross-fades to the colour one, evenly over the reveal duration, like the cell. Only opacity
+// changes: animating the black filter itself repainted every frame and passed through harsh colours.
+const fadeOut = cx(size, 'transition-opacity duration-reveal ease-in-out group-hover:opacity-0 group-focus-visible:opacity-0', opaque && 'mix-blend-multiply');
+const fadeIn = cx(size, 'opacity-0 transition-opacity duration-reveal ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100', opaque && 'mix-blend-multiply');
+// Without a black file, the colour file drawn in black by a filter stands in for it.
+const filtered = cx(fadeOut, opaque || knockout ? 'filter-logo-threshold' : 'brightness-0');
 const Tag = href ? 'a' : 'div';
 const link = href ? { href, target: '_blank', rel } : {};
 ---
@@ -59,14 +55,8 @@ const link = href ? { href, target: '_blank', rel } : {};
     {
       logo && (
         <span class="grid h-full place-items-center">
-          {logoBlack ? (
-            <>
-              <img src={logoBlack} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={fadeOut} />
-              <img src={logo} alt="" aria-hidden="true" width={width} height={height} loading="lazy" decoding="async" class={fadeIn} />
-            </>
-          ) : (
-            <img src={logo} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={filtered} />
-          )}
+          <img src={logoBlack ?? logo} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={logoBlack ? fadeOut : filtered} />
+          <img src={logo} alt="" aria-hidden="true" width={width} height={height} loading="lazy" decoding="async" class={fadeIn} />
         </span>
       )
     }

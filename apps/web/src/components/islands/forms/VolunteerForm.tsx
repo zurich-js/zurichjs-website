@@ -6,7 +6,7 @@ import { optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen } from './shared.tsx';
+import { Appear, fieldErrors, Honeypot, honeypotValue, SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 type Interest = (typeof VOLUNTEER_INTERESTS)[number];
 interface Answers {
@@ -100,7 +100,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
   const legend = 'text-compact font-bold mb-2 p-0';
   const errorLine = (k: keyof Answers, elId: string) => (
     <span id={elId} class="text-meta text-danger min-h-lh" aria-live="polite">
-      {err(k)}
+      <Appear text={err(k)} />
     </span>
   );
   const optional = <span class="font-normal text-grey-text"> (optional)</span>;
@@ -234,7 +234,7 @@ export default function VolunteerForm({ nextHref }: { nextHref: string }) {
           {busy ? 'Sending…' : 'Send application'}
         </SubmitButton>
         <span role="alert" class="text-meta text-danger">
-          {tried && !valid ? 'Fix the highlighted fields.' : serverError}
+          <Appear text={tried && !valid ? 'Fix the highlighted fields.' : serverError} />
         </span>
         {serverError && (
           <span class="text-meta text-ink-2 basis-full">

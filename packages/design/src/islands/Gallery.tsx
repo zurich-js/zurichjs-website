@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { sizedSrc, srcsetFor } from '../images.ts';
-import { buttonClass, cx } from '../recipes.ts';
+import { buttonClass, cx, motion } from '../recipes.ts';
 
 export interface GalleryItem {
   id: string;
@@ -29,7 +29,8 @@ interface Props {
 
 /**
  * Thumbnail grid plus a viewer (a native modal <dialog>: focus stays inside,
- * Esc closes, focus returns to the thumbnail). ← and → move between items,
+ * Esc closes, focus returns to the thumbnail). It fades in and out, and each item fades in as you page
+ * (motion.css). Thumbnails rise in row by row as they scroll into view and fade in once loaded. ← and → move between items,
  * with buttons for touch. Videos play only on request. #media-<id> in the URL
  * opens an item directly, so a photo can be shared.
  */
@@ -41,7 +42,11 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   // each viewer's caption id comes from the gallery's own label.
   const captionId = `gallery-caption-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   const shown = max ? items.slice(0, max) : items;
-  const cur = open === null ? null : items[open];
+  // The viewer keeps showing the last item while it fades out after closing.
+  const last = useRef<number | null>(null);
+  if (open !== null) last.current = open;
+  const at = open ?? last.current;
+  const cur = at === null ? null : items[at];
 
   const show = (i: number, from?: HTMLElement | null) => {
     if (from) opener.current = from;
@@ -108,6 +113,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
       <ul
         class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-3"
         aria-label={label}
+        data-reveal="children"
       >
         {shown.map((m, i) => (
           <li key={m.id}>
@@ -126,7 +132,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                 decoding="async"
                 width={m.width}
                 height={m.height}
-                class={cx('absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-102', m.kind === 'video' && !m.poster && 'hidden')}
+                class={cx(motion.load, 'absolute inset-0 w-full h-full object-cover group-hover:scale-102', m.kind === 'video' && !m.poster && 'hidden')}
               />
               {m.kind === 'video' && (
                 <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center">
@@ -142,13 +148,13 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
         ref={dialog}
         onClose={onClose}
         aria-labelledby={captionId}
-        class="m-auto p-0 border-0 bg-ink rounded-card max-w-site w-full max-h-dvh backdrop:bg-black/85 text-white"
+        class={cx(motion.fade, 'm-auto p-0 border-0 bg-ink rounded-card max-w-site w-full max-h-dvh backdrop:bg-black/85 text-white')}
       >
-        {cur && open !== null && (
+        {cur && at !== null && (
           <figure class="m-0 flex flex-col gap-3 p-3 md:p-6">
             <div class="flex items-center justify-between gap-3">
               <span class="text-compact font-bold tabular-nums" aria-live="polite">
-                {open + 1} of {items.length}
+                {at + 1} of {items.length}
               </span>
               <button type="button" onClick={close} class={buttonClass({ inverse: true })} autoFocus>
                 Close
@@ -165,7 +171,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                   playsInline
                   preload="none"
                   poster={cur.poster ? sizedSrc(cur.poster, 1600) : undefined}
-                  class="max-h-[70vh] max-w-full rounded-card bg-black"
+                  class={cx(motion.enter, 'max-h-[70vh] max-w-full rounded-card bg-black')}
                   aria-label={cur.alt}
                 >
                   <source src={cur.src} />
@@ -181,7 +187,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                   srcset={srcsetFor(cur.src)}
                   sizes="(min-width: 1200px) 1152px, 100vw"
                   alt={cur.alt}
-                  class="max-h-[70vh] max-w-full rounded-card object-contain"
+                  class={cx(motion.enter, 'max-h-[70vh] max-w-full rounded-card object-contain')}
                   decoding="async"
                 />
               )}

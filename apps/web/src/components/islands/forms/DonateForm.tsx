@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { optionClass, optionInput } from '@zurichjs/design/recipes';
+import { motion, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { SegmentedControl } from '@zurichjs/design/islands/SegmentedControl';
@@ -180,7 +180,11 @@ export default function DonateForm({ portalUrl, email: contactEmail, twint = fal
           {busy ? 'Opening the payment page…' : 'Continue to secure payment'}
         </SubmitButton>
         <span role="alert" class="text-meta text-danger">
-          {error}
+          {error && (
+            <span key={error} class={motion.enter}>
+              {error}
+            </span>
+          )}
           {error && offerOther && (
             <>
               {' '}

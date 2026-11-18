@@ -13,7 +13,7 @@ import {
 } from '@zurichjs/events';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cx, tagClass } from '@zurichjs/design/recipes';
+import { cx, motion, tagClass } from '@zurichjs/design/recipes';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
 import { Check } from '@zurichjs/design/islands/Check';
@@ -217,7 +217,7 @@ export default function Tonight({ part, ev, names = {}, people = {}, now: nowIso
                 )}
               </div>
               {mine.length > 0 && (
-                <div class="flex flex-wrap md:flex-col md:items-end gap-2 justify-self-start md:justify-self-end col-span-full md:col-auto">
+                <div class={cx(motion.enter, 'flex flex-wrap md:flex-col md:items-end gap-2 justify-self-start md:justify-self-end col-span-full md:col-auto')}>
                   {mine.map((x) => {
                     const many = mine.length > 1;
                     const name = x.speakerId ? names[x.speakerId] : undefined;
@@ -325,7 +325,8 @@ function Opening({ ev, phase, now, rated }: { ev?: Event; phase: TodayPhase; now
         </p>
         <p class="m-0 text-body text-grey-light max-w-reading">{where}</p>
       </div>
-      <div class="flex flex-wrap gap-3">
+      {/* The main action follows the evening; keyed by it, so a new one fades in. */}
+      <div key={phase === 'today' ? 'venue' : unratedLast ? 'rate' : 'feedback'} class={cx(motion.enter, 'flex flex-wrap gap-3')}>
         {phase === 'today' ? (
           <Button href="#venue" variant="cta" grow>
             Venue and arrival

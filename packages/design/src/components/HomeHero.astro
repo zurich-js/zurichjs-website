@@ -39,7 +39,7 @@ const art = next?.cover;
 ---
 
 <section class="relative px-gut pt-page-top pb-page-end grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
-  <div class="relative z-1 flex flex-col gap-4 min-w-0">
+  <div class="relative z-1 flex flex-col gap-4 min-w-0" data-entrance="children">
     <h1 class="m-0 text-display font-bold text-balance">JavaScript meets Zurich.</h1>
     <h2 class="m-0 text-subsection font-bold text-grey text-balance">Shaping the Zurich tech scene.</h2>
     <p class="m-0 mt-2 text-lead max-w-reading text-pretty text-grey-mid">
@@ -48,7 +48,7 @@ const art = next?.cover;
   </div>
 
   {/* The square composition: a photo, the loop, and the next meetup as a card. The card's artwork sits on its left at every width, so it stays short on phones; below 800px the composition stops at the form width. */}
-  <div class="grid grid-cols-2 gap-3 w-full max-md:max-w-form">
+  <div class="grid grid-cols-2 gap-3 w-full max-md:max-w-form" data-entrance="media">
     <span class={tile}>
       {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
       <img src={srcFor(PHOTOS.audience.src)} srcset={PHOTOS.audience.srcset ?? srcsetFor(PHOTOS.audience.src)} sizes="(min-width: 800px) 25vw, 50vw" alt={PHOTOS.audience.alt} loading="eager" fetchpriority="high" decoding="async" class="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: PHOTOS.audience.position ?? 'center' }} />
@@ -60,7 +60,7 @@ const art = next?.cover;
         PHOTOS.speaker.video && (
           <>
           {/* eslint-disable-next-line no-restricted-syntax -- the photo's focal point comes from content */}
-          <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }}>
+          <video data-hero-video muted loop playsinline preload="none" aria-hidden="true" tabindex="-1" class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-reveal" style={{ objectPosition: PHOTOS.speaker.position ?? 'center 25%' }}>
             <source src={PHOTOS.speaker.video} type="video/mp4" />
           </video>
           </>

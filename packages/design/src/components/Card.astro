@@ -7,7 +7,8 @@
  * behaviour: what it does, shown by one signifier that aligns with the title's first line.
  *   static      nothing to do. No signifier.
  *   link        the whole card is one link (`href`). Arrow. Nothing else clickable inside.
- *   disclosure  opens in place (native <details>). Chevron that turns. Actions go in the footer.
+ *   disclosure  opens in place (native <details>). Chevron that turns; the body grows open and shrinks closed
+ *               where the browser supports ::details-content (motion.css). Actions go in the footer.
  *   action      buttons in the footer and no signifier: the buttons are the signifier.
  *
  * edge: what touches the card's edge, which sets its rounding. Outer radius = inner radius + padding + frame.
@@ -119,7 +120,7 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
   behaviour === 'disclosure' ? (
     <Outer id={id} class={cx(Outer === 'li' && 'list-none', 'min-w-0')}>
       {/* eslint-disable-next-line no-restricted-syntax -- the radius comes from the edge and padding props (the rounding formula), as CSS custom properties */}
-      <details class={cx(box, cardPadding[padding], 'block')} style={radius} open={open}>
+      <details class={cx(box, cardPadding[padding], 'block motion-disclosure')} style={radius} open={open}>
         <summary class="flex flex-col gap-2 cursor-pointer list-none focus-visible:outline-none">
           <div class={cx('flex gap-4', has.icon ? 'items-center' : 'items-start')}>
             {has.icon && (
@@ -129,7 +130,7 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
             )}
             <div class="flex flex-col gap-1 min-w-0 flex-1">{title ? <Title class={cx('m-0 font-bold text-balance wrap-anywhere', titleSize)}>{title}</Title> : <slot name="header" />}</div>
             <span aria-hidden="true" class={cx(titleSize, 'flex-none flex items-center h-lh')}>
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none transition-transform group-open:rotate-180">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none transition-transform duration-reveal ease-glide group-open:rotate-180">
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </span>

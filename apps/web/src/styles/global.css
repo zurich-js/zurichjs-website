@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@zurichjs/design/theme.css';
+@import '@zurichjs/design/motion.css';
 
 /* Tailwind scans the design package's components for class names too. */
 @source '../../../../packages/design/src';

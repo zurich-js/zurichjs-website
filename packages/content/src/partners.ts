@@ -200,16 +200,6 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     delisted: true,
     source: 'old-partners, owner-2026-11',
   },
-  {
-    id: 'web-zurich',
-    name: 'Web Zurich',
-    url: 'https://webzurich.ch/',
-    logo: logo('webzurich.webp'),
-    kinds: ['community'],
-    current: true,
-    description: 'Regional web development community partner',
-    source: 'old-partners',
-  },
 
   // Supporting partners: "Companies providing resources and tools".
   {

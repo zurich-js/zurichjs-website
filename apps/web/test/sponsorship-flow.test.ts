@@ -489,3 +489,47 @@ function base() {
     notes: null,
   };
 }
+
+describe('daily check and the Slack agent', () => {
+  it('completes one-meetup sponsorships, ends agreed manual ones, expires proposals and reminds the board', async () => {
+    const { dailyCheck } = await import('../src/server/sponsor-daily.ts');
+    const { lifecycleDeps } = await import('../src/server/sponsor-route.ts');
+    const store = memoryStore();
+    const w = world();
+    const board = { kind: 'board', id: 'admin' } as const;
+    const once = await store.create(
+      { ...base(), companyName: 'Once AG', cycle: 'once', eventId: 'e', eventTitle: 'ZurichJS Meetup December', eventDate: '2026-12-09', paidUntil: '2026-12-10' },
+      { email: 'a@once.ch', name: 'A', role: 'primary' },
+      board,
+    );
+    await store.transition(once.sponsor.id, { to: 'active', actor: board });
+    const manual = await store.create(
+      { ...base(), companyName: 'Manual AG', paymentMode: 'manual', paidUntil: '2027-01-09' },
+      { email: 'b@manual.ch', name: 'B', role: 'primary' },
+      board,
+    );
+    await store.transition(manual.sponsor.id, { to: 'active', actor: board });
+    await store.propose(manual.sponsor.id, { kind: 'end', tier: null, cycle: null, message: null, expiresAt: '2026-12-05T00:00:00Z' }, board);
+
+    const deps = { ...lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack }), now: () => new Date('2026-12-10T07:15:00Z') };
+    expect(await dailyCheck(deps)).toEqual({ completed: 1, ended: 0, expired: 1, reminded: 1 });
+    expect(await store.get(once.sponsor.id)).toMatchObject({ status: 'ended', endedReason: 'completed' });
+    expect(w.emails.at(-1)!.text).toContain('ZurichJS Meetup December, 9th December 2026 is behind us');
+    expect(w.slackPosts.some((t) => t.includes('Manual AG') && t.includes('30 days left'))).toBe(true);
+    // Running it again the same day changes nothing more.
+    expect(await dailyCheck(deps)).toEqual({ completed: 0, ended: 0, expired: 0, reminded: 1 });
+  });
+
+  it('gives the model company-level facts only', async () => {
+    const { sponsorshipTools } = await import('../src/server/sponsor-agent.ts');
+    const store = memoryStore();
+    const { sponsor } = await store.create({ ...base(), notes: 'secret' }, { email: 'grace@acme.ch', name: 'Grace Hopper', role: 'primary' }, { kind: 'board', id: 'admin' });
+    await store.transition(sponsor.id, { to: 'active', actor: { kind: 'board', id: 'admin' } });
+    const tools = sponsorshipTools(store);
+    const run = (name: string, input: unknown) => (tools[name] as unknown as { execute: (i: unknown, o: unknown) => Promise<unknown> }).execute(input, {});
+    const found = JSON.stringify(await run('findSponsors', { query: 'acme' }));
+    expect(found).toContain('Community Friend');
+    expect(found).not.toMatch(/grace|secret|cus_/i);
+    expect(await run('sponsorshipOverview', {})).toMatchObject({ running: 1, runningByTier: { 'Community Friend': 1 } });
+  });
+});

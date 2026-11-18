@@ -12,3 +12,15 @@ export {
   type TemplateName,
   type TemplateProps,
 } from './templates.ts';
+export type {
+  SponsorAgreementProps,
+  SponsorChangeProps,
+  SponsorEndedProps,
+  SponsorEndingProps,
+  SponsorInviteProps,
+  SponsorLogoProps,
+  SponsorPaymentProblemProps,
+  SponsorProposalProps,
+  SponsorProps,
+  SponsorWelcomeProps,
+} from './sponsors.ts';

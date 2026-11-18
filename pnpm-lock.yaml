@@ -170,6 +170,9 @@ importers:
       '@zurichjs/seo':
         specifier: workspace:*
         version: link:../../packages/seo
+      '@zurichjs/sponsorship':
+        specifier: workspace:*
+        version: link:../../packages/sponsorship
       astro:
         specifier: 7.4.4
         version: 7.4.4(@netlify/blobs@11.1.7(supports-color@8.1.1))(@types/node@22.15.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)

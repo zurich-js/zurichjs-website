@@ -4,6 +4,7 @@
  * Later phases add their templates here (docs/v2/MEMBERSHIP.md, "Email").
  */
 import { render, type Block, type EmailContent, type RenderedEmail } from './layout.ts';
+import { SPONSOR_TEMPLATES } from './sponsors.ts';
 
 export interface LoginLinkProps {
   /** The Better Auth sign-in link (expires; see `validMinutes`). */
@@ -452,6 +453,7 @@ const TEMPLATES = {
   'resignation-withdrawn': resignationWithdrawn,
   'board-notice': boardNotice,
   'talk-scheduled': talkScheduled,
+  ...SPONSOR_TEMPLATES,
 } satisfies Record<string, (p: never) => EmailContent>;
 
 export type TemplateName = keyof typeof TEMPLATES;

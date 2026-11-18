@@ -35,6 +35,9 @@ export const spacing = group('spacing');
 export const containers = group('container');
 export const breakpoints = group('breakpoint');
 export const shadows = group('shadow');
+/** Motion: the three durations (feedback, reveal, drift) and the one easing (glide). */
+export const durations = group('transition-duration');
+export const easings = group('ease');
 
 /** The nine type roles: size and line height, from --text-<role> and --text-<role>--line-height. */
 export const text: Readonly<Record<string, { size: string; lineHeight: string }>> = Object.fromEntries(

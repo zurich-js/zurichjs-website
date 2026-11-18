@@ -4,7 +4,7 @@ import { track } from '@zurichjs/design/analytics';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, fieldErrors, honeypotValue, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
+import { Appear, fieldErrors, Honeypot, honeypotValue, SubmitButton, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
 const TOPICS = ['General question', 'Slack invite', 'Speaking', 'Hosting or sponsoring', 'Press or media', 'Problem with the website'];
 /** ?topic= presets the topic, e.g. "Ask us for a Slack invite" links to /contact?topic=slack. */
@@ -134,7 +134,7 @@ export default function ContactForm() {
           {busy ? 'Sending…' : 'Send message'}
         </SubmitButton>
         <span role="alert" class="text-meta text-danger">
-          {tried && !valid ? 'Fix the highlighted fields.' : serverError}
+          <Appear text={tried && !valid ? 'Fix the highlighted fields.' : serverError} />
         </span>
         {serverError && (
           <span class="text-meta text-ink-2 basis-full">

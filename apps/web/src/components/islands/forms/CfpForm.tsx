@@ -1,13 +1,13 @@
 import { CFP_AGREE_ERROR, MAX_TOPICS, TALK_LENGTHS, TALK_LEVELS, TALK_TOPICS, submitForm } from '@zurichjs/forms/client';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
-import { buttonClass, cx, optionClass, optionInput } from '@zurichjs/design/recipes';
+import { buttonClass, cx, motion, optionClass, optionInput } from '@zurichjs/design/recipes';
 import { Heading } from '@zurichjs/design/islands/Heading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Checkbox, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { SocialLabel } from '@zurichjs/design/islands/SocialLabel';
-import { ChoiceGroup, Honeypot, SubmitButton, fieldErrors, honeypotValue, optional, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
+import { Appear, ChoiceGroup, fieldErrors, Honeypot, honeypotValue, optional, SubmitButton, useFocusFirstError, useFocusWhen, useSubmitOnce } from './shared.tsx';
 
 const DRAFT_KEY = 'zurichjs-cfp-draft';
 const EMAIL = 'hello@zurichjs.com';
@@ -205,7 +205,7 @@ function PhotoField({ photo, error, onChange }: { photo: { file: Blob; url: stri
         A photo of your face, centred, works best in every shape: JPEG, PNG or WebP.
       </span>
       {error && (
-        <span role="alert" class="text-meta text-danger">
+        <span role="alert" class={cx(motion.enter, 'text-meta text-danger')}>
           {error}
         </span>
       )}
@@ -562,7 +562,7 @@ export default function CfpForm({ nextHref }: Props) {
                 aria-describedby={bad('agree') ? 'cfp-agree-error' : undefined}
               />
               {bad('agree') && (
-                <p id="cfp-agree-error" class="m-0 pl-8.5 text-meta text-danger">
+                <p id="cfp-agree-error" class={cx(motion.enter, 'm-0 pl-8.5 text-meta text-danger')}>
                   {err('agree')}
                 </p>
               )}
@@ -573,7 +573,7 @@ export default function CfpForm({ nextHref }: Props) {
               {busy ? 'Sending…' : 'Send proposal'}
             </SubmitButton>
             <span role="alert" class="text-meta text-danger">
-              {tried && !valid ? 'Fix the highlighted fields.' : serverError}
+              <Appear text={tried && !valid ? 'Fix the highlighted fields.' : serverError} />
             </span>
             {serverError && (
               <span class="text-meta text-ink-2 basis-full">

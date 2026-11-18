@@ -57,5 +57,5 @@ const { award, photo, storyUrl, stats = [], rating } = Astro.props;
       <Button href={storyUrl} variant="primary" external>Read the full story</Button>
     </div>
   </div>
-  <Photo photo={photo} class="aspect-3/2 w-full" />
+  <Photo photo={photo} ratio="wide" />
 </section>

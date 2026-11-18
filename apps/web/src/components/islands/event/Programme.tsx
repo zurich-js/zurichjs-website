@@ -2,7 +2,7 @@ import { feedbackAvailability, itemMinutes, talkAnchor, talkFormatLine, untimedN
 import { RichText } from '../../RichText.tsx';
 import { submitRating } from '~/lib/rating';
 import { useEffect, useState } from 'preact/hooks';
-import { cardClass, cx, monogramClass, noticeClass } from '@zurichjs/design/recipes';
+import { cardClass, cx, monogramClass, motion, noticeClass } from '@zurichjs/design/recipes';
 import type { ComponentChildren } from 'preact';
 import { Button } from '@zurichjs/design/islands/Button';
 import { RatingSheet, type RateTarget } from '@zurichjs/design/islands/RatingSheet';
@@ -196,7 +196,8 @@ export default function Programme({
                       </a>
                     )}
                     {rating && (
-                      <div class="flex flex-wrap gap-2 mt-1">
+                      // Appears when feedback opens (the clock or ?feedback=true): fades in.
+                      <div class={cx(motion.enter, 'flex flex-wrap gap-2 mt-1')}>
                         {targets
                           .filter((t) => t.talkId === a.talk!.id && t.title === a.talk!.title)
                           .map((t) => {

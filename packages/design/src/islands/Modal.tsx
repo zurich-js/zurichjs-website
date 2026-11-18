@@ -1,5 +1,9 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef } from 'preact/hooks';
+import { cx, motion } from '../recipes.ts';
+
+// eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector for the Tab wrap, not classes
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface Props {
   open: boolean;
@@ -8,67 +12,74 @@ interface Props {
   children: ComponentChildren;
 }
 
-// eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector for the focus trap, not classes
-const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
-/** Centred dialog with a dimmed backdrop. Closes on Escape and backdrop click; keeps Tab inside while open. */
+/**
+ * Centred dialog over a dimmed backdrop: a native modal <dialog> (`showModal()`), so the page behind is inert, and
+ * theme.css keeps it still. Tab wraps inside (the browser alone would let it leave for its own toolbar). Escape and a
+ * click on the backdrop close it; focus returns to the element that opened it. It fades and rises in, and sinks out
+ * (motion.sheet).
+ */
 export function Modal({ open, onClose, labelledBy, children }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-  // Callers often pass a new onClose on every render; keep the latest in a ref so the effect below runs
-  // once per opening and remembers the element that opened the dialog.
+  const ref = useRef<HTMLDialogElement>(null);
+  // Callers often pass a new onClose on every render; the close event reads the latest from a ref.
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const openRef = useRef(open);
+  openRef.current = open;
+  const opener = useRef<HTMLElement | null>(null);
+  // While it fades out the dialog keeps showing what it showed last (the caller has usually cleared it already).
+  const shown = useRef<ComponentChildren>(children);
+  if (open) shown.current = children;
 
   useEffect(() => {
-    if (!open) return;
-    const prev = document.activeElement as HTMLElement | null;
-    const focusables = () => [...(ref.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].filter((el) => el.getClientRects().length > 0);
-    (focusables()[0] ?? ref.current)?.focus();
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) {
+      opener.current = document.activeElement as HTMLElement | null;
+      d.showModal();
+    } else if (!open && d.open) d.close();
+  }, [open]);
+
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    // Every way of closing (Escape, the backdrop, the caller) ends in the native close event.
+    const onCloseEvent = () => {
+      opener.current?.focus?.();
+      opener.current = null;
+      if (openRef.current) closeRef.current();
+    };
+    // A click on the dialog element itself is a click on the backdrop: the panel inside fills the dialog.
+    const onClick = (e: MouseEvent) => {
+      if (e.target === d) d.close();
+    };
+    // Tab and Shift+Tab wrap from the last control to the first and back.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') return closeRef.current();
-      if (e.key !== 'Tab' || !ref.current) return;
-      // Focus trap: Tab and Shift+Tab wrap inside the dialog, since aria-modal hides the page behind it.
-      const els = focusables();
+      if (e.key !== 'Tab') return;
+      const els = [...d.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.getClientRects().length > 0);
       const first = els[0];
-      const last = els[els.length - 1];
-      const active = document.activeElement;
-      const inside = ref.current.contains(active);
-      if (!first || !last) {
-        e.preventDefault();
-        ref.current.focus();
-      } else if (e.shiftKey && (active === first || active === ref.current || !inside)) {
+      const last = els.at(-1);
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
         last.focus();
-      } else if (!e.shiftKey && (active === last || !inside)) {
+      } else if (!e.shiftKey && document.activeElement === last) {
         e.preventDefault();
         first.focus();
       }
     };
-    document.addEventListener('keydown', onKey);
-    const { overflow } = document.body.style;
-    document.body.style.overflow = 'hidden';
+    d.addEventListener('close', onCloseEvent);
+    d.addEventListener('click', onClick);
+    d.addEventListener('keydown', onKey);
     return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = overflow;
-      prev?.focus?.();
+      d.removeEventListener('close', onCloseEvent);
+      d.removeEventListener('click', onClick);
+      d.removeEventListener('keydown', onKey);
     };
-  }, [open]);
+  }, []);
 
-  if (!open) return null;
   return (
-    // Backdrop click is a mouse shortcut; keyboard users close with Escape (handled above).
-    // oxlint-disable-next-line jsx-a11y/click-events-have-key-events
-    <div role="presentation" onClick={(e) => e.target === e.currentTarget && onClose()} class="fixed inset-0 z-40 bg-black/55 flex items-center justify-center p-4">
-      <div
-        ref={ref}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={labelledBy}
-        tabIndex={-1}
-        class="bg-white text-black rounded-card w-full max-w-115 max-h-full overflow-auto p-7 box-border flex flex-col gap-4 outline-hidden"
-      >
-        {children}
-      </div>
-    </div>
+    <dialog ref={ref} aria-labelledby={labelledBy} class={cx(motion.sheet, 'm-auto p-0 w-115 overflow-auto border-0 rounded-card bg-white text-black backdrop:bg-black/55')}>
+      <div class="p-7 box-border flex flex-col gap-4">{open ? children : shown.current}</div>
+    </dialog>
   );
 }

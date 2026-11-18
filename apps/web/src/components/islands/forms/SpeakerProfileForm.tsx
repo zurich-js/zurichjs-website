@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Notice } from '@zurichjs/design/islands/Notice';
-import { SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
+import { Appear, SubmitButton, useFocusFirstError, useFocusWhen } from './shared.tsx';
 
 interface Profile {
   name?: string;
@@ -174,7 +174,7 @@ export default function SpeakerProfileForm() {
           {state === 'saving' ? 'Saving…' : 'Save for review'}
         </SubmitButton>
         <span role="alert" class="text-meta text-danger">
-          {error}
+          <Appear text={error} />
         </span>
       </div>
       <p class="m-0 text-meta text-ink-2">Nothing is published until an organiser approves it. Your email address is never shown on the site.</p>

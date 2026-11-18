@@ -1,0 +1,304 @@
+/*
+ * Motion: only the rules Tailwind utilities cannot express. The durations and the easing are tokens in theme.css
+ * (duration-feedback, duration-reveal, duration-drift, ease-glide); nothing here defines a value of its own.
+ *
+ * Everything is progressive enhancement: a browser without view transitions, @starting-style, allow-discrete or
+ * ::details-content keeps today's instant behaviour. Under prefers-reduced-motion, theme.css switches it all off.
+ *
+ * Utilities (used through recipes.ts and the primitives, never directly on pages):
+ *   motion-enter       fades in when it appears (notices, field errors, state swaps)
+ *   motion-drop        a dropdown toggled with `hidden`: fades and drops 4px in, leaves faster
+ *   motion-fade        a native <dialog> and its backdrop fade in and out
+ *   motion-sheet       a native <dialog> that fades and rises in, and sinks out (Modal)
+ *   motion-disclosure  a <details> that grows open and shrinks closed
+ *   segmented          a segmented control's track, with one black thumb that slides to the checked option
+ *   motion-load        an image that fades in once loaded
+ * Attributes: data-reveal and data-entrance (scroll reveals and page openings, below; reveal.ts runs them).
+ */
+
+/* ------------------------------------------------------------------------------------------------ Pages */
+
+/* Cross-document view transitions: the new page fades and rises in over the old one; the header stays still. */
+/* The opt-in, @view-transition { navigation: auto }, is inline in BaseLayout's head (only without reduced motion),
+   so it is in place however this stylesheet arrives. */
+
+[data-site-header] {
+  view-transition-name: site-header;
+}
+
+::view-transition-group(*) {
+  animation-duration: var(--transition-duration-reveal);
+  animation-timing-function: var(--ease-glide);
+}
+/* The old page stays fully drawn under the new one while it fades in: fading both at once let the white page
+   background show through between two black openings. */
+::view-transition-old(root) {
+  animation: none;
+}
+::view-transition-new(root) {
+  animation: motion-rise-in var(--transition-duration-reveal) var(--ease-glide) both;
+}
+/* A list filtered in place (swap() in motion.ts): a plain cross-fade, no rise, so cards filtered out fade away. */
+html[data-motion-swap]::view-transition-old(root) {
+  animation: motion-fade-out var(--transition-duration-reveal) ease both;
+}
+html[data-motion-swap]::view-transition-new(root) {
+  animation: motion-fade-in var(--transition-duration-reveal) ease both;
+}
+
+@keyframes motion-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    translate: 0 --spacing(2);
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------ Appearing */
+
+@utility motion-enter {
+  transition-property: opacity;
+  transition-duration: var(--transition-duration-reveal);
+  transition-timing-function: ease;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------ Dropdowns */
+
+@utility motion-drop {
+  transition-property: opacity, translate, display;
+  transition-behavior: allow-discrete;
+  transition-duration: var(--transition-duration-reveal);
+  transition-timing-function: var(--ease-glide);
+  @starting-style {
+    opacity: 0;
+    translate: 0 calc(--spacing(1) * -1);
+  }
+  &[hidden] {
+    opacity: 0;
+    translate: 0 calc(--spacing(1) * -1);
+    transition-duration: var(--transition-duration-feedback);
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------ Dialogs */
+
+@utility motion-fade {
+  transition-property: opacity, display, overlay;
+  transition-behavior: allow-discrete;
+  transition-duration: var(--transition-duration-feedback);
+  opacity: 0;
+  &[open] {
+    opacity: 1;
+    transition-duration: var(--transition-duration-reveal);
+  }
+  @starting-style {
+    &[open] {
+      opacity: 0;
+    }
+  }
+  &::backdrop {
+    transition-property: opacity, display, overlay;
+    transition-behavior: allow-discrete;
+    transition-duration: var(--transition-duration-feedback);
+    opacity: 0;
+  }
+  &[open]::backdrop {
+    opacity: 1;
+    transition-duration: var(--transition-duration-reveal);
+  }
+  @starting-style {
+    &[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+@utility motion-sheet {
+  transition-property: opacity, translate, display, overlay;
+  transition-behavior: allow-discrete;
+  transition-duration: var(--transition-duration-feedback);
+  transition-timing-function: var(--ease-glide);
+  opacity: 0;
+  translate: 0 --spacing(4);
+  &[open] {
+    opacity: 1;
+    translate: 0 0;
+    transition-duration: var(--transition-duration-reveal);
+  }
+  @starting-style {
+    &[open] {
+      opacity: 0;
+      translate: 0 --spacing(4);
+    }
+  }
+  &::backdrop {
+    transition-property: opacity, display, overlay;
+    transition-behavior: allow-discrete;
+    transition-duration: var(--transition-duration-feedback);
+    opacity: 0;
+  }
+  &[open]::backdrop {
+    opacity: 1;
+    transition-duration: var(--transition-duration-reveal);
+  }
+  @starting-style {
+    &[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------ Disclosures */
+
+@utility motion-disclosure {
+  interpolate-size: allow-keywords;
+  &::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow-y: clip;
+    transition-property: block-size, opacity, content-visibility;
+    transition-behavior: allow-discrete;
+    transition-duration: var(--transition-duration-feedback);
+    transition-timing-function: var(--ease-glide);
+  }
+  &[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+    transition-duration: var(--transition-duration-reveal);
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------ Segmented control */
+
+/*
+ * The track (a grid of equal columns, 4px padding and gap) draws the thumb as ::before: one column wide, moved
+ * by whole columns to the checked option. The options sit above it (they are positioned and come later).
+ * Up to four options; with none checked the thumb is not shown.
+ */
+@utility segmented {
+  --seg-n: 1;
+  --seg-i: 0;
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: --spacing(1);
+    left: --spacing(1);
+    width: calc((100% - --spacing(2) - (var(--seg-n) - 1) * --spacing(1)) / var(--seg-n));
+    border-radius: var(--radius-pill);
+    background-color: var(--color-black);
+    translate: calc(var(--seg-i) * (100% + --spacing(1))) 0;
+    opacity: 0;
+    transition-property: translate;
+    transition-duration: var(--transition-duration-reveal);
+    transition-timing-function: var(--ease-glide);
+  }
+  &:has(:checked)::before {
+    opacity: 1;
+  }
+  &:has(> :nth-child(2)) {
+    --seg-n: 2;
+  }
+  &:has(> :nth-child(3)) {
+    --seg-n: 3;
+  }
+  &:has(> :nth-child(4)) {
+    --seg-n: 4;
+  }
+  &:has(> :nth-child(2) :checked) {
+    --seg-i: 1;
+  }
+  &:has(> :nth-child(3) :checked) {
+    --seg-i: 2;
+  }
+  &:has(> :nth-child(4) :checked) {
+    --seg-i: 3;
+  }
+}
+
+/* ------------------------------------------------------------------------------------------------ Scroll reveals */
+
+/*
+ * The Zoo pattern: content waits blurred and lower, and rises in as it scrolls into view, row by row. Scrolling
+ * up, what drops below the viewport hides again, so it rises in again on the way down; nothing animates on the
+ * way up.
+ * Only while html[data-motion] is set: BaseLayout's head script sets it when motion is welcome, and drops it if
+ * reveal.ts has not started within 2.5 seconds, so nothing ever stays hidden. Which elements reveal (the same
+ * selector is in reveal.ts, keep the two in step):
+ *   - every child of a section in the page's content that holds no other section ("leaf" sections), of a
+ *     block of the page's content that holds no section, and of the footer, unless it holds its own reveal;
+ *   - [data-reveal]: the element itself; [data-reveal='children']: each child, in reading order (grids, lists).
+ * Page openings do not scroll in; they enter on load ([data-entrance], below).
+ */
+@keyframes motion-reveal {
+  from {
+    opacity: 0;
+    filter: blur(var(--blur-reveal));
+    translate: 0 var(--spacing-reveal);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html[data-motion]
+    :is(
+      [data-reveal]:not([data-reveal='children']),
+      [data-reveal='children'] > *,
+      :is(main section:not(:has(section), [data-opening] *), main > :not([data-opening], section, :has(section))) > :not(:has([data-reveal])),
+      :is(main section:not(:has(section), [data-opening] *), main > :not([data-opening], section, :has(section))) > astro-island > :not(:has([data-reveal])),
+      body > footer > :not(:has([data-reveal]))
+    ):not([data-reveal='children'], [data-reveal-skip], dialog, script, style, template, astro-island, astro-slot, [data-revealed], :focus-within) {
+    opacity: 0;
+    filter: blur(var(--blur-reveal));
+    translate: 0 var(--spacing-reveal);
+  }
+  html[data-motion] [data-revealed]:not([data-reveal-done]) {
+    animation: motion-reveal var(--transition-duration-entrance) var(--ease-entrance) both;
+    animation-delay: calc(var(--reveal-i, 0) * var(--transition-delay-stagger));
+  }
+
+  /* Page openings: on load, each child of [data-entrance='children'] enters after the one before; media last. */
+  html[data-motion] :is([data-entrance='children'] > *, [data-entrance='media']) {
+    animation: motion-reveal var(--transition-duration-entrance) var(--ease-entrance) both;
+    animation-delay: calc(var(--entrance-step, 0) * var(--transition-delay-stagger));
+  }
+  [data-entrance='children'] > :nth-child(2) {
+    --entrance-step: 1;
+  }
+  [data-entrance='children'] > :nth-child(3) {
+    --entrance-step: 2;
+  }
+  [data-entrance='children'] > :nth-child(4) {
+    --entrance-step: 3;
+  }
+  [data-entrance='children'] > :nth-child(n + 5) {
+    --entrance-step: 4;
+  }
+  [data-entrance='media'] {
+    --entrance-step: 3;
+  }
+}
+
+/*
+ * An image that fades in once it has loaded (gallery thumbnails); reveal.ts marks it [data-loading] meanwhile.
+ * Its transforms (a hover zoom) keep the feedback duration, so it replaces transition-transform.
+ */
+@utility motion-load {
+  transition-property: opacity, transform, translate, scale;
+  transition-duration: var(--transition-duration-entrance), var(--transition-duration-feedback), var(--transition-duration-feedback), var(--transition-duration-feedback);
+  transition-timing-function: var(--ease-entrance), ease, ease, ease;
+  &[data-loading] {
+    opacity: 0;
+  }
+}

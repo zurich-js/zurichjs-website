@@ -1,9 +1,9 @@
 /** Form controls for islands (Preact). Labels wrap controls; errors are announced politely. */
 import type { ComponentChildren, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'preact';
 import { useId } from 'preact/hooks';
-import { cx, optionClass, optionInput } from '../recipes.ts';
+import { cx, motion, optionClass, optionInput } from '../recipes.ts';
 
-const control = 'rounded-field border px-3.5 text-body font-normal bg-white text-black w-full box-border';
+const control = 'rounded-field border px-3.5 text-body font-normal bg-white text-black w-full box-border transition-colors';
 const border = (bad?: boolean) => (bad ? 'border-danger' : 'border-grey-line');
 
 interface Wrap {
@@ -46,7 +46,12 @@ function Wrapper({
       {children}
       {error !== undefined && (
         <span id={ids.error} class="font-normal text-meta text-danger min-h-lh" aria-live="polite">
-          {error}
+          {/* Keyed by its text, so each new message fades in. */}
+          {error && (
+            <span key={error} class={motion.enter}>
+              {error}
+            </span>
+          )}
         </span>
       )}
     </label>

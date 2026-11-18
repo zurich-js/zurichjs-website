@@ -3,7 +3,7 @@ import { track } from '@zurichjs/design/analytics';
 import { cardClass } from '@zurichjs/design/recipes';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { TextField, isEmail } from '@zurichjs/design/islands/Field';
-import { Honeypot, SubmitButton, honeypotValue, useFocusWhen } from './shared.tsx';
+import { Appear, Honeypot, honeypotValue, SubmitButton, useFocusWhen } from './shared.tsx';
 
 type Done = { email: string; outcome: 'added' | 'already' | 'off' };
 
@@ -80,7 +80,7 @@ export default function WaitlistForm() {
         {busy ? 'Adding you…' : 'Join the waitlist'}
       </SubmitButton>
       <span role="alert" class="text-meta text-danger empty:hidden">
-        {serverError}
+        <Appear text={serverError} />
       </span>
       <p class="m-0 text-meta text-ink-2">
         Your email joins the ZurichJS newsletter, sent with EmailOctopus, which carries conference and meetup news. See the{' '}

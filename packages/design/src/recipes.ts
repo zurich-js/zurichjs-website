@@ -8,6 +8,25 @@ export const isExternal = (href: string) => /^(https?:|mailto:)/.test(href);
 /** Links to other sites open in a new tab; mail links do not. */
 export const opensNewTab = (href: string | undefined) => !!href && isExternal(href) && !href.startsWith('mailto:');
 
+/* ------------------------------------------------------------------------------------------------ Motion */
+
+/**
+ * Motion recipes (the rules are in motion.css, the durations in theme.css). Hover and colour changes use
+ * `transition-colors`, whose default duration is the feedback token.
+ *   enter  fades in when it appears: notices, field errors, state swaps in islands.
+ *   drop   a dropdown shown and hidden with the `hidden` attribute: fades and drops 4px in, leaves faster.
+ *   fade   a native <dialog> (and its backdrop) fades in and out.
+ *   sheet  a native <dialog> fades and rises in, and sinks out (Modal).
+ *   load   an image that fades in once loaded (reveal.ts marks it while it loads).
+ */
+export const motion = {
+  enter: 'motion-enter',
+  drop: 'motion-drop',
+  fade: 'motion-fade',
+  sheet: 'motion-sheet',
+  load: 'motion-load',
+} as const;
+
 /* ------------------------------------------------------------------------------------------------ Buttons */
 
 /**
@@ -127,7 +146,7 @@ export const choiceCardClass = (extra?: string) =>
   cx(
     'group relative flex flex-col gap-3 rounded-card bg-white border-3 border-grey-frame cursor-pointer transition-colors p-card-lg',
     'hover:border-grey-mid has-checked:border-yellow',
-    'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
+    'has-focus-visible:outline-3 has-focus-visible:outline-yellow has-focus-visible:outline-offset-2',
     extra,
   );
 /** The dot of a choice card: on the title's first line, filled yellow with a tick when chosen. */
@@ -141,7 +160,8 @@ const noticeTones: Record<NoticeTone, string> = {
   success: 'bg-success-soft',
   danger: 'bg-danger-soft',
 };
-export const noticeClass = (tone: NoticeTone = 'note', extra?: string) => cx('flex gap-4 rounded-card text-black p-card-md', noticeTones[tone], extra);
+/** A notice fades in when it appears (a form's result, a state change), so it is noticed without a jump. */
+export const noticeClass = (tone: NoticeTone = 'note', extra?: string) => cx('flex gap-4 rounded-card text-black p-card-md', noticeTones[tone], motion.enter, extra);
 
 /* ------------------------------------------------------------------------------------------------ Type */
 
@@ -187,10 +207,11 @@ export const monogramClass = (tone: MonogramTone = 'grey', size: MonogramSize = 
  */
 export const optionClass = (invalid = false, extra?: string) =>
   cx(
-    'inline-flex items-center gap-2.5 min-h-control px-3.5 py-2 rounded-field border bg-white text-compact text-black cursor-pointer select-none',
-    'hover:border-black has-checked:border-black has-checked:bg-grey-soft has-disabled:opacity-50 has-disabled:cursor-not-allowed',
-    invalid ? 'border-danger' : 'border-grey-line',
+    'inline-flex items-center gap-2.5 min-h-control px-3.5 py-2 rounded-field border-3 bg-white text-compact text-black cursor-pointer select-none transition-colors',
+    'hover:border-grey-mid has-checked:border-yellow has-disabled:opacity-50 has-disabled:cursor-not-allowed',
+    'has-focus-visible:outline-3 has-focus-visible:outline-yellow has-focus-visible:outline-offset-2',
+    invalid ? 'border-danger' : 'border-grey-frame',
     extra,
   );
-/** The native radio or checkbox inside an option. */
-export const optionInput = 'size-4.5 m-0 flex-none accent-black cursor-pointer';
+/** The native radio or checkbox inside an option. Its option draws the focus ring, so it draws none of its own. */
+export const optionInput = 'size-4.5 m-0 flex-none accent-black cursor-pointer focus-visible:outline-none';

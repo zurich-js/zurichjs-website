@@ -192,7 +192,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               }}
               class={cx(
                 'group absolute left-1/2 top-0 overflow-hidden rounded-card bg-ink no-underline focus-visible:outline-offset-4',
-                'transition-all duration-500 ease-glide motion-reduce:transition-none',
+                'transition-all duration-drift ease-glide motion-reduce:transition-none',
                 isActive ? 'shadow-lift' : 'shadow-none',
                 opacity === 0 && 'pointer-events-none',
               )}
@@ -228,7 +228,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               {isActive && (
                 <span
                   aria-hidden="true"
-                  class="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white text-black opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+                  class="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white text-black opacity-0 transition-opacity duration-feedback group-hover:opacity-100 group-focus-visible:opacity-100"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M4.5 9.5 10 4M5 4h5v5" />
@@ -250,7 +250,7 @@ export function SpeakerArc({ speakers }: { speakers: ArcSpeaker[] }) {
               */}
               <span
                 aria-hidden="true"
-                class="absolute inset-0 bg-white pointer-events-none transition-opacity duration-500 ease-glide motion-reduce:transition-none group-hover:opacity-0!"
+                class="absolute inset-0 bg-white pointer-events-none transition-opacity duration-drift ease-glide motion-reduce:transition-none group-hover:opacity-0!"
                 // eslint-disable-next-line no-restricted-syntax -- the wash follows the card's computed distance from the centre
                 style={{ opacity: 1 - opacity }}
               />

@@ -2,7 +2,7 @@
 import { HONEYPOT, validate, type FormKind } from '@zurichjs/forms/client';
 import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { buttonClass, type ButtonVariant } from '@zurichjs/design/recipes';
+import { buttonClass, motion, type ButtonVariant } from '@zurichjs/design/recipes';
 
 /**
  * Hidden field that bots fill in and people never see. The server rejects any
@@ -18,6 +18,18 @@ export function Honeypot() {
       </label>
     </div>
   );
+}
+
+/**
+ * A message that fades in each time it changes (an error, a server reply): keyed by its text, so new text is a new
+ * element (motion.enter). Nothing is rendered while it is empty, so the live region around it stays in place.
+ */
+export function Appear({ text }: { text?: string | false | null }) {
+  return text ? (
+    <span key={text} class={motion.enter}>
+      {text}
+    </span>
+  ) : null;
 }
 
 /** A label with "(optional)" after it. Forms that use it say once that every other field is required. */
@@ -150,7 +162,7 @@ export function ChoiceGroup({
       )}
       <div class={extra}>{children}</div>
       <span id={`${id}-error`} class="text-meta text-danger min-h-lh" aria-live="polite">
-        {error}
+        <Appear text={error} />
       </span>
     </fieldset>
   );

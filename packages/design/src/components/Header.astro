@@ -1,12 +1,13 @@
 ---
 /**
  * Navigation in the conference's pattern (Bogdan's review, 4th November 2026): sticky, flat on the black
- * opening at the top of the page and a floating black pill once the page scrolls. Desktop: links, the
+ * opening at the top of the page and a floating black pill once the page scrolls. Links get a dark pill on hover
+ * that fades in (the Zoo navigation's pattern). Desktop: links, the
  * "Get involved" menu, social icons, a divider and the one action. Phones: an icon button that opens a
  * full-screen menu (a modal <dialog>: focus stays inside, Escape closes it, the page behind can't scroll,
- * and focus returns to the button).
+ * and focus returns to the button). It fades in and out; "Get involved" drops in (motion.css).
  */
-import { buttonClass, cx } from '../recipes';
+import { buttonClass, cx, motion } from '../recipes';
 import { SocialIcon, type Social } from '../islands/SocialLabel';
 
 interface Props {
@@ -38,7 +39,12 @@ const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p
 const involvedCurrent = isCurrent(INVOLVED.map((i) => i.href));
 const barSocial = social.filter((s) => ['linkedin', 'instagram', 'bluesky'].includes(s.kind));
 // Plain white marks (nav review, 5th November 2026), each in a 40px round hit area for the focus ring.
-const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70';
+// The current page's link is yellow (owner, 17th November 2026); the others are white.
+const tone = (current: boolean) => (current ? 'text-yellow' : 'text-white');
+// Hover: a dark pill grows and fades in behind the link, evenly over the reveal duration (150ms on black read as instant).
+const hoverPill =
+  'relative isolate before:absolute before:inset-0 before:-z-1 before:rounded-pill before:bg-ink-3 before:opacity-0 before:scale-75 before:transition before:duration-reveal before:ease-in-out hover:before:opacity-100 hover:before:scale-100 focus-visible:before:opacity-100 focus-visible:before:scale-100';
+const iconLink = cx('w-10 h-10 rounded-full flex items-center justify-center text-white', hoverPill);
 ---
 
 <!-- Scrolled once this leaves the viewport. It sits outside the header, so the header's own height can't flip the state back. -->
@@ -58,10 +64,10 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
       <img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-4.5 w-auto" />
     </a>
 
-    <nav aria-label="Main" class="hidden md:flex items-center gap-4 lg:gap-6 text-compact whitespace-nowrap">
+    <nav aria-label="Main" class="hidden md:flex items-center gap-1 lg:gap-2 text-compact whitespace-nowrap">
       {
         NAV.map((n) => (
-          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-1.5 font-bold no-underline hover:text-grey-mid', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
+          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('px-3 py-2 rounded-pill font-bold no-underline transition-colors', tone(isCurrent(n.match)), hoverPill)}>
             {n.label}
           </a>
         ))
@@ -72,16 +78,16 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
           data-involved-toggle
           aria-expanded="false"
           aria-controls="involved-menu"
-          class={cx('group flex items-center gap-1.5 py-1.5 bg-transparent border-0 p-0 font-bold text-compact cursor-pointer hover:text-grey-mid', involvedCurrent ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}
+          class={cx('group flex items-center gap-1.5 px-3 py-2 rounded-pill bg-transparent border-0 font-bold text-compact cursor-pointer transition-colors', tone(involvedCurrent), hoverPill)}
         >
           Get involved
-          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform group-aria-expanded:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" class="shrink-0 transition-transform duration-reveal ease-glide group-aria-expanded:rotate-180"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
-        <ul id="involved-menu" hidden class="absolute right-0 top-full z-50 mt-3 w-60 list-none m-0 p-3 bg-black rounded-card">
+        <ul id="involved-menu" hidden class={cx(motion.drop, 'absolute right-0 top-full z-50 mt-3 w-60 list-none m-0 p-3 bg-black rounded-card')}>
           {
             INVOLVED.map((i) => (
               <li>
-                <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block px-3 py-2.5 rounded-pill font-bold no-underline hover:text-grey-mid', isCurrent([i.href]) ? 'text-white underline decoration-2 underline-offset-4' : 'text-white')}>
+                <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block px-3 py-2.5 rounded-pill font-bold no-underline', hoverPill, tone(isCurrent([i.href])))}>
                   {i.label}
                 </a>
               </li>
@@ -101,23 +107,23 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
                 </li>
               ))}
             </ul>
-            <span aria-hidden="true" class="hidden lg:block w-px h-6 -mx-4 bg-grey-text" />
+            <span aria-hidden="true" class="hidden lg:block w-px h-6 mx-1 bg-grey-text" />
           </>
         )
       }
       <a href={CTA.href} data-header-cta class={buttonClass({ variant: 'cta' }, 'ml-2')}><span data-cta-guest>{CTA.label}</span><span data-cta-member>Account</span></a>
     </nav>
 
-    <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
+    <button type="button" data-menu-open aria-haspopup="dialog" aria-controls="mobile-nav" aria-label="Open menu" class="md:hidden inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer transition-colors hover:text-grey-mid">
       <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
     </button>
   </div>
 </header>
 
-<dialog id="mobile-nav" aria-label="Menu" class="mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none open:flex flex-col overflow-hidden bg-black text-white border-0">
+<dialog id="mobile-nav" aria-label="Menu" class={cx(motion.fade, 'mobile-nav on-black m-0 p-0 w-full max-w-none h-dvh max-h-none open:flex flex-col overflow-hidden bg-black text-white border-0')}>
   <div class="flex shrink-0 items-center justify-between py-4 px-gut">
     <a href="/" aria-label="ZurichJS home" class="flex"><img src="/images/logo/wordmark-white.svg" alt="ZurichJS" width="274" height="40" class="block h-4.5 w-auto" /></a>
-    <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer hover:text-grey-mid">
+    <button type="button" data-menu-close aria-label="Close menu" class="inline-flex items-center justify-center w-11 h-11 -mr-2 bg-transparent border-0 text-white cursor-pointer transition-colors hover:text-grey-mid">
       <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
     </button>
   </div>
@@ -125,7 +131,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
     <nav aria-label="Main" class="flex-1 flex flex-col justify-center gap-1 px-gut py-6">
       {
         NAV.map((n) => (
-          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2 text-subsection font-bold no-underline', isCurrent(n.match) ? 'text-white underline decoration-2 underline-offset-8' : 'text-white')}>
+          <a href={n.href} aria-current={isCurrent(n.match) ? 'page' : undefined} class={cx('py-2 text-subsection font-bold no-underline', tone(isCurrent(n.match)))}>
             {n.label}
           </a>
         ))
@@ -135,7 +141,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
         {
           INVOLVED.map((i) => (
             <li>
-              <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block py-1.5 text-card-title font-bold no-underline', isCurrent([i.href]) ? 'text-white underline decoration-2 underline-offset-4' : 'text-white')}>
+              <a href={i.href} aria-current={isCurrent([i.href]) ? 'page' : undefined} class={cx('block py-1.5 text-card-title font-bold no-underline', tone(isCurrent([i.href])))}>
                 {i.label}
               </a>
             </li>
@@ -149,7 +155,7 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
         <ul class="m-0 p-0 list-none flex flex-wrap gap-2 px-gut pb-8" aria-label="ZurichJS on social media">
           {social.map((s) => (
             <li>
-              <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} class="w-11 h-11 rounded-full flex items-center justify-center text-white hover:opacity-70">
+              <a href={s.href} target="_blank" rel="noopener" aria-label={`ZurichJS on ${s.label} (opens in a new tab)`} class="w-11 h-11 rounded-full flex items-center justify-center text-white transition-opacity hover:opacity-70">
                 <SocialIcon kind={s.kind} size={24} />
               </a>
             </li>
@@ -203,21 +209,18 @@ const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-w
   @media (prefers-reduced-motion: no-preference) {
     .site-header {
       transition:
-        background-color 300ms ease,
-        padding-inline 300ms ease;
+        background-color var(--transition-duration-reveal) ease,
+        padding-inline var(--transition-duration-reveal) ease;
     }
     .site-header .bar {
       transition:
-        background-color 300ms ease,
-        border-radius 300ms ease,
-        box-shadow 300ms ease;
+        background-color var(--transition-duration-reveal) ease,
+        border-radius var(--transition-duration-reveal) ease,
+        box-shadow var(--transition-duration-reveal) ease;
     }
   }
   .mobile-nav::backdrop {
     background: var(--color-black);
-  }
-  :global(html:has(dialog.mobile-nav[open])) {
-    overflow: hidden;
   }
 </style>
 

@@ -1,6 +1,7 @@
 ---
 /**
  * The black opening of every inner page: breadcrumb, status tags, title, one sentence (slot "sub" or prop), actions (default slot).
+ * On load its lines enter one after another, the media last (data-entrance, motion.css).
  * Slot "media": an image beside all of that from 800px (an event's artwork), under it on phones. Every opening is at least `min-h-opening` tall, its text centred (owner, 12th November 2026).
  */
 import { cx } from '../recipes';
@@ -24,7 +25,7 @@ const hasMedia = Astro.slots.has('media');
 ---
 
 <section class={cx('px-gut pt-4 md:pt-6 lg:pt-10', compact ? 'pb-7 md:pb-10 lg:pb-12' : 'pb-9 md:pb-12 lg:pb-16', hasMedia ? 'grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center' : 'flex flex-col', 'min-h-opening justify-center')}>
-  <div class="flex flex-col gap-4 min-w-0">
+  <div class="flex flex-col gap-4 min-w-0" data-entrance="children">
     {
       crumb && (
         <nav aria-label="Breadcrumb" class="text-compact text-grey-mid flex gap-2 flex-wrap">
@@ -59,7 +60,7 @@ const hasMedia = Astro.slots.has('media');
     <slot />
   </div>
   {hasMedia && (
-    <div class="min-w-0">
+    <div class="min-w-0" data-entrance="media">
       <slot name="media" />
     </div>
   )}

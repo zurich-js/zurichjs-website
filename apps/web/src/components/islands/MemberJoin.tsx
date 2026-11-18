@@ -8,7 +8,7 @@ import { useRef, useState } from 'preact/hooks';
 import { track } from '@zurichjs/design/analytics';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Notice } from '@zurichjs/design/islands/Notice';
-import { cardClass, cx } from '@zurichjs/design/recipes';
+import { cardClass, cx, motion } from '@zurichjs/design/recipes';
 import { TERMS } from '@zurichjs/membership/terms';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, type Cycle, type TierKey } from '../../lib/membership.ts';
 import type { MemberView } from '../../server/membership.ts';
@@ -59,7 +59,7 @@ export function TermsCheckbox({ checked, onChange, error }: { checked: boolean; 
         </span>
       </label>
       {error && (
-        <span id="terms-error" class="text-meta text-danger pl-8" aria-live="polite">
+        <span id="terms-error" class={cx(motion.enter, 'text-meta text-danger pl-8')} aria-live="polite">
           {error}
         </span>
       )}

@@ -402,6 +402,8 @@ const link = 'text-black underline';
 </script>
 
 <script>
+  import { swap } from '@zurichjs/design/motion';
+
   // Billing switch on the sponsorship packages: shows one price per package (monthly by default).
   const box = document.querySelector<HTMLElement>('#sponsorship-tiers');
   if (box) {
@@ -410,7 +412,8 @@ const link = 'text-black underline';
     };
     // Native radios (arrow keys included): the change event fires for every way of choosing.
     const radios = [...box.querySelectorAll<HTMLInputElement>('input[name="billing"]')];
-    for (const o of radios) o.addEventListener('change', () => o.checked && choose(o.value));
+    // The prices cross-fade where the browser has view transitions.
+    for (const o of radios) o.addEventListener('change', () => o.checked && swap(() => choose(o.value)));
     // A restored page (back button) may come back with another option checked.
     const restored = radios.find((o) => o.checked);
     if (restored) choose(restored.value);

@@ -69,7 +69,7 @@ const SECTIONS = [
           <h2 id={`h-${t.k}`} class="m-0 text-subsection font-bold">
             {t.heading}
           </h2>
-          <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-3" data-reveal="children">
             {t.list.map((e) => (
               <div data-hay={hay(e)}>
                 <EventRow ev={e} now={BUILD_TIME} ticketing={ticketing} dim={t.k === 'past'} />
@@ -107,6 +107,7 @@ const SECTIONS = [
 
 <script>
   import { normalizeSearch } from '@zurichjs/events';
+  import { swap } from '@zurichjs/design/motion';
 
   const root = document.querySelector<HTMLElement>('[data-events]');
   if (root) {
@@ -153,14 +154,15 @@ const SECTIONS = [
     input.addEventListener('input', () => {
       q = input.value;
       syncUrl();
-      render();
+      // The rows cross-fade to the new result where the browser has view transitions.
+      swap(render);
     });
     for (const b of root.querySelectorAll<HTMLButtonElement>('[data-clear]')) {
       b.addEventListener('click', () => {
         q = '';
         input.value = '';
         syncUrl();
-        render();
+        swap(render);
         input.focus();
       });
     }

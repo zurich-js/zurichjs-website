@@ -24,7 +24,7 @@ const rendered = await Promise.all(items.map(async (it) => ({ it, html: await re
 ---
 
 <div class:list={['packed-wrap', cls]}>
-<div class="packed-grid" style={{ '--cols-base': columns.base, '--cols-md': columns.md }} role={label ? 'group' : undefined} aria-label={label}>
+<div class="packed-grid" data-reveal="children" style={{ '--cols-base': columns.base, '--cols-md': columns.md }} role={label ? 'group' : undefined} aria-label={label}>
   {
     rendered.map(({ it, html }) => {
       const b = base.get(it.id)!;

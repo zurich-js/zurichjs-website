@@ -178,7 +178,7 @@ test.describe('Tonight page', () => {
     await expect(page.getByText('Wed 18th Nov 2026').first()).toBeVisible();
   });
 
-  test('on the day: arrival first, and "Find the venue" is a working link', async ({ page }) => {
+  test('on the day: arrival first, and "Venue and arrival" leads to the venue', async ({ page }) => {
     await at(page, '2026-11-18T10:00:00+01:00');
     await page.goto('/today');
     await expect(page.getByText(/Doors 18:30/).first()).toBeVisible();

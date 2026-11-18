@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
-import { buttonClass, cx, type ButtonVariant } from '../recipes.ts';
+import { buttonClass, cx, motion, type ButtonVariant } from '../recipes.ts';
 
 export interface MenuItem {
   label: string;
@@ -39,7 +39,8 @@ const Icon = ({ d, class: extra }: { d: string; class?: string }) => (
  * A button that opens a short list of links under it (Add to calendar → Google, Outlook, Apple), the menu
  * button pattern: Enter, Space or the arrow keys open it on the first item, the arrows move, Escape closes
  * and returns to the button, and choosing, Tab or a click outside closes it. The trigger is a Button; the
- * list is a white panel (24px: 14px items plus its 10px padding) with one lift shadow.
+ * list is a white panel (24px: 14px items plus its 10px padding) with one lift shadow. It drops in and fades out
+ * (motion.drop, shared with the header's "Get involved").
  */
 export function Menu({ label, items, variant = 'secondary', inverse, icon }: Props) {
   const [open, setOpen] = useState(false);
@@ -104,7 +105,7 @@ export function Menu({ label, items, variant = 'secondary', inverse, icon }: Pro
       >
         {icon && <Icon d={icon} />}
         {label}
-        <Icon d="M6 9l6 6 6-6" class={cx('transition-transform', open && 'rotate-180')} />
+        <Icon d="M6 9l6 6 6-6" class={cx('transition-transform duration-reveal ease-glide', open && 'rotate-180')} />
       </button>
       <div
         id={`${id}-menu`}
@@ -113,7 +114,7 @@ export function Menu({ label, items, variant = 'secondary', inverse, icon }: Pro
         aria-labelledby={`${id}-button`}
         hidden={!open}
         onKeyDown={onKey}
-        class="absolute left-0 top-full z-40 mt-2 min-w-full w-max flex flex-col p-2.5 rounded-card bg-white text-black shadow-lift"
+        class={cx(motion.drop, 'absolute left-0 top-full z-40 mt-2 min-w-full w-max flex flex-col p-2.5 rounded-card bg-white text-black shadow-lift')}
       >
         {items.map((item) => (
           <a
@@ -125,7 +126,7 @@ export function Menu({ label, items, variant = 'secondary', inverse, icon }: Pro
               item.onSelect?.();
               close();
             }}
-            class="flex items-center min-h-control px-4 rounded-field text-compact font-bold text-black no-underline hover:bg-grey-soft focus-visible:bg-grey-soft focus-visible:outline-offset-0"
+            class="flex items-center min-h-control px-4 rounded-field text-compact font-bold text-black no-underline transition-colors hover:bg-grey-soft focus-visible:bg-grey-soft focus-visible:outline-offset-0"
           >
             {item.label}
             {item.external && <span class="sr-only"> (opens in a new tab)</span>}

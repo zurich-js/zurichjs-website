@@ -90,7 +90,22 @@
   --grid-template-columns-auto-md: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   --grid-template-columns-auto-lg: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
 
+  /* Motion: three durations by job, one easing for things that move (colours keep the default ease). Rules: motion.css. */
   --ease-glide: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Hover, focus, press, colour, and every exit. */
+  --transition-duration-feedback: 150ms;
+  /* Anything that opens, slides or swaps in, and page transitions. */
+  --transition-duration-reveal: 250ms;
+  /* The speaker arc only. */
+  --transition-duration-drift: 500ms;
+  /* Scroll reveals and page openings (the Zoo pattern): slow, soft and staggered. */
+  --transition-duration-entrance: 1000ms;
+  --transition-delay-stagger: 120ms;
+  --ease-entrance: cubic-bezier(0.2, 0.75, 0.25, 1);
+  --spacing-reveal: 120px;
+  --blur-reveal: 10px;
+  /* `transition-colors` and friends without a duration get feedback. */
+  --default-transition-duration: var(--transition-duration-feedback);
   --shadow-lift: 0 16px 32px -12px rgb(0 0 0 / 0.45);
 }
 
@@ -164,10 +179,24 @@
     }
     *,
     *::before,
-    *::after {
+    *::after,
+    *::backdrop {
       transition: none !important;
       animation: none !important;
     }
+    /* Separate rules: a browser that does not know one of these pseudo-elements would drop a whole list. */
+    *::details-content {
+      transition: none !important;
+    }
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+  /* An open modal dialog (the phone menu, the gallery viewer, Modal) keeps the page behind it still. */
+  html:has(dialog:modal) {
+    overflow: hidden;
   }
   body {
     margin: 0;

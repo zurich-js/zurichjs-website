@@ -110,16 +110,14 @@ export const MILESTONES: Milestone[] = [
     iso: '2025-01',
     title: 'The community grows',
     text: '100 followers on LinkedIn, and 80 to 90 active members in the Meetup group.',
-    photo: h('history-web-zurich', 'ZurichJS and Web Zurich at dinner, January 2025'),
     source: 'old-about',
   },
   {
     date: 'February 2025',
     iso: '2025-02-06',
-    title: 'International speakers and local friends',
-    text: 'Evangelia flies in from Thessaloniki for the second meetup, and the partnership with Web Zurich begins.',
+    title: 'International speakers',
+    text: 'Evangelia flies in from Thessaloniki for the second meetup.',
     photo: h('history-second-meetup', 'The second ZurichJS meetup, February 2025'),
-    link: { label: 'Community partners', href: '/partners#partners-community' },
     source: 'old-about',
   },
   {

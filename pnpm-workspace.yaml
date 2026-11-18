@@ -33,3 +33,10 @@ overrides:
   '@emnapi/runtime': ^1.11.3
   # No patched deepmerge release exists; vendor/deepmerge carries the fix (see its README).
   deepmerge: link:./vendor/deepmerge
+
+auditConfig:
+  ignoreGhsas:
+    # picomatch <=4.0.7 ReDoS (high, owner decision 18th November 2026). No patched release exists yet (4.0.7
+    # is the latest on npm). It only reaches build and dev tools (vite, vitest, tinyglobby, Sanity and Netlify
+    # CLIs) matching our own glob patterns, never visitor input. Remove this once picomatch publishes a fix.
+    - GHSA-fc5q-39xc-vjpf

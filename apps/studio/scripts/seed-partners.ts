@@ -111,14 +111,6 @@ export const PARTNERS: Seed[] = [
     description: 'Regional JavaScript community partner',
   },
   {
-    slug: 'web-zurich',
-    name: 'Web Zurich',
-    url: 'https://webzurich.ch/',
-    logo: 'webzurich.png',
-    kinds: ['community'],
-    description: 'Regional web development community partner',
-  },
-  {
     slug: 'swiss-dev-jobs',
     name: 'Swiss Dev Jobs',
     url: 'https://swissdevjobs.ch/jobs/JavaScript/all',

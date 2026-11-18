@@ -112,7 +112,7 @@ test.describe('desktop only', () => {
     await page.goto('/speakers');
     const card = page.locator('[data-speaker-card]').first();
     await settle(page, '[data-speaker-card] >> nth=0');
-    const photo = card.locator('> span > span').first();
+    const photo = card.locator('> span > span:not([aria-hidden])').first();
     expect(await photo.evaluate((el) => getComputedStyle(el).rotate)).not.toBe('0deg');
     await card.hover();
     await expect.poll(() => photo.evaluate((el) => getComputedStyle(el).rotate)).toBe('0deg');

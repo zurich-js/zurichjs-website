@@ -24,7 +24,7 @@ const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw,
 const RATIO = { square: 'aspect-square', video: 'aspect-video', landscape: 'aspect-4/3', wide: 'aspect-3/2' };
 ---
 
-<span class={cx('relative block overflow-hidden rounded-card bg-grey', ratio ? cx('w-full', RATIO[ratio]) : 'size-full max-lg:aspect-video', extra)}>
+<span class={cx('relative isolate block overflow-hidden rounded-card bg-grey', ratio ? cx('w-full', RATIO[ratio]) : 'size-full max-lg:aspect-video', extra)}>
   <img
     src={srcFor(photo.src)}
     srcset={srcsetFor(photo.src)}

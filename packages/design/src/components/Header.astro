@@ -37,7 +37,7 @@ const path = Astro.url.pathname.replace(/\.html$/, '');
 const isCurrent = (m: string[]) => m.some((p) => path === p || path.startsWith(p + '/'));
 const involvedCurrent = isCurrent(INVOLVED.map((i) => i.href));
 const barSocial = social.filter((s) => ['linkedin', 'instagram', 'bluesky'].includes(s.kind));
-// White marks as on conf.zurichjs.com: 24px glyphs in a 40px round hit area (for the focus ring).
+// Plain white marks (nav review, 5th November 2026), each in a 40px round hit area for the focus ring.
 const iconLink = 'w-10 h-10 rounded-full flex items-center justify-center text-white hover:opacity-70';
 ---
 

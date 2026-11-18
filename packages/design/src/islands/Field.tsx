@@ -83,7 +83,12 @@ export function SelectField({ label, hint, error, class: className, children, ..
     <Wrapper label={label} hint={hint} error={error} class={className} ids={ids}>
       {/* The native arrow is tiny and sits on the edge in most browsers: hidden, and drawn here with room around it. */}
       <span class="relative flex">
-        <select aria-labelledby={ids.label} aria-describedby={describedBy} class={cx(control, 'min-h-control pl-3.5 pr-11 appearance-none cursor-pointer', border(false))} {...rest}>
+        <select
+          aria-labelledby={ids.label}
+          aria-describedby={describedBy}
+          class={cx(control, 'min-h-control pl-3.5 pr-11 appearance-none cursor-pointer', border(false))}
+          {...rest}
+        >
           {children}
         </select>
         <svg

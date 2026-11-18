@@ -22,7 +22,7 @@ import { lastDay, longDate } from './dates.ts';
 import { fail, isEmail, text, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
-import { afterLastMeetup, emailSponsor, meetupLabel, note, planLabel, slackText, sponsorStore, who, zurichDay } from './sponsor.ts';
+import { afterLastMeetup, emailSponsor, meetupLabel, note, planLabel, slackText, sponsorFee, sponsorStore, who, zurichDay } from './sponsor.ts';
 import { isDate, parseDetails, parsePrice, type Parsed } from './sponsor-input.ts';
 import { SponsorshipError, type LifecycleDeps } from './sponsor-lifecycle.ts';
 import type { LogoStore } from './sponsor-logo.ts';
@@ -200,7 +200,7 @@ export async function createSponsor(
   if (imported) sponsor = await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: BOARD, payload: { imported: true } });
   const emailed = input.sendEmail ? await sendInvitation(sponsor, [created.contact], input.message, deps) : 0;
   await note(
-    `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${planLabel(sponsor, meetups.length)}${
+    `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${sponsorFee(sponsor, meetups)}${
       meetups.length ? ` (${meetups.map((m) => slackText(meetupLabel(m))).join('; ')})` : ''
     }${imported && sponsor.paidUntil && sponsor.cycle !== 'once' ? `, paid through ${longDate(lastDay(sponsor.paidUntil))}` : ''}. ${emailed ? `${slackText(input.contact.name)} was emailed.` : 'No email sent.'}`,
     deps,

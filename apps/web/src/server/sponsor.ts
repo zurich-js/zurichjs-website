@@ -234,7 +234,7 @@ export const slackText = (s: string) =>
     .trim();
 
 /** "*Acme* (Community Builder, quarterly)" for Slack. */
-export const who = (s: Sponsor) => `*${slackText(s.companyName)}* (${tierInfo(s.tier).name}, ${cycleInfo(s.cycle).label.toLowerCase()})`;
+export const who = (s: Sponsor) => `*${slackText(s.companyName)}* (${tierInfo(s.tier).name}, ${s.cycle === 'once' ? 'one-time' : cycleInfo(s.cycle).label.toLowerCase()})`;
 
 /**
  * Who an email goes to: confirmed contacts only (a colleague added on the sponsorship page gets

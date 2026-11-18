@@ -126,7 +126,7 @@ async function moveTo(store: SponsorStore, s: Sponsor, to: Status, eventId: stri
 const isStale = (s: Sponsor, subscriptionId: string) => !!s.stripeSubscriptionId && s.stripeSubscriptionId !== subscriptionId;
 
 /** The first payment of a sponsorship: welcome every confirmed contact, one Slack note with what to deliver. */
-async function welcome(s: Sponsor, term: string | null, nextPayment: string | null, eventId: string, deps: NotifyDeps) {
+async function welcome(s: Sponsor, term: string | null, nextPayment: string | null, deps: NotifyDeps) {
   const meetups = s.cycle === 'once' ? await deps.store.meetups(s.id) : [];
   const needsLogo = !(await deps.store.logos(s.id)).length;
   await emailSponsor(s, 'sponsor-welcome', (base) => ({ ...base, term, nextPayment, needsLogo }), { ...deps, meetups, key: `sponsor-welcome:${s.id}` });
@@ -148,7 +148,7 @@ async function startOnce(s: Sponsor, eventId: string, today: string, deps: Notif
   const r = await moveTo(deps.store, m, 'active', eventId);
   if (r.changed) {
     await closePaymentLink(r.sponsor, deps.store, { env: deps.env, fetch: deps.fetch });
-    await welcome(r.sponsor, null, null, eventId, deps);
+    await welcome(r.sponsor, null, null, deps);
   }
 }
 
@@ -255,7 +255,7 @@ export async function handleSponsorWebhook(request: Request, deps: SponsorWebhoo
         const moved =
           s.status === 'pending' || s.status === 'past_due' ? await moveTo(store, s, 'active', event.id, { payload: { invoice: inv.id } }) : { sponsor: s, changed: false };
         s = moved.sponsor;
-        if (first && moved.changed) await welcome(s, termLabel(zurichDayOf(period.start), paidUntil), isRecurring(s.cycle) ? longDate(paidUntil) : null, event.id, notify);
+        if (first && moved.changed) await welcome(s, termLabel(zurichDayOf(period.start), paidUntil), isRecurring(s.cycle) ? longDate(paidUntil) : null, notify);
         else if (!first) await note(`:repeat: Paid: ${who(s)}, ${termLabel(zurichDayOf(period.start), paidUntil)}.`, notify);
         break;
       }

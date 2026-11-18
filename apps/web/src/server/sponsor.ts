@@ -163,12 +163,6 @@ export const sponsorView = (s: Sponsor, meetups: SponsorMeetup[] = [], hasContra
   source: s.source,
 });
 
-/** Loads what a view needs: the meetups and whether a contract is on file. */
-export async function loadView(store: SponsorStore, s: Sponsor): Promise<{ meetups: SponsorMeetup[]; documents: SponsorDocument[] }> {
-  const [meetups, documents] = await Promise.all([store.meetups(s.id), store.documents(s.id)]);
-  return { meetups, documents };
-}
-
 /** The board also sees Stripe ids, the payment link and notes. */
 export const adminSponsorView = (s: Sponsor, meetups: SponsorMeetup[] = [], hasContract = false) => ({
   ...sponsorView(s, meetups, hasContract),

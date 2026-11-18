@@ -32,6 +32,8 @@ const PAGES = [
   '/contact?topic=conduct',
   '/speakers/profile',
   '/membership/account',
+  '/partners/account',
+  '/partners/agreement',
 ];
 
 const axe = async (page: Page) => {

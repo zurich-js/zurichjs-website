@@ -324,3 +324,28 @@ For the board, behind one shared password, `ADMIN_PASSWORD`. The site checks it 
 - **Resignations** arrive as a card with **Confirm resignation** (Nadja, Bogdan, Faris). If dues are open it says so and waits. Confirming ends the subscription at the end of the paid period and emails the member.
 - **Certificates** are issued per paid invoice; a member can download them all on their account page.
 - **Data retention:** one year after a membership ends, `member_anonymise` removes the person (database function; the scheduled job that calls it is a follow-up). Stripe records are kept for the accounts.
+
+## Sponsorship (online)
+
+How it works: `docs/v2/SPONSORSHIP.md`. Sponsors sign in at `/partners/account` (the same email sign-in as members), sign the agreement and pay by card or invoice; the board works in `/admin/sponsors`. It uses the membership database, sign-in, Resend and Slack bot set up above.
+
+### Set up (owner, once)
+
+1. **Stripe (test mode first):** `STRIPE_SECRET_KEY=sk_test_… pnpm sponsorship:stripe-setup --webhook-url https://zurichjs.com/api/sponsorship/webhook` is a dry run; add `--apply` to create one product per tier, 16 prices (lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`), the billing portal configuration (prints `STRIPE_SPONSOR_PORTAL_CONFIG`) and the webhook endpoint (prints `STRIPE_SPONSORSHIP_WEBHOOK_SECRET` once). Repeat with the live key when going live (production change).
+2. **Stripe settings:** keep "Email finalized invoices to customers" and receipts on (they are the invoices sponsors pay); revenue recovery as for memberships.
+3. **Slack:** optionally a sponsors channel with @ZurichJS Bot in it.
+4. **Approve the agreement** at `/partners/agreement` before inviting anyone.
+
+| Variable                            | What                                                                                   |
+| ----------------------------------- | -------------------------------------------------------------------------------------- |
+| `STRIPE_SPONSOR_PORTAL_CONFIG`      | from `pnpm sponsorship:stripe-setup`                                                   |
+| `STRIPE_SPONSORSHIP_WEBHOOK_SECRET` | secret; the sponsorship webhook's signing secret (not the membership or donations one) |
+| `SLACK_SPONSORSHIP_CHANNEL_ID`      | optional; the channel for sponsor notes (falls back to the membership channel)         |
+| `SPONSORSHIP_BOARD_EMAIL`           | optional; where board copies go (default hello@zurichjs.com)                           |
+
+### Day to day
+
+- **Invite a company** after agreeing the sponsorship: `/admin/sponsors` › Add a sponsor › Invite. They get an email, sign in with that address, sign and pay.
+- **An existing sponsorship** (paid by bank transfer, say): Add a sponsor › Import existing, with the date it is paid until. Record later transfers with **Record a payment**. Slack reminds you 30 and 7 days before it runs out.
+- **Move a sponsor up, down or out** after talking to them: open the sponsor › **Propose a change**. They confirm in the portal; until then nothing changes. Use **End outright** only when they did not agree (terminated) or an invitation never started (withdrawn).
+- **Logos:** Slack says when one is uploaded; approve or send it back in the admin area, then add it to the partner document in Sanity and publish.

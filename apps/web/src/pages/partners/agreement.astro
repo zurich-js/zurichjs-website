@@ -1,0 +1,137 @@
+---
+/**
+ * The sponsorship agreement (version AGREEMENT.version in @zurichjs/sponsorship): what a
+ * sponsor's signer accepts in the portal (/partners/account) when they start, change or end
+ * a sponsorship. Fees and benefits come from packages/sponsorship and packages/content, the
+ * same tables /partners and Stripe use.
+ *
+ * DRAFT, written by an agent on 18th November 2026: it needs the owner's approval before
+ * any sponsor signs it (AGENTS.md: legal wording needs the owner). Points to confirm are in
+ * docs/v2/SPONSORSHIP.md, "Open". Change AGREEMENT.version with every change of this text.
+ */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import { SPONSORSHIP_TIERS } from '@zurichjs/content';
+import { AGREEMENT, CYCLES, INVOICE_DAYS, TIERS, feeLabel } from '@zurichjs/sponsorship';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+import { longDate } from '~/server/dates';
+
+const version = longDate(AGREEMENT.version);
+const tiers = [...TIERS].reverse().map((t) => ({
+  name: t.name,
+  fees: CYCLES.map((c) => feeLabel(t.key, c.key)).join(', '),
+  perks: SPONSORSHIP_TIERS.find((o) => o.id === t.key)?.perks ?? [],
+}));
+
+const SECTIONS: [string, string[]][] = [
+  [
+    'The parties',
+    [
+      `This agreement is between the ${SITE.association}, an association (Verein) under Art. 60 ff. of the Swiss Civil Code at Alderstrasse 30, 8008 Zurich, which runs ZurichJS ("we"), and the company named in the sponsorship ("you").`,
+      'The person who accepts this agreement on the website confirms that they may act for the company. Accepting it on the website, with their name and role, is the signature.',
+    ],
+  ],
+  [
+    'What the sponsorship includes',
+    [
+      'You receive the benefits of the tier you chose, as listed below and on the partners page when you accepted this agreement. A sponsorship is recognition of your support. It gives no exclusivity and no say over the programme or the talks, unless the tier says otherwise.',
+      'Some benefits depend on events taking place (slides, mentions, swag). We run meetups regularly but do not promise a number of events in a period.',
+    ],
+  ],
+  [
+    'Term and payment',
+    [
+      'A monthly, quarterly or yearly sponsorship starts with the first payment and renews automatically for the same period until it ends. A one-meetup sponsorship covers the one meetup you chose and ends after it.',
+      `Fees are in Swiss francs. By card, Stripe charges the fee at the start of each period. By invoice, Stripe emails an invoice at the start of each period, due within ${INVOICE_DAYS} days. A sponsorship paid directly to the association runs until the date we confirm in writing.`,
+      'If a payment fails or an invoice is overdue, we remind you. If it stays unpaid, the sponsorship ends and its benefits stop.',
+    ],
+  ],
+  [
+    'Changing the sponsorship',
+    [
+      'You can change the tier or the billing period on your sponsorship page. A higher tier on the same billing period applies at once, and you pay only the difference for the rest of the current period. Any other change applies from your next renewal; nothing is refunded or charged twice.',
+      'We may propose a change we agreed with you, for example a different tier or an end date. A proposal changes nothing until someone from your company accepts it on the sponsorship page.',
+    ],
+  ],
+  [
+    'Ending the sponsorship',
+    [
+      'You can end a recurring sponsorship at any time on your sponsorship page. It ends with the period you have already paid for; fees already paid are not refunded. Until then you can take the end back.',
+      'If we cancel the meetup of a one-meetup sponsorship, we move the sponsorship to another meetup you choose, or refund it if none suits you.',
+      'We may end a sponsorship with written notice if you seriously breach this agreement or our code of conduct. In that case we refund the unused part of the current period, unless the breach is of the code of conduct.',
+    ],
+  ],
+  [
+    'Your name and logo',
+    [
+      'You allow us to use your company name and the logo you upload to recognise your sponsorship while it runs: on zurichjs.com, on sponsor slides, in event announcements and at events. You confirm you hold the rights to the logo. After the sponsorship ends we may still list you as a past sponsor and keep materials already published, such as event photos.',
+      'You may say that you sponsor ZurichJS. Neither of us implies that the other endorses its products.',
+    ],
+  ],
+  [
+    'At our events',
+    [
+      'Everyone who attends or represents your company at our events follows the ZurichJS code of conduct. Recruiting and promotion take place within the benefits of your tier.',
+    ],
+  ],
+  [
+    'Your data',
+    [
+      'We keep the names and email addresses of your contacts, your company and billing details, the agreements accepted and the payment history to run the sponsorship. Payments are processed by Stripe, emails are sent through Resend, and the data is stored with Netlify and Neon. Payment records stay with Stripe as accounting law requires. The privacy policy has the details.',
+    ],
+  ],
+  [
+    'Liability and law',
+    [
+      'Only the association’s assets are liable for its obligations. Neither party is liable for indirect damage. Swiss law applies; the courts of Zurich are competent.',
+      'If we change this agreement, you accept the new version the next time you change your sponsorship. Until then the version you accepted applies.',
+    ],
+  ],
+];
+---
+
+<BaseLayout title="Sponsorship agreement" description={`The agreement for sponsoring ZurichJS, run by the ${SITE.association}.`} noindex>
+  <PageOpening slot="opening" title="Sponsorship agreement" sub={`For companies sponsoring ZurichJS. Version of ${version}.`} />
+  <div class="px-gut pt-12 pb-24">
+    <div class="max-w-3xl flex flex-col gap-9">
+      {
+        SECTIONS.slice(0, 2).map(([h, paras]) => (
+          <section class="flex flex-col gap-3">
+            <h2 class="m-0 text-3xl leading-tight font-bold">{h}</h2>
+            {paras.map((p) => (
+              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">{p}</p>
+            ))}
+          </section>
+        ))
+      }
+      <section class="flex flex-col gap-3" aria-labelledby="h-tiers">
+        <h2 id="h-tiers" class="m-0 text-3xl leading-tight font-bold">Tiers, fees and benefits</h2>
+        <ul class="m-0 p-0 list-none flex flex-col gap-5">
+          {
+            tiers.map((t) => (
+              <li class="flex flex-col gap-1.5">
+                <h3 class="m-0 text-xl font-bold">{t.name}</h3>
+                <p class="m-0 text-lg leading-relaxed text-ink-2">{t.fees}.</p>
+                <p class="m-0 text-lg leading-relaxed text-ink-2">{t.perks.join('; ')}.</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+      {
+        SECTIONS.slice(2).map(([h, paras]) => (
+          <section class="flex flex-col gap-3">
+            <h2 class="m-0 text-3xl leading-tight font-bold">{h}</h2>
+            {paras.map((p) => (
+              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">{p}</p>
+            ))}
+          </section>
+        ))
+      }
+      <p class="m-0 text-lg text-ink-2">
+        Questions? <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a> · <a href="/policies/code-of-conduct" class="font-bold text-black">Code of conduct</a> ·{' '}
+        <a href="/policies/privacy-policy" class="font-bold text-black">Privacy policy</a> · <a href="/partners/account" class="font-bold text-black">Your sponsorship</a>
+      </p>
+    </div>
+  </div>
+</BaseLayout>

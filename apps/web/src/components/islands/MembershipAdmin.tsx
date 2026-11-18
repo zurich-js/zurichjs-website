@@ -15,6 +15,7 @@ import { CYCLES, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, manualTerm, type Cy
 import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.ts';
 import type { CertificateView } from '../../server/membership.ts';
 import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
+import { SponsorsAdmin } from './SponsorsAdmin.tsx';
 
 type Status = AdminMember['status'];
 interface Detail {
@@ -47,9 +48,12 @@ async function api<T>(path: string, init?: RequestInit): Promise<{ status: numbe
   return { status: res.status, body: (await res.json().catch(() => ({}))) as T & { ok?: boolean; error?: string } };
 }
 
-export type AdminSection = 'memberships';
+export type AdminSection = 'memberships' | 'sponsors';
 
-const SECTIONS: { key: AdminSection; label: string; href: string }[] = [{ key: 'memberships', label: 'Memberships', href: '/admin/memberships' }];
+const SECTIONS: { key: AdminSection; label: string; href: string }[] = [
+  { key: 'memberships', label: 'Memberships', href: '/admin/memberships' },
+  { key: 'sponsors', label: 'Sponsors', href: '/admin/sponsors' },
+];
 
 export default function MembershipAdmin({ section = 'memberships' }: { section?: AdminSection }) {
   const [state, setState] = useState<'loading' | 'signed-out' | 'ready'>('loading');
@@ -86,7 +90,7 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
           Sign out
         </Button>
       </div>
-      <Admin onSignedOut={() => setState('signed-out')} />
+      {section === 'sponsors' ? <SponsorsAdmin onSignedOut={() => setState('signed-out')} /> : <Admin onSignedOut={() => setState('signed-out')} />}
     </div>
   );
 }

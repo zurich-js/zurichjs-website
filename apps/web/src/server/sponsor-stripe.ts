@@ -237,17 +237,6 @@ export async function createPortalSession(s: Sponsor, origin: string, deps: Stri
   return r.url;
 }
 
-/** Open or uncollectible invoices: dues still to pay. */
-export async function openInvoices(s: Sponsor, deps: StripeDeps): Promise<number> {
-  if (!s.stripeCustomerId) return 0;
-  const counts = await Promise.all(
-    (['open', 'uncollectible'] as const).map(
-      async (status) => (await api<{ data: unknown[] }>(deps, 'GET', 'invoices', stripeForm({ customer: s.stripeCustomerId, status, limit: 10 }))).data.length,
-    ),
-  );
-  return counts[0]! + counts[1]!;
-}
-
 /* ------------------------------------------------------------------ subscriptions */
 
 interface StripeSubscription {
@@ -267,10 +256,6 @@ const day = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
 const getSub = (id: string, deps: StripeDeps, expand = false) =>
   api<StripeSubscription>(deps, 'GET', `subscriptions/${encodeURIComponent(id)}`, expand ? stripeForm({ expand: ['schedule'] }) : undefined);
 const scheduleId = (s: StripeSubscription) => (typeof s.schedule === 'string' ? s.schedule : (s.schedule?.id ?? null));
-
-export async function currentPlan(subscriptionId: string, deps: StripeDeps) {
-  return fromLookupKey((await getSub(subscriptionId, deps)).items?.data?.[0]?.price?.lookup_key);
-}
 
 /** The first day after the current term. */
 export async function periodEnd(subscriptionId: string, deps: StripeDeps): Promise<string | null> {

@@ -2,6 +2,7 @@
 
 ## 2026-11-19
 
+- **Update**: the home page thanks supporters in three steps: sponsors and hosts in colour in framed cells, then community and conference partners and past supporters in two moving logo rows. A partner's `logoBackground` is now its hover colour, which flips the cell and draws the logo in white or black. The logo rows are the second thing that moves on its own, with a new `duration-marquee` token ([Components](/systems/design-system/components.md), [Motion](/systems/design-system/motion.md), [Partners](/domains/partners/overview.md)).
 - **Update**: speaker IDs are names, never generated IDs. `clean-speaker-slugs.ts` proposes a name for every `speaker-<uuid>` ID, and feedback and profile links resolve old IDs ([Web](/systems/web.md), [Studio](/systems/studio.md)).
 - **Update**: cards and callouts between sections reveal on scroll, and an empty `media` slot counts as no media ([Motion](/systems/design-system/motion.md), [Components](/systems/design-system/components.md)). The contact page's organiser cards link to speaker profiles and its FAQ links carry an arrow.
 - **Update**: `pnpm audit` runs with no ignored advisory ([CI](/systems/operations/ci.md)).

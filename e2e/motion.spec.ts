@@ -196,3 +196,77 @@ test.describe('reduced motion', () => {
     expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
   });
 });
+
+/** The supporters section on the home page. */
+const HOSTS = 'section[aria-labelledby="h-hosts"]';
+
+test('the logo rows move, hold under the pointer and show a logo in colour', async ({ page, isMobile }) => {
+  await page.goto('/');
+  // The heading, not a row: a row never stops moving, so it is never "stable" to scroll to.
+  await settle(page, `${HOSTS} h3 >> nth=1`);
+  const rows = page.locator(`${HOSTS} .motion-marquee`);
+  await expect(rows).toHaveCount(2);
+  const row = rows.first();
+  const state = () => row.evaluate((el) => getComputedStyle(el).animationPlayState);
+  const x = () => row.evaluate((el) => el.getBoundingClientRect().x);
+  expect(await state()).toBe('running');
+  const before = await x();
+  await expect.poll(x).not.toBe(before);
+  // The two rows move in opposite directions.
+  expect(await rows.evaluateAll((els) => els.map((el) => getComputedStyle(el).animationDirection))).toEqual(['normal', 'reverse']);
+  // Hover styles apply only where there is a pointer that hovers.
+  if (isMobile) return;
+  // Every logo on screen can be hovered, the repeated copies too: the row holds and the logo turns to colour.
+  const box = (await row.boundingBox())!;
+  await page.mouse.move(page.viewportSize()!.width / 2, box.y + box.height / 2);
+  expect(await state()).toBe('paused');
+  const hovered = page.locator(`${HOSTS} .motion-marquee a:hover`);
+  await expect(hovered).toHaveCount(1);
+  await expect.poll(() => hovered.locator('img').evaluateAll((imgs) => imgs.map((i) => getComputedStyle(i).opacity))).toEqual(['0', '1']);
+  // The keyboard meets each logo once: links in the copies are skipped.
+  const links = await row.evaluate((el) => ({
+    first: el.querySelectorAll('ul:first-child a:not([tabindex="-1"])').length,
+    all: el.querySelectorAll('a:not([tabindex="-1"])').length,
+    hidden: el.querySelectorAll('ul[aria-hidden="true"]').length,
+    lists: el.querySelectorAll('ul').length,
+  }));
+  expect(links.all).toBe(links.first);
+  expect(links.hidden).toBe(links.lists - 1);
+});
+
+test("a sponsor's card flips to its hover colour, and one without a hover colour stays white", async ({ page, isMobile }) => {
+  test.skip(isMobile, 'hover styles apply only where there is a pointer that hovers');
+  await page.goto('/');
+  await settle(page, `${HOSTS} a`);
+  const card = (name: string) => page.locator(`${HOSTS} a:has(img[alt^="${name}"])`).first();
+  const look = (name: string) =>
+    card(name).evaluate((el) => ({
+      bg: getComputedStyle(el).backgroundColor,
+      imgs: [...el.querySelectorAll('img')].map((i) => `${getComputedStyle(i).opacity} ${getComputedStyle(i).filter}`),
+    }));
+  // Stripe has a hover colour: a white card with the colour logo, then its purple with the logo in white.
+  expect(await look('Stripe')).toEqual({ bg: 'rgb(255, 255, 255)', imgs: ['1 none', '0 brightness(0) invert(1)'] });
+  await card('Stripe').hover();
+  await expect.poll(() => look('Stripe')).toEqual({ bg: 'rgb(99, 91, 255)', imgs: ['0 none', '1 brightness(0) invert(1)'] });
+  // FIN has none: nothing but the frame changes.
+  await card('FIN').hover();
+  await expect.poll(() => look('FIN')).toEqual({ bg: 'rgb(255, 255, 255)', imgs: ['1 none'] });
+});
+
+test.describe('with reduced motion', () => {
+  test.use({ contextOptions: { reducedMotion: 'reduce' } });
+
+  test('the logo rows do not move: the logos wrap, once each, with no fade', async ({ page }) => {
+    await page.goto('/');
+    const row = page.locator(`${HOSTS} .motion-marquee`).first();
+    await row.scrollIntoViewIfNeeded();
+    const got = await row.evaluate((el) => ({
+      animation: getComputedStyle(el).animationName,
+      wrap: getComputedStyle(el.querySelector('ul')!).flexWrap,
+      copies: [...el.querySelectorAll('ul[aria-hidden="true"]')].filter((u) => getComputedStyle(u).display !== 'none').length,
+      mask: getComputedStyle(el.parentElement!).maskImage,
+      fits: el.querySelector('ul')!.getBoundingClientRect().right <= innerWidth,
+    }));
+    expect(got).toEqual({ animation: 'none', wrap: 'wrap', copies: 0, mask: 'none', fits: true });
+  });
+});

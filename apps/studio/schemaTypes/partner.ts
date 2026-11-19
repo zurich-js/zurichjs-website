@@ -27,10 +27,10 @@ export default defineType({
     }),
     defineField({
       name: 'logoBackground',
-      title: 'Logo background colour (optional)',
+      title: 'Hover colour (optional)',
       type: 'string',
       description:
-        'A hex colour such as #635BFF, for a logo made to sit on its own brand colour. On hover the logo wall shows the colour logo on it; without it, on white.',
+        'A hex colour such as #635BFF. On hover the logo card turns this colour and the logo turns white (black on a light colour). Leave it empty and the card stays white with the colour logo.',
       validation: (r) => r.regex(/^#[0-9a-fA-F]{6}$/, {name: 'hex colour'}).error('Use a hex colour like #635BFF.'),
     }),
     defineField({name: 'url', title: 'Website URL', type: 'url'}),

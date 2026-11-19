@@ -202,3 +202,9 @@ Recorded from the commits that made them (#83, #90).
 # Related specs
 
 None.
+
+## Supporters on the home page in three steps (owner, 19th November 2026)
+
+- Logos were all black at rest so they would not compete for attention, but sponsors like their logos as they are. So only the companies who fund the meetups (current sponsors and current hosts) keep their colours, in framed white cells sized by tier.
+- Community and conference partners, and past supporters, are two moving rows of faint black logos across the whole screen, fading at its edges, in colour on hover. This adds a second thing that moves on its own (after the speaker arc) and the `duration-marquee` token.
+- A partner's `logoBackground` became its hover colour: the cell flips to it and the logo turns white (black on a light colour). Stripe flips to its purple and SAE to black; partners without one stay white. It is one optional field in the Studio.

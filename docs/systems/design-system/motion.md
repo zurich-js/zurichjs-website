@@ -18,6 +18,7 @@ CSS only, with no library (owner, 12th November 2026). The values are tokens in 
 | `duration-reveal`   | 250ms                              | Anything that opens, slides or swaps in, and page transitions.                               |
 | `duration-drift`    | 500ms                              | The speaker arc, and a speaker card's photo straightening on hover.                          |
 | `duration-entrance` | 1000ms                             | Scroll reveals and page openings.                                                            |
+| `duration-marquee`  | 4s                                 | A moving logo row: the time one logo takes, so rows of any length move at the same speed.    |
 | `delay-stagger`     | 120ms                              | The gap between items that reveal together.                                                  |
 | `ease-glide`        | `cubic-bezier(0.22, 1, 0.36, 1)`   | Things that move. Colours keep the default ease.                                             |
 | `ease-entrance`     | `cubic-bezier(0.2, 0.75, 0.25, 1)` | Scroll reveals and page openings.                                                            |
@@ -45,15 +46,17 @@ CSS only, with no library (owner, 12th November 2026). The values are tokens in 
   - `data-reveal` reveals one element, and `data-reveal="children"` each child of a grid or list (AutoGrid, PackedGrid, the gallery, the speaker and event lists).
   - `reveal.ts` runs them. BaseLayout's head script turns them on (`html[data-motion]`) only without reduced motion, and drops them if the script has not started within 2.5 seconds, so content never stays hidden. The selector for what reveals is in both `motion.css` and `reveal.ts`: keep the two in step.
 - **Page openings** (`PageOpening`, the home hero) enter on load, line by line, the media last (`data-entrance`).
-- **Hover:** header links get a dark pill that grows and fades in over 250ms. Logo tiles cross-fade to colour over 250ms, opacity only. A speaker card's photo straightens.
-- **The speaker arc** is the one thing that moves on its own: it turns every 3.2 seconds only while it is on screen, and holds while a card is hovered or focused. No parallax.
+- **Hover:** header links get a dark pill that grows and fades in over 250ms. Logo tiles cross-fade to colour over 250ms, opacity only; a tile with a hover colour changes its cell colour over the same time. A speaker card's photo straightens.
+- **Two things move on their own** (owner, 19th November 2026), and nothing else. No parallax.
+  - **The speaker arc** turns every 3.2 seconds only while it is on screen, and holds while a card is hovered or focused.
+  - **The logo rows** on the home page (`LogoMarquee`, `motion-marquee`) slide slowly and without end, the two rows in opposite directions, and hold while hovered or focused. A row holds its logos an even number of times and slides by half its width, so it loops without a seam on any screen; the copies are hidden from assistive technology and skipped by the keyboard, and the pointer can use them.
 - **Dialogs:** `Modal` is a native `<dialog>` (owner, 12th November 2026). Dropdowns, disclosures, notices and field errors animate, and the segmented control's thumb slides.
 - **Progressive enhancement:** a browser without view transitions, `@starting-style`, `allow-discrete` or `::details-content` keeps the instant behaviour. There is no script fallback.
-- **Reduced motion:** under `prefers-reduced-motion`, all transitions, animations, reveals and view transitions are switched off, the arc does not turn, and smooth scrolling is disabled.
+- **Reduced motion:** under `prefers-reduced-motion`, all transitions, animations, reveals and view transitions are switched off, the arc does not turn, the logo rows do not move (the logos wrap inside the gutter, once each, with no edge fade), and smooth scrolling is disabled.
 
 ## Tests
 
-Every e2e spec runs with reduced motion (`playwright.config.ts`), so runs are deterministic. `e2e/motion.spec.ts` turns motion back on to check the thumb, disclosures, dropdowns, page transitions, the header and the reveals; a motion change gets its check there ([Testing](/systems/testing.md)).
+Every e2e spec runs with reduced motion (`playwright.config.ts`), so runs are deterministic. `e2e/motion.spec.ts` turns motion back on to check the thumb, disclosures, dropdowns, page transitions, the header, the reveals, the logo rows and a sponsor card's hover colour; a motion change gets its check there ([Testing](/systems/testing.md)).
 
 ## Related concepts
 

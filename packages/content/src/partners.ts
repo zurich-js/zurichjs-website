@@ -95,6 +95,7 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     name: 'Stripe',
     url: 'https://stripe.com',
     ...logo('stripe.webp'),
+    logoBackground: '#635bff',
     kinds: ['sponsor'],
     tier: 'builder',
     // Production lists Stripe as a Community Builder AND in "Previous Partners and Sponsors". Confirm item.
@@ -110,7 +111,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://www.gyffted.com',
     ...logo('gyff-logo-square.webp'),
     kinds: ['sponsor'],
-    tier: 'supporter',
+    // A Community Friend from their coming contribution (owner, 19th November 2026).
+    tier: 'friend',
     current: true,
     description: 'IT recruitment in Switzerland',
     blurb:
@@ -289,7 +291,16 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
   { id: 'gatling', name: 'Gatling', url: 'https://gatling.io', ...logo('gatling.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
   { id: 'supabase', name: 'Supabase', url: 'https://supabase.com', ...logo('supabase.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
   { id: 'remotion', name: 'Remotion', url: 'https://www.remotion.dev', ...logo('remotion.svg'), kinds: ['sponsor'], current: false, source: 'owner' },
-  { id: 'sae-institute', name: 'SAE Institute Zürich', url: 'https://www.sae.swiss', ...logo('sae-institute.svg'), kinds: ['venue'], current: true, source: 'owner' },
+  {
+    id: 'sae-institute',
+    name: 'SAE Institute Zürich',
+    url: 'https://www.sae.swiss',
+    ...logo('sae-institute.svg'),
+    logoBackground: '#000000',
+    kinds: ['venue'],
+    current: true,
+    source: 'owner',
+  },
   { id: 'sentry', name: 'Sentry', url: 'https://sentry.io', ...logo('sentry.svg'), kinds: ['sponsor'], current: false, source: 'prospectus' },
   { id: 'cloudflare', name: 'Cloudflare', url: 'https://www.cloudflare.com', ...logo('cloudflare.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },
   { id: 'imagekit', name: 'ImageKit', url: 'https://imagekit.io', ...logo('imagekit.svg'), kinds: ['sponsor'], current: false, source: 'photo-banners' },

@@ -37,7 +37,7 @@ timestamp: "2026-11-19T00:00:00Z"
 | `e2e/motion.spec.ts`      | the motion layer, with motion on                                                                                                                                                                            |
 | `e2e/visual.spec.ts`      | visual regression                                                                                                                                                                                           |
 
-- **Reduced motion by default:** every spec runs with `reducedMotion: 'reduce'` (`playwright.config.ts`), so runs are deterministic. `e2e/motion.spec.ts` turns motion back on to check the segmented thumb, disclosures, dropdowns, page transitions, the header and the reveals. A motion change gets its check there.
+- **Reduced motion by default:** every spec runs with `reducedMotion: 'reduce'` (`playwright.config.ts`), so runs are deterministic. `e2e/motion.spec.ts` turns motion back on to check the segmented thumb, disclosures, dropdowns, page transitions, the header, the reveals, the logo rows and a sponsor card's hover colour. A motion change gets its check there.
 - **Chromium text rendering is fixed** (`--disable-lcd-text`, `--font-render-hinting=none`, `--force-color-profile=srgb` in `playwright.config.ts`), so baselines made locally on Linux match CI. Keep these flags.
 
 ## Visual regression

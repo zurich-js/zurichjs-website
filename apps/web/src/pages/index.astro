@@ -140,8 +140,8 @@ const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.f
   </div>
   <div class="py-section">
     <HostsSection
-      sponsors={partnerGroups.currentSponsors}
-      partners={[...partnerGroups.venues.filter((p) => p.current), ...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]}
+      sponsors={[...partnerGroups.currentSponsors, ...partnerGroups.venues.filter((p) => p.current)]}
+      partners={[...partnerGroups.conferences, ...partnerGroups.communities, ...partnerGroups.supporting]}
       past={pastSupporters}
     />
   </div>

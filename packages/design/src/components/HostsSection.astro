@@ -1,17 +1,18 @@
 ---
 /**
- * The companies behind ZurichJS as logo walls: current sponsors (sized by tier) and hosts and partners in
- * one wall, then everyone who supported us before in a second wall.
+ * The companies behind ZurichJS, in three steps of attention (owner, 19th November 2026): the sponsors and hosts
+ * who fund the meetups, in their own colours and framed, sized by tier; community and conference partners, faint
+ * in a moving row; and everyone who supported us before, in a second row that moves the other way.
  */
 import type { Partner } from '@zurichjs/events';
 import Heading from './Heading.astro';
+import LogoMarquee from './LogoMarquee.astro';
 import LogoWall from './LogoWall.astro';
-import Section from './Section.astro';
 
 interface Props {
-  /** Venue hosts and other partners, shown at the standard size. */
+  /** Community and conference partners. */
   partners: Partner[];
-  /** Current sponsors, highest tier first: the tier sets the size of their cell. */
+  /** Current sponsors and hosts, highest tier first: the tier sets the size of their cell. */
   sponsors?: Partner[];
   /** Everyone who supported ZurichJS before. */
   past?: Partner[];
@@ -19,33 +20,44 @@ interface Props {
   link?: boolean;
 }
 const { partners, sponsors = [], past = [], heading = 'Companies who host and support ZurichJS', link = true } = Astro.props;
-const current = [...sponsors, ...partners];
 ---
 
 {
-  current.length > 0 && (
-    <Section id="h-hosts" title={heading}>
-      <div class="flex flex-col gap-3">
-        {past.length > 0 && (
+  sponsors.length + partners.length > 0 && (
+    <section aria-labelledby="h-hosts" class="flex flex-col gap-8">
+      <div class="px-gut max-w-reading box-content">
+        <Heading id="h-hosts">{heading}</Heading>
+      </div>
+      {sponsors.length > 0 && (
+        <div class="px-gut flex flex-col gap-3">
           <Heading as="h3" size="card">
             Thank you to everyone supporting us today
           </Heading>
-        )}
-        <LogoWall partners={current} byTier label="Current hosts and sponsors" />
-      </div>
+          <LogoWall partners={sponsors} byTier tone="colour" label="Current sponsors and hosts" />
+        </div>
+      )}
+      {/* The two rows span the screen (no gutter) and fade out at its edges; their headings stay in the column. */}
+      {partners.length > 0 && (
+        <div class="flex flex-col gap-3">
+          <Heading as="h3" size="card" class="px-gut">
+            Community and conference partners
+          </Heading>
+          <LogoMarquee partners={partners} label="Community and conference partners" />
+        </div>
+      )}
       {past.length > 0 && (
         <div class="flex flex-col gap-3">
-          <Heading as="h3" size="card">
+          <Heading as="h3" size="card" class="px-gut">
             And thank you to everyone who helped us get here
           </Heading>
-          <LogoWall partners={past} label="Past supporters" />
+          <LogoMarquee partners={past} reverse label="Past supporters" />
         </div>
       )}
       {link && (
-        <a href="/partners" class="self-start font-bold text-body underline">
+        <a href="/partners" class="mx-gut self-start font-bold text-body underline">
           Host a meetup or support the community
         </a>
       )}
-    </Section>
+    </section>
   )
 }

@@ -315,7 +315,7 @@ const TYPE: { role: string; cls: string; bold: boolean }[] = [
     </Section>
 
     <Section id="d-proof" title="ProofSentence and logos">
-      <Fragment slot="sub">Rating and award in one sentence. Logo walls: grey cells, black logos, colour on hover. Inline logos keep their colours.</Fragment>
+      <Fragment slot="sub">Rating and award in one sentence. Logo walls: grey cells, black logos, colour on hover; a partner with a hover colour flips its cell. Inline logos keep their colours.</Fragment>
       <div class="on-black bg-black text-white rounded-block p-card-lg"><ProofSentence rating={rating} award={award} /></div>
       <LogoWall partners={partners.filter((p) => !p.delisted).slice(0, 6)} label="Example logo wall" />
       <LogoRow items={partners.filter((p) => !p.delisted).slice(0, 3).map((partner) => ({ partner, caption: partner.name }))} />

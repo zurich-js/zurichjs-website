@@ -113,7 +113,8 @@ describe('groupPartners on the production record', () => {
   it('lists current sponsors by tier, highest first', () => {
     expect(g.sponsorsByTier.map((t) => [t.tier, names(t.partners)])).toEqual([
       ['builder', ['Stripe']],
-      ['supporter', ['FIN', 'GYFF']],
+      ['friend', ['GYFF']],
+      ['supporter', ['FIN']],
     ]);
   });
   it('separates venues, conference, community and supporting partners as production does', () => {

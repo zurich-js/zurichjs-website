@@ -26,7 +26,7 @@ Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisti
 
 ## Where partners are thanked
 
-- **Home page:** current sponsors (Champion extra large, Builder large), then venue hosts and current partners.
+- **Home page:** current sponsors and current venue hosts together, in colour (Champion extra large, Builder large, Friend a step above the rest); then community and conference partners in a moving row; then past supporters in a second one ([Components](/systems/design-system/components.md)).
 - **Upcoming event pages and Tonight:** the evening's hosts and supporters, plus this season's current sponsors.
 - **Past event pages:** only their own hosts and stated supporters (`eventThanks(ev, partners, { past })`). A meetup whose date has gone by, including a cancelled one, never shows "Supporting ZurichJS this season", so no past event implies today's sponsors supported it. JSON-LD sponsors follow the same rule.
 

@@ -101,6 +101,8 @@
   /* Scroll reveals and page openings (the Zoo pattern): slow, soft and staggered. */
   --transition-duration-entrance: 1000ms;
   --transition-delay-stagger: 120ms;
+  /* How long one logo takes to go by in a moving row (LogoMarquee): slow enough to read it. */
+  --transition-duration-marquee: 4s;
   --ease-entrance: cubic-bezier(0.2, 0.75, 0.25, 1);
   --spacing-reveal: 120px;
   --blur-reveal: 10px;

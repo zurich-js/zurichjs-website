@@ -305,3 +305,53 @@ html[data-motion-swap]::view-transition-new(root) {
     opacity: 0;
   }
 }
+
+/* ------------------------------------------------------------------------------------------------ Marquee */
+
+/*
+ * A row that moves on its own (LogoMarquee): it holds its content an even number of times and slides by half
+ * its width, so it loops without a seam. One pass takes the marquee duration for each item (--marquee-items),
+ * so rows of any length move at the same speed. It holds while hovered or focused. `marquee-fade` on the box
+ * around it fades the row out at both edges of the screen.
+ * With reduced motion it does not move: the content wraps inside the gutter and the copies are not shown.
+ */
+@keyframes motion-marquee {
+  to {
+    translate: -50% 0;
+  }
+}
+@utility motion-marquee {
+  display: flex;
+  width: max-content;
+  animation: motion-marquee calc(var(--transition-duration-marquee) * var(--marquee-items, 12)) linear infinite;
+  /* Each copy of the content keeps its own width. */
+  & > * {
+    flex: none;
+  }
+  &[data-reverse] {
+    animation-direction: reverse;
+  }
+  &:hover,
+  &:focus-within {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    width: auto;
+    & > * {
+      flex: 1 1 0;
+      min-width: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    & > [aria-hidden='true'] {
+      display: none;
+    }
+  }
+}
+@utility marquee-fade {
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  @media (prefers-reduced-motion: reduce) {
+    mask-image: none;
+    padding-inline: var(--gut);
+  }
+}

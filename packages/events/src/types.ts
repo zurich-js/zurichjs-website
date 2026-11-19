@@ -179,7 +179,7 @@ export interface Partner {
   logo?: string;
   /** A black version for logo walls; without it the colour logo is drawn in black by a filter. */
   logoBlack?: string;
-  /** The colour behind the colour logo on hover in a logo wall (hex); without it, white. */
+  /** The hover colour (hex): on hover a logo cell turns this colour and the logo white, or black on a light colour. Without it the cell does not flip. */
   logoBackground?: string;
   /** Width / height of `logo`, to size logos to the same visual weight. */
   logoRatio?: number;

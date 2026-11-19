@@ -16,3 +16,8 @@ for f in $(ls "$dir"/*.sql 2>/dev/null | sort); do
   applied=$((applied + 1))
 done
 echo "migrations: $applied applied, database up to date"
+
+# Members linked to the old Docker Stripe mock (cus_mock_…, sub_mock_…) would make Stripe answer
+# "No such customer": unlink them, so their next checkout creates a real test customer.
+psql -v ON_ERROR_STOP=1 -q -c "update members set stripe_customer_id = null, stripe_subscription_id = null
+  where stripe_customer_id like 'cus\_mock\_%' or stripe_subscription_id like 'sub\_mock\_%'"

@@ -48,7 +48,7 @@ timestamp: "2026-11-19T00:00:00Z"
 - an upcoming event, a recap event and a past event without times
 - the speakers list and a speaker page
 - an event's media page
-- about, today, cfp, partners, donate, membership
+- about, today, cfp, partners, donate, membership, the sponsorship agreement
 - the `/design` gallery
 
 - **Deterministic input:** build with `CONTENT_SOURCE=sample BUILD_NOW=2026-11-01T12:00:00+01:00`; the browser clock is fixed to the same instant.

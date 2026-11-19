@@ -25,6 +25,7 @@ const PAGES = [
   ['partners', '/partners'],
   ['donate', '/donate'],
   ['membership', '/membership'],
+  ['sponsorship-agreement', '/partners/agreement'],
 ] as const;
 
 test.describe('visual', () => {

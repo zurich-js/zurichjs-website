@@ -145,3 +145,4 @@ Not added, because production gives no role or logo: Stripe for `jan-2026` (name
 # Related specs
 
 - [Member perks](/domains/membership/specs/member-perks.md)
+- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)

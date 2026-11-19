@@ -93,3 +93,4 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 
 - [A radius rule for cards with buttons](/systems/design-system/specs/card-radius-with-buttons.md)
 - [A tertiary button](/systems/design-system/specs/tertiary-button.md)
+- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)

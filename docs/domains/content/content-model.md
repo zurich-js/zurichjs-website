@@ -37,4 +37,4 @@ The publish webhook rebuilds the site for `events`, `talk`, `speaker`, `partner`
 
 # Related specs
 
-None.
+- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)

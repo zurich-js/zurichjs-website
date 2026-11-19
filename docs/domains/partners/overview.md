@@ -16,7 +16,7 @@ Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisti
 
 - **Sanity `partner` documents win.** While Sanity has none, `withPartnerFallback` uses the code-side record in `packages/content/src/partners.ts`, which follows the old production partner list; every entry names its source ([Content sources](/reference/content-sources.md)). Once Sanity has any partner document, the record is ignored. Sample content uses the same record.
 - **With the fallback,** each event's host is the venue partner named in its own `location`, and only the supporters production stated for an evening are added (`EVENT_SUPPORTERS`). Hosts or supporters an event already has always win.
-- **The Studio's `seed-partners.ts`** writes the same list as drafts for organisers to confirm (every "current" flag, with dates) before publishing.
+- **The Studio's `seed-partners.ts`** writes 17 of the 33 partners as drafts for organisers to confirm (every "current" flag, with dates) before publishing. It is behind the code list: the review and what the script still needs are in [the partner review Spec](/domains/partners/specs/partner-data-review.md).
 
 ## Who counts as current
 
@@ -57,3 +57,4 @@ The owner decisions and confirm items for partners (each current flag, the one-t
 # Related specs
 
 - [Online sponsorship on /partners](/domains/sponsorship/specs/partners-page-online.md)
+- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)

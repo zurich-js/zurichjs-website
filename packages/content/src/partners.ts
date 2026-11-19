@@ -155,7 +155,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://novu.ch/',
     ...logo('novu.webp'),
     kinds: ['venue'],
-    current: false,
+    // A current host again (owner, 19th November 2026).
+    current: true,
     description: 'Hosting venue for ZurichJS meetups',
     source: 'old-partners',
   },
@@ -165,7 +166,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://qrco.de/bgTBWh',
     ...logo('get-your-guide.webp'),
     kinds: ['venue'],
-    current: false,
+    // A current host again (owner, 19th November 2026).
+    current: true,
     description: 'Software company hosting us for Vue Zurich/ZurichJS meetups',
     source: 'old-partners',
   },
@@ -185,7 +187,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://orbiz-flex.ch/standort/josef',
     ...logo('orbiz.webp'),
     kinds: ['venue'],
-    current: false,
+    // A current host again (owner, 19th November 2026).
+    current: true,
     description: 'Hosting venue for ZurichJS meetups',
     source: 'old-partners',
   },
@@ -218,7 +221,9 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://javascript-conference.com/munich/',
     ...logo('ijs-munich.webp'),
     kinds: ['conference'],
-    current: true,
+    current: false,
+    // No longer a partner: removed from every list (owner, 19th November 2026).
+    delisted: true,
     description: 'The Conference for Fullstack JS Development',
     source: 'old-partners',
   },
@@ -252,7 +257,9 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://webzurich.ch/',
     ...logo('webzurich.webp'),
     kinds: ['community'],
-    current: true,
+    current: false,
+    // No longer a partner: removed from every list (owner, 19th November 2026).
+    delisted: true,
     description: 'Regional web development community partner',
     source: 'old-partners',
   },
@@ -320,11 +327,11 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
 ];
 
 /**
- * Partners the owner withdrew from all promotion (2nd and 3rd November 2026), by id or
+ * Partners the owner withdrew from all promotion (2nd, 3rd and 19th November 2026), by id or
  * name. Applied to Sanity partners too, so a seeded or re-imported document
  * cannot bring them back onto partner lists, logo walls or upcoming event pages.
  */
-export const DELISTED_PARTNERS: readonly string[] = ['ginetta', 'code-blossom', 'dotjs', 'react-paris'];
+export const DELISTED_PARTNERS: readonly string[] = ['ginetta', 'code-blossom', 'dotjs', 'react-paris', 'ijs-munich', 'web-zurich'];
 const norm = (s: string) =>
   s
     .toLowerCase()

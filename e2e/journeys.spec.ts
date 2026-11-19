@@ -748,7 +748,9 @@ test.describe('partners and sponsors', () => {
   test('the anchors other pages link to exist: venues, community, previous supporters', async ({ page }) => {
     await page.goto('/partners#partners-venues');
     await expect(page.locator('#partners-venues').getByRole('heading', { name: 'Venue partners' })).toBeVisible();
-    await expect(page.locator('#partners-communities').getByRole('link', { name: /Web Zurich/ })).toBeVisible();
+    // No community partner is listed since Web Zurich left (owner, 19th November 2026); the anchor stays.
+    await expect(page.locator('#partners-communities')).toContainText('None listed right now.');
+    await expect(page.locator('#partners-communities').getByRole('link')).toHaveCount(0);
     await expect(page.locator('#partners-conferences').getByRole('link', { name: /Grusp/ })).toBeVisible();
     // CityJS is a past supporter now (owner, 4th November 2026).
     await expect(page.locator('#partners-past').getByRole('img', { name: 'CityJS' })).toBeVisible();

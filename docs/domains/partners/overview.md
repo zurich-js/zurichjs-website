@@ -22,8 +22,8 @@ Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisti
 
 ## Who counts as current
 
-- **Only partners an organiser marks `current`, or with a running sponsorship in the database, are called current sponsors.** Venue hosts are listed as hosts ("have hosted"), never as current sponsors.
-- **Delisted partners** are never promoted: `DELISTED_PARTNERS` (Ginetta, Code Blossom, DotJS, React Paris; owner, 2nd and 3rd November 2026) and any partner with `delisted`, matched by id or name, so a seeded Sanity document cannot bring them back. `groupPartners` leaves them out of every list (current, venue, community, previous), so they disappear from `/partners`, the home page, upcoming event pages, Tonight and the design gallery. They remain only as history: a past event they hosted still names them, and the About timeline and `llms-full.txt` keep past venues.
+- **Only partners an organiser marks `current`, or with a running sponsorship in the database, are called current sponsors.** Venue hosts are listed as hosts ("have hosted"), never as current sponsors. The current hosts are SAE Institute Zürich, novu, GetYourGuide and Orbiz Josef (owner, 19th November 2026); Smallpdf is a past host.
+- **Delisted partners** are never promoted: `DELISTED_PARTNERS` (Ginetta, Code Blossom, DotJS, React Paris; owner, 2nd and 3rd November 2026; iJS Munich and Web Zurich; owner, 19th November 2026) and any partner with `delisted`, matched by id or name, so a seeded Sanity document cannot bring them back. `groupPartners` leaves them out of every list (current, venue, community, previous), so they disappear from `/partners`, the home page, upcoming event pages, Tonight and the design gallery. They remain only as history: a past event they hosted still names them, and the About timeline and `llms-full.txt` keep past venues.
 - Vercel is listed as a past sponsor, not current (owner, 4th November 2026).
 
 ## Where partners are thanked

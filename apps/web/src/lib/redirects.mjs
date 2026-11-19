@@ -1,5 +1,5 @@
 /**
- * Permanent redirects for URLs that change in V2 (docs/v2/PLAN.md, section 2).
+ * Permanent redirects for URLs that change in V2 (docs/systems/seo.md, "Old URLs").
  * Old production URLs keep working and pass their ranking to the new page.
  */
 /** @type {Record<string, { status: 301; destination: string }>} */
@@ -14,7 +14,7 @@ export const LEGACY_REDIRECTS = {
   // Stripe return pages; online payments were removed (owner decision).
   '/success': { status: 301, destination: '/donate' },
   '/checkout/success': { status: 301, destination: '/events' },
-  // Production pages that V2 does not have (owner decisions, docs/v2/DECISIONS.md): send visitors and
+  // Production pages that V2 does not have (owner decisions, docs/reference/decisions/index.md): send visitors and
   // search ranking to the closest page. Sub-paths (/workshops/*, /profile/*, ...) are in apps/web/netlify.toml.
   // /admin is the board's admin area again (owner, 11th November 2026), so it no longer redirects.
   // ?from= shows a one-line note that workshops and T-shirt sales have ended (owner decisions).

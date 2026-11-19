@@ -1,5 +1,5 @@
 /**
- * Membership payments through Stripe (docs/v2/MEMBERSHIP.md). Plain fetch via
+ * Membership payments through Stripe (docs/domains/membership/overview.md). Plain fetch via
  * stripeApi (stripe.ts): no SDK, and the same local mock works.
  *
  *   - Prices are found by lookup key (member_basic_quarterly, …), so the fee

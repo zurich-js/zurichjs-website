@@ -146,7 +146,7 @@ export default function Programme({
                   )}
                 </h3>
                 {(() => {
-                  // The facts row under the title (docs/design-system.md, Cards): the time first and bold
+                  // The facts row under the title (docs/systems/design-system/components.md, Cards): the time first and bold
                   // (its label read by screen readers only), then the format and level. The speakers follow the description.
                   const items: Fact[] = [
                     ...(a.time ? [{ label: 'Time', value: <time>{a.time}</time>, hideLabel: true, strong: true }] : []),

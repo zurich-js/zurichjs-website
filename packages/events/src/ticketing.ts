@@ -3,7 +3,7 @@ import type { Event, EventState } from './types.ts';
 /**
  * Seam for where people get a place at an event: Meetup RSVP links (every
  * meetup is free), and free tickets on Sane for events linked to it (see
- * docs/v2/SANE-READINESS.md). Pages never branch on the provider; they render
+ * docs/domains/events/specs/sane-ticketing.md). Pages never branch on the provider; they render
  * the action.
  */
 export interface TicketingAction {

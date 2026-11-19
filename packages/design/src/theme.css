@@ -96,7 +96,7 @@
   --transition-duration-feedback: 150ms;
   /* Anything that opens, slides or swaps in, and page transitions. */
   --transition-duration-reveal: 250ms;
-  /* The speaker arc only. */
+  /* The speaker arc, and a speaker card's photo straightening on hover. */
   --transition-duration-drift: 500ms;
   /* Scroll reveals and page openings (the Zoo pattern): slow, soft and staggered. */
   --transition-duration-entrance: 1000ms;

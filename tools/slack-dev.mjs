@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The ZurichJS Slack bots on your machine (docs/v2/AUTOMATION.md, "Try it locally"): a dev Slack app
+// The ZurichJS Slack bots on your machine (docs/systems/slack-agent.md, "Try it locally"): a dev Slack app
 // in Socket Mode connects out to Slack, so Slack needs no public URL and no tunnel. Each event or
 // button press arrives over the socket; this bridge acknowledges it, signs it with the dev app's
 // signing secret exactly as Slack signs HTTP requests, and posts it to the local site's functions.

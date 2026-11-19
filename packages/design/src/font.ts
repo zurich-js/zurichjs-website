@@ -1,5 +1,5 @@
 /**
- * Figtree, the only typeface (AGENTS.md). Configuration for the Astro Fonts API (apps/web/astro.config.mjs) and the
+ * Figtree, the only typeface (docs/systems/design-system/brand.md). Configuration for the Astro Fonts API (apps/web/astro.config.mjs) and the
  * HTML emails, which need the file and its weights rather than a CSS value. Other sites use fonts.css.
  */
 export const font = {

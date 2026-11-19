@@ -1,5 +1,5 @@
 /**
- * The member area (/membership/account, docs/v2/MEMBERSHIP.md). Sign in with
+ * The member area (/membership/account, docs/domains/membership/overview.md). Sign in with
  * an emailed link (Better Auth; the session is an httpOnly cookie, so no token
  * ever reaches this script), then join, or manage the membership: status,
  * certificates, the subscription (Stripe portal), switching from
@@ -513,7 +513,7 @@ function MemberPortal({
  * The resignation step (owner, 10th November 2026): why they leave (one or more reasons, a few
  * words), then send. Giving a reason is never a condition: the small red link under the form
  * resigns at once without one, as the bylaws (Art. 5) and the Swiss Civil Code (Art. 70) allow.
- * Red here is the owner's call for this one link (AGENTS.md otherwise keeps red for errors).
+ * Red here is the owner's call for this one link (the brand rules otherwise keep red for errors, docs/systems/design-system/brand.md).
  */
 function ResignForm({
   busy,

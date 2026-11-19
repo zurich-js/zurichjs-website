@@ -9,7 +9,7 @@ const dir = (p: string) => readdirSync(join(root, p));
 
 const skills = dir('agents/skills').map((s) => `agents/skills/${s}/SKILL.md`);
 const roles = dir('agents/roles').map((r) => `agents/roles/${r}`);
-const DOCS = ['AGENTS.md', 'docs/v2/AUTOMATION.md', ...skills, ...roles, ...dir('.claude/agents').map((a) => `.claude/agents/${a}`)];
+const DOCS = ['AGENTS.md', 'docs/systems/slack-agent.md', ...skills, ...roles, ...dir('.claude/agents').map((a) => `.claude/agents/${a}`)];
 
 /** Paths named in docs that live outside this repository or in other tools' config. */
 const NOT_HERE = /^(zurich-js\/|\.cursor\/|\.vscode\/|v2\/pr-media)/;

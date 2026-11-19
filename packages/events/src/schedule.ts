@@ -2,7 +2,7 @@
  * The evening's programme, in one place. Event pages, the Tonight page,
  * speaker pages and calendar files all read it from here.
  *
- * What each field means (docs/v2/DECISIONS.md, 2026-11-02):
+ * What each field means (docs/reference/decisions/launch-restoration.md, 2026-11-02):
  *   - `datetime` (startsAt) is the start time listed on Meetup. It is not
  *     called "doors": production never used it consistently as doors, so the
  *     site says "Starts 18:00".

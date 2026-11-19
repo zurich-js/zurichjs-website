@@ -17,7 +17,7 @@
 # webhooks. Run it through pnpm local, not `docker compose up`, which lacks the webhook secret.
 # Nothing here reaches Resend or Slack. Content comes from the built-in sample by
 # default; put SANITY_TOKEN (read) in .env.local and CONTENT_SOURCE= (empty) for real content.
-# Your own overrides go in .env.local (git-ignored). Details: docs/v2/RUNBOOK.md, "Local development".
+# Your own overrides go in .env.local (git-ignored). Details: docs/systems/local-development.md.
 
 name: zurichjs
 

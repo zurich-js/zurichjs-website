@@ -1,7 +1,7 @@
 import {at, defineMigration, setIfMissing} from 'sanity/migrate'
 
 /**
- * V2 additive migration (zurichjs-website docs/v2/CONTENT-MODEL-DIFF.md).
+ * V2 additive migration (zurichjs-website docs/domains/events/content-model.md).
  * Only sets fields that are missing. Never deletes or overwrites anything.
  *
  *   npx sanity migration run v2-additive                 # dry run (default): prints the patches

@@ -9,7 +9,7 @@
  *
  * Every entry names its source. Nothing here is guessed: what production does
  * not say (for example whether a conference partner is still current) is a
- * "confirm" item in docs/v2/CONTENT-SOURCES.md.
+ * "confirm" item in docs/reference/content-sources.md.
  *
  * Sources:
  *   [old-partners]  origin/main src/data/index.ts, getPartners() (the production partner list, last changed 2026-05-20)

@@ -1,4 +1,4 @@
-# The ZurichJS Bot for local development (docs/v2/AUTOMATION.md, "Try it locally"). Same scopes and
+# The ZurichJS Bot for local development (docs/systems/slack-agent.md, "Try it locally"). Same scopes and
 # events as slack/manifest.yml, but in Socket Mode: Slack sends events over a socket that
 # tools/slack-dev.mjs opens from your machine, so no public URL is needed and the production bot
 # is untouched. Create it at api.slack.com/apps › Create New App › From a manifest, then add an

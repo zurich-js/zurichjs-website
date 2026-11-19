@@ -6,7 +6,7 @@
  *   /og/event-<slug>.png      one per event, with its Sanity artwork when it has one
  *   /og/speaker-<id>.png      one per speaker, with their photo when it has one
  *
- * The design follows docs/design-system.md: black, white and yellow, Figtree, 24px tiles, pills, no kickers.
+ * The design follows docs/systems/design-system/index.md: black, white and yellow, Figtree, 24px tiles, pills, no kickers.
  * Remote images are fetched once per build with a timeout; when a fetch fails, the card is drawn without
  * it (date tile or initials), so a CDN problem never breaks the build.
  */

@@ -1,5 +1,5 @@
 /**
- * Sponsor-facing emails (docs/v2/SPONSORSHIP.md, "Emails"). Same layout and copy rules as
+ * Sponsor-facing emails (docs/domains/sponsorship/overview.md, "Emails and Slack"). Same layout and copy rules as
  * the membership emails: plain, specific, no em dashes. Glossary: "your sponsorship page",
  * "we" (ZurichJS, never "the board"), "how often you pay", "payment overdue". Stripe sends the
  * card receipts itself; these emails cover everything around them.

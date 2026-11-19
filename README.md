@@ -10,41 +10,11 @@ pnpm test                                  # Vitest: packages, API functions, re
 pnpm e2e                                   # Playwright against apps/web/dist (build first)
 node tools/serve-dist.mjs 4321 &           # serve the build like Netlify (pretty URLs, redirects)
 node tools/seo/compare.mjs --base http://localhost:4321   # SEO and LLM parity gate
-pnpm lint && pnpm format:check && pnpm knip && pnpm typecheck
+pnpm lint && pnpm lint:ui && pnpm format:check && pnpm knip && pnpm typecheck
+pnpm local                                 # Docker: site + Postgres + Mailpit + Stripe test mode
 ```
 
-Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11. Agents (any tool) start with [`AGENTS.md`](AGENTS.md); automation and the Slack content agent are in [`docs/v2/AUTOMATION.md`](docs/v2/AUTOMATION.md).
+Requires Node 22.23.4 or later (`.nvmrc`) and pnpm 11.
 
-| Path                    | What                                                                                                      |
-| ----------------------- | --------------------------------------------------------------------------------------------------------- |
-| `apps/web`              | The Astro 7 site: static output, Netlify adapter, Preact islands, Tailwind 4. `netlify.toml` is here.     |
-| `packages/design`       | The design system: the Tailwind 4 theme (the tokens), Figtree, Astro components, Preact islands.          |
-| `packages/events`       | Domain types, clock-based event state, presentation copy, the ticketing seam, `.ics`.                     |
-| `packages/content`      | Sanity GROQ over `fetch`, types generated from the Studio schema, mappers, sample content.                |
-| `packages/seo`          | Meta tags, JSON-LD, sitemap and `llms.txt` builders.                                                      |
-| `packages/forms`        | zod schemas shared by islands and the forms function.                                                     |
-| `packages/integrations` | Form forwarding: Sanity writes, Resend, Slack, EmailOctopus; `TalkProposalSink`.                          |
-| `packages/agent`        | The Slack content agent: draft-only Sanity tools, model-agnostic loop ([setup](docs/v2/AUTOMATION.md)).   |
-| `packages/config`       | Shared TypeScript config.                                                                                 |
-| `tools/`                | The SEO baseline and parity gate, the local Netlify-like server, CI helpers.                              |
-| `e2e/`                  | Playwright: routes, accessibility, redirects, visual regression.                                          |
-| `docs/`                 | [Runbook](docs/v2/RUNBOOK.md), [design system](docs/design-system.md), [decisions](docs/v2/DECISIONS.md). |
-
-## Content
-
-`loadContent()` reads Sanity. It uses `SANITY_PROJECT_ID` (default `viqjrovw`), `SANITY_DATASET` (default `production`) and, optionally, `SANITY_READ_TOKEN` or `SANITY_TOKEN`.
-
-- **When Sanity is unreachable:** the build falls back to sample content with a warning. On production builds (`CONTEXT=production` or `CONTENT_REQUIRE_SANITY=1`) it fails instead, so sample content never ships.
-- **Typed queries:** `pnpm --filter @zurichjs/studio typegen` generates `packages/content/src/sanity.types.ts` from the Studio in `apps/studio`. CI regenerates it and fails when it is out of date.
-- **Draft preview:** `SANITY_PERSPECTIVE=drafts` (which needs a read token) builds with unpublished changes. The pages are noindex and show a "Draft preview" bar.
-- **Rebuilds:** publishing in Sanity, and each event's doors and doors + 48 h, trigger a rebuild. See the [runbook](docs/v2/RUNBOOK.md).
-
-## Event state
-
-An event's displayed state comes from its editorial `status` plus the clock (`packages/events/src/state.ts`):
-
-- **Before doors:** open, RSVP soon, TBC or full.
-- **From doors, for 48 hours:** live, which means feedback mode.
-- **After that:** past, which means the recap.
-
-Cancelled and postponed override the clock. Pages are prerendered in the state that is true at build time, and the event islands re-check the clock in the browser.
+- **Agents** (any tool) start with [`AGENTS.md`](AGENTS.md).
+- **Documentation** is the knowledge bundle in [`docs/`](docs/index.md): the [system map](docs/systems/overview.md) (apps, packages and integrations), [local development](docs/systems/local-development.md), [operations](docs/systems/operations/index.md), the [design system](docs/systems/design-system/index.md), the domains (events, membership, content, partners, talk proposals, forms, donations) and the [decision record](docs/reference/decisions/index.md).

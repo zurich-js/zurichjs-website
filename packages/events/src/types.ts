@@ -2,7 +2,7 @@
  * Domain types for the ZurichJS site. Content sources (Sanity, sample data)
  * map into these; pages and islands only ever see these shapes.
  *
- * Workshops are de-scoped for now (see docs/v2/DECISIONS.md), so every event is a meetup.
+ * Workshops are de-scoped for now (see docs/reference/decisions/index.md), so every event is a meetup.
  */
 
 /**
@@ -247,7 +247,7 @@ export interface Milestone {
   eventSlug?: string;
   /** Another page about it (a story, partners, the conference). */
   link?: { label: string; href: string };
-  /** Where the fact comes from (not shown; see docs/v2/CONTENT-SOURCES.md). */
+  /** Where the fact comes from (not shown; see docs/reference/content-sources.md). */
   source: string;
 }
 

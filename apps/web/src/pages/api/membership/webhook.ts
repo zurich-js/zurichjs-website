@@ -2,7 +2,7 @@
  * Membership events. They arrive on the site's one Stripe webhook, /api/stripe/webhook
  * (server/stripe-webhook.ts), which verifies the signature and calls processMembershipEvent.
  * This route is the old membership-only endpoint (STRIPE_MEMBERSHIP_WEBHOOK_SECRET), kept until
- * production's Stripe sends to the shared one (docs/v2/RUNBOOK.md); then delete the route.
+ * production's Stripe sends to the shared one (docs/systems/stripe.md); then delete the route.
  *
  *   invoice.paid (amount > 0)          the first payment and every renewal: pending/past_due/imported → active;
  *                                       paid until the period end; certificate for the term, emailed

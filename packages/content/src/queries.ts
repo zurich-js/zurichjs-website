@@ -1,7 +1,7 @@
 /**
  * GROQ queries for the public site. They read the production document shapes
  * (type `events`, slug in `id`, `datetime`, free-text `location`/`address`)
- * and the additive V2 fields from docs/v2/CONTENT-MODEL-DIFF.md, so they work
+ * and the additive V2 fields from docs/domains/events/content-model.md, so they work
  * before and after the Phase 3 schema migration.
  */
 import { defineQuery } from 'groq';

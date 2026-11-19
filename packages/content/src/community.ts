@@ -2,7 +2,7 @@
  * Community content that is not in Sanity yet: the team, volunteers and the
  * timeline. Real content (used in every build), each fact with its source.
  * The full list of sources, and what was left out because it could not be
- * verified, is in docs/v2/CONTENT-SOURCES.md. Organisers: correct roles and
+ * verified, is in docs/reference/content-sources.md. Organisers: correct roles and
  * add milestones here (or move them to Sanity later).
  *
  * Sources:

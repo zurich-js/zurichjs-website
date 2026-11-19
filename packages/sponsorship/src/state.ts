@@ -74,7 +74,7 @@ export const label = (s: Status) => LABELS[s];
 
 const actorLabel = (a: ActorKind) => ({ sponsor: 'the sponsor', board: 'an organiser', stripe: 'Stripe', script: 'the daily check' })[a];
 
-/** How sponsors read why it ended (glossary: docs/v2/SPONSORSHIP.md). */
+/** How sponsors read why it ended (docs/domains/sponsorship/overview.md, "Status machine"). */
 export const ENDED_REASON_LABEL: Record<EndedReason, string> = {
   cancelled: 'you ended it',
   completed: 'completed',

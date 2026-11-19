@@ -74,7 +74,7 @@ EVENTS=checkout.session.completed,invoice.paid,invoice.payment_failed,invoice.pa
 stripe listen --api-key "$STRIPE_SECRET_KEY" --events "$EVENTS" --forward-to "$WEBHOOK" &
 
 # The ZurichJS Bot (dev) and the ZurichJS CFP (dev) bot in Socket Mode, when their tokens are set
-# (docs/v2/AUTOMATION.md, "Try it locally"). One bridge serves both.
+# (docs/systems/slack-agent.md, "Try it locally"). One bridge serves both.
 if [ -n "${SLACK_APP_TOKEN:-}" ] || [ -n "${SLACK_CFP_APP_TOKEN:-}" ]; then
   node tools/slack-dev.mjs http://localhost:4321 &
 else

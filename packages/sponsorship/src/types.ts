@@ -1,5 +1,5 @@
 /**
- * Sponsorship of ZurichJS (docs/v2/SPONSORSHIP.md). A sponsor is a company with one or
+ * Sponsorship of ZurichJS (docs/domains/sponsorship/overview.md). A sponsor is a company with one or
  * more contacts who sign in to /partners/account. Field names follow the tables in
  * apps/web/database/migrations (…_sponsorship.sql), in camelCase.
  */

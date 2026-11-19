@@ -1,4 +1,4 @@
--- Talk proposals written with the ZurichJS CFP bot in Slack (docs/v2/CFP-BOT.md).
+-- Talk proposals written with the ZurichJS CFP bot in Slack (docs/systems/cfp-bot.md).
 -- A draft lives here, not in Sanity, until the person presses Submit; then it is deleted.
 -- Unfinished drafts are deleted after 14 days without activity (CFP_DRAFT_RETENTION_DAYS in
 -- packages/agent/src/cfp/limits.ts). One open draft per person, one draft per thread.

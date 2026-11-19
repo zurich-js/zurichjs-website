@@ -1,4 +1,4 @@
--- Sponsorship, second round (owner, 18th November 2026; docs/v2/SPONSORSHIP.md):
+-- Sponsorship, second round (owner, 18th November 2026; docs/domains/sponsorship/overview.md):
 --   * card only: no Stripe invoices (sponsors paid outside Stripe stay `manual`)
 --   * meetup bundles: one or more meetups per one-time sponsorship, optionally at a custom
 --     price per meetup set by the board

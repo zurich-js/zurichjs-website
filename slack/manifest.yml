@@ -1,5 +1,5 @@
 # Slack app for the ZurichJS content agent. Create it at api.slack.com/apps › Create New App ›
-# From a manifest, pick the ZurichJS workspace and paste this file. Setup: docs/v2/AUTOMATION.md.
+# From a manifest, pick the ZurichJS workspace and paste this file. Setup: docs/systems/slack-agent.md.
 display_information:
   name: ZurichJS Bot
   description: Keeps the meetup pages on zurichjs.com up to date. Writes drafts; organisers publish.

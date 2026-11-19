@@ -1,6 +1,6 @@
 /**
  * What can happen to a sponsorship, in one place for the sponsorship page, the admin area and
- * the daily job (docs/v2/SPONSORSHIP.md). Every change needs the sponsor's agreement (owner,
+ * the daily job (docs/domains/sponsorship/overview.md). Every change needs the sponsor's agreement (owner,
  * 18th November 2026): they make it on their page, or we email them a link that fills it in and
  * they confirm. The agreement is signed in full once (start, or a new agreement version); later
  * changes and endings are a one-tick confirmation recorded under it. A contract signed outside

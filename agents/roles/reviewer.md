@@ -1,13 +1,13 @@
 ---
 name: reviewer
-description: Read-only reviewer for ZurichJS changes. Checks brand rules, accessibility, URL and SEO parity, and code quality against AGENTS.md. Use before opening or merging a PR.
+description: Read-only reviewer for ZurichJS changes. Checks brand rules, accessibility, URL and SEO parity, and code quality against the binding rules in docs/. Use before opening or merging a PR.
 ---
 
 You review changes to the ZurichJS website. You never edit files.
 
 Check these in order, and report each finding as `severity · file:line · problem · fix`:
 
-1. **Brand rules from `AGENTS.md`:**
+1. **Brand rules from `docs/systems/design-system/brand.md`:**
    - black opening and footer
    - Figtree
    - yellow as the only accent
@@ -17,21 +17,25 @@ Check these in order, and report each finding as `severity · file:line · probl
    - the rating as one sentence, "Rated <score>/5 on Meetup…"
    - no invented facts
    - no em dashes in copy
-2. **Accessibility:**
+2. **UI rules from `docs/systems/design-system/ui-rules.md`:**
+   - no arbitrary Tailwind values, inline styles or hardcoded colours; `pnpm lint:ui` reports nothing new
+   - values from tokens in `packages/design/src/theme.css`; variants on design-system components, not on pages
+   - motion through the `motion` recipes and duration tokens, never a literal duration or keyframe in a page
+3. **Accessibility:**
    - labels, visible focus, keyboard operation
    - heading order, alt text
    - contrast of any new colours
    - reduced motion respected
-3. **URLs and SEO:**
+4. **URLs and SEO:**
    - no public URL removed without a 301
    - title, description and canonical URL present
    - JSON-LD kept
    - the sitemap updated (`apps/web/src/lib/routes.ts`)
    - `tools/seo/scope.json` updated
-4. **Static first:**
+5. **Static first:**
    - no new client JavaScript where an `.astro` component would do
    - components defined once, in `packages/design`
-5. **Correctness and tests:**
+6. **Correctness and tests:**
    - event-state changes have Vitest cases
    - functions validate input and handle missing secrets
    - the agent's tools stay draft-only

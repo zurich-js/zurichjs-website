@@ -42,7 +42,7 @@ export interface TalkProposal {
   slackUserId?: string;
 }
 
-/** Seam for talk proposals. Today: Sanity `talkSubmission`. Later: Sane (docs/v2/SANE-READINESS.md). */
+/** Seam for talk proposals. Today: Sanity `talkSubmission`. Later: Sane (docs/domains/events/specs/sane-ticketing.md). */
 export interface ProposalPhoto {
   bytes: Uint8Array;
   name: string;

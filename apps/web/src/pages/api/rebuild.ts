@@ -1,7 +1,7 @@
 /**
  * Sanity publish webhook (POST /api/rebuild). Validates the signature and records
  * a pending rebuild in Netlify Blobs; netlify/functions/scheduled-rebuild.mts builds
- * once publishing has paused. Env: SANITY_WEBHOOK_SECRET. See docs/v2/RUNBOOK.md.
+ * once publishing has paused. Env: SANITY_WEBHOOK_SECRET. See docs/systems/operations/netlify.md.
  */
 import type { APIRoute } from 'astro';
 import { getStore } from '@netlify/blobs';

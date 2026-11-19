@@ -1,0 +1,114 @@
+---
+type: Domain
+title: Sponsorship
+description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a sponsor reaches the public partner list.
+tags: [sponsorship, stripe, postgres]
+timestamp: "2026-11-19T00:00:00Z"
+---
+
+# Sponsorship
+
+Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql` and `apps/web/database/migrations/20261119090000_sponsorship_round2.sql`.
+
+Sponsors get the same self-serve system as [members](/domains/membership/overview.md): the board invites a company or brings an existing sponsorship onto the site, a contact signs the sponsorship agreement and pays by card, and from then on the sponsor manages tier, billing, payment details, logo and colleagues themselves. Changes the board agrees with a sponsor in conversation are sent as a link that fills the change in, and apply only once the sponsor confirms (owner, 18th November 2026).
+
+**This page owns paid sponsorships.** The public side (who is listed and thanked, the `/partners` page, the enquiry form) is in [Partners and sponsorship](/domains/partners/overview.md). A running sponsorship does not appear on `/partners` by itself: an organiser updates or creates the `partner` document in Sanity with the tier and logo, ticks current, and publishes (drafts first). Slack says when a sponsor uploads a logo.
+
+## Decisions (owner, 18th November 2026)
+
+| Area                 | Choice                                                                                                                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tiers                | The four on `/partners`: Community Supporter, Friend, Builder, Champion. Host stays a way to help, not a paid tier                                                                                        |
+| Billing              | Monthly, quarterly, yearly (renew automatically) or one-time for one or more meetups                                                                                                                      |
+| One-time             | A sponsor starting on their own picks one meetup. The board can bundle several meetups at a custom price per meetup, pegged to a tier for the benefits (for example 3 meetups at CHF 500 each as Builder) |
+| Tier changes         | A higher tier on the same billing applies now, and Stripe charges the prorated difference to the card; anything else (lower tier, other billing) applies from the next renewal; nothing is refunded       |
+| Payment              | Card only (Stripe Checkout, or a single-use Stripe payment link for a bundle with a contract on file). Invoices were removed. A sponsorship paid by bank transfer is recorded by the board                |
+| Agreement            | Signed once on the site by a named person with their role; later changes and ends are confirmed with one tick under the same agreement. A contract signed outside the site can be attached instead        |
+| Changes by the board | A pre-filled link (`/partners/account?change=builder-yearly` or `?change=end`) emailed to the confirmed contacts; nothing changes until a contact confirms. The board can still end one outright (logged) |
+| Logos                | Uploaded and announced in Slack, with no review step                                                                                                                                                      |
+| Board notices        | Slack only, no board emails                                                                                                                                                                               |
+
+Assumed, not asked (change if wrong): no minimum term, so a sponsor can end at any time with effect at the end of the paid period; one email belongs to one sponsor.
+
+## Tiers and fees
+
+`packages/sponsorship/src/tiers.ts` is the source for the portal, the admin area, Stripe and the emails. `/partners` shows the same monthly, yearly and one-time prices from its own copy in `packages/content/src/partners.ts` ([Partners](/domains/partners/overview.md)); `apps/web/test/sponsorship-fees.test.ts` keeps the two equal. Yearly is ten months ("2 months free"); quarterly is new (owner, 18th November 2026), round numbers about 7% under three months.
+
+| Tier                | Monthly | Quarterly | Yearly    | One meetup |
+| ------------------- | ------- | --------- | --------- | ---------- |
+| Community Supporter | CHF 150 | CHF 420   | CHF 1’500 | CHF 250    |
+| Community Friend    | CHF 300 | CHF 840   | CHF 3’000 | CHF 400    |
+| Community Builder   | CHF 500 | CHF 1’400 | CHF 5’000 | CHF 700    |
+| Community Champion  | CHF 750 | CHF 2’100 | CHF 7’500 | CHF 1’000  |
+
+Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. A bundle uses the board's custom price per meetup on the tier's product.
+
+## How a sponsorship runs
+
+1. **Invite:** in the admin area, the board enters company, contact, tier and billing (or meetups and a price per meetup for a bundle). A `pending` sponsorship is created and the contact gets an email listing the tier's benefits. **Import** instead records an existing sponsorship paid by bank transfer, `active` until a paid-until date; the contact gets a "your sponsorship is now online" email. Companies can also start on their own at `/partners/account`; pending ones they start are hidden from the Slack bot until they pay.
+2. **Sign and pay** on `/partners/account`, with the same email sign-in as members: billing details, plan, and the agreement (name, role). Card opens Stripe Checkout; opening it again closes the earlier page, so it can never be paid twice. A sponsor with a contract on file skips signing. A bank-transfer sponsor moving to card is not charged before their paid period ends (`trial_end`).
+3. **Active** with the first payment (from the webhook, at the tier Stripe actually charged), or when the board records a transfer. The welcome email goes out once, with the benefits; the board gets a Slack note with what to deliver.
+4. **Self-serve** ([Sponsorship frontend](/domains/sponsorship/frontend.md)): tier and billing changes, ending and taking it back, the Stripe portal, details, logo, colleagues.
+5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). Once paid, the meetups can still move; their number and price cannot.
+6. **Ends:** at the end of the paid period (Stripe `cancel_at_period_end`, or the daily check for bank-transfer ones), after the last meetup (one-time), when Stripe gives up on payment (lapsed), or outright by the board (terminated, or withdrawn before it started). The daily check also closes unpaid one-time sponsorships whose meetup has passed.
+
+## Status machine
+
+`packages/sponsorship/src/state.ts` lists the allowed changes and who may make each (the sponsor, the board, Stripe, the daily script). Every change is compare-and-set and written with its row in the append-only `sponsor_events`.
+
+| From                 | To                   | By                                        |
+| -------------------- | -------------------- | ----------------------------------------- |
+| `pending`            | `active`             | Stripe, the board                         |
+| `pending`            | `ended`              | the board, Stripe, the script             |
+| `active`             | `past_due`           | Stripe                                    |
+| `past_due`           | `active`             | Stripe, the board                         |
+| `active`, `past_due` | `ending`             | the sponsor, the board                    |
+| `ending`             | `active`, `past_due` | the sponsor, the board (undo)             |
+| `ending`             | `ended`              | the board, Stripe, the script             |
+| `active`             | `ended`              | the board, Stripe, the script             |
+| `past_due`           | `ended`              | the board, Stripe                         |
+| `ended`              | `pending`            | the sponsor, the board (sponsoring again) |
+
+**Ending reasons:** the board may give cancelled, completed, lapsed, terminated or withdrawn; Stripe cancelled or lapsed; the script cancelled, completed or withdrawn. A sponsorship is **running** (gets the tier's benefits) while `active`, `past_due` or `ending`.
+
+## Data and files
+
+The same Neon database as memberships ([Membership](/domains/membership/overview.md)): sponsors, meetups, contacts, agreements, logos, documents, events and handled Stripe event ids. Logos and contracts (PDF, up to 10 MB) are in the Netlify Blobs store `sponsors`.
+
+## Emails and Slack
+
+- **Emails** (`packages/emails/src/sponsors.ts`, sent with Resend): invite, agreement copy, welcome, payment problem, change to confirm, change, ending, resumed, ended, payment recorded. Every email names the tier's benefits.
+- **Slack:** notes in `SLACK_SPONSORSHIP_CHANNEL_ID`, else the membership channel, else the agent's. The organisers' bot can answer questions about sponsors (`apps/web/src/server/sponsor-agent.ts`: read only, company-level facts, names marked as data) ([Slack content agent](/systems/slack-agent.md)).
+
+## The daily check
+
+`apps/web/netlify/functions/sponsorship-daily.mts`, at 07:15 UTC (`apps/web/src/server/sponsor-daily.ts`), in Zurich days:
+
+- a one-time sponsorship ends (completed) the day after its last meetup, and the sponsor is thanked
+- an unpaid one-time sponsorship is closed (withdrawn) once one of its meetups has passed, and its payment page is switched off
+- a bank-transfer sponsorship that was agreed to end ends on its last day
+- the board is reminded in Slack 30 and 7 days before, and on the day, a bank-transfer sponsorship runs out; nothing changes by itself, a person records the payment or agrees the end
+
+Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
+
+### Not verified
+
+The schedule is set only in the function's source (`export const config`). `apps/web/netlify.toml` repeats the other scheduled functions' schedules because Netlify may not read the config from a bundled file ([Web app](/systems/web.md)), but not this one. Whether the daily check runs on Netlify was not checked.
+
+## Open questions (owner)
+
+- **VAT:** the site and receipts say nothing about VAT. If the association is or becomes VAT registered, the prices and the Stripe tax settings change.
+- **Privacy policy:** it should name sponsor contacts (names, emails, roles) and contracts as data kept (a legal page, owner).
+- **Host tier:** "covering speaker travel qualifies you as Community Friend" is not modelled; the board can import such a sponsorship as Friend, paid by bank transfer.
+- **Invoices:** removed for now. Bringing them back needs reconciling bank transfers against Stripe invoices.
+- **No minimum term** and one email per sponsor are assumptions to confirm.
+
+## Related concepts
+
+- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)
+- [Partners and sponsorship](/domains/partners/overview.md) (the public list and `/partners`), [Membership](/domains/membership/overview.md) (sign-in, database and admin password are shared)
+- Systems: [Stripe](/systems/stripe.md), [Web app](/systems/web.md), [Environment variables](/systems/operations/environment.md), [Slack content agent](/systems/slack-agent.md)
+
+# Related specs
+
+- [Online sponsorship on /partners](/domains/sponsorship/specs/partners-page-online.md)

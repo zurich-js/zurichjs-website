@@ -1,5 +1,5 @@
 /**
- * The one email layout, from the design tokens and the brand rules (AGENTS.md):
+ * The one email layout, from the design tokens and the brand rules (docs/systems/design-system/brand.md):
  * black header with the wordmark, white content, black footer; one yellow pill
  * button; 24px radius on the summary box; green only for success, red only for
  * errors; no kickers, dividers or gradients; no em dashes.

@@ -1,5 +1,5 @@
 /**
- * Joining on /membership/account (docs/v2/MEMBERSHIP.md): who joins, level and
+ * Joining on /membership/account (docs/domains/membership/overview.md): who joins, level and
  * cycle (quarterly or yearly only), the membership terms tick, then Stripe
  * Checkout. Anyone can join; the membership starts with the first payment.
  * The level and cycle chosen on /membership come along (this browser only).

@@ -1,4 +1,4 @@
-# Netlify config for zurichjs.com (docs/v2/RUNBOOK.md).
+# Netlify config for zurichjs.com (docs/systems/operations/netlify.md).
 #
 # Netlify site settings: Base directory `apps/web` (also set by the root netlify.toml, so deploy previews
 # work before the UI changes), Package directory empty. Every path

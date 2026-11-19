@@ -356,7 +356,12 @@ function boardNotice(p: BoardNoticeProps): EmailContent {
     blocks: [
       ...(p.intro ?? []).map((text): Block => ({ kind: 'p', text })),
       ...(p.rows?.length ? [{ kind: 'summary', rows: p.rows } satisfies Block] : []),
-      ...(p.message ? ([{ kind: 'p', text: `${p.message.label}:` }, ...p.message.text.split(/\n+/).map((text): Block => ({ kind: 'p', text }))] satisfies Block[]) : []),
+      ...(p.message
+        ? ([
+            { kind: 'p', text: `${p.message.label}:` },
+            { kind: 'p', text: p.message.text },
+          ] satisfies Block[])
+        : []),
       ...(p.button ? [{ kind: 'button', label: p.button.label, url: p.button.url } satisfies Block] : []),
       ...(p.note ? [{ kind: 'small', text: p.note } satisfies Block] : []),
     ],

@@ -54,6 +54,17 @@ export interface RenderedEmail {
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ESCAPES[c]!);
 
+/** Escaped, with the writer's line breaks kept (free text from a person: an admin's note, a message). */
+const multiline = (s: string) => escapeHtml(s.replace(/\r\n?/g, '\n').trim()).replace(/\n/g, '<br>');
+
+/** A blank line starts a new paragraph; a single line break stays a line break. */
+const paragraphs = (s: string) =>
+  s
+    .replace(/\r\n?/g, '\n')
+    .split(/\n[ \t]*\n\s*/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+
 /** Only https links (or the site's own), so a template can never put a javascript: URL in a button. */
 export function safeUrl(url: string): string {
   const u = new URL(url);
@@ -67,11 +78,15 @@ const text = `font-family:${FONT_STACK};font-size:17px;line-height:1.55;color:${
 function blockHtml(b: Block): string {
   switch (b.kind) {
     case 'p':
-      return `<p style="margin:0 0 18px;${text}">${escapeHtml(b.text)}</p>`;
+      return paragraphs(b.text)
+        .map((t) => `<p style="margin:0 0 18px;${text}">${multiline(t)}</p>`)
+        .join('\n');
     case 'small':
-      return `<p style="margin:0 0 14px;${text}font-size:15px;color:${color('grey-text')};">${escapeHtml(b.text)}</p>`;
+      return paragraphs(b.text)
+        .map((t) => `<p style="margin:0 0 14px;${text}font-size:15px;color:${color('grey-text')};">${multiline(t)}</p>`)
+        .join('\n');
     case 'success':
-      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radius('card')};background:${color('success-soft')};${text}color:${color('success')};font-weight:700;">${escapeHtml(b.text)}</p>`;
+      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radius('card')};background:${color('success-soft')};${text}color:${color('success')};font-weight:700;">${multiline(b.text)}</p>`;
     case 'badge':
       return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;"><tr><td bgcolor="${color('success-soft')}" style="border-radius:${radius('pill')};background:${color('success-soft')};padding:8px 16px;font-family:${FONT_STACK};font-size:15px;line-height:1.2;font-weight:700;color:${color('success')};">&#10003;&nbsp; ${escapeHtml(b.text)}</td></tr></table>`;
     case 'plan':
@@ -86,9 +101,9 @@ function blockHtml(b: Block): string {
         .join('')}</table>
 </td></tr></table>`;
     case 'list':
-      return `<ul style="margin:0 0 22px;padding:0 0 0 22px;">${b.items.map((i) => `<li style="margin:0 0 6px;${text}">${escapeHtml(i)}</li>`).join('')}</ul>`;
+      return `<ul style="margin:0 0 22px;padding:0 0 0 22px;">${b.items.map((i) => `<li style="margin:0 0 6px;${text}">${multiline(i)}</li>`).join('')}</ul>`;
     case 'error':
-      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radius('card')};background:${color('danger-soft')};${text}color:${color('danger')};font-weight:700;">${escapeHtml(b.text)}</p>`;
+      return `<p style="margin:0 0 18px;padding:14px 18px;border-radius:${radius('card')};background:${color('danger-soft')};${text}color:${color('danger')};font-weight:700;">${multiline(b.text)}</p>`;
     case 'url':
       return `<p style="margin:0 0 18px;${text}font-size:15px;color:${color('grey-text')};">${escapeHtml(b.text)}<br><a href="${escapeHtml(safeUrl(b.url))}" style="color:${color('black')};word-break:break-all;">${escapeHtml(safeUrl(b.url))}</a></p>`;
     case 'button':

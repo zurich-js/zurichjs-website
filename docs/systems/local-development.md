@@ -64,13 +64,13 @@ just run <command>    # any command with the checked environment, e.g. just run 
 just compose <args>   # docker compose with the checked environment, e.g. just compose restart web
 ```
 
-| Where                       | What                                                                                                                                      |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| http://localhost:4321       | the site, with online membership (`/membership`, `/membership/account`) and sponsorship (`/partners/account`)                             |
-| http://localhost:4321/admin | the board's admin area (memberships and sponsors); the password is `ADMIN_PASSWORD` from `.env`, else the default in `docker-compose.yml` |
-| http://localhost:8025       | Mailpit: every email the site sends (sign-in links, certificates); SMTP on `localhost:1025`                                               |
-| http://localhost:3333       | the Sanity Studio (`just studio`), against the real project: sign in with your Sanity account                                             |
-| `localhost:54322`           | Postgres (`postgres` / `postgres`, database `zurichjs`), migrations applied by the `migrate` service                                      |
+| Where                       | What                                                                                                                                                             |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| http://localhost:4321       | the site, with online membership (`/membership`, `/membership/account`) and sponsorship (`/partners/account`)                                                    |
+| http://localhost:4321/admin | the board's admin area (memberships and sponsors); the password is `ADMIN_PASSWORD` from `.env`, else the default in `docker-compose.yml`                        |
+| http://localhost:8025       | Mailpit: every email the site sends (sign-in links, certificates); SMTP on `localhost:1025`                                                                      |
+| http://localhost:3333       | the Sanity Studio (`just studio`), against the real project: sign in with your Sanity account                                                                    |
+| `localhost:54322`           | Postgres (`postgres` / `postgres`, database `zurichjs`), migrated when the site starts by `apps/web/scripts/db-migrate.mjs`, the script every Netlify build runs |
 
 - **Settings:** `.env.schema` (committed) names every variable the stack takes, its shape, and the two it requires. Values go in `.env`, then `.env.local` (which wins); both are git-ignored. A value is plain (`KEY=value`) or a 1Password reference, `KEY=op("op://vault/item/section/field")`, which varlock resolves through the signed-in `op` CLI with the desktop app integration on. Nothing resolved is written to disk. A missing or malformed value stops `just up` before a container starts, with the variable's name. `docker-compose.yml` passes each schema variable to the `web` service by name and sets the local services' own (`MEMBERSHIP_DB_URL`, `BETTER_AUTH_*`, `MAILPIT_URL`); `tools/env-schema.test.ts` fails when a schema variable is not passed.
 - **Content:** sample content by default. For real content put `CONTENT_SOURCE=sanity` in `.env.local`: the `production` dataset is public, so reading it needs no token. Writing to `production` is refused without `SANITY_ALLOW_PRODUCTION_WRITES=1`, which belongs on the production deploy and not in `.env.local` ([Environment variables](/systems/operations/environment.md)): a form sent on localhost is not stored, and the dev Slack bot answers a change with an error. To store and edit locally, point `SANITY_DATASET` at another dataset; the project has none yet (`v2-preview` is still to be created, an owner action: [Studio](/systems/studio.md)).
@@ -83,7 +83,7 @@ just compose <args>   # docker compose with the checked environment, e.g. just c
 
 **Trying the membership:** open `/membership`, choose a level, sign in with any email, open the link from Mailpit, join and pay in Stripe Checkout with a test card. The certificate arrives in Mailpit. Sign-in links are rate limited to 3 per 10 minutes per address; `just reset` or `delete from "rateLimit"` clears that.
 
-**Without Docker:** run Mailpit (`brew install mailpit`, then `MAILPIT_URL=http://localhost:8025`), a Postgres with `tools/docker/migrate.sh` applied and `MEMBERSHIP_DB_URL` pointing at it, the Stripe keys above, and the Stripe CLI (`brew install stripe/stripe-cli/stripe`) with `stripe listen --forward-to localhost:4321/api/stripe/webhook` (its secret as `STRIPE_WEBHOOK_SECRET`). `just run <command>` gives any command the checked environment. `MEMBERSHIP_DB_URL` wins over `DATABASE_URL`, so a Neon string in `.env` never reaches local data.
+**Without Docker:** run Mailpit (`brew install mailpit`, then `MAILPIT_URL=http://localhost:8025`), a Postgres with `MEMBERSHIP_DB_URL` pointing at it, migrated with `DATABASE_URL=<that URL> node apps/web/scripts/db-migrate.mjs`, the Stripe keys above, and the Stripe CLI (`brew install stripe/stripe-cli/stripe`) with `stripe listen --forward-to localhost:4321/api/stripe/webhook` (its secret as `STRIPE_WEBHOOK_SECRET`). `just run <command>` gives any command the checked environment. `MEMBERSHIP_DB_URL` wins over `DATABASE_URL`, so a Neon string in `.env` never reaches local data.
 
 ## Donations without Stripe
 

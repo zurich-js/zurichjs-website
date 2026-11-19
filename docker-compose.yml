@@ -76,24 +76,6 @@ services:
       timeout: 3s
       retries: 30
 
-  # Applies apps/web/database/migrations (the files tools/db-migrate.mjs applies on every Netlify build), each once.
-  migrate:
-    image: postgres:16-alpine
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PGHOST: db
-      PGUSER: postgres
-      PGPASSWORD: postgres
-      PGDATABASE: zurichjs
-      MIGRATIONS_DIR: /migrations
-    volumes:
-      - ./apps/web/database/migrations:/migrations:ro
-      - ./tools/docker/migrate.sh:/migrate.sh:ro
-    entrypoint: ['sh', '/migrate.sh']
-    restart: 'no'
-
   # Mailpit (https://mailpit.axllent.org) catches every email the site sends (MAILPIT_URL below); nothing leaves your machine.
   # The inbox is kept in the mail-data volume, so it survives restarts; `docker compose down -v` clears it.
   mail:
@@ -123,19 +105,23 @@ services:
   web:
     <<: *node
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      db:
+        condition: service_healthy
       mail:
         condition: service_started
       stripe-secret:
         condition: service_completed_successfully
+    # Before the site starts, the database is migrated by the script every Netlify build runs
+    # (apps/web/scripts/db-migrate.mjs), here against the local Postgres.
     # Astro's dev lock (.astro/dev.json) lives in the bind mount, so one left by a previous container is always stale here.
     command:
       - sh
       - -c
       - |
         export STRIPE_WEBHOOK_SECRET="$$(cat /run/stripe/webhook-secret)"
-        corepack enable && pnpm install --frozen-lockfile && rm -f apps/web/.astro/dev.json &&
+        corepack enable && pnpm install --frozen-lockfile &&
+          DATABASE_URL="$$MEMBERSHIP_DB_URL" node apps/web/scripts/db-migrate.mjs &&
+          rm -f apps/web/.astro/dev.json &&
           exec pnpm --filter @zurichjs/web exec astro dev --host 0.0.0.0 --port 4321
     environment:
       <<: *node-env

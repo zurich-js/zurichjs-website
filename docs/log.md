@@ -2,6 +2,7 @@
 
 ## 2026-11-19
 
+- **Update**: the local Docker stack migrates its Postgres with `apps/web/scripts/db-migrate.mjs`, the script every Netlify build runs, when the site starts; `tools/docker/migrate.sh` and the `migrate` service are gone ([Local development](/systems/local-development.md)).
 - **Update**: Slack notifications can say where they come from: `[local]` from the Docker stack, and `[preview]` once `SLACK_ENV_LABEL` is set in Netlify for deploy previews and branch deploys ([Environment variables](/systems/operations/environment.md)).
 - **Correction**: the local development page said nothing from the Docker stack reaches Slack; with the Slack variables set, notifications go to the real channels.
 - **Update**: writing to the `production` Sanity dataset needs `SANITY_ALLOW_PRODUCTION_WRITES=1`, set by hand on the production deploy; without it forms, speaker profiles and the Slack agent do not write there, so a laptop or a deploy preview cannot change production content. The Sanity project has only `production` and `production-comments`; the `v2-preview` dataset the bot instructions name does not exist yet ([Environment variables](/systems/operations/environment.md), [Local development](/systems/local-development.md)).

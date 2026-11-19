@@ -2,7 +2,7 @@
  * Domain types for the ZurichJS site. Content sources (Sanity, sample data)
  * map into these; pages and islands only ever see these shapes.
  *
- * Workshops are de-scoped for now (see docs/v2/DECISIONS.md), so every event is a meetup.
+ * Workshops are de-scoped for now (see docs/reference/decisions/index.md), so every event is a meetup.
  */
 
 /**
@@ -175,7 +175,18 @@ export type SponsorTier = 'champion' | 'builder' | 'friend' | 'supporter';
 export interface Partner {
   id: string;
   name: string;
+  /** The colour logo. */
   logo?: string;
+  /** A black version for logo walls; without it the colour logo is drawn in black by a filter. */
+  logoBlack?: string;
+  /** The hover colour (hex): on hover a logo cell turns this colour and the logo white, or black on a light colour. Without it the cell does not flip. */
+  logoBackground?: string;
+  /** Width / height of `logo`, to size logos to the same visual weight. */
+  logoRatio?: number;
+  /** The logo file has a solid background: the black filter thresholds it and multiplies it into its cell. */
+  logoOpaque?: boolean;
+  /** White shapes inside a coloured one (AXA): the black filter thresholds it so the white parts stay. */
+  logoKnockout?: boolean;
   url?: string;
   kinds: PartnerKind[];
   tier?: SponsorTier;
@@ -236,7 +247,7 @@ export interface Milestone {
   eventSlug?: string;
   /** Another page about it (a story, partners, the conference). */
   link?: { label: string; href: string };
-  /** Where the fact comes from (not shown; see docs/v2/CONTENT-SOURCES.md). */
+  /** Where the fact comes from (not shown; see docs/reference/content-sources.md). */
   source: string;
 }
 

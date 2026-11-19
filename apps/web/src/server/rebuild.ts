@@ -1,5 +1,5 @@
 /**
- * Rebuild scheduling for the static site (docs/v2/RUNBOOK.md, "How rebuilds happen").
+ * Rebuild scheduling for the static site (docs/systems/operations/rebuilds.md).
  *
  * - Sanity publish webhooks (POST /api/rebuild) only record that content changed.
  * - A scheduled function ticks every 2 minutes. It triggers ONE Netlify build once

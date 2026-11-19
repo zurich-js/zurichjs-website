@@ -1,4 +1,4 @@
--- Better Auth 1.7.18 tables (sign-in by email link for the member portal; docs/v2/MEMBERSHIP.md).
+-- Better Auth 1.7.18 tables (sign-in by email link for the member portal; docs/domains/membership/overview.md).
 -- Generated with better-auth's getMigrations for: Postgres, the magicLink plugin, rateLimit storage 'database'.
 -- Regenerate the same way when Better Auth or its plugins change; never edit an applied migration.
 

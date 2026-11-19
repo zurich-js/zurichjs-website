@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SEO and LLM parity gate (docs/v2/SEO-BASELINE.md).
+ * SEO and LLM parity gate (docs/systems/seo.md).
  *
  *   node tools/seo/compare.mjs [--base http://localhost:4321] [--dist apps/web/dist] [--report out.json]
  *

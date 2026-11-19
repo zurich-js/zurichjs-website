@@ -7,12 +7,13 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { surfaceClass } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
+import { cardClass } from '@zurichjs/design/recipes';
 import { CYCLES, TIERS, bundleLabel, chf, fee, feeLabel, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { post } from '../admin-api.ts';
-import { SubmitButton, optional, useFocusFirstError } from '../forms/shared.tsx';
+import { SubmitButton, TextButton, optional, useFocusFirstError } from '../forms/shared.tsx';
 import { BASE, DATE, MeetupPicker, Notice, focusHeading, francs, inputChecked, inputValue, listPrice, today, useMeetups, type FieldError } from './shared.tsx';
 
 type Mode = 'invite' | 'import';
@@ -108,19 +109,17 @@ export function AddSponsor({
   return (
     <section aria-labelledby="h-add" class="flex flex-col gap-6">
       <div class="flex flex-col items-start gap-4">
-        <Button variant="link" onClick={onBack}>
-          Back to sponsors
-        </Button>
-        <h2 id="h-add" ref={heading} tabIndex={-1} class="m-0 scroll-mt-6 text-3xl font-bold outline-hidden">
+        <TextButton onClick={onBack}>Back to sponsors</TextButton>
+        <Heading id="h-add" size="subsection" focus={heading} class="scroll-mt-6">
           {imported ? 'Import a running sponsorship' : 'Invite a sponsor'}
-        </h2>
-        <p class="m-0 max-w-2xl text-base text-ink-2">
+        </Heading>
+        <p class="m-0 max-w-reading text-compact text-ink-2">
           {imported
             ? 'For a sponsorship that already runs and was paid by bank transfer. It is recorded as active and paid until the date you give. The contact can sign in and switch to card later; nothing is charged before that date.'
             : 'For a company that agreed to sponsor. The contact gets an email to sign in, sign the sponsorship agreement and pay by card. It starts with the first payment.'}
         </p>
       </div>
-      <form ref={form} class={surfaceClass('grey', 'flex flex-col gap-6 p-5 md:p-8')} noValidate onSubmit={submit}>
+      <form ref={form} class={cardClass('outline', 'lg')} noValidate onSubmit={submit}>
         <ChipGroup
           label="Add as"
           value={mode}
@@ -130,7 +129,7 @@ export function AddSponsor({
             { value: 'import', label: 'Import (paid by bank transfer)' },
           ]}
         />
-        <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+        <div class="grid grid-cols-auto-sm gap-4">
           <TextField
             label="Company"
             name="companyName"
@@ -161,9 +160,9 @@ export function AddSponsor({
           />
         </div>
         {error?.sponsorId && (
-          <Button variant="link" class="self-start" onClick={() => onOpen(error.sponsorId!)}>
+          <TextButton class="self-start" onClick={() => onOpen(error.sponsorId!)}>
             Open the sponsor that has this contact
-          </Button>
+          </TextButton>
         )}
         <ChipGroup label="Tier" value={f.tier} onChange={(v) => set('tier', v)} options={TIERS.map((t) => ({ value: t.key, label: t.name }))} />
         <ChipGroup label="Billing" value={f.cycle} onChange={(v) => set('cycle', v)} options={CYCLES.map((c) => ({ value: c.key, label: cycleOption(f.tier, c.key) }))} />
@@ -194,7 +193,7 @@ export function AddSponsor({
           </>
         )}
         {imported && (
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+          <div class="grid grid-cols-auto-sm gap-4">
             <TextField
               label="Started on"
               type="date"
@@ -224,7 +223,7 @@ export function AddSponsor({
             )}
           </div>
         )}
-        {imported && once && <p class="m-0 text-base text-ink-2">A one-time sponsorship is paid through the day of its last meetup.</p>}
+        {imported && once && <p class="m-0 text-compact text-ink-2">A one-time sponsorship is paid through the day of its last meetup.</p>}
         <TextArea label={optional('Notes for the board')} rows={2} value={f.notes} invalid={!!err('notes')} error={err('notes')} onInput={(e) => set('notes', inputValue(e))} />
         <Checkbox
           label={imported ? 'Email the contact that the sponsorship is now online' : 'Email the invitation to the contact'}
@@ -243,10 +242,10 @@ export function AddSponsor({
         )}
         {error && !shown.includes(error.field ?? '') && <Notice kind="error">{error.message}</Notice>}
         <div class="flex flex-wrap gap-3">
-          <SubmitButton busy={busy} size="md" grow>
+          <SubmitButton busy={busy} grow>
             {busy ? 'Saving…' : imported ? 'Add sponsor' : 'Send invitation'}
           </SubmitButton>
-          <Button variant="outline-black" grow onClick={onBack}>
+          <Button variant="secondary" grow onClick={onBack}>
             Cancel
           </Button>
         </div>

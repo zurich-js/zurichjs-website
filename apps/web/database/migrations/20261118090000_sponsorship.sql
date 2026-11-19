@@ -1,4 +1,4 @@
--- Sponsorship (docs/v2/SPONSORSHIP.md): sponsors, the people who sign in for them, the
+-- Sponsorship (docs/domains/sponsorship/overview.md): sponsors, the people who sign in for them, the
 -- agreements they accepted, the board's proposals, logos, and an append-only audit log.
 --
 -- Only the site's server functions connect. Every write in the store

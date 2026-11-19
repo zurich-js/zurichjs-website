@@ -1,13 +1,15 @@
 /** Build-time content access for pages. One fetch per build (see @zurichjs/content). */
 import { isPreview, loadContent } from '@zurichjs/content';
 import { nextMeetup } from '@zurichjs/events';
+import { publicSponsorships } from '../server/sponsor-public.ts';
 
 export { ticketing } from './ticketing.ts';
 
 export { SITE, slackLink } from '@zurichjs/content';
 /** Draft preview build (SANITY_PERSPECTIVE=drafts): noindex everywhere, robots.txt disallows all. */
 export const PREVIEW = isPreview(process.env);
-export const content = () => loadContent(import.meta.env.MODE === 'test' ? { ...process.env, CONTENT_SOURCE: 'sample' } : process.env);
+/** The sponsorships database decides who is a current sponsor and at which tier; sample content never reads it. */
+export const content = () => loadContent(import.meta.env.MODE === 'test' ? { ...process.env, CONTENT_SOURCE: 'sample' } : process.env, undefined, publicSponsorships);
 
 /**
  * The build time is the reference clock for prerendered state; islands re-check it in the browser.

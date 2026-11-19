@@ -15,6 +15,7 @@ import {
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries.ts';
 import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
 import { withPartnerFallback } from './partners.ts';
+import { applySponsorships, type SponsorshipSource } from './sponsorships.ts';
 import { loadMedia, MediaUnavailableError, type MediaCollection } from './media.ts';
 import { attachSane } from './sane.ts';
 import * as sample from './sample.ts';
@@ -23,6 +24,7 @@ export * from './map.ts';
 export * from './media.ts';
 export * from './queries.ts';
 export * from './partners.ts';
+export * from './sponsorships.ts';
 export * from './sane.ts';
 export { PHOTOS, SITE } from './sample.ts';
 export { BEGINNINGS, SPEAKER_COMPANIES, type SpeakerCompany } from './community.ts';
@@ -200,22 +202,63 @@ let cached: Promise<SiteContent> | undefined;
  *   is unavailable.
  * - `SANITY_PERSPECTIVE=drafts` reads drafts (preview site) and requires
  *   `SANITY_READ_TOKEN`; without it the build fails.
+ * - `sponsorships` (the web app passes the database reader) overrides who is a
+ *   current sponsor and at which tier (sponsorships.ts). Sample content never
+ *   reads it, and a build without the database keeps the partner list as it is.
  */
-export function loadContent(env: Env = process.env, fetchSanity: (env: Env) => Promise<SiteContent> = sanityContent): Promise<SiteContent> {
+export function loadContent(env: Env = process.env, fetchSanity: (env: Env) => Promise<SiteContent> = sanityContent, sponsorships?: SponsorshipSource): Promise<SiteContent> {
   cached ??= (async () => {
     if (env.CONTENT_SOURCE === 'sample') return sampleContent();
     // A misconfigured preview build fails loudly instead of falling back to sample content.
     perspective(env);
+    let content: SiteContent;
     try {
-      return await fetchSanity(env);
+      content = await fetchSanity(env);
     } catch (err) {
       // A build that needs the photo archive and cannot read it fails too (sample content would not help).
       if (err instanceof MediaUnavailableError || env.CONTEXT === 'production' || env.CONTENT_REQUIRE_SANITY === '1') throw err;
       console.warn(`\n[content] Sanity is not reachable (${(err as Error).message}). USING SAMPLE CONTENT. Do not deploy this build.\n`);
       return sampleContent();
     }
+    return withSponsorships(content, env, sponsorships);
   })();
   return cached;
+}
+
+/** How long a build waits for the sponsorships database before it carries on without it. */
+export const SPONSORSHIPS_TIMEOUT_MS = 15_000;
+
+/**
+ * The content with the sponsorships database applied to its partners. It never throws: without a
+ * database, or when reading it fails or takes too long, the partner list stays as it is.
+ */
+export async function withSponsorships(
+  content: SiteContent,
+  env: Env,
+  source: SponsorshipSource | undefined,
+  { log = console.warn, timeoutMs = SPONSORSHIPS_TIMEOUT_MS }: { log?: (msg: string) => void; timeoutMs?: number } = {},
+): Promise<SiteContent> {
+  if (!source) return content;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const rows = await Promise.race([
+      source(env),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`no answer after ${timeoutMs} ms`)), timeoutMs);
+      }),
+    ]);
+    if (!rows) return content;
+    const { partners, notes } = applySponsorships(content.partners, rows);
+    for (const n of notes) log(`[content] sponsorships: ${n}`);
+    return { ...content, partners };
+  } catch (err) {
+    log(
+      `\n[content] The sponsorships database is not reachable (${(err as Error).message || (err as { code?: string }).code || String(err)}). Sponsors and tiers come from the partner list alone.\n`,
+    );
+    return content;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** For tests. */

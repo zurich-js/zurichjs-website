@@ -68,7 +68,8 @@ export function parseProfile(form: Record<string, unknown>): { ok: true; data: P
 
 export async function loadProfile(client: SanityClient, speakerId: string) {
   return client.fetch<(ProfileFields & { _id: string; image?: string; hasDraft: boolean }) | null>(
-    `*[_type == "speaker" && id.current == $speakerId && !(_id in path("drafts.**"))][0]{
+    // The link's ID, or an earlier one: a profile link sent before the ID changed still opens the profile.
+    `*[_type == "speaker" && (id.current == $speakerId || $speakerId in legacySlugs) && !(_id in path("drafts.**"))][0]{
       _id, name, title, company, bio, website, github, linkedin, twitter, bluesky, interests,
       "image": coalesce(*[_id == "drafts." + ^._id][0].image.asset->url, image.asset->url),
       "hasDraft": defined(*[_id == "drafts." + ^._id][0]._id)

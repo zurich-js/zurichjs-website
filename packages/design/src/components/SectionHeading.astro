@@ -1,19 +1,26 @@
 ---
-/** Section heading, optionally with a right-aligned action (slot "action") and a sub line (slot "sub"). */
-import { cx, headingSizes } from '../recipes';
+/**
+ * A heading block with a sub line (slot "sub") and an optional right-aligned action (slot "action").
+ * For a whole section with its gutter and content, use Section. Level and look are separate: `as` sets
+ * the level (h3 by default for "sm"), `size` the look.
+ */
+import { cx } from '../recipes';
+import Heading from './Heading.astro';
 
 interface Props {
   id?: string;
-  size?: keyof typeof headingSizes;
+  size?: 'lg' | 'md' | 'sm';
+  as?: 'h2' | 'h3';
   class?: string;
 }
-const { id, size = 'lg', class: extra } = Astro.props;
+const { id, size = 'lg', as = size === 'sm' ? 'h3' : 'h2', class: extra } = Astro.props;
+const LOOK = { lg: 'section', md: 'subsection', sm: 'subsection' } as const;
 ---
 
 <div class={cx('flex justify-between items-end gap-4 flex-wrap', extra)}>
-  <div class="flex flex-col gap-2.5 max-w-[720px]">
-    <h2 id={id} class={cx('m-0 font-bold', headingSizes[size])}><slot /></h2>
-    {Astro.slots.has('sub') && <p class="m-0 text-[18px] leading-[1.55] text-ink-2 text-pretty"><slot name="sub" /></p>}
+  <div class="flex flex-col gap-2.5 max-w-reading">
+    <Heading as={as} size={LOOK[size]} id={id}><slot /></Heading>
+    {Astro.slots.has('sub') && <p class="m-0 text-body text-ink-2 text-pretty"><slot name="sub" /></p>}
   </div>
   <slot name="action" />
 </div>

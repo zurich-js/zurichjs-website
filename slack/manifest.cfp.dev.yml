@@ -1,4 +1,4 @@
-# The ZurichJS CFP bot for local development (docs/v2/AUTOMATION.md, "The CFP bot"). Same scopes
+# The ZurichJS CFP bot for local development (docs/systems/cfp-bot.md). Same scopes
 # and events as slack/manifest.cfp.yml, but in Socket Mode: tools/slack-dev.mjs opens the socket
 # from your machine and passes events, signed, to the local slack-cfp-* functions. Create it at
 # api.slack.com/apps › Create New App › From a manifest, then add an app-level token with the

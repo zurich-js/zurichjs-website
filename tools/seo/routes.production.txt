@@ -1,5 +1,5 @@
 # Every page route of the current production app (src/pages), plus legacy redirects.
-# Dynamic routes are listed with the IDs the baseline could resolve; see docs/v2/SEO-BASELINE.md.
+# Dynamic routes are listed with the IDs the baseline could resolve; see docs/systems/seo.md.
 /
 /about
 /ai-context

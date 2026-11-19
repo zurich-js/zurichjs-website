@@ -1,9 +1,9 @@
 /** Form controls for islands (Preact). Labels wrap controls; errors are announced politely. */
 import type { ComponentChildren, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'preact';
 import { useId } from 'preact/hooks';
-import { cx, optionClass, optionInput } from '../recipes.ts';
+import { cx, motion, optionClass, optionInput } from '../recipes.ts';
 
-const control = 'rounded-[14px] border px-3.5 text-[17px] font-normal bg-white text-black w-full box-border';
+const control = 'rounded-field border px-3.5 text-body font-normal bg-white text-black w-full box-border transition-colors';
 const border = (bad?: boolean) => (bad ? 'border-danger' : 'border-grey-line');
 
 interface Wrap {
@@ -36,17 +36,22 @@ function Wrapper({
   children,
 }: Wrap & { ids: { label: string; hint: string; error: string }; children: ComponentChildren }) {
   return (
-    <label class={cx('flex flex-col gap-1.5 font-bold', labelSize === 'lg' ? 'text-[clamp(19px,1.8vw,22px)] leading-[1.3]' : 'text-[16px]', className)}>
+    <label class={cx('flex flex-col gap-1.5 font-bold', labelSize === 'lg' ? 'text-lead' : 'text-compact', className)}>
       <span id={ids.label}>{label}</span>
       {hint && (
-        <span id={ids.hint} class="text-[16px] font-normal text-grey-text leading-[1.45]">
+        <span id={ids.hint} class="text-compact font-normal text-grey-text">
           {hint}
         </span>
       )}
       {children}
       {error !== undefined && (
-        <span id={ids.error} class="font-normal text-[14px] text-danger min-h-[1.2em]" aria-live="polite">
-          {error}
+        <span id={ids.error} class="font-normal text-meta text-danger min-h-lh" aria-live="polite">
+          {/* Keyed by its text, so each new message fades in. */}
+          {error && (
+            <span key={error} class={motion.enter}>
+              {error}
+            </span>
+          )}
         </span>
       )}
     </label>
@@ -57,7 +62,7 @@ export function TextField({ label, hint, error, class: className, labelSize, inv
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <Wrapper label={label} hint={hint} error={error} class={className} labelSize={labelSize} ids={ids}>
-      <input aria-labelledby={ids.label} aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-[52px]', border(invalid))} {...rest} />
+      <input aria-labelledby={ids.label} aria-invalid={invalid || undefined} aria-describedby={describedBy} class={cx(control, 'min-h-control', border(invalid))} {...rest} />
     </Wrapper>
   );
 }
@@ -87,7 +92,7 @@ export function SelectField({ label, hint, error, class: className, children, in
           aria-labelledby={ids.label}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy}
-          class={cx(control, 'min-h-[52px] pl-3.5 pr-11 appearance-none cursor-pointer', border(invalid))}
+          class={cx(control, 'min-h-control pl-3.5 pr-11 appearance-none cursor-pointer', border(invalid))}
           {...rest}
         >
           {children}
@@ -95,7 +100,7 @@ export function SelectField({ label, hint, error, class: className, children, in
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-black"
+          class="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 size-4 text-black"
           fill="none"
           stroke="currentColor"
           stroke-width="2.2"
@@ -138,20 +143,21 @@ export function FileField({
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <div class="flex flex-col gap-1.5">
-      <span id={ids.label} class="text-base font-bold">
+      <span id={ids.label} class="text-compact font-bold">
         {label}
       </span>
       {hint && (
-        <span id={ids.hint} class="text-base leading-normal text-grey-text">
+        <span id={ids.hint} class="text-compact font-normal text-grey-text">
           {hint}
         </span>
       )}
       <div class="flex flex-wrap items-center gap-3 min-w-0">
         <label
           class={cx(
-            'inline-flex min-h-11 items-center rounded-pill border px-5 text-base font-bold cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue',
-            invalid ? 'border-danger' : 'border-black',
-            disabled ? 'opacity-50 cursor-not-allowed' : 'bg-white hover:bg-grey',
+            'inline-flex items-center min-h-control px-6 rounded-pill border bg-white text-compact font-bold text-black select-none transition-colors',
+            'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
+            border(invalid),
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-grey',
           )}
         >
           <input
@@ -166,11 +172,16 @@ export function FileField({
           />
           {button}
         </label>
-        <span class="min-w-0 text-base text-ink-2 break-all">{fileName || 'No file chosen'}</span>
+        <span class="min-w-0 text-compact text-ink-2 break-all">{fileName || 'No file chosen'}</span>
       </div>
       {error !== undefined && (
-        <span id={ids.error} class="text-sm text-danger" aria-live="polite">
-          {error}
+        <span id={ids.error} class="font-normal text-meta text-danger min-h-lh" aria-live="polite">
+          {/* Keyed by its text, so each new message fades in. */}
+          {error && (
+            <span key={error} class={motion.enter}>
+              {error}
+            </span>
+          )}
         </span>
       )}
     </div>
@@ -179,20 +190,19 @@ export function FileField({
 
 export function Checkbox({ label, class: className, ...rest }: { label: ComponentChildren; class?: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label class={cx('flex gap-3 items-start text-[17px] leading-[1.45] cursor-pointer', className)}>
-      <input type="checkbox" class="w-[22px] h-[22px] mt-px flex-none accent-black cursor-pointer" {...rest} />
+    <label class={cx('flex gap-3 items-start text-body cursor-pointer', className)}>
+      <input type="checkbox" class="size-5 mt-1 flex-none accent-black cursor-pointer" {...rest} />
       <span>{label}</span>
     </label>
   );
 }
 
-/** Pill-shaped radio chips. */
 /** One choice from a few: native radios shown as light options (never as buttons). */
 export function ChipGroup<T extends string>({ label, options, value, onChange }: { label: string; options: { value: T; label: string }[]; value: T; onChange: (v: T) => void }) {
   const id = label.toLowerCase().replace(/\W+/g, '-');
   return (
     <fieldset class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0">
-      <legend class="p-0 mb-2 text-[16px] font-bold">{label}</legend>
+      <legend class="p-0 mb-2 text-compact font-bold">{label}</legend>
       <div class="flex flex-wrap gap-2">
         {options.map((o) => (
           <label key={o.value} class={optionClass()}>

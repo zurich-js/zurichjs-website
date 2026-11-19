@@ -1,5 +1,5 @@
 /**
- * "Your talk is scheduled" emails to speakers (docs/v2/AUTOMATION.md, "Telling speakers their talk
+ * "Your talk is scheduled" emails to speakers (docs/systems/slack-agent.md, "Telling speakers their talk
  * is scheduled"). Deterministic code, not the model: there is no model tool for it.
  *
  *   1. After Publish (or Publish all), `scheduledTalks` looks at the published events: a talk that is

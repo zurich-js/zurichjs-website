@@ -1,5 +1,5 @@
 /**
- * Free tickets on Sane (docs/v2/SANE-READINESS.md). For each event linked to
+ * Free tickets on Sane (docs/domains/events/specs/sane-ticketing.md). For each event linked to
  * Sane in Sanity (`events.sane`), the build reads Sane's public event and
  * attaches `sane: { url, state }`. Sane's CORS rule forbids browsers on
  * zurichjs.com, so this runs at build time only.

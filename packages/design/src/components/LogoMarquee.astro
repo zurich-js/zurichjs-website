@@ -1,0 +1,63 @@
+---
+/**
+ * Logos as one slow row that moves on its own, across the whole screen and fading out at both edges (owner,
+ * 19th November 2026). The logos are black and faint, and show their own colours on hover, so they do not
+ * compete with the sponsors above them.
+ * The row holds the list an even number of times and slides by half its width, so it loops without a seam on
+ * any screen; the copies are hidden from assistive technology and skipped by the keyboard, but the pointer can hover and open them like the first. It holds while hovered or
+ * focused. With reduced motion it does not move: the logos wrap onto rows inside the gutter and the copies are
+ * not shown (motion.css).
+ */
+import type { Partner } from '@zurichjs/events';
+import LogoTile from './LogoTile.astro';
+import { logoSize, partnerRel } from '../logos';
+import { cx } from '../recipes';
+
+interface Props {
+  partners: Partner[];
+  /** The group's accessible name. */
+  label: string;
+  /** Moves the other way, so two rows do not read as one. */
+  reverse?: boolean;
+}
+const { partners, label, reverse = false } = Astro.props;
+/** One logo's box, its width with the gap in px, and the logo's area and height cap. */
+const SIZE = { item: 'h-20 w-44', px: 200, area: 2800, maxH: 40 };
+// Half the row must be wider than any screen, or a gap would show: repeat a short list until it is.
+const repeats = Math.max(1, Math.ceil(2800 / (partners.length * SIZE.px)));
+const copies = Array.from({ length: repeats * 2 }, (_, i) => i);
+---
+
+{
+  partners.length > 0 && (
+    <div class="marquee-fade overflow-hidden" data-reveal role="group" aria-label={label}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the number of logos in the row sets how long one pass takes, as a CSS custom property */}
+      <div class="motion-marquee" data-reverse={reverse ? '' : undefined} style={{ '--marquee-items': partners.length * repeats }}>
+        {copies.map((i) => (
+          <ul class="m-0 p-0 list-none flex gap-6 pr-6" aria-hidden={i > 0 ? 'true' : undefined}>
+            {partners.map((p) => {
+              const wh = logoSize(p.logoRatio, SIZE.area, SIZE.maxH);
+              return (
+                <li class={cx('flex-none', SIZE.item)}>
+                  <LogoTile
+                    tone="quiet"
+                    copy={i > 0}
+                    name={p.name}
+                    logo={p.logo}
+                    logoBlack={p.logoBlack}
+                    href={p.url}
+                    rel={partnerRel(p)}
+                    opaque={p.logoOpaque}
+                    knockout={p.logoKnockout}
+                    width={wh?.w}
+                    height={wh?.h}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        ))}
+      </div>
+    </div>
+  )
+}

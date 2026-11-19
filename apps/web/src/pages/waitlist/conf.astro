@@ -26,23 +26,23 @@ const WHAT = [
     title="ZurichJS Conference waitlist"
     sub="The community’s JavaScript conference in Zurich. Leave your email and we’ll tell you when tickets, speakers and dates are announced."
   />
-  <div class="pt-[clamp(56px,7vw,104px)] pb-[clamp(64px,8vw,112px)] flex flex-col gap-[clamp(56px,7vw,96px)]">
-    <div class="px-gut grid grid-cols-[repeat(auto-fit,minmax(min(100%,360px),1fr))] gap-[clamp(40px,5vw,80px)] items-start">
-      <section aria-labelledby="h-wl" class="flex flex-col gap-[18px]">
-        <h2 id="h-wl" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">Join the waitlist</h2>
+  <div class="py-section flex flex-col gap-section">
+    <div class="px-gut grid grid-cols-auto-lg gap-10 md:gap-20 items-start">
+      <section aria-labelledby="h-wl" class="flex flex-col gap-4">
+        <h2 id="h-wl" class="m-0 text-subsection font-bold">Join the waitlist</h2>
         <WaitlistForm client:load />
       </section>
-      <section aria-labelledby="h-what" class="flex flex-col gap-[18px]">
-        <h2 id="h-what" class="m-0 text-[clamp(26px,2.8vw,36px)] leading-[1.15] font-bold">What to expect</h2>
+      <section aria-labelledby="h-what" class="flex flex-col gap-4">
+        <h2 id="h-what" class="m-0 text-subsection font-bold">What to expect</h2>
         {
           WHAT.map(([h, d]) => (
             <div class="flex flex-col gap-1">
-              <h3 class="m-0 text-[19px] font-bold">{h}</h3>
-              <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{d}</p>
+              <h3 class="m-0 text-card-title font-bold">{h}</h3>
+              <p class="m-0 text-body text-ink-2">{d}</p>
             </div>
           ))
         }
-        <p class="m-0 text-[17px] leading-[1.55] text-ink-2">
+        <p class="m-0 text-body text-ink-2">
           Dates, tickets and the programme live on <a href={confLink('/', 'waitlist')} target="_blank" rel="noopener" class="font-bold text-black">conf.zurichjs.com</a>.
         </p>
       </section>

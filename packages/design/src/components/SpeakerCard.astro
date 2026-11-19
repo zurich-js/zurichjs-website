@@ -1,28 +1,55 @@
 ---
+/**
+ * A speaker as two stacked cards (owner, 17th November 2026): a grey card behind, and the photo on top of it, turned
+ * a little (one way, then the other, along a grid). On hover or focus the photo straightens out over the grey.
+ * Optional `tag` sits on the photo ("3 talks").
+ */
 import { normalizeSearch, speakerSearchText, type Speaker } from '@zurichjs/events';
 import Monogram from './Monogram.astro';
 import Photo from './Photo.astro';
+import Tag from './Tag.astro';
+import type { MonogramTone } from '../recipes';
 
 interface Props {
   speaker: Speaker;
-  /** Second line: tagline (home) or "role · n talks" (directory). */
-  meta: string;
-  tone?: 'grey' | 'yellow';
+  /** Second line: tagline (home) or role (directory). */
+  meta?: string;
+  /** A short label on the photo, such as the number of talks. */
+  tag?: string;
+  /** The monogram's colour when there is no photo. */
+  tone?: MonogramTone;
 }
-const { speaker, meta, tone = 'grey' } = Astro.props;
+const { speaker, meta, tag, tone = 'grey' } = Astro.props;
 ---
 
 <a
   href={`/speakers/${speaker.id}`}
-  class="no-underline text-black flex flex-col gap-3"
+  class="group no-underline text-black flex flex-col gap-3"
   data-speaker-card
   data-search={speakerSearchText(speaker)}
   data-name={normalizeSearch(speaker.name)}
   data-topics={[...new Set(speaker.talks.flatMap((t) => t.tags).map(normalizeSearch))].join('|')}
 >
-  {speaker.photo ? <Photo photo={speaker.photo} class="aspect-square w-full" sizes="(min-width: 800px) 25vw, 50vw" /> : <Monogram initials={speaker.initials} size="tile" tone={tone} />}
+  <span class="relative block aspect-square w-full">
+    {/* The grey card sits 2px inside the photo's edge, so it never shows through the photo's antialiased corners. */}
+    <span aria-hidden="true" class="absolute inset-0.5 rounded-card bg-grey-light"></span>
+    <span class="absolute inset-0 transition-transform duration-drift ease-in-out group-odd:-rotate-3 group-even:rotate-3 group-hover:rotate-0 group-focus-visible:rotate-0">
+      {speaker.photo ? <Photo photo={speaker.photo} ratio="square" zoom sizes="(min-width: 800px) 25vw, 50vw" /> : <Monogram initials={speaker.initials} size="tile" tone={tone} />}
+      {
+        tag && (
+          // Read after the name instead (below), so the link is named by the speaker first.
+          <span aria-hidden="true">
+            <Tag tone="white" class="absolute top-3 left-3 font-bold">
+              {tag}
+            </Tag>
+          </span>
+        )
+      }
+    </span>
+  </span>
   <span class="flex flex-col gap-0.5">
-    <span class="text-[19px] font-bold">{speaker.name}</span>
-    <span class="text-[16px] text-ink-2">{meta}</span>
+    <span class="text-body font-bold">{speaker.name}</span>
+    {meta && <span class="text-compact text-ink-2">{meta}</span>}
+    {tag && <span class="sr-only">{tag}</span>}
   </span>
 </a>

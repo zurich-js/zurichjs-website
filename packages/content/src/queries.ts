@@ -1,7 +1,7 @@
 /**
  * GROQ queries for the public site. They read the production document shapes
  * (type `events`, slug in `id`, `datetime`, free-text `location`/`address`)
- * and the additive V2 fields from docs/v2/CONTENT-MODEL-DIFF.md, so they work
+ * and the additive V2 fields from docs/domains/events/content-model.md, so they work
  * before and after the Phase 3 schema migration.
  */
 import { defineQuery } from 'groq';
@@ -45,7 +45,10 @@ export const SPEAKERS_QUERY = defineQuery(`
 
 export const PARTNERS_QUERY = defineQuery(`
 *[_type == "partner" && defined(id.current)] | order(name asc) {
-  "id": id.current, name, url, "logo": logo.asset->url, kinds, tier, current, since, until, description, allowReferrer
+  "id": id.current, name, url, "logo": logo.asset->url,
+  "logoRatio": logo.asset->metadata.dimensions.aspectRatio, "logoOpaque": logo.asset->metadata.isOpaque,
+  "logoBlack": logoBlack.asset->url, logoBackground,
+  kinds, tier, current, since, until, description, allowReferrer
 }`);
 
 export const SINGLETONS_QUERY = defineQuery(`{

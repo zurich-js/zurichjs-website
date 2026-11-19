@@ -1,7 +1,6 @@
 import { directionsUrl, mapEmbedUrl, venueAddress, type Venue } from '@zurichjs/events';
 import { useState } from 'preact/hooks';
-import { Button } from '@zurichjs/design/islands/Button';
-import { cx } from '@zurichjs/design/recipes';
+import { cardClass, cx } from '@zurichjs/design/recipes';
 
 interface Props {
   venue: Venue;
@@ -14,8 +13,8 @@ interface Props {
 }
 
 /**
- * Where the meetup is: name, full address, how to get in, and directions.
- * The directions link always works. The map is always shown (owner, 2nd
+ * Where the meetup is: name, full address, how to get in, and the map (Google
+ * Maps gives directions from it; a link takes its place if it fails). The map is always shown (owner, 2nd
  * November 2026) and loads lazily as it scrolls near: the Maps Embed API with a
  * key, otherwise Google Maps' keyless embed of the address (see mapEmbedUrl).
  */
@@ -32,38 +31,38 @@ export default function VenueCard({ venue, mapsKey, heading = 'Venue', headingLe
 
   return (
     <section id="venue" aria-labelledby="h-venue" class="flex flex-col gap-4 scroll-mt-6">
-      <H id="h-venue" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+      <H id="h-venue" class="m-0 text-subsection font-bold">
         {heading}
       </H>
-      <div class={cx('bg-grey rounded-card flex flex-col', compact ? 'p-5 gap-3' : 'p-6 gap-4')}>
+      <div class={cardClass('outline', compact ? 'sm' : 'md')}>
         <div class="flex flex-col gap-0.5">
-          <div class={cx('font-bold', compact ? 'text-[18px]' : 'text-[20px]')}>{venue.name}</div>
-          <address class={cx('not-italic text-ink-2', compact ? 'text-[16px]' : 'text-[17px]')}>{address}</address>
+          <div class={cx('font-bold', compact ? 'text-body' : 'text-card-title')}>{venue.name}</div>
+          <address class={cx('not-italic text-ink-2', compact ? 'text-compact' : 'text-body')}>{address}</address>
         </div>
         {notes.length > 0 && (
-          <dl class={cx('m-0 grid gap-x-8', compact ? 'grid-cols-1 gap-y-2' : 'grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-y-3')}>
+          <dl class={cx('m-0 grid gap-x-8', compact ? 'grid-cols-1 gap-y-2' : 'grid-cols-auto-sm gap-y-3')}>
             {notes.map(([label, value]) => (
               <div key={label} class="flex flex-col gap-0.5">
-                <dt class="text-[15px] text-ink-2">{label}</dt>
-                <dd class={cx('m-0 leading-normal', compact ? 'text-[16px]' : 'text-[17px]')}>{value}</dd>
+                <dt class="text-compact text-ink-2">{label}</dt>
+                <dd class={cx('m-0', compact ? 'text-compact' : 'text-body')}>{value}</dd>
               </div>
             ))}
           </dl>
         )}
-        <div class="flex flex-wrap gap-3 items-center">
-          <Button href={directionsUrl(venue)} variant="yellow" size={compact ? 'sm' : 'md'} external>
-            Get directions
-          </Button>
-        </div>
         {
           <div id="venue-map" class="flex flex-col gap-2">
             {mapFailed ? (
-              <p class="m-0 text-[16px] text-ink-2">The map didn’t load. The directions link above still works.</p>
+              <p class="m-0 text-compact text-ink-2">
+                The map didn’t load.{' '}
+                <a href={directionsUrl(venue)} target="_blank" rel="noopener" class="font-bold text-black">
+                  Get directions on Google Maps
+                </a>
+              </p>
             ) : (
               <iframe
                 title={`Map of ${venue.name}, ${address}`}
                 src={mapEmbedUrl(venue, mapsKey)}
-                class={cx('w-full rounded-2xl border-0 bg-grey-soft', compact ? 'h-[200px]' : 'aspect-[4/3] md:aspect-[16/9]')}
+                class={cx('w-full rounded-nested-min border-0 bg-grey', compact ? 'h-50' : 'aspect-[4/3] md:aspect-[16/9]')}
                 loading="lazy"
                 referrerpolicy="strict-origin-when-cross-origin"
                 onError={() => setMapFailed(true)}

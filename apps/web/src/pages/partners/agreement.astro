@@ -9,6 +9,7 @@
  * Any change needs the owner (AGENTS.md: legal wording) and a new AGREEMENT.version.
  */
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content';
 import { AGREEMENT, CYCLES, TIERS, feeLabel } from '@zurichjs/sponsorship';
 import BaseLayout from '~/layouts/BaseLayout.astro';
@@ -109,14 +110,14 @@ const SECTIONS: [string, Para[]][] = [
 
 <BaseLayout title="Sponsorship agreement" description={`The agreement for sponsoring ZurichJS, run by the ${SITE.association}.`} noindex>
   <PageOpening slot="opening" title="Sponsorship agreement" sub={`For companies sponsoring ZurichJS. Version of ${version}.`} />
-  <div class="px-gut pt-12 pb-24">
-    <div class="max-w-3xl flex flex-col gap-9">
+  <div class="px-gut py-section">
+    <div class="max-w-reading flex flex-col gap-9">
       {
         SECTIONS.slice(0, 2).map(([h, paras]) => (
           <section class="flex flex-col gap-3">
-            <h2 class="m-0 text-3xl leading-tight font-bold">{h}</h2>
+            <Heading size="subsection">{h}</Heading>
             {paras.map((p) => (
-              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">
+              <p class="m-0 text-body text-ink-2 text-pretty">
                 {typeof p === 'string'
                   ? p
                   : p.map((part) =>
@@ -134,14 +135,14 @@ const SECTIONS: [string, Para[]][] = [
         ))
       }
       <section class="flex flex-col gap-3" aria-labelledby="h-tiers">
-        <h2 id="h-tiers" class="m-0 text-3xl leading-tight font-bold">Tiers, fees and benefits</h2>
+        <Heading id="h-tiers" size="subsection">Tiers, fees and benefits</Heading>
         <ul class="m-0 p-0 list-none flex flex-col gap-5">
           {
             tiers.map((t) => (
               <li class="flex flex-col gap-1.5">
-                <h3 class="m-0 text-xl font-bold">{t.name}</h3>
-                <p class="m-0 text-lg leading-relaxed text-ink-2">{t.fees}.</p>
-                <p class="m-0 text-lg leading-relaxed text-ink-2">{t.perks.join('; ')}.</p>
+                <Heading as="h3" size="card">{t.name}</Heading>
+                <p class="m-0 text-body text-ink-2">{t.fees}.</p>
+                <p class="m-0 text-body text-ink-2">{t.perks.join('; ')}.</p>
               </li>
             ))
           }
@@ -150,9 +151,9 @@ const SECTIONS: [string, Para[]][] = [
       {
         SECTIONS.slice(2).map(([h, paras]) => (
           <section class="flex flex-col gap-3">
-            <h2 class="m-0 text-3xl leading-tight font-bold">{h}</h2>
+            <Heading size="subsection">{h}</Heading>
             {paras.map((p) => (
-              <p class="m-0 text-lg leading-relaxed text-ink-2 text-pretty">
+              <p class="m-0 text-body text-ink-2 text-pretty">
                 {typeof p === 'string'
                   ? p
                   : p.map((part) =>
@@ -169,7 +170,7 @@ const SECTIONS: [string, Para[]][] = [
           </section>
         ))
       }
-      <p class="m-0 text-lg text-ink-2">
+      <p class="m-0 text-body text-ink-2">
         Questions? <a href={`mailto:${SITE.email}`} class="font-bold text-black">{SITE.email}</a> · <a href="/policies/code-of-conduct" class="font-bold text-black">Code of conduct</a> ·{' '}
         <a href="/policies/privacy-policy" class="font-bold text-black">Privacy policy</a> · <a href="/partners/account" class="font-bold text-black">Your sponsorship</a>
       </p>

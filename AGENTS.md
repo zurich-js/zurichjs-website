@@ -1,143 +1,59 @@
 # AGENTS.md
 
-These are the instructions for any coding or content agent working in this repository: Claude Code, Codex, Cursor, Copilot, Gemini and others. People should read them too. `CLAUDE.md` only imports this file.
+Instructions for any coding or content agent working in this repository: Claude Code, Codex, Cursor, Copilot, Gemini and others. People should read them too. `CLAUDE.md` only imports this file.
 
-## What this is
+zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich: a static-first Astro 7 site on Netlify, with content in Sanity and the Sanity Studio in `apps/studio`, in one pnpm workspace.
 
-zurichjs.com is the website of ZurichJS, the JavaScript community in Zurich. It is a static-first Astro 7 site on Netlify, with content in Sanity (project `viqjrovw`, dataset `production`). The Sanity Studio lives in this repo at `apps/studio` (imported from `zurich-js/zurich-js-website-sanity-studio`, history kept).
+## Read the docs first
 
-| Path                                      | What                                                                                                                                                                         |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/studio`                             | The Sanity Studio (Sanity 6): schema, desk, actions, migrations and content scripts. Deploys itself when changes reach `main`.                                               |
-| `apps/web`                                | The site. Static pages, Preact islands for interactive parts, Netlify Functions (forms, rebuilds, the Slack agent), and `apps/web/netlify.toml`.                             |
-| `packages/design`                         | The design system: tokens, the generated Tailwind 4 theme, Figtree, components. Rules: `docs/design-system.md`.                                                              |
-| `packages/events`                         | Event types, the state machine, presentation copy, readiness rules.                                                                                                          |
-| `packages/content`                        | Typed GROQ queries, mappers, sample content.                                                                                                                                 |
-| `packages/seo`                            | Meta tags, JSON-LD, sitemap, `llms.txt`.                                                                                                                                     |
-| `packages/forms`, `packages/integrations` | Form schemas, and where forms go (Sanity, Slack, email).                                                                                                                     |
-| `packages/agent`                          | The Slack content agent: typed draft-only Sanity tools and a model-agnostic loop.                                                                                            |
-| `packages/membership`                     | Verein membership: levels, the status machine, the Postgres member store, CSV import. Schema: `apps/web/database/migrations` (Neon Postgres); docs: `docs/v2/MEMBERSHIP.md`. |
-| `packages/sponsorship`                    | Sponsorship: tiers and fees, the status machine, the Postgres sponsor store (contacts, agreements, meetups, logos, contracts). Docs: `docs/v2/SPONSORSHIP.md`.               |
-| `agents/`                                 | Playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`) for agents.                                                                                           |
-| `tools/`                                  | The SEO parity gate, the local Netlify-like server, the agent CLI, CI helpers.                                                                                               |
-| `e2e/`                                    | Playwright: routes, accessibility, redirects, visual regression.                                                                                                             |
-| `docs/`                                   | `docs/v2/RUNBOOK.md` (operations), `docs/v2/AUTOMATION.md` (agents and Slack), `docs/v2/DECISIONS.md`, `docs/design-system.md`.                                              |
+Everything about this repository lives in the documentation, an Open Knowledge Format (OKF) v0.1 bundle in `docs/`. This file only points into it. Start at `docs/index.md`, then read the concepts for what you are about to change. Before any change, read the binding rules:
 
-## Commands
+- `docs/conventions/working-rules.md`: what needs the owner, branches and PRs, checks before a commit, content edits, secrets
+- `docs/systems/design-system/brand.md`: the brand rules (changing them needs the owner)
+- `docs/systems/design-system/ui-rules.md`: the rules for every UI change, and its definition of done
 
-```bash
-pnpm install                               # Node 22.23.4+ (.nvmrc), pnpm 11
-pnpm dev                                   # http://localhost:4321 (CONTENT_SOURCE=sample to work offline)
-pnpm local                                 # Docker: site + Postgres + Mailpit + Stripe test mode (sandbox key in .env or .env.local; docs/v2/RUNBOOK.md, Local development)
-CONTENT_SOURCE=sample BUILD_NOW=2026-11-01T12:00:00+01:00 pnpm build   # the deterministic build CI uses
-pnpm lint && pnpm lint:ui && pnpm format:check && pnpm knip && pnpm typecheck && pnpm test
-pnpm e2e                                   # needs a build; includes visual regression
-node tools/serve-dist.mjs 4321 &           # serve the build like Netlify
-node tools/seo/compare.mjs --base http://localhost:4321   # SEO and LLM parity gate
-pnpm agent "change the venue of the next meetup to …"     # the Slack agent, from the terminal
-```
+Other starting points: `docs/systems/overview.md` (repository layout, packages, integrations), `docs/systems/local-development.md` (setup and commands), `docs/systems/operations/index.md` (deploys, environment variables, rebuilds, CI) and `docs/reference/decisions/index.md` (why things are the way they are).
 
-Before every commit, run the checks for what you touched. The pre-commit hook formats and lints staged files, then typechecks. CI (`.github/workflows/ci.yml`) runs everything, including e2e, visual regression, the SEO gate and Lighthouse.
+When a change alters durable behaviour, update its concept in the same PR, add a line to `docs/log.md`, and put work that is not built yet in a Spec. The rules for writing the bundle are in `docs/conventions/authoring-guide.md`.
 
-## Brand rules (binding; changing them needs the owner)
+## Writing documentation: the `okf-documentation` skill
 
-- **Structure:** a black opening (header and page opening), black footer and white content.
-- **Typeface:** Figtree only.
-- **Colour:** `#F1E271` is the only accent: small button accents, and one large section on the home page ("Speak at a meetup"); no yellow text highlights (Bogdan's review, 4th November 2026). `#268BCC` is used only for focus rings and the logo. Green (`success`, `success-soft`) is only for success messages, and red (`danger`) only for errors (owner, 3rd November 2026).
-- **Shapes and layout:** rounded pills for buttons and tags, 24px cards, one breakpoint at 800px.
-- **No decoration:** no kickers or eyebrow labels, no decorative borders, dividers or gradients.
-- **No recordings:** ZurichJS does not record talks. Slides are shown on a talk only when the speaker shared them (owner, 2026-11-01). Short clips from the evening may appear in the media archive, never presented as talk recordings.
-- **Rating and award:** "Rated 4.9/5 on Meetup…" in plain words, in the home page's award section and never in the hero (Bogdan's review, 4th November 2026); where the award is named elsewhere, it links to that section. The rating comes from the `meetupRating` record, updated by hand and never scraped.
-- **No invented facts:** dates, prices, attendee numbers, speakers and venues come from content or from a person, never from the agent.
-- **Copy:** plain, specific, no em dashes. Say "talk proposals" (explain "call for papers (CFP)" once).
+The bundle follows the `okf-documentation` skill in novu's skills repository on GitHub, teamnovu/novu-skills (under skills/dev/shared). It is not vendored here; if your agent has it installed, load it for any documentation work. Without it, the authoring guide covers everything you need.
 
-## UI and design system rules
+- **Pick the mode by the task:**
+  - **Feature planning** (something not built yet): create or update a Spec under the domain's or system's `specs/` folder, with requirements, acceptance criteria, affected concepts, open decisions and `status: planned` or `in-progress`. Link it from each affected concept under `# Related specs`, and back.
+  - **Implementation:** update the concepts for the behaviour you built, in the same PR, in the present tense, with no branch names or "pending merge". Mark a Spec `shipped` only when its acceptance criteria are met, and move its facts into the concepts.
+  - **Small fixes and regressions:** update a concept only if a durable fact changed. A styling tweak or restoring documented behaviour needs no Spec and no log entry.
+  - **Audit:** check the requested pages and their direct links, and report findings without editing unless asked.
+- **Before writing,** read the concepts you are about to touch and the authoring guide. Verify every fact against the code; where code and docs disagree, the code wins, and the correction goes in `docs/log.md`. Anything you cannot verify goes under "Open questions" or "Not verified".
+- **One home per fact.** Use the table below to find it, link to it from elsewhere, and keep owner attributions on binding rules.
+- **Before finishing,** run the checks in the authoring guide ("Checking the bundle"): frontmatter with a `type`, every `/…` link and backticked path resolves, every concept is in its folder's index, domain and system pages and Specs link both ways. There is no bundle linter in this repository, so check with a script or by hand, and say what you checked. `pnpm format:check` and `pnpm test` (`tools/agents.test.ts`) must pass.
 
-These rules are mandatory for every UI change. They override convenience. If a rule blocks you, stop and ask. Do not work around it. (Owner, 10th November 2026. The brand rules above still apply; these say how to build within them.)
-
-### 1. Zero arbitrary values
-
-- Never write Tailwind arbitrary values: no `min-h-[44px]`, `text-[16px]`, `px-[26px]`, `bg-[#abc]`, `w-[calc(...)]`, `z-[999]`, `rounded-[10px]`. Arbitrary variants and properties (`[&>li]:mt-2`, `[grid-area:a]`) count too.
-- The only exceptions are `grid-cols-[...]` track lists and `aspect-[...]` photo ratios, which have no scale equivalent (justified in `eslint.config.mjs`).
-- Never use inline `style={{}}` for spacing, colour, type, radius or shadow. A value that exists only at runtime (a CSS custom property, an image focal point from Sanity) needs an `eslint-disable-next-line no-restricted-syntax -- <reason>` comment.
-- Never hardcode hex, rgb, px or rem values in components.
-- If the value you need does not exist, you have two options: (a) snap to the nearest existing token (preferred), or (b) propose a new token in `packages/design/src/tokens.ts`, with a one-line justification, and wait for approval before using it.
-- Common snaps: 16px = `text-base`, 18px = `text-lg`, 44px = `11`, 48px = `12`. Tailwind 4 spacing takes quarter steps, so 18px = `4.5` and 22px = `5.5` are exact. Prefer the scale over "pixel-perfect" guesses.
-
-### 2. Single source of truth for tokens
-
-- Tokens live in ONE place: `packages/design/src/tokens.ts`. `pnpm --filter @zurichjs/design theme` writes them into `packages/design/src/theme.css` (Tailwind 4 `@theme`); never edit `theme.css` by hand. Read the tokens file before writing any UI. Do not invent tokens that already exist under a different name.
-- Semantic names only: `text-muted`, `bg-surface`, `border-danger`, `space-touch`. Never name tokens after their value (`grey-line-2`).
-- Colours, type scale, spacing, radius, shadow, z-index and breakpoints are all tokenised. The touch target minimum is a token, not a repeated literal.
-
-### 3. Components own variants, pages own layout
-
-- Visual variants (size, intent, state, invalid, disabled) are defined ONCE in a primitive in `packages/design/src/components/ui/`, using cva or tailwind-variants. (The primitives move there during the UI compliance work in `docs/v2/UI-AUDIT.md`; until one has moved, its current home is `packages/design/src/components`, `packages/design/src/islands` or `packages/design/src/recipes.ts`.)
-- No class-string-returning helper functions (like `optionClass()`) outside a primitive. No long `cx(...)` chains in feature components or pages.
-- Feature components compose primitives. They do not restyle them. Passing `class` to override a primitive's tokens is a smell: add a variant instead.
-- A page or feature component may only use layout utilities (flex, grid, gap, padding from the scale, responsive prefixes).
-- Before creating a component, search `packages/design/src` for an existing one. Duplicating a primitive is a failed task.
-
-### 4. Consistency over novelty
-
-- Match existing patterns in the repo. If two patterns exist, use the one in the most files and flag the other for cleanup. Do not add a third.
-- New UI must work at mobile, tablet and desktop, with keyboard focus visible, and with disabled and invalid states, using existing tokens.
-
-### 5. Definition of done (verify, do not assume)
-
-Run and report the results of:
-
-1. `pnpm lint` and `pnpm lint:ui` (the arbitrary-value, inline-style and hex rules; legacy violations are baselined in `eslint-suppressions.json`, new ones fail)
-2. `pnpm typecheck`
-3. `rg '\[[0-9#]|\-\[|style=\{\{' apps/web/src packages/design/src` returns nothing new in files you touched
-4. A screenshot or description of the result at 375px and 1280px
-
-In your summary, list: tokens used, any new token proposed, any primitive added or changed, and anything you could not make fit the system.
-
-The baseline only shrinks. When you fix a legacy violation, run `pnpm lint:ui:prune` and commit the smaller `eslint-suppressions.json`. Never regenerate it with `--suppress-all` to get green.
-
-### 6. Scope discipline
-
-- Change only what the task requires. No drive-by refactors.
-- If you find existing violations in files you touch, list them in the summary. Fix them only if asked.
-
-## Needs the owner (never do these on your own)
-
-- changing the brand, fonts or colours
-- changing or removing a public URL (every production URL keeps working or gets a 301; the SEO gate enforces it)
-- changing the rating copy or the AI-crawler rules in `robots.txt`
-- deleting content or Sanity documents
-- spending money
-- production deploys, and migrations on the `production` dataset. The Studio deploys itself when `apps/studio` changes reach `main` (`.github/workflows/deploy-studio.yml`); never run `sanity deploy` by hand
-- the legal pages (`apps/web/src/content/policies`)
-
-## Content, state and rebuilds
-
-- **Queries** live in `packages/content/src/queries.ts` and are typed by `sanity typegen` into `sanity.types.ts`. After changing a query or the schema, run `pnpm --filter @zurichjs/studio typegen` and commit `sanity.types.ts` and `apps/studio/schema.json`. CI regenerates them and fails when they differ.
-- **Sample content** (`packages/content/src/sample.ts`) is used only offline or in CI. Production builds fail rather than ship it.
-- **Schedules** (`packages/events/src/schedule.ts`): the event's `agenda` is the programme, with times in Zurich. Without an agenda, the evening is estimated from the start time as the old site did (doors, welcome, talks, a break after the second talk, networking), marked "Times are approximate" (owner, 4th November 2026). Never invent any other time.
-- **Event state** (`packages/events/src/state.ts`) comes from the editorial status plus the clock. Cancelled and postponed override the clock. An event is "live" (feedback mode) from doors for 48 hours, then "past" (the recap on the same URL).
-- **Rebuilds:**
-  - A Sanity publish calls a signed webhook (`/api/rebuild`).
-  - A scheduled function builds once publishing has paused for 2 minutes, and at each event's doors and doors + 48 h.
-  - There is no nightly rebuild.
-- **Draft preview:** a build with `SANITY_PERSPECTIVE=drafts` shows unpublished changes. It is noindex.
-- **Payments:** donations through Stripe Checkout on `/donate` (one-time or monthly, owner decision 2026-11-01), and Verein memberships as Stripe subscriptions, quarterly or yearly (owner, 5th and 10th November 2026). Anyone can join: they sign in, accept the membership terms and pay; nobody approves them and there is no declaration to sign (owner, 10th November 2026). Every paid term gets a certificate of membership by email. Members cannot cancel in Stripe: they resign to the board, as the bylaws say (`docs/v2/MEMBERSHIP.md`). Sponsorships by card through Stripe (or bank transfer recorded by the board), monthly, quarterly, yearly or one-time for one or more meetups; sponsors sign the sponsorship agreement on the site, and changes the board agrees with them apply only once the sponsor confirms (owner, 18th November 2026; `docs/v2/SPONSORSHIP.md`). Pro meetups, tickets and merchandise stay removed. Twint (QR from Site settings) and email remain.
-
-## Environment variables
-
-They are listed in `docs/v2/RUNBOOK.md`. Secrets come only from the environment, never from files, and a missing secret logs a stub line instead of crashing a page. The production site's existing names keep working: `SANITY_TOKEN`, `SLACK_BOT_TOKEN` with `SLACK_DEFAULT_CHANNEL`, and `NEXT_PUBLIC_POSTHOG_*`.
-
-## Testing and pull requests
-
-- **One branch and one PR per change,** and never push to `main`. Every PR includes screenshots and a short recording (`agents/skills/visual-review`).
-- **Visual baselines** (`e2e/__screenshots__`) change only for intended changes. Update them with `pnpm exec playwright test e2e/visual.spec.ts --update-snapshots`, and say why in the PR.
-- **Keep the Chromium text-rendering flags** in `playwright.config.ts`, so baselines made locally match CI.
-- **Don't weaken a test, a security check or the SEO gate to get green.** Fix the cause, or record an intended change with a reason (`tools/seo/allowlist.json`).
+| When you change                                             | Update                                                                           |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Packages, apps, integrations, who owns a contract           | `docs/systems/overview.md`                                                       |
+| Commands, `pnpm local`, mocks                               | `docs/systems/local-development.md`                                              |
+| Rendering, routes, redirects, headers, share images         | `docs/systems/web.md` (and `docs/systems/seo.md` for any URL)                    |
+| The Sanity schema, typegen, Studio scripts, the webhook     | `docs/systems/studio.md` and the domain's content model                          |
+| Tokens, components, motion                                  | `docs/systems/design-system/` (brand rules need the owner)                       |
+| Netlify, environment variables, rebuilds, CI, failures      | `docs/systems/operations/`                                                       |
+| Stripe calls, the shared webhook, Stripe settings           | `docs/systems/stripe.md`                                                         |
+| Tests, e2e, visual baselines                                | `docs/systems/testing.md`                                                        |
+| The Slack agent, playbooks, roles, MCP                      | `docs/systems/slack-agent.md`                                                    |
+| The CFP bot                                                 | `docs/systems/cfp-bot.md`                                                        |
+| Event state, schedules, readiness, feedback, Meetup or Sane | `docs/domains/events/`                                                           |
+| Membership, Stripe subscriptions, the admin area            | `docs/domains/membership/`                                                       |
+| Sponsorships, the sponsor account and admin                 | `docs/domains/sponsorship/`                                                      |
+| Content loading, singletons, sample content                 | `docs/domains/content/`                                                          |
+| Partners and sponsorship                                    | `docs/domains/partners/overview.md`                                              |
+| The talk proposal form or speaker profiles                  | `docs/domains/talk-proposals/overview.md`                                        |
+| Forms and their destinations                                | `docs/domains/forms/overview.md`                                                 |
+| Donations                                                   | `docs/domains/donations/overview.md`                                             |
+| An owner decision                                           | `docs/reference/decisions/index.md` (append), and the concept that owns the rule |
 
 ## Playbooks and roles
 
-The playbooks are plain markdown in the Agent Skills format. Any agent can follow them, and Claude Code also loads them through `.claude/skills`.
+Playbooks are plain markdown in the Agent Skills format in `agents/skills`; any agent can follow them, and Claude Code loads them through `.claude/skills`. Roles are in `agents/roles`. Both are described in `docs/systems/slack-agent.md`.
 
 | Playbook                                | Use it to                                        |
 | --------------------------------------- | ------------------------------------------------ |
@@ -147,9 +63,3 @@ The playbooks are plain markdown in the Agent Skills format. Any agent can follo
 | `agents/skills/rating-refresh/SKILL.md` | update the Meetup rating by hand                 |
 | `agents/skills/release/SKILL.md`        | check a branch before asking for a merge         |
 | `agents/skills/visual-review/SKILL.md`  | make the PR screenshots and recording            |
-
-The roles are `agents/roles/reviewer.md`, `agents/roles/qa.md` and `agents/roles/content-editor.md`.
-
-## MCP servers
-
-`.mcp.json` lists the Sanity, GitHub and Playwright MCP servers, with tokens taken from the environment. Tools that use another file read the same entries: Cursor uses `.cursor/mcp.json`, and VS Code uses `.vscode/mcp.json`. Content edits through Sanity follow the same rules as the Slack agent: drafts first, and a person publishes.

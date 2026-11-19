@@ -1,5 +1,5 @@
 /**
- * Sponsorship payments through Stripe (docs/v2/SPONSORSHIP.md), over plain fetch like
+ * Sponsorship payments through Stripe (docs/domains/sponsorship/api.md), over plain fetch like
  * membership-stripe.ts, so the same local mock works. Card only (owner, 18th November 2026):
  * Stripe invoices are off; sponsors who pay by bank transfer are `manual` and the board records
  * their payments.

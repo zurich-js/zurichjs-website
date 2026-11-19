@@ -134,6 +134,24 @@ test('the mobile menu opens and closes from the keyboard, and focus returns to t
   await expect(menu).toBeHidden();
 });
 
+test('the mobile menu scrolls its links while the close button and page stay in place', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'mobile only');
+  await page.setViewportSize({ width: 390, height: 480 });
+  await page.goto('/');
+  await page.evaluate(() => window.scrollTo(0, 300));
+  await page.getByRole('button', { name: 'Open menu' }).click();
+  const menu = page.getByRole('dialog', { name: 'Menu' });
+  const close = menu.getByRole('button', { name: 'Close menu' });
+  const closePosition = await close.boundingBox();
+  const pageScroll = await page.evaluate(() => window.scrollY);
+  const lastLink = menu.getByRole('link').last();
+  await expect(lastLink).not.toBeInViewport();
+  await lastLink.scrollIntoViewIfNeeded();
+  await expect(lastLink).toBeInViewport();
+  expect(await close.boundingBox()).toEqual(closePosition);
+  expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+});
+
 test('the header turns into the floating bar once, without changing its height (no flicker)', async ({ page }) => {
   await page.goto('/');
   const header = page.locator('[data-site-header]');

@@ -114,3 +114,16 @@ describe('GET /api/speaker-feedback/[token]', () => {
     expect((await ALL({} as never)).status).toBe(405);
   });
 });
+
+describe('links signed with an earlier speaker ID', () => {
+  it('the feedback and profile lookups also match the speaker’s old IDs, so emailed links survive a rename', async () => {
+    const { SPEAKER_FEEDBACK_QUERY } = await import('../src/server/speaker-feedback');
+    expect(SPEAKER_FEEDBACK_QUERY).toContain('(id.current == $speakerId || $speakerId in legacySlugs)');
+    expect(SPEAKER_FEEDBACK_QUERY).toContain('$speakerId in speaker->legacySlugs');
+    expect(SPEAKER_FEEDBACK_QUERY).toContain('$speakerId in talk->speakers[]->legacySlugs[]');
+    const { loadProfile } = await import('../src/server/speaker-profile');
+    let asked = '';
+    await loadProfile({ fetch: async (q: string) => ((asked = q), null) } as never, 'speaker-ce57073e-185e-4b8f-980b-bfa996270837');
+    expect(asked).toContain('(id.current == $speakerId || $speakerId in legacySlugs)');
+  });
+});

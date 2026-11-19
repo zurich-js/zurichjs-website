@@ -4,14 +4,15 @@
  * on the scale of the conference's ticket section: full width, centred, one clear action.
  */
 import Button from './Button.astro';
+import Heading from './Heading.astro';
 ---
 
-<section aria-labelledby="h-speak" class="bg-yellow text-black px-gut py-[clamp(72px,10vw,144px)]">
-  <div class="mx-auto max-w-[760px] flex flex-col items-center text-center gap-[clamp(16px,2vw,24px)]">
-    <h2 id="h-speak" class="m-0 text-[clamp(34px,4.4vw,60px)] leading-[1.05] font-bold text-balance">Speak at a meetup</h2>
-    <p class="m-0 text-[clamp(18px,1.6vw,21px)] leading-normal text-pretty">
+<section aria-labelledby="h-speak" class="bg-yellow text-black px-gut py-18 md:py-24 lg:py-36">
+  <div class="mx-auto max-w-reading flex flex-col items-center text-center gap-4 lg:gap-6">
+    <Heading id="h-speak" size="title">Speak at a meetup</Heading>
+    <p class="m-0 text-lead text-pretty">
       Does it have to be about JavaScript? Not really. We’ve had talks on Laravel, careers, infrastructure and observability. A 10-minute lightning talk or a 20-minute full talk. First-time speakers are welcome, and we help you prepare.
     </p>
-    <Button href="/cfp" variant="black" class="mt-2">Propose a talk</Button>
+    <Button href="/cfp" variant="primary" class="mt-2">Propose a talk</Button>
   </div>
 </section>

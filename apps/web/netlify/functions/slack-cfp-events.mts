@@ -1,6 +1,6 @@
 /**
  * Slack Events API endpoint for the CFP bot, the second Slack app "ZurichJS CFP"
- * (slack/manifest.cfp.yml; docs/v2/CFP-BOT.md). Verifies Slack's signature with the CFP app's own
+ * (slack/manifest.cfp.yml; docs/systems/cfp-bot.md). Verifies Slack's signature with the CFP app's own
  * secret, keeps to #cfp, ignores bots, edits and people from other workspaces, answers within
  * Slack's 3 seconds and hands the work to slack-cfp-background.
  * Env: SLACK_CFP_SIGNING_SECRET, SLACK_CFP_CHANNEL_ID.

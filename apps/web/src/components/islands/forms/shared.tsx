@@ -2,7 +2,7 @@
 import { HONEYPOT, validate, type FormKind } from '@zurichjs/forms/client';
 import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { buttonClass, type ButtonSize, type ButtonVariant } from '@zurichjs/design/recipes';
+import { buttonClass, cx, motion, opensNewTab, textClass, type ButtonVariant, type TextSize } from '@zurichjs/design/recipes';
 
 /**
  * Hidden field that bots fill in and people never see. The server rejects any
@@ -18,6 +18,18 @@ export function Honeypot() {
       </label>
     </div>
   );
+}
+
+/**
+ * A message that fades in each time it changes (an error, a server reply): keyed by its text, so new text is a new
+ * element (motion.enter). Nothing is rendered while it is empty, so the live region around it stays in place.
+ */
+export function Appear({ text }: { text?: string | false | null }) {
+  return text ? (
+    <span key={text} class={motion.enter}>
+      {text}
+    </span>
+  ) : null;
 }
 
 /** A label with "(optional)" after it. Forms that use it say once that every other field is required. */
@@ -98,22 +110,60 @@ export function useFocusWhen<T extends HTMLElement>(when: boolean) {
  * not type `type` or `disabled`, so forms use this.)
  */
 export function SubmitButton({
-  variant = 'black',
-  size = 'lg',
+  variant = 'primary',
   grow,
   class: extra,
   busy,
   children,
 }: {
   variant?: ButtonVariant;
-  size?: ButtonSize;
   grow?: boolean;
   class?: string;
   busy?: boolean;
   children: ComponentChildren;
 }) {
   return (
-    <button type="submit" class={buttonClass(variant, size, grow, extra)} disabled={busy} aria-busy={busy || undefined}>
+    <button type="submit" class={buttonClass({ variant, grow }, extra)} disabled={busy} aria-busy={busy || undefined}>
+      {children}
+    </button>
+  );
+}
+
+/**
+ * An action that reads as a text link (back, resend, download, "use another email"): bold and underlined, no box.
+ * A link with `href`, else a button. The membership islands write the same classes inline.
+ */
+export function TextButton({
+  size = 'compact',
+  href,
+  external,
+  download,
+  disabled,
+  onClick,
+  class: extra,
+  children,
+}: {
+  size?: TextSize;
+  /** Renders a link when set. */
+  href?: string;
+  external?: boolean;
+  /** A link that downloads, under this file name. */
+  download?: string;
+  disabled?: boolean;
+  onClick?: (e: MouseEvent) => void;
+  /** Layout only (placement). */
+  class?: string;
+  children: ComponentChildren;
+}) {
+  const cls = cx('p-0 bg-transparent border-0 font-bold text-left text-black underline cursor-pointer disabled:opacity-50', textClass[size], extra);
+  if (href !== undefined)
+    return (
+      <a href={href} download={download} class={cls} onClick={onClick} {...((external ?? opensNewTab(href)) ? { target: '_blank', rel: 'noopener' } : {})}>
+        {children}
+      </a>
+    );
+  return (
+    <button type="button" class={cls} disabled={disabled} onClick={onClick}>
       {children}
     </button>
   );
@@ -144,15 +194,15 @@ export function ChoiceGroup({
       class="border-0 p-0 m-0 flex flex-col gap-2 min-w-0"
       aria-describedby={[hint ? `${id}-hint` : '', error ? `${id}-error` : ''].filter(Boolean).join(' ') || undefined}
     >
-      <legend class="text-base font-bold p-0 mb-1.5">{legend}</legend>
+      <legend class="text-compact font-bold p-0 mb-1.5">{legend}</legend>
       {hint && (
-        <p id={`${id}-hint`} class="m-0 mb-1 text-base text-grey-text leading-normal">
+        <p id={`${id}-hint`} class="m-0 mb-1 text-compact text-grey-text">
           {hint}
         </p>
       )}
       <div class={extra}>{children}</div>
-      <span id={`${id}-error`} class="text-sm text-danger min-h-5" aria-live="polite">
-        {error}
+      <span id={`${id}-error`} class="text-meta text-danger min-h-lh" aria-live="polite">
+        <Appear text={error} />
       </span>
     </fieldset>
   );

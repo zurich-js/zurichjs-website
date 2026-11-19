@@ -32,13 +32,17 @@ import { lastDay, longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { membershipDb } from './membership-db.ts';
 import { membershipSlack, type MembershipSlack } from './membership-slack.ts';
+import { queueRebuild, withRebuilds } from './sponsor-rebuild.ts';
 import { confirmed } from './sponsor-stripe.ts';
 
 type Fetch = typeof fetch;
 type Log = (m: string) => void;
 
-/** The sponsor store, on the same database as memberships. Throws MembershipUnavailable without one. */
-export const sponsorStore = (env: Env): SponsorStore => postgresStore(membershipDb(env));
+/**
+ * The sponsor store, on the same database as memberships. Throws MembershipUnavailable without one.
+ * A change the public site shows queues a rebuild (sponsor-rebuild.ts).
+ */
+export const sponsorStore = (env: Env): SponsorStore => withRebuilds(postgresStore(membershipDb(env)), queueRebuild);
 
 /** Sponsors can start and pay only once the owner switches this on (after approving the agreement). */
 export const accountUrl = (origin: string) => new URL('/partners/account', origin).toString();

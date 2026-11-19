@@ -1,6 +1,6 @@
 /**
  * The CFP bot in the public #cfp channel must never reach the organiser bot or the membership
- * agent (docs/v2/CFP-BOT.md). This test follows every import, transitively, from the CFP code and
+ * agent (docs/systems/cfp-bot.md). This test follows every import, transitively, from the CFP code and
  * the slack-cfp-* functions, and fails if any of them reaches the organiser bot's tools, store,
  * loop, prompt or Slack code, the package root, or the membership code. The oxlint rule in
  * .oxlintrc.json catches direct imports in the editor; this catches indirect ones.

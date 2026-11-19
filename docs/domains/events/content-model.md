@@ -55,17 +55,17 @@ The type name is `events` (plural): renaming a type would mean migrating every d
 
 ## `speaker`
 
-| Field                                                 | Type and meaning                                                                                         |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `id`                                                  | slug; the URL is `/speakers/<id>`                                                                        |
-| `name`, `email`                                       | `email` is never rendered and never sent to a model                                                      |
-| `title`, `company`, `location`                        | job title (shown as the role), company, location                                                         |
-| `tagline`, `bio`, `interests`                         | topics come from `interests` first, else from the speaker's talks' tags                                  |
-| `image`                                               | the portrait; alt text is derived from the name                                                          |
-| `twitter`, `bluesky`, `linkedin`, `github`, `website` | the mapper builds the profile's links from these                                                         |
-| `talks`, `talkReferences`                             | kept from the old site                                                                                   |
-| `isVisible`                                           | filters the speaker directory; new speakers from a talk proposal are hidden until an organiser publishes |
-| `legacySlugs`                                         | old IDs that 301 to the current one at build time                                                        |
+| Field                                                 | Type and meaning                                                                                            |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `id`                                                  | slug; the URL is `/speakers/<id>`                                                                           |
+| `name`, `email`                                       | `email` is never rendered and never sent to a model                                                         |
+| `title`, `company`, `location`                        | job title (shown as the role), company, location                                                            |
+| `tagline`, `bio`, `interests`                         | topics come from `interests` first, else from the speaker's talks' tags                                     |
+| `image`                                               | the portrait; alt text is derived from the name                                                             |
+| `twitter`, `bluesky`, `linkedin`, `github`, `website` | the mapper builds the profile's links from these                                                            |
+| `talks`, `talkReferences`                             | kept from the old site                                                                                      |
+| `isVisible`                                           | filters the speaker directory; new speakers from a talk proposal are hidden until an organiser publishes    |
+| `legacySlugs`                                         | old IDs that 301 to the current one at build time; feedback and profile links signed with one still resolve |
 
 ## Feedback
 

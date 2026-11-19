@@ -2,6 +2,7 @@
 
 ## 2026-11-19
 
+- **Update**: speaker IDs are names, never generated IDs. `clean-speaker-slugs.ts` proposes a name for every `speaker-<uuid>` ID, and feedback and profile links resolve old IDs ([Web](/systems/web.md), [Studio](/systems/studio.md)).
 - **Update**: cards and callouts between sections reveal on scroll, and an empty `media` slot counts as no media ([Motion](/systems/design-system/motion.md), [Components](/systems/design-system/components.md)). The contact page's organiser cards link to speaker profiles and its FAQ links carry an arrow.
 - **Update**: `pnpm audit` runs with no ignored advisory ([CI](/systems/operations/ci.md)).
 - **Added**: the [Sponsorship](/domains/sponsorship/index.md) domain (self-serve sponsorships, from the old sponsorship doc, checked against the code), a [Stripe](/systems/stripe.md) concept for the shared webhook, and a Spec for [online sponsorship on /partners](/domains/sponsorship/specs/partners-page-online.md). [Partners](/domains/partners/overview.md) keeps the public side and links to it.

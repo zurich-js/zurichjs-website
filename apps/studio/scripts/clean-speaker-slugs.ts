@@ -1,43 +1,32 @@
 /**
- * Finds speaker IDs that are not clean URL segments (lowercase letters,
- * digits and single hyphens) and proposes a clean one. With --apply it
- * writes a draft that sets the new ID and keeps the old one in
- * `legacySlugs`, so zurichjs.com/speakers/<old> redirects (301) after the
- * draft is published and the site rebuilt.
+ * Makes every speaker ID a clean, name-based URL segment (lib/speakerIds.ts):
+ *   - an ID the old site generated ("speaker-<uuid>") becomes the speaker's name ("nadja-hesselbjerg");
+ *   - any other ID that is not lowercase letters, digits and single hyphens is cleaned.
+ * With --apply it writes a draft that sets the new ID and keeps the old one in `legacySlugs`, so
+ * zurichjs.com/speakers/<old> redirects (301) and feedback and profile links already emailed keep
+ * working, once the draft is published and the site rebuilt. Clashes are listed for a person to settle.
  *
  *   npx sanity exec scripts/clean-speaker-slugs.ts --with-user-token [-- --apply]
  */
+import {planSpeakerIds, type SpeakerIdRow} from '../lib/speakerIds'
 import {APPLY, banner, client, patchDraft} from './lib/drafts'
 
-export const cleanSlug = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-
 banner('Clean speaker IDs')
-const rows = await client.fetch<
-  {_id: string; slug: string; name?: string; legacySlugs?: string[]}[]
->(
-  `*[_type == "speaker" && defined(id.current) && !(_id in path("drafts.**"))]{_id, "slug": id.current, name, legacySlugs}`,
+const rows = await client.fetch<SpeakerIdRow[]>(
+  `*[_type == "speaker" && defined(id.current) && !(_id in path("drafts.**"))] | order(name asc) {_id, "slug": id.current, name, legacySlugs}`,
 )
-const taken = new Set(rows.map((r) => r.slug))
 let n = 0
-for (const r of rows) {
-  const clean = cleanSlug(r.slug)
-  if (clean === r.slug) continue
-  if (!clean || taken.has(clean)) {
-    console.log(`! ${r.slug} → ${clean || '(empty)'} clashes; fix by hand`)
+for (const plan of planSpeakerIds(rows)) {
+  const who = plan.row.name ?? plan.row._id
+  if (plan.kind === 'problem') {
+    console.log(`! ${who}: ${plan.row.slug} ${plan.reason}; fix by hand`)
     continue
   }
   n++
-  taken.add(clean)
-  console.log(`● ${r.name ?? r._id}: ${r.slug} → ${clean}`)
-  await patchDraft(r._id, {
-    id: {_type: 'slug', current: clean},
-    legacySlugs: [...new Set([...(r.legacySlugs ?? []), r.slug])],
+  console.log(`● ${who}: ${plan.row.slug} → ${plan.to}`)
+  await patchDraft(plan.row._id, {
+    id: {_type: 'slug', current: plan.to},
+    legacySlugs: plan.legacySlugs,
   })
 }
 console.log(`\n${n} speaker ID(s) ${APPLY ? 'changed in drafts' : 'would change'}.`)

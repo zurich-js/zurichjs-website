@@ -63,7 +63,7 @@ Every production URL keeps working or gets a 301; changing or removing a public 
 
 - **Renamed and retired pages:** `apps/web/src/lib/redirects.mjs` (`LEGACY_REDIRECTS`), written by Astro to `dist/_redirects`. For example `/partnerships` → `/partners`, `/buy-us-a-coffee` and `/support` → `/donate`, `/workshops` → `/events?from=workshops`, `/tshirt` → `/donate?from=tshirt` (both pages then show a one-line note that workshops and T-shirt sales have ended).
 - **Section wildcards and old share-image URLs:** `apps/web/netlify.toml` (`/workshops/*`, `/checkout/*`, `/profile/*`, `/invite/*`, `/api/og/*`).
-- **Old speaker IDs:** `speaker.legacySlugs` become 301s at build time. A page renders `/content-redirects.txt`, and an integration in `astro.config.mjs` appends it to `_redirects` and removes the file.
+- **Old speaker IDs:** `speaker.legacySlugs` become 301s at build time. A page renders `/content-redirects.txt`, and an integration in `astro.config.mjs` appends it to `_redirects` and removes the file. The old share image (`/og/speaker-<old>.png`) redirects too. A speaker ID is the public URL, so it is a name, never a generated ID (owner, 19th November 2026); the private feedback and profile links look a speaker up by current or old ID, so links already emailed survive a rename.
 - `tools/serve-dist.mjs` applies both `_redirects` and the `netlify.toml` redirects, so e2e and the SEO gate test them as Netlify serves them.
 
 ## Headers and caching

@@ -39,7 +39,7 @@ npx sanity migration run v2-additive            # dry run; add --dataset v2-prev
 SANITY_WRITE_TOKEN=… npx sanity exec scripts/seed-v2-preview.ts --with-user-token   # sample content into v2-preview
 npx sanity exec scripts/seed-partners.ts --with-user-token        # the partner list as drafts to confirm
 npx sanity exec scripts/backfill-agenda.ts --with-user-token      # proposed agendas for events with talks but none
-npx sanity exec scripts/clean-speaker-slugs.ts --with-user-token  # clean speaker IDs; old ones become 301s
+npx sanity exec scripts/clean-speaker-slugs.ts --with-user-token  # name-based speaker IDs (generated "speaker-<uuid>" ones too); old ones become 301s
 ```
 
 Running migrations on `production` and creating the `v2-preview` dataset are owner actions.

@@ -1,0 +1,91 @@
+---
+/**
+ * One logo in a logo wall (PackedGrid) or a moving row (LogoMarquee).
+ *
+ *   neutral   grey cell, logo black      -> hover: white cell, colour logo
+ *   colour    white framed cell, colour  -> hover: no change
+ *   + bg      (either of the above)      -> hover: the cell in the partner's hover colour, the logo in one
+ *                                           colour on it (white on a dark colour, black on a light one)
+ *
+ * Without a black file the colour logo is drawn black by a filter, and cross-fades to an unfiltered copy (the same file). Most logos are simply filled black;
+ * `knockout` (white shapes inside a coloured one, like AXA) and `opaque` (a solid background) are
+ * thresholded instead so their white parts stay, and an opaque file is multiplied into the cell so its
+ * background disappears. It fills its grid cell; the cell's size comes from PackedGrid.
+ */
+import { cx } from '../recipes';
+
+interface Props {
+  name: string;
+  logo?: string;
+  logoBlack?: string;
+  bg?: string;
+  href?: string;
+  rel?: string;
+  knockout?: boolean;
+  opaque?: boolean;
+  /** Width and height in px for a logo whose ratio is known (equal visual weight); otherwise it fits the cell. */
+  width?: number;
+  height?: number;
+  /** The company name next to a symbol-only logo. */
+  label?: boolean;
+  /**
+   * neutral (default): a grey cell, the logo black, colour on hover.
+   * colour: the logo in its own colours on a framed white cell: the sponsors and hosts.
+   * quiet: no cell, the logo black and faint, its own colours on hover: a moving row (LogoMarquee).
+   */
+  tone?: 'neutral' | 'colour' | 'quiet';
+  /** A repeated copy (LogoMarquee): the pointer can still use it, the keyboard skips it. */
+  copy?: boolean;
+}
+const { name, logo, logoBlack, bg, href, rel = 'noopener noreferrer', knockout = false, opaque = false, width, height, label = false, tone = 'neutral', copy = false } = Astro.props;
+
+// A hover colour flips the cell: the partner's colour behind, the logo in one colour on it. Rows without cells never flip.
+const flip = !!bg && (tone === 'neutral' || tone === 'colour');
+/** Relative luminance of a #rrggbb colour, to choose a white or a black logo on it. */
+const luminance = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+};
+const onBg = flip && (luminance(bg!) > 0.5 ? 'brightness-0' : 'brightness-0 invert');
+const inColour = tone === 'colour';
+
+const cell = cx(
+  'group relative flex size-full items-center justify-center gap-2 rounded-card px-4 text-black no-underline transition-colors duration-reveal ease-in-out',
+  tone === 'neutral' && 'bg-grey hover:bg-(--logo-bg) focus-visible:bg-(--logo-bg)',
+  // The frame says where a cell ends on white, as an outline card's does.
+  tone === 'colour' && 'bg-white border border-grey-frame',
+  tone === 'colour' && (flip ? 'hover:bg-(--logo-bg) hover:border-(--logo-bg) focus-visible:bg-(--logo-bg) focus-visible:border-(--logo-bg)' : 'hover:border-grey-mid focus-visible:border-grey-mid'),
+);
+const style = { '--logo-bg': bg ?? 'var(--color-white)' };
+const alt = href ? `${name} (opens in a new tab)` : name;
+// The width attribute sizes the logo (no w-auto, which would override it); both files share one grid cell.
+const size = cx('block h-auto max-w-full max-h-full min-w-0 object-contain col-start-1 row-start-1', opaque && 'mix-blend-multiply');
+// On hover the resting logo cross-fades to the hover one, evenly over the reveal duration, like the cell. Only opacity
+// changes: animating the black filter itself repainted every frame and passed through harsh colours.
+const fadeOut = cx(size, 'transition-opacity duration-reveal ease-in-out group-hover:opacity-0 group-focus-visible:opacity-0');
+const fadeIn = cx(size, 'opacity-0 transition-opacity duration-reveal ease-in-out group-hover:opacity-100 group-focus-visible:opacity-100');
+// Without a black file, the colour file drawn in black by a filter stands in for it.
+const black = cx(fadeOut, !logoBlack && (opaque || knockout ? 'filter-logo-threshold' : 'brightness-0'), tone === 'quiet' && 'opacity-50');
+// At rest: the colour logo (which only fades when the cell flips), or the black one.
+const rest = inColour ? { src: logo, class: flip ? fadeOut : size } : { src: logoBlack ?? logo, class: black };
+// On hover: the logo in one colour on the partner's colour, or the colour logo. A colour logo that does not flip has none.
+const hover = flip ? { src: logoBlack ?? logo, class: cx(fadeIn, onBg) } : inColour ? undefined : { src: logo, class: fadeIn };
+const Tag = href ? 'a' : 'div';
+const link = href ? { href, target: '_blank', rel, tabindex: copy ? -1 : undefined } : {};
+---
+
+{/* eslint-disable-next-line no-restricted-syntax -- the hover colour is the partner's own, from Sanity, as a CSS custom property */}
+<Tag class={cell} style={style} {...link}>
+  <span class="flex h-1/2 max-w-3/4 items-center justify-center gap-2">
+    {
+      logo && (
+        <span class="grid h-full place-items-center">
+          <img src={rest.src} alt={label ? '' : alt} width={width} height={height} loading="lazy" decoding="async" class={rest.class} />
+          {hover && <img src={hover.src} alt="" aria-hidden="true" width={width} height={height} loading="lazy" decoding="async" class={hover.class} />}
+        </span>
+      )
+    }
+    {(label || !logo) && <span class="text-compact leading-tight font-bold text-center">{name}</span>}
+    {label && href && <span class="sr-only"> (opens in a new tab)</span>}
+  </span>
+</Tag>

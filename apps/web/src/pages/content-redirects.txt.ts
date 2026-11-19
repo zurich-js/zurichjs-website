@@ -23,6 +23,8 @@ export const GET: APIRoute = async () => {
       // matches whether the host compares encoded or decoded paths.
       const to = `/speakers/${encodeURIComponent(s.id)}`;
       for (const from of new Set([encodeURIComponent(old), old.replace(/\s/g, '%20')])) lines.push(`/speakers/${from} ${to} 301`);
+      // The share image of the old URL, for cards other sites have cached.
+      if (CLEAN.test(old)) lines.push(`/og/speaker-${old}.png /og/speaker-${s.id}.png 301`);
     }
   }
   return new Response(lines.join('\n') + (lines.length ? '\n' : ''), { headers: { 'content-type': 'text/plain; charset=utf-8' } });

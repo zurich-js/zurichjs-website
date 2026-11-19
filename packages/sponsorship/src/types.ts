@@ -1,5 +1,5 @@
 /**
- * Sponsorship of ZurichJS (docs/v2/SPONSORSHIP.md). A sponsor is a company with one or
+ * Sponsorship of ZurichJS (docs/domains/sponsorship/overview.md). A sponsor is a company with one or
  * more contacts who sign in to /partners/account. Field names follow the tables in
  * apps/web/database/migrations (…_sponsorship.sql), in camelCase.
  */
@@ -68,7 +68,7 @@ export interface Sponsor {
   paidUntil: string | null;
   /** One-time sponsorships: a custom price per meetup (CHF) the board agreed; null = the list price. */
   pricePerMeetup: number | null;
-  /** The Sanity partner document that shows them on the site. */
+  /** The `id` of the partner record (Sanity, or packages/content/src/partners.ts) that gives them their logo on the site. */
   partnerId: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;

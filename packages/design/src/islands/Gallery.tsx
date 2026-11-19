@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { sizedSrc, srcsetFor } from '../images.ts';
-import { cx } from '../recipes.ts';
+import { buttonClass, cx, motion } from '../recipes.ts';
 
 export interface GalleryItem {
   id: string;
@@ -29,7 +29,8 @@ interface Props {
 
 /**
  * Thumbnail grid plus a viewer (a native modal <dialog>: focus stays inside,
- * Esc closes, focus returns to the thumbnail). ← and → move between items,
+ * Esc closes, focus returns to the thumbnail). It fades in and out, and each item fades in as you page
+ * (motion.css). Thumbnails rise in row by row as they scroll into view and fade in once loaded. ← and → move between items,
  * with buttons for touch. Videos play only on request. #media-<id> in the URL
  * opens an item directly, so a photo can be shared.
  */
@@ -41,7 +42,11 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   // each viewer's caption id comes from the gallery's own label.
   const captionId = `gallery-caption-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   const shown = max ? items.slice(0, max) : items;
-  const cur = open === null ? null : items[open];
+  // The viewer keeps showing the last item while it fades out after closing.
+  const last = useRef<number | null>(null);
+  if (open !== null) last.current = open;
+  const at = open ?? last.current;
+  const cur = at === null ? null : items[at];
 
   const show = (i: number, from?: HTMLElement | null) => {
     if (from) opener.current = from;
@@ -53,12 +58,13 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
   // Functional update: fast key presses never read a stale position.
   const step = (d: number) => setOpen((o) => (o === null ? o : (o + d + items.length) % items.length));
 
-  // The open item is in the URL (#media-<id>) so it can be shared.
-  useEffect(() => {
+  // The open item is in the URL (#media-<id>) so it can be shared. Both effects are layout effects, so they run
+  // before the next key press: deferred ones could reopen the viewer, or write the hash back, after Escape closed it.
+  useLayoutEffect(() => {
     if (open !== null) history.replaceState(history.state, '', `#media-${items[open]!.id}`);
   }, [open, items]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const d = dialog.current;
     if (!d) return;
     if (open !== null && !d.open) d.showModal();
@@ -107,13 +113,14 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
       <ul
         class="m-0 p-0 list-none grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] md:grid-cols-[repeat(auto-fill,minmax(min(100%,220px),1fr))] gap-3"
         aria-label={label}
+        data-reveal="children"
       >
         {shown.map((m, i) => (
           <li key={m.id}>
             <button
               type="button"
               onClick={(e) => show(i, e.currentTarget)}
-              class="group relative block w-full aspect-4/3 overflow-hidden rounded-2xl bg-grey p-0 border-0 cursor-zoom-in"
+              class="group relative block w-full aspect-4/3 overflow-hidden rounded-card bg-grey p-0 border-0 cursor-zoom-in"
               aria-label={`${m.kind === 'video' ? 'Play clip' : 'Open photo'}: ${m.alt}`}
             >
               <img
@@ -125,11 +132,11 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                 decoding="async"
                 width={m.width}
                 height={m.height}
-                class={cx('absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-[1.02]', m.kind === 'video' && !m.poster && 'hidden')}
+                class={cx(motion.load, 'absolute inset-0 w-full h-full object-cover group-hover:scale-102', m.kind === 'video' && !m.poster && 'hidden')}
               />
               {m.kind === 'video' && (
                 <span aria-hidden="true" class="absolute inset-0 flex items-center justify-center">
-                  <span class="w-14 h-14 rounded-full bg-black/75 text-white flex items-center justify-center text-[22px] pl-1">▶</span>
+                  <span class="w-14 h-14 rounded-full bg-black/75 text-white flex items-center justify-center text-card-title pl-1">▶</span>
                 </span>
               )}
             </button>
@@ -141,15 +148,15 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
         ref={dialog}
         onClose={onClose}
         aria-labelledby={captionId}
-        class="m-auto p-0 border-0 bg-ink rounded-card max-w-[min(1200px,100vw)] w-full max-h-dvh backdrop:bg-black/85 text-white"
+        class={cx(motion.fade, 'm-auto p-0 border-0 bg-ink rounded-card max-w-site w-full max-h-dvh backdrop:bg-black/85 text-white')}
       >
-        {cur && open !== null && (
+        {cur && at !== null && (
           <figure class="m-0 flex flex-col gap-3 p-3 md:p-6">
             <div class="flex items-center justify-between gap-3">
-              <span class="text-[15px] font-bold tabular-nums" aria-live="polite">
-                {open + 1} of {items.length}
+              <span class="text-compact font-bold tabular-nums" aria-live="polite">
+                {at + 1} of {items.length}
               </span>
-              <button type="button" onClick={close} class="min-h-[44px] px-5 rounded-pill bg-white text-black font-bold text-[16px] cursor-pointer" autoFocus>
+              <button type="button" onClick={close} class={buttonClass({ inverse: true })} autoFocus>
                 Close
               </button>
             </div>
@@ -164,7 +171,7 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                   playsInline
                   preload="none"
                   poster={cur.poster ? sizedSrc(cur.poster, 1600) : undefined}
-                  class="max-h-[70vh] max-w-full rounded-2xl bg-black"
+                  class={cx(motion.enter, 'max-h-[70vh] max-w-full rounded-card bg-black')}
                   aria-label={cur.alt}
                 >
                   <source src={cur.src} />
@@ -180,19 +187,19 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
                   srcset={srcsetFor(cur.src)}
                   sizes="(min-width: 1200px) 1152px, 100vw"
                   alt={cur.alt}
-                  class="max-h-[70vh] max-w-full rounded-2xl object-contain"
+                  class={cx(motion.enter, 'max-h-[70vh] max-w-full rounded-card object-contain')}
                   decoding="async"
                 />
               )}
             </div>
-            <figcaption id={captionId} class="flex flex-col gap-1 text-[16px] leading-normal">
+            <figcaption id={captionId} class="flex flex-col gap-1 text-compact">
               {cur.caption ? <span>{cur.caption}</span> : <span class="sr-only">{cur.alt}</span>}
               <span class="text-grey-light">
                 {cur.credit}
                 {cur.context && (
                   <>
                     {cur.credit ? ' · ' : ''}
-                    <a href={cur.context.href} class="text-white underline underline-offset-[3px]">
+                    <a href={cur.context.href} class="text-white underline">
                       {cur.context.label}
                     </a>
                   </>
@@ -201,18 +208,10 @@ export function Gallery({ items, label, max, sizes = '(min-width: 800px) 25vw, 5
             </figcaption>
             {items.length > 1 && (
               <div class="flex justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => step(-1)}
-                  class="min-h-[44px] px-5 rounded-pill border-2 border-white text-white bg-transparent font-bold text-[16px] cursor-pointer"
-                >
+                <button type="button" onClick={() => step(-1)} class={buttonClass({ variant: 'plain', inverse: true })}>
                   ← Previous
                 </button>
-                <button
-                  type="button"
-                  onClick={() => step(1)}
-                  class="min-h-[44px] px-5 rounded-pill border-2 border-white text-white bg-transparent font-bold text-[16px] cursor-pointer"
-                >
+                <button type="button" onClick={() => step(1)} class={buttonClass({ variant: 'plain', inverse: true })}>
                   Next →
                 </button>
               </div>

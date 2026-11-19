@@ -27,6 +27,8 @@ const TYPES = {
   '.txt': 'text/plain; charset=utf-8',
   '.json': 'application/json',
   '.mp4': 'video/mp4',
+  // As apps/web/netlify.toml serves the calendar files.
+  '.ics': 'text/calendar; charset=utf-8',
 };
 const COMPRESSIBLE = new Set(['.html', '.css', '.js', '.mjs', '.svg', '.xml', '.txt', '.json']);
 const compressed = new Map();

@@ -6,9 +6,10 @@
  * scheduled rebuilds at doors and doors + 48 h refresh the HTML.
  */
 import { eventCardAlt } from '~/lib/og';
-import { dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, timesLine, type Event } from '@zurichjs/events';
+import { ROLE_LABEL, type Partner, type SupporterRole, dateLong, eventHref, eventThanks, eventTalks, nextMeetup, presentEvent, recapSummary, resolveState, type Event } from '@zurichjs/events';
 import { breadcrumbSchema, canonicalUrl, eventSchema } from '@zurichjs/seo';
 import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import Heading from '@zurichjs/design/components/Heading.astro';
 import EventActions from '~/components/islands/event/EventActions';
 import EventBanner from '~/components/islands/event/EventBanner';
 import EventSummary from '~/components/islands/event/EventSummary';
@@ -16,12 +17,13 @@ import FeedbackGate from '~/components/islands/event/FeedbackGate';
 import Programme from '~/components/islands/event/Programme';
 import { avatarSrc } from '@zurichjs/design/images';
 import VenueCard from '~/components/islands/event/VenueCard';
-import SupporterList from '~/components/SupporterList.astro';
+import LogoRow from '@zurichjs/design/components/LogoRow.astro';
 import Button from '@zurichjs/design/components/Button.astro';
 import { Gallery } from '@zurichjs/design/islands/Gallery';
 import { eventPhotoState, mediaForEvent } from '@zurichjs/content';
 import { countLabel, mediaHref, toGallery } from '~/lib/media';
-import Surface from '@zurichjs/design/components/Surface.astro';
+import Card from '@zurichjs/design/components/Card.astro';
+import Photo from '@zurichjs/design/components/Photo.astro';
 import BaseLayout from '~/layouts/BaseLayout.astro';
 import { BUILD_TIME, MAPS_EMBED_KEY, PREVIEW, SITE, content, ticketing } from '~/lib/content';
 import { clip } from '~/lib/text';
@@ -39,7 +41,7 @@ const url = canonicalUrl(eventHref(ev));
 const byId = new Map(c.speakers.map((s) => [s.id, s]));
 const speakerIds = [...new Set([...eventTalks(ev).flatMap((t) => t.speakerIds), ...(ev.recap?.talks.flatMap((t) => t.speakerIds) ?? [])])];
 const speakers = speakerIds.map((id) => byId.get(id)).filter((s) => !!s);
-const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 36) : undefined }));
+const progSpeakers = speakers.map(({ id, name, role, initials, photo }) => ({ id, name, role, initials, avatar: photo ? avatarSrc(photo.src, 48) : undefined }));
 const gallery = mediaForEvent(c.media.items, ev.slug);
 // Honest about missing photos: "unavailable" when this build could not read the archive, never "coming soon".
 const evEnd = ev.endsAt ?? ev.startsAt;
@@ -58,14 +60,16 @@ const jsonLd = [eventSchema(ev, c.speakers, hosts), breadcrumbSchema([{ name: 'E
 // The event's own card (with its artwork when it has one), never a random photo (pages/og/[name].png.ts).
 const image = `/og/event-${ev.slug}.png`;
 const imageAlt = eventCardAlt(ev.title, ev.startsAt ? dateLong(ev.startsAt) : ev.dateText, ev.venue?.name);
-const times = timesLine(ev);
 const summaries = Object.fromEntries((ev.recap?.talks ?? []).filter((t) => t.summary).map((t) => [t.title, t.summary]));
 // Recap talks that are not in the programme (older events) still get listed.
 const recapOnly = (ev.recap?.talks ?? []).filter((t) => !eventTalks(ev).some((x) => x.title === t.title));
 const hasTalks = eventTalks(ev).length > 0;
 const speakingOpen = !isPast && state !== 'cancelled' && (!hasTalks || ev.agenda.some((a) => /\b(tba|tbc|to be announced|open slot)\b/i.test(a.title)));
 // About this meetup on the left and the venue on the right on wide screens; stacked on phones.
-const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] items-start';
+const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 items-start';
+// "Thanks to": each logo with its name, role and note as a caption (only when there is a role or note).
+const thanksRow = (items: { partner: Partner; role?: SupporterRole; note?: string }[]) =>
+  items.map(({ partner, role, note }) => ({ partner, caption: role || note ? [partner.name, role ? ROLE_LABEL[role] : '', note].filter(Boolean).join(' · ') : undefined }));
 ---
 
 <BaseLayout title={ev.title} description={description} image={image} imageAlt={imageAlt} jsonLd={jsonLd}>
@@ -73,36 +77,36 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
     isPast ? (
       <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events?tab=past', here: ev.startsAt ? dateLong(ev.startsAt) : 'Past' }} sub={recapSummary(ev, { photos: gallery.filter((m) => m.kind === 'photo').length })} />
     ) : (
-      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }} pills={p.pills}>
-        <div class="flex flex-col gap-[18px] pt-1">
-          <div class="text-[clamp(18px,1.6vw,21px)] leading-normal">
+      <PageOpening slot="opening" title={ev.title} crumb={{ label: 'Events', href: '/events', here: p.crumb }}>
+        <div class="flex flex-col gap-4 pt-1">
+          <div class="text-lead">
             <b>{p.whenShort}</b>
-            {p.dateKnown && times && (
-              <>
-                <br />
-                <span>{times}</span>
-              </>
-            )}
             <br />
-            <a href="#venue" class="text-grey-mid">{`${p.venueShort}${p.venueStreet}`}</a>
+            <a href="#venue" class="text-body text-grey-mid underline hover:text-white">{`${p.venueShort}${p.venueStreet}`}</a>
           </div>
           <EventActions client:load ev={ev} initial={state} url={url} />
         </div>
+        {/* The event's own artwork beside the title from 800px, only when it has one: never the share card, which repeats the title. */}
+        {ev.cover && (
+          <div slot="media" class="aspect-video w-full">
+            <Photo photo={ev.cover} priority class="size-full" />
+          </div>
+        )}
       </PageOpening>
     )
   }
 
   {
     isPast ? (
-      <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] flex flex-col gap-[clamp(48px,6vw,80px)]">
+      <div class="px-gut py-section flex flex-col gap-section">
         <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
         {(ev.description || ev.venue) && (
           <div class={ABOUT_GRID}>
             {ev.description && (
               <section class="flex flex-col gap-3.5">
-                <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
-                <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
+                <Heading size="subsection">About this meetup</Heading>
+                <p class="m-0 text-body text-ink-2 max-w-reading text-pretty">{ev.description}</p>
               </section>
             )}
             {ev.venue && <VenueCard client:visible venue={ev.venue} mapsKey={MAPS_EMBED_KEY} compact />}
@@ -113,22 +117,22 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
 
         {recapOnly.length > 0 && (
           <section class="flex flex-col gap-6">
-            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Talks</h2>
+            <Heading size="subsection">Talks</Heading>
             {recapOnly.map((t) => (
               <div class="flex flex-col gap-2">
-                <h3 class="m-0 text-[22px] font-bold leading-[1.3] text-pretty">{t.title}</h3>
+                <h3 class="m-0 text-card-title font-bold text-pretty">{t.title}</h3>
                 <div class="flex flex-wrap gap-x-3">
                   {t.speakerIds
                     .map((id) => byId.get(id))
                     .filter((s) => !!s)
                     .map((s) => (
-                      <a href={`/speakers/${s.id}`} class="text-[17px] font-bold underline underline-offset-[3px]">
+                      <a href={`/speakers/${s.id}`} class="text-body font-bold underline">
                         {s.name}
                       </a>
                     ))}
                 </div>
-                {t.summary && <p class="m-0 text-[17px] leading-[1.55] text-ink-2">{t.summary}</p>}
-                <span class="text-[16px] font-bold text-ink-2">{t.format}</span>
+                {t.summary && <p class="m-0 text-body text-ink-2">{t.summary}</p>}
+                <span class="text-compact font-bold text-ink-2">{t.format}</span>
               </div>
             ))}
           </section>
@@ -136,21 +140,21 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
 
         {supporters.length > 0 && (
           <section aria-labelledby="h-thanks" class="flex flex-col gap-4">
-            <h2 id="h-thanks" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+            <h2 id="h-thanks" class="m-0 text-subsection font-bold">
               Thanks to
             </h2>
-            <p class="m-0 text-[17px] text-ink-2">The companies that made this meetup possible.</p>
-            <SupporterList items={supporters} />
+            <p class="m-0 text-body text-ink-2">The companies that made this meetup possible.</p>
+            <LogoRow items={thanksRow(supporters)} />
           </section>
         )}
 
-        <section id="photos" aria-labelledby="h-photos" class="flex flex-col gap-[18px] scroll-mt-6">
+        <section id="photos" aria-labelledby="h-photos" class="flex flex-col gap-4 scroll-mt-6">
           <div class="flex justify-between items-baseline flex-wrap gap-2.5">
-            <h2 id="h-photos" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+            <h2 id="h-photos" class="m-0 text-subsection font-bold">
               Photos from the evening
             </h2>
             {gallery.length > 0 && (
-              <a href={mediaHref(ev.slug)} class="font-bold text-[17px] underline underline-offset-[3px]">
+              <a href={mediaHref(ev.slug)} class="font-bold text-body underline">
                 {`All ${countLabel(gallery)}`}
               </a>
             )}
@@ -158,10 +162,11 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
           {gallery.length > 0 ? (
             <>
               <Gallery client:visible items={toGallery(gallery)} label={`Photos and videos from ${ev.title}`} max={8} />
-              {ev.photoCredit && <p class="m-0 text-[15px] text-ink-2">{ev.photoCredit}</p>}
+              {ev.photoCredit && <p class="m-0 text-meta text-ink-2">{ev.photoCredit}</p>}
             </>
           ) : (
-            <Surface class="p-6 text-[17px] leading-[1.55] text-ink-2" data-photos={photoState}>
+            <Card>
+              <p class="m-0 text-body text-ink-2" data-photos={photoState}>
               {photoState === 'unavailable' && 'The photo archive could not be loaded for this version of the site, so photos from this evening are not shown here.'}
               {photoState === 'pending' && 'Photos from this evening aren’t online yet. They usually follow within a week.'}
               {photoState === 'none' && 'There are no photos from this evening in our archive.'}{' '}
@@ -170,77 +175,73 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
                   See photos from other meetups
                 </a>
               )}
-            </Surface>
+              </p>
+            </Card>
           )}
         </section>
 
-        <section class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-4">
-          <Surface class="p-7 flex flex-col gap-2.5">
-            <h2 class="m-0 text-[24px] font-bold">Were you there?</h2>
-            <p class="m-0 text-[17px] leading-normal text-ink-2">
+        <section class="grid grid-cols-auto-md gap-4">
+          <Card title="Were you there?" level="h2" padding="lg">
+            <p class="m-0 text-body text-ink-2">
               {hasTalks
                 ? 'Rate the talks: each speaker reads the ratings and comments for their own talk. Or tell the organisers about the evening in a few open questions.'
                 : 'Tell the organisers about the evening in a few open questions. Only the organisers read your answers.'}
             </p>
-            <div class="flex flex-wrap gap-2.5">
-              {hasTalks && (
-                <Button href={`${eventHref(ev)}?feedback=true#programme`} variant="yellow" class="text-[17px]">
-                  Rate the talks
-                </Button>
-              )}
-              <Button href={`/feedback?event=${ev.slug}`} variant={hasTalks ? 'outline-black' : 'black'} class="text-[17px]">
-                Feedback on the evening
+            {hasTalks && (
+              <Button slot="footer" href={`${eventHref(ev)}?feedback=true#programme`} variant="cta">
+                Rate the talks
               </Button>
-            </div>
-          </Surface>
-          <Surface tone="yellow" class="p-7 flex flex-col gap-2.5">
-            <h2 class="m-0 text-[24px] font-bold">{next ? `Next: ${next.title}` : 'The next meetup is being planned'}</h2>
-            <p class="m-0 text-[17px] leading-normal">{next && nextP ? `${nextP.dateLineShort} · ${nextP.venueShort}` : 'It is announced on Meetup first.'}</p>
-            <Button href={next ? eventHref(next) : SITE.meetupGroupUrl} variant="black" class="self-start text-[17px]">
+            )}
+            <Button slot="footer" href={`/feedback?event=${ev.slug}`} variant={hasTalks ? 'secondary' : 'primary'}>
+              Feedback on the evening
+            </Button>
+          </Card>
+          <Card title={next ? `Next: ${next.title}` : 'The next meetup is being planned'} level="h2" padding="lg">
+            <p class="m-0 text-body">{next && nextP ? `${nextP.dateLineShort} · ${nextP.venueShort}` : 'It is announced on Meetup first.'}</p>
+            <Button slot="footer" href={next ? eventHref(next) : SITE.meetupGroupUrl} variant="primary">
               {next ? 'See the next meetup' : 'Follow the group on Meetup'}
             </Button>
-          </Surface>
+          </Card>
         </section>
       </div>
     ) : (
-      <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)] grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-[clamp(40px,5vw,72px)] items-start">
-        <div class="flex flex-col gap-[clamp(40px,5vw,64px)] col-span-full md:col-[1/-2] min-w-0">
+      <div class="px-gut py-section grid grid-cols-auto-md gap-12 items-start">
+        <div class="flex flex-col gap-8 col-span-full md:col-start-1 md:-col-end-2 min-w-0">
           <FeedbackGate client:load ev={ev} initial={state} preview={PREVIEW} />
 
           <EventBanner client:load ev={ev} initial={state} />
 
           <section class="flex flex-col gap-3.5">
-            <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">About this meetup</h2>
-            <p class="m-0 text-[18px] leading-[1.6] text-ink-2 max-w-[680px] text-pretty">{ev.description}</p>
+            <Heading size="subsection">About this meetup</Heading>
+            <p class="m-0 text-body text-ink-2 max-w-reading text-pretty">{ev.description}</p>
           </section>
 
           {ev.agenda.length > 0 && <Programme client:load ev={ev} initial={state} speakers={progSpeakers} preview={PREVIEW} />}
 
           {speakingOpen && (
-            <Surface class="p-6 flex flex-col gap-2.5">
-              <h2 class="m-0 text-[22px] font-bold">Speakers are still being confirmed</h2>
-              <p class="m-0 text-[17px] leading-normal text-ink-2">Want to speak at a ZurichJS meetup? First-time speakers are welcome, and we help you prepare.</p>
-              <Button href="/cfp" variant="outline-black" class="self-start text-[17px]">
+            <Card title="Speakers are still being confirmed" level="h2">
+              <p class="m-0 text-body text-ink-2">Want to speak at a ZurichJS meetup? First-time speakers are welcome, and we help you prepare.</p>
+              <Button slot="footer" href="/cfp" variant="secondary">
                 Send a talk proposal
               </Button>
-            </Surface>
+            </Card>
           )}
 
           {(supporters.length > 0 || seasonSponsors.length > 0) && (
             <section aria-labelledby="h-thanks" class="flex flex-col gap-4">
-              <h2 id="h-thanks" class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">
+              <h2 id="h-thanks" class="m-0 text-subsection font-bold">
                 Thanks to
               </h2>
               {supporters.length > 0 && (
                 <>
-                  <p class="m-0 text-[17px] text-ink-2">The companies that make this meetup possible.</p>
-                  <SupporterList items={supporters} />
+                  <p class="m-0 text-body text-ink-2">The companies that make this meetup possible.</p>
+                  <LogoRow items={thanksRow(supporters)} />
                 </>
               )}
               {seasonSponsors.length > 0 && (
                 <>
-                  <p class="m-0 text-[17px] text-ink-2">Supporting ZurichJS this season.</p>
-                  <SupporterList items={seasonSponsors.map((partner) => ({ partner }))} />
+                  <p class="m-0 text-body text-ink-2">Supporting ZurichJS this season.</p>
+                  <LogoRow items={seasonSponsors.map((partner) => ({ partner }))} />
                 </>
               )}
             </section>
@@ -248,12 +249,12 @@ const ABOUT_GRID = 'grid grid-cols-1 md:grid-cols-2 gap-[clamp(32px,4vw,56px)] i
 
           {ev.practical.length > 0 && (
             <section class="flex flex-col gap-5">
-              <h2 class="m-0 text-[clamp(26px,2.6vw,34px)] font-bold">Good to know</h2>
-              <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-x-10 gap-y-[22px]">
+              <Heading size="subsection">Good to know</Heading>
+              <div class="grid grid-cols-auto-sm gap-x-10 gap-y-6">
                 {ev.practical.map((x) => (
                   <div class="flex flex-col gap-1">
-                    <h3 class="m-0 text-[18px] font-bold">{x.label}</h3>
-                    <p class="m-0 text-[17px] leading-normal text-ink-2">
+                    <h3 class="m-0 text-body font-bold">{x.label}</h3>
+                    <p class="m-0 text-body text-ink-2">
                       {x.label === 'Code of conduct' ? (
                         <>
                           All ZurichJS events follow our <a href="/policies/code-of-conduct">code of conduct</a>.

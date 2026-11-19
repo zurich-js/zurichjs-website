@@ -1,5 +1,5 @@
 /**
- * The CFP bot's dependencies from the environment (docs/v2/CFP-BOT.md). Used by the
+ * The CFP bot's dependencies from the environment (docs/systems/cfp-bot.md). Used by the
  * slack-cfp-* functions only. It takes nothing from the organiser bot: no SANITY_AGENT_TOKEN, no
  * organiser Slack token, no membership agent. Its credentials:
  *

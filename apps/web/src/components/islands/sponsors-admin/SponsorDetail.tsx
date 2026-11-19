@@ -8,12 +8,14 @@ import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { FileField, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { badgeClass, buttonClass, surfaceClass } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
+import { Tag } from '@zurichjs/design/islands/Tag';
+import { cardClass } from '@zurichjs/design/recipes';
 import { RECURRING, TIERS, chf, cycleInfo, tierInfo, type EndedReason, type SponsorEvent, type Status, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate, shortDateTime } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
-import { SubmitButton, optional } from '../forms/shared.tsx';
+import { SubmitButton, TextButton, optional } from '../forms/shared.tsx';
 import { ActionForm, actionsFor, canRecordPayment, planName, type Done, type OpenAction } from './actions.tsx';
 import {
   AttentionBadge,
@@ -123,10 +125,8 @@ export function SponsorDetail({
   if (!d)
     return (
       <div class="flex flex-col items-start gap-4">
-        <Button variant="link" onClick={onBack}>
-          Back to sponsors
-        </Button>
-        {error ? <Notice kind="error">{error}</Notice> : <p class="m-0 text-base text-ink-2">Loading the sponsor…</p>}
+        <TextButton onClick={onBack}>Back to sponsors</TextButton>
+        {error ? <Notice kind="error">{error}</Notice> : <p class="m-0 text-compact text-ink-2">Loading the sponsor…</p>}
       </div>
     );
 
@@ -137,13 +137,11 @@ export function SponsorDetail({
   return (
     <article aria-labelledby="h-sponsor" class="flex flex-col gap-8">
       <header class="flex flex-col items-start gap-3">
-        <Button variant="link" onClick={onBack}>
-          Back to sponsors
-        </Button>
-        <h2 id="h-sponsor" ref={heading} tabIndex={-1} class="m-0 scroll-mt-6 text-3xl font-bold break-words outline-hidden">
+        <TextButton onClick={onBack}>Back to sponsors</TextButton>
+        <Heading id="h-sponsor" size="subsection" focus={heading} class="scroll-mt-6 break-words">
           {s.companyName}
-        </h2>
-        <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-2 text-base">
+        </Heading>
+        <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-2 text-compact">
           <StatusBadge status={s.status} />
           <span>
             {s.status === 'ended' && s.endedReason ? `${ENDED_LABEL[s.endedReason].charAt(0).toUpperCase()}${ENDED_LABEL[s.endedReason].slice(1)}. ` : ''}
@@ -166,11 +164,11 @@ export function SponsorDetail({
       <Summary d={d} />
 
       <section ref={actionsRef} aria-labelledby="h-actions" class="flex scroll-mt-6 flex-col gap-4">
-        <h3 id="h-actions" class="m-0 text-xl font-bold">
+        <Heading as="h3" size="card" id="h-actions">
           Actions
-        </h3>
+        </Heading>
         {actions.length === 0 ? (
-          <p class="m-0 text-base text-ink-2">Nothing to do: it has ended.</p>
+          <p class="m-0 text-compact text-ink-2">Nothing to do: it has ended.</p>
         ) : (
           <div class="flex flex-wrap gap-3">
             {actions.map((a) => {
@@ -178,8 +176,7 @@ export function SponsorDetail({
               return (
                 <Button
                   key={a.key}
-                  variant={expanded ? 'black' : 'outline-black'}
-                  size="sm"
+                  variant={expanded ? 'primary' : 'secondary'}
                   grow
                   aria-expanded={expanded}
                   aria-controls="sponsor-action"
@@ -197,12 +194,9 @@ export function SponsorDetail({
         <div id="sponsor-action" class="flex flex-col gap-4">
           {open && <ActionForm key={open} action={open} id={id} sponsor={s} onDone={finish} onCancel={() => setOpen(null)} onSwitch={show} onSignedOut={onSignedOut} />}
           {done && (
-            <div ref={doneRef} tabIndex={-1} class="outline-hidden">
-              <Notice kind="done">
-                <span>{done.text}</span>
-                {done.url && <CopyLink label={done.urlLabel ?? 'Link'} url={done.url} />}
-              </Notice>
-            </div>
+            <Notice kind="done" focusRef={doneRef} detail={done.url && <CopyLink label={done.urlLabel ?? 'Link'} url={done.url} />}>
+              {done.text}
+            </Notice>
           )}
         </div>
       </section>
@@ -241,7 +235,7 @@ function ActionNeeded({
   };
   const toLogos = () => focusHeading(document.getElementById('h-logos'));
   const record = canRecordPayment(s) ? (
-    <Button variant="black" size="sm" grow onClick={() => onOpen('payment')}>
+    <Button variant="primary" grow onClick={() => onOpen('payment')}>
       Record a bank transfer
     </Button>
   ) : null;
@@ -254,7 +248,7 @@ function ActionNeeded({
             ? 'Stripe could not charge their card and is trying again. Check the payment in Stripe, or ask their billing contact.'
             : `The payment is overdue. Paid through ${through}.`,
           action: s.stripeCustomerId ? (
-            <Button variant="black" size="sm" grow href={stripeCustomer(s.stripeCustomerId)} external>
+            <Button variant="primary" grow href={stripeCustomer(s.stripeCustomerId)} external>
               Open in Stripe
             </Button>
           ) : (
@@ -269,7 +263,7 @@ function ActionNeeded({
         return {
           text: `Invited on ${longDate(s.createdAt)} and not paid yet.`,
           action: (
-            <Button variant="black" size="sm" grow disabled={busy} onClick={() => void resend()}>
+            <Button variant="primary" grow disabled={busy} onClick={() => void resend()}>
               {busy ? 'Sending…' : 'Email the invitation again'}
             </Button>
           ),
@@ -278,7 +272,7 @@ function ActionNeeded({
         return {
           text: 'They uploaded a new logo. Add it to their partner document in Sanity.',
           action: (
-            <Button variant="black" size="sm" grow onClick={toLogos}>
+            <Button variant="primary" grow onClick={toLogos}>
               See the logo
             </Button>
           ),
@@ -287,7 +281,7 @@ function ActionNeeded({
         return {
           text: 'A meetup it covers has passed and nobody has paid. Move it to a later meetup, or withdraw the invitation.',
           action: (
-            <Button variant="black" size="sm" grow onClick={() => onOpen('bundle')}>
+            <Button variant="primary" grow onClick={() => onOpen('bundle')}>
               Meetups and price
             </Button>
           ),
@@ -296,10 +290,10 @@ function ActionNeeded({
   };
 
   return (
-    <section aria-labelledby="h-needed" class={surfaceClass('grey', 'flex flex-col gap-4 p-5 md:p-6')}>
-      <h3 id="h-needed" class="m-0 text-xl font-bold">
+    <section aria-labelledby="h-needed" class={cardClass('outline', 'lg')}>
+      <Heading as="h3" size="card" id="h-needed">
         Action needed
-      </h3>
+      </Heading>
       <ul class="m-0 flex list-none flex-col gap-5 p-0">
         {attention.map((flag) => {
           const { text, action } = item(flag);
@@ -307,7 +301,7 @@ function ActionNeeded({
             <li key={flag} class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div class="flex flex-col items-start gap-1.5">
                 <AttentionBadge flag={flag} labels={labels} />
-                <p class="m-0 text-base">{text}</p>
+                <p class="m-0 text-compact">{text}</p>
               </div>
               {action && <div class="flex flex-none flex-wrap">{action}</div>}
             </li>
@@ -356,28 +350,28 @@ function Summary({ d }: { d: Detail }) {
     [
       'Stripe',
       s.stripeCustomerId ? (
-        <Button key="stripe" variant="link" href={stripeCustomer(s.stripeCustomerId)} external>
+        <TextButton key="stripe" size="body" href={stripeCustomer(s.stripeCustomerId)} external>
           Open in Stripe
-        </Button>
+        </TextButton>
       ) : (
         'No Stripe customer'
       ),
     ],
-    ['Sanity partner id', s.partnerId ?? 'Not linked'],
+    ['Partner id', s.partnerId ?? 'Not linked'],
     ['Source', SOURCE_LABEL[s.source]],
     ['Added', shortDateTime(s.createdAt)],
   ];
 
   return (
-    <section aria-labelledby="h-summary" class={surfaceClass('grey', 'flex flex-col gap-5 p-5 md:p-6')}>
-      <h3 id="h-summary" class="m-0 text-xl font-bold">
+    <section aria-labelledby="h-summary" class={cardClass('filled', 'lg')}>
+      <Heading as="h3" size="card" id="h-summary">
         Summary
-      </h3>
+      </Heading>
       <Pairs rows={rows} />
       {s.paymentLinkUrl && s.status === 'pending' && <CopyLink label="Payment link" url={s.paymentLinkUrl} />}
-      {s.notes && <p class="m-0 text-base break-words whitespace-pre-line">{s.notes}</p>}
+      {s.notes && <p class="m-0 text-compact break-words whitespace-pre-line">{s.notes}</p>}
       <details class="group">
-        <summary class="cursor-pointer text-base font-bold">More details</summary>
+        <summary class="cursor-pointer text-compact font-bold">More details</summary>
         <div class="pt-4">
           <Pairs rows={more} />
         </div>
@@ -388,11 +382,11 @@ function Summary({ d }: { d: Detail }) {
 
 function Pairs({ rows }: { rows: [string, ComponentChildren][] }) {
   return (
-    <dl class="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-x-6 gap-y-4">
+    <dl class="m-0 grid grid-cols-auto-sm gap-x-6 gap-y-4">
       {rows.map(([k, v]) => (
         <div key={k} class="flex flex-col gap-0.5">
-          <dt class="text-sm text-grey-text">{k}</dt>
-          <dd class="m-0 text-base font-bold break-words whitespace-pre-line">{v}</dd>
+          <dt class="text-meta text-grey-text">{k}</dt>
+          <dd class="m-0 text-body font-bold break-words whitespace-pre-line">{v}</dd>
         </div>
       ))}
     </dl>
@@ -405,10 +399,10 @@ function Block({ id, title, intro, children }: { id: string; title: string; intr
   return (
     <section aria-labelledby={id} class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <h3 id={id} tabIndex={-1} class="m-0 scroll-mt-6 text-xl font-bold outline-hidden">
+        <Heading as="h3" size="card" id={id} focus class="scroll-mt-6">
           {title}
-        </h3>
-        {intro && <p class="m-0 text-base text-ink-2">{intro}</p>}
+        </Heading>
+        {intro && <p class="m-0 text-compact text-ink-2">{intro}</p>}
       </div>
       {children}
     </section>
@@ -454,28 +448,20 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
     <Block id="h-contacts" title="Contacts" intro="The people who sign in to the sponsorship page. Each email belongs to one sponsor.">
       <ul class="m-0 flex list-none flex-col gap-3 p-0">
         {contacts.map((c) => (
-          <li key={c.id} class={surfaceClass('grey', 'flex flex-col gap-3 px-5 py-4')}>
+          <li key={c.id} class={cardClass('outline', 'md')}>
             <div class="flex flex-col gap-1 min-w-0">
               <span class="flex flex-wrap items-center gap-2">
-                <span class="font-bold">{c.name}</span>
-                <span class={badgeClass('neutral')}>{ROLE_LABEL[c.role]}</span>
-                {c.pending && <span class={badgeClass('dark')}>Not joined yet</span>}
+                <span class="text-body font-bold">{c.name}</span>
+                <Tag>{ROLE_LABEL[c.role]}</Tag>
+                {c.pending && <Tag tone="black">Not joined yet</Tag>}
               </span>
-              <span class="text-base break-all">{c.email}</span>
-              <span class="text-sm text-grey-text">{c.hasAccount ? 'Has signed in' : 'Not signed in yet'}</span>
+              <span class="text-compact break-all">{c.email}</span>
+              <span class="text-meta text-grey-text">{c.hasAccount ? 'Has signed in' : 'Not signed in yet'}</span>
             </div>
             {inviting !== c.id && removing !== c.id && (
               <div class="flex flex-wrap gap-x-5 gap-y-2">
-                {!ended && !c.hasAccount && (
-                  <Button variant="link" onClick={() => setInviting(c.id)}>
-                    Resend invitation
-                  </Button>
-                )}
-                {contacts.length > 1 && (
-                  <Button variant="link" onClick={() => setRemoving(c.id)}>
-                    Remove
-                  </Button>
-                )}
+                {!ended && !c.hasAccount && <TextButton onClick={() => setInviting(c.id)}>Resend invitation</TextButton>}
+                {contacts.length > 1 && <TextButton onClick={() => setRemoving(c.id)}>Remove</TextButton>}
               </div>
             )}
             {inviting === c.id && (
@@ -489,10 +475,10 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
                   onInput={(e) => setMessage(inputValue(e))}
                 />
                 <div class="flex flex-wrap gap-3">
-                  <Button variant="black" size="sm" grow disabled={busy} onClick={() => void resend(c)}>
+                  <Button variant="primary" grow disabled={busy} onClick={() => void resend(c)}>
                     {busy ? 'Sending…' : `Email ${c.name}`}
                   </Button>
-                  <Button variant="outline-black" size="sm" grow onClick={() => setInviting(null)}>
+                  <Button variant="secondary" grow onClick={() => setInviting(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -500,12 +486,12 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
             )}
             {removing === c.id && (
               <div class="flex flex-col gap-3">
-                <p class="m-0 text-base font-bold">Remove {c.name}? They can no longer sign in for this sponsor.</p>
+                <p class="m-0 text-compact font-bold">Remove {c.name}? They can no longer sign in for this sponsor.</p>
                 <div class="flex flex-wrap gap-3">
-                  <Button variant="danger" size="sm" grow disabled={busy} onClick={() => void remove(c)}>
+                  <Button variant="primary" grow disabled={busy} onClick={() => void remove(c)}>
                     {busy ? 'Removing…' : 'Yes, remove'}
                   </Button>
-                  <Button variant="outline-black" size="sm" grow onClick={() => setRemoving(null)}>
+                  <Button variant="secondary" grow onClick={() => setRemoving(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -518,12 +504,12 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
       {done && <Notice kind="done">{done}</Notice>}
       {!ended &&
         (!adding ? (
-          <Button variant="outline-black" size="sm" grow class="self-start" onClick={() => setAdding(true)}>
+          <Button variant="secondary" grow class="self-start" onClick={() => setAdding(true)}>
             Add a contact
           </Button>
         ) : (
           <form
-            class={surfaceClass('grey', 'flex flex-col gap-4 p-5 md:p-6')}
+            class={cardClass('outline', 'lg')}
             noValidate
             onSubmit={async (e) => {
               e.preventDefault();
@@ -540,7 +526,7 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
               onChanged();
             }}
           >
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-4">
+            <div class="grid grid-cols-auto-sm gap-4">
               <TextField
                 label="Name"
                 name="name"
@@ -576,10 +562,10 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
               </SelectField>
             </div>
             <div class="flex flex-wrap gap-3">
-              <SubmitButton busy={busy} size="sm" grow>
+              <SubmitButton busy={busy} grow>
                 {busy ? 'Adding…' : 'Add contact'}
               </SubmitButton>
-              <Button variant="outline-black" size="sm" grow onClick={() => setAdding(false)}>
+              <Button variant="secondary" grow onClick={() => setAdding(false)}>
                 Cancel
               </Button>
             </div>
@@ -621,9 +607,9 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
 
   return (
     <Block id="h-logos" title="Logos" intro="Newest first. The newest one is shown on the sponsor's page. Add it to their partner document in Sanity.">
-      {logos.length === 0 && <p class="m-0 text-base text-ink-2">None uploaded yet.</p>}
+      {logos.length === 0 && <p class="m-0 text-compact text-ink-2">None uploaded yet.</p>}
       {!ended && (
-        <form class={surfaceClass('grey', 'flex max-w-xl flex-col gap-4 p-5 md:p-6')} noValidate onSubmit={upload}>
+        <form class={cardClass('outline', 'lg', 'max-w-form')} noValidate onSubmit={upload}>
           <FileField
             key={picker}
             label="Upload a logo for them"
@@ -638,7 +624,7 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
               setDone('');
             }}
           />
-          <SubmitButton busy={busy} size="sm" grow class="self-start">
+          <SubmitButton busy={busy} grow class="self-start">
             {busy ? 'Uploading…' : 'Upload logo'}
           </SubmitButton>
         </form>
@@ -650,7 +636,7 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
           return (
             <li key={l.id} class="flex flex-col gap-3">
               {/* The site's header and footer are black: check the logo on both. */}
-              <div class="grid max-w-xl grid-cols-2 gap-3">
+              <div class="grid max-w-form grid-cols-2 gap-3">
                 <div class="flex h-28 items-center justify-center rounded-card border border-grey-frame bg-white p-4">
                   <img src={src} alt={`${l.filename} on white`} class="block max-h-full max-w-full object-contain" />
                 </div>
@@ -659,13 +645,13 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
                 </div>
               </div>
               <div class="flex flex-col gap-1">
-                <span class="font-bold break-all">{l.filename}</span>
-                <span class="text-sm text-grey-text">
+                <span class="text-compact font-bold break-all">{l.filename}</span>
+                <span class="text-meta text-grey-text">
                   {kb(l.bytes)}, uploaded {shortDateTime(l.uploadedAt)} by {l.uploadedBy === 'board' ? 'the board' : l.uploadedBy}
                 </span>
-                <a href={src} download={l.filename} class={buttonClass('link', 'sm', false, 'self-start')}>
+                <TextButton href={src} download={l.filename} class="self-start">
                   Download
-                </a>
+                </TextButton>
               </div>
             </li>
           );
@@ -679,18 +665,18 @@ function Contracts({ contracts, id }: Ctx & { contracts: Contract[] }) {
   return (
     <Block id="h-contracts" title="Signed contracts" intro="Contracts signed outside the site. One on file replaces signing online.">
       {contracts.length === 0 ? (
-        <p class="m-0 text-base text-ink-2">None attached.</p>
+        <p class="m-0 text-compact text-ink-2">None attached.</p>
       ) : (
         <ul class="m-0 flex list-none flex-col gap-3 p-0">
           {contracts.map((c) => (
             <li key={c.id} class="flex flex-col gap-1">
-              <span class="font-bold break-all">{c.filename}</span>
-              <span class="text-sm text-grey-text">
+              <span class="text-compact font-bold break-all">{c.filename}</span>
+              <span class="text-meta text-grey-text">
                 {c.signedOn ? `Signed on ${longDate(c.signedOn)}` : 'Signing date not given'}, attached {shortDateTime(c.uploadedAt)}, {kb(c.bytes)}
               </span>
-              <Button variant="link" href={`${BASE}/${id}/contracts/${c.id}`} external={false} class="self-start">
+              <TextButton href={`${BASE}/${id}/contracts/${c.id}`} external={false} class="self-start">
                 Download
-              </Button>
+              </TextButton>
             </li>
           ))}
         </ul>
@@ -708,7 +694,7 @@ const FIELD_LABEL: Record<string, string> = {
   vatId: 'VAT number',
   website: 'website',
   notes: 'notes',
-  partnerId: 'Sanity partner id',
+  partnerId: 'Partner id',
   tier: 'tier',
   cycle: 'billing',
   paymentMode: 'payment method',
@@ -782,51 +768,53 @@ function eventText(e: SponsorEvent): string {
 
 function Records({ d }: { d: Detail }) {
   return (
-    <details class={surfaceClass('grey', 'px-5 py-4 md:px-6')}>
-      <summary class="cursor-pointer text-xl font-bold">Agreements and history</summary>
-      <div class="flex flex-col gap-6 pt-5">
-        <section aria-labelledby="h-agreements" class="flex flex-col gap-3">
-          <h4 id="h-agreements" class="m-0 text-lg font-bold">
-            Agreements signed
-          </h4>
-          {d.agreements.length === 0 ? (
-            <p class="m-0 text-base text-ink-2">None yet.</p>
-          ) : (
-            <ul class="m-0 flex list-none flex-col gap-3 p-0">
-              {d.agreements.map((a) => (
-                <li key={a.id} class="flex flex-col gap-0.5">
-                  <span class="font-bold">
-                    {a.summary} <span class="font-normal text-grey-text">({a.context === 'start' ? 'to start' : 'for a change'})</span>
-                  </span>
-                  <span class="text-base break-words">
-                    {a.signerName}, {a.signerTitle}, {a.signerEmail}
-                  </span>
-                  <span class="text-sm text-grey-text">
-                    Version {a.version}, signed {shortDateTime(a.acceptedAt)}
+    <div class={cardClass('outline', 'md')}>
+      <details>
+        <summary class="cursor-pointer text-card-title font-bold">Agreements and history</summary>
+        <div class="flex flex-col gap-6 pt-5">
+          <section aria-labelledby="h-agreements" class="flex flex-col gap-3">
+            <Heading as="h4" size="card" id="h-agreements">
+              Agreements signed
+            </Heading>
+            {d.agreements.length === 0 ? (
+              <p class="m-0 text-compact text-ink-2">None yet.</p>
+            ) : (
+              <ul class="m-0 flex list-none flex-col gap-3 p-0">
+                {d.agreements.map((a) => (
+                  <li key={a.id} class="flex flex-col gap-0.5">
+                    <span class="text-compact font-bold">
+                      {a.summary} <span class="font-normal text-grey-text">({a.context === 'start' ? 'to start' : 'for a change'})</span>
+                    </span>
+                    <span class="text-compact break-words">
+                      {a.signerName}, {a.signerTitle}, {a.signerEmail}
+                    </span>
+                    <span class="text-meta text-grey-text">
+                      Version {a.version}, signed {shortDateTime(a.acceptedAt)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section aria-labelledby="h-history" class="flex flex-col gap-3">
+            <Heading as="h4" size="card" id="h-history">
+              History
+            </Heading>
+            {d.events.length === 0 && <p class="m-0 text-compact text-ink-2">Nothing yet.</p>}
+            <ol class="m-0 flex list-none flex-col gap-2 p-0">
+              {d.events.map((e) => (
+                <li key={e.id} class="flex flex-col text-compact break-words">
+                  <span>{eventText(e)}</span>
+                  <span class="text-meta text-grey-text">
+                    {shortDateTime(e.at)}, by {actorText(e.actor)}
                   </span>
                 </li>
               ))}
-            </ul>
-          )}
-        </section>
-        <section aria-labelledby="h-history" class="flex flex-col gap-3">
-          <h4 id="h-history" class="m-0 text-lg font-bold">
-            History
-          </h4>
-          {d.events.length === 0 && <p class="m-0 text-base text-ink-2">Nothing yet.</p>}
-          <ol class="m-0 flex list-none flex-col gap-2 p-0">
-            {d.events.map((e) => (
-              <li key={e.id} class="flex flex-col text-base break-words">
-                <span>{eventText(e)}</span>
-                <span class="text-sm text-grey-text">
-                  {shortDateTime(e.at)}, by {actorText(e.actor)}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      </div>
-    </details>
+            </ol>
+          </section>
+        </div>
+      </details>
+    </div>
   );
 }
 
@@ -858,8 +846,7 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
       {done && <Notice kind="done">{done}</Notice>}
       {!open ? (
         <Button
-          variant="outline-black"
-          size="sm"
+          variant="secondary"
           grow
           class="self-start"
           aria-expanded={false}
@@ -874,7 +861,7 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
         </Button>
       ) : (
         <form
-          class={surfaceClass('grey', 'flex flex-col gap-4 p-5 md:p-6')}
+          class={cardClass('outline', 'lg')}
           noValidate
           onSubmit={async (e) => {
             e.preventDefault();
@@ -890,10 +877,10 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             onChanged();
           }}
         >
-          <p class="m-0 text-base text-ink-2">
+          <p class="m-0 text-compact text-ink-2">
             The company name is shown on the site and in emails, the legal name on invoices. Company and billing details are copied to Stripe when they have a Stripe customer.
           </p>
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+          <div class="grid grid-cols-auto-sm gap-4">
             {text('companyName', 'Company name')}
             {text('legalName', optional('Legal name'))}
             {text('vatId', optional('VAT number'))}
@@ -907,16 +894,20 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             error={err('billingAddress')}
             onInput={(e) => set('billingAddress', inputValue(e))}
           />
-          {text('partnerId', optional('Sanity partner id'), 'The id of the partner document that shows them on the site.')}
+          {text(
+            'partnerId',
+            optional('Partner id'),
+            'The id of their partner record, for example gyff. It gives them their logo on the site, at this tier. Without it a running sponsor is listed by name only.',
+          )}
           <TextArea label={optional('Notes for the board')} rows={3} value={f.notes} invalid={!!err('notes')} error={err('notes')} onInput={(e) => set('notes', inputValue(e))} />
           {error && !['companyName', 'legalName', 'vatId', 'website', 'partnerId', 'billingAddress', 'notes'].includes(error.field ?? '') && (
             <Notice kind="error">{error.message}</Notice>
           )}
           <div class="flex flex-wrap gap-3">
-            <SubmitButton busy={busy} size="sm" grow>
+            <SubmitButton busy={busy} grow>
               {busy ? 'Saving…' : 'Save details'}
             </SubmitButton>
-            <Button variant="outline-black" size="sm" grow onClick={() => setOpen(false)}>
+            <Button variant="secondary" grow onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </div>

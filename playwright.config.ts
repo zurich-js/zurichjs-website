@@ -27,6 +27,9 @@ export default defineConfig({
         '--force-color-profile=srgb',
       ],
     },
+    // Deterministic: every spec runs with reduced motion (no transitions, animations or view transitions);
+    // e2e/motion.spec.ts turns motion back on to check it.
+    contextOptions: { reducedMotion: 'reduce' },
     trace: 'retain-on-failure',
     video: process.env.E2E_VIDEO ? 'on' : 'off',
   },

@@ -1,38 +1,52 @@
 ---
-/** One event in the list: date tile, status, title, one line of practical detail. */
-import { dateParts, eventHref, presentEvent, talkCount, type Event, type TicketingProvider } from '@zurichjs/events';
-import { cx } from '../recipes';
+/**
+ * One event in a list: the home hero's next-meetup card (owner, 12th November 2026). A link card with the
+ * image flush to its edges on the left (Card mediaLayout="row"): the event's cover (its promotional artwork),
+ * else the first photo from the evening, else a grey tile with the date. The title, then one line of facts that
+ * leads with the date (date, "RSVP open" while it is, talks, venue). The arrow sits on the title's first line.
+ * `dim` (past meetups in a list): the whole card at lower opacity, full again on hover or focus (owner, 12th
+ * November 2026). Artwork and text keep their colours.
+ */
+import { dateParts, dateShort, eventHref, presentEvent, talkCount, type Event, type TicketingProvider } from '@zurichjs/events';
+import { srcFor, srcsetFor } from '../images';
+import Card from './Card.astro';
+import Facts from './Facts.astro';
 
 interface Props {
   ev: Event;
   /** Reference clock (build time). */
   now: Date;
   ticketing?: TicketingProvider;
+  /** Lower opacity until hovered or focused (past meetups). */
+  dim?: boolean;
 }
-const { ev, now, ticketing } = Astro.props;
+const { ev, now, ticketing, dim = false } = Astro.props;
 const p = presentEvent(ev, { now, ticketing });
 const upcoming = p.state !== 'past';
+const image = ev.cover ?? ev.photos[0];
 const parts = ev.startsAt ? dateParts(ev.startsAt) : { mon: ev.dateText?.slice(0, 3) ?? 'TBC', day: '?', suffix: '', year: ev.dateText?.slice(-4) ?? '' };
-const status = upcoming ? p.stateLabel : ev.recap ? 'Recap' : 'Past';
 const n = talkCount(ev);
-const meta = upcoming ? `${n} talk${n === 1 ? '' : 's'} · ${p.venueShort} · Free` : `${n} talk${n === 1 ? '' : 's'}${ev.photos.length ? ' · Photos' : ''}`;
+// Date, "RSVP open" only while it is (no other status), the number of talks (none when there are none), the venue (owner, 12th November 2026).
+const facts = [
+  { label: 'Date', value: ev.startsAt ? dateShort(ev.startsAt) : (ev.dateText ?? 'Date to be confirmed'), hideLabel: true, strong: true },
+  ...(upcoming && p.stateLabel === 'RSVP open' ? [{ label: 'Status', value: p.stateLabel, hideLabel: true }] : []),
+  ...(n > 0 ? [{ label: 'Talks', value: `${n} talk${n === 1 ? '' : 's'}`, hideLabel: true }] : []),
+  ...(ev.venue ? [{ label: 'Venue', value: p.venueShort, hideLabel: true }] : []),
+];
 ---
 
-<a
-  href={eventHref(ev)}
-  data-event-row
-  data-upcoming={String(upcoming)}
-  data-search={`${ev.title} ${ev.description} ${ev.venue?.name ?? ''}`.toLowerCase()}
-  class="no-underline text-black w-full text-left rounded-card bg-white hover:bg-grey grid grid-cols-[80px_minmax(0,1fr)] gap-[clamp(16px,2vw,28px)] items-center p-3.5 -mx-3.5 box-content"
->
-  <span class={cx('flex flex-col items-center justify-center h-20 rounded-2xl', upcoming ? 'bg-black text-white' : 'bg-grey')}>
-    <span class="text-[14px] font-bold">{parts.mon}</span>
-    <span class="text-[30px] font-bold leading-none">{parts.day}<span class="text-[15px] align-top">{parts.suffix}</span></span>
-    <span class="text-[13px]">{parts.year}</span>
-  </span>
-  <span class="flex flex-col gap-1.5 min-w-0">
-    <span class="text-[15px] font-bold text-ink-2">Meetup · {status}</span>
-    <span class="text-[clamp(19px,2vw,23px)] font-bold leading-tight text-pretty">{ev.title}</span>
-    <span class="text-[16px] text-ink-2">{meta}</span>
-  </span>
-</a>
+<Card level="h3" mediaLayout="row" title={ev.title} href={eventHref(ev)} dim={dim} linkAttrs={{ 'data-event-row': '', 'data-upcoming': String(upcoming) }}>
+  {
+    image ? (
+      <img slot="media" src={srcFor(image.src)} srcset={srcsetFor(image.src)} sizes="(min-width: 800px) 240px, 33vw" alt="" loading="lazy" decoding="async" />
+    ) : (
+      <span slot="media">
+        <span class="flex items-center justify-center bg-grey text-card-title font-bold">
+          {parts.day}
+          {parts.suffix} {parts.mon}
+        </span>
+      </span>
+    )
+  }
+  <Facts slot="facts" items={facts} />
+</Card>

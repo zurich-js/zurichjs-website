@@ -1,5 +1,5 @@
 /**
- * The ZurichJS CFP bot (docs/v2/CFP-BOT.md): people propose a talk by chatting with a second Slack
+ * The ZurichJS CFP bot (docs/systems/cfp-bot.md): people propose a talk by chatting with a second Slack
  * app in the public #cfp channel. Imported as `@zurichjs/agent/cfp`.
  *
  * This folder must never import the organiser bot (../tools.ts, ../programme.ts, ../run.ts,

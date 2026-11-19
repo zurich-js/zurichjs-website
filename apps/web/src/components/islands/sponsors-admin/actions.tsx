@@ -10,7 +10,8 @@ import type { ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, FileField, TextArea, TextField } from '@zurichjs/design/islands/Field';
-import { surfaceClass } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
+import { cardClass } from '@zurichjs/design/recipes';
 import { RECURRING, TIERS, bundleLabel, changeTiming, chf, cycleInfo, fee, feeLabel, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
@@ -81,23 +82,25 @@ export function ActionForm({ action, ...p }: Props & { action: OpenAction }) {
 /** The frame of an open action: a title, what it does, the form. */
 function Panel({ title, intro, children }: { title: string; intro?: string; children: ComponentChildren }) {
   return (
-    <section aria-label={title} class={surfaceClass('grey', 'flex flex-col gap-5 p-5 md:p-6')}>
+    <section aria-label={title} class={cardClass('outline', 'lg')}>
       <div class="flex flex-col gap-1">
-        <h4 class="m-0 text-lg font-bold">{title}</h4>
-        {intro && <p class="m-0 text-base text-ink-2">{intro}</p>}
+        <Heading as="h4" size="card">
+          {title}
+        </Heading>
+        {intro && <p class="m-0 text-compact text-ink-2">{intro}</p>}
       </div>
       {children}
     </section>
   );
 }
 
-function Buttons({ busy, label, busyLabel, onCancel, variant = 'black' }: { busy: boolean; label: string; busyLabel: string; onCancel: () => void; variant?: 'black' | 'danger' }) {
+function Buttons({ busy, label, busyLabel, onCancel }: { busy: boolean; label: string; busyLabel: string; onCancel: () => void }) {
   return (
     <div class="flex flex-wrap gap-3">
-      <SubmitButton busy={busy} size="sm" grow variant={variant}>
+      <SubmitButton busy={busy} grow>
         {busy ? busyLabel : label}
       </SubmitButton>
-      <Button variant="outline-black" size="sm" grow onClick={onCancel}>
+      <Button variant="secondary" grow onClick={onCancel}>
         Cancel
       </Button>
     </div>
@@ -168,13 +171,13 @@ function SuggestChange({ id, sponsor: s, onDone, onCancel, onSignedOut, initialK
           <>
             <ChipGroup label="Tier" value={tier} onChange={setTier} options={TIERS.map((t) => ({ value: t.key, label: t.name }))} />
             <ChipGroup label="Billing" value={cycle} onChange={setCycle} options={RECURRING.map((c) => ({ value: c, label: `${cycleInfo(c).label}, ${feeLabel(tier, c)}` }))} />
-            <p class="m-0 text-base">
+            <p class="m-0 text-compact">
               <b>{planName(tier, cycle)}.</b> {timingText(s, tier, cycle)}
             </p>
             {(err('tier') || err('cycle')) && <Notice kind="error">{err('tier') ?? err('cycle')}</Notice>}
           </>
         ) : (
-          <p class="m-0 text-base">
+          <p class="m-0 text-compact">
             If they confirm, it runs to the end of the paid period{s.paidThrough ? ` (paid through ${longDate(s.paidThrough)})` : ''} and then ends. Nothing is refunded.
           </p>
         )}
@@ -463,15 +466,15 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
               class="max-w-xs"
             />
             <div class="flex flex-wrap gap-2" role="group" aria-label="Fill in paid until">
-              <Button variant="grey" size="sm" onClick={() => setPaidUntil(addMonths(from, 3))}>
+              <Button variant="secondary" onClick={() => setPaidUntil(addMonths(from, 3))}>
                 +1 quarter
               </Button>
-              <Button variant="grey" size="sm" onClick={() => setPaidUntil(addMonths(from, 12))}>
+              <Button variant="secondary" onClick={() => setPaidUntil(addMonths(from, 12))}>
                 +1 year
               </Button>
             </div>
           </div>
-          <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-4">
+          <div class="grid grid-cols-auto-sm gap-4">
             <TextField
               label={optional('Amount (CHF)')}
               name="amount"
@@ -496,18 +499,18 @@ function RecordTransfer({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props
         </form>
       ) : (
         <div class="flex flex-col gap-5">
-          <p class="m-0 text-lg font-bold">
+          <p class="m-0 text-body font-bold">
             Mark {s.companyName} paid through {through}?
           </p>
-          <p class="m-0 text-base">
+          <p class="m-0 text-compact">
             {received !== null ? `${chf(received)} received` : 'No amount noted'}
             {reference.trim() ? `, reference ${reference.trim()}` : ''}. The billing contact is emailed a confirmation.
           </p>
           <div class="flex flex-wrap gap-3">
-            <Button variant="black" size="sm" grow disabled={busy} onClick={() => void record()}>
+            <Button variant="primary" grow disabled={busy} onClick={() => void record()}>
               {busy ? 'Recording…' : 'Yes, record it'}
             </Button>
-            <Button variant="outline-black" size="sm" grow onClick={() => setConfirming(false)}>
+            <Button variant="secondary" grow onClick={() => setConfirming(false)}>
               Go back
             </Button>
           </div>
@@ -536,11 +539,11 @@ function End({ id, sponsor: s, onDone, onCancel, onSwitch, onSignedOut }: Props)
   };
   return (
     <Panel title={withdraw ? 'Withdraw invitation' : 'End outright (breach)'}>
-      <p class="m-0 text-lg font-bold">{withdraw ? `Withdraw the invitation to ${s.companyName}?` : `End ${s.companyName} now?`}</p>
+      <p class="m-0 text-body font-bold">{withdraw ? `Withdraw the invitation to ${s.companyName}?` : `End ${s.companyName} now?`}</p>
       {withdraw ? (
-        <p class="m-0 text-base">Nobody has paid. The invitation and any payment link stop working, and it is logged.</p>
+        <p class="m-0 text-compact">Nobody has paid. The invitation and any payment link stop working, and it is logged.</p>
       ) : (
-        <ul class="m-0 flex flex-col gap-1 pl-5 text-base">
+        <ul class="m-0 flex list-disc flex-col gap-1 pl-5 text-compact">
           <li>Stripe stops at once and it ends today.</li>
           <li>Nothing is refunded automatically.</li>
           <li>Only for a breach of the agreement. If they agreed to end it, send it as a change instead, so it runs to the end of the paid period.</li>
@@ -548,15 +551,15 @@ function End({ id, sponsor: s, onDone, onCancel, onSwitch, onSignedOut }: Props)
       )}
       {error && <Notice kind="error">{error}</Notice>}
       <div class="flex flex-wrap gap-3">
-        <Button variant="danger" size="sm" grow disabled={busy} onClick={() => void end()}>
+        <Button variant="primary" grow disabled={busy} onClick={() => void end()}>
           {busy ? 'Ending…' : withdraw ? 'Yes, withdraw it' : 'Yes, end it now'}
         </Button>
         {canSuggest && (
-          <Button variant="outline-black" size="sm" grow onClick={() => onSwitch('suggest-end')}>
+          <Button variant="secondary" grow onClick={() => onSwitch('suggest-end')}>
             Send a change instead
           </Button>
         )}
-        <Button variant="outline-black" size="sm" grow onClick={onCancel}>
+        <Button variant="secondary" grow onClick={onCancel}>
           Cancel
         </Button>
       </div>

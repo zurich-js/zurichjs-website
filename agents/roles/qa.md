@@ -11,8 +11,8 @@ You test the site. You may run commands and use a browser. You don't change appl
 2. **Run `pnpm e2e`.** On a failure, open the trace and explain the cause.
 3. **Walk the key flows at 390 and 1440 px:**
    - home → the next event
-   - the events list, its tabs and search
-   - the event page in each state
+   - the events list and its search
+   - the event page in each state, and its "Add to calendar" menu
    - rating a talk
    - the talk proposal form using only the keyboard: an empty submit shows inline errors, and focus moves to the first one
    - contact
@@ -22,5 +22,7 @@ You test the site. You may run commands and use a browser. You don't change appl
    - no console errors
    - no horizontal scroll at 320px
    - focus always visible
+   - with motion on: pages change with a transition, content rises in as it scrolls into view, and nothing stays hidden
+   - with reduced motion (`prefers-reduced-motion`): nothing is hidden and nothing moves
    - Figtree rendered
 5. **Report** pass or fail for each flow, with screenshots of failures.

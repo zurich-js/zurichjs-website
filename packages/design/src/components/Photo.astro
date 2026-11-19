@@ -1,8 +1,12 @@
 ---
-/** A cover-cropped photo with rounded corners. Fills its parent, so give the parent an aspect ratio. */
+/**
+ * A cover-cropped photo with rounded corners. With `ratio` it is as wide as its parent and that shape (a speaker's
+ * square); without, it fills its parent, so give the parent a size (16:9 below 1100px when the parent has none).
+ * It fades in once loaded, over the grey (motion.load).
+ */
 import type { Photo } from '@zurichjs/events';
 import { srcFor, srcsetFor } from '../images';
-import { cx } from '../recipes';
+import { cx, motion } from '../recipes';
 
 interface Props {
   photo: Photo;
@@ -11,11 +15,16 @@ interface Props {
   priority?: boolean;
   /** The `sizes` attribute: how wide the photo is rendered. */
   sizes?: string;
+  /** Its own shape, full width: speakers are square. Without it, the photo fills its parent. */
+  ratio?: 'square' | 'video' | 'landscape' | 'wide';
+  /** Crops in 10% closer (speaker cards: more face, less background). */
+  zoom?: boolean;
 }
-const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw, 100vw' } = Astro.props;
+const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw, 100vw', ratio, zoom = false } = Astro.props;
+const RATIO = { square: 'aspect-square', video: 'aspect-video', landscape: 'aspect-4/3', wide: 'aspect-3/2' };
 ---
 
-<span class={cx('relative block overflow-hidden rounded-card bg-grey', extra)}>
+<span class={cx('relative isolate block overflow-hidden rounded-card bg-grey', ratio ? cx('w-full', RATIO[ratio]) : 'size-full max-lg:aspect-video', extra)}>
   <img
     src={srcFor(photo.src)}
     srcset={srcsetFor(photo.src)}
@@ -26,7 +35,7 @@ const { photo, class: extra, priority = false, sizes = '(min-width: 800px) 50vw,
     loading={priority ? 'eager' : 'lazy'}
     fetchpriority={priority ? 'high' : 'auto'}
     decoding="async"
-    class="absolute inset-0 h-full w-full object-cover"
+    class={cx(motion.load, 'absolute inset-0 size-full object-cover', zoom && 'scale-110')}
     style={{ objectPosition: photo.position ?? 'center' }}
   />
 </span>

@@ -14,7 +14,7 @@ const nextHref = await nextMeetupHref();
   keywords={['call for papers', 'CFP Zurich', 'speak at a meetup', 'JavaScript talk Zurich', 'tech talk proposal', 'ZurichJS speakers']}
 >
   <PageOpening slot="opening" title="Speak at a meetup"><span slot="sub" id="cfp-sub">{CFP_SUB}</span></PageOpening>
-  <div class="px-gut pt-[clamp(40px,5vw,72px)] pb-[clamp(64px,8vw,104px)]">
+  <div class="px-gut py-section">
     <CfpForm client:load nextHref={nextHref} />
   </div>
 </BaseLayout>

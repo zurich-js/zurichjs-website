@@ -1,0 +1,14 @@
+---
+/** Headings. The level (`as`) and the look (`size`) are chosen separately. */
+import { cx, headingClass, type HeadingSize } from '../recipes';
+
+interface Props {
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'p';
+  size?: HeadingSize;
+  id?: string;
+  class?: string;
+}
+const { as: Tag = 'h2', size = 'section', id, class: extra } = Astro.props;
+---
+
+<Tag id={id} class={cx('m-0 font-bold text-balance', headingClass[size], extra)}><slot /></Tag>

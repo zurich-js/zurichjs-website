@@ -1,4 +1,4 @@
--- Verein membership (docs/v2/MEMBERSHIP.md), on Netlify Database (Postgres).
+-- Verein membership (docs/domains/membership/overview.md), on Postgres (Neon).
 --
 -- Only the site's server functions connect to this database; there is no
 -- client-side access, so there are no database roles or row-level security.

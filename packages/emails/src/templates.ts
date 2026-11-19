@@ -1,7 +1,7 @@
 /**
  * Member-facing emails. Each template takes typed props and returns blocks;
- * layout.ts renders them. Copy rules (AGENTS.md): plain, specific, no em dashes.
- * Later phases add their templates here (docs/v2/MEMBERSHIP.md, "Email").
+ * layout.ts renders them. Copy rules (docs/systems/design-system/brand.md): plain, specific, no em dashes.
+ * Later phases add their templates here (docs/domains/membership/overview.md, "Emails").
  */
 import { render, type Block, type EmailContent, type RenderedEmail } from './layout.ts';
 import { SPONSOR_TEMPLATES } from './sponsors.ts';

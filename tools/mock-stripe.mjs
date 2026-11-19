@@ -12,7 +12,7 @@
 //   GET  /pay/:id/complete            marks the session paid and redirects to success_url
 // A unit_amount of 99900 (CHF 999) answers HTTP 500, to test "Stripe failed".
 //
-// Memberships (docs/v2/MEMBERSHIP.md), the same way:
+// Memberships (docs/domains/membership/overview.md), the same way:
 //   GET  /v1/prices?lookup_keys[0]=member_<level>_<cycle>   a price per lookup key (amounts from the site's fee table)
 //   POST /v1/customers                                     a customer
 //   POST /v1/checkout/sessions with line_items[0][price]   a subscription checkout

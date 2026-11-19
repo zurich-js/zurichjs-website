@@ -113,13 +113,17 @@ describe('groupPartners on the production record', () => {
   it('lists current sponsors by tier, highest first', () => {
     expect(g.sponsorsByTier.map((t) => [t.tier, names(t.partners)])).toEqual([
       ['builder', ['Stripe']],
-      ['supporter', ['FIN', 'GYFF']],
+      ['friend', ['GYFF']],
+      ['supporter', ['FIN']],
     ]);
   });
   it('separates venues, conference, community and supporting partners as production does', () => {
     expect(names(g.venues)).toEqual(['GetYourGuide', 'novu AG', 'Orbiz Josef Zurich', 'SAE Institute Zürich', 'Smallpdf'].sort((a, b) => a.localeCompare(b)));
-    expect(names(g.conferences)).toEqual(['Grusp', 'iJS Munich', 'Voxxed Days Zurich', 'WhatTheStack']);
-    expect(names(g.communities)).toEqual(['Web Zurich']);
+    // iJS Munich and Web Zurich are no longer partners (owner, 19th November 2026).
+    expect(names(g.conferences)).toEqual(['Grusp', 'Voxxed Days Zurich', 'WhatTheStack']);
+    expect(names(g.communities)).toEqual([]);
+    // Current hosts: everyone who has hosted except Smallpdf.
+    expect(names(g.venues.filter((p) => p.current))).toEqual(['GetYourGuide', 'novu AG', 'Orbiz Josef Zurich', 'SAE Institute Zürich']);
     expect(names(g.supporting)).toEqual(['JetBrains', 'Swiss Dev Jobs']);
   });
   it('keeps previous supporters out of the current lists', () => {

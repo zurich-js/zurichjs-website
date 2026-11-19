@@ -16,7 +16,22 @@ export default defineType({
       name: 'logo',
       title: 'Logo',
       type: 'image',
-      description: 'Transparent PNG or SVG on white works best.',
+      description: 'The colour logo. Transparent PNG or SVG works best.',
+    }),
+    defineField({
+      name: 'logoBlack',
+      title: 'Logo in black (optional)',
+      type: 'image',
+      description:
+        'Logo walls show logos in black and in colour on hover. Without this file the site turns the colour logo black with a filter, which fails for logos made of colour alone.',
+    }),
+    defineField({
+      name: 'logoBackground',
+      title: 'Hover colour (optional)',
+      type: 'string',
+      description:
+        'A hex colour such as #635BFF. On hover the logo card turns this colour and the logo turns white (black on a light colour). Leave it empty and the card stays white with the colour logo.',
+      validation: (r) => r.regex(/^#[0-9a-fA-F]{6}$/, {name: 'hex colour'}).error('Use a hex colour like #635BFF.'),
     }),
     defineField({name: 'url', title: 'Website URL', type: 'url'}),
     defineField({

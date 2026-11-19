@@ -10,10 +10,12 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
-import { linkCardArrow, linkCardClass, surfaceClass } from '@zurichjs/design/recipes';
+import { Heading } from '@zurichjs/design/islands/Heading';
+import { cardClass } from '@zurichjs/design/recipes';
 import type { Status } from '@zurichjs/sponsorship';
 import { shortDate } from '../../server/dates.ts';
 import { api } from './admin-api.ts';
+import { TextButton } from './forms/shared.tsx';
 import { AddSponsor } from './sponsors-admin/AddSponsor.tsx';
 import { SponsorDetail } from './sponsors-admin/SponsorDetail.tsx';
 import { AttentionBadge, BASE, Notice, PAGE, STATUSES, STATUS_LABEL, StatusBadge, focusHeading, follow, inputValue, type Row } from './sponsors-admin/shared.tsx';
@@ -166,32 +168,30 @@ function SponsorList({
   return (
     <section aria-labelledby="h-sponsors" class="flex flex-col gap-8">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <h2 id="h-sponsors" ref={heading} tabIndex={-1} class="m-0 scroll-mt-6 text-3xl font-bold outline-hidden">
+        <Heading id="h-sponsors" size="subsection" focus={heading} class="scroll-mt-6">
           Sponsors
-        </h2>
+        </Heading>
         <div class="flex w-full flex-wrap gap-3 md:w-auto">
-          <Button variant="black" size="sm" grow href={`${PAGE}?add=invite`} external={false} onClick={(e) => follow(e, () => onAdd('invite'))}>
+          <Button variant="primary" grow href={`${PAGE}?add=invite`} external={false} onClick={(e) => follow(e, () => onAdd('invite'))}>
             Invite a sponsor
           </Button>
-          <Button variant="outline-black" size="sm" grow href={`${PAGE}?add=import`} external={false} onClick={(e) => follow(e, () => onAdd('import'))}>
+          <Button variant="secondary" grow href={`${PAGE}?add=import`} external={false} onClick={(e) => follow(e, () => onAdd('import'))}>
             Import a running sponsorship
           </Button>
         </div>
       </div>
 
       {needs.length > 0 && (
-        <section aria-labelledby="h-needs" class={surfaceClass('grey', 'flex flex-col gap-3 p-5 md:p-6')}>
-          <h3 id="h-needs" class="m-0 text-xl font-bold">
+        <section aria-labelledby="h-needs" class={cardClass('outline', 'lg')}>
+          <Heading as="h3" size="card" id="h-needs">
             Needs action
-          </h3>
+          </Heading>
           <ul class="m-0 flex list-none flex-col gap-3 p-0">
             {needs.map(({ s, flag }) => (
               <li key={`${s.id}-${flag}`} class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span class="text-lg">
-                  <Button variant="link" href={href(s.id)} external={false} class="text-left" onClick={(e) => follow(e, () => onOpen(s.id))}>
-                    {s.companyName}
-                  </Button>
-                </span>
+                <TextButton size="body" href={href(s.id)} external={false} onClick={(e) => follow(e, () => onOpen(s.id))}>
+                  {s.companyName}
+                </TextButton>
                 <AttentionBadge flag={flag} labels={labels} />
               </li>
             ))}
@@ -200,7 +200,7 @@ function SponsorList({
       )}
 
       <form class="flex flex-col gap-4" role="search" onSubmit={(e) => e.preventDefault()}>
-        <TextField label="Search" name="q" type="search" placeholder="Company or legal name" value={q} onInput={(e) => onQ(inputValue(e))} class="max-w-xl" />
+        <TextField label="Search" name="q" type="search" placeholder="Company or legal name" value={q} onInput={(e) => onQ(inputValue(e))} class="max-w-form" />
         <ChipGroup
           label="Status"
           value={status}
@@ -213,30 +213,29 @@ function SponsorList({
       </form>
 
       {error && <Notice kind="error">{error}</Notice>}
-      {!rows && !error && <p class="m-0 text-base text-ink-2">Loading the sponsors…</p>}
+      {!rows && !error && <p class="m-0 text-body text-ink-2">Loading the sponsors…</p>}
 
       {rows && (
-        // Phones: one card per sponsor, the whole card is the link.
+        // Phones: one card per sponsor (a five-column table does not fit).
         <ul class="m-0 flex list-none flex-col gap-3 p-0 md:hidden" aria-label="Sponsors">
-          {rows.length === 0 && <li class="text-base text-ink-2">No sponsors match.</li>}
+          {rows.length === 0 && <li class="text-ink-2">No sponsors match.</li>}
           {rows.map((s) => (
-            <li key={s.id}>
-              <a href={href(s.id)} class={linkCardClass('flex flex-col gap-2')} onClick={(e) => follow(e, () => onOpen(s.id))}>
-                <span class="text-lg font-bold break-words">{s.companyName}</span>
-                <span class="flex flex-wrap gap-2">
-                  <StatusBadge status={s.status} />
-                  {flags(s).map((flag) => (
-                    <AttentionBadge key={flag} flag={flag} labels={labels} />
-                  ))}
-                </span>
-                <span class="text-base">
-                  {s.tierName}, {s.feeLabel}
-                </span>
-                <span class="text-sm text-grey-text">
-                  {s.paymentLabel}. {s.status === 'ended' ? 'Ended' : s.paidThrough ? `Paid through ${shortDate(s.paidThrough)}` : 'Not paid yet'}
-                </span>
-                <ArrowIcon />
-              </a>
+            <li key={s.id} class={cardClass('outline', 'sm')}>
+              <TextButton size="body" href={href(s.id)} external={false} class="self-start break-words" onClick={(e) => follow(e, () => onOpen(s.id))}>
+                {s.companyName}
+              </TextButton>
+              <span class="flex flex-wrap gap-2">
+                <StatusBadge status={s.status} />
+                {flags(s).map((flag) => (
+                  <AttentionBadge key={flag} flag={flag} labels={labels} />
+                ))}
+              </span>
+              <span class="text-meta">
+                {s.tierName}, {s.feeLabel}
+              </span>
+              <span class="text-meta text-grey-text">
+                {s.paymentLabel}. {s.status === 'ended' ? 'Ended' : s.paidThrough ? `Paid through ${shortDate(s.paidThrough)}` : 'Not paid yet'}
+              </span>
             </li>
           ))}
         </ul>
@@ -244,10 +243,10 @@ function SponsorList({
 
       {rows && (
         <div class="hidden overflow-x-auto rounded-card border border-grey-frame md:block">
-          <table class="w-full border-collapse text-base">
+          <table class="w-full border-collapse text-compact">
             <caption class="sr-only">Sponsors</caption>
             <thead>
-              <tr class="text-left text-sm text-grey-text">
+              <tr class="text-left text-meta text-grey-text">
                 {['Company', 'Plan', 'Payment', 'Status', 'Paid through'].map((h) => (
                   <th key={h} scope="col" class="px-4 py-3 font-bold whitespace-nowrap">
                     {h}
@@ -267,9 +266,9 @@ function SponsorList({
                 <tr key={s.id} class="border-t border-grey-frame align-top">
                   <td class="px-4 py-3">
                     <div class="flex flex-col items-start gap-1.5">
-                      <Button variant="link" href={href(s.id)} external={false} class="text-left" onClick={(e) => follow(e, () => onOpen(s.id))}>
+                      <TextButton href={href(s.id)} external={false} onClick={(e) => follow(e, () => onOpen(s.id))}>
                         {s.companyName}
-                      </Button>
+                      </TextButton>
                       {flags(s).length > 0 && (
                         <span class="flex flex-wrap gap-1.5">
                           {flags(s).map((flag) => (
@@ -281,7 +280,7 @@ function SponsorList({
                   </td>
                   <td class="px-4 py-3">
                     {s.tierName}
-                    <span class="block text-sm text-grey-text">{s.feeLabel}</span>
+                    <span class="block text-meta text-grey-text">{s.feeLabel}</span>
                   </td>
                   <td class="px-4 py-3">{s.paymentLabel}</td>
                   <td class="px-4 py-3">
@@ -295,24 +294,5 @@ function SponsorList({
         </div>
       )}
     </section>
-  );
-}
-
-function ArrowIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="20"
-      height="20"
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      class={linkCardArrow}
-    >
-      <path d="M4 10h12M11 5l5 5-5 5" />
-    </svg>
   );
 }

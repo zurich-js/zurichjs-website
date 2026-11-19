@@ -1,5 +1,5 @@
 /**
- * The CFP bot's limits (owner, 11th November 2026; docs/v2/CFP-BOT.md). Counted in Postgres
+ * The CFP bot's limits (owner, 11th November 2026; docs/systems/cfp-bot.md). Counted in Postgres
  * (`cfp_usage`), so they hold across serverless instances.
  */
 import type { CfpOwner, CfpStore } from './store.ts';

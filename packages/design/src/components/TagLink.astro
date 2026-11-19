@@ -1,0 +1,13 @@
+---
+/** A tag that is a link (a topic leading to its talks). Same sizes as Tag; the hit area is 44px tall. */
+import { tagLinkClass, type TagSize } from '../recipes';
+
+interface Props {
+  href: string;
+  size?: TagSize;
+  class?: string;
+}
+const { href, size = 'sm', class: extra } = Astro.props;
+---
+
+<a href={href} class={tagLinkClass(size, extra)}><slot /></a>

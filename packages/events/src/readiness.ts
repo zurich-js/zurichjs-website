@@ -1,6 +1,6 @@
 /**
  * What the public event page needs before an event can be published, per editorial status.
- * Same rules as the Sanity Studio's `lib/readiness.ts` (zurich-js/zurich-js-website-sanity-studio);
+ * Same rules as the Sanity Studio's `apps/studio/lib/readiness.ts`;
  * keep both in step (test/readiness.test.ts holds the shared cases). Works on the raw Sanity
  * document shape, so the Slack agent can check a draft before anyone publishes it.
  */

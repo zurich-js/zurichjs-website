@@ -1,5 +1,5 @@
 /**
- * Membership in Slack (docs/v2/MEMBERSHIP.md). Nobody approves new members
+ * Membership in Slack (docs/domains/membership/overview.md). Nobody approves new members
  * (owner, 10th November 2026): Slack gets a note when someone joins, renews
  * or a payment fails. Resignations go to the board (bylaws Art. 5): the card
  * has one button, Confirm resignation, for SLACK_MEMBERSHIP_APPROVER_IDS only

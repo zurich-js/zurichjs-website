@@ -1,7 +1,7 @@
 /**
  * Membership of the Swiss JavaScript Group (the association behind ZurichJS).
  * Field names follow the Supabase tables in supabase/migrations, in camelCase.
- * Bylaws references: Statuten approved on 23rd May 2025 (docs/v2/MEMBERSHIP.md).
+ * Bylaws references: Statuten approved on 23rd May 2025 (docs/domains/membership/overview.md).
  */
 
 /**

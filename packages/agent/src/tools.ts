@@ -102,7 +102,7 @@ function toSanityFields(input: EventFields, current: EventDoc | null): Record<st
       input.doorsTime ??
       (current?.datetime ? new Date(current.datetime).toLocaleTimeString('en-GB', { timeZone: 'Europe/Zurich', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : undefined);
     if (!day) throw new Error('A date (YYYY-MM-DD) is needed to set the start time');
-    // Never invent a time (AGENTS.md): ask the organiser instead.
+    // Never invent a time (docs/domains/events/overview.md): ask the organiser instead.
     if (!time) throw new Error('A start time (HH:MM in Zurich) is needed with the date. Ask the organiser; never guess it.');
     set.datetime = zurichToUtcIso(day, time);
     if (input.endTime) set.endsAt = zurichToUtcIso(day, input.endTime);

@@ -5,6 +5,7 @@
  * Hidden unless ?from= matches, so the static page stays clean.
  */
 import { SITE } from '~/lib/content';
+import { noticeClass } from '@zurichjs/design/recipes';
 
 const NOTES = {
   workshops: `Workshops have ended; ZurichJS now runs free meetups. If you booked a workshop and have a question about it, write to ${SITE.email}.`,
@@ -12,8 +13,8 @@ const NOTES = {
 } as const;
 ---
 
-<div class="px-gut pt-6 [[hidden]]:hidden" data-retired hidden>
-  <p role="status" class="m-0 bg-grey rounded-[20px] px-5 py-4 text-[17px] leading-normal max-w-[880px]" data-retired-text></p>
+<div class="px-gut pt-6" data-retired hidden>
+  <p role="status" class={noticeClass('note', 'm-0 text-body max-w-wide')} data-retired-text></p>
 </div>
 <script define:vars={{ NOTES }}>
   const from = new URLSearchParams(location.search).get('from');

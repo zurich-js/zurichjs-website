@@ -46,9 +46,11 @@ interface RawFeedback {
   talk?: { _id?: string; title?: string } | null;
 }
 
+// A link carries the speaker ID it was signed with. When that ID changes later (a name instead of a generated ID),
+// the old one stays in `legacySlugs`, so links already emailed keep working (owner, 19th November 2026).
 export const SPEAKER_FEEDBACK_QUERY = `{
-  "speaker": *[_type == "speaker" && id.current == $speakerId][0]{ name, "image": image.asset->url },
-  "feedback": *[_type == "feedback" && (speaker->id.current == $speakerId || $speakerId in talk->speakers[]->id.current)] | order(submittedAt desc) {
+  "speaker": *[_type == "speaker" && (id.current == $speakerId || $speakerId in legacySlugs)][0]{ name, "image": image.asset->url },
+  "feedback": *[_type == "feedback" && (speaker->id.current == $speakerId || $speakerId in speaker->legacySlugs || $speakerId in talk->speakers[]->id.current || $speakerId in talk->speakers[]->legacySlugs[])] | order(submittedAt desc) {
     _id, rating, comment, submittedAt,
     "event": event->{ _id, title, datetime, "slug": id.current },
     "talk": talk->{ _id, title }

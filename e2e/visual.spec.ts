@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Visual regression for the key templates (docs/design-system.md). Deterministic when the site is
+ * Visual regression for the key templates (docs/systems/design-system/index.md). Deterministic when the site is
  * built with CONTENT_SOURCE=sample BUILD_NOW=2026-11-01T12:00:00+01:00; the browser clock is fixed to
  * the same instant so islands render the same state as the HTML.
  *
@@ -25,6 +25,7 @@ const PAGES = [
   ['partners', '/partners'],
   ['donate', '/donate'],
   ['membership', '/membership'],
+  ['sponsorship-agreement', '/partners/agreement'],
 ] as const;
 
 test.describe('visual', () => {

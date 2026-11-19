@@ -54,6 +54,25 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
     <link rel="canonical" href={head.canonical} />
     {head.meta.map((m) => <meta name={m.name} property={m.property} http-equiv={m.httpEquiv} content={m.content} />)}
     <meta name="theme-color" content="#000000" />
+    {/*
+      Motion, before anything paints (motion.css has the rest). The page-transition opt-in is inline so it is in place
+      however the stylesheet arrives (the dev server injects it late). data-motion turns scroll reveals on; if reveal.ts
+      has not started 2.5 seconds later, it is dropped again, so content never stays hidden.
+    */}
+    <style is:inline>
+      @media (prefers-reduced-motion: no-preference) {
+        @view-transition {
+          navigation: auto;
+        }
+      }
+    </style>
+    <script is:inline>
+      if (matchMedia('(prefers-reduced-motion: no-preference)').matches) {
+        const root = document.documentElement;
+        root.setAttribute('data-motion', '');
+        setTimeout(() => root.hasAttribute('data-motion-ready') || root.removeAttribute('data-motion'), 2500);
+      }
+    </script>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/logo-square.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/logo-square.png" />
@@ -80,18 +99,24 @@ const schemas = jsonLd.filter((j): j is Record<string, unknown> => !!j);
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-3 focus:left-3 focus:bg-yellow focus:text-black focus:px-4 focus:py-2 focus:rounded-pill focus:font-bold">Skip to content</a>
     {
       PREVIEW && (
-        <div role="status" class="bg-white text-black text-center text-[15px] font-bold px-gut py-2">
+        <div role="status" class="bg-white text-black text-center text-meta font-bold px-gut py-2">
           Draft preview: unpublished changes from Sanity. Not the live site.
         </div>
       )
     }
     <Header social={SOCIAL} />
-    <div class="on-black bg-black text-white">
-      <slot name="opening" />
-    </div>
-    <main id="main" class="flex-1"><slot /></main>
+    <main id="main" class="flex-1">
+      {/* The opening starts at the top of the page, under the header (which overlaps it), and is padded by the header's height. */}
+      <div data-opening class="on-black bg-black text-white pt-header">
+        <slot name="opening" />
+      </div>
+      <slot />
+    </main>
     <Footer site={SITE} confState={c.conference.state} />
     <script>
+      import { startReveal } from '@zurichjs/design/reveal';
+
+      startReveal();
       // One delegated listener for data-track="<event>" elements (see lib/analytics.ts).
       document.addEventListener('click', (e) => {
         const el = (e.target as Element | null)?.closest<HTMLElement>('[data-track]');

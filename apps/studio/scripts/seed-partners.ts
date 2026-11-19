@@ -160,7 +160,7 @@ export const PARTNERS: Seed[] = [
     url: 'https://www.gyffted.com',
     logo: 'gyff-logo-square.png',
     kinds: ['sponsor'],
-    tier: 'supporter',
+    tier: 'friend',
     current: true,
     description: 'IT recruitment in Switzerland',
     allowReferrer: true,

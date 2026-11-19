@@ -1,22 +1,24 @@
 ---
-/** A list of points with a bold lead, as cards in a grid ("Consistent rhythm: monthly events …"). */
-import { cx } from '../../recipes';
+/** A list of points with a bold lead, as filled cards in a grid ("Consistent rhythm: monthly events …"). */
+import AutoGrid from '../AutoGrid.astro';
+import Card from '../Card.astro';
 
 interface Props {
   items: { t: string; d: string }[];
+  /** Narrowest column in px: up to 260 gives the small grid, above it the medium one. */
   min?: number;
   class?: string;
 }
 const { items, min = 300, class: extra } = Astro.props;
 ---
 
-<ul class={cx('m-0 p-0 list-none grid gap-4', extra)} style={`grid-template-columns: repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))`}>
+<AutoGrid as="ul" min={min <= 260 ? 'sm' : 'md'} gap="sm" class={extra}>
   {
     items.map((it) => (
-      <li class="rounded-card bg-grey-soft p-6 flex flex-col gap-1.5">
-        <strong class="text-[19px] leading-[1.3]">{it.t}</strong>
-        <span class="text-[17px] leading-[1.55] text-ink-2 text-pretty">{it.d}</span>
-      </li>
+      <Card as="li" surface="filled">
+        <strong class="text-body">{it.t}</strong>
+        <span class="text-body text-ink-2 text-pretty">{it.d}</span>
+      </Card>
     ))
   }
-</ul>
+</AutoGrid>

@@ -1,7 +1,7 @@
 /**
  * One agent turn, run as a Netlify Background Function (up to 15 minutes; Slack already got its
  * 200 from slack-events). Reads the thread, runs the model with the draft-only tools, and posts
- * the reply with Publish / Discard buttons. See packages/agent and docs/v2/AUTOMATION.md.
+ * the reply with Publish / Discard buttons. See packages/agent and docs/systems/slack-agent.md.
  * Env: SLACK_SIGNING_SECRET, SLACK_AGENT_BOT_TOKEN, SANITY_AGENT_TOKEN, LLM_PROVIDER, LLM_MODEL,
  * LLM_API_KEY (LLM_BASE_URL), SANITY_STUDIO_URL, DRAFT_PREVIEW_URL (optional).
  * With the membership database (DATABASE_URL or MEMBERSHIP_DB_URL), it also answers questions

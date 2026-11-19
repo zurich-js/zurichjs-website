@@ -448,6 +448,14 @@ export type Partner = {
     crop?: SanityImageCrop;
     _type: "image";
   };
+  logoBlack?: {
+    asset?: SanityImageAssetReference;
+    media?: unknown;
+    hotspot?: SanityImageHotspot;
+    crop?: SanityImageCrop;
+    _type: "image";
+  };
+  logoBackground?: string;
   url?: string;
   kinds?: Array<string>;
   tier?: "champion" | "builder" | "friend" | "supporter";
@@ -742,12 +750,16 @@ export type SPEAKERS_QUERY_RESULT = Array<{
 
 // Source: ../../packages/content/src/queries.ts
 // Variable: PARTNERS_QUERY
-// Query: *[_type == "partner" && defined(id.current)] | order(name asc) {  "id": id.current, name, url, "logo": logo.asset->url, kinds, tier, current, since, until, description, allowReferrer}
+// Query: *[_type == "partner" && defined(id.current)] | order(name asc) {  "id": id.current, name, url, "logo": logo.asset->url,  "logoRatio": logo.asset->metadata.dimensions.aspectRatio, "logoOpaque": logo.asset->metadata.isOpaque,  "logoBlack": logoBlack.asset->url, logoBackground,  kinds, tier, current, since, until, description, allowReferrer}
 export type PARTNERS_QUERY_RESULT = Array<{
   id: string;
   name: string | null;
   url: string | null;
   logo: string | null;
+  logoRatio: number | null;
+  logoOpaque: boolean | null;
+  logoBlack: string | null;
+  logoBackground: string | null;
   kinds: Array<string> | null;
   tier: "builder" | "champion" | "friend" | "supporter" | null;
   current: boolean | null;

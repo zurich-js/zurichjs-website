@@ -1,5 +1,5 @@
 /**
- * UI lint: the design-system rules in AGENTS.md ("UI and design system rules") that oxlint cannot check.
+ * UI lint: the UI and design system rules (docs/systems/design-system/ui-rules.md) that oxlint cannot check.
  * Oxlint (`pnpm lint`) stays the general linter; this config only runs the UI rules (`pnpm lint:ui`).
  *
  * Existing violations are recorded in eslint-suppressions.json (ESLint bulk suppressions), so CI fails only
@@ -42,8 +42,8 @@ export default [
   },
   {
     files: ['apps/web/src/**/*.{ts,tsx,astro}', 'packages/design/src/**/*.{ts,tsx,astro}'],
-    // Server code, API routes and image generators have no classes; tokens.ts is where literals belong.
-    ignores: ['**/*.test.*', '**/*.d.ts', 'apps/web/src/server/**', 'apps/web/src/pages/api/**', 'apps/web/src/pages/og/**', 'packages/design/src/tokens.ts'],
+    // Server code, API routes and image generators have no classes; theme.css is where literals belong.
+    ignores: ['**/*.test.*', '**/*.d.ts', 'apps/web/src/server/**', 'apps/web/src/pages/api/**', 'apps/web/src/pages/og/**'],
     languageOptions: { parser: tseslint.parser, parserOptions: { ecmaFeatures: { jsx: true } } },
     plugins: { 'better-tailwindcss': betterTailwind },
     settings: {
@@ -57,7 +57,7 @@ export default [
           restrict: [
             {
               pattern: ARBITRARY,
-              message: 'Arbitrary value "$0": snap to a token from packages/design/src/tokens.ts, or propose a new token (AGENTS.md, UI rule 1).',
+              message: 'Arbitrary value "$0": snap to a token from packages/design/src/theme.css, or propose a new token (docs/systems/design-system/ui-rules.md, rule 1).',
             },
           ],
         },
@@ -67,15 +67,15 @@ export default [
         {
           selector: 'JSXAttribute[name.name="style"]',
           message:
-            'No inline style: use tokens and utilities. A value that only exists at runtime (a CSS custom property, an image focal point) needs an eslint-disable comment with the reason (AGENTS.md, UI rule 1).',
+            'No inline style: use tokens and utilities. A value that only exists at runtime (a CSS custom property, an image focal point) needs an eslint-disable comment with the reason (docs/systems/design-system/ui-rules.md, rule 1).',
         },
         {
           selector: `Literal[value=${hex}]`,
-          message: 'No hardcoded colours: use a colour token from packages/design/src/tokens.ts (AGENTS.md, UI rule 1).',
+          message: 'No hardcoded colours: use a colour token from packages/design/src/theme.css (docs/systems/design-system/ui-rules.md, rule 1).',
         },
         {
           selector: `TemplateElement[value.raw=${hex}]`,
-          message: 'No hardcoded colours: use a colour token from packages/design/src/tokens.ts (AGENTS.md, UI rule 1).',
+          message: 'No hardcoded colours: use a colour token from packages/design/src/theme.css (docs/systems/design-system/ui-rules.md, rule 1).',
         },
       ],
     },

@@ -30,7 +30,7 @@ export const TIERS: Record<TierKey, Tier> = {
     fees: { quarterly: 50, yearly: 175 },
     perMonth: 14.5,
     comparisons: ['a simple bouquet of tulips', 'a 250 g coffee refill from MAME', 'less than an AI tool subscription', 'less than 3 Halbtax trips in Zurich'],
-    // Production's wording (voting rules: owner to confirm, docs/v2/CONTENT-SOURCES.md).
+    // Production's wording (voting rules: owner to confirm, docs/reference/content-sources.md).
     benefits: ['Cancel anytime', 'Stay informed and vote on small decisions'],
   },
   supporter: {

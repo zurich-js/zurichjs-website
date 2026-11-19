@@ -4,7 +4,7 @@ The Sanity Studio for zurichjs.com (Sanity 6, project `viqjrovw`, dataset `produ
 
 ```bash
 pnpm install                                            # from the repository root
-pnpm --filter @zurichjs/studio dev                      # http://localhost:3333 (or `pnpm local:studio`, in Docker)
+pnpm --filter @zurichjs/studio dev                      # http://localhost:3333 (or `just studio`, in Docker)
 pnpm --filter @zurichjs/studio exec sanity build --yes  # the build CI runs
 pnpm --filter @zurichjs/studio typegen                  # schema.json and packages/content/src/sanity.types.ts
 ```

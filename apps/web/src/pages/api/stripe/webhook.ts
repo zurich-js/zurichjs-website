@@ -2,7 +2,7 @@
  * The one Stripe webhook: memberships, sponsorships and donations. Stripe › Developers › Webhooks:
  * https://zurichjs.com/api/stripe/webhook with the events in STRIPE_WEBHOOK_EVENTS; its signing
  * secret in STRIPE_WEBHOOK_SECRET. `pnpm membership:stripe-setup --webhook-url …` creates it, and
- * `pnpm local` forwards to it with `stripe listen`. How it runs the parts: server/stripe-webhook.ts.
+ * `just up` forwards to it with `stripe listen`. How it runs the parts: server/stripe-webhook.ts.
  *
  *   POST (signed by Stripe) → 200 · 400 bad signature or JSON · 503 not configured · 500 retry
  */

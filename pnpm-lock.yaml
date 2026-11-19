@@ -32,6 +32,9 @@ importers:
       '@types/node':
         specifier: 22.15.3
         version: 22.15.3
+      '@varlock/1password-plugin':
+        specifier: 2.0.7
+        version: 2.0.7(varlock@1.25.0)
       '@zurichjs/agent':
         specifier: workspace:*
         version: link:packages/agent
@@ -77,6 +80,9 @@ importers:
       typescript-eslint:
         specifier: 8.72.1
         version: 8.72.1(eslint@10.14.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)
+      varlock:
+        specifier: 1.25.0
+        version: 1.25.0
       vitest:
         specifier: 4.1.12
         version: 4.1.12(@opentelemetry/api@1.9.1)(@types/node@22.15.3)(jsdom@29.1.1(@noble/hashes@2.4.0))(vite@8.3.8(@types/node@22.15.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
@@ -4771,6 +4777,30 @@ packages:
     peerDependencies:
       valibot: ^1.5.0
 
+  '@varlock/1password-plugin@2.0.7':
+    resolution: {integrity: sha512-JWisivEBYq0jEVnlV5eXLsqTcYgpj9FQk4gbEYSDNNhRlWHEUOCRJ++Ap3tszsMjV1kPX5gguuWOd2zSuvfeRw==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      varlock: ^1.25.0
+
+  '@varlock/native-helper-darwin@1.24.0':
+    resolution: {integrity: sha512-/uMRBzTZxdtlwyszdPbamFojDfRQYTNY0l20SoX8UoTXrI+Kq7B3tt2ZDP0WfOhb9EAP1egAewBuGLj8NzemMQ==}
+    os: [darwin]
+
+  '@varlock/native-helper-linux-arm64@1.24.0':
+    resolution: {integrity: sha512-o2cMTiRtFNMNijxQxb8I7L6aQnEOTxB4QKYIZKAqbjoUCAFhStCwl1n2hj1J/rvCegSSaJT040T7r4culNZEqg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@varlock/native-helper-linux-x64@1.24.0':
+    resolution: {integrity: sha512-gToIgVYiYBf5rEdgM2nUV+r/5pPdQWZu6/GW4uZQqYQ0ApRL3ZTPXF2D9FWnDXDhI5CyXnckxokzP5azcSRDBA==}
+    cpu: [x64]
+    os: [linux]
+
+  '@varlock/native-helper-win32-x64@1.24.0':
+    resolution: {integrity: sha512-qudkH54KfX8dBmsQyAlC8BYlPwrxF0Drg6q4MHHVC7l7taTClYNqf6M6xRdIoNynyPDKTTPNjpOvoHwvRanEpg==}
+    os: [win32, linux]
+
   '@vercel/error-utils@2.2.0':
     resolution: {integrity: sha512-WFWiRxfPzoYWYifaj4thSKvAaZZwUOqD4k5GINRIgZgCiS2E3iAJbWbIsIZmkQdTecWFHcWGA6q48CjisgpOBA==}
 
@@ -9249,6 +9279,11 @@ packages:
   validate-npm-package-name@5.0.1:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  varlock@1.25.0:
+    resolution: {integrity: sha512-SBTZzrqQD+er1dPCJLE/BzHsCHKJj6j3HHuJHq4b+erDB06MS3MZ/EUgXwKkCytYiM97BZyLk8Plf6Qs2ezkGg==}
+    engines: {bun: '>=1.3.3', node: '>=22.3.0'}
+    hasBin: true
 
   verkit@0.5.0:
     resolution: {integrity: sha512-u4J1hr6Y+C/hit34GwL3eIcUf3wngT8TlYUjK7tk0jxydKLAq3sYvifjdTDA6U3KCKRcQCQDGf/srjxfZF3l7g==}
@@ -14549,6 +14584,22 @@ snapshots:
     dependencies:
       valibot: 1.5.0(typescript@5.9.3)
 
+  '@varlock/1password-plugin@2.0.7(varlock@1.25.0)':
+    dependencies:
+      varlock: 1.25.0
+
+  '@varlock/native-helper-darwin@1.24.0':
+    optional: true
+
+  '@varlock/native-helper-linux-arm64@1.24.0':
+    optional: true
+
+  '@varlock/native-helper-linux-x64@1.24.0':
+    optional: true
+
+  '@varlock/native-helper-win32-x64@1.24.0':
+    optional: true
+
   '@vercel/error-utils@2.2.0': {}
 
   '@vercel/frameworks@3.29.0':
@@ -19504,6 +19555,13 @@ snapshots:
       spdx-expression-parse: 3.0.1
 
   validate-npm-package-name@5.0.1: {}
+
+  varlock@1.25.0:
+    optionalDependencies:
+      '@varlock/native-helper-darwin': 1.24.0
+      '@varlock/native-helper-linux-arm64': 1.24.0
+      '@varlock/native-helper-linux-x64': 1.24.0
+      '@varlock/native-helper-win32-x64': 1.24.0
 
   verkit@0.5.0: {}
 

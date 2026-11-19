@@ -39,13 +39,13 @@ Packages are split where a second consumer exists: the app, the Studio, the Netl
 
 ## Other folders
 
-| Path      | What                                                                                                                        | Concept                                                                    |
-| --------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `tools/`  | The SEO baseline and parity gate, the local Netlify-like server, the Docker stack script, mocks, the agent CLI, CI helpers. | [Local development](/systems/local-development.md), [SEO](/systems/seo.md) |
-| `e2e/`    | Playwright: routes, journeys, keyboard, accessibility, redirects, motion, visual regression.                                | [Testing](/systems/testing.md)                                             |
-| `slack/`  | The Slack app manifests: the organisers' bot and the CFP bot, each with a dev variant.                                      | [Slack content agent](/systems/slack-agent.md)                             |
-| `agents/` | Agent playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`).                                               | [Slack content agent](/systems/slack-agent.md)                             |
-| `docs/`   | This bundle.                                                                                                                | [Authoring guide](/conventions/authoring-guide.md)                         |
+| Path      | What                                                                                               | Concept                                                                    |
+| --------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `tools/`  | The SEO baseline and parity gate, the local Netlify-like server, mocks, the agent CLI, CI helpers. | [Local development](/systems/local-development.md), [SEO](/systems/seo.md) |
+| `e2e/`    | Playwright: routes, journeys, keyboard, accessibility, redirects, motion, visual regression.       | [Testing](/systems/testing.md)                                             |
+| `slack/`  | The Slack app manifests: the organisers' bot and the CFP bot, each with a dev variant.             | [Slack content agent](/systems/slack-agent.md)                             |
+| `agents/` | Agent playbooks (`agents/skills/*/SKILL.md`) and roles (`agents/roles/*.md`).                      | [Slack content agent](/systems/slack-agent.md)                             |
+| `docs/`   | This bundle.                                                                                       | [Authoring guide](/conventions/authoring-guide.md)                         |
 
 ## Contract owners
 

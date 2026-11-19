@@ -108,7 +108,7 @@ The production app sends events to zurichjs.com. For a laptop, use a second app 
 2. Basic Information › App-Level Tokens › Generate, with `connections:write`: that is `SLACK_APP_TOKEN` (`xapp-…`).
 3. Create a private test channel and invite **@ZurichJS Bot (dev)**.
 4. In `.env` (git-ignored), set the dev app's `SLACK_APP_TOKEN`, `SLACK_AGENT_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_AGENT_CHANNEL_ID` (the test channel), your own Slack ID in `SLACK_PUBLISHER_IDS` and `SLACK_MEMBERSHIP_APPROVER_IDS`, an Editor `SANITY_AGENT_TOKEN`, `SANITY_DATASET=v2-preview` (never production from a laptop), and the `LLM_*` variables.
-5. Run `pnpm local`. It starts the bridge when `SLACK_APP_TOKEN` is set (`[slack-dev] connected`). Mention **@ZurichJS Bot (dev)** in the test channel.
+5. Run `just up`. It starts the bridge when `SLACK_APP_TOKEN` is set (`[slack-dev] connected`). Mention **@ZurichJS Bot (dev)** in the test channel.
 
 To try membership: join on `localhost:4321/membership` with a test card, resign on the account page, then ask the dev bot "who is resigning?" and press the buttons. Emails land in Mailpit, never in a real inbox.
 

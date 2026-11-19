@@ -19,7 +19,7 @@
  * sponsorships and donations: apps/web/src/pages/api/stripe/webhook.ts) for every
  * event the site handles, on the API version the site pins, and prints
  * STRIPE_WEBHOOK_SECRET (Stripe shows the secret only when the endpoint is created). Locally, `stripe listen`
- * replaces the endpoint (pnpm local).
+ * replaces the endpoint (just up).
  */
 import { priceLookupKey } from '@zurichjs/membership';
 import { CYCLES, TIERS, TIER_KEYS } from '../apps/web/src/lib/membership.ts';

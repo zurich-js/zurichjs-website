@@ -13,6 +13,7 @@
  * Without RESEND_API_KEY / SLACK_WEBHOOK_URL each channel logs a stub line.
  */
 import { postSlack, sendEmail } from '@zurichjs/integrations';
+import { levelList } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { CONTACT_EMAIL, fail, isBot, isEmail, json, methodNotAllowed, readJsonObject, text, type Env } from '../../server/http.ts';
 import { clientKey, rateLimited } from '../../server/rateLimit.ts';
@@ -40,7 +41,7 @@ export function parseInquiry(body: Record<string, unknown>): { ok: true; data: V
   const message = text(body.message, 2000);
   if (message === false) return { ok: false, error: 'Keep the message under 2000 characters, without HTML.', field: 'message' };
   const tier = body.tier === undefined || body.tier === '' ? undefined : body.tier;
-  if (tier !== undefined && !TIERS.includes(tier as never)) return { ok: false, error: 'Choose Basic Member or Supporter.', field: 'tier' };
+  if (tier !== undefined && !TIERS.includes(tier as never)) return { ok: false, error: `Choose ${levelList()}.`, field: 'tier' };
   const cycle = body.billingCycle === undefined || body.billingCycle === '' ? undefined : body.billingCycle;
   if (cycle !== undefined && !BILLING_CYCLES.includes(cycle as never)) return { ok: false, error: 'Choose quarterly or yearly.', field: 'billingCycle' };
   return {

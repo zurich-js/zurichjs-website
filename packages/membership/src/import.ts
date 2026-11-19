@@ -4,17 +4,21 @@
  *
  *   kind,name,organisation,email,level,cycle,category,joined_at,paid_until,notes
  *
- * kind: person | organisation (empty = person). level: basic | supporter.
+ * kind: person | organisation (empty = person). level: basic | supporter | enthusiast | advocate.
  * cycle: quarterly | yearly. category: passive | active
  * (empty = passive). Dates are YYYY-MM-DD; paid_until is required.
+ * Optional columns for the member register: birth_date (YYYY-MM-DD), street, postal_code, city, phone.
  * Rows become `imported_manual` members paying manually (cash/bank). Before they can switch
  * to automatic payment they accept the current membership terms in the portal.
  */
-import { isCycle, isLevel } from './levels.ts';
+import { parseContactDetails } from './details.ts';
+import { LEVEL_KEYS, isCycle, isLevel } from './levels.ts';
 import { normaliseEmail } from './store.ts';
 import type { Category, MemberKind, NewMember } from './types.ts';
 
 export const IMPORT_COLUMNS = ['kind', 'name', 'organisation', 'email', 'level', 'cycle', 'category', 'joined_at', 'paid_until', 'notes'] as const;
+/** May be left out of the file, or empty in a row. */
+export const OPTIONAL_IMPORT_COLUMNS = ['birth_date', 'street', 'postal_code', 'city', 'phone'] as const;
 
 export interface ImportRow {
   line: number;
@@ -76,7 +80,7 @@ export function parseImport(text: string): { rows: ImportRow[]; problems: Import
   const seen = new Map<string, number>();
   lines.forEach((cells, i) => {
     const line = i + 2;
-    const get = (c: (typeof IMPORT_COLUMNS)[number]) => (cells[cols.indexOf(c)] ?? '').trim();
+    const get = (c: (typeof IMPORT_COLUMNS)[number] | (typeof OPTIONAL_IMPORT_COLUMNS)[number]) => (cols.includes(c) ? (cells[cols.indexOf(c)] ?? '') : '').trim();
     const bad = (message: string) => problems.push({ line, message });
     const before = problems.length;
 
@@ -91,7 +95,7 @@ export function parseImport(text: string): { rows: ImportRow[]; problems: Import
     else if (seen.has(email)) bad(`${email} is already on line ${seen.get(email)}.`);
     else seen.set(email, line);
     const level = get('level').toLowerCase();
-    if (!isLevel(level)) bad(`level must be basic or supporter, not "${get('level')}".`);
+    if (!isLevel(level)) bad(`level must be ${LEVEL_KEYS.slice(0, -1).join(', ')} or ${LEVEL_KEYS.at(-1)}, not "${get('level')}".`);
     const cycle = get('cycle').toLowerCase();
     if (!isCycle(cycle)) bad(`cycle must be quarterly or yearly, not "${get('cycle')}".`);
     const category = (get('category').toLowerCase() || 'passive') as Category;
@@ -103,7 +107,13 @@ export function parseImport(text: string): { rows: ImportRow[]; problems: Import
     else if (!isDate(paidUntil)) bad(`paid_until "${paidUntil}" is not a date like 2026-12-31.`);
     if (joinedAt && paidUntil && isDate(joinedAt) && isDate(paidUntil) && paidUntil < joinedAt) bad('paid_until is before joined_at.');
 
-    if (problems.length > before) return;
+    const contact = parseContactDetails(
+      { birthDate: get('birth_date'), street: get('street'), postalCode: get('postal_code'), city: get('city'), phone: get('phone') },
+      { kind: kind === 'organisation' ? 'organisation' : 'person', required: false },
+    );
+    if (!contact.ok) bad(contact.error);
+
+    if (problems.length > before || !contact.ok) return;
     rows.push({
       line,
       member: {
@@ -120,6 +130,7 @@ export function parseImport(text: string): { rows: ImportRow[]; problems: Import
         paidUntil,
         paymentMode: 'manual',
         notes: get('notes') || null,
+        ...contact.value,
       },
     });
   });

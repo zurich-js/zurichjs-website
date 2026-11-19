@@ -1,3 +1,4 @@
+import { NO_CONTACT_DETAILS } from './details.ts';
 import { checkTransition, TransitionError } from './state.ts';
 import type { Actor, Certificate, EndedReason, Member, MemberEvent, MemberPatch, NewMember, Status } from './types.ts';
 
@@ -126,6 +127,7 @@ export function memoryStore(opts: { now?: () => Date; id?: () => string } = {}):
       if ([...members.values()].some((m) => m.email === email)) throw new DuplicateEmail(email);
       const at = now().toISOString();
       const m: Member = {
+        ...NO_CONTACT_DETAILS,
         userId: null,
         stripeCustomerId: null,
         stripeSubscriptionId: null,

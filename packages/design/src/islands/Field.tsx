@@ -3,7 +3,7 @@ import type { ComponentChildren, InputHTMLAttributes, SelectHTMLAttributes, Text
 import { useId } from 'preact/hooks';
 import { cx, motion, optionClass, optionInput } from '../recipes.ts';
 
-const control = 'rounded-field border px-3.5 text-body font-normal bg-white text-black w-full box-border transition-colors';
+const control = 'rounded-field border px-3.5 text-body font-normal bg-white text-black w-full box-border transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 const border = (bad?: boolean) => (bad ? 'border-danger' : 'border-grey-line');
 
 interface Wrap {

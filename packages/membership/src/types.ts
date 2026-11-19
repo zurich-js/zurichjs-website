@@ -3,13 +3,14 @@
  * Field names follow the Supabase tables in supabase/migrations, in camelCase.
  * Bylaws references: Statuten approved on 23rd May 2025 (docs/domains/membership/overview.md).
  */
+import type { ContactDetails } from './details.ts';
 
 /**
- * The levels that exist today, one to one with the fees on /membership. The bylaws (Art. 4)
- * also name Enthusiast and Advocate; they do not exist yet (owner, 6th November 2026).
- * Adding one later is a migration (`alter type member_level add value`) plus a row in levels.ts.
+ * The four levels of the bylaws (Art. 4), one to one with the fees on /membership. Enthusiast
+ * and Advocate were added on 19th November 2026 (owner). Adding one is a migration
+ * (`alter type member_level add value`) plus a row in levels.ts.
  */
-export type Level = 'basic' | 'supporter';
+export type Level = 'basic' | 'supporter' | 'enthusiast' | 'advocate';
 
 export type Cycle = 'quarterly' | 'yearly';
 
@@ -49,7 +50,8 @@ export interface Actor {
   id: string;
 }
 
-export interface Member {
+/** Date of birth, address and phone (details.ts) are part of the member. */
+export interface Member extends ContactDetails {
   id: string;
   /** The Better Auth user that signs in as this member; null for imported members until their first sign-in. */
   userId: string | null;
@@ -81,13 +83,13 @@ export interface Member {
 /** A new member record, before the store assigns id and timestamps. */
 export type NewMember = Omit<
   Member,
-  'id' | 'createdAt' | 'updatedAt' | 'userId' | 'endedReason' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'resignedAt' | 'resignationConfirmedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'userId' | 'endedReason' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'resignedAt' | 'resignationConfirmedAt' | keyof ContactDetails
 > &
-  Partial<Pick<Member, 'userId' | 'stripeCustomerId' | 'stripeSubscriptionId'>>;
+  Partial<Pick<Member, 'userId' | 'stripeCustomerId' | 'stripeSubscriptionId'> & ContactDetails>;
 
 /** Fields that may change without a status transition. Status, Stripe ids and the end reason are not here on purpose. */
 export type MemberPatch = Partial<
-  Pick<Member, 'userId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt'>
+  Pick<Member, 'userId' | 'kind' | 'name' | 'organisationName' | 'level' | 'cycle' | 'category' | 'paidUntil' | 'paymentMode' | 'notes' | 'joinedAt' | keyof ContactDetails>
 >;
 
 /** One row of the append-only audit log (`member_events`). */

@@ -15,7 +15,7 @@ Source: `packages/membership` (`@zurichjs/membership`: levels, status machine, `
 **Anyone can join** (bylaws Art. 4: any person who supports the goals may become a member). Nobody approves them, and there is no declaration to sign.
 
 1. **Sign in** on `/membership/account` with an emailed link (Better Auth with the magic-link plugin; sessions are httpOnly cookies). Sign-in links are rate limited to 3 per 10 minutes per address, in the database.
-2. **Join:** person or organisation, Basic Member or Supporter, quarterly or yearly (no other cycles), and a tick for the **membership terms** (`/membership/terms`, based on the bylaws, approved in the version of 11th November 2026; the accepted version is recorded).
+2. **Join:** person or organisation, one of the four levels, quarterly or yearly (no other cycles), their details for the **member register** (below), and a tick for the **membership terms** (`/membership/terms`, based on the bylaws; version `2026-11-19`, which lists the four levels' fees; the accepted version is recorded).
 3. **Pay** in Stripe Checkout (a subscription). The first payment makes them active.
 4. **Certificate of membership** for every paid term: a numbered PDF, signed by Faris Aziz, President of the Board, emailed (welcome or renewal) and downloadable in the portal.
 5. **Portal** (the account page): status, paid until, certificates, and the Stripe billing portal for payment method and invoices (no cancelling and no plan switching there). **Changing level or cycle** is on the account page and applies only from the next renewal (owner): a Stripe subscription schedule keeps the current term as paid and starts the new price at the renewal, so nothing is charged or prorated now. A pending switch shows on the account page and can be taken back; resigning drops it. Members paying manually (cash/bank) set up automatic payment first.
@@ -27,7 +27,7 @@ Source: `packages/membership` (`@zurichjs/membership`: levels, status machine, `
 
 ## Levels and fees
 
-Two levels, one to one with the site: Basic Member and Supporter. Art. 4 also names Enthusiast and Advocate; they do not exist yet and are not modelled (owner, 6th November 2026). Adding one later is a migration (`alter type member_level add value`) and a row in `packages/membership/src/levels.ts`.
+Four levels, one to one with the site and with Art. 4: Basic Member, Supporter, Enthusiast and Advocate (Enthusiast and Advocate added by the owner on 19th November 2026). Adding a level is a migration (`alter type member_level add value`), a row in `packages/membership/src/levels.ts` and the fee table, then `pnpm membership:stripe-setup --apply` ([Membership payments](/domains/membership/api.md)).
 
 Fees are one table, `apps/web/src/lib/membership.ts`, used by the page, the Stripe setup script and `/api/verein-inquiry`; change fees or benefits only there.
 
@@ -35,8 +35,12 @@ Fees are one table, `apps/web/src/lib/membership.ts`, used by the page, the Stri
 | ------------ | --------- | ------- | -------------------------- |
 | Basic Member | CHF 50    | CHF 175 | CHF 200                    |
 | Supporter    | CHF 75    | CHF 250 | CHF 300                    |
+| Enthusiast   | CHF 100   | CHF 400 | CHF 400                    |
+| Advocate     | CHF 150   | CHF 600 | CHF 600                    |
 
-The monthly option is gone (owner, 3rd November 2026). The page says quarterly costs the most over a year; a unit test keeps that true. The benefit wording comes from the old production page; what each level may vote on is an open question ([Content sources](/reference/content-sources.md)).
+The monthly option is gone (owner, 3rd November 2026). Basic and Supporter cost less paying yearly; Enthusiast and Advocate cost the same either way, so their cards say "The same as paying quarterly." instead of a saving (`cycleNote`, unit-tested).
+
+Each level includes everything in the level below. From Enthusiast up, perks scale (owner, 19th November 2026): a yearly voucher for ZurichJS workshops (Enthusiast CHF 50, Advocate CHF 100), and first dibs on partner conference tickets and discounts when partners offer them, Advocates before Enthusiasts. Partner offers are ad hoc. No free or discounted ZurichJS Conf tickets and no speaker dinner are promised. Supporter has priority event access and voting rights; "Free or discounted workshops" was removed from it. The benefit wording comes from the old production page; what each level may vote on is an open question ([Content sources](/reference/content-sources.md)).
 
 ## Status machine
 
@@ -80,9 +84,17 @@ Templates are plain TypeScript in `packages/emails`, styled only from the design
 
 **Layout, from the brand rules:** black header with the logo, white content, black footer with the association name, registered office and a link to `/membership/account`; one yellow pill button per email; a 24px summary box; no kickers, dividers or gradients; green only on a success line, red only for a payment problem. Figtree is loaded from `/fonts/figtree-var.woff2` (a test keeps it equal to the design package's file) and falls back to Helvetica and Arial where clients ignore web fonts. The logo is a PNG rendered from the white wordmark, since email clients do not show SVG.
 
+## Member register
+
+What the association keeps about each member (owner, 19th November 2026): date of birth, street and number, postcode, city and phone (`packages/membership/src/details.ts`; columns `birth_date`, `street`, `postal_code`, `city`, `phone` on `members`, all nullable).
+
+- **Joining online** asks for all five; an organisation gives its address and phone, with no date of birth. The browser and the API check them with the same rules: a date of birth from 1900 to yesterday, a postcode of 3 to 10 letters, digits, spaces or dashes (members abroad too), a phone number with 6 to 15 digits and at most 30 characters.
+- **Existing members:** the board backfills them in the admin area ([Membership frontend](/domains/membership/frontend.md)), where every field is optional. The CSV import takes them as optional columns; the CSV export includes them.
+- **Where they go:** the database only. Never to Stripe, Slack, emails or the Slack agent; the audit log names the fields that changed, never their values.
+
 ## Data retention
 
-Member data is kept for one year after the membership ends, then anonymised by the database function `member_anonymise`: personal fields, notes and Stripe ids are removed, and the row stays as a count with its level and dates. The function refuses before a year has passed. Stripe keeps the payment records for the accounts. The scheduled job that calls the function is not built (Spec below).
+Member data is kept for one year after the membership ends, then anonymised by the database function `member_anonymise`: personal fields (including the member register), notes and Stripe ids are removed, and the row stays as a count with its level and dates. The function refuses before a year has passed. Stripe keeps the payment records for the accounts. The scheduled job that calls the function is not built (Spec below).
 
 ## How the bylaws shape the rules
 
@@ -101,6 +113,8 @@ The Swiss JavaScript Group bylaws (Statuten, approved at the founding meeting on
 
 - **Board:** what the "basic discount" is, and which paid events are included each year (Art. 4).
 - **Accounting records:** Swiss law most likely requires keeping bookkeeping records for 10 years (OR Art. 958f), longer than the one-year member data rule. Stripe's invoices and payouts are those records, so the anonymisation never touches Stripe. To confirm with whoever keeps the books.
+- **Workshop vouchers:** how they are issued and redeemed once workshops are back, and whether an unused voucher expires with the membership year (board).
+- **Privacy policy:** it should name the member register fields and why the association keeps them (owner; `apps/web/src/content/policies`).
 - **Voting wording** on `/membership`: Basic says "vote on small decisions" without the attendance condition; change only with the owner.
 
 ## Related concepts

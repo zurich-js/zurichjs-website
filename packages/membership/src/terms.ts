@@ -9,7 +9,8 @@
  * start or switch to automatic payment.
  */
 export const TERMS = {
-  version: '2026-11-11',
+  // 2026-11-19: the fee list names Enthusiast and Advocate.
+  version: '2026-11-19',
   bylawsVersion: '2025-05-23',
   path: '/membership/terms',
 } as const;

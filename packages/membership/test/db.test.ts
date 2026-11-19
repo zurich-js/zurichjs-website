@@ -55,6 +55,10 @@ d('membership database', () => {
       expect(tables).toContain(t);
   });
 
+  it('stores all four levels, in the order of levels.ts', () => {
+    expect(pgdb.sql(`select string_agg(v::text, ',' order by v) from unnest(enum_range(null::member_level)) v`)).toBe('basic,supporter,enthusiast,advocate');
+  });
+
   describe('the Postgres store', () => {
     it('creates a member linked to the sign-in user, with an audit row', async () => {
       user('u-ada', 'ada@example.com');
@@ -107,6 +111,15 @@ d('membership database', () => {
       expect(u).toMatchObject({ paidUntil: '2027-11-10', notes: 'Paid by card' });
     });
 
+    it('keeps the member register details: date of birth, address and phone', async () => {
+      const m = (await store.byEmail('ada@example.com'))!;
+      expect(m).toMatchObject({ birthDate: null, street: null, postalCode: null, city: null, phone: null });
+      const u = await store.update(m.id, { birthDate: '1990-05-23', street: 'Alderstrasse 30', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' }, board);
+      expect(u).toMatchObject({ birthDate: '1990-05-23', street: 'Alderstrasse 30', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' });
+      expect((await store.update(m.id, { phone: null }, board)).phone).toBeNull();
+      expect(pgdb.fails(`select member_update('${m.id}', '{"birth_date":"1850-01-01"}', 'board', 'U1')`)).toMatch(/check constraint/);
+    });
+
     it('switches a person to an organisation only together with its name', async () => {
       const m = (await store.byEmail('ada@example.com'))!;
       await expect(store.update(m.id, { kind: 'organisation' }, board)).rejects.toThrow(/organisation_has_name/);
@@ -143,7 +156,19 @@ d('membership database', () => {
       user('u-gina', 'gone@example.com');
       pgdb.sql(`insert into session (id, "expiresAt", token, "updatedAt", "userId") values ('s1', now() + interval '1 day', 'tok', now(), 'u-gina')`);
       const m = await store.create(
-        { ...person, kind: 'organisation', organisationName: 'Acme AG', email: 'gone@example.com', name: 'Gina', notes: 'Prefers German', userId: 'u-gina' },
+        {
+          ...person,
+          kind: 'organisation',
+          organisationName: 'Acme AG',
+          email: 'gone@example.com',
+          name: 'Gina',
+          notes: 'Prefers German',
+          userId: 'u-gina',
+          street: 'Bahnhofstrasse 1',
+          postalCode: '8001',
+          city: 'Zurich',
+          phone: '+41 44 000 00 00',
+        },
         { kind: 'member', id: 'u-gina' },
       );
       id = m.id;
@@ -151,6 +176,10 @@ d('membership database', () => {
       await store.transition(id, { to: 'active', actor: stripe });
       await store.issueCertificate(id, { periodStart: '2026-01-01', periodEnd: '2027-01-01', stripeInvoiceId: 'in_gone' }, stripe);
       await store.transition(id, { to: 'ended', actor: board, reason: 'resigned' });
+    });
+
+    it('stores the details given when the member was created', async () => {
+      expect(await store.get(id)).toMatchObject({ street: 'Bahnhofstrasse 1', postalCode: '8001', city: 'Zurich', phone: '+41 44 000 00 00', birthDate: null });
     });
 
     it('dates the end of a membership', () => {
@@ -171,6 +200,11 @@ d('membership database', () => {
         kind: 'person',
         organisationName: null,
         notes: null,
+        birthDate: null,
+        street: null,
+        postalCode: null,
+        city: null,
+        phone: null,
         userId: null,
         stripeCustomerId: null,
         level: 'supporter',

@@ -30,7 +30,16 @@ import { pathToFileURL } from 'node:url';
 const uid = () => randomBytes(6).toString('hex');
 
 /** Membership fees in rappen by lookup key (apps/web/src/lib/membership.ts). */
-export const MEMBER_FEES = { member_basic_quarterly: 5000, member_basic_yearly: 17500, member_supporter_quarterly: 7500, member_supporter_yearly: 25000 };
+export const MEMBER_FEES = {
+  member_basic_quarterly: 5000,
+  member_basic_yearly: 17500,
+  member_supporter_quarterly: 7500,
+  member_supporter_yearly: 25000,
+  member_enthusiast_quarterly: 10000,
+  member_enthusiast_yearly: 40000,
+  member_advocate_quarterly: 15000,
+  member_advocate_yearly: 60000,
+};
 
 const html = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 

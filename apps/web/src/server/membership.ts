@@ -6,11 +6,12 @@
  * assets.
  */
 import type { MembershipProps } from '@zurichjs/emails';
-import { label, levelInfo, resignationState, type Certificate, type Member } from '@zurichjs/membership';
+import { label, levelInfo, resignationState, type Certificate, type ContactDetails, type Member } from '@zurichjs/membership';
 import { CYCLES, TIERS, chf, feeLabel } from '../lib/membership.ts';
 import { lastDay, longDate } from './dates.ts';
 
-export interface MemberView {
+/** The member's own view; includes their register details so the join form can fill them in again. */
+export interface MemberView extends ContactDetails {
   name: string;
   organisationName: string | null;
   level: Member['level'];
@@ -47,6 +48,11 @@ export const memberView = (m: Member): MemberView => ({
   canManagePayment: !!m.stripeCustomerId,
   invited: m.source === 'invited',
   resignation: resignationOf(m),
+  birthDate: m.birthDate,
+  street: m.street,
+  postalCode: m.postalCode,
+  city: m.city,
+  phone: m.phone,
 });
 
 const resignationOf = (m: Member): MemberView['resignation'] => {

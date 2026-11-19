@@ -5,18 +5,21 @@
  *
  * Members pay quarterly or yearly (owner, 3rd November 2026: the monthly option
  * is gone). `perMonth` is only the "That's CHF … a month" line on each card.
+ *
+ * Enthusiast and Advocate (bylaws Art. 4) were added by the owner on 19th November 2026; each
+ * level's benefits build on the level below (docs/reference/decisions/studio-membership-design.md).
  */
-export type TierKey = 'basic' | 'supporter';
+export type TierKey = 'basic' | 'supporter' | 'enthusiast' | 'advocate';
 export type Cycle = 'quarterly' | 'yearly';
-export type TierName = 'Basic Member' | 'Supporter';
+export type TierName = 'Basic Member' | 'Supporter' | 'Enthusiast' | 'Advocate';
 
 export interface Tier {
   name: TierName;
-  tagline: string;
+  tagline?: string;
   fees: Record<Cycle, number>;
   /** What membership comes to per month, for the comparison line. */
   perMonth: number;
-  /** "That's about…" comparisons (owner's copy). */
+  /** "That's about…" comparisons (owner's copy). Empty: the card shows only the monthly figure. */
   comparisons: string[];
   /** Heading over the benefits, when they build on another tier. */
   benefitsTitle?: string;
@@ -40,13 +43,45 @@ export const TIERS: Record<TierKey, Tier> = {
     perMonth: 21,
     comparisons: ['still cheaper than Netflix in 4K', 'one takeaway lunch', '30% less than what we pay for meetup.com'],
     benefitsTitle: 'Everything in Basic, and you also get',
-    benefits: ['Exclusive events access', 'Free or discounted workshops', 'Voting rights'],
+    benefits: ['Priority event access', 'Voting rights'],
+  },
+  enthusiast: {
+    name: 'Enthusiast',
+    tagline: 'For regulars who never miss a meetup.',
+    fees: { quarterly: 100, yearly: 400 },
+    perMonth: 33,
+    comparisons: ['a cinema ticket and popcorn in Zurich', 'a pizza and a drink in Zurich', 'two AI tool subscriptions'],
+    benefitsTitle: 'Everything in Supporter, and you also get',
+    benefits: [
+      'A CHF 50 voucher a year for ZurichJS workshops',
+      'First dibs on partner conference tickets and discounts, when partners offer them',
+      'Early access to ZurichJS Conf tickets',
+      'Propose a topic for an upcoming meetup',
+    ],
+  },
+  advocate: {
+    name: 'Advocate',
+    tagline: 'For the people who keep ZurichJS going.',
+    fees: { quarterly: 150, yearly: 600 },
+    perMonth: 50,
+    comparisons: ['dinner for two at a Zurich pizzeria', 'more than half a monthly ZVV pass for the city', 'less than a month at a Zurich gym'],
+    benefitsTitle: 'Everything in Enthusiast, and you also get',
+    benefits: [
+      'A CHF 100 workshop voucher a year, instead of CHF 50',
+      'First pick of partner conference tickets and discounts, ahead of Enthusiasts',
+      'Thanks by name in the meetup opening slides, if you like',
+    ],
   },
 };
 
 export const TIER_KEYS = Object.keys(TIERS) as TierKey[];
 
-export const CYCLES: { value: Cycle; label: string; unit: string; perYear: number }[] = [
+export const CYCLES: {
+  value: Cycle;
+  label: string;
+  unit: string;
+  perYear: number;
+}[] = [
   { value: 'quarterly', label: 'Quarterly', unit: 'quarter', perYear: 4 },
   { value: 'yearly', label: 'Yearly', unit: 'year', perYear: 1 },
 ];
@@ -60,6 +95,16 @@ export const feeLabel = (t: Tier, c: Cycle) => `${chf(t.fees[c])} a ${cycleOf(c)
 
 /** What a year costs on a cycle: 4 × 50 = 200. */
 export const perYear = (t: Tier, c: Cycle) => Math.round(t.fees[c] * cycleOf(c).perYear * 100) / 100;
+
+/**
+ * The line under the fee on each card. Enthusiast and Advocate cost the same either way
+ * (4 × 100 = 400, 4 × 150 = 600), so they get no "Save CHF 0" line.
+ */
+export function cycleNote(t: Tier, c: Cycle): string {
+  const saving = perYear(t, 'quarterly') - perYear(t, 'yearly');
+  if (c === 'quarterly') return `${chf(perYear(t, 'quarterly'))} over a year.`;
+  return saving > 0 ? `Save ${chf(saving)} compared with paying quarterly.` : 'The same as paying quarterly.';
+}
 
 /** The tier with this display name (what the form sends and the API accepts). */
 export const tierByName = (name: string): Tier | undefined => TIER_KEYS.map((k) => TIERS[k]).find((t) => t.name === name);
@@ -83,8 +128,14 @@ export type ResignReason = (typeof RESIGN_REASONS)[number]['value'];
 export const RESIGN_NOTE_MAX = 1000;
 
 /** What the member told us, cleaned: known reasons only, a trimmed note. Never a reason to refuse. */
-export function parseResignReasons(body: unknown): { reasons: ResignReason[]; note: string } {
-  const b = (body && typeof body === 'object' ? body : {}) as { reasons?: unknown; note?: unknown };
+export function parseResignReasons(body: unknown): {
+  reasons: ResignReason[];
+  note: string;
+} {
+  const b = (body && typeof body === 'object' ? body : {}) as {
+    reasons?: unknown;
+    note?: unknown;
+  };
   const known = new Set<string>(RESIGN_REASONS.map((r) => r.value));
   const reasons = Array.isArray(b.reasons) ? [...new Set(b.reasons.filter((r): r is ResignReason => typeof r === 'string' && known.has(r)))] : [];
   const note = typeof b.note === 'string' ? b.note.trim().slice(0, RESIGN_NOTE_MAX) : '';
@@ -101,5 +152,8 @@ export function manualTerm(startMonth: string, cycle: Cycle): { start: string; e
   const [y, m] = startMonth.split('-').map(Number);
   const start = new Date(Date.UTC(y!, m! - 1, 1));
   const end = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + (cycle === 'yearly' ? 12 : 3), 1));
-  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+  return {
+    start: start.toISOString().slice(0, 10),
+    end: end.toISOString().slice(0, 10),
+  };
 }

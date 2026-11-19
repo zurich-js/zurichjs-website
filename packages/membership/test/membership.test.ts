@@ -13,6 +13,8 @@ import {
   memoryStore,
   parseCsv,
   parseImport,
+  LEVEL_KEYS,
+  levelList,
   priceLookupKey,
   type NewMember,
   type Status,
@@ -52,6 +54,10 @@ describe('levels', () => {
     expect(atLeast('supporter', 'basic')).toBe(true);
     expect(atLeast('supporter', 'supporter')).toBe(true);
     expect(atLeast('basic', 'supporter')).toBe(false);
+    expect(atLeast('advocate', 'enthusiast')).toBe(true);
+    expect(atLeast('enthusiast', 'advocate')).toBe(false);
+    expect(LEVEL_KEYS).toEqual(['basic', 'supporter', 'enthusiast', 'advocate']);
+    expect(levelList()).toBe('Basic Member, Supporter, Enthusiast or Advocate');
     expect(priceLookupKey('basic', 'quarterly')).toBe('member_basic_quarterly');
   });
 });
@@ -205,6 +211,20 @@ describe('import', () => {
     expect(rows[1]!.member).toMatchObject({ kind: 'organisation', organisationName: 'Acme AG', category: 'passive', joinedAt: null });
   });
 
+  it('reads the optional member register columns, and checks them', () => {
+    const { rows, problems } = parseImport(
+      [
+        `${header},birth_date,street,postal_code,city,phone`,
+        'person,Ada Lovelace,,ada@example.com,supporter,yearly,,,2026-05-22,,1990-05-23,Alderstrasse 30,8008,Zurich,+41 79 123 45 67',
+        'person,Grace,,grace@example.com,basic,yearly,,,2026-05-22,,,,,,',
+        'person,Bad,,bad@example.com,basic,yearly,,,2026-05-22,,23.05.1990,,,,',
+      ].join('\n'),
+    );
+    expect(rows[0]!.member).toMatchObject({ birthDate: '1990-05-23', street: 'Alderstrasse 30', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' });
+    expect(rows[1]!.member).toMatchObject({ birthDate: null, street: null, phone: null });
+    expect(problems).toEqual([{ line: 4, message: 'Enter the date of birth as a date, like 1990-05-23.' }]);
+  });
+
   it('reports every problem with its line, and imports nothing from a bad row', () => {
     const { rows, problems } = parseImport(
       [
@@ -219,7 +239,7 @@ describe('import', () => {
     expect(problems.filter((p) => p.line === 2).map((p) => p.message)).toEqual([
       'name is empty.',
       'email "" is not an email address.',
-      'level must be basic or supporter, not "gold".',
+      'level must be basic, supporter, enthusiast or advocate, not "gold".',
       'cycle must be quarterly or yearly, not "monthly".',
       'joined_at "2025-02-30" is not a date like 2025-05-23.',
       'paid_until is empty: say until when they have paid.',

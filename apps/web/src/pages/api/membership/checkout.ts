@@ -3,7 +3,8 @@
  * Checkout (owner, 10th November 2026: anyone can join, no approval).
  *
  * POST /api/membership/checkout   (session cookie)
- *   JSON { kind?, name, organisationName?, level, cycle, termsVersion }   new or returning member
+ *   JSON { kind?, name, organisationName?, level, cycle, termsVersion,       new or returning member
+ *          birthDate (people only), street, postalCode, city, phone }       the member register (packages/membership/src/details.ts)
  *   JSON { termsVersion }                                                 imported member switching to automatic payment
  *   200 { ok: true, url }   the Stripe Checkout page
  *   400 { ok: false, error, field? }   invalid fields, or the terms not accepted (termsVersion must be the current one)
@@ -15,7 +16,21 @@
  * payment (Stripe webhook). An imported member is not charged before their
  * paid period ends.
  */
-import { DuplicateEmail, TERMS, canJoin, canStartAutomaticPayment, isCycle, isLevel, type Cycle, type Level, type Member, type MemberKind } from '@zurichjs/membership';
+import {
+  DuplicateEmail,
+  TERMS,
+  canJoin,
+  canStartAutomaticPayment,
+  isCycle,
+  isLevel,
+  levelList,
+  parseContactDetails,
+  type ContactDetails,
+  type Cycle,
+  type Level,
+  type Member,
+  type MemberKind,
+} from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../server/http.ts';
 import { AlreadySubscribed, createCheckout } from '../../../server/membership-stripe.ts';
@@ -24,7 +39,7 @@ import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 
 export const prerender = false;
 
-export interface Choice {
+export interface Choice extends ContactDetails {
   kind: MemberKind;
   name: string;
   organisationName: string | null;
@@ -52,9 +67,12 @@ export function parseChoice(body: Record<string, unknown>): Parsed<Choice> {
   const org = text(body.organisationName, 200);
   if (org === false) return { ok: false, error: 'Keep the organisation name under 200 characters, without HTML.', field: 'organisationName' };
   if (kind === 'organisation' && !org) return { ok: false, error: 'Add the organisation’s name.', field: 'organisationName' };
-  if (!isLevel(body.level)) return { ok: false, error: 'Choose Basic Member or Supporter.', field: 'level' };
+  if (!isLevel(body.level)) return { ok: false, error: `Choose ${levelList()}.`, field: 'level' };
   if (!isCycle(body.cycle)) return { ok: false, error: 'Choose quarterly or yearly.', field: 'cycle' };
-  return { ok: true, data: { kind, name, organisationName: kind === 'organisation' ? (org as string) : null, level: body.level, cycle: body.cycle } };
+  // The member register (owner, 19th November 2026): people give all five, organisations no date of birth.
+  const contact = parseContactDetails(body, { kind, required: true });
+  if (!contact.ok) return contact;
+  return { ok: true, data: { kind, name, organisationName: kind === 'organisation' ? (org as string) : null, level: body.level, cycle: body.cycle, ...contact.value } };
 }
 
 /** Checkout's URL, or 409 when the member already has a membership subscription (never a second one). */
@@ -95,7 +113,7 @@ export const handleCheckout = (request: Request, deps: RouteDeps = {}) => {
       try {
         if (member) {
           // An earlier checkout that was not finished, or a membership that ended: same record.
-          m = await store.update(member.id, { kind: c.kind, name: c.name, organisationName: c.organisationName, level: c.level, cycle: c.cycle, paymentMode: 'automatic' }, actor);
+          m = await store.update(member.id, { ...c, paymentMode: 'automatic' }, actor);
           if (m.status === 'ended') m = await store.transition(m.id, { from: 'ended', to: 'pending', actor });
         } else {
           m = await store.create(

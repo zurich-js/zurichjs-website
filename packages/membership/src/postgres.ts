@@ -34,6 +34,11 @@ export interface MemberRow {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   notes: string | null;
+  birth_date: string | Date | null;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  phone: string | null;
   resigned_at: string | Date | null;
   resignation_confirmed_at: string | Date | null;
   created_at: string | Date;
@@ -91,6 +96,11 @@ export const fromRow = (r: MemberRow): Member => ({
   stripeCustomerId: r.stripe_customer_id,
   stripeSubscriptionId: r.stripe_subscription_id,
   notes: r.notes,
+  birthDate: day(r.birth_date),
+  street: r.street,
+  postalCode: r.postal_code,
+  city: r.city,
+  phone: r.phone,
   resignedAt: r.resigned_at ? iso(r.resigned_at) : null,
   resignationConfirmedAt: r.resignation_confirmed_at ? iso(r.resignation_confirmed_at) : null,
   createdAt: iso(r.created_at),
@@ -120,6 +130,11 @@ const PATCH_COLUMNS: Record<keyof MemberPatch, string> = {
   paymentMode: 'payment_mode',
   notes: 'notes',
   joinedAt: 'joined_at',
+  birthDate: 'birth_date',
+  street: 'street',
+  postalCode: 'postal_code',
+  city: 'city',
+  phone: 'phone',
 };
 
 export const toPatchRow = (patch: MemberPatch): Record<string, unknown> =>
@@ -187,6 +202,11 @@ export function postgresStore(db: Queryable): MemberStore {
           payment_mode: m.paymentMode,
           notes: m.notes,
           user_id: m.userId ?? null,
+          birth_date: m.birthDate ?? null,
+          street: m.street ?? null,
+          postal_code: m.postalCode ?? null,
+          city: m.city ?? null,
+          phone: m.phone ?? null,
         }),
         actor.kind,
         actor.id,

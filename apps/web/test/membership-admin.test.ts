@@ -9,7 +9,7 @@ import { handleAdminExport } from '../src/pages/api/membership/admin/export.csv.
 import { handleImport } from '../src/pages/api/membership/admin/import.ts';
 import { handleAdminLogin } from '../src/pages/api/membership/admin/login.ts';
 import { handleAdminLogout } from '../src/pages/api/membership/admin/logout.ts';
-import { handleAdminMember } from '../src/pages/api/membership/admin/members/[id]/index.ts';
+import { handleAdminMember, handleAdminMemberDetails } from '../src/pages/api/membership/admin/members/[id]/index.ts';
 import { handleAdminConfirmResignation } from '../src/pages/api/membership/admin/members/[id]/confirm-resignation.ts';
 import { handleAdminResign } from '../src/pages/api/membership/admin/members/[id]/resign.ts';
 import { handleAdminUndoResignation } from '../src/pages/api/membership/admin/members/[id]/undo-resignation.ts';
@@ -180,6 +180,23 @@ describe('admin API', () => {
     expect(body.termsVersion).toBe('2026-11-10');
     expect(body.events.map((e) => e.type)).toEqual(['terms_accepted', 'created']);
     expect((await handleAdminMember(asAdmin('/api/membership/admin/members/nope'), 'nope', { env, store })).status).toBe(404);
+  });
+
+  it('backfills the member register details: only the fields sent, an empty one clears it', async () => {
+    const patch = (body: unknown, origin?: string | null) =>
+      handleAdminMemberDetails(asAdmin(`/api/membership/admin/members/${id}`, { method: 'PATCH', body, origin }), id, { env, store });
+    expect((await patch({ city: 'Zurich' }, 'https://evil.example')).status).toBe(403);
+    const res = await patch({ birthDate: '1990-12-10', street: ' Alderstrasse  30 ', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' });
+    expect(res.status).toBe(200);
+    expect((await res.json()).member).toMatchObject({ birthDate: '1990-12-10', street: 'Alderstrasse 30', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' });
+    expect((await patch({ phone: '' })).status).toBe(200);
+    expect(await store.get(id)).toMatchObject({ phone: null, city: 'Zurich', birthDate: '1990-12-10' });
+    expect(await (await patch({ postalCode: 'x' })).json()).toMatchObject({ field: 'postalCode', error: 'Enter a postcode like 8008.' });
+    expect((await patch({})).status).toBe(400);
+    expect((await handleAdminMemberDetails(asAdmin('/api/membership/admin/members/nope', { method: 'PATCH', body: { city: 'Bern' } }), 'nope', { env, store })).status).toBe(404);
+    // The audit log names the fields, never the values.
+    const updated = (await store.events(id)).filter((e) => e.type === 'updated');
+    expect(JSON.stringify(updated)).not.toContain('Alderstrasse');
   });
 
   it('confirms a resignation of a member who paid manually (ends now), and only for resigning members', async () => {
@@ -383,7 +400,9 @@ describe('admin API', () => {
     expect(res.headers.get('content-type')).toBe('text/csv; charset=utf-8');
     expect(res.headers.get('content-disposition')).toMatch(/^attachment; filename="zurichjs-members-\d{4}-\d{2}-\d{2}\.csv"$/);
     const text = await res.text();
-    expect(text.split('\r\n')[0]).toBe('name,organisationName,email,levelName,cycle,category,status,paymentMode,joinedAt,paidUntil,source,createdAt');
+    expect(text.split('\r\n')[0]).toBe(
+      'name,organisationName,email,levelName,cycle,category,status,paymentMode,joinedAt,paidUntil,source,createdAt,birthDate,street,postalCode,city,phone',
+    );
     expect(text).toContain('Grace Hopper,Acme AG,grace@example.com,Supporter,yearly');
     expect(membersCsv([{ ...(await store.get(id))!, name: '=HYPERLINK("x")' }])).toContain(`"'=HYPERLINK(""x"")"`);
   });

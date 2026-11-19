@@ -126,7 +126,8 @@ const paidInvoice = (id: string, memberId: string, start: string, end: string, a
   parent: { subscription_details: { subscription: 'sub_ada', metadata: { source: 'zurichjs.com/membership', memberId } } },
 });
 
-const join = { name: 'Ada Lovelace', level: 'supporter', cycle: 'yearly', termsVersion: TERMS.version };
+const details = { birthDate: '1990-05-23', street: 'Alderstrasse 30', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' };
+const join = { name: 'Ada Lovelace', level: 'supporter', cycle: 'yearly', termsVersion: TERMS.version, ...details };
 
 beforeEach(() => {
   resetRateLimits();
@@ -156,10 +157,22 @@ describe('joining', () => {
   it.each([
     [{ ...join, termsVersion: undefined }, 'terms', 'Accept the membership terms to continue.'],
     [{ ...join, termsVersion: '2020-01-01' }, 'terms', 'The membership terms changed. Reload the page and accept the current terms.'],
-    [{ ...join, level: 'advocate' }, 'level', 'Choose Basic Member or Supporter.'],
+    [{ ...join, level: 'patron' }, 'level', 'Choose Basic Member, Supporter, Enthusiast or Advocate.'],
     [{ ...join, cycle: 'monthly' }, 'cycle', 'Choose quarterly or yearly.'],
     [{ ...join, kind: 'organisation' }, 'organisationName', 'Add the organisation’s name.'],
     [{ ...join, name: '<b>Ada</b>' }, 'name', 'Add your full name.'],
+    [{ ...join, birthDate: '' }, 'birthDate', 'Add your date of birth.'],
+    [{ ...join, birthDate: '23.05.1990' }, 'birthDate', 'Enter the date of birth as a date, like 1990-05-23.'],
+    [{ ...join, birthDate: '2999-01-01' }, 'birthDate', 'Check the date of birth.'],
+    [{ ...join, street: ' ' }, 'street', 'Add your street and number.'],
+    [{ ...join, postalCode: undefined }, 'postalCode', 'Add your postcode.'],
+    [{ ...join, postalCode: '8' }, 'postalCode', 'Enter a postcode like 8008.'],
+    [{ ...join, city: '' }, 'city', 'Add your city.'],
+    [{ ...join, phone: '' }, 'phone', 'Add your phone number.'],
+    [{ ...join, phone: 'call me' }, 'phone', 'Enter a phone number like +41 79 123 45 67.'],
+    // Six digits and allowed characters, but longer than the database's 30 characters.
+    [{ ...join, phone: `123456${'('.repeat(25)}` }, 'phone', 'Enter a phone number like +41 79 123 45 67.'],
+    [{ ...join, kind: 'organisation', organisationName: 'Acme AG', street: '' }, 'street', 'Add your street and number.'],
   ])('refuses %j', async (body, field, error) => {
     const store = memoryStore();
     const res = await handleCheckout(req('/api/membership/checkout', body), { env, store, session: async () => ada, fetch: world().f });
@@ -174,7 +187,7 @@ describe('joining', () => {
     const res = await handleCheckout(req('/api/membership/checkout', join), { env, store, session: async () => ada, fetch: w.f });
     expect(await res.json()).toEqual({ ok: true, url: 'https://checkout.stripe.com/c/pay/cs_1' });
     const m = (await store.byEmail('ada@example.com'))!;
-    expect(m).toMatchObject({ status: 'pending', userId: 'user-ada', level: 'supporter', cycle: 'yearly', stripeCustomerId: 'cus_ada', source: 'self_serve' });
+    expect(m).toMatchObject({ status: 'pending', userId: 'user-ada', level: 'supporter', cycle: 'yearly', stripeCustomerId: 'cus_ada', source: 'self_serve', ...details });
     expect(await store.acceptedTerms(m.id)).toBe(TERMS.version);
     const checkout = w.calls.find((c) => c.path === 'checkout/sessions')!.params;
     expect(Object.fromEntries(checkout)).toMatchObject({
@@ -196,6 +209,27 @@ describe('joining', () => {
     await handleCheckout(req('/api/membership/checkout', { ...join, level: 'basic', cycle: 'quarterly' }), { env, store, session: async () => ada, fetch: w.f });
     expect(store.all()).toHaveLength(1);
     expect(store.all()[0]).toMatchObject({ level: 'basic', cycle: 'quarterly', status: 'pending' });
+  });
+
+  it('keeps an organisation’s address and phone, and never a date of birth for it', async () => {
+    const store = memoryStore();
+    const w = world();
+    const res = await handleCheckout(req('/api/membership/checkout', { ...join, kind: 'organisation', organisationName: 'Acme AG', birthDate: undefined }), {
+      env,
+      store,
+      session: async () => ada,
+      fetch: w.f,
+    });
+    expect(res.status).toBe(200);
+    expect(store.all()[0]).toMatchObject({ kind: 'organisation', birthDate: null, street: 'Alderstrasse 30', postalCode: '8008', city: 'Zurich', phone: '+41 79 123 45 67' });
+  });
+
+  it('never sends the register details to Stripe', async () => {
+    const store = memoryStore();
+    const w = world();
+    await handleCheckout(req('/api/membership/checkout', join), { env, store, session: async () => ada, fetch: w.f });
+    const sent = w.calls.map((c) => [...c.params.values()].join(' ')).join(' ');
+    for (const v of Object.values(details)) expect(sent).not.toContain(v);
     expect(w.calls.filter((c) => c.path === 'customers')).toHaveLength(1);
   });
 });

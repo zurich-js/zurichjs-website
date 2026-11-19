@@ -4,7 +4,7 @@
  * of its sections. Memberships (/admin, /admin/memberships): members with search and
  * filters, one member's details, terms, certificates and audit log, confirming
  * resignations, inviting people who asked to join, adding members who paid manually
- * (cash/bank), and CSV export.
+ * (cash/bank), the member register details (date of birth, address, phone), and CSV export.
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
@@ -19,6 +19,7 @@ import { lastDay, longDate, shortDate, shortDateTime } from '../../server/dates.
 import type { CertificateView } from '../../server/membership.ts';
 import { api } from './admin-api.ts';
 import { ChoiceGroup, SubmitButton } from './forms/shared.tsx';
+import { MemberRegisterForm } from './MemberRegisterForm.tsx';
 import { SponsorsAdmin } from './SponsorsAdmin.tsx';
 
 type Status = AdminMember['status'];
@@ -41,6 +42,9 @@ const FILTERS: { value: '' | Status; label: string }[] = [
   { value: '', label: 'All' },
   ...(Object.keys(STATUS_LABEL) as Status[]).map((s) => ({ value: s, label: STATUS_LABEL[s] })),
 ];
+
+/** Only the register details from a save: status, history and the rest stay as currently loaded. */
+const pickContact = (m: AdminMember) => ({ birthDate: m.birthDate, street: m.street, postalCode: m.postalCode, city: m.city, phone: m.phone });
 
 const date = (iso: string | null) => (iso ? shortDate(iso) : '–');
 const dateTime = shortDateTime;
@@ -310,7 +314,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
         </div>
       )}
 
-      {selected && <MemberDetail id={selected} onClose={() => setSelected(null)} onChanged={() => void load()} onSignedOut={onSignedOut} />}
+      {selected && <MemberDetail key={selected} id={selected} onClose={() => setSelected(null)} onChanged={() => void load()} onSignedOut={onSignedOut} />}
     </div>
   );
 }
@@ -380,6 +384,13 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
         </p>
       )}
       {m.notes && <p class="m-0 text-compact bg-white rounded-(--radius-nested) p-card-sm">{m.notes}</p>}
+      {/* Keyed by member, so the form starts from that member's saved details. */}
+      <MemberRegisterForm
+        key={m.id}
+        member={m}
+        onSaved={(saved) => setD((cur) => (cur && cur.member.id === saved.id ? { ...cur, member: { ...cur.member, ...pickContact(saved) } } : cur))}
+        onSignedOut={onSignedOut}
+      />
 
       {['active', 'past_due', 'imported_manual'].includes(m.status) && (
         <RecordResignation

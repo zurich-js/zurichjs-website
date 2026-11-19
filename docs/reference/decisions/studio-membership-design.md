@@ -222,3 +222,21 @@ None.
 - A running sponsorship in the database sets the partner's tier and current status on the site; the logo, hover colour and link stay the partner record's. The sponsor is linked by its partner id, never by name.
 - When a linked sponsorship has ended, the partner is shown as a past sponsor.
 - A running sponsor with no partner record is listed by company name, without a logo.
+
+## Enthusiast and Advocate, perks that scale (owner, 19th November 2026)
+
+- **Four levels:** Basic Member CHF 50 a quarter or CHF 175 a year, Supporter CHF 75 or CHF 250, Enthusiast CHF 100 or CHF 400, Advocate CHF 150 or CHF 600. Still only quarterly and yearly. Enthusiast and Advocate cost the same either way, so their cards say "The same as paying quarterly." instead of "Save CHF 0".
+- **Perks build on the level below.** Supporter: priority event access (was "Exclusive events access") and voting rights; "Free or discounted workshops" is removed, since Supporter is a contribution, not a workshop benefit. Enthusiast adds a CHF 50 voucher a year for ZurichJS workshops, first dibs on partner conference tickets and discounts when partners offer them, early access to ZurichJS Conf tickets, and proposing a topic for an upcoming meetup. Advocate adds a CHF 100 voucher instead of CHF 50, first pick of partner offers ahead of Enthusiasts, and thanks by name in the meetup opening slides if they want it.
+- **Not promised:** free or discounted ZurichJS Conf tickets, and dinner with the speakers. Partner offers are ad hoc and change with each partner. Workshops will come back.
+- **Taglines and comparisons** (proposed by Claude, kept by the owner): "For regulars who never miss a meetup." and "For the people who keep ZurichJS going."; CHF 33 a month is about a cinema ticket and popcorn in Zurich, a pizza and a drink, or two AI tool subscriptions; CHF 50 about dinner for two at a Zurich pizzeria, more than half a monthly ZVV pass for the city, or less than a month at a Zurich gym. Rough Zurich prices, not quotes.
+- **Stripe:** `pnpm membership:stripe-setup --apply` adds the two products and four prices, and now keeps the existing billing portal configuration instead of creating another.
+- **Terms version `2026-11-19`,** since the fee list on `/membership/terms` changed.
+- **Layout:** the tier cards are two by two from the breakpoint, so four levels never leave one card alone on a row.
+
+## The member register (owner, 19th November 2026)
+
+- **What we keep:** date of birth, street and number, postcode, city and phone for every member. People give all five when joining online; organisations give their address and phone, without a date of birth.
+- **Existing members** are backfilled by the board on the member's page in the admin area, where every field is optional; the CSV import takes the same optional columns and the CSV export includes them.
+- **Where they go:** the database only, never Stripe, Slack, emails or the Slack agent. The audit log names the fields that changed, never their values. `member_anonymise` wipes them.
+- **Checks:** dates of birth from 1900 to yesterday; postcodes of 3 to 10 letters, digits, spaces or dashes (members abroad too); phone numbers with 6 to 15 digits and at most 30 characters.
+- **Open (owner):** the privacy policy should name these fields and why the association keeps them. Members who switch from paying manually to automatic payment are not asked for them; the board fills them in.

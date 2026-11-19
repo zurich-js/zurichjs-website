@@ -13,7 +13,7 @@ systems: [content, studio, design-system]
 
 Every partner the site shows has been checked by the owner (who they are to ZurichJS, their tier, whether they are current, their logo), and organisers change partners in the Sanity Studio instead of in code.
 
-Today the list is in code: `packages/content/src/partners.ts`, with the logo files in `apps/web/public/images/partners`. Production Sanity has no `partner` documents (checked 19th November 2026), so the site falls back to that list. The board's admin area (`/admin/sponsors`) manages paid sponsorships and has no effect on logos, tiers or colours on the site ([Sponsorship](/domains/sponsorship/overview.md)).
+Today the list is in code: `packages/content/src/partners.ts`, with the logo files in `apps/web/public/images/partners`. Production Sanity has no `partner` documents (checked 19th November 2026), so the site falls back to that list. The board's admin area (`/admin/sponsors`) manages paid sponsorships; a running sponsorship linked to a partner sets that partner's tier and current status on the site, and has no effect on logos or colours ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
 
 ## The list as it is (19th November 2026)
 
@@ -50,6 +50,8 @@ Nobody has a `logoBlack` file. Where logos are black (the moving rows, the wall 
 - Whether a current host belongs with the sponsors (SAE today), and whether the tier alone should set a sponsor's cell size (GYFF's bigger cell comes from the Friend tier).
 
 **Moving the list into Sanity (code):**
+
+- The sponsorships database keeps overriding `tier` and `current` after the move: a sponsor's partner id is then the Sanity partner's `id`, so the ids in the seed stay the ones in the code list.
 
 - `apps/studio/scripts/seed-partners.ts` creates a draft for all 33 partners in the code list, not the 17 it has now, with the same kinds, tiers and current flags, and with `logoBackground` and `logoBlack` where the code list has them. Vercel is no longer a current Champion in it.
 - The seed runs only after the Studio with the `partner` fields is deployed (it deploys when `apps/studio` reaches `main`). The site ignores the whole code list as soon as Sanity has one published partner, so all drafts are published together, after the review.

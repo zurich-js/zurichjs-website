@@ -208,3 +208,9 @@ None.
 - Logos were all black at rest so they would not compete for attention, but sponsors like their logos as they are. So only the companies who fund the meetups (current sponsors and current hosts) keep their colours, in framed white cells sized by tier.
 - Community and conference partners, and past supporters, are two moving rows of faint black logos across the whole screen, fading at its edges, in colour on hover. This adds a second thing that moves on its own (after the speaker arc) and the `duration-marquee` token.
 - A partner's `logoBackground` became its hover colour: the cell flips to it and the logo turns white (black on a light colour). Stripe flips to its purple and SAE to black; partners without one stay white. It is one optional field in the Studio.
+
+## Sponsorships override the partner list (owner, 19th November 2026)
+
+- A running sponsorship in the database sets the partner's tier and current status on the site; the logo, hover colour and link stay the partner record's. The sponsor is linked by its partner id, never by name.
+- When a linked sponsorship has ended, the partner is shown as a past sponsor.
+- A running sponsor with no partner record is listed by company name, without a logo.

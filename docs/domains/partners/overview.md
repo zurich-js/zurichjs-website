@@ -8,19 +8,21 @@ timestamp: "2026-11-19T00:00:00Z"
 
 # Partners and sponsorship
 
-**This page owns the public side of partners.** Paid sponsorships (sign-up, payment, the sponsor account and admin) are in [Sponsorship](/domains/sponsorship/overview.md); a running sponsorship reaches the lists below only when an organiser publishes its `partner` document in Sanity.
+**This page owns the public side of partners.** Paid sponsorships (sign-up, payment, the sponsor account and admin) are in [Sponsorship](/domains/sponsorship/overview.md); a running sponsorship sets who is a current sponsor and at which tier, on top of the list described below.
 
-Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisting, event supporters, `withPartnerFallback`, `groupPartners`, `eventThanks`), `apps/web/src/pages/partners.astro`, the `partner` type ([Content model](/domains/content/content-model.md)), and the logo components ([Components](/systems/design-system/components.md), "Logos").
+Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisting, event supporters, `withPartnerFallback`), `packages/content/src/sponsorships.ts` (`applySponsorships`), `packages/events/src/today.ts` (`groupPartners`, `eventThanks`), `apps/web/src/pages/partners.astro`, the `partner` type ([Content model](/domains/content/content-model.md)), and the logo components ([Components](/systems/design-system/components.md), "Logos").
 
 ## Where the list comes from
 
 - **Sanity `partner` documents win.** While Sanity has none, `withPartnerFallback` uses the code-side record in `packages/content/src/partners.ts`, which follows the old production partner list; every entry names its source ([Content sources](/reference/content-sources.md)). Once Sanity has any partner document, the record is ignored. Sample content uses the same record.
+- **The sponsorships database overrides `tier` and `current`** for a partner a sponsorship is linked to, by the partner's `id` (owner, 19th November 2026). A running sponsorship makes the partner a current sponsor at its tier; an ended one makes it a past sponsor. The logo, hover colour, link and words stay the partner record's. A running sponsor with no partner record is listed by name, without a logo. A build that cannot read the database shows this list as it is. The rules and the builds are in [Sponsorship](/domains/sponsorship/overview.md), "On the public site".
+- **GYFF's tier** comes from its sponsorship. The record's `friend` is only what a build without the database shows.
 - **With the fallback,** each event's host is the venue partner named in its own `location`, and only the supporters production stated for an evening are added (`EVENT_SUPPORTERS`). Hosts or supporters an event already has always win.
 - **The Studio's `seed-partners.ts`** writes 17 of the 33 partners as drafts for organisers to confirm (every "current" flag, with dates) before publishing. It is behind the code list: the review and what the script still needs are in [the partner review Spec](/domains/partners/specs/partner-data-review.md).
 
 ## Who counts as current
 
-- **Only partners an organiser marks `current` are called current sponsors.** Venue hosts are listed as hosts ("have hosted"), never as current sponsors.
+- **Only partners an organiser marks `current`, or with a running sponsorship in the database, are called current sponsors.** Venue hosts are listed as hosts ("have hosted"), never as current sponsors.
 - **Delisted partners** are never promoted: `DELISTED_PARTNERS` (Ginetta, Code Blossom, DotJS, React Paris; owner, 2nd and 3rd November 2026) and any partner with `delisted`, matched by id or name, so a seeded Sanity document cannot bring them back. `groupPartners` leaves them out of every list (current, venue, community, previous), so they disappear from `/partners`, the home page, upcoming event pages, Tonight and the design gallery. They remain only as history: a past event they hosted still names them, and the About timeline and `llms-full.txt` keep past venues.
 - Vercel is listed as a past sponsor, not current (owner, 4th November 2026).
 

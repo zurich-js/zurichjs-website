@@ -111,7 +111,8 @@ export const PARTNER_RECORDS: Sourced<Partner>[] = [
     url: 'https://www.gyffted.com',
     ...logo('gyff-logo-square.webp'),
     kinds: ['sponsor'],
-    // A Community Friend from their coming contribution (owner, 19th November 2026).
+    // Only the fallback: GYFF's tier comes from its sponsorship in the database, linked by this id
+    // (sponsorships.ts; owner, 19th November 2026). This value shows when a build cannot read the database.
     tier: 'friend',
     current: true,
     description: 'IT recruitment in Switzerland',

@@ -64,7 +64,7 @@ export const handleUpdateSponsor = (request: Request, id: string, deps: SponsorA
       }
       if ('partnerId' in body) {
         const pid = typeof body.partnerId === 'string' && /^[\w.-]{1,128}$/.test(body.partnerId) ? body.partnerId : body.partnerId ? false : null;
-        if (pid === false) return fail(400, 'Use the Sanity document id of the partner.', { field: 'partnerId' });
+        if (pid === false) return fail(400, 'Use the id of the partner record: letters, numbers, dots and hyphens.', { field: 'partnerId' });
         patch.partnerId = pid;
       }
       const updated = await store.update(s.id, patch, BOARD);

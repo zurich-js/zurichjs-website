@@ -29,6 +29,7 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 
 - **Sign-in** is the members' email link (Better Auth, `/api/auth/[...all]`).
 - **The admin API** sits under `/api/membership/admin` so it shares the admin cookie's path and `ADMIN_PASSWORD` ([Membership frontend](/domains/membership/frontend.md)).
+- **A sponsor's partner id** (`partnerId` on the admin's details route) links it to its partner record on the public site ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
 - **Writes** must come from the site (an `Origin` check, as in the admin area); uploads and contact changes are rate limited.
 - **Logos:** SVG, PNG or WebP up to 2 MB; SVGs with scripts, external references or other tricks are refused. **Contracts:** PDF up to 10 MB. Both are stored in the Netlify Blobs store `sponsors` (`apps/web/src/server/sponsor-logo.ts`).
 
@@ -54,7 +55,7 @@ Whether the live Stripe objects exist.
 
 ## Tests
 
-`packages/sponsorship/test` (with a real Postgres; skipped without one), `apps/web/test/sponsorship-flow.test.ts`, `apps/web/test/sponsorship-fees.test.ts`, `packages/emails/test`.
+`packages/sponsorship/test` (with a real Postgres; skipped without one), `apps/web/test/sponsorship-flow.test.ts`, `apps/web/test/sponsorship-fees.test.ts`, `packages/emails/test`. The override of the public partner list: `packages/content/test/sponsorships.test.ts` (the rules and the fallback) and `apps/web/test/sponsor-rebuild.test.ts` (which changes queue a rebuild).
 
 ## Related concepts
 

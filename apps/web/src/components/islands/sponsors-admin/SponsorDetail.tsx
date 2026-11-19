@@ -357,7 +357,7 @@ function Summary({ d }: { d: Detail }) {
         'No Stripe customer'
       ),
     ],
-    ['Sanity partner id', s.partnerId ?? 'Not linked'],
+    ['Partner id', s.partnerId ?? 'Not linked'],
     ['Source', SOURCE_LABEL[s.source]],
     ['Added', shortDateTime(s.createdAt)],
   ];
@@ -694,7 +694,7 @@ const FIELD_LABEL: Record<string, string> = {
   vatId: 'VAT number',
   website: 'website',
   notes: 'notes',
-  partnerId: 'Sanity partner id',
+  partnerId: 'Partner id',
   tier: 'tier',
   cycle: 'billing',
   paymentMode: 'payment method',
@@ -894,7 +894,11 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             error={err('billingAddress')}
             onInput={(e) => set('billingAddress', inputValue(e))}
           />
-          {text('partnerId', optional('Sanity partner id'), 'The id of the partner document that shows them on the site.')}
+          {text(
+            'partnerId',
+            optional('Partner id'),
+            'The id of their partner record, for example gyff. It gives them their logo on the site, at this tier. Without it a running sponsor is listed by name only.',
+          )}
           <TextArea label={optional('Notes for the board')} rows={3} value={f.notes} invalid={!!err('notes')} error={err('notes')} onInput={(e) => set('notes', inputValue(e))} />
           {error && !['companyName', 'legalName', 'vatId', 'website', 'partnerId', 'billingAddress', 'notes'].includes(error.field ?? '') && (
             <Notice kind="error">{error.message}</Notice>

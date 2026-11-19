@@ -68,7 +68,7 @@ export interface Sponsor {
   paidUntil: string | null;
   /** One-time sponsorships: a custom price per meetup (CHF) the board agreed; null = the list price. */
   pricePerMeetup: number | null;
-  /** The Sanity partner document that shows them on the site. */
+  /** The `id` of the partner record (Sanity, or packages/content/src/partners.ts) that gives them their logo on the site. */
   partnerId: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;

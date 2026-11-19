@@ -1,18 +1,18 @@
 ---
 type: Domain
 title: Sponsorship
-description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a sponsor reaches the public partner list.
+description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
 tags: [sponsorship, stripe, postgres]
 timestamp: "2026-11-19T00:00:00Z"
 ---
 
 # Sponsorship
 
-Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql` and `apps/web/database/migrations/20261119090000_sponsorship_round2.sql`.
+Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `apps/web/src/server/sponsor-public.ts` and `packages/content/src/sponsorships.ts` (the public site), `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql` and `apps/web/database/migrations/20261119090000_sponsorship_round2.sql`.
 
 Sponsors get the same self-serve system as [members](/domains/membership/overview.md): the board invites a company or brings an existing sponsorship onto the site, a contact signs the sponsorship agreement and pays by card, and from then on the sponsor manages tier, billing, payment details, logo and colleagues themselves. Changes the board agrees with a sponsor in conversation are sent as a link that fills the change in, and apply only once the sponsor confirms (owner, 18th November 2026).
 
-**This page owns paid sponsorships.** The public side (who is listed and thanked, the `/partners` page, the enquiry form) is in [Partners and sponsorship](/domains/partners/overview.md). A running sponsorship does not appear on `/partners` by itself: an organiser updates or creates the `partner` document in Sanity with the tier and logo, ticks current, and publishes (drafts first). Slack says when a sponsor uploads a logo.
+**This page owns paid sponsorships.** The public side (who is listed and thanked, the `/partners` page, the enquiry form) is in [Partners and sponsorship](/domains/partners/overview.md). A running sponsorship decides who is shown as a current sponsor and at which tier ("On the public site" below); the logo, hover colour and link still come from the partner record. Slack says when a sponsor uploads a logo; an uploaded logo is not shown on the site by itself.
 
 ## Decisions (owner, 18th November 2026)
 
@@ -70,6 +70,31 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 | `ended`              | `pending`            | the sponsor, the board (sponsoring again) |
 
 **Ending reasons:** the board may give cancelled, completed, lapsed, terminated or withdrawn; Stripe cancelled or lapsed; the script cancelled, completed or withdrawn. A sponsorship is **running** (gets the tier's benefits) while `active`, `past_due` or `ending`.
+
+## On the public site
+
+The sponsorships database overrides the partner list for who is a current sponsor and at which tier (owner, 19th November 2026). Nothing else: the logo, hover colour, link and words stay the partner record's ([Partners and sponsorship](/domains/partners/overview.md)).
+
+- **The link is the sponsor's partner id** (`sponsors.partner_id`, "Partner id" under Edit details in `/admin/sponsors`): the `id` of the partner record, for example `gyff`. Names are never used to link.
+- **Running** (`active`, `past_due` or `ending`) and linked: that partner is a current sponsor at the sponsorship's tier, whatever the partner record says. With several running sponsorships on one partner the highest tier counts.
+- **Ended** and linked, with none running: the partner becomes a past sponsor without a tier. A partner who is also a host or another kind keeps its own current flag and only loses the tier.
+- **Running without a partner record** (no partner id, or one that matches nothing): listed as a current sponsor at its tier by company name and website, without a logo. If the company name equals a partner record's, nothing is added (so no company is listed twice) and the build log says to set the partner id.
+- **Pending** sponsorships, and partners no sponsorship is linked to, change nothing. A partner withdrawn from promotion is never brought back.
+
+**Where it is read:** at build time. `apps/web/src/lib/content.ts` hands `loadContent` the reader `publicSponsorships` (one short-lived connection, the same database URL as the functions), and `applySponsorships` applies the rows to the partners from Sanity or from the code-side record. The build never fails because of it:
+
+| Build                                                    | What it shows                                                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Production                                               | the production database's sponsorships                                                         |
+| Deploy preview                                           | its own database `pr_<number>`, which starts empty: the partner list alone                     |
+| Local with `MEMBERSHIP_DB_URL` (`pnpm local`)            | the local database's sponsorships, when content comes from Sanity                              |
+| No database URL                                          | the partner list alone                                                                         |
+| The database is unreachable or silent for 15 seconds     | the partner list alone, with a warning in the build log                                        |
+| Sample content (`CONTENT_SOURCE=sample`: tests, e2e, CI) | the partner list alone; the database is never read, so the visual baselines never depend on it |
+
+**Rebuilds:** the store every writer uses is wrapped (`apps/web/src/server/sponsor-rebuild.ts`), so a sponsorship that starts, ends, changes tier, or has its partner id, company name or website changed queues a rebuild, debounced like a Sanity publish ([Rebuilds](/systems/operations/rebuilds.md)). The site follows a few minutes later.
+
+**Moving a sponsor to another tier on the site** is therefore board work in `/admin/sponsors`, not a code change: the sponsorship has to be running at that tier, and its partner id has to be set ([Sponsorship frontend](/domains/sponsorship/frontend.md)).
 
 ## Data and files
 

@@ -14,7 +14,7 @@ Source: `packages/content` (`@zurichjs/content`): `packages/content/src/queries.
 
 - **`loadContent()` reads Sanity over plain `fetch`** at build time, with `SANITY_PROJECT_ID` (default `viqjrovw`), `SANITY_DATASET` (default `production`) and optionally `SANITY_READ_TOKEN` or `SANITY_TOKEN`. Not `@sanity/client`: `fetch` is smaller, and the client crashed the build with an uncatchable socket error when Sanity was unreachable.
 - **Typed queries:** every query in `queries.ts` has a generated result type; change a query or the schema, then run typegen ([Studio](/systems/studio.md)). CI fails when the generated files differ.
-- **At build time it also reads** the ImageKit archive ([Media archive](/systems/media.md)) and, for events linked to Sane, Sane's public API ([Events](/domains/events/overview.md)).
+- **At build time it also reads** the ImageKit archive ([Media archive](/systems/media.md)), for events linked to Sane, Sane's public API ([Events](/domains/events/overview.md)), and the sponsorships database for who is a current sponsor and at which tier ([Sponsorship](/domains/sponsorship/overview.md)). The package itself has no database driver: the web app passes the reader in. Sample content never reads the database.
 
 ## Sample content
 

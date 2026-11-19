@@ -7,13 +7,16 @@
  *
  * Prices come from apps/web/src/lib/membership.ts (the table /membership shows)
  * and get lookup keys member_<level>_<cycle>. Only quarterly and yearly exist.
+ * It is safe to run again: it creates only what is missing. Adding a level (Enthusiast and
+ * Advocate, 19th November 2026) is a rerun that adds that level's product and two prices.
  * If a lookup key already points at a price with the same amount it is kept;
  * if the amount changed, a new price takes over the lookup key (existing
  * subscriptions keep their old price until changed).
  *
  * The portal configuration lets members update their payment method, see
- * invoices and switch level and cycle among those four prices; cancelling is off (members
- * resign through the board, bylaws Art. 5). Prints STRIPE_MEMBER_PORTAL_CONFIG.
+ * invoices; cancelling and plan switching are off (members resign through the board, bylaws
+ * Art. 5, and switch on the account page). Created once and then kept; prints
+ * STRIPE_MEMBER_PORTAL_CONFIG.
  *
  * With --webhook-url it also creates the site's one webhook endpoint (memberships,
  * sponsorships and donations: apps/web/src/pages/api/stripe/webhook.ts) for every
@@ -89,8 +92,12 @@ for (const level of TIER_KEYS) {
   if (!product || prices.length !== CYCLES.length) complete = false;
 }
 
-console.log('\n+ billing portal configuration (payment method and invoices; no cancelling or plan switching, which happen on the account page)');
-if (apply && complete) {
+// The configuration names no products (plan switching is off), so a new level needs no new one.
+const configs = await api<{ data: { id: string; active: boolean; metadata: Record<string, string> }[] }>('GET', 'billing_portal/configurations', { active: true, limit: 100 });
+const existingConfig = configs.data.find((c) => c.metadata.source === SOURCE);
+if (existingConfig) console.log(`\n= billing portal configuration ${existingConfig.id} (STRIPE_MEMBER_PORTAL_CONFIG)`);
+else console.log('\n+ billing portal configuration (payment method and invoices; no cancelling or plan switching, which happen on the account page)');
+if (apply && complete && !existingConfig) {
   const config = await api<{ id: string }>('POST', 'billing_portal/configurations', {
     business_profile: { headline: 'Swiss JavaScript Group: your ZurichJS membership' },
     default_return_url: 'https://zurichjs.com/membership/account',

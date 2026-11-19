@@ -3,7 +3,7 @@ import { Button } from '@zurichjs/design/islands/Button';
 import { Check } from '@zurichjs/design/islands/Check';
 import { ChoiceCard } from '@zurichjs/design/islands/ChoiceCard';
 import { SegmentedControl } from '@zurichjs/design/islands/SegmentedControl';
-import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, perYear, type Cycle, type TierKey } from '../../../lib/membership.ts';
+import { CYCLES, TIERS, TIER_KEYS, chf, cycleNote, feeLabel, type Cycle, type TierKey } from '../../../lib/membership.ts';
 
 /** The billing switch: yearly first, as it costs less. */
 const BILLING = [...CYCLES].reverse();
@@ -29,7 +29,8 @@ export default function MembershipForm() {
         </h2>
         {/* One billing choice for the cards and the Join step: a single pill with a segment per cycle (native radios). */}
         <SegmentedControl legend="Billing" options={BILLING} value={cycle} onChange={setCycle} class="self-center" />
-        <div class="grid grid-cols-auto-md gap-4 items-stretch">
+        {/* Four tiers: two by two from the breakpoint, so none is left alone on a row. */}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
           {TIER_KEYS.map((k) => {
             const x = TIERS[k];
             return (
@@ -50,11 +51,7 @@ export default function MembershipForm() {
                     <span class="text-section leading-none font-bold">{chf(x.fees[cycle])}</span>
                     <span class="text-body text-ink-2">per {unit}</span>
                   </p>
-                  <p class="m-0 text-compact text-ink-2">
-                    {cycle === 'yearly'
-                      ? `Save ${chf(perYear(x, 'quarterly') - perYear(x, 'yearly'))} compared with paying quarterly.`
-                      : `${chf(perYear(x, 'quarterly'))} over a year.`}
-                  </p>
+                  <p class="m-0 text-compact text-ink-2">{cycleNote(x, cycle)}</p>
                 </div>
                 <div class="flex flex-col gap-2">
                   <p class="m-0 text-body font-bold">That’s {chf(x.perMonth)} a month, about</p>

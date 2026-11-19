@@ -10,6 +10,8 @@ export interface LevelInfo {
 export const LEVELS: readonly LevelInfo[] = [
   { key: 'basic', name: 'Basic Member' },
   { key: 'supporter', name: 'Supporter' },
+  { key: 'enthusiast', name: 'Enthusiast' },
+  { key: 'advocate', name: 'Advocate' },
 ];
 
 export const LEVEL_KEYS = LEVELS.map((l) => l.key);
@@ -21,10 +23,16 @@ export const isCycle = (v: unknown): v is Cycle => typeof v === 'string' && (CYC
 
 export const levelInfo = (l: Level): LevelInfo => LEVELS.find((x) => x.key === l)!;
 
-/** 0 for Basic, 1 for Supporter. */
+/** 0 for Basic, 1 for Supporter, 2 for Enthusiast, 3 for Advocate. */
 export const levelRank = (l: Level): number => LEVEL_KEYS.indexOf(l);
 
 /** True when `level` is `min` or higher. */
+/** "Basic Member, Supporter, Enthusiast or Advocate", for error messages. */
+export const levelList = (): string => {
+  const names = LEVELS.map((l) => l.name);
+  return `${names.slice(0, -1).join(', ')} or ${names.at(-1)}`;
+};
+
 export const atLeast = (level: Level, min: Level): boolean => levelRank(level) >= levelRank(min);
 
 /** The Stripe Price lookup key for a level and cycle: `member_basic_quarterly`. */

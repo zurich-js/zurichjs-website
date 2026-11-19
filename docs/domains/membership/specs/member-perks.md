@@ -30,4 +30,4 @@ The bylaws (Art. 4) name two perks: a basic discount set by the board for all me
 
 - **Board:** what the basic discount is, and which paid events are included each year.
 - Whether passive and active membership is recorded at all.
-- What "Free or discounted workshops" (Supporter) covers now that standalone workshops are retired ([Content sources](/reference/content-sources.md)).
+- How the yearly workshop vouchers (Enthusiast CHF 50, Advocate CHF 100) are issued and redeemed once workshops are back, and whether an unused voucher expires with the membership year. "Free or discounted workshops" was removed from Supporter (owner, 19th November 2026).

@@ -23,6 +23,11 @@ export const adminMember = (m: Member) => ({
   stripeCustomerId: m.stripeCustomerId,
   stripeSubscriptionId: m.stripeSubscriptionId,
   notes: m.notes,
+  birthDate: m.birthDate,
+  street: m.street,
+  postalCode: m.postalCode,
+  city: m.city,
+  phone: m.phone,
   resignedAt: m.resignedAt,
   resignationConfirmedAt: m.resignationConfirmedAt,
   createdAt: m.createdAt,
@@ -30,7 +35,25 @@ export const adminMember = (m: Member) => ({
 
 export type AdminMember = ReturnType<typeof adminMember>;
 
-const CSV_COLUMNS = ['name', 'organisationName', 'email', 'levelName', 'cycle', 'category', 'status', 'paymentMode', 'joinedAt', 'paidUntil', 'source', 'createdAt'] as const;
+const CSV_COLUMNS = [
+  'name',
+  'organisationName',
+  'email',
+  'levelName',
+  'cycle',
+  'category',
+  'status',
+  'paymentMode',
+  'joinedAt',
+  'paidUntil',
+  'source',
+  'createdAt',
+  'birthDate',
+  'street',
+  'postalCode',
+  'city',
+  'phone',
+] as const;
 
 /** RFC 4180; a leading = + - @ is prefixed with ' so spreadsheets do not run it as a formula. */
 const cell = (v: unknown) => {

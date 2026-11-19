@@ -5,3 +5,4 @@ export * from './store.ts';
 export * from './postgres.ts';
 export * from './import.ts';
 export * from './terms.ts';
+export * from './details.ts';

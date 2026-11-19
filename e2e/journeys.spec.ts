@@ -269,7 +269,9 @@ test.describe('donations and membership', () => {
     await page.goto('/membership');
     await hydrated(page);
     await expect(page.getByText('Coming to meetups is free and never needs a membership.')).toBeVisible();
-    await expect(page.getByText('Free or discounted workshops')).toBeVisible();
+    // Workshops left Supporter (owner, 19th November 2026): they are a voucher from Enthusiast up.
+    await expect(page.getByText('Free or discounted workshops')).toHaveCount(0);
+    await expect(page.getByText('A CHF 50 voucher a year for ZurichJS workshops')).toBeVisible();
     // The tier cards are the choice: selecting one is a radio, not a button.
     await expect(page.getByRole('button', { name: /^Choose / })).toHaveCount(0);
     await page.locator('label', { has: page.getByRole('radio', { name: /^Supporter, CHF/ }) }).click();
@@ -289,10 +291,17 @@ test.describe('donations and membership', () => {
       ['Basic Member', 'basic', 'Yearly', 'yearly', 'CHF 175 a year'],
       ['Supporter', 'supporter', 'Quarterly', 'quarterly', 'CHF 75 a quarter'],
       ['Supporter', 'supporter', 'Yearly', 'yearly', 'CHF 250 a year'],
+      ['Enthusiast', 'enthusiast', 'Quarterly', 'quarterly', 'CHF 100 a quarter'],
+      ['Enthusiast', 'enthusiast', 'Yearly', 'yearly', 'CHF 400 a year'],
+      ['Advocate', 'advocate', 'Quarterly', 'quarterly', 'CHF 150 a quarter'],
+      ['Advocate', 'advocate', 'Yearly', 'yearly', 'CHF 600 a year'],
     ] as const;
     // Supporter and yearly are the defaults.
     await expect(page.locator('[data-join-summary]')).toContainText('Supporter, CHF 250 a year');
     await expect(page.getByText('Save CHF 25 compared with paying quarterly.')).toBeVisible();
+    // Enthusiast and Advocate cost the same either way: no "Save CHF 0".
+    await expect(page.getByText('The same as paying quarterly.')).toHaveCount(2);
+    await expect(page.getByText('Save CHF 0', { exact: false })).toHaveCount(0);
     await page.getByRole('radio', { name: 'Quarterly', exact: true }).click();
     await expect(page.getByText('CHF 200 over a year.')).toBeVisible();
     await expect(page.getByRole('radio', { name: /^Monthly/ })).toHaveCount(0);

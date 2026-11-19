@@ -1,5 +1,6 @@
 /**
- * Joining on /membership/account (docs/domains/membership/overview.md): who joins, level and
+ * Joining on /membership/account (docs/domains/membership/overview.md): who joins, their details
+ * for the member register (date of birth for people, address and phone), level and
  * cycle (quarterly or yearly only), the membership terms tick, then Stripe
  * Checkout. Anyone can join; the membership starts with the first payment.
  * The level and cycle chosen on /membership come along (this browser only).
@@ -9,6 +10,7 @@ import { track } from '@zurichjs/design/analytics';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { cardClass, cx, motion } from '@zurichjs/design/recipes';
+import { CONTACT_FIELDS, CONTACT_LABELS, CONTACT_MISSING, contactFieldError, requiredContactFields, type ContactField } from '@zurichjs/membership/details';
 import { TERMS } from '@zurichjs/membership/terms';
 import { CYCLES, TIERS, TIER_KEYS, chf, feeLabel, type Cycle, type TierKey } from '../../lib/membership.ts';
 import type { MemberView } from '../../server/membership.ts';
@@ -89,12 +91,39 @@ interface Props {
 
 type Kind = 'person' | 'organisation';
 
+const CONTACT_INPUT: Record<ContactField, { type: string; autoComplete: string; inputMode?: 'numeric' | 'tel' }> = {
+  birthDate: { type: 'date', autoComplete: 'bday' },
+  street: { type: 'text', autoComplete: 'address-line1' },
+  postalCode: { type: 'text', autoComplete: 'postal-code', inputMode: 'numeric' },
+  city: { type: 'text', autoComplete: 'address-level2' },
+  phone: { type: 'tel', autoComplete: 'tel', inputMode: 'tel' },
+};
+
+/** The member register fields, checked as the API checks them (packages/membership/src/details.ts). */
+function contactErrors(kind: Kind, f: Record<ContactField, string>): Record<ContactField, string> {
+  const required = requiredContactFields(kind);
+  const out = {} as Record<ContactField, string>;
+  for (const k of CONTACT_FIELDS) {
+    if (!required.includes(k)) out[k] = '';
+    else out[k] = f[k].trim() ? contactFieldError(k, f[k]) : CONTACT_MISSING[k];
+  }
+  return out;
+}
+
 export default function MemberJoin({ previous, contactEmail, onSignedOut }: Props) {
   const [choice] = useState(readChoice);
   const [kind, setKind] = useState<Kind>(previous?.organisationName ? 'organisation' : 'person');
   const [level, setLevel] = useState<TierKey>(previous?.level ?? choice.level);
   const [cycle, setCycle] = useState<Cycle>(previous?.cycle ?? choice.cycle);
-  const [f, setF] = useState({ name: previous?.name ?? '', organisationName: previous?.organisationName ?? '' });
+  const [f, setF] = useState({
+    name: previous?.name ?? '',
+    organisationName: previous?.organisationName ?? '',
+    birthDate: previous?.birthDate ?? '',
+    street: previous?.street ?? '',
+    postalCode: previous?.postalCode ?? '',
+    city: previous?.city ?? '',
+    phone: previous?.phone ?? '',
+  });
   const [accepted, setAccepted] = useState(false);
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -106,10 +135,22 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
   const errs = {
     name: f.name.trim() ? '' : kind === 'organisation' ? 'Add the name of the person who joins for the organisation.' : 'Add your full name.',
     organisationName: kind === 'organisation' && !f.organisationName.trim() ? 'Add the organisation’s name.' : '',
+    ...contactErrors(kind, f),
     terms: accepted ? '' : 'Accept the membership terms to continue.',
   };
   const fieldError = (k: keyof typeof errs) => (tried ? errs[k] : '') || (serverField?.field === k ? serverField.error : '');
-  const valid = !errs.name && !errs.organisationName && !errs.terms;
+  const valid = Object.values(errs).every((e) => !e);
+  const contactField = (k: ContactField) => (
+    <TextField
+      label={CONTACT_LABELS[k]}
+      name={k}
+      {...CONTACT_INPUT[k]}
+      value={f[k]}
+      onInput={(e) => setF({ ...f, [k]: (e.target as HTMLInputElement).value })}
+      invalid={!!fieldError(k)}
+      error={fieldError(k) || undefined}
+    />
+  );
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -124,7 +165,18 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
     setServerField(null);
     track('form_submit', { form: 'membership_join', tier: level, cycle });
     const result: { error?: string; field?: string } | void = await startCheckout(
-      { kind, name: f.name, organisationName: kind === 'organisation' ? f.organisationName : undefined, level, cycle },
+      {
+        kind,
+        name: f.name,
+        organisationName: kind === 'organisation' ? f.organisationName : undefined,
+        birthDate: kind === 'person' ? f.birthDate : undefined,
+        street: f.street,
+        postalCode: f.postalCode,
+        city: f.city,
+        phone: f.phone,
+        level,
+        cycle,
+      },
       onSignedOut,
       contactEmail,
     ).catch(() => ({ error: 'We couldn’t start the payment. Check your connection and try again.' }));
@@ -191,6 +243,13 @@ export default function MemberJoin({ previous, contactEmail, onSignedOut }: Prop
           invalid={!!fieldError('name')}
           error={fieldError('name') || undefined}
         />
+        {kind === 'person' && contactField('birthDate')}
+        {contactField('street')}
+        <div class="grid grid-cols-auto-sm gap-4">
+          {contactField('postalCode')}
+          {contactField('city')}
+        </div>
+        {contactField('phone')}
         <ChipGroup<TierKey> label="Membership" value={level} onChange={setLevel} options={TIER_KEYS.map((k) => ({ value: k, label: TIERS[k].name }))} />
         <ChipGroup<Cycle>
           label="Billing"

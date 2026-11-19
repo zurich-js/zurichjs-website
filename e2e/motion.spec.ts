@@ -148,6 +148,22 @@ test('content rises in as it scrolls into view, again after scrolling back up, a
   await expect.poll(() => last.evaluate((el) => el.hasAttribute('data-reveal-done'))).toBe(true);
 });
 
+test('what sits between sections rises in too: a callout card, and the event page’s summary', async ({ page }) => {
+  // /cfv: the award callout is a card next to the page's sections, not inside one.
+  await page.goto('/cfv');
+  const callout = page.locator('main :has(> section) > :not(section)', { hasText: 'award-winning community' }).first();
+  expect(await callout.evaluate((el) => [getComputedStyle(el).opacity, el.hasAttribute('data-revealed')])).toEqual(['0', false]);
+  await callout.scrollIntoViewIfNeeded();
+  await expect.poll(() => callout.evaluate((el) => [getComputedStyle(el).opacity, el.hasAttribute('data-reveal-done')])).toEqual(['1', true]);
+
+  // An event page: the summary card in the side column (an island).
+  await page.clock.setFixedTime(new Date('2026-11-01T12:00:00+01:00'));
+  await page.goto('/events/2026-11-forms-types');
+  const summary = page.getByRole('complementary', { name: 'Event summary' });
+  await summary.scrollIntoViewIfNeeded();
+  await expect.poll(() => summary.evaluate((el) => [getComputedStyle(el).opacity, el.hasAttribute('data-reveal-done')])).toEqual(['1', true]);
+});
+
 test('content coming in from above, scrolling up, is shown without rising in', async ({ page }) => {
   await page.goto('/speakers');
   // Straight to the bottom: the cards in the middle never revealed.

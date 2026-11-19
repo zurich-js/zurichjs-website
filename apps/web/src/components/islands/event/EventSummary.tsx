@@ -27,7 +27,7 @@ export default function EventSummary({ ev, initial, url }: { ev: Event; initial:
     );
   };
   return (
-    <aside aria-label="Event summary" class={cardClass('outline', 'md', 'md:sticky md:top-26')}>
+    <aside aria-label="Event summary" data-reveal class={cardClass('outline', 'md', 'md:sticky md:top-26')}>
       <div class="text-body font-bold">{p.whenShort}</div>
       <div class="grid grid-cols-2 gap-3">
         <div>

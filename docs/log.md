@@ -2,6 +2,8 @@
 
 ## 2026-11-19
 
+- **Update**: cards and callouts between sections reveal on scroll, and an empty `media` slot counts as no media ([Motion](/systems/design-system/motion.md), [Components](/systems/design-system/components.md)). The contact page's organiser cards link to speaker profiles and its FAQ links carry an arrow.
+- **Update**: `pnpm audit` runs with no ignored advisory ([CI](/systems/operations/ci.md)).
 - **Added**: the [Sponsorship](/domains/sponsorship/index.md) domain (self-serve sponsorships, from the old sponsorship doc, checked against the code), a [Stripe](/systems/stripe.md) concept for the shared webhook, and a Spec for [online sponsorship on /partners](/domains/sponsorship/specs/partners-page-online.md). [Partners](/domains/partners/overview.md) keeps the public side and links to it.
 - **Update**: memberships, sponsorships and donations share one Stripe webhook, `/api/stripe/webhook` ([Membership payments](/domains/membership/api.md), [Donations](/domains/donations/overview.md), [Environment variables](/systems/operations/environment.md)); Netlify Functions are bundled with esbuild ([Web app](/systems/web.md), [Netlify deploys](/systems/operations/netlify.md)); the Slack bots call the model provider with an explicit base URL ([Slack content agent](/systems/slack-agent.md)).
 - **Correction**: the old sponsorship doc said the sponsorship webhook is its own Stripe endpoint with its own secret; the code has one shared endpoint and secret ([Stripe](/systems/stripe.md)). The old runbook said the webhook updates Netlify Database; it is Neon.

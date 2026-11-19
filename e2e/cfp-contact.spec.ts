@@ -245,5 +245,10 @@ test.describe('/contact', () => {
     await expect(answer).toBeHidden();
     await page.getByRole('heading', { name: 'Do you cover travel and accommodation for speakers?' }).click();
     await expect(answer).toBeVisible();
+    // A link under an answer carries an arrow, so it does not read as bold text.
+    await page.getByRole('heading', { name: 'How can I speak at a ZurichJS meetup?' }).click();
+    const propose = page.getByRole('link', { name: 'Propose a talk' });
+    await expect(propose).toHaveAttribute('href', '/cfp');
+    await expect(propose.locator('svg')).toBeVisible();
   });
 });

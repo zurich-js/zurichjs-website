@@ -239,6 +239,7 @@ html[data-motion-swap]::view-transition-new(root) {
  * selector is in reveal.ts, keep the two in step):
  *   - every child of a section in the page's content that holds no other section ("leaf" sections), of a
  *     block of the page's content that holds no section, and of the footer, unless it holds its own reveal;
+ *   - what sits between sections in a block that holds sections (a card, a callout, an island), as a whole;
  *   - [data-reveal]: the element itself; [data-reveal='children']: each child, in reading order (grids, lists).
  * Page openings do not scroll in; they enter on load ([data-entrance], below).
  */
@@ -257,6 +258,8 @@ html[data-motion-swap]::view-transition-new(root) {
       [data-reveal='children'] > *,
       :is(main section:not(:has(section), [data-opening] *), main > :not([data-opening], section, :has(section))) > :not(:has([data-reveal])),
       :is(main section:not(:has(section), [data-opening] *), main > :not([data-opening], section, :has(section))) > astro-island > :not(:has([data-reveal])),
+      main :not([data-opening], [data-opening] *):has(> section) > :not(section, :has(section), :has([data-reveal])),
+      main :not([data-opening], [data-opening] *):has(> section) > astro-island > :not(section, :has(section), :has([data-reveal])),
       body > footer > :not(:has([data-reveal]))
     ):not([data-reveal='children'], [data-reveal-skip], dialog, script, style, template, astro-island, astro-slot, [data-revealed], :focus-within) {
     opacity: 0;

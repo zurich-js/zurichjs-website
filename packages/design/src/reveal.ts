@@ -8,9 +8,12 @@
 /** Blocks of the page's content that reveal their children: sections holding no other section, and top-level blocks holding none. */
 // eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector, not classes
 const AUTO = ':is(main section:not(:has(section), [data-opening] *), main > :not([data-opening], section, :has(section)))';
+/** Blocks that hold sections: what sits between those sections (a card, a callout, an island) reveals as a whole. */
+// eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector, not classes
+const BESIDE = 'main :not([data-opening], [data-opening] *):has(> section)';
 /** The elements motion.css hides until they reveal. Keep in step with the selector there. */
 // eslint-disable-next-line better-tailwindcss/no-restricted-classes -- a DOM selector, not classes
-const TARGETS = `:is([data-reveal]:not([data-reveal='children']), [data-reveal='children'] > *, ${AUTO} > :not(:has([data-reveal])), ${AUTO} > astro-island > :not(:has([data-reveal])), body > footer > :not(:has([data-reveal]))):not([data-reveal='children'], [data-reveal-skip], dialog, script, style, template, astro-island, astro-slot)`;
+const TARGETS = `:is([data-reveal]:not([data-reveal='children']), [data-reveal='children'] > *, ${AUTO} > :not(:has([data-reveal])), ${AUTO} > astro-island > :not(:has([data-reveal])), ${BESIDE} > :not(section, :has(section), :has([data-reveal])), ${BESIDE} > astro-island > :not(section, :has(section), :has([data-reveal])), body > footer > :not(:has([data-reveal]))):not([data-reveal='children'], [data-reveal-skip], dialog, script, style, template, astro-island, astro-slot)`;
 /** At most this many steps of delay in one batch, so a long list never keeps the last items waiting. */
 const MAX_STEPS = 6;
 

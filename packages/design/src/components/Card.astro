@@ -68,11 +68,13 @@ interface Props {
 const { surface = 'outline', padding = 'md', title, level = 'h3', href, external, linkHint, linkAttrs, disclosure = false, open = false, as: Outer = 'div', mediaLayout = 'auto', mediaRatio = 'video', edge: edgeProp, dim = false, id, class: extra } = Astro.props;
 
 const behaviour = href ? 'link' : disclosure ? 'disclosure' : 'other';
-const cornerSignifier = behaviour === 'link' && Astro.slots.has('media') && mediaLayout === 'stack';
+// A media slot that renders nothing (`{image && <img slot="media" />}` without an image) counts as no media, so the text fills the card.
+const media = Astro.slots.has('media') ? (await Astro.slots.render('media')).trim() : '';
+const cornerSignifier = behaviour === 'link' && media !== '' && mediaLayout === 'stack';
 const ext = href ? (external ?? opensNewTab(href)) : false;
 const Title = level;
 const has = {
-  media: Astro.slots.has('media'),
+  media: media !== '',
   facts: Astro.slots.has('facts'),
   icon: Astro.slots.has('icon'),
   header: Astro.slots.has('header'),
@@ -167,7 +169,7 @@ const iconBox = cx('flex-none size-11 rounded-(--radius-nested) flex items-cente
       <div class={has.media ? cx('grid h-full', mediaLayout === 'auto' && '@lg:grid-cols-2', mediaLayout === 'side' && 'grid-cols-[1fr_2fr] @lg:grid-cols-2', mediaLayout === 'row' && '@lg:grid-cols-4 @3xl:grid-cols-5') : 'contents'}>
       {has.media && (
         <div class={cx('relative *:absolute *:inset-0 *:rounded-none *:bg-transparent **:size-full **:object-cover', mediaLayout !== 'side' && (mediaRatio === 'square' ? 'aspect-square' : 'aspect-video'), mediaLayout === 'auto' && '@lg:aspect-auto', mediaLayout === 'row' && '@lg:aspect-5/4')}>
-          <slot name="media" />
+          <Fragment set:html={media} />
         </div>
       )}
       <div class={has.media ? cx('flex flex-col min-w-0', cardPadding[padding], mediaLayout === 'row' && '@lg:col-span-3 @3xl:col-span-4 @lg:justify-center') : 'contents'}>

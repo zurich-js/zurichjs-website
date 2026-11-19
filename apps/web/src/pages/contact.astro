@@ -12,6 +12,7 @@ import Monogram from '@zurichjs/design/components/Monogram.astro';
 import { SocialIcon, socialKind } from '@zurichjs/design/islands/SocialLabel';
 import { buttonClass } from '@zurichjs/design/recipes';
 import { faqSchema, organizationSchema } from '@zurichjs/seo';
+import { normalizeSearch } from '@zurichjs/events';
 
 /** Simple line icons (24 px grid, drawn here), one per kind of question. */
 const ICON = {
@@ -38,8 +39,11 @@ const EMAIL: Record<string, string> = {
   'Bogdan Mihai Ilie': 'bogdan@zurichjs.com',
   'Nadja Hesselbjerg': 'nadja@zurichjs.com',
 };
-const { team } = await content();
+const { team, speakers } = await content();
 const ORGANISERS = team.filter((m) => m.group === 'organisers');
+// Organisers who have spoken link to their speaker profile, as on /about: an explicit speakerId wins, otherwise the name.
+const speakerFor = (m: { name: string; speakerId?: string }) =>
+  (m.speakerId && speakers.find((x) => x.id === m.speakerId)) || speakers.find((x) => normalizeSearch(x.name) === normalizeSearch(m.name));
 
 /**
  * Production's FAQ, in plain words. Travel: meetup speakers' travel and accommodation are not covered
@@ -160,12 +164,15 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
           ORGANISERS.map((o) => {
             const email = EMAIL[o.name];
             const socials = (o.links ?? []).filter((l) => socialKind(l.label));
+            const sp = speakerFor(o);
             return (
-              <Card as="li" padding="md" title={o.name} level="h4" mediaLayout="stack" mediaRatio="square">
+              // With a speaker profile, the whole card opens it in a new tab, as the team cards on /about do (owner, 19th November 2026).
+              <Card as="li" padding="md" title={o.name} level="h4" href={sp ? `/speakers/${sp.id}` : undefined} external={sp ? true : undefined} mediaLayout="stack" mediaRatio="square">
                 {o.photo ? <Photo slot="media" photo={o.photo} sizes="(min-width: 800px) 30vw, 100vw" /> : <Monogram slot="media" initials={o.initials} size="portrait" label={o.name} />}
                 <p class="m-0 text-compact text-ink-2">{o.role}</p>
                 {(email || socials.length > 0) && (
-                  <ul slot="footer" class="m-0 p-0 list-none flex flex-wrap gap-2" aria-label={`${o.name}: email and links`}>
+                  // Above the card's link, so each one is its own link.
+                  <ul slot="footer" class="relative z-10 m-0 p-0 list-none flex flex-wrap gap-2" aria-label={`${o.name}: email and links`}>
                     {email && (
                       <li>
                         <a href={`mailto:${email}`} title={email} aria-label={`Email ${o.name}: ${email}`} class={buttonClass({ variant: 'secondary', iconOnly: true })}>
@@ -206,8 +213,12 @@ const FAQS: { question: string; answer: string; link?: { label: string; href: st
             <Card title={f.question} disclosure>
               <p class="m-0 text-body text-ink-2 text-pretty">{f.answer}</p>
               {f.link && (
-                <a href={f.link.href} class="font-bold text-body self-start">
+                <a href={f.link.href} class="self-start inline-flex items-center gap-2 font-bold text-body">
                   {f.link.label}
+                  {/* The arrow says it is a link (owner, 19th November 2026): bold text alone read as emphasis. */}
+                  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 flex-none">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
                 </a>
               )}
             </Card>

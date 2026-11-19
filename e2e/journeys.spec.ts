@@ -944,6 +944,11 @@ test.describe('home (Bogdan’s review)', () => {
     await expect(card).toHaveAccessibleName(/Details and RSVP$/);
     await expect(card).toHaveAttribute('href', /^\/events\//);
     await expect(page.getByText('Opens Meetup in a new tab')).toHaveCount(0);
+    // Without artwork (the sample meetup has none) the text fills the card: no empty image column beside it.
+    const box = card.locator('xpath=ancestor::div[contains(concat(" ", @class, " "), " group ")][1]');
+    await expect(box.locator('img')).toHaveCount(0);
+    const [cardBox, titleBox] = [await box.boundingBox(), await card.boundingBox()];
+    expect(titleBox!.x - cardBox!.x).toBeLessThan(40);
     const carousel = page.getByRole('region', { name: 'ZurichJS speakers' });
     await carousel.scrollIntoViewIfNeeded();
     await expect(page.locator('astro-island[ssr]', { has: carousel })).toHaveCount(0);

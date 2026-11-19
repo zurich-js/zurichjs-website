@@ -1,7 +1,7 @@
 ---
 /**
- * Current sponsors by tier: each one a link card to the sponsor's site, with its logo at the size the tier
- * promises (XL, large, medium, small), its name and its own words. Sponsors who asked for referral analytics
+ * Current sponsors by tier: each one a link card to the sponsor's site, with its name, its own words, and
+ * below them its logo at the size the tier promises (XL, large, medium, small). Sponsors who asked for referral analytics
  * (`allowReferrer`) get links without `noreferrer`.
  */
 import { TIER_LABEL, type Partner, type SponsorTier } from '@zurichjs/events';
@@ -33,14 +33,15 @@ const LOGO: Record<SponsorTier | 'none', { box: string; img: string; cols: strin
           </Heading>
           <ul class={`grid ${z.cols} gap-4 list-none m-0 p-0`}>
             {g.partners.map((p) => (
-              // The whole card is the link to the sponsor (Bogdan's review, 12th November 2026); the logo leads.
+              // The whole card is the link to the sponsor (Bogdan's review, 12th November 2026). The name and its arrow lead,
+              // as on every link card; the logo comes after the words (owner, 19th November 2026).
               <Card as="li" title={p.name} href={p.url} external linkAttrs={p.url ? { rel: partnerRel(p) } : undefined}>
+                {(p.blurb || p.description) && <p class="m-0 text-body text-ink-2">{p.blurb ?? p.description}</p>}
                 {p.logo && (
-                  <div class={`${z.box} order-first flex items-center`}>
+                  <div class={`${z.box} flex items-center`}>
                     <img src={p.logo} alt="" width="240" height="96" loading="lazy" decoding="async" class={`${z.img} max-w-full w-auto object-contain`} />
                   </div>
                 )}
-                {(p.blurb || p.description) && <p class="m-0 text-body text-ink-2">{p.blurb ?? p.description}</p>}
               </Card>
             ))}
           </ul>

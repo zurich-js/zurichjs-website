@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { font } from '../src/font.ts';
-import { breakpoints, color, colors, gutter, radii, radius, space, spacing, text } from '../src/theme.ts';
+import { breakpoints, color, colors, durations, easings, gutter, radii, radius, space, spacing, text } from '../src/theme.ts';
 
 const read = (f: string) => readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
 const css = read('theme.css');
@@ -44,6 +44,17 @@ describe('tokens', () => {
   it('gives every button, switch and field one 48px height, and chips 44px', () => {
     expect(space('control')).toBe('48px');
     expect(space('chip')).toBe('44px');
+  });
+  it('has the motion durations by job, and transitions without a duration get feedback', () => {
+    expect(durations).toMatchObject({ feedback: '150ms', reveal: '250ms', drift: '500ms', entrance: '1000ms' });
+    expect(Object.keys(easings).sort()).toEqual(['entrance', 'glide']);
+    expect(css).toContain('--default-transition-duration: var(--transition-duration-feedback);');
+  });
+  it('switches motion off under prefers-reduced-motion, view transitions included', () => {
+    const reduced = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(reduced).toContain('transition: none !important;');
+    expect(reduced).toContain('animation: none !important;');
+    expect(reduced).toContain('::view-transition-group(*)');
   });
   it('rounds tags at 6px, cards at 24px and pills fully', () => {
     expect(radius('tag')).toBe('6px');

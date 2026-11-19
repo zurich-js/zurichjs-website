@@ -61,3 +61,49 @@ test('the sponsorship billing switch moves with arrow keys and shows that price'
   await expect(tiers.getByRole('radio', { name: 'Yearly' })).toBeChecked();
   await expect(tiers.getByText('CHF 7’500')).toBeVisible();
 });
+
+test('"Add to calendar" is a menu: arrow keys move, Escape returns to the button, and the .ics file is a calendar entry', async ({ page, request }) => {
+  await at(page, '2026-11-01T12:00:00+01:00');
+  await page.goto('/events/2026-11-forms-types');
+  const button = page.getByRole('button', { name: 'Add to calendar' });
+  const menu = page.getByRole('menu');
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await expect(menu).toBeHidden();
+
+  // Opens on the first item; the arrows move and wrap; Escape closes and returns focus.
+  // (Retried until the island has hydrated; islands further down the page hydrate only when scrolled to.)
+  await expect(async () => {
+    await button.focus();
+    await page.keyboard.press('Enter');
+    await expect(button).toHaveAttribute('aria-expanded', 'true', { timeout: 500 });
+  }).toPass();
+  const items = menu.getByRole('menuitem');
+  await expect(items).toHaveText([/^Google Calendar/, /^Outlook/, /^Apple \/ iCal$/]);
+  await expect(items.nth(0)).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(items.nth(1)).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(items.nth(2)).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(items.nth(0)).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(button).toBeFocused();
+
+  // Google and Outlook open elsewhere; Apple and other apps get the event's own file.
+  await button.click();
+  await expect(items.nth(0)).toHaveAttribute('href', /^https:\/\/calendar\.google\.com\//);
+  await expect(items.nth(0)).toHaveAttribute('target', '_blank');
+  await expect(items.nth(2)).toHaveAttribute('href', '/events/2026-11-forms-types.ics');
+  const ics = await request.get('/events/2026-11-forms-types.ics');
+  expect(ics.status()).toBe(200);
+  expect(ics.headers()['content-type']).toContain('text/calendar');
+  const body = await ics.text();
+  expect(body).toContain('BEGIN:VEVENT');
+  expect(body).toContain('UID:');
+  expect(body.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+
+  // A click outside closes it.
+  await page.locator('h1').click();
+  await expect(menu).toBeHidden();
+});

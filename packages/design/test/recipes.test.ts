@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { buttonClass, cardClass, chipClass, cx, isExternal, monogramClass, noticeClass, opensNewTab, tagClass, type ButtonVariant } from '../src/recipes.ts';
+import { buttonClass, cardClass, chipClass, cx, isExternal, monogramClass, motion, noticeClass, opensNewTab, tagClass, type ButtonVariant } from '../src/recipes.ts';
 
 const VARIANTS: ButtonVariant[] = ['primary', 'secondary', 'cta', 'plain'];
 
@@ -56,5 +57,16 @@ describe('tags, chips, cards and notices', () => {
     expect(noticeClass('success')).toContain('bg-success-soft');
     expect(noticeClass('danger')).toContain('bg-danger-soft');
     expect(noticeClass('note')).not.toMatch(/success|danger/);
+  });
+});
+
+describe('motion', () => {
+  const css = readFileSync(new URL('../src/motion.css', import.meta.url), 'utf8');
+  it('every motion recipe names a utility that motion.css defines', () => {
+    for (const utility of Object.values(motion)) expect(css, utility).toContain(`@utility ${utility} {`);
+  });
+  it('motion.css defines no duration or easing of its own: they are tokens in theme.css', () => {
+    expect(css).not.toMatch(/\b\d+(\.\d+)?m?s\b/);
+    expect(css).not.toContain('cubic-bezier');
   });
 });

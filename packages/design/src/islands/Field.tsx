@@ -143,20 +143,21 @@ export function FileField({
   const { ids, describedBy } = useDescribedBy(hint, error);
   return (
     <div class="flex flex-col gap-1.5">
-      <span id={ids.label} class="text-base font-bold">
+      <span id={ids.label} class="text-compact font-bold">
         {label}
       </span>
       {hint && (
-        <span id={ids.hint} class="text-base leading-normal text-grey-text">
+        <span id={ids.hint} class="text-compact font-normal text-grey-text">
           {hint}
         </span>
       )}
       <div class="flex flex-wrap items-center gap-3 min-w-0">
         <label
           class={cx(
-            'inline-flex min-h-11 items-center rounded-pill border px-5 text-base font-bold cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-blue',
-            invalid ? 'border-danger' : 'border-black',
-            disabled ? 'opacity-50 cursor-not-allowed' : 'bg-white hover:bg-grey',
+            'inline-flex items-center min-h-control px-6 rounded-pill border bg-white text-compact font-bold text-black select-none transition-colors',
+            'has-focus-visible:outline-3 has-focus-visible:outline-blue has-focus-visible:outline-offset-2',
+            border(invalid),
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-grey',
           )}
         >
           <input
@@ -171,11 +172,16 @@ export function FileField({
           />
           {button}
         </label>
-        <span class="min-w-0 text-base text-ink-2 break-all">{fileName || 'No file chosen'}</span>
+        <span class="min-w-0 text-compact text-ink-2 break-all">{fileName || 'No file chosen'}</span>
       </div>
       {error !== undefined && (
-        <span id={ids.error} class="text-sm text-danger" aria-live="polite">
-          {error}
+        <span id={ids.error} class="font-normal text-meta text-danger min-h-lh" aria-live="polite">
+          {/* Keyed by its text, so each new message fades in. */}
+          {error && (
+            <span key={error} class={motion.enter}>
+              {error}
+            </span>
+          )}
         </span>
       )}
     </div>

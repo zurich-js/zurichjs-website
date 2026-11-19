@@ -1,9 +1,11 @@
 /** Types, labels and small pieces the sponsor admin views share (SponsorsAdmin.tsx). */
-import type { ComponentChildren } from 'preact';
+import type { ComponentChildren, Ref } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { TextField } from '@zurichjs/design/islands/Field';
-import { badgeClass, optionClass, optionInput, surfaceClass, type BadgeTone } from '@zurichjs/design/recipes';
+import { Notice as Result } from '@zurichjs/design/islands/Notice';
+import { Tag } from '@zurichjs/design/islands/Tag';
+import { optionClass, optionInput, type TagTone } from '@zurichjs/design/recipes';
 import { fee, type Cycle, type SponsorEvent, type Status, type Tier } from '@zurichjs/sponsorship';
 import { longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView, agreementView, contactView, documentView, logoView } from '../../../server/sponsor.ts';
@@ -51,26 +53,26 @@ export const STATUS_LABEL: Record<Status, string> = {
   ended: 'Ended',
 };
 export const STATUSES = Object.keys(STATUS_LABEL) as Status[];
-const STATUS_TONE: Record<Status, BadgeTone> = { pending: 'neutral', active: 'dark', past_due: 'danger', ending: 'neutral', ended: 'neutral' };
+const STATUS_TONE: Record<Status, TagTone> = { pending: 'grey', active: 'black', past_due: 'danger', ending: 'grey', ended: 'grey' };
 
 export const ROLE_LABEL: Record<Contact['role'], string> = { primary: 'Primary contact', billing: 'Billing contact', other: 'Colleague' };
 
-/** Overdue money is the one attention flag shown in red; everything else is a dark badge. */
-const ATTENTION_TONE: Record<Attention, BadgeTone> = {
+/** Overdue money is the one attention flag shown in red; everything else is a black tag. */
+const ATTENTION_TONE: Record<Attention, TagTone> = {
   payment_overdue: 'danger',
   manual_overdue: 'danger',
   meetup_passed_unpaid: 'danger',
-  manual_due_soon: 'dark',
-  invite_waiting: 'dark',
-  new_logo: 'dark',
+  manual_due_soon: 'black',
+  invite_waiting: 'black',
+  new_logo: 'black',
 };
 
 export function StatusBadge({ status }: { status: Status }) {
-  return <span class={badgeClass(STATUS_TONE[status])}>{STATUS_LABEL[status]}</span>;
+  return <Tag tone={STATUS_TONE[status]}>{STATUS_LABEL[status]}</Tag>;
 }
 
 export function AttentionBadge({ flag, labels }: { flag: Attention; labels: Record<string, string> }) {
-  return <span class={badgeClass(ATTENTION_TONE[flag])}>{labels[flag] ?? flag}</span>;
+  return <Tag tone={ATTENTION_TONE[flag]}>{labels[flag] ?? flag}</Tag>;
 }
 
 /** Today in Zurich, YYYY-MM-DD. */
@@ -106,15 +108,15 @@ export function follow(e: MouseEvent, go: () => void) {
   go();
 }
 
-export function Notice({ kind, children }: { kind: 'error' | 'done'; children: ComponentChildren }) {
-  return kind === 'error' ? (
-    <div role="alert" class={surfaceClass('danger', 'm-0 flex flex-col gap-3 px-5 py-4 text-base font-bold break-words')}>
-      {children}
-    </div>
-  ) : (
-    <div role="status" class={surfaceClass('success', 'm-0 flex flex-col gap-3 px-5 py-4 text-base font-bold break-words')}>
-      {children}
-    </div>
+/**
+ * The result of an admin action: an error (an alert) or what was done (a status). Long emails and links wrap.
+ * `detail` goes under the sentence (a link to copy); `focusRef` lets the caller move focus to it.
+ */
+export function Notice({ kind, focusRef, detail, children }: { kind: 'error' | 'done'; focusRef?: Ref<HTMLDivElement>; detail?: ComponentChildren; children: ComponentChildren }) {
+  return (
+    <Result tone={kind === 'error' ? 'danger' : 'success'} live focusRef={focusRef} title={children} class="break-words">
+      {detail}
+    </Result>
   );
 }
 
@@ -124,12 +126,11 @@ export function CopyLink({ label, url }: { label: string; url: string }) {
   const timer = useRef<number>();
   useEffect(() => () => window.clearTimeout(timer.current), []);
   return (
-    <div class="flex flex-col gap-2 font-normal">
+    <div class="flex flex-col gap-2">
       <TextField label={label} value={url} readOnly onFocus={(e) => (e.target as HTMLInputElement).select()} />
       <div class="flex flex-wrap items-center gap-3">
         <Button
-          variant="black"
-          size="sm"
+          variant="primary"
           onClick={() => {
             void navigator.clipboard?.writeText(url).then(() => {
               setCopied(true);
@@ -140,7 +141,7 @@ export function CopyLink({ label, url }: { label: string; url: string }) {
         >
           Copy link
         </Button>
-        <span role="status" class="text-base">
+        <span role="status" class="text-compact">
           {copied ? 'Copied.' : ''}
         </span>
       </div>
@@ -185,8 +186,8 @@ export function MeetupPicker({
   const all = [...extra.filter((m) => !meetups?.some((x) => x.id === m.id)), ...(meetups ?? [])].sort((a, b) => a.date.localeCompare(b.date));
   return (
     <ChoiceGroup legend="Meetups" hint={hint} error={error} class="flex flex-col gap-2">
-      {!meetups && <span class="text-base text-grey-text">Loading the meetups…</span>}
-      {meetups && all.length === 0 && <span class="text-base text-grey-text">{loadError || 'No upcoming meetup is published yet.'}</span>}
+      {!meetups && <span class="text-compact text-grey-text">Loading the meetups…</span>}
+      {meetups && all.length === 0 && <span class="text-compact text-grey-text">{loadError || 'No upcoming meetup is published yet.'}</span>}
       {all.map((m) => (
         <label key={m.id} class={optionClass(!!error, 'self-stretch md:self-start')}>
           <input

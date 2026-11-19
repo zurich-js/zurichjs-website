@@ -2,6 +2,7 @@
 
 ## 2026-11-19
 
+- **Update**: Web Zurich is removed from the site entirely, not only delisted: its partner record, logo and the January 2025 About timeline photo are deleted, and February 2025 no longer mentions the partnership. Svelte Society Zurich is gone from `/about/why-zurichjs` ([Partners](/domains/partners/overview.md)).
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).
 - **Correction**: the sponsorship and partner pages said a running sponsorship reaches the public lists only through a `partner` document in Sanity; that is no longer so. The admin field "Sanity partner id" is "Partner id": it is the id of the partner record, in Sanity or in the code list.
 - **Update**: the partner list after the owner's review: novu, GetYourGuide and Orbiz Josef are current hosts again, iJS Munich and Web Zurich are no longer shown, Stripe, SAE, Smallpdf and CityJS are confirmed as they were ([Partners](/domains/partners/overview.md), [the partner review Spec](/domains/partners/specs/partner-data-review.md)).

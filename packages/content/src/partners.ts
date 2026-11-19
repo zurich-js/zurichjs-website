@@ -70,7 +70,6 @@ const LOGO_META: Record<string, Pick<Partner, 'logoRatio' | 'logoOpaque' | 'logo
   'supabase.svg': { logoRatio: 5.142 },
   'vercel-black.webp': { logoRatio: 5.15 },
   'voxxed-days-zurich.webp': { logoRatio: 3.582, logoOpaque: true },
-  'webzurich.webp': { logoRatio: 1.894, logoOpaque: true },
   'wts.webp': { logoRatio: 3.265 },
 };
 const logo = (f: string): Pick<Partner, 'logo' | 'logoRatio' | 'logoOpaque' | 'logoKnockout'> => {

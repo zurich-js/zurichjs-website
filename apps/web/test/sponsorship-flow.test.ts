@@ -340,6 +340,25 @@ describe('sponsorship flow', () => {
     expect(w.emails.at(-1)!.text).toContain('Your sponsorship and its benefits continue');
   });
 
+  it('emails the invitation of a one-time sponsorship with its meetups', async () => {
+    const r = await handleAddSponsor(
+      asAdmin('/api/membership/admin/sponsors', {
+        mode: 'invite',
+        companyName: 'Initrode',
+        contactName: 'Bill Lumbergh',
+        contactEmail: 'bill@initrode.com',
+        tier: 'friend',
+        cycle: 'once',
+        eventIds: ['event-dec'],
+      }),
+      adminDeps(),
+    );
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: true, emailed: 1 });
+    expect(w.emails.at(-1)!.to).toEqual(['bill@initrode.com']);
+    expect(w.emails.at(-1)!.text).toContain('ZurichJS Meetup December, 9th December 2026');
+  });
+
   it('bundles meetups at a custom price, with a signed contract and a payment link', async () => {
     const r = await handleAddSponsor(
       asAdmin('/api/membership/admin/sponsors', {

@@ -198,7 +198,9 @@ export async function createSponsor(
   let sponsor = created.sponsor;
   if (meetups.length) await store.setMeetups(sponsor.id, meetups, BOARD);
   if (imported) sponsor = await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: BOARD, payload: { imported: true } });
-  const emailed = input.sendEmail ? await sendInvitation(sponsor, [created.contact], input.message, deps) : 0;
+  // Not `deps` itself: its `meetups` loads the upcoming meetups, and emailSponsor reads `meetups` as this sponsorship's own.
+  const { meetups: _loader, ...lifecycle } = deps;
+  const emailed = input.sendEmail ? await sendInvitation(sponsor, [created.contact], input.message, lifecycle) : 0;
   await note(
     `:envelope: ${imported ? 'Existing sponsorship added' : 'Invited to sponsor'}: ${who(sponsor)}, ${sponsorFee(sponsor, meetups)}${
       meetups.length ? ` (${meetups.map((m) => slackText(meetupLabel(m))).join('; ')})` : ''

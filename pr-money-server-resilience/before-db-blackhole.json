@@ -1,0 +1,1 @@
+{"scenario":"db-blackhole","totalMs":70008,"result":{"status":"no response after 70000 ms (cap)","body":""},"calls":["5ms TCP accepted, never answered"]}

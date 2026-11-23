@@ -1,0 +1,9 @@
+ ✓ tmp/battle-test/tests/w4-adapted.test.ts > donations on the shared webhook > guard: a donation posts one Slack note 3ms
+ ✓ tmp/battle-test/tests/w4-adapted.test.ts > donations on the shared webhook > W4-15: Slack down: the webhook answers 500 (a Response), it does not throw 0ms
+ × tmp/battle-test/tests/w4-adapted.test.ts > donations on the shared webhook > W4-16: a redelivered donation event posts one Slack note 3ms
+ ✓ tmp/battle-test/tests/w4-adapted.test.ts > donations on the shared webhook > W4-17: without a membership database a donation event is still accepted 0ms
+ ✓ tmp/battle-test/tests/w4-adapted.test.ts > rebuild queue > guard: a failed build hook keeps the publish pending; the next tick retries 3ms
+ ✓ tmp/battle-test/tests/w4-adapted.test.ts > rebuild queue > W4-18: a publish recorded while the build hook call is in flight stays pending 1ms
+ ✓ tmp/battle-test/tests/w4-adapted.test.ts > rebuild queue > W4-19 (characterisation): steady publishing every 90 s never builds; there is no maximum wait 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  1 failed | 6 passed (7)

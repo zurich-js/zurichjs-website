@@ -1,0 +1,1 @@
+{"scenario":"daily-hang","totalMs":23016,"result":{"completed":0,"ended":0,"closed":1,"reminded":0,"deferred":["s_3","s_1"]},"after":{"timeline":["5005ms ended=1","10010ms ended=1","15012ms ended=1","20015ms ended=1"],"endedAtFinish":1},"calls":["12ms POST https://api.stripe.com/v1/checkout/sessions/cs_test_2/expire","15013ms POST https://slack.com/api/chat.postMessage"]}

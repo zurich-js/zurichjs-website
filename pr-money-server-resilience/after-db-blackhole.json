@@ -1,0 +1,1 @@
+{"scenario":"db-blackhole","totalMs":5010,"result":{"status":502,"body":"{\"ok\":false,\"error\":\"Could not load the sponsors. Try again; details are in the function log.\"}"},"calls":["5ms TCP accepted, never answered"]}

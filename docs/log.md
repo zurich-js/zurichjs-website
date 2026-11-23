@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-24
+
+- **Added**: a Spec for [the sponsor dashboard, the raffle add-on and fee coverage](/domains/sponsorship/specs/sponsor-dashboard-raffle-fees.md): covered meetups for every billing cycle, a separately paid raffle for existing sponsors only, a per-offer choice of who covers payment-processing fees, and the configuration gates that keep surcharges and entrant sharing off until the owner sets them.
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

@@ -3,7 +3,7 @@ type: Frontend Area
 title: Membership frontend
 description: The membership pages (/membership, /membership/terms, /membership/account) and the board's admin area (/admin), with how the admin area is protected.
 tags: [membership, frontend, admin]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Membership frontend
@@ -31,7 +31,8 @@ A static shell with a Preact island; it holds no member data in the HTML. Not in
 
 For the board, behind one shared password, `ADMIN_PASSWORD` (owner, 11th November 2026). `/admin` asks for the password first, then shows Memberships; there is no content section, since Sanity is reached through the Studio directly. noindex.
 
-- **What it shows:** all members with search (name, email, organisation) and a status filter, the totals, and one member's details: terms accepted, certificates, Stripe ids, notes and the full history.
+- **What it shows:** members with search (name, email, organisation) and a status filter, the totals, and one member's details: terms accepted, certificates, Stripe ids, notes and the full history. The list shows the newest 500 (`LIST_LIMIT`, `apps/web/src/server/admin-views.ts`) and says so when more match; the totals count every member in the database.
+- **When the site does not answer:** a session check that fails (no connection, a platform error page) says the admin area cannot be reached, with Try again; only an answer from the site shows the sign-in form. Sign-in shows the site's own sentence for a wrong password or the lockout, and "We couldn’t complete sign-in. Try again in a moment." for anything else, since no verdict on the password came back. A list or member that fails to load offers Try again. Reads give up after 20 s; writes wait for the site, and when it cannot be reached the message says the change may or may not have been saved (`apps/web/src/components/islands/admin-api.ts`). Loading lines say after 10 s that loading is taking longer than usual (`Loading`, [Components](/systems/design-system/components.md)).
 - **What it does:** confirm resignations (the same as the Slack button), import members (dry run first), export everyone as CSV (formulas neutralised for spreadsheets).
 - **Invite someone to join:** enter who they are and the level and cycle they asked for. They get "Your invitation to join ZurichJS" with a link to the account page. Until they pay they are listed as "Waiting for first payment" (source: invited by the board). Inviting the same email again updates the choice and resends; someone who is already a member is refused.
 - **Add a member who paid manually (cash/bank):** person or organisation, name, email, level, billing cycle and the month their paid term started; the form shows until when that covers them. Adding them records them as paid manually until the term ends (one cycle from the first of the start month), issues their certificate for that term, optionally emails it with an invitation to set up automatic payment (Stripe charges nothing before the term ends, then renews and issues the next certificate), and posts a note in the membership Slack channel. One member per email address.

@@ -6,7 +6,7 @@
  */
 import { checkTransition, TransitionError } from './state.ts';
 import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeLinks } from './store.ts';
-import type { Actor, Agreement, Contact, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch } from './types.ts';
+import type { Actor, Agreement, Contact, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch, Status } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -143,6 +143,8 @@ export function postgresStore(db: Queryable): SponsorStore {
       );
       return rows.map(sponsorOf);
     },
+    statusCounts: async () =>
+      Object.fromEntries((await q<{ status: Status; n: number }>('select status, count(*)::int as n from sponsors group by status')).map((r) => [r.status, r.n])),
     async create(s, c, actor) {
       const rows = await q(
         `with s as (

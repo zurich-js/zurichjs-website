@@ -1,6 +1,7 @@
 /**
  * Members for the admin area.
- *   GET ?q=&status=   → { ok, members, counts } (newest first, at most 500)
+ *   GET ?q=&status=   → { ok, members, truncated, counts } (newest first, at most LIST_LIMIT, `truncated` when more
+ *                       match; `counts` per status over every member, unfiltered lists only)
  *   POST { kind, name, organisationName?, email, level, cycle, startMonth: 'YYYY-MM', category?, notes?, sendEmail? }
  *     adds a member who paid manually, cash/bank (server/membership-manual.ts) → 200 { ok, member, certificate, emailed }
  *     · 400 { error, field } · 409 already a member
@@ -8,7 +9,7 @@
 import { isMember, type Status } from '@zurichjs/membership';
 import type { APIRoute } from 'astro';
 import { adminRoute, type AdminDeps } from '../../../../../server/admin-route.ts';
-import { adminMember } from '../../../../../server/admin-views.ts';
+import { adminMember, LIST_LIMIT } from '../../../../../server/admin-views.ts';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../server/http.ts';
 import { addManualMember, parseManualMember, type ManualDeps } from '../../../../../server/membership-manual.ts';
 
@@ -24,13 +25,14 @@ export const handleAdminMembers = (request: Request, deps: AdminDeps = {}) =>
       const url = new URL(request.url);
       const q = url.searchParams.get('q')?.trim().slice(0, 200) || undefined;
       const status = STATUSES.find((s) => s === url.searchParams.get('status'));
-      const members = await store.search({ q, status, limit: 500 });
-      // Totals for the overview, only when the list is not filtered.
-      const counts =
-        q || status
-          ? null
-          : { members: members.filter((m) => isMember(m.status)).length, ...Object.fromEntries(STATUSES.map((s) => [s, members.filter((m) => m.status === s).length])) };
-      return json(200, { ok: true, members: members.map(adminMember), counts });
+      const found = await store.search({ q, status, limit: LIST_LIMIT + 1 });
+      // Totals for the overview, over every member, only when the list is not filtered.
+      const all = q || status ? null : await store.statusCounts();
+      const counts = all && {
+        members: STATUSES.filter(isMember).reduce((n, s) => n + (all[s] ?? 0), 0),
+        ...Object.fromEntries(STATUSES.map((s) => [s, all[s] ?? 0])),
+      };
+      return json(200, { ok: true, members: found.slice(0, LIST_LIMIT).map(adminMember), truncated: found.length > LIST_LIMIT, counts });
     },
     'load the members',
   );

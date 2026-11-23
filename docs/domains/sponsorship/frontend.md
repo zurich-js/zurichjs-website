@@ -3,7 +3,7 @@ type: Frontend Area
 title: Sponsorship frontend
 description: The sponsor's account page, the sponsorship agreement page, and the board's sponsor admin with its day-to-day tasks.
 tags: [sponsorship, frontend, admin]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Sponsorship frontend
@@ -24,7 +24,7 @@ The sponsorship agreement, approved by the owner on 18th November 2026. Its vers
 
 ## `/admin/sponsors` (noindex)
 
-For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)). "Needs you" lists what needs the board.
+For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)), with the same handling when the site does not answer. "Needs you" lists what needs the board. The list shows the newest 500 and says so when more match; the counts on the status filter cover every sponsorship.
 
 **Day to day:**
 

@@ -326,6 +326,30 @@ test.describe('the sponsorship page (/partners/account)', () => {
 });
 
 test.describe('the board’s sponsors (/admin/sponsors)', () => {
+  test('an outage is not a sign-out: the admin can try again, and a failed list offers the same', async ({ page }) => {
+    let session = 0;
+    let list = 0;
+    await page.route('**/api/membership/admin/session', (route) => (session++ === 0 ? route.abort('connectionrefused') : route.fulfill({ json: { ok: true, signedIn: false } })));
+    await page.route('**/api/membership/admin/login', (route) => route.fulfill({ status: 502, contentType: 'text/html', body: '<html>502 Bad Gateway</html>' }));
+    await page.goto(ADMIN);
+    await expect(page.getByRole('alert')).toContainText('We couldn’t reach the admin area.');
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await page.getByLabel('Password').fill('right-or-wrong');
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    // A platform error page is no verdict on the password.
+    await expect(page.getByRole('alert')).toHaveText('We couldn’t complete sign-in. Try again in a moment.');
+    await expect(page.getByRole('button', { name: 'Sign in' })).toBeEnabled();
+
+    await page.unrouteAll();
+    await mockAdmin(page);
+    await page.route(/\/api\/membership\/admin\/sponsors(\?.*)?$/, (route) => (list++ === 0 ? route.abort('connectionrefused') : route.fallback()));
+    await page.goto(ADMIN);
+    await expect(page.getByRole('alert')).toContainText('We couldn’t reach the site.');
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect(page.getByRole('heading', { name: 'Sponsors' })).toBeVisible();
+    await expect(page.getByText('Acme AG').first()).toBeAttached();
+  });
+
   test('the list shows each sponsor’s plan and status, filters by status, and opens one sponsor', async ({ page, isMobile }) => {
     const queries = await mockAdmin(page);
     await page.goto(ADMIN);

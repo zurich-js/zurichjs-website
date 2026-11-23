@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-24
+
+- **Update**: the admin area tells an outage from a sign-out, offers Try again when a load fails, gives reads a 20 s limit, and counts every member and sponsorship; lists stop at 500 rows and say so ([Membership frontend](/domains/membership/frontend.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)). New island primitives `Loading` and `LoadFailed` ([Components](/systems/design-system/components.md)).
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

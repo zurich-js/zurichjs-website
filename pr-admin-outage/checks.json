@@ -1,0 +1,922 @@
+[
+ {
+  "scenario": "sponsors-slow",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-slow",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-slow",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-slow",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-slow",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-failed",
+  "width": 320,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-failed",
+  "width": 375,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-failed",
+  "width": 390,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-failed",
+  "width": 1280,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-failed",
+  "width": 1440,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-502",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: Could not load the sponsors."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-502",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: Could not load the sponsors."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-502",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: Could not load the sponsors."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-502",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: Could not load the sponsors."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-502",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: Could not load the sponsors."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-empty",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-empty",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-empty",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-empty",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-empty",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-truncated",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-truncated",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-truncated",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-truncated",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-truncated",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-loading",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the members\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-loading",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the members\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-loading",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the members\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-loading",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the members\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-loading",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the members\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-failed",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-failed",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-failed",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-failed",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-failed",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-truncated",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-truncated",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-truncated",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-truncated",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "members-truncated",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-unreachable",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-unreachable",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-unreachable",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-unreachable",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-unreachable",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-502",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-502",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-502",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-502",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "session-502",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the admin area.The site did not answer, so we can\u2019t tell wheth"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signed-out",
+  "width": 320,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signed-out",
+  "width": 375,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signed-out",
+  "width": 390,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signed-out",
+  "width": 1280,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signed-out",
+  "width": 1440,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-502",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t complete sign-in. Try again in a moment."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-502",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t complete sign-in. Try again in a moment."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-502",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t complete sign-in. Try again in a moment."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-502",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t complete sign-in. Try again in a moment."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-502",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t complete sign-in. Try again in a moment."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-refused",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-refused",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-refused",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-refused",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "signin-refused",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and try again."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-loading",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-loading",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-loading",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-loading",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsors-loading",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading the sponsors\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ }
+]

@@ -112,7 +112,8 @@ services:
       stripe-secret:
         condition: service_completed_successfully
     # Before the site starts, the database is migrated by the script every Netlify build runs
-    # (apps/web/scripts/db-migrate.mjs), here against the local Postgres.
+    # (apps/web/scripts/db-migrate.mjs), here against the local Postgres, and the partners table is
+    # filled from the list in code (apps/web/scripts/seed-partners.ts: it only adds what is missing).
     # Astro's dev lock (.astro/dev.json) lives in the bind mount, so one left by a previous container is always stale here.
     command:
       - sh
@@ -121,6 +122,7 @@ services:
         export STRIPE_WEBHOOK_SECRET="$$(cat /run/stripe/webhook-secret)"
         corepack enable && pnpm install --frozen-lockfile &&
           DATABASE_URL="$$MEMBERSHIP_DB_URL" node apps/web/scripts/db-migrate.mjs &&
+          pnpm -s partners:seed &&
           rm -f apps/web/.astro/dev.json &&
           exec pnpm --filter @zurichjs/web exec astro dev --host 0.0.0.0 --port 4321
     environment:

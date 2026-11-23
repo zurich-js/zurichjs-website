@@ -7,7 +7,18 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startPg, type Pg } from '../../membership/test/pg.ts';
-import { ContactRequired, DuplicateContact, NotFound, TransitionError, postgresStore, type NewSponsor, type SponsorStore } from '../src/index.ts';
+import {
+  ContactRequired,
+  DuplicateContact,
+  DuplicatePartner,
+  NotFound,
+  TransitionError,
+  postgresPartners,
+  postgresStore,
+  type NewPartner,
+  type NewSponsor,
+  type SponsorStore,
+} from '../src/index.ts';
 
 const migrations = join(import.meta.dirname, '../../../apps/web/database/migrations');
 const db = startPg();
@@ -337,5 +348,47 @@ d('sponsorship database', () => {
     await store.markStripeEvent('evt_9', 'invoice.paid');
     expect(await store.stripeEventSeen('evt_9')).toBe(true);
     expect(pgdb.sql(`select count(*) from stripe_events where id = 'evt_9'`)).toBe('0');
+  });
+
+  it('keeps partner records with up to two logo files each, replaced by variant', async () => {
+    const partners = postgresPartners(pool);
+    const acme: NewPartner = {
+      id: 'acme',
+      name: 'Acme',
+      url: 'https://acme.ch',
+      kinds: ['sponsor', 'venue'],
+      tier: 'friend',
+      current: true,
+      delisted: false,
+      description: null,
+      blurb: null,
+      allowReferrer: false,
+      logoBackground: '#635bff',
+      logoKnockout: false,
+    };
+    expect(await partners.create(acme)).toMatchObject({ id: 'acme', kinds: ['sponsor', 'venue'], logoBackground: '#635bff' });
+    await expect(partners.create(acme)).rejects.toBeInstanceOf(DuplicatePartner);
+    expect(await partners.update('acme', { current: false, tier: null, logoBackground: null })).toMatchObject({ current: false, tier: null, logoBackground: null, name: 'Acme' });
+
+    const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"/>');
+    const first = await partners.setLogo('acme', 'colour', { contentType: 'image/svg+xml', filename: 'acme.svg', data: svg, ratio: 2, opaque: false });
+    const second = await partners.setLogo('acme', 'colour', { contentType: 'image/svg+xml', filename: 'acme-2.svg', data: svg, ratio: 2, opaque: false });
+    await partners.setLogo('acme', 'mono', { contentType: 'image/svg+xml', filename: 'acme-black.svg', data: svg, ratio: null, opaque: false });
+    // A new upload has a new id (a new address on the site) and the old file is gone.
+    expect(second.id).not.toBe(first.id);
+    expect(await partners.logoFile(first.id)).toBeNull();
+    expect(new TextDecoder().decode((await partners.logoFile(second.id))!.data)).toContain('viewBox');
+    const got = (await partners.get('acme'))!;
+    expect(got.logos.colour).toMatchObject({ filename: 'acme-2.svg', ratio: 2, bytes: svg.length });
+    expect(got.logos.mono?.filename).toBe('acme-black.svg');
+    expect((await partners.logoFiles()).map((l) => l.variant).sort()).toEqual(['colour', 'mono']);
+    expect((await partners.list()).map((p) => p.id)).toEqual(['acme']);
+
+    await partners.removeLogo('acme', 'mono');
+    expect((await partners.get('acme'))!.logos.mono).toBeUndefined();
+    await expect(partners.setLogo('nobody', 'colour', { contentType: 'image/png', filename: 'x.png', data: svg, ratio: null, opaque: false })).rejects.toThrow('No partner');
+    expect(await partners.get('nobody')).toBeNull();
+    expect(pgdb.fails(`insert into partners (id, name) values ('Not An Id', 'x')`)).toMatch(/check/);
+    expect(pgdb.fails(`insert into partners (id, name, logo_background) values ('x', 'x', 'purple')`)).toMatch(/check/);
   });
 });

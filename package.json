@@ -23,7 +23,8 @@
     "membership:import": "tsx tools/membership-import.ts",
     "membership:stripe-setup": "tsx tools/membership-stripe-setup.ts",
     "membership:signature": "tsx tools/membership-signature.ts",
-    "sponsorship:stripe-setup": "tsx tools/sponsorship-stripe-setup.ts"
+    "sponsorship:stripe-setup": "tsx tools/sponsorship-stripe-setup.ts",
+    "partners:seed": "tsx apps/web/scripts/seed-partners.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

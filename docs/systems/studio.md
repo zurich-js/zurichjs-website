@@ -74,4 +74,4 @@ With Drafts off, saving a draft never triggers a build; only publishing does. Re
 
 # Related specs
 
-- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)
+- [Review every partner, then seed the production database](/domains/partners/specs/partner-data-review.md)

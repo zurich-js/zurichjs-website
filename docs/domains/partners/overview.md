@@ -10,15 +10,16 @@ timestamp: "2026-11-25T00:00:00Z"
 
 **This page owns the public side of partners.** Paid sponsorships (sign-up, payment, the sponsor account and admin) are in [Sponsorship](/domains/sponsorship/overview.md); a running sponsorship sets who is a current sponsor and at which tier, on top of the list described below.
 
-Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisting, event supporters, `withPartnerFallback`), `packages/content/src/sponsorships.ts` (`applySponsorships`), `packages/events/src/today.ts` (`groupPartners`, `eventThanks`), `apps/web/src/pages/partners.astro`, the `partner` type ([Content model](/domains/content/content-model.md)), and the logo components ([Components](/systems/design-system/components.md), "Logos").
+Source: `packages/content/src/partners.ts` (the seed list, tiers, delisting, event supporters, `withPartnerFallback`), `packages/content/src/sponsorships.ts` (`applySponsorships`), `packages/events/src/today.ts` (`groupPartners`, `eventThanks`), `apps/web/src/pages/partners.astro`, the `partner` type ([Content model](/domains/content/content-model.md)), and the logo components ([Components](/systems/design-system/components.md), "Logos").
 
 ## Where the list comes from
 
-- **Sanity `partner` documents win.** While Sanity has none, `withPartnerFallback` uses the code-side record in `packages/content/src/partners.ts`, which follows the old production partner list; every entry names its source ([Content sources](/reference/content-sources.md)). Once Sanity has any partner document, the record is ignored. Sample content uses the same record.
-- **The sponsorships database overrides `tier` and `current`** for a partner a sponsorship is linked to, by the partner's `id` (owner, 19th November 2026). A running sponsorship makes the partner a current sponsor at its tier; an ended one makes it a past sponsor. The logo, hover colour, link and words stay the partner record's. A running sponsor with no partner record is listed by name, without a logo. A build that cannot read the database shows this list as it is. The rules and the builds are in [Sponsorship](/domains/sponsorship/overview.md), "On the public site".
-- **GYFF's tier** comes from its sponsorship. The record's `friend` is only what a build without the database shows.
-- **With the fallback,** each event's host is the venue partner named in its own `location`, and only the supporters production stated for an evening are added (`EVENT_SUPPORTERS`). Hosts or supporters an event already has always win.
-- **The Studio's `seed-partners.ts`** writes 17 of the 33 partners as drafts for organisers to confirm (every "current" flag, with dates) before publishing. It is behind the code list: the review and what the script still needs are in [the partner review Spec](/domains/partners/specs/partner-data-review.md).
+- **The `partners` table in the database is the list** (owner, 20th November 2026): every sponsor, host and partner the site names, current and past, is a row there, edited by the board in `/admin/partners`. A build reads it with the sponsorships, in one step (`apps/web/src/server/sponsor-public.ts`, `withPartners` in `packages/content/src/index.ts`).
+- **The list in code is the seed and the fallback.** `packages/content/src/partners.ts`, with the logo files in `apps/web/public/images/partners`, follows the old production partner list; every entry names its source ([Content sources](/reference/content-sources.md)). It is what a build shows when it has no database, cannot read it, or the table is still empty, and what tests and CI show (they never read the database). `apps/web/scripts/seed-partners.ts` copies it into a local database ("Seeding" below).
+- **Sanity `partner` documents are no longer read first.** Production has none. They are used only when there is no database table to read and Sanity has some; the `partner` type and the Studio's `seed-partners.ts` are left as they were.
+- **The sponsorships database overrides `tier` and `current`** for a partner a sponsorship is linked to, by the partner's `id` (owner, 19th November 2026). A running sponsorship makes the partner a current sponsor at its tier; an ended one makes it a past sponsor. The logos, hover colour, link and words stay the partner record's. A running sponsor with no partner record is listed by name, without a logo, and the admin area flags it ("No logo on the site"). The rules and the builds are in [Sponsorship](/domains/sponsorship/overview.md), "On the public site".
+- **Event hosts:** while Sanity has no partner documents, each event's host is the venue partner named in its own `location`, and only the supporters production stated for an evening are added (`EVENT_SUPPORTERS`). Hosts or supporters an event already has always win.
+- **The review of every partner** (tier, current, logo files, hover colour) is in [the partner review Spec](/domains/partners/specs/partner-data-review.md).
 
 ## Who counts as current
 
@@ -26,6 +27,23 @@ Source: `packages/content/src/partners.ts` (the code-side record, tiers, delisti
 - **Web Zurich is a current community partner** again (owner, 25th November 2026). It was removed from every list on 19th November 2026.
 - **Delisted partners** are never promoted: `DELISTED_PARTNERS` (Ginetta, Code Blossom, DotJS, React Paris; owner, 2nd and 3rd November 2026; iJS Munich; owner, 19th November 2026) and any partner with `delisted`, matched by id or name, so a seeded Sanity document cannot bring them back. `groupPartners` leaves them out of every list (current, venue, community, previous), so they disappear from `/partners`, the home page, upcoming event pages, Tonight and the design gallery. They remain only as history: a past event they hosted still names them, and the About timeline and `llms-full.txt` keep past venues.
 - Vercel is listed as a past sponsor, not current (owner, 4th November 2026).
+
+## The partner record, logos and hover colour
+
+Source: `packages/sponsorship/src/partners.ts` (the store), `apps/web/src/server/partner-admin.ts`, `apps/web/src/components/islands/PartnersAdmin.tsx`, the endpoints under `apps/web/src/pages/api/membership/admin/partners`, and the migration `apps/web/database/migrations/20261123090000_partners.sql`.
+
+- **A record has** an id (lowercase letters, numbers and hyphens; fixed once created, because sponsorships and events link to it), name, website, kinds, tier, current, "do not show" (delisted), a short description, the sponsor's own words, and whether links to them carry the referrer. There is no delete: a partner that should disappear is marked "do not show".
+- **Two logo files** (owner, 20th November 2026), SVG, PNG or WebP up to 2 MB, checked like a sponsor's upload (`apps/web/src/server/sponsor-logo.ts`):
+  - **Colour logo:** the logo as the company wants it, in the sponsor and host cells and on event pages.
+  - **One-colour logo** (optional): a single-colour version on a transparent background, used where logos are black (the moving rows, the wall on `/partners`) and drawn white or black on the hover colour. Without it the colour logo is drawn in one colour by a filter ([Components](/systems/design-system/components.md), "Logos").
+- **Hover colour** (optional, `#rrggbb`): the colour the partner's cell turns on hover. The admin page previews the cell at rest, on hover and in a moving row.
+- **Only the board sets them.** A sponsor still uploads logos on their own page; a file is on the public site only once the board uses it as the partner's colour or one-colour logo ("Use as the colour logo" in `/admin/sponsors`, or an upload in `/admin/partners`).
+- **Where the files live:** in the database (`partner_logos`, one row per partner and variant), so a build reads them with the same connection. A build writes them out as static files, `/partner-logos/<logo id>.<ext>` (`apps/web/src/pages/partner-logos/[file].ts`); the dev server and the admin previews read them from `/api/partner-logo/<logo id>.<ext>`. A new upload has a new id, so an address never changes what it shows; both are served with a sandboxing content security policy. The logo's ratio and whether it is opaque are read from the file when it is uploaded (`apps/web/src/server/logo-meta.ts`).
+- **A change queues a rebuild,** debounced like a Sanity publish ([Rebuilds](/systems/operations/rebuilds.md)); the site follows a few minutes later.
+
+### Seeding
+
+`pnpm partners:seed` (`just seed-partners`) adds every partner of the list in code that the table does not have yet, with its logo file, and never changes one that is there. It refuses any database that is not on this machine. The local Docker stack runs it when the site starts. **No deployed database has been seeded** (owner, 20th November 2026: local only for now): until the owner seeds production, production builds find an empty table and show the list in code, as before.
 
 ## Where partners are thanked
 
@@ -61,4 +79,4 @@ The owner decisions and confirm items for partners (each current flag, the one-t
 # Related specs
 
 - [Online sponsorship on /partners](/domains/sponsorship/specs/partners-page-online.md)
-- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)
+- [Review every partner, then seed the production database](/domains/partners/specs/partner-data-review.md)

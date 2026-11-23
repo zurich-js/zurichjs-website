@@ -14,6 +14,7 @@ import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass } from '@zurichjs/design/recipes';
 import { RECURRING, TIERS, chf, cycleInfo, tierInfo, type EndedReason, type SponsorEvent, type Status, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate, shortDateTime } from '../../../server/dates.ts';
+import type { PartnerView } from '../../../server/partner-admin.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, TextButton, optional } from '../forms/shared.tsx';
@@ -50,6 +51,8 @@ const SOURCE_LABEL: Record<AdminSponsorView['source'], string> = {
   imported: 'Imported (paid by bank transfer)',
 };
 const stripeCustomer = (id: string) => `https://dashboard.stripe.com/customers/${encodeURIComponent(id)}`;
+const PARTNERS = '/api/membership/admin/partners';
+const partnerPage = (id: string) => `/admin/partners?id=${encodeURIComponent(id)}`;
 const kb = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
 interface Ctx {
@@ -213,7 +216,7 @@ export function SponsorDetail({
       </section>
 
       <Contacts contacts={d.contacts} sponsor={s} {...ctx} />
-      <Logos logos={d.logos} ended={s.status === 'ended'} {...ctx} />
+      <Logos logos={d.logos} ended={s.status === 'ended'} partnerId={s.partnerId} {...ctx} />
       <Contracts contracts={d.contracts} {...ctx} />
       <Records d={d} />
       <EditDetails sponsor={s} {...ctx} />
@@ -245,6 +248,7 @@ function ActionNeeded({
     onResent(body.emailed ?? 0);
   };
   const toLogos = () => focusHeading(document.getElementById('h-logos'));
+  const toDetails = () => focusHeading(document.getElementById('h-edit'));
   const record = canRecordPayment(s) ? (
     <Button variant="primary" grow onClick={() => onOpen('payment')}>
       Record a bank transfer
@@ -281,9 +285,18 @@ function ActionNeeded({
         };
       case 'checkout_abandoned':
         return { text: `Started online on ${longDate(s.createdAt)} and not paid yet. They can finish on their sponsorship page; nothing to send.`, action: null };
+      case 'no_partner':
+        return {
+          text: 'Their sponsorship is running, but it is not linked to a partner record. The site lists them by name only, without a logo. Choose their partner record under Details.',
+          action: (
+            <Button variant="primary" grow onClick={toDetails}>
+              Choose the partner record
+            </Button>
+          ),
+        };
       case 'new_logo':
         return {
-          text: 'They uploaded a new logo. Add it to their partner record.',
+          text: 'They uploaded a new logo. Use it as their partner record’s logo if it is the one to show.',
           action: (
             <Button variant="primary" grow onClick={toLogos}>
               See the logo
@@ -370,7 +383,16 @@ function Summary({ d }: { d: Detail }) {
         'No Stripe customer'
       ),
     ],
-    ['Partner id', s.partnerId ?? 'Not linked'],
+    [
+      'Partner record',
+      s.partnerId ? (
+        <TextButton key="partner" size="body" href={partnerPage(s.partnerId)} external={false}>
+          {s.partnerId}
+        </TextButton>
+      ) : (
+        'Not linked: listed by name only, without a logo'
+      ),
+    ],
     ['Source', SOURCE_LABEL[s.source]],
     ['Added', shortDateTime(s.createdAt)],
   ];
@@ -599,12 +621,27 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
 
 const LOGO_TYPES = 'image/svg+xml,image/png,image/webp';
 
-function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo[]; ended: boolean }) {
+function Logos({ logos, ended, partnerId, id, onChanged, onSignedOut }: Ctx & { logos: Logo[]; ended: boolean; partnerId: string | null }) {
   const [file, setFile] = useState<File | null>(null);
   const [picker, setPicker] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
+  const [using, setUsing] = useState('');
+  const [useError, setUseError] = useState('');
+
+  /** Copies an uploaded file to their partner record, where the site reads it. */
+  const useOnSite = async (logo: Logo, variant: 'colour' | 'mono') => {
+    if (using || !partnerId) return;
+    setUsing(`${logo.id}-${variant}`);
+    setUseError('');
+    setDone('');
+    const { status, body } = await post(`${PARTNERS}/${encodeURIComponent(partnerId)}/logos/${variant}`, { sponsorId: id, logoId: logo.id });
+    setUsing('');
+    if (status === 401) return onSignedOut();
+    if (status !== 200) return setUseError(body.error ?? 'Could not put the logo on the site.');
+    setDone(`${logo.filename} is now their ${variant === 'colour' ? 'colour' : 'one-colour'} logo. The site shows it after the next rebuild.`);
+  };
 
   const upload = async (e: Event) => {
     e.preventDefault();
@@ -626,7 +663,19 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
   };
 
   return (
-    <Block id="h-logos" title="Logos" intro="Newest first. The sponsor's page shows the newest one. Add it to their partner record so the site shows it.">
+    <Block
+      id="h-logos"
+      title="Logos"
+      intro="What they uploaded, newest first; the newest one is shown on their own page. A file is on the public site only once it is used as their partner record's logo."
+    >
+      {partnerId ? (
+        <TextButton href={partnerPage(partnerId)} external={false} class="self-start">
+          The logos and hover colour on the site
+        </TextButton>
+      ) : (
+        <p class="m-0 text-compact text-ink-2">Choose their partner record under Details to put a logo on the site.</p>
+      )}
+      {useError && <Notice kind="error">{useError}</Notice>}
       {logos.length === 0 && <p class="m-0 text-compact text-ink-2">None uploaded yet.</p>}
       {!ended && (
         <form class={cardClass('outline', 'lg', 'max-w-form')} noValidate onSubmit={upload}>
@@ -673,6 +722,16 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
                   Download
                 </TextButton>
               </div>
+              {partnerId && (
+                <div class="flex flex-wrap gap-3">
+                  <Button variant="secondary" grow disabled={!!using} onClick={() => void useOnSite(l, 'colour')}>
+                    {using === `${l.id}-colour` ? 'Saving…' : 'Use as the colour logo'}
+                  </Button>
+                  <Button variant="secondary" grow disabled={!!using} onClick={() => void useOnSite(l, 'mono')}>
+                    {using === `${l.id}-mono` ? 'Saving…' : 'Use as the one-colour logo'}
+                  </Button>
+                </div>
+              )}
             </li>
           );
         })}
@@ -865,9 +924,18 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<FieldError>(null);
   const [done, setDone] = useState<{ text: string; kind: 'done' | 'note' } | null>(null);
+  const [partners, setPartners] = useState<PartnerView[] | null>(null);
+  useEffect(() => {
+    if (!open || partners) return;
+    void api<{ partners: PartnerView[] }>(PARTNERS).then(({ status, body }) => {
+      if (status === 401) return onSignedOut();
+      setPartners(status === 200 ? body.partners : []);
+    });
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- load once, the first time the form opens
+  }, [open]);
   const set = <K extends keyof typeof f>(k: K, v: string) => setF((x) => ({ ...x, [k]: v }));
   const err = (field: string) => (error?.field === field ? error.message : undefined);
-  const text = (k: 'companyName' | 'legalName' | 'vatId' | 'website' | 'partnerId', label: ComponentChildren, hint?: string) => (
+  const text = (k: 'companyName' | 'legalName' | 'vatId' | 'website', label: ComponentChildren, hint?: string) => (
     <TextField label={label} hint={hint} name={k} value={f[k]} invalid={!!err(k)} error={err(k)} onInput={(e) => set(k, inputValue(e))} />
   );
 
@@ -924,11 +992,24 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             error={err('billingAddress')}
             onInput={(e) => set('billingAddress', inputValue(e))}
           />
-          {text(
-            'partnerId',
-            optional('Partner id'),
-            'The id of their partner record, for example gyff. It gives them their logo on the site, at this tier. Without it a running sponsor is listed by name only.',
-          )}
+          <SelectField
+            label={optional('Partner record')}
+            name="partnerId"
+            hint="Their record under Partners gives them their logo, hover colour and link on the site, at this sponsorship's tier. Not linked, a running sponsor is listed by name only. Add the record under Partners first if it is missing."
+            value={f.partnerId}
+            invalid={!!err('partnerId')}
+            error={err('partnerId')}
+            onChange={(e) => set('partnerId', inputValue(e))}
+          >
+            <option value="">Not linked</option>
+            {/* A link made before the record existed stays selectable, so saving other details never drops it. */}
+            {f.partnerId && !partners?.some((p) => p.id === f.partnerId) && <option value={f.partnerId}>{partners ? `${f.partnerId} (no record yet)` : f.partnerId}</option>}
+            {partners?.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.id})
+              </option>
+            ))}
+          </SelectField>
           <TextArea label={optional('Notes for the board')} rows={3} value={f.notes} invalid={!!err('notes')} error={err('notes')} onInput={(e) => set('notes', inputValue(e))} />
           {error && !['companyName', 'legalName', 'vatId', 'website', 'partnerId', 'billingAddress', 'notes'].includes(error.field ?? '') && (
             <Notice kind="error">{error.message}</Notice>

@@ -6,8 +6,7 @@
  *   contracts   a contract signed outside the site, attached by the board (PDF, up to 10 MB)
  *
  * Files are recognised by their content, not the name or the browser's type. SVGs are checked
- * strictly, because the board copies approved logos into Sanity, which serves them without our
- * sandbox: no scripts, animation, embedded or external content (in attributes or CSS),
+ * strictly, because the board puts them on the public site as partner logos (partner-admin.ts): no scripts, animation, embedded or external content (in attributes or CSS),
  * namespaced elements, event handlers or doctypes, after decoding character references. Styles
  * and internal references (`url(#gradient)`, `<use href="#shape">`) are fine. Anything unusual is refused
  * with a request for a plain SVG or a PNG. Files are only ever served with a sandboxing CSP.

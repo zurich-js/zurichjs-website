@@ -3,7 +3,7 @@ type: Reference
 title: Components
 description: The design system's component catalogue, with the rules for buttons, cards, choices and logos.
 tags: [design-system, components]
-timestamp: '2026-11-24T00:00:00Z'
+timestamp: '2026-11-25T00:00:00Z'
 ---
 
 # Components
@@ -82,7 +82,7 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 - **Black logos:** a partner's `logoBlack` file is used when there is one. Without it, the colour logo is drawn black by a filter; `logoKnockout` (white shapes inside a coloured one) and `logoOpaque` (a solid background) are thresholded instead, and an opaque file is multiplied into its cell. Grusp and Swiss Dev Jobs need real black files.
 - **Inline logos** (an event's "Thanks to", `LogoRow`) have no cells and keep their colours.
 - **A partner can have three things:** `logo` (the final colour logo), an optional `logoBlack`, and an optional `logoBackground` (the hover colour, a hex value). Logo only: black by the filter where logos are black, colour on a white cell on hover. With `logoBlack`: that file where logos are black, and for the one-colour logo on a hover colour.
-- **Sizes** come from the logo's ratio (Sanity `metadata.dimensions.aspectRatio`, or the measured value in `packages/content/src/partners.ts`), so every logo has about the same visual weight.
+- **Sizes** come from the logo's ratio (read from the file when the board uploads it, or the measured value in `packages/content/src/partners.ts`), so every logo has about the same visual weight.
 
 ## Related concepts
 
@@ -94,4 +94,4 @@ External links get `target="_blank"` and `rel="noopener"` automatically (`extern
 
 - [A radius rule for cards with buttons](/systems/design-system/specs/card-radius-with-buttons.md)
 - [A tertiary button](/systems/design-system/specs/tertiary-button.md)
-- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)
+- [Review every partner, then seed the production database](/domains/partners/specs/partner-data-review.md)

@@ -96,7 +96,7 @@ All partners come from old-partners. The seed script marks as **current** what t
 
 ### The code-side partner record (2026-11-02)
 
-Real builds use `packages/content/src/partners.ts` until Sanity has partner documents. It follows production exactly; these points could not be verified as current:
+`packages/content/src/partners.ts` is the seed of the `partners` table and what a build without the database shows ([Partners](/domains/partners/overview.md)). It follows production exactly; these points could not be verified as current:
 
 | Item                                                                                                                               | What the site shows                                      | Source                                                                             | Status                                                    |
 | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -147,4 +147,4 @@ Not added, because production gives no role or logo: Stripe for `jan-2026` (name
 # Related specs
 
 - [Member perks](/domains/membership/specs/member-perks.md)
-- [Review every partner, then move the list into Sanity](/domains/partners/specs/partner-data-review.md)
+- [Review every partner, then seed the production database](/domains/partners/specs/partner-data-review.md)

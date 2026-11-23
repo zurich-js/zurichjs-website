@@ -171,7 +171,7 @@ async function welcomeNotices(s: Sponsor, ref: string, term: string | null, next
     emailNotice(`sponsor-welcome:${s.id}:${ref}`, 'sponsor-welcome', { term, nextPayment, needsLogo }),
     slackNotice(
       `sponsor-welcome:${s.id}:${ref}:slack`,
-      `:tada: New sponsor: ${who(s)}, ${sponsorFee(s, meetups)}${meetups.length ? ` (${meetups.map((m) => slackText(`${m.title}, ${longDate(m.date)}`)).join('; ')})` : ''}.${needsLogo ? ' No logo yet.' : ''}${s.partnerId ? '' : ' Set their Partner id on their page here so the site shows them with their logo; until then it lists them by name.'}${deliver ? `\n*To deliver:*\n${deliver}` : ''}\n${adminUrl(deps.origin, s.id)}`,
+      `:tada: New sponsor: ${who(s)}, ${sponsorFee(s, meetups)}${meetups.length ? ` (${meetups.map((m) => slackText(`${m.title}, ${longDate(m.date)}`)).join('; ')})` : ''}.${needsLogo ? ' No logo yet.' : ''}${s.partnerId ? '' : ' Choose their partner record on their page here so the site shows them with their logo; until then it lists them by name.'}${deliver ? `\n*To deliver:*\n${deliver}` : ''}\n${adminUrl(deps.origin, s.id)}`,
     ),
   ];
 }

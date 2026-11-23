@@ -19,6 +19,13 @@
 - **Update**: every sponsorship email and Slack note is a notice written with the change that owes it and sent by the request or, failing that, the daily check; first payments, retries and out-of-order Stripe events no longer lose or repeat them. Bank-transfer reminders are caught up once when a day is missed. Sponsoring again needs a new full signature and validates before changing anything; a terminated sponsorship needs the board. Refunds and disputes are recorded and flagged without changing the sponsorship ([Sponsorship](/domains/sponsorship/overview.md), [Stripe](/systems/stripe.md)).
 - **Update**: adding a sponsor (invite or import, one-time bundles included) is one store write with its meetups and starting status; a Stripe payment page is forgotten only once Stripe confirms it is closed, the board's end and a recorded bank transfer finish on retry, and the daily check closes what an ended sponsorship still has open in Stripe ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 
+## 2026-11-23
+
+- **Update**: partners are records in the database (`partners`, `partner_logos`), edited in the new `/admin/partners`, each with a colour logo, an optional one-colour logo and a hover colour; a build reads them and writes the logo files out as `/partner-logos/*`. The list in code is the seed and what a build without the database shows. No deployed database is seeded yet ([Partners](/domains/partners/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)).
+- **Update**: a sponsorship's partner is chosen from the partner records instead of typed, a changed link must point at a record that exists, and a running sponsorship without one is flagged "No logo on the site". Slack notes no longer send the board to Sanity ([Sponsorship](/domains/sponsorship/overview.md)).
+- **Update**: sample content reads the partners and sponsorships of a configured database (the local Docker stack); tests and CI still never do ([Local development](/systems/local-development.md)).
+- **Correction**: the partner pages said Sanity `partner` documents win over every other source; the database table does now, and Sanity's are read only without it.
+
 ## 2026-11-19
 
 - **Update**: the local Docker stack migrates its Postgres with `apps/web/scripts/db-migrate.mjs`, the script every Netlify build runs, when the site starts; `tools/docker/migrate.sh` and the `migrate` service are gone ([Local development](/systems/local-development.md)).

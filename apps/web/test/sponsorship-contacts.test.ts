@@ -140,7 +140,7 @@ describe('sponsorship contacts and notes', () => {
     expect((await store.agreements(id))[0]!.summary).toContain('last day 17th February 2027');
   });
 
-  it('the new-sponsor note asks for the Partner id, not a Sanity edit', async () => {
+  it('the new-sponsor note asks for the partner record, not a Sanity edit', async () => {
     const id = await sponsor();
     const inv = {
       id: 'in_1',
@@ -158,7 +158,7 @@ describe('sponsorship contacts and notes', () => {
       now: NOW.getTime(),
     });
     const note = w.slackPosts.find((t) => t.includes('New sponsor'))!;
-    expect(note).toContain('Set their Partner id');
+    expect(note).toContain('Choose their partner record');
     expect(note).not.toContain('Sanity');
   });
 

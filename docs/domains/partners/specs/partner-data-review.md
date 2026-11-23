@@ -1,19 +1,19 @@
 ---
 type: Spec
-title: Review every partner, then move the list into Sanity
-description: A checklist of what the owner must confirm for each partner (tier, current, logo files, hover colour) and what has to be built before partners can be edited in the Studio.
-tags: [partners, sponsorship, logos, sanity]
+title: Review every partner, then seed the production database
+description: A checklist of what the owner must confirm for each partner (tier, current, logo files, hover colour), and what is left before production reads its partners from the database.
+tags: [partners, sponsorship, logos, database]
 timestamp: '2026-11-25T00:00:00Z'
-status: planned
+status: in-progress
 domain: partners
-systems: [content, studio, design-system]
+systems: [content, web, design-system]
 ---
 
 # Outcome
 
-Every partner the site shows has been checked by the owner (who they are to ZurichJS, their tier, whether they are current, their logo), and organisers change partners in the Sanity Studio instead of in code.
+Every partner the site shows has been checked by the owner (who they are to ZurichJS, their tier, whether they are current, their logos), and the board changes partners in `/admin/partners` instead of in code.
 
-Today the list is in code: `packages/content/src/partners.ts`, with the logo files in `apps/web/public/images/partners`. Production Sanity has no `partner` documents (checked 19th November 2026), so the site falls back to that list. The board's admin area (`/admin/sponsors`) manages paid sponsorships; a running sponsorship linked to a partner sets that partner's tier and current status on the site, and has no effect on logos or colours ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
+The admin section and the database tables exist ([Partners and sponsorship](/domains/partners/overview.md)). Production's table is still empty, so production shows the list in code: `packages/content/src/partners.ts`, with the logo files in `apps/web/public/images/partners`. A running sponsorship linked to a partner sets that partner's tier and current status on the site, and has no effect on logos or colours ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
 
 ## The list as it is (19th November 2026)
 
@@ -44,19 +44,17 @@ Nobody has a `logoBlack` file. Where logos are black (the moving rows, the wall 
 
 **The owner's review (content, no code):**
 
-- For each row above, the kind, tier and current flag are confirmed or corrected, with `since` and `until` where known. The open "confirm" items are also in [Content sources](/reference/content-sources.md).
+- For each row above, the kind, tier and current flag are confirmed or corrected. The open "confirm" items are also in [Content sources](/reference/content-sources.md).
 - Sponsors and current hosts: the logo is the file the company wants shown, and a hover colour is chosen or left empty. A hover colour suits a logo that is one shape (the logo turns white on a dark colour, black on a light one).
-- A black logo file for Grusp and Swiss Dev Jobs, and for any other logo that reads badly in the moving rows.
+- A one-colour logo file for Grusp and Swiss Dev Jobs, and for any other logo that reads badly in the moving rows.
 - Hover colours for the three hosts added back.
 
-**Moving the list into Sanity (code):**
+**Moving the list into the database** (owner, 20th November 2026: partners are records in the database, edited in `/admin/partners`, not in Sanity and not in code):
 
-- The sponsorships database keeps overriding `tier` and `current` after the move: a sponsor's partner id is then the Sanity partner's `id`, so the ids in the seed stay the ones in the code list.
-
-- `apps/studio/scripts/seed-partners.ts` creates a draft for all 33 partners in the code list, not the 17 it has now, with the same kinds, tiers, current flags and delisting, and with `logoBackground` and `logoBlack` where the code list has them. Vercel is no longer a current Champion in it.
-- The seed runs only after the Studio with the `partner` fields is deployed (it deploys when `apps/studio` reaches `main`). The site ignores the whole code list as soon as Sanity has one published partner, so all drafts are published together, after the review.
-- `logoKnockout` (white shapes inside a coloured one) comes only from the code list today; in Sanity those logos get a `logoBlack` file instead, or the flag becomes a field.
-- After publishing, the home page, `/partners`, an upcoming event page and Tonight show the same partners as before the move, and the visual baselines change only where the review changed something.
+- Built: the `partners` and `partner_logos` tables, the admin section with two logo files and a hover colour per partner, the build reading them, and a seed for local databases ([Partners and sponsorship](/domains/partners/overview.md)).
+- Left: seeding the production database. `apps/web/scripts/seed-partners.ts` refuses any database that is not on this machine; how production is seeded (the same list through the admin area, or the script with an explicit switch) is the owner's call. Until then production builds find an empty table and show the list in code.
+- Left: once production reads the table, the logo files in `apps/web/public/images/partners` and the list in code are only the seed and what tests show; the Sanity `partner` type and the Studio's `seed-partners.ts` can then go.
+- After seeding, the home page, `/partners`, an upcoming event page and Tonight show the same partners as before, apart from the logo addresses.
 
 ## Affected concepts
 
@@ -64,11 +62,13 @@ Nobody has a `logoBlack` file. Where logos are black (the moving rows, the wall 
 - [Content sources](/reference/content-sources.md)
 - [Content model](/domains/content/content-model.md)
 - [Studio](/systems/studio.md)
+- [Sponsorship frontend](/domains/sponsorship/frontend.md)
 - [Components](/systems/design-system/components.md)
 
 ## Open decisions
 
-- Whether hover colours are chosen by ZurichJS or asked of each sponsor.
+- Whether hover colours are chosen by ZurichJS or asked of each sponsor. Either way the board enters them (owner, 20th November 2026).
+- How and when the production database is seeded.
 
 ## Not verified
 

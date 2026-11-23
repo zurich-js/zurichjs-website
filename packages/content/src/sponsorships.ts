@@ -1,8 +1,8 @@
 /**
  * Paid sponsorships override the partner list (owner, 19th November 2026).
  *
- * The partner list (Sanity, or the code-side record in partners.ts) owns each partner's logo, hover
- * colour, link and words. The sponsorships database (docs/domains/sponsorship/overview.md) owns who
+ * The partner list (the `partners` table; the list in partners.ts for a build without the database)
+ * owns each partner's logos, hover colour, link and words. The sponsorships database (docs/domains/sponsorship/overview.md) owns who
  * is a current sponsor and at which tier:
  *
  *   a running sponsorship linked to a partner   -> that partner is a current sponsor at the database's tier
@@ -15,7 +15,7 @@
  * partner gets `coverage` (those meetups' ids) and those events list it as a sponsor. How long a
  * one-time sponsor stays listed beyond that is an open owner question; it is not invented here.
  *
- * A sponsor is linked by its `partnerId` (the admin area's "Partner id"), which equals the partner's
+ * A sponsor is linked by its `partnerId` (the admin area's "Partner record"), which equals the partner's
  * `id`. Names are never used to link. This file is pure: the database is read by the caller
  * (apps/web/src/server/sponsor-public.ts) and handed in, so the content package stays dependency-free.
  */
@@ -38,6 +38,17 @@ export interface SponsorshipRow {
 
 /** Reads the sponsorships for a build; null when no database is configured. */
 export type SponsorshipSource = (env: Record<string, string | undefined>) => Promise<SponsorshipRow[] | null>;
+
+/** Reads the partner records for a build; null when no database is configured, empty when none are there yet. */
+export type PartnerSource = (env: Record<string, string | undefined>) => Promise<Partner[] | null>;
+
+/** The database readers a build hands to `loadContent`. */
+export interface ContentDatabase {
+  partners?: PartnerSource;
+  sponsorships?: SponsorshipSource;
+  /** Read the database again after this long (the dev server); without it, once per build. */
+  refreshMs?: number;
+}
 
 /** Highest first. */
 const TIERS: SponsorTier[] = ['champion', 'builder', 'friend', 'supporter'];
@@ -110,7 +121,7 @@ export function applySponsorships(partners: Partner[], rows: SponsorshipRow[], e
     } else if (names.has(norm(r.companyName))) {
       // The same company as a partner record, but not linked: never a second, logo-less entry.
       notes.push(
-        `"${r.companyName}" has a running sponsorship that is not linked to its partner record: set its Partner id in /admin/sponsors. The partner list is shown unchanged.`,
+        `"${r.companyName}" has a running sponsorship that is not linked to its partner record: choose its partner record in /admin/sponsors. The partner list is shown unchanged.`,
       );
     } else {
       const coverage = coverageOf(group);

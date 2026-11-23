@@ -14,8 +14,8 @@ import {
 } from './map.ts';
 import { EVENTS_QUERY, PARTNERS_QUERY, SINGLETONS_QUERY, SPEAKERS_QUERY } from './queries.ts';
 import { MILESTONES, TEAM, VOLUNTEERS } from './community.ts';
-import { withPartnerFallback } from './partners.ts';
-import { applySponsorships, type SponsorshipSource } from './sponsorships.ts';
+import { isDelisted, withPartnerFallback } from './partners.ts';
+import { applySponsorships, type ContentDatabase, type PartnerSource, type SponsorshipSource } from './sponsorships.ts';
 import { loadMedia, MediaUnavailableError, type MediaCollection } from './media.ts';
 import { attachSane } from './sane.ts';
 import * as sample from './sample.ts';
@@ -188,6 +188,7 @@ async function sanityContent(env: Env): Promise<SiteContent> {
 }
 
 let cached: Promise<SiteContent> | undefined;
+let overlaid: { at: number; value: Promise<SiteContent> } | undefined;
 
 /**
  * Loads all public content once per build.
@@ -202,66 +203,94 @@ let cached: Promise<SiteContent> | undefined;
  *   is unavailable.
  * - `SANITY_PERSPECTIVE=drafts` reads drafts (preview site) and requires
  *   `SANITY_READ_TOKEN`; without it the build fails.
- * - `sponsorships` (the web app passes the database reader) overrides who is a
- *   current sponsor and at which tier (sponsorships.ts). Sample content never
- *   reads it, and a build without the database keeps the partner list as it is.
+ * - `db` (the web app passes the database readers) gives the partners and says who is a
+ *   current sponsor and at which tier (sponsorships.ts), for sample content too. A build
+ *   without the database, or with an empty partners table, keeps the partner list in code.
+ *   With `db.refreshMs` (the dev server) the database is read again after that long.
  */
-export function loadContent(env: Env = process.env, fetchSanity: (env: Env) => Promise<SiteContent> = sanityContent, sponsorships?: SponsorshipSource): Promise<SiteContent> {
+export function loadContent(env: Env = process.env, fetchSanity: (env: Env) => Promise<SiteContent> = sanityContent, db?: ContentDatabase): Promise<SiteContent> {
   cached ??= (async () => {
     if (env.CONTENT_SOURCE === 'sample') return sampleContent();
     // A misconfigured preview build fails loudly instead of falling back to sample content.
     perspective(env);
-    let content: SiteContent;
     try {
-      content = await fetchSanity(env);
+      return await fetchSanity(env);
     } catch (err) {
       // A build that needs the photo archive and cannot read it fails too (sample content would not help).
       if (err instanceof MediaUnavailableError || env.CONTEXT === 'production' || env.CONTENT_REQUIRE_SANITY === '1') throw err;
       console.warn(`\n[content] Sanity is not reachable (${(err as Error).message}). USING SAMPLE CONTENT. Do not deploy this build.\n`);
       return sampleContent();
     }
-    return withSponsorships(content, env, sponsorships);
   })();
-  return cached;
+  if (!db?.partners && !db?.sponsorships) return cached;
+  if (!overlaid || (db.refreshMs !== undefined && Date.now() - overlaid.at >= db.refreshMs)) {
+    const value = cached.then(async (content) => withSponsorships(await withPartners(content, env, db.partners), env, db.sponsorships));
+    overlaid = { at: Date.now(), value };
+  }
+  return overlaid.value;
 }
 
-/** How long a build waits for the sponsorships database before it carries on without it. */
+/** How long a build waits for the database before it carries on without it. */
 export const SPONSORSHIPS_TIMEOUT_MS = 15_000;
 
-/**
- * The content with the sponsorships database applied to its partners. It never throws: without a
- * database, or when reading it fails or takes too long, the partner list stays as it is.
- */
-export async function withSponsorships(
-  content: SiteContent,
+interface Guard {
+  log?: (msg: string) => void;
+  timeoutMs?: number;
+}
+
+/** What the reader answers, or null when there is no reader or no database, it fails, or it takes too long. Never throws. */
+async function readDatabase<T>(
+  source: ((env: Env) => Promise<T | null>) | undefined,
   env: Env,
-  source: SponsorshipSource | undefined,
-  { log = console.warn, timeoutMs = SPONSORSHIPS_TIMEOUT_MS }: { log?: (msg: string) => void; timeoutMs?: number } = {},
-): Promise<SiteContent> {
-  if (!source) return content;
+  kept: string,
+  { log = console.warn, timeoutMs = SPONSORSHIPS_TIMEOUT_MS }: Guard,
+): Promise<T | null> {
+  if (!source) return null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const rows = await Promise.race([
+    return await Promise.race([
       source(env),
       new Promise<never>((_, reject) => {
         timer = setTimeout(() => reject(new Error(`no answer after ${timeoutMs} ms`)), timeoutMs);
       }),
     ]);
-    if (!rows) return content;
-    const { partners, events, notes } = applySponsorships(content.partners, rows, content.events);
-    for (const n of notes) log(`[content] sponsorships: ${n}`);
-    return { ...content, partners, events };
   } catch (err) {
-    log(
-      `\n[content] The sponsorships database is not reachable (${(err as Error).message || (err as { code?: string }).code || String(err)}). Sponsors and tiers come from the partner list alone.\n`,
-    );
-    return content;
+    log(`\n[content] The sponsorships database is not reachable (${(err as Error).message || (err as { code?: string }).code || String(err)}). ${kept}\n`);
+    return null;
   } finally {
     clearTimeout(timer);
   }
 }
 
+/**
+ * The content with the partners of the database (docs/domains/partners/overview.md). It never throws:
+ * without a database, with an empty partners table, or when reading fails or takes too long, the
+ * partner list stays as it is. Partners withdrawn from promotion stay withdrawn.
+ */
+export async function withPartners(content: SiteContent, env: Env, source: PartnerSource | undefined, guard: Guard = {}): Promise<SiteContent> {
+  const rows = await readDatabase(source, env, 'Partners come from the list in code.', guard);
+  if (!rows) return content;
+  if (rows.length === 0) {
+    (guard.log ?? console.warn)('[content] partners: the partners table is empty, so the list in code is shown. Seed it (docs/domains/partners/overview.md).');
+    return content;
+  }
+  return { ...content, partners: rows.map((p) => (isDelisted(p) ? { ...p, current: false, delisted: true } : p)) };
+}
+
+/**
+ * The content with the sponsorships database applied to its partners. It never throws: without a
+ * database, or when reading it fails or takes too long, the partner list stays as it is.
+ */
+export async function withSponsorships(content: SiteContent, env: Env, source: SponsorshipSource | undefined, guard: Guard = {}): Promise<SiteContent> {
+  const rows = await readDatabase(source, env, 'Sponsors and tiers come from the partner list alone.', guard);
+  if (!rows) return content;
+  const { partners, events, notes } = applySponsorships(content.partners, rows, content.events);
+  for (const n of notes) (guard.log ?? console.warn)(`[content] sponsorships: ${n}`);
+  return { ...content, partners, events };
+}
+
 /** For tests. */
 export const resetContentCache = () => {
   cached = undefined;
+  overlaid = undefined;
 };

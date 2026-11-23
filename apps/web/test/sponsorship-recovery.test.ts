@@ -3,7 +3,7 @@
  * whether the same request again finishes the job. Real handlers on the in-memory store, Stripe
  * and Resend faked with state and injected failures (sponsor-faults.ts).
  */
-import { AGREEMENT, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
+import { AGREEMENT, memoryPartners, memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleAddSponsor } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { handleUpdateSponsor } from '../src/pages/api/membership/admin/sponsors/[id]/index.ts';
@@ -417,7 +417,8 @@ describe('sponsorship board actions that fail half-way', () => {
     const calls = w.calls.length;
     await handleUpdateSponsor(asAdmin('/x', { ...form, legalName: 'Acme AG' }), id, deps());
     expect(w.calls.length).toBe(calls);
-    expect(await answer(await handleUpdateSponsor(asAdmin('/x', { ...form, partnerId: 'drafts.partner-acme' }), id, deps()))).toMatchObject({
+    // The link must point at a partner record that exists.
+    expect(await answer(await handleUpdateSponsor(asAdmin('/x', { ...form, partnerId: 'drafts.partner-acme' }), id, { ...deps(), partners: memoryPartners() }))).toMatchObject({
       status: 400,
       body: { field: 'partnerId' },
     });

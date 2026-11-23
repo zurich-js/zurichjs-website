@@ -155,6 +155,23 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('the sponsorship page (/partners/account)', () => {
+  test('a slow answer says so, and a failed one offers Try again instead of a signed-out or empty page', async ({ page }) => {
+    await page.clock.install();
+    let answered = false;
+    await page.route('**/api/sponsorship/me', (route) => (answered ? route.abort('connectionrefused') : undefined));
+    await page.goto(ACCOUNT);
+    await expect(page.getByRole('status')).toHaveText('Loading your sponsorship…');
+    // The clock also holds the frame that runs the island's effects: one step to schedule, one to pass 10 s.
+    await page.clock.runFor(1_000);
+    await page.clock.fastForward(11_000);
+    await expect(page.getByRole('status')).toHaveText('Loading your sponsorship… This is taking longer than usual.');
+    answered = true;
+    await page.reload();
+    await expect(page.getByRole('alert')).toContainText('We couldn’t reach the site.');
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await expect(page.getByLabel('Email')).toHaveCount(0);
+  });
+
   test('signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox', async ({ page }) => {
     const sent: Record<string, unknown>[] = [];
     await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 401, json: { ok: false, error: 'Sign in first.' } }));

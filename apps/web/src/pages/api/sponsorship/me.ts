@@ -5,6 +5,7 @@
  *   200 {
  *     ok, email,
  *     contact, sponsor | null, contacts, agreements, logos, contracts, pendingChange,
+ *     pendingChangeUnknown (Stripe could not be asked, so pendingChange says nothing),
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
  *     invitation: { company, tierName } | null (a colleague added this email; accept or decline)
@@ -23,10 +24,16 @@ import { tierInfo } from '@zurichjs/sponsorship';
 
 export const prerender = false;
 
-const changeOf = (s: Sponsor, deps: SponsorRouteDeps, env: Record<string, string | undefined>) =>
-  s.stripeSubscriptionId && (s.status === 'active' || s.status === 'past_due')
-    ? pendingChange(s.stripeSubscriptionId, { env, fetch: deps.fetch, now: deps.now }).catch(() => null)
-    : null;
+/** A change waiting for the renewal, or `unknown` when Stripe could not be asked: never "none" by mistake. */
+const changeOf = async (s: Sponsor, deps: SponsorRouteDeps, env: Record<string, string | undefined>) => {
+  if (!s.stripeSubscriptionId || !(s.status === 'active' || s.status === 'past_due')) return { change: null, unknown: false };
+  try {
+    return { change: await pendingChange(s.stripeSubscriptionId, { env, fetch: deps.fetch, now: deps.now }), unknown: false };
+  } catch (cause) {
+    console.error(`[sponsorship] could not read the scheduled change of ${s.id}`, cause);
+    return { change: null, unknown: true };
+  }
+};
 
 export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =>
   signedInSponsor(
@@ -58,7 +65,8 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         agreements: agreements.map(agreementView),
         logos: logos.slice(0, 5).map(logoView),
         contracts: documents.map(documentView),
-        pendingChange: pending,
+        pendingChange: pending.change,
+        pendingChangeUnknown: pending.unknown,
         signedCurrent: agreements.some((a) => a.version === AGREEMENT.version) || documents.length > 0,
         signer: mine ? { name: mine.signerName, title: mine.signerTitle } : null,
         invitation: null,

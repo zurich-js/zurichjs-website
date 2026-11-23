@@ -8,9 +8,9 @@
  * their own message. Reads give up after READ_DEADLINE_MS. Writes have no deadline here: the
  * server may still be saving (its outbound calls have up to 50 s), and Netlify answers by 60 s.
  */
-export type ApiBody<T> = T & { ok?: boolean; error?: string; field?: string };
+import { READ_DEADLINE_MS } from './read-deadline.ts';
 
-export const READ_DEADLINE_MS = 20_000;
+export type ApiBody<T> = T & { ok?: boolean; error?: string; field?: string };
 
 export const UNREACHABLE = 'We couldn’t reach the site. Check your connection and try again.';
 const UNREACHABLE_WRITE = 'We couldn’t reach the site, so we don’t know whether this was saved. Reload the page to check before you try again.';

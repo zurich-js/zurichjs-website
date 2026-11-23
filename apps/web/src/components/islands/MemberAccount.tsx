@@ -9,6 +9,7 @@
  * accounts are not available yet.
  */
 import { useEffect, useState } from 'preact/hooks';
+import { Loading } from '@zurichjs/design/islands/Loading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Notice } from '@zurichjs/design/islands/Notice';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -20,6 +21,7 @@ import { lastDay, longDate } from '../../server/dates.ts';
 import type { CertificateView, MemberView } from '../../server/membership.ts';
 import { CYCLES, RESIGN_NOTE_MAX, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { ChoiceGroup, SubmitButton, optional, useFocusWhen } from './forms/shared.tsx';
+import { READ_DEADLINE_MS } from './read-deadline.ts';
 import MemberJoin, { TermsCheckbox, readChoice, startCheckout } from './MemberJoin.tsx';
 
 interface Props {
@@ -79,7 +81,7 @@ export default function MemberAccount({ contactEmail }: Props) {
   const sentRef = useFocusWhen<HTMLDivElement>(view.kind === 'sent');
 
   const load = async (n: ReturnType<typeof urlNotice>, attempt = 0): Promise<void> => {
-    const res = await fetch('/api/membership/me', { credentials: 'same-origin' }).catch(() => null);
+    const res = await fetch('/api/membership/me', { credentials: 'same-origin', signal: AbortSignal.timeout(READ_DEADLINE_MS) }).catch(() => null);
     if (!res) return setView({ kind: 'error', message: 'We couldn’t reach the site. Check your connection and reload.' });
     if (res.status === 401) {
       setSignedIn(false);
@@ -137,12 +139,7 @@ export default function MemberAccount({ contactEmail }: Props) {
     setView({ kind: 'signed-out' });
   };
 
-  if (view.kind === 'loading')
-    return (
-      <p class="m-0 text-body text-ink-2" aria-busy="true">
-        Loading your account…
-      </p>
-    );
+  if (view.kind === 'loading') return <Loading>Loading your account…</Loading>;
 
   if (view.kind === 'unavailable')
     return (

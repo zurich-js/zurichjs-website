@@ -16,6 +16,7 @@ A static shell with a Preact island; it holds no sponsor data in the HTML. Sign-
 
 - **Start or finish:** billing details, plan, and the agreement (name, role), then card payment in Stripe Checkout. A sponsor with a contract on file skips signing.
 - **A change from the board** arrives as a link (`?change=builder-yearly`, `?change=end`) that fills the change in; nothing changes until a contact confirms it with one tick.
+- **Loading:** the loading line says after 10 s that it is slow, and after 20 s without an answer the page shows an error with Try again, never the sign-in form or an empty sponsorship (`READ_DEADLINE_MS`, `apps/web/src/components/islands/read-deadline.ts`). When Stripe cannot be asked for a change scheduled for the renewal, the summary says so instead of showing none (`pendingChangeUnknown` from `/api/sponsorship/me`).
 - **Self-serve:** change tier or billing (a higher tier on the same billing applies now, anything else from the next renewal); end, and take it back until the end; Stripe's portal for the card and receipts; company and billing details (synced to Stripe); logo upload; colleagues (primary, billing, other). A colleague added by someone else must sign in and accept before they see or receive anything.
 
 ## `/partners/agreement` (noindex)

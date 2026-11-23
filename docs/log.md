@@ -2,6 +2,7 @@
 
 ## 2026-11-24
 
+- **Update**: the account pages give `/me` 20 s, then show an error with Try again, and their loading line says when it is slow; the sponsor page says when it could not check Stripe for a scheduled plan change ([Sponsorship frontend](/domains/sponsorship/frontend.md), [Membership frontend](/domains/membership/frontend.md)).
 - **Update**: the admin area tells an outage from a sign-out, offers Try again when a load fails, gives reads a 20 s limit, and counts every member and sponsorship; lists stop at 500 rows and say so ([Membership frontend](/domains/membership/frontend.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)). New island primitives `Loading` and `LoadFailed` ([Components](/systems/design-system/components.md)).
 
 ## 2026-11-19

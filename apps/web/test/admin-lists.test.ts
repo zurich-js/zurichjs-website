@@ -5,7 +5,8 @@
 import { memoryStore as memberMemory, type NewMember } from '@zurichjs/membership';
 import { memoryStore as sponsorMemory } from '@zurichjs/sponsorship';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { READ_DEADLINE_MS, api } from '../src/components/islands/admin-api.ts';
+import { api } from '../src/components/islands/admin-api.ts';
+import { READ_DEADLINE_MS } from '../src/components/islands/read-deadline.ts';
 import { handleAdminMembers } from '../src/pages/api/membership/admin/members/index.ts';
 import { handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { LIST_LIMIT } from '../src/server/admin-views.ts';

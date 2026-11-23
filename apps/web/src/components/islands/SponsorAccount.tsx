@@ -14,6 +14,7 @@
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
+import { Loading } from '@zurichjs/design/islands/Loading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, FileField, SelectField, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
@@ -26,6 +27,7 @@ import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, i
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
+import { READ_DEADLINE_MS } from './read-deadline.ts';
 
 type ContactView = ReturnType<typeof contactView>;
 type AgreementView = ReturnType<typeof agreementView>;
@@ -51,6 +53,8 @@ interface Me {
   logos?: LogoView[];
   contracts?: DocumentView[];
   pendingChange?: PendingChange | null;
+  /** Stripe could not be asked for a scheduled change: `pendingChange` says nothing. */
+  pendingChangeUnknown?: boolean;
   signedCurrent?: boolean;
   signer?: { name: string; title: string } | null;
   invitation?: { company: string; tierName: string } | null;
@@ -405,7 +409,7 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
 
   const load = async (attempt = 0): Promise<void> => {
     const q = query.current;
-    const res = await fetch('/api/sponsorship/me', { credentials: 'same-origin' }).catch(() => null);
+    const res = await fetch('/api/sponsorship/me', { credentials: 'same-origin', signal: AbortSignal.timeout(READ_DEADLINE_MS) }).catch(() => null);
     if (!res) return setView({ kind: 'error', message: 'We couldn’t reach the site. Check your connection and reload.' });
     if (res.status === 401) {
       setSignedIn(false);
@@ -480,12 +484,7 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
     signedOut();
   };
 
-  if (view.kind === 'loading')
-    return (
-      <p role="status" class={body}>
-        Loading your sponsorship…
-      </p>
-    );
+  if (view.kind === 'loading') return <Loading>Loading your sponsorship…</Loading>;
 
   if (view.kind === 'unavailable')
     return (
@@ -740,6 +739,7 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
     ]);
   if (s.status === 'past_due' && s.paidThrough) rows.push(['Paid through', longDate(s.paidThrough)]);
   if (s.startedAt) rows.push(['Sponsor since', longDate(s.startedAt)]);
+  if (canChange(s) && ctx.me.pendingChangeUnknown) rows.push(['Next renewal', 'We couldn’t check for a change waiting for your renewal. Reload the page to see it.']);
   if (pending)
     rows.push([
       `From ${longDate(pending.from)}`,

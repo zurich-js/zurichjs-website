@@ -23,6 +23,7 @@ The membership terms, based on the bylaws; indexed (the version of 11th November
 A static shell with a Preact island; it holds no member data in the HTML. Not in the sitemap or `llms.txt`.
 
 - **Signed out:** sign in with an emailed link.
+- **Loading:** as on the sponsor account page, the loading line says after 10 s that it is slow, and after 20 s the page shows an error instead of guessing ([Sponsorship frontend](/domains/sponsorship/frontend.md)).
 - **Not a member yet:** join (person or organisation, level, cycle, the terms), then Stripe Checkout. An invited person sees "Finish joining" with the level and cycle the board entered.
 - **A member:** level, status, billing, paid until, member since; certificates to download; "Manage payment" (a Stripe billing portal session); a level or cycle change from the next renewal, which shows as pending and can be taken back; resign, with optional reasons; resubscribe while resigning.
 - **Paid manually (cash/bank):** a plain note under "Signed in as" asks them to switch to automatic payment (it was a soft yellow banner until 18th November 2026).

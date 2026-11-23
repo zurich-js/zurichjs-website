@@ -10,7 +10,7 @@
 import { createHmac } from 'node:crypto';
 import { memoryStore as memoryMembers } from '@zurichjs/membership';
 import { AGREEMENT, memoryStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleAddSponsor, handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { handleAdminSponsor } from '../src/pages/api/membership/admin/sponsors/[id]/index.ts';
 import { handleBoardEnd } from '../src/pages/api/membership/admin/sponsors/[id]/end.ts';
@@ -270,6 +270,13 @@ describe('sponsorship flow', () => {
       from: '2027-02-18',
     });
     expect((await me()).pendingChange).toEqual({ tier: 'supporter', cycle: 'yearly', from: '2027-02-18' });
+    // Stripe not answering is not "no change scheduled": the page is told it does not know.
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const down = (async () => new Response('{"error":{"message":"down"}}', { status: 500 })) as typeof fetch;
+    const blind = await (await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), { ...user(), fetch: down })).json();
+    error.mockRestore();
+    expect(blind).toMatchObject({ pendingChange: null, pendingChangeUnknown: true });
+    expect(await me()).toMatchObject({ pendingChangeUnknown: false });
 
     // We send an end to confirm: a link that fills it in. Nothing changes yet.
     const suggested = await (

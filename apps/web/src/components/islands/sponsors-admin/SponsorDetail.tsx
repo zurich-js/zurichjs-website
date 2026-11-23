@@ -156,7 +156,7 @@ export function SponsorDetail({
           attention={d.attention}
           labels={labels}
           onOpen={show}
-          onResent={(n) => setDone({ text: n ? `Invitation emailed again to ${n === 1 ? 'their contact' : `${n} contacts`}.` : 'The invitation was not sent. Try again later.' })}
+          onResent={(n) => finish({ text: n ? `Invitation emailed again to ${n === 1 ? 'their contact' : `${n} contacts`}.` : 'The invitation was not sent. Try again later.' })}
           {...ctx}
         />
       )}
@@ -431,6 +431,7 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
     setInviting(null);
     setMessage('');
     setDone(body.emailed ? `Invitation emailed to ${c.email}.` : `The invitation to ${c.email} was not sent. Try again later.`);
+    onChanged();
   };
   const remove = async (c: Contact) => {
     setBusy(true);
@@ -460,7 +461,7 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
             </div>
             {inviting !== c.id && removing !== c.id && (
               <div class="flex flex-wrap gap-x-5 gap-y-2">
-                {!ended && !c.hasAccount && <TextButton onClick={() => setInviting(c.id)}>Resend invitation</TextButton>}
+                {!ended && (!c.hasAccount || s.status === 'pending') && <TextButton onClick={() => setInviting(c.id)}>Resend invitation</TextButton>}
                 {contacts.length > 1 && <TextButton onClick={() => setRemoving(c.id)}>Remove</TextButton>}
               </div>
             )}
@@ -759,6 +760,13 @@ function eventText(e: SponsorEvent): string {
     }
     case 'contact_removed':
       return 'Contact removed.';
+    case 'invitation_emailed': {
+      const to = Array.isArray(p.to) ? (p.to as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+      const sent = typeof p.emailed === 'number' ? p.emailed : 0;
+      if (!to.length) return 'Invitation emailed.';
+      if (sent === 0) return `Invitation NOT sent to ${to.join(', ')}: the email failed.`;
+      return sent < to.length ? `Invitation emailed to ${sent} of ${to.length}: ${to.join(', ')}.` : `Invitation emailed to ${to.join(', ')}.`;
+    }
     default: {
       const t = e.type.replace(/_/g, ' ');
       return `${t.charAt(0).toUpperCase()}${t.slice(1)}.`;

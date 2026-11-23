@@ -19,7 +19,7 @@ import { api, post } from '../admin-api.ts';
 import { SubmitButton, optional } from '../forms/shared.tsx';
 import { BASE, DATE, MeetupPicker, Notice, addMonths, francs, inputChecked, inputValue, listPrice, today, useMeetups, type FieldError } from './shared.tsx';
 
-export type ActionKey = 'suggest' | 'plan' | 'bundle' | 'contract' | 'link' | 'payment' | 'end';
+export type ActionKey = 'invite' | 'suggest' | 'plan' | 'bundle' | 'contract' | 'link' | 'payment' | 'end';
 /** An open form: an action, or the change form opened on "end" from the end confirmation. */
 export type OpenAction = ActionKey | 'suggest-end';
 
@@ -38,6 +38,7 @@ export const canRecordPayment = (s: AdminSponsorView) =>
 export function actionsFor(s: AdminSponsorView): { key: ActionKey; label: string }[] {
   const once = s.cycle === 'once';
   const out: { key: ActionKey; label: string }[] = [];
+  if (s.status === 'pending') out.push({ key: 'invite', label: 'Email the invitation again' });
   if (running(s) && !once) out.push({ key: 'suggest', label: 'Send a change to confirm' });
   if (s.status === 'pending' && !once) out.push({ key: 'plan', label: 'Change the invited plan' });
   if (once && s.status !== 'ended') out.push({ key: 'bundle', label: s.status === 'pending' ? 'Meetups and price' : 'Move meetups' });
@@ -60,6 +61,8 @@ interface Props {
 
 export function ActionForm({ action, ...p }: Props & { action: OpenAction }) {
   switch (action) {
+    case 'invite':
+      return <ResendInvitation {...p} />;
     case 'suggest':
       return <SuggestChange {...p} />;
     case 'suggest-end':
@@ -192,6 +195,46 @@ function SuggestChange({ id, sponsor: s, onDone, onCancel, onSignedOut, initialK
         />
         {error && !['tier', 'cycle', 'message'].includes(error.field ?? '') && <Notice kind="error">{error.message}</Notice>}
         <Buttons busy={busy} label="Email the change" busyLabel="Sending…" onCancel={onCancel} />
+      </form>
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ the invitation again */
+
+function ResendInvitation({ id, onDone, onCancel, onSignedOut }: Props) {
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<FieldError>(null);
+
+  return (
+    <Panel title="Email the invitation again" intro="To every contact who has joined. The Contacts list below sends it to one person. Each send shows in the history.">
+      <form
+        class="flex flex-col gap-5"
+        noValidate
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (busy) return;
+          setBusy(true);
+          setError(null);
+          const { status, body } = await post<{ emailed?: number }>(`${BASE}/${id}/invite`, { message: message || undefined });
+          setBusy(false);
+          if (status === 401) return onSignedOut();
+          if (status !== 200) return setError({ field: body.field, message: body.error ?? 'Could not send the invitation.' });
+          const n = body.emailed ?? 0;
+          onDone({ text: n ? `Invitation emailed to ${n === 1 ? 'their contact' : `${n} contacts`}.` : 'The invitation was not sent. Try again later.' });
+        }}
+      >
+        <TextArea
+          label={optional('Message in the email')}
+          rows={3}
+          value={message}
+          invalid={error?.field === 'message'}
+          error={error?.field === 'message' ? error.message : undefined}
+          onInput={(e) => setMessage(inputValue(e))}
+        />
+        {error && error.field !== 'message' && <Notice kind="error">{error.message}</Notice>}
+        <Buttons busy={busy} label="Send the invitation" busyLabel="Sending…" onCancel={onCancel} />
       </form>
     </Panel>
   );

@@ -29,6 +29,7 @@ For the board, behind the same `ADMIN_PASSWORD` and protection as the membership
 **Day to day:**
 
 - **Invite a company** after agreeing the sponsorship: Add a sponsor › Invite. They get an email, sign in with that address, sign and pay.
+- **Send the invitation again** while nobody has paid: open the sponsor › **Email the invitation again** (every joined contact), or Contacts › **Resend invitation** (one person). Every send is a new email, and each one shows in Agreements and history with the addresses, or says it failed.
 - **An existing sponsorship** (paid by bank transfer, say): Add a sponsor › Import existing, with the date it is paid until. Record later transfers with **Record a payment**. Slack reminds the board 30 and 7 days before it runs out, and on the day.
 - **Move a sponsor up, down or out** after talking to them: open the sponsor › **Send a change to confirm**. They get a link that fills it in; until they confirm nothing changes. Use **End outright** only when they did not agree (terminated) or an invitation never started (withdrawn).
 - **Show a sponsor on the site at their tier:** open the sponsor › Edit details › **Partner id**, and enter the id of their partner record (for example `gyff`). A running sponsorship then sets their tier on the home page, `/partners` and Tonight within a few minutes; without a partner id they are listed by name only, without a logo ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").

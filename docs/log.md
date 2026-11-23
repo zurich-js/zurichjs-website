@@ -1,5 +1,10 @@
 # Knowledge updates
 
+## 2026-11-23
+
+- **Update**: a pending sponsorship has **Email the invitation again** under Actions from the start (it was only offered after seven days), Contacts › Resend invitation stays while it is pending, and every invitation email is recorded in the sponsor's history ([Sponsorship frontend](/domains/sponsorship/frontend.md)).
+- **Correction**: a resend the board asked for reused the day's email idempotency key, so Resend dropped a same-day resend while the admin reported it sent; each board resend now has its own key. Adding a one-time sponsor with the invitation email failed after saving it (`meetups.map is not a function`); fixed.
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

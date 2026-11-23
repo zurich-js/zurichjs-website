@@ -15,6 +15,7 @@
  *   end         outright (terminated, or an invitation withdrawn); logged
  *   to do       what needs someone: see `attention`
  */
+import { randomUUID } from 'node:crypto';
 import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
@@ -27,7 +28,7 @@ import { isDate, parseDetails, parsePrice, type Parsed } from './sponsor-input.t
 import { SponsorshipError, type LifecycleDeps } from './sponsor-lifecycle.ts';
 import type { LogoStore } from './sponsor-logo.ts';
 import { knownFailure, lifecycleDeps, type Meetup } from './sponsor-route.ts';
-import { closeCheckout } from './sponsor-stripe.ts';
+import { closeCheckout, confirmed } from './sponsor-stripe.ts';
 import { StripeUnavailable } from './stripe.ts';
 
 export interface SponsorAdminDeps {
@@ -151,15 +152,27 @@ export async function resolveMeetups(eventIds: string[], meetups: () => Promise<
 }
 
 /** Emails the invitation (new) or the "now online" note (imported) to these contacts. */
-export async function sendInvitation(s: Sponsor, contacts: Contact[], message: string | null, deps: LifecycleDeps): Promise<number> {
+/**
+ * `again`: the board asked to send it again. Each such send gets its own key: Resend drops a repeated
+ * key for 24 hours, so a same-day resend under the day's key would be reported as sent and never arrive.
+ */
+export async function sendInvitation(s: Sponsor, contacts: Contact[], message: string | null, deps: LifecycleDeps, { again = false } = {}): Promise<number> {
   const day = zurichDay(deps.now?.() ?? new Date());
   const existing = s.source === 'imported' && s.paidUntil && s.cycle !== 'once' ? longDate(lastDay(s.paidUntil)) : null;
   const contractOnFile = (await deps.store.documents(s.id)).length > 0;
-  return emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing, contractOnFile }), {
+  const emailed = await emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing, contractOnFile }), {
     ...deps,
     contacts,
-    key: `sponsor-invite:${s.id}:${s.tier}-${s.cycle}:${day}`,
+    key: `sponsor-invite:${s.id}:${s.tier}-${s.cycle}:${day}${again ? `:again-${randomUUID()}` : ''}`,
   });
+  // The history shows the board each invitation, and whether it went out.
+  const to = contacts.filter(confirmed).map((c) => c.email);
+  // The emails are out: a failed history write is logged, never reported as a failed send.
+  if (to.length)
+    await deps.store
+      .log(s.id, 'invitation_emailed', BOARD, { to, emailed })
+      .catch((e: Error) => (deps.log ?? console.log)(`[sponsorship] invitation history for ${s.id} failed: ${e.message}`));
+  return emailed;
 }
 
 export async function createSponsor(

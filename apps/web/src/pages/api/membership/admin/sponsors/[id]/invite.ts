@@ -18,7 +18,7 @@ export const handleResendInvite = (request: Request, id: string, deps: SponsorAd
       if (!contacts.length) return fail(404, 'No such contact.');
       const message = text(body.message, 2000);
       if (message === false) return fail(400, 'Keep the message under 2000 characters, without < or >.', { field: 'message' });
-      return json(200, { ok: true, emailed: await sendInvitation(s, contacts, message ?? null, lifecycle) });
+      return json(200, { ok: true, emailed: await sendInvitation(s, contacts, message ?? null, lifecycle, { again: true }) });
     },
     'send the invitation',
   );

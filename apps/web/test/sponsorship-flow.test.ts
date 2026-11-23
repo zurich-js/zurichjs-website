@@ -17,6 +17,7 @@ import { handleBoardEnd } from '../src/pages/api/membership/admin/sponsors/[id]/
 import { handleBundle } from '../src/pages/api/membership/admin/sponsors/[id]/bundle.ts';
 import { handleAttachContract } from '../src/pages/api/membership/admin/sponsors/[id]/contracts/index.ts';
 import { handleAdminLogoUpload } from '../src/pages/api/membership/admin/sponsors/[id]/logos/index.ts';
+import { handleResendInvite } from '../src/pages/api/membership/admin/sponsors/[id]/invite.ts';
 import { handlePaymentLink } from '../src/pages/api/membership/admin/sponsors/[id]/payment-link.ts';
 import { handleRecordPayment } from '../src/pages/api/membership/admin/sponsors/[id]/payment.ts';
 import { handleSuggest } from '../src/pages/api/membership/admin/sponsors/[id]/suggest.ts';
@@ -60,11 +61,13 @@ const tick = { confirm: true, agreementVersion: AGREEMENT.version };
 function world() {
   const calls: { method: string; path: string; params: URLSearchParams }[] = [];
   const emails: { to: string[]; subject: string; text: string }[] = [];
+  const emailKeys: string[] = [];
   const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[] };
   let sessions = 0;
   const f = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
       emails.push(JSON.parse(String(init.body)));
+      emailKeys.push(new Headers(init.headers).get('idempotency-key') ?? '');
       return new Response('{"id":"e"}');
     }
     const u = new URL(url);
@@ -129,7 +132,7 @@ function world() {
   };
   const blobs = new Map<string, ArrayBuffer>();
   const logos: LogoStore = { set: async (k, d) => void blobs.set(k, d), get: async (k) => blobs.get(k) ?? null };
-  return { f, calls, emails, slack, slackPosts, sub, logos, blobs };
+  return { f, calls, emails, emailKeys, slack, slackPosts, sub, logos, blobs };
 }
 
 const post = (path: string, body: unknown, headers: Record<string, string> = {}) =>
@@ -354,8 +357,20 @@ describe('sponsorship flow', () => {
       adminDeps(),
     );
     expect(r.status).toBe(200);
-    expect(await r.json()).toMatchObject({ ok: true, emailed: 1 });
+    const body = (await r.json()) as { emailed: number; sponsor: { id: string } };
+    expect(body).toMatchObject({ ok: true, emailed: 1 });
     expect(w.emails.at(-1)!.to).toEqual(['bill@initrode.com']);
+    // Each invitation shows in the history, including one sent again later.
+    expect((await handleResendInvite(asAdmin('/x', {}), body.sponsor.id, adminDeps())).status).toBe(200);
+    const sent = (await store.events(body.sponsor.id)).filter((e) => e.type === 'invitation_emailed');
+    expect(sent.map((e) => e.payload)).toEqual([
+      { to: ['bill@initrode.com'], emailed: 1 },
+      { to: ['bill@initrode.com'], emailed: 1 },
+    ]);
+    // A same-day resend must not reuse the first send's key, or Resend drops it.
+    const keys = w.emailKeys.filter((k) => k.startsWith(`sponsor-invite:${body.sponsor.id}`));
+    expect(keys).toHaveLength(2);
+    expect(new Set(keys).size).toBe(2);
     expect(w.emails.at(-1)!.text).toContain('ZurichJS Meetup December, 9th December 2026');
   });
 

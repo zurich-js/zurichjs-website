@@ -24,7 +24,7 @@ export const handleInvitedPlan = (request: Request, id: string, deps: SponsorAdm
       const message = text(body.message, 2000);
       if (message === false) return fail(400, 'Keep the message under 2000 characters, without < or >.', { field: 'message' });
       const updated = await changeInvitedPlan(s, plan.value, lifecycle);
-      const emailed = body.resend === true ? await sendInvitation(updated, await store.contacts(s.id), message ?? null, lifecycle) : 0;
+      const emailed = body.resend === true ? await sendInvitation(updated, await store.contacts(s.id), message ?? null, lifecycle, { again: true }) : 0;
       return json(200, { ok: true, sponsor: adminSponsorView(updated, await store.meetups(s.id)), emailed });
     },
     'change the invitation',

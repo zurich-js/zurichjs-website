@@ -148,6 +148,24 @@ d('sponsorship database', () => {
     );
   });
 
+  it('summarises many sponsors in three queries, as their own reads do', async () => {
+    const acmeId = (await store.search({ q: 'acme' }))[0]!.id;
+    const { sponsor: bare } = await store.create({ ...acme, companyName: 'Bare' }, { email: 'b@bare.ch', name: 'B', role: 'primary' }, board);
+    let queries = 0;
+    const counted = postgresStore({ query: (text, params) => (queries++, pool.query(text, params)) });
+    const summaries = await counted.summaries([acmeId, bare.id, 'not-a-uuid']);
+    expect(queries).toBe(3);
+    for (const id of [acmeId, bare.id])
+      expect(summaries.get(id)).toEqual({ meetups: await store.meetups(id), hasContract: (await store.documents(id)).length > 0, latestLogo: (await store.logos(id))[0] ?? null });
+    expect(summaries.get(acmeId)).toMatchObject({ hasContract: true, latestLogo: { filename: 'acme.svg' } });
+    expect(summaries.get(acmeId)?.meetups.map((m) => m.eventId)).toEqual(['e2', 'e3']);
+    expect(summaries.get('not-a-uuid')).toEqual({ meetups: [], hasContract: false, latestLogo: null });
+    const mixedCase = await counted.summaries([acmeId, acmeId.toUpperCase(), bare.id]);
+    expect(mixedCase.get(acmeId.toUpperCase())).toEqual(summaries.get(acmeId));
+    expect(mixedCase.get(acmeId)).toEqual(summaries.get(acmeId));
+    expect(mixedCase.get(bare.id)).toEqual(summaries.get(bare.id));
+  });
+
   it('handles each Stripe event once, separately from memberships', async () => {
     expect(await store.stripeEventSeen('evt_9')).toBe(false);
     await store.markStripeEvent('evt_9', 'invoice.paid');

@@ -21,6 +21,15 @@ export interface StripeLinks {
   paymentLinkUrl?: string | null;
 }
 
+/** What the board's list shows next to a sponsor, read for many sponsors at once. */
+export interface SponsorSummary {
+  /** By date. */
+  meetups: SponsorMeetup[];
+  hasContract: boolean;
+  /** The newest logo. */
+  latestLogo: Logo | null;
+}
+
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
 export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename' | 'uploadedBy'>;
 export type NewDocument = Pick<SponsorDocument, 'blobKey' | 'filename' | 'bytes' | 'signedOn' | 'uploadedBy'>;
@@ -43,6 +52,8 @@ export interface SponsorStore {
 
   /** The meetups of a one-time sponsorship, by date. */
   meetups(sponsorId: string): Promise<SponsorMeetup[]>;
+  /** Meetups, contract on file and newest logo for each id (every id gets an entry). Postgres: at most three queries. */
+  summaries(sponsorIds: string[]): Promise<Map<string, SponsorSummary>>;
   /** Replaces the meetups (the board moves or bundles them; a sponsor picks one). */
   setMeetups(sponsorId: string, meetups: SponsorMeetup[], actor: Actor): Promise<SponsorMeetup[]>;
 
@@ -210,6 +221,20 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       return save({ ...s, ...transitionFields(s, t.to, t.endedReason, input.endsAt, now()) });
     },
     meetups: async (sid) => [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+    summaries: async (ids) =>
+      new Map(
+        ids.map((sid) => {
+          const latestLogo = [...logos.values()].findLast((l) => l.sponsorId === sid);
+          return [
+            sid,
+            {
+              meetups: [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+              hasContract: [...documents.values()].some((d) => d.sponsorId === sid),
+              latestLogo: latestLogo ? { ...latestLogo } : null,
+            },
+          ];
+        }),
+      ),
     async setMeetups(sid, list, actor) {
       must(sid);
       const unique = [...new Map(list.map((m) => [m.eventId, { ...m }])).values()].sort(byDate);

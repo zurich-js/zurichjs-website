@@ -3,9 +3,12 @@
  * unpaid one-time ones whose meetup has passed, ends bank-transfer sponsorships agreed to end,
  * and reminds the board 30, 7 and 0 days before a bank-transfer sponsorship runs out.
  * Logic and tests: src/server/sponsor-daily.ts.
+ * Every outbound call shares one 25 s budget (deadline.ts); sponsors left when it runs out are
+ * logged as deferred and checked on the next run.
  * Env: DATABASE_URL, RESEND_API_KEY, SLACK_AGENT_BOT_TOKEN, SLACK_SPONSORSHIP_CHANNEL_ID.
  */
 import { siteOrigin } from '../../src/server/auth.ts';
+import { deadline, SCHEDULED_BUDGET_MS } from '../../src/server/deadline.ts';
 import { sponsorStore } from '../../src/server/sponsor.ts';
 import { dailyCheck } from '../../src/server/sponsor-daily.ts';
 import { lifecycleDeps } from '../../src/server/sponsor-route.ts';
@@ -13,9 +16,12 @@ import { lifecycleDeps } from '../../src/server/sponsor-route.ts';
 export default async () => {
   const env = process.env;
   try {
+    const budget = deadline(SCHEDULED_BUDGET_MS);
     const store = sponsorStore(env);
-    const result = await dailyCheck(lifecycleDeps(env, store, siteOrigin(env), {}));
+    const result = await dailyCheck({ ...lifecycleDeps(env, store, siteOrigin(env), { fetch: budget.fetch() }), deadline: budget });
     console.log(`[sponsorship-daily] ${JSON.stringify(result)}`);
+    if (result.deferred.length)
+      console.error(`[sponsorship-daily] time budget reached; ${result.deferred.length} sponsorships left for the next run: ${result.deferred.join(', ')}`);
   } catch (err) {
     console.error('[sponsorship-daily] failed', err);
   }

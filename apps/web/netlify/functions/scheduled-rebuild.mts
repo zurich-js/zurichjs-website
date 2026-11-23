@@ -4,17 +4,13 @@
  * src/server/rebuild.ts. Env: NETLIFY_BUILD_HOOK_URL (logs instead of building when
  * missing). Netlify sets URL to the site's own address.
  */
-import { getStore } from '@netlify/blobs';
-import { tick, type RebuildState } from '../../src/server/rebuild.ts';
+import { tick } from '../../src/server/rebuild.ts';
+import { rebuildStore } from '../../src/server/rebuild-store.ts';
 
 export default async () => {
-  const blobs = getStore('rebuild');
   const hook = process.env.NETLIFY_BUILD_HOOK_URL;
   await tick({
-    store: {
-      read: async () => (await blobs.get('state', { type: 'json' })) as RebuildState | null,
-      write: (s) => blobs.setJSON('state', s).then(() => undefined),
-    },
+    store: rebuildStore(),
     changeTimes: async () => {
       try {
         const res = await fetch(new URL('/state-changes.json', process.env.URL ?? 'https://zurichjs.com'));

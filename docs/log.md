@@ -1,5 +1,12 @@
 # Knowledge updates
 
+## 2026-11-24
+
+- **Update**: requests stay inside Netlify's time limits: database connections give up after 5 s and queries after 10 s, sponsorship routes share a 50 s budget for outbound calls, and the daily sponsorship check a 25 s budget, deferring what it cannot reach to the next run ([Netlify deploys](/systems/operations/netlify.md), [Sponsorship](/domains/sponsorship/overview.md), [Troubleshooting](/systems/operations/troubleshooting.md)).
+- **Update**: donation events go to the donation part alone, post their Slack note once per event (`donation_stripe_events`), and answer 500 when Slack fails, so Stripe retries ([Stripe](/systems/stripe.md), [Donations](/domains/donations/overview.md)).
+- **Update**: rebuild state writes are conditional, so a publish during the build hook call stays pending, and steady publishing is built once its first publish is 15 minutes old ([Rebuilds](/systems/operations/rebuilds.md)).
+- **Correction**: the Stripe and troubleshooting pages said Netlify stops synchronous functions after about 10 seconds; Netlify's docs say 60 seconds. The Stripe page said an overlap of the old and new webhook endpoints is harmless; a membership or sponsorship Slack note can be posted twice during it. The membership webhook page said every event is safe to receive twice; a retry after a partial failure runs the steps again.
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

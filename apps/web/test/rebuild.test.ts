@@ -1,5 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DEBOUNCE_MS, acceptPublish, decide, emptyState, recordPublish, tick, validSanitySignature, type RebuildState, type StateStore } from '../src/server/rebuild.ts';
+import {
+  DEBOUNCE_MS,
+  MAX_WAIT_MS,
+  acceptPublish,
+  decide,
+  emptyState,
+  recordPublish,
+  tick,
+  validSanitySignature,
+  type RebuildState,
+  type StateStore,
+} from '../src/server/rebuild.ts';
 
 const t0 = new Date('2026-11-18T10:00:00Z');
 const plus = (ms: number) => new Date(t0.getTime() + ms);
@@ -16,7 +27,7 @@ async function sign(secret: string, t: number, body: string) {
 
 const memoryStore = (initial: RebuildState | null = null) => {
   let s = initial;
-  const store: StateStore = { read: async () => s, write: async (n) => void (s = n) };
+  const store: StateStore = { read: async () => s, update: async (change) => (s = change(s ?? emptyState())) };
   return { store, get: () => s };
 };
 
@@ -30,6 +41,42 @@ describe('debounced publish rebuilds', () => {
     expect(d.build).toBe(true);
     expect(d.next.pendingSince).toBeUndefined();
     expect(decide(d.next, plus(10 * 60_000), []).build).toBe(false);
+  });
+});
+
+describe('publishing that does not pause', () => {
+  it('builds once the first unbuilt publish is fifteen minutes old', async () => {
+    const { store } = memoryStore(emptyState());
+    const built: string[] = [];
+    for (let i = 0; i * 90_000 <= MAX_WAIT_MS + 90_000; i++) {
+      const now = plus(i * 90_000);
+      await store.update((s) => recordPublish(s, now));
+      await tick({ store, changeTimes: async () => [], triggerBuild: async (t) => void built.push(t), now, log: () => {} });
+    }
+    expect(built).toHaveLength(1);
+    expect(built[0]).toContain('(still publishing)');
+  });
+});
+
+describe('a publish while the build hook call is in flight', () => {
+  it('stays pending and gets a build of its own', async () => {
+    const { store, get } = memoryStore(recordPublish(emptyState(), t0));
+    const during = plus(DEBOUNCE_MS);
+    const built: string[] = [];
+    await tick({
+      store,
+      changeTimes: async () => [],
+      triggerBuild: async (t) => {
+        built.push(t);
+        await store.update((s) => recordPublish(s, during));
+      },
+      now: during,
+      log: () => {},
+    });
+    expect(get()).toMatchObject({ pendingSince: during.toISOString(), lastPublishAt: during.toISOString(), lastBuildAt: during.toISOString() });
+    await tick({ store, changeTimes: async () => [], triggerBuild: async (t) => void built.push(t), now: plus(2 * DEBOUNCE_MS), log: () => {} });
+    expect(built).toHaveLength(2);
+    expect(get()?.pendingSince).toBeUndefined();
   });
 });
 

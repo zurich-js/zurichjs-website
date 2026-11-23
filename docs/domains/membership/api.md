@@ -3,7 +3,7 @@ type: API
 title: Membership payments and API
 description: The membership endpoints, the Stripe objects and webhook lifecycle, the dashboard settings, and the owner's one-time setup for the database, Stripe, email and Slack.
 tags: [membership, stripe, api, webhook]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Membership payments and API
@@ -51,7 +51,7 @@ Membership events arrive on the site's one webhook, `/api/stripe/webhook`, which
 | `customer.subscription.updated`   | a scheduled level or cycle switch took effect at the renewal (`invoice.paid` also reads it, so the certificate shows the new level); Stripe reporting `past_due` or `unpaid` marks an active member past due |
 | `customer.subscription.deleted`   | ended: resigned (the board confirmed) or lapsed (the retries ran out)                                                                                                                                        |
 
-- **Safe to receive twice:** handled events are skipped, status changes are compare-and-set, there is one certificate per invoice, and emails have idempotency keys. A failure answers 500 and Stripe retries for up to three days.
+- **Receiving an event twice:** handled events are skipped, status changes are compare-and-set, there is one certificate per invoice, and emails have idempotency keys. An event is recorded only once every step worked, so a retry after a failure (answered 500; Stripe retries for up to three days) runs the steps again, and a step that already happened, such as a Slack note, can happen a second time.
 - People still in Checkout get no failed-payment email (Checkout shows the error). Disputes and refunds are not handled by the site; Stripe emails the account owner.
 - **Duration, deploy-preview testing and the move off the old endpoint:** [Stripe](/systems/stripe.md).
 

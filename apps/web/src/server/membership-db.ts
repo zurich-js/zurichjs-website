@@ -10,11 +10,12 @@
  *   local          MEMBERSHIP_DB_URL: the Docker Postgres (docker-compose.yml); it wins over DATABASE_URL
  *
  * One pool per function instance. Without a database URL every membership route answers 503
- * ("not available yet") instead of crashing.
+ * ("not available yet") instead of crashing. A database that accepts the connection and never
+ * answers fails within DB_TIMEOUTS, so the route answers its own 502 well inside Netlify's 60 s.
  */
 import pg from 'pg';
 import { postgresStore, type MemberStore, type Queryable } from '@zurichjs/membership';
-import { membershipUrl } from './db-url.ts';
+import { DB_TIMEOUTS, membershipUrl } from './db-url.ts';
 import type { Env } from './http.ts';
 
 export class MembershipUnavailable extends Error {}
@@ -25,7 +26,7 @@ export function membershipDb(env: Env): Queryable {
   const url = membershipUrl(env);
   if (!url) throw new MembershipUnavailable('DATABASE_URL is not set');
   // Serverless functions: a few connections each, through Neon's pooler (the -pooler host).
-  pool ??= new pg.Pool({ connectionString: url, max: 3, idleTimeoutMillis: 10_000 }) as unknown as Queryable;
+  pool ??= new pg.Pool({ connectionString: url, max: 3, idleTimeoutMillis: 10_000, ...DB_TIMEOUTS }) as unknown as Queryable;
   return pool;
 }
 

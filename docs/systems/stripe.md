@@ -3,7 +3,7 @@ type: System
 title: Stripe
 description: How the site talks to Stripe for donations, memberships and sponsorships, the one shared webhook and how it routes events, the move off the old endpoints, and the settings every part shares.
 tags: [stripe, payments, webhook]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Stripe
@@ -20,11 +20,11 @@ Three parts of the site take payments through one Stripe account: [donations](/d
 
 `/api/stripe/webhook` (`apps/web/src/pages/api/stripe/webhook.ts`, logic in `apps/web/src/server/stripe-webhook.ts`): one endpoint in Stripe, one signing secret (`STRIPE_WEBHOOK_SECRET`), every event the site handles (`STRIPE_WEBHOOK_EVENTS`: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`, `customer.subscription.updated`, `customer.subscription.deleted`).
 
-- **Routing:** each part (memberships, sponsorships, donations) receives every event and skips the ones that are not its own, by the `source` metadata.
-- **Order and retries:** memberships and sponsorships record the events they handled, so a retry after one of them failed (answered 500) only redoes the part that failed. Donations keep no record, so they run last and only when the others succeeded, so a retry cannot post twice.
+- **Routing:** an event whose object carries the donation `source` goes to the donation part alone, so it never waits for the membership database. Every other event goes to memberships, then sponsorships, and each skips the ones that are not its own, by the `source` metadata.
+- **Retries:** every part records the events it handled, so a retry after one of them failed (answered 500) only redoes the part that failed. Donations claim each event before posting their Slack note (`donation_stripe_events`, `apps/web/src/server/donation-events.ts`): a redelivery, or a second delivery at the same moment, posts nothing. When Slack fails, the claim is given back and the answer is 500, so Stripe delivers the event again. Without a database the claim is skipped and a redelivery posts again.
 - **Answers:** 200; 400 for a bad signature or JSON; 503 when not configured; 500 to make Stripe retry (for up to three days).
 - **API versions:** events arrive in the endpoint's API version; invoices are read in both the older and the 2025-03-31.basil shape, so an older endpoint or `stripe listen` still works.
-- **On Netlify** it is an Astro route (`prerender = false`) in the site's server function; nothing else is deployed. Netlify stops synchronous functions after about 10 seconds; membership `invoice.paid` does the most work (certificate and emails), so watch its duration in the function logs, and move that work to a background function if it gets close.
+- **On Netlify** it is an Astro route (`prerender = false`) in the site's server function; nothing else is deployed. Netlify stops synchronous functions after 60 seconds, with no answer from the code ([Netlify deploys](/systems/operations/netlify.md)); membership `invoice.paid` does the most work (certificate and emails), so watch its duration in the function logs, and move that work to a background function if it gets close.
 - **Creating it:** `pnpm membership:stripe-setup --webhook-url https://zurichjs.com/api/stripe/webhook` (dry run; `--apply` creates it) prints the signing secret once. Sponsorship events use the same endpoint; there is no separate one. Locally, `pnpm local` forwards to it with `stripe listen`.
 
 ## Moving production to the one webhook (owner, production change)
@@ -34,7 +34,7 @@ Production still sends to the old endpoints, which keep working:
 - `/api/membership/webhook` with `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`
 - `/api/donate/webhook` with `STRIPE_WEBHOOK_SECRET` (today that variable holds this endpoint's secret)
 
-To switch: create the `/api/stripe/webhook` endpoint as above, put its secret in `STRIPE_WEBHOOK_SECRET`, then disable the two old endpoints in Stripe in the same minute. Events already handled are skipped, so an overlap is harmless. Afterwards delete both old routes and `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`.
+To switch: create the `/api/stripe/webhook` endpoint as above, put its secret in `STRIPE_WEBHOOK_SECRET`, then disable the two old endpoints in Stripe in the same minute. Events already handled are skipped. While both receive events, the same event can arrive on both at the same moment, before either has recorded it, so expect the occasional membership or sponsorship Slack note twice during the switch. Afterwards delete both old routes and `STRIPE_MEMBERSHIP_WEBHOOK_SECRET`.
 
 ### Not verified
 

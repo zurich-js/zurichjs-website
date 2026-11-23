@@ -4,18 +4,21 @@
  * donations) gets every event and skips the ones that are not its own, by the `source` metadata
  * set when the payment was created.
  *
- * Order matters for retries: memberships and sponsorships remember the events they handled, so a
- * retry after one of them failed (answered 500) only redoes the part that failed. Donations keep
- * no record, so they run last and only when the others worked, so a retry cannot post twice.
+ * Every part remembers the events it handled, so a retry after one of them failed (answered 500)
+ * only redoes the part that failed. A donation event (its object carries the donation `source`)
+ * goes to the donation part alone: it is never a membership or sponsorship event, so it does not
+ * wait for their database.
  */
 import { fail, json, type Env } from './http.ts';
-import { verifyStripeSignature } from './stripe.ts';
+import { DONATION_SOURCE, verifyStripeSignature } from './stripe.ts';
 
 export interface StripeEvent {
   id: string;
   type: string;
   data: { object: Record<string, unknown> };
 }
+
+export const isDonationEvent = (event: StripeEvent) => (event.data.object.metadata as Record<string, string> | undefined)?.source === DONATION_SOURCE;
 
 /** Every event any part handles; `pnpm membership:stripe-setup --webhook-url …` subscribes the endpoint to these. */
 export const STRIPE_WEBHOOK_EVENTS = [

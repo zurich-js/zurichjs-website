@@ -13,7 +13,7 @@ import pg from 'pg';
 import { cfpModelFromEnv, cfpSlackApi, postgresCfpStore, type CfpDeps, type Queryable, type SubmitCfpProposal } from '@zurichjs/agent/cfp';
 import { forwardForm } from '@zurichjs/integrations';
 import type { FormData } from '@zurichjs/forms';
-import { membershipUrl } from './db-url.ts';
+import { DB_TIMEOUTS, membershipUrl } from './db-url.ts';
 import type { Env } from './http.ts';
 
 let pool: Queryable | undefined;
@@ -22,7 +22,7 @@ let pool: Queryable | undefined;
 export function cfpDb(env: Env): Queryable {
   const url = membershipUrl(env);
   if (!url) throw new Error('DATABASE_URL is not set: the CFP bot keeps its drafts in Postgres');
-  pool ??= new pg.Pool({ connectionString: url, max: 2, idleTimeoutMillis: 10_000 }) as unknown as Queryable;
+  pool ??= new pg.Pool({ connectionString: url, max: 2, idleTimeoutMillis: 10_000, ...DB_TIMEOUTS }) as unknown as Queryable;
   return pool;
 }
 

@@ -19,6 +19,7 @@ import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type 
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
+import { deadline, REQUEST_BUDGET_MS } from './deadline.ts';
 import { fail, isEmail, text, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
@@ -59,7 +60,12 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
     const store = deps.store ?? sponsorStore(env);
     const origin = siteOrigin(env);
     const now = deps.now === undefined ? undefined : () => new Date(deps.now!);
-    return await fn({ env, store, origin, lifecycle: lifecycleDeps(env, store, origin, { fetch: deps.fetch, slack: deps.slack, log: deps.log, now }) });
+    return await fn({
+      env,
+      store,
+      origin,
+      lifecycle: lifecycleDeps(env, store, origin, { fetch: deadline(REQUEST_BUDGET_MS).fetch(deps.fetch), slack: deps.slack, log: deps.log, now }),
+    });
   } catch (cause) {
     const known = knownFailure(cause);
     if (known) return known;

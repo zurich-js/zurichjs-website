@@ -9,21 +9,30 @@
  *     transfer runs out (nothing changes by itself: a person records the payment or agrees the end)
  *
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
+ *
+ * Netlify stops a scheduled function after 30 s. With a `deadline` (deadline.ts) the check starts
+ * no further sponsor once less than PER_SPONSOR_MS is left, and reports the rest as `deferred`:
+ * they are checked on the next run instead of being cut off half-way.
  */
 import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
 import { adminUrl, emailSponsor, note, who, zurichDay } from './sponsor.ts';
+import type { Deadline } from './deadline.ts';
 import { closeStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
+/** Time one sponsor can need when Stripe and Slack are slow: a Checkout expiry and a Slack note. */
+export const PER_SPONSOR_MS = 8_000;
 
 const daysBetween = (from: string, to: string) => Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
 
-export async function dailyCheck(deps: LifecycleDeps): Promise<{ completed: number; ended: number; closed: number; reminded: number }> {
+export async function dailyCheck(
+  deps: LifecycleDeps & { deadline?: Deadline },
+): Promise<{ completed: number; ended: number; closed: number; reminded: number; deferred: string[] }> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
-  const out = { completed: 0, ended: 0, closed: 0, reminded: 0 };
+  const out = { completed: 0, ended: 0, closed: 0, reminded: 0, deferred: [] as string[] };
 
   const end = async (s: Sponsor, reason: Extract<EndedReason, 'completed' | 'cancelled' | 'withdrawn'>) => {
     try {
@@ -43,7 +52,11 @@ export async function dailyCheck(deps: LifecycleDeps): Promise<{ completed: numb
     }
   };
 
-  for (const s of all) {
+  for (const [i, s] of all.entries()) {
+    if (deps.deadline && deps.deadline.remaining() < PER_SPONSOR_MS) {
+      out.deferred = all.slice(i).map((x) => x.id);
+      break;
+    }
     if (s.cycle === 'once' && s.status === 'active' && s.paidUntil && s.paidUntil <= today) {
       if (await end(s, 'completed')) out.completed++;
     } else if (s.cycle === 'once' && s.status === 'pending') {

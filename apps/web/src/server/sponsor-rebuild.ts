@@ -9,9 +9,9 @@
  *
  * Queueing never throws and never blocks a change: without Netlify Blobs (local, tests) it logs a line.
  */
-import { getStore } from '@netlify/blobs';
 import { isRunning, type Sponsor, type SponsorPatch, type SponsorStore, type Status } from '@zurichjs/sponsorship';
-import { emptyState, recordPublish, type RebuildState } from './rebuild.ts';
+import { recordPublish } from './rebuild.ts';
+import { rebuildStore } from './rebuild-store.ts';
 
 /** The fields of a sponsor the public site shows or links by. */
 const PUBLIC_FIELDS: (keyof SponsorPatch)[] = ['tier', 'partnerId', 'companyName', 'website'];
@@ -49,7 +49,5 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
 
 /** Records a pending build in the store `scheduled-rebuild` reads, as /api/rebuild does for a Sanity publish. */
 export async function queueRebuild(_reason: string, now = new Date()): Promise<void> {
-  const blobs = getStore('rebuild');
-  const state = ((await blobs.get('state', { type: 'json' })) as RebuildState | null) ?? emptyState();
-  await blobs.setJSON('state', recordPublish(state, now));
+  await rebuildStore().update((s) => recordPublish(s, now));
 }

@@ -54,6 +54,9 @@ export function parseDonation(body: Record<string, unknown>): { ok: true; data: 
 
 export class StripeUnavailable extends Error {}
 
+/** The `source` metadata on donation Checkout sessions and subscriptions; the webhook routes by it. */
+export const DONATION_SOURCE = 'zurichjs.com/donate';
+
 const STRIPE_API = 'https://api.stripe.com';
 
 /** The API version every call uses, and the membership webhook endpoint is created on. */
@@ -109,8 +112,8 @@ export async function createDonationCheckout(d: DonationRequest, deps: { env: En
     cancel_url: `${origin}/donate?canceled=1#donate`,
     customer_email: d.email,
     submit_type: monthly ? undefined : 'donate',
-    metadata: { source: 'zurichjs.com/donate', recurrence: d.recurrence, amount_chf: String(d.amount) },
-    ...(monthly ? { subscription_data: { metadata: { source: 'zurichjs.com/donate' } } } : {}),
+    metadata: { source: DONATION_SOURCE, recurrence: d.recurrence, amount_chf: String(d.amount) },
+    ...(monthly ? { subscription_data: { metadata: { source: DONATION_SOURCE } } } : {}),
   });
   const s = await stripeApi<{ id: string; url: string }>(env, f, 'POST', 'checkout/sessions', params, deps.idempotencyKey);
   return { url: s.url, id: s.id };
@@ -132,7 +135,7 @@ export async function getDonationSession(id: string, deps: { env: Env; fetch?: F
     'GET',
     `checkout/sessions/${id}`,
   );
-  if (s.metadata?.source !== 'zurichjs.com/donate') return null;
+  if (s.metadata?.source !== DONATION_SOURCE) return null;
   return {
     status: s.payment_status === 'paid' || s.payment_status === 'no_payment_required' ? 'paid' : s.status === 'open' ? 'open' : 'unpaid',
     amount: (s.amount_total ?? 0) / 100,

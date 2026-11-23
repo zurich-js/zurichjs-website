@@ -14,6 +14,7 @@ import type { Contact, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
 import { TransitionError } from '@zurichjs/sponsorship';
 import { sameOrigin } from './admin-auth.ts';
 import { sessionUser, siteOrigin, type AuthUser } from './auth.ts';
+import { deadline, REQUEST_BUDGET_MS } from './deadline.ts';
 import { CONTACT_EMAIL, fail, type Env } from './http.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
@@ -77,8 +78,9 @@ export function knownFailure(cause: unknown): Response | null {
   return null;
 }
 
-export async function signedInSponsor(request: Request, deps: SponsorRouteDeps, fn: (ctx: SponsorCtx) => Promise<Response>, what = 'do that'): Promise<Response> {
-  const env = deps.env ?? process.env;
+export async function signedInSponsor(request: Request, routeDeps: SponsorRouteDeps, fn: (ctx: SponsorCtx) => Promise<Response>, what = 'do that'): Promise<Response> {
+  const env = routeDeps.env ?? process.env;
+  const deps = { ...routeDeps, fetch: deadline(REQUEST_BUDGET_MS).fetch(routeDeps.fetch) };
   if (request.method !== 'GET' && !(request.headers.get('origin') && sameOrigin(request))) return fail(403, 'Refused: the request did not come from this site.');
   try {
     const user = await (deps.session ?? ((r: Request) => sessionUser(r, env)))(request);

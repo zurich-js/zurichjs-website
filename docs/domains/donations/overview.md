@@ -3,7 +3,7 @@ type: Domain
 title: Donations
 description: One-time and monthly donations through Stripe Checkout on /donate, the return and webhook endpoints, the Twint and email alternatives, and what the page shows when payments are unavailable.
 tags: [donations, stripe, api, frontend]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Donations
@@ -30,7 +30,7 @@ POST /api/donate/checkout  JSON { amount: CHF 5–1000, recurrence: 'once' | 'mo
 
 - **Checkout:** CHF on the support product (`STRIPE_SUPPORT_PRODUCT_ID`), always with `price_data`; `mode` `payment`, or `subscription` with a monthly recurring price; `submit_type=donate` only with one-time payments, as Stripe requires; `customer_email` when given. Sessions carry the metadata `source: zurichjs.com/donate`.
 - **`/api/donate/session`** lets `/donate/thanks` (noindex) say back only what Stripe confirmed, and reads only sessions this site created.
-- **Webhook:** donation events arrive on the site's one webhook, `/api/stripe/webhook`, and `processDonationEvent` (`apps/web/src/pages/api/donate/webhook.ts`) posts Slack notes for new and cancelled monthly donations. It runs last and keeps no record, so a retry cannot post twice. `/api/donate/webhook` is the old donations-only endpoint, kept until production moves to the shared one ([Stripe](/systems/stripe.md)).
+- **Webhook:** donation events arrive on the site's one webhook, `/api/stripe/webhook`, and `processDonationEvent` (`apps/web/src/pages/api/donate/webhook.ts`) posts Slack notes for new and cancelled monthly donations. Each event posts once, also when Stripe delivers it again; when Slack fails the answer is 500 and Stripe retries, and the part needs no membership database ([Stripe](/systems/stripe.md), "The one webhook"). `/api/donate/webhook` is the old donations-only endpoint, kept until production moves to the shared one ([Stripe](/systems/stripe.md)).
 
 ## The page
 

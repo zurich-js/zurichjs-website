@@ -116,6 +116,8 @@ The same Neon database as memberships ([Membership](/domains/membership/overview
 
 Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
 
+Netlify stops scheduled functions after 30 seconds, so every outbound call shares a 25 s budget (`apps/web/src/server/deadline.ts`). The check starts no further sponsorship once less than 8 s is left, and logs the ones it did not reach as deferred; they are checked on the next run. A sponsorship ended just before a call ran out can be left without its email or Slack note, as when the call itself fails: nothing records which notes were sent, so the next run does not send them again.
+
 ### Not verified
 
 The schedule is set only in the function's source (`export const config`). `apps/web/netlify.toml` repeats the other scheduled functions' schedules because Netlify may not read the config from a bundled file ([Web app](/systems/web.md)), but not this one. Whether the daily check runs on Netlify was not checked.

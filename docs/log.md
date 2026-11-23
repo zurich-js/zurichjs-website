@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-24
+
+- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state from Sanity ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

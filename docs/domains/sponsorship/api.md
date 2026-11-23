@@ -22,10 +22,12 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 | `/api/sponsorship/portal`                                     | a Stripe billing portal session                                                                                                                      |
 | `/api/sponsorship/details`                                    | company and billing details (synced to Stripe)                                                                                                       |
 | `/api/sponsorship/meetups`                                    | the meetups of a one-time sponsorship                                                                                                                |
+| `/api/sponsorship/coverage`                                   | the meetups the sponsorship covers, with their state from Sanity (or the stored ones when Sanity fails)                                              |
 | `/api/sponsorship/logo`, `/api/sponsorship/logo/[id]`         | upload and read logos                                                                                                                                |
 | `/api/sponsorship/contacts`, `/api/sponsorship/contacts/[id]` | colleagues                                                                                                                                           |
 | `/api/sponsorship/contracts/[id]`                             | download an attached contract                                                                                                                        |
 | `/api/membership/admin/sponsors/*`                            | the board's API: list, one sponsor, invite, plan, suggest a change, end, record a payment, bundle, payment link, contacts, contracts, logos, meetups |
+| `/api/membership/admin/sponsors/[id]/coverage`                | the covered meetups of a recurring sponsorship and their history; add an upcoming meetup or take one off                                             |
 
 - **Sign-in** is the members' email link (Better Auth, `/api/auth/[...all]`).
 - **The admin API** sits under `/api/membership/admin` so it shares the admin cookie's path and `ADMIN_PASSWORD` ([Membership frontend](/domains/membership/frontend.md)).
@@ -55,7 +57,7 @@ Whether the live Stripe objects exist.
 
 ## Tests
 
-`packages/sponsorship/test` (with a real Postgres; skipped without one), `apps/web/test/sponsorship-flow.test.ts`, `apps/web/test/sponsorship-fees.test.ts`, `packages/emails/test`. The override of the public partner list: `packages/content/test/sponsorships.test.ts` (the rules and the fallback) and `apps/web/test/sponsor-rebuild.test.ts` (which changes queue a rebuild).
+`packages/sponsorship/test` (with a real Postgres; skipped without one), `apps/web/test/sponsorship-flow.test.ts`, `apps/web/test/sponsor-coverage.test.ts`, `apps/web/test/sponsorship-fees.test.ts`, `packages/emails/test`. The override of the public partner list: `packages/content/test/sponsorships.test.ts` (the rules and the fallback) and `apps/web/test/sponsor-rebuild.test.ts` (which changes queue a rebuild).
 
 ## Related concepts
 

@@ -8,7 +8,7 @@ timestamp: "2026-11-19T00:00:00Z"
 
 # Sponsorship
 
-Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `apps/web/src/server/sponsor-public.ts` and `packages/content/src/sponsorships.ts` (the public site), `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql` and `apps/web/database/migrations/20261119090000_sponsorship_round2.sql`.
+Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `apps/web/src/server/sponsor-public.ts` and `packages/content/src/sponsorships.ts` (the public site), `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql`, `apps/web/database/migrations/20261119090000_sponsorship_round2.sql` and `apps/web/database/migrations/20261124090000_sponsor_coverage.sql`.
 
 Sponsors get the same self-serve system as [members](/domains/membership/overview.md): the board invites a company or brings an existing sponsorship onto the site, a contact signs the sponsorship agreement and pays by card, and from then on the sponsor manages tier, billing, payment details, logo and colleagues themselves. Changes the board agrees with a sponsor in conversation are sent as a link that fills the change in, and apply only once the sponsor confirms (owner, 18th November 2026).
 
@@ -51,6 +51,15 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 4. **Self-serve** ([Sponsorship frontend](/domains/sponsorship/frontend.md)): tier and billing changes, ending and taking it back, the Stripe portal, details, logo, colleagues.
 5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). Once paid, the meetups can still move; their number and price cannot.
 6. **Ends:** at the end of the paid period (Stripe `cancel_at_period_end`, or the daily check for bank-transfer ones), after the last meetup (one-time), when Stripe gives up on payment (lapsed), or outright by the board (terminated, or withdrawn before it started). The daily check also closes unpaid one-time sponsorships whose meetup has passed.
+
+## Covered meetups
+
+A sponsorship covers the meetups recorded for it in `sponsor_meetups`, whatever its billing. Being a sponsor does not cover every meetup.
+
+- **One-time:** the meetups in the plan (the sponsor picks one, or the board bundles several). They set the price and the end.
+- **Recurring:** the board confirms each covered meetup in `/admin/sponsors` (Covered meetups), from the upcoming published meetups. A meetup inside a billing period is not covered until it is confirmed.
+- **History:** a row is never deleted. Taking a meetup off records when and by whom (`removed_at`, `removed_by`); confirming it again records the new confirmation. A meetup that has happened cannot be taken off. Each change is in `sponsor_events` (`meetup_covered`, `meetup_uncovered`, `meetups_set`).
+- **The sponsor's dashboard** lists the covered meetups with title, Zurich date and a state in words: upcoming, happened, cancelled, postponed, or no longer listed. Title, date and state come from Sanity when the page loads; when Sanity cannot be reached, the stored title and date are shown, the state comes from the date, and the page says so. They load apart from the rest of the account, so a billing problem never hides them.
 
 ## Status machine
 

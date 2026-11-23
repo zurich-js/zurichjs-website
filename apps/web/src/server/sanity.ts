@@ -8,7 +8,7 @@ import type { Env } from './http.ts';
 
 export function groqQuery(env: Env, fetchImpl: typeof fetch = fetch) {
   const { projectId, dataset, apiVersion, token } = sanityConfig(env);
-  return async function query<T>(groq: string, params: Record<string, string> = {}): Promise<T> {
+  return async function query<T>(groq: string, params: Record<string, unknown> = {}): Promise<T> {
     const url = new URL(`https://${projectId}.api.sanity.io/v${apiVersion}/data/query/${dataset}`);
     url.searchParams.set('query', groq);
     url.searchParams.set('perspective', 'published');

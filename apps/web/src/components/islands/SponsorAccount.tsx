@@ -26,6 +26,7 @@ import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, i
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
+import { CoveredMeetups } from './sponsor-account/CoveredMeetups.tsx';
 
 type ContactView = ReturnType<typeof contactView>;
 type AgreementView = ReturnType<typeof agreementView>;
@@ -674,6 +675,7 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       )}
       {link && <LinkedChange ctx={ctx} s={s} link={link} />}
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
+      <CoveredMeetups once={!recurring} contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
       {s.status === 'pending' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}

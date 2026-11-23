@@ -179,6 +179,35 @@ test.describe('the sponsorship page (/partners/account)', () => {
     expect(sent).toEqual([{ email: EMAIL, callbackURL: ACCOUNT, errorCallbackURL: `${ACCOUNT}?link=invalid` }]);
   });
 
+  test('signed in: covered meetups load on their own, say their state in words, and retry after an error', async ({ page }) => {
+    let calls = 0;
+    await mockMe(page, () => me(sponsor()));
+    await page.route('**/api/sponsorship/coverage', (route) =>
+      ++calls === 1
+        ? route.fulfill({ status: 502, json: { ok: false, error: 'We couldn’t load your meetups right now.' } })
+        : route.fulfill({
+            json: {
+              ok: true,
+              checked: true,
+              meetups: [
+                { eventId: 'e-dec', title: 'ZurichJS Meetup December', date: '2026-12-09', state: 'cancelled' },
+                { eventId: 'e-jan', title: 'ZurichJS Meetup January', date: '2027-01-13', state: 'upcoming' },
+              ],
+            },
+          }),
+    );
+    await page.goto(ACCOUNT);
+    const section = page.getByRole('region', { name: 'Meetups you sponsor' });
+    await expect(section.getByText('We couldn’t load your meetups right now.')).toBeVisible();
+    // The rest of the account still shows.
+    await expect(page.getByText(`Signed in as ${EMAIL}`)).toBeVisible();
+    await section.getByRole('button', { name: 'Try again' }).click();
+    await expect(section.getByText('ZurichJS Meetup January')).toBeVisible();
+    await expect(section.getByText('Cancelled')).toBeVisible();
+    await expect(section.getByText('Upcoming')).toBeVisible();
+    expect(await axe(page)).toEqual([]);
+  });
+
   test('without accounts configured (503) the page says so and offers no form', async ({ page }) => {
     await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 503, json: { ok: false } }));
     await page.goto(ACCOUNT);

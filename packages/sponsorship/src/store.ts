@@ -1,5 +1,20 @@
 import { checkTransition, TransitionError } from './state.ts';
-import type { Actor, Agreement, Contact, EndedReason, Logo, NewContact, NewSponsor, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch, Status } from './types.ts';
+import type {
+  Actor,
+  Agreement,
+  Contact,
+  CoverageRow,
+  EndedReason,
+  Logo,
+  NewContact,
+  NewSponsor,
+  Sponsor,
+  SponsorDocument,
+  SponsorEvent,
+  SponsorMeetup,
+  SponsorPatch,
+  Status,
+} from './types.ts';
 
 export interface TransitionInput {
   /** The status the caller saw: a different one now is a `conflict` (double click, retried webhook). */
@@ -41,10 +56,19 @@ export interface SponsorStore {
   linkStripe(id: string, links: StripeLinks, actor: Actor): Promise<Sponsor>;
   transition(id: string, input: TransitionInput): Promise<Sponsor>;
 
-  /** The meetups of a one-time sponsorship, by date. */
+  /** The meetups the sponsorship covers now, by date (rows taken off are left out). */
   meetups(sponsorId: string): Promise<SponsorMeetup[]>;
-  /** Replaces the meetups (the board moves or bundles them; a sponsor picks one). */
+  /**
+   * Makes the covered meetups exactly `meetups` (the board moves or bundles them; a sponsor picks
+   * one). Meetups not in the list are taken off, not deleted.
+   */
   setMeetups(sponsorId: string, meetups: SponsorMeetup[], actor: Actor): Promise<SponsorMeetup[]>;
+  /** Every coverage row, taken-off ones included, by date. */
+  coverage(sponsorId: string): Promise<CoverageRow[]>;
+  /** Confirms one covered meetup (again, if it had been taken off). Returns the rows covered now. */
+  cover(sponsorId: string, meetup: SponsorMeetup, actor: Actor): Promise<SponsorMeetup[]>;
+  /** Takes one meetup off; its row stays, with when and by whom. Returns the rows covered now. */
+  uncover(sponsorId: string, eventId: string, actor: Actor): Promise<SponsorMeetup[]>;
 
   contacts(sponsorId: string): Promise<Contact[]>;
   contactByUser(userId: string): Promise<Contact | null>;
@@ -105,6 +129,7 @@ export function transitionFields(s: Sponsor, to: Status, endedReason: EndedReaso
 }
 
 const byDate = (a: SponsorMeetup, b: SponsorMeetup) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId);
+const plain = ({ eventId, title, date }: SponsorMeetup): SponsorMeetup => ({ eventId, title, date });
 
 /** In-memory store with the same rules as the database. */
 export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { all(): Sponsor[] } {
@@ -112,7 +137,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
   let n = 0;
   const id = (p: string) => `${p}_${++n}`;
   const sponsors = new Map<string, Sponsor>();
-  const meetups = new Map<string, SponsorMeetup[]>();
+  const coverage = new Map<string, Map<string, CoverageRow>>();
   const contacts = new Map<string, Contact>();
   const agreements: Agreement[] = [];
   const logos = new Map<string, Logo>();
@@ -136,6 +161,21 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
   const findBy = async (pred: (s: Sponsor) => boolean) => {
     const s = [...sponsors.values()].find(pred);
     return s ? { ...s } : null;
+  };
+  const rowsOf = (sid: string) => {
+    if (!coverage.has(sid)) coverage.set(sid, new Map());
+    return coverage.get(sid)!;
+  };
+  const covered = async (sid: string) =>
+    [...rowsOf(sid).values()]
+      .filter((r) => !r.removedAt)
+      .map(plain)
+      .sort(byDate);
+  /** Adds or refreshes a row; a row taken off is confirmed again by this actor. */
+  const put = (rows: Map<string, CoverageRow>, m: SponsorMeetup, actor: Actor) => {
+    const r = rows.get(m.eventId);
+    const fresh = !r || r.removedAt;
+    rows.set(m.eventId, { ...m, confirmedAt: fresh ? now() : r.confirmedAt, confirmedBy: fresh ? actor.kind : r.confirmedBy, removedAt: null, removedBy: null });
   };
 
   return {
@@ -209,13 +249,31 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       });
       return save({ ...s, ...transitionFields(s, t.to, t.endedReason, input.endsAt, now()) });
     },
-    meetups: async (sid) => [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
+    meetups: async (sid) => covered(sid),
     async setMeetups(sid, list, actor) {
       must(sid);
-      const unique = [...new Map(list.map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
-      meetups.set(sid, unique);
-      record(sid, 'meetups_set', actor, { payload: { events: unique.map((m) => m.eventId) } });
-      return unique.map((m) => ({ ...m }));
+      const unique = [...new Map(list.map((m) => [m.eventId, plain(m)])).values()];
+      const rows = rowsOf(sid);
+      for (const r of rows.values()) if (!r.removedAt && !unique.some((m) => m.eventId === r.eventId)) rows.set(r.eventId, { ...r, removedAt: now(), removedBy: actor.kind });
+      for (const m of unique) put(rows, m, actor);
+      record(sid, 'meetups_set', actor, { payload: { events: unique.sort(byDate).map((m) => m.eventId) } });
+      return covered(sid);
+    },
+    coverage: async (sid) => [...rowsOf(sid).values()].sort(byDate).map((r) => ({ ...r })),
+    async cover(sid, m, actor) {
+      must(sid);
+      put(rowsOf(sid), plain(m), actor);
+      record(sid, 'meetup_covered', actor, { payload: { eventId: m.eventId } });
+      return covered(sid);
+    },
+    async uncover(sid, eventId, actor) {
+      must(sid);
+      const rows = rowsOf(sid);
+      const r = rows.get(eventId);
+      if (!r || r.removedAt) throw new NotFound('covered meetup');
+      rows.set(eventId, { ...r, removedAt: now(), removedBy: actor.kind });
+      record(sid, 'meetup_uncovered', actor, { payload: { eventId } });
+      return covered(sid);
     },
     contacts: async (sid) => [...contacts.values()].filter((c) => c.sponsorId === sid).map((c) => ({ ...c })),
     contactByUser: async (uid) => {

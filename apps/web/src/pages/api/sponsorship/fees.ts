@@ -27,13 +27,16 @@ export const handleConfirmFee = (request: Request, deps: SponsorRouteDeps = {}) 
       const fees = deps.fees ?? feeStore(env);
       const q = typeof body.quoteId === 'string' ? await fees.quote(body.quoteId) : null;
       if (!q || q.sponsorId !== s.id || q.subject !== 'sponsorship' || !q.interval) return fail(404, 'No such offer.');
+      if (q.status === 'accepted') return json(200, { ok: true, inForce: quoteView(q) });
       if (q.status !== 'open') throw new SponsorshipError('This offer was replaced or already confirmed. Reload the page.');
       if (!isRecurring(s.cycle) || !s.stripeSubscriptionId || (s.status !== 'active' && s.status !== 'past_due'))
         throw new SponsorshipError('This sponsorship cannot take a processing fee now. Write to us.');
       // The fee was worked out for one plan: after a plan change it needs a new offer.
       if (q.baseMinor !== fee(s.tier, s.cycle) * 100) throw new SponsorshipError('Your plan changed since this offer. We will send you a new one.');
-      const item = q.surchargeMinor ? await setSurchargeItem(s.stripeSubscriptionId, q, lifecycle.stripe) : null;
+      if (!(await fees.claimRecurring(q.id, contact.id))) throw new SponsorshipError('The offer changed. Reload to review it.');
+      const item = await setSurchargeItem(s.stripeSubscriptionId, q, lifecycle.stripe);
       const inForce = await fees.acceptQuote(q.id, contact.id, item);
+      if (!inForce) throw new SponsorshipError('The fee confirmation needs review.');
       await note(`:receipt: ${who(s)} confirmed the processing fee; it applies from the next renewal.`, lifecycle);
       return json(200, { ok: true, inForce: inForce ? quoteView(inForce) : null });
     },

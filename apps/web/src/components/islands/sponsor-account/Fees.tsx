@@ -17,15 +17,16 @@ export interface FeesView {
 }
 
 export function Fees({ fees, onSignedOut, onChanged }: { fees: FeesView; onSignedOut: () => void; onChanged: () => void }) {
-  const [agree, setAgree] = useState(false);
+  const [acceptedId, setAcceptedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const q = fees.toConfirm;
+  const agree = !!q && q.id === acceptedId;
   const current = fees.inForce?.feeChoice === 'pass_through' ? fees.inForce : null;
   if (!q && !current) return null;
 
   const confirm = async () => {
-    if (!q || busy) return;
+    if (!q || !agree || busy) return;
     setBusy(true);
     setError('');
     const res = await fetch('/api/sponsorship/fees', {
@@ -54,13 +55,14 @@ export function Fees({ fees, onSignedOut, onChanged }: { fees: FeesView; onSigne
       {q && (
         <>
           <p class="m-0 text-body text-ink-2 text-pretty">
-            We asked you to cover the card processing fee from your next renewal: {q.surcharge} {q.per} on top of {q.base}, so {q.total} {q.per}. Nothing changes until you confirm,
-            and nothing is charged now. The fee is our estimate.
+            {q.surcharge
+              ? `From the next renewal, you would pay ${q.base} plus an estimated processing fee of ${q.surcharge}, totalling ${q.total} ${q.per}.`
+              : `ZurichJS offers to cover the processing fee. You would pay ${q.total} ${q.per} from the next renewal.`}
           </p>
           <Checkbox
-            label={`I agree to pay the processing fee of ${q.surcharge} ${q.per} from the next renewal.`}
+            label={`I agree to the total of ${q.total} ${q.per} from the next renewal.`}
             checked={agree}
-            onChange={(e) => setAgree((e.target as HTMLInputElement).checked)}
+            onChange={(e) => setAcceptedId((e.target as HTMLInputElement).checked ? q.id : null)}
           />
           {error && <Notice tone="danger" live title={error} />}
           <div>

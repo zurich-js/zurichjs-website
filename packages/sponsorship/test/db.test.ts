@@ -141,6 +141,138 @@ d('sponsorship database', () => {
     expect(pgdb.fails(`update sponsor_meetups set removed_at = now() where event_id = 'e3'`)).toMatch(/removed_pair/);
   });
 
+  it('creates a running import with its meetups, and moves a contact nobody accepted, in one statement', async () => {
+    const { sponsor: globex } = await store.create({ ...acme, companyName: 'Globex' }, { email: 'hank@globex.com', name: 'Hank', role: 'primary' }, board);
+    const pat = await store.addContact(globex.id, { email: 'pat@initech.com', name: 'Pat', role: 'other', addedBy: 'sponsor' }, sponsorActor);
+    const { sponsor, contact } = await store.create(
+      { ...acme, companyName: 'Initech', cycle: 'once', status: 'active', source: 'imported', paymentMode: 'manual', startedAt: '2026-11-01', paidUntil: '2026-12-10' },
+      { email: 'pat@initech.com', name: 'Pat Doe', role: 'primary', addedBy: 'board' },
+      board,
+      { meetups: [{ eventId: 'e1', title: 'December', date: '2026-12-09' }], claimUnconfirmed: true },
+    );
+    expect(sponsor).toMatchObject({ status: 'active', paidUntil: '2026-12-10' });
+    expect(contact).toMatchObject({ id: pat.id, sponsorId: sponsor.id, addedBy: 'board' });
+    expect((await store.contacts(globex.id)).map((c) => c.email)).toEqual(['hank@globex.com']);
+    expect(await store.meetups(sponsor.id)).toEqual([{ eventId: 'e1', title: 'December', date: '2026-12-09' }]);
+    expect((await store.events(sponsor.id)).map((e) => e.type).sort()).toEqual(['created', 'meetups_set']);
+    expect((await store.events(globex.id)).at(-1)).toMatchObject({ type: 'contact_removed', payload: { contactId: pat.id, movedTo: sponsor.id } });
+    // A contact someone accepted (or the board added) is never moved.
+    await expect(
+      store.create({ ...acme, companyName: 'Other' }, { email: 'hank@globex.com', name: 'Hank', role: 'primary' }, board, { claimUnconfirmed: true }),
+    ).rejects.toBeInstanceOf(DuplicateContact);
+    expect(await store.search({ q: 'Other' })).toHaveLength(0);
+  });
+
+  it('writes a Stripe link only while the expected value is still there', async () => {
+    const s = (await store.search({ q: 'Globex' }))[0]!;
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: 'plink_a', paymentLinkUrl: 'https://buy.stripe.com/a' }, stripe)).toMatchObject({
+      paymentLinkId: 'plink_a',
+    });
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: 'plink_b', paymentLinkUrl: 'https://buy.stripe.com/b' }, stripe)).toBeNull();
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: 'plink_a' }, { paymentLinkId: null, paymentLinkUrl: null }, stripe)).toMatchObject({ paymentLinkId: null });
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: null, status: 'active' }, { paymentLinkId: 'plink_c', paymentLinkUrl: 'https://buy.stripe.com/c' }, stripe)).toBeNull();
+    expect(
+      await store.linkStripeIf(s.id, { paymentLinkId: null, status: s.status }, { paymentLinkId: 'plink_c', paymentLinkUrl: 'https://buy.stripe.com/c' }, stripe),
+    ).toMatchObject({
+      paymentLinkId: 'plink_c',
+    });
+  });
+
+  it('writes notices with a status change, once per key, and hands each to one sender at a time', async () => {
+    const { sponsor } = await store.create({ ...acme, companyName: 'Noticed' }, { email: 'n@noticed.ch', name: 'N', role: 'primary' }, board);
+    const notice = (key: string) => ({ key, body: { kind: 'slack', text: key } });
+    await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: stripe, notices: [notice('welcome'), notice('welcome:slack')] });
+    // A refused change writes no notice.
+    await expect(store.transition(sponsor.id, { from: 'pending', to: 'active', actor: stripe, notices: [notice('never')] })).rejects.toBeInstanceOf(TransitionError);
+    expect(await store.queueNotices(sponsor.id, [notice('welcome'), notice('renewal')])).toBe(1);
+    const first = await store.claimNotices({ sponsorId: sponsor.id, limit: 10 });
+    expect(first.map((n) => n.key)).toEqual(['welcome', 'welcome:slack', 'renewal']);
+    expect(await store.claimNotices({ sponsorId: sponsor.id, limit: 10 })).toEqual([]);
+    await store.noticeDone(first[0]!.id);
+    await store.noticeDone(first[1]!.id, 'Slack 500');
+    const again = await store.claimNotices({ limit: 10 });
+    expect(again.map((n) => [n.key, n.attempts, n.lastError])).toEqual([['welcome:slack', 2, 'Slack 500']]);
+    expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'never'`)).toBe('0');
+  });
+
+  it('writes a signed copy with its agreement and a receipt with its mark, in one step each', async () => {
+    const { sponsor } = await store.create({ ...acme, companyName: 'Owed' }, { email: 'o@owed.ch', name: 'O', role: 'primary' }, board);
+    const ag = await store.acceptAgreement(
+      sponsor.id,
+      { version: '2026-11-18', signerName: 'O', signerTitle: 'CEO', signerEmail: 'o@owed.ch', context: 'start', summary: 'Friend' },
+      sponsorActor,
+      (saved) => [{ key: `copy:${saved.id}`, body: { kind: 'email', at: saved.acceptedAt } }],
+    );
+    expect(pgdb.sql(`select body->>'at' from sponsor_notices where key = 'copy:${ag.id}'`)).not.toBe('');
+    // The notice key is taken already: the whole write fails, the agreement is not saved either.
+    await expect(
+      store.acceptAgreement(
+        sponsor.id,
+        { version: '2026-11-18', signerName: 'O', signerTitle: 'CEO', signerEmail: 'o@owed.ch', context: 'start', summary: 'Friend' },
+        sponsorActor,
+        () => [
+          { key: `copy:${ag.id}`, body: { bad: true } },
+          { key: 'x'.repeat(301), body: {} },
+        ],
+      ),
+    ).rejects.toThrow();
+    expect(await store.agreements(sponsor.id)).toHaveLength(1);
+    expect(await store.queueNotices(sponsor.id, [{ key: 'receipt:1', body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-01-01' } })).toBe(1);
+    await expect(
+      store.queueNotices(sponsor.id, [{ key: 'y'.repeat(301), body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-02-01' } }),
+    ).rejects.toThrow();
+    expect((await store.events(sponsor.id)).filter((e) => e.type === 'payment_recorded').map((e) => e.payload.paidUntil)).toEqual(['2027-01-01']);
+  });
+
+  it('decides a failed and a paid invoice handled at the same moment one after the other: the payment wins', async () => {
+    const { sponsor } = await store.create({ ...acme, companyName: 'Crossed', status: 'active' }, { email: 'c@crossed.ch', name: 'C', role: 'primary' }, board);
+    await store.linkStripe(sponsor.id, { subscriptionId: 'sub_crossed' }, stripe);
+    const notice = [{ key: 'overdue:in_x', body: {} }];
+    // Whichever takes the row first, the other sees it: paid first, the failure changes nothing;
+    // failed first, the payment clears "payment overdue".
+    await Promise.all([
+      store.paidInvoice(sponsor.id, { invoice: 'in_x' }, stripe, { clearOverdue: true }),
+      store.overdueInvoice(sponsor.id, { invoice: 'in_x', subscriptionId: 'sub_crossed', payload: {} }, stripe, notice),
+    ]);
+    expect((await store.get(sponsor.id))?.status).toBe('active');
+    // A failure for another subscription, or for an invoice already paid, changes nothing.
+    expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_y', subscriptionId: 'sub_old', payload: {} }, stripe, [])).outcome).toBe('stale');
+    expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_x', subscriptionId: 'sub_crossed', payload: {} }, stripe, [])).outcome).toBe('paid');
+    // A genuine failure: overdue, with its notice in the same write; the payment then clears it.
+    const r = await store.overdueInvoice(sponsor.id, { invoice: 'in_z', subscriptionId: 'sub_crossed', payload: { event: 'invoice.payment_failed' } }, stripe, [
+      { key: 'overdue:in_z', body: {} },
+    ]);
+    expect(r).toMatchObject({ outcome: 'overdue', sponsor: { status: 'past_due' } });
+    expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'overdue:in_z'`)).toBe('1');
+    expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_z', subscriptionId: 'sub_crossed', payload: {} }, stripe, [])).outcome).toBe('overdue');
+    expect(await store.paidInvoice(sponsor.id, { invoice: 'in_z', created: 1 }, stripe, { clearOverdue: true })).toMatchObject({ status: 'active' });
+  });
+
+  it('keeps a payment link attempt or switches it off, never both, even at the same time', async () => {
+    const { sponsor: s } = await store.create({ ...acme, companyName: 'Initech', cycle: 'once' }, { email: 'ada@initech.ch', name: 'Ada', role: 'primary' }, board);
+    const keep = (key: string, id: string) =>
+      store.linkStripeIf(s.id, { paymentLinkId: null, status: 'pending', attempt: key }, { paymentLinkId: id, paymentLinkUrl: `https://buy.stripe.com/${id}` }, stripe);
+    const a = await store.beginLinkAttempt(s.id, 'line_items[0][price]=price_1');
+    const b = await store.beginLinkAttempt(s.id, 'line_items[0][price]=price_1');
+    expect(a).toMatchObject({ sponsorId: s.id, state: 'open', linkId: null });
+    await store.linkAttemptCreated(a.key, 'plink_a');
+    await store.linkAttemptCreated(b.key, 'plink_b');
+    // Kept and claimed for cleanup at the same moment: exactly one wins.
+    const [kept, claimed] = await Promise.all([keep(a.key, 'plink_a'), store.claimLinkCleanup(a.key)]);
+    expect([!!kept, claimed].filter(Boolean)).toHaveLength(1);
+    const unsettled = await store.unsettledLinkAttempts({ sponsorId: s.id, limit: 10 });
+    expect(unsettled.map((x) => x.key).sort()).toEqual((kept ? [b.key] : [a.key, b.key]).sort());
+    // A second link is never kept over the first, and a kept one is never claimed.
+    if (kept) {
+      expect(await keep(b.key, 'plink_b')).toBeNull();
+      expect(await store.claimLinkCleanup(a.key)).toBe(false);
+    }
+    expect(await store.claimLinkCleanup(b.key)).toBe(true);
+    await store.linkAttemptClosed(b.key);
+    expect(await store.unsettledLinkAttempts({ sponsorId: s.id, limit: 10 })).toHaveLength(kept ? 0 : 1);
+    expect(await store.unsettledLinkAttempts({ sponsorId: 'not-a-uuid', limit: 10 })).toEqual([]);
+  });
+
   it('keeps the audit log append-only', () => {
     expect(pgdb.fails('delete from sponsor_events')).toMatch(/append-only/);
   });

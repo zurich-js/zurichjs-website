@@ -23,7 +23,7 @@ import {
 } from '@zurichjs/sponsorship';
 import { bundleTotal } from './sponsor.ts';
 import { currentGate } from './sponsor-fees.ts';
-import { activeQuoteLinks, actualFee, deactivateLink, quoteLink, type StripeDeps } from './sponsor-stripe.ts';
+import { activeQuoteLinks, actualFee, deactivateLink, PaymentLinkRace, quoteLink, type StripeDeps } from './sponsor-stripe.ts';
 
 /** An earlier payment link could not be switched off, so no new one was made. */
 export class LinkStillOpen extends Error {
@@ -110,9 +110,15 @@ export async function publishOffer(
   if (reused && quote.linkState === 'live' && quote.linkUrl) return { quote, url: quote.linkUrl, reused };
   await closeStaleLinks(s, 'sponsorship', null, fees, store, stripe);
   if (!(await fees.linkCreating(quote.id))) throw new OfferReplaced();
-  const link = await quoteLink(s, meetups, ctx.origin, stripe, quote);
+  const link = await quoteLink(s, meetups, ctx.origin, stripe, quote, store).catch(async (cause: unknown) => {
+    if (cause instanceof PaymentLinkRace) {
+      await fees.voidQuote(quote.id);
+      throw new OfferReplaced();
+    }
+    throw cause;
+  });
   const actor = { kind: 'stripe', id: link.id } as const;
-  const owner = await store.linkStripeIf(s.id, { paymentLinkId: null, status: 'pending' }, { paymentLinkId: link.id, paymentLinkUrl: link.url }, actor);
+  const owner = await store.linkStripeIf(s.id, { paymentLinkId: null, status: 'pending', attempt: quote.id }, { paymentLinkId: link.id, paymentLinkUrl: link.url }, actor);
   const alreadyOwned = !owner && (await store.get(s.id))?.paymentLinkId === link.id;
   const attached = owner || alreadyOwned ? await fees.attachLink(quote.id, link.id, link.url) : null;
   if (!attached) {

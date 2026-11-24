@@ -931,7 +931,11 @@ function ChangePlan({
     setBusy(true);
     errs.setServer(null);
     result.set(null);
-    const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null }>('/api/sponsorship/plan', { json: { tier, cycle, ...sig.payload } }, ctx);
+    const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null; droppedChange?: string | null }>(
+      '/api/sponsorship/plan',
+      { json: { tier, cycle, ...sig.payload } },
+      ctx,
+    );
     setBusy(false);
     if (!r) return;
     if (!r.ok) {
@@ -942,7 +946,9 @@ function ChangePlan({
     }
     onDone(
       r.timing === 'now'
-        ? `Done. Your sponsorship is now ${plan}.${manual ? ' We bill the difference.' : ' Stripe charges the difference for this term.'}`
+        ? `Done. Your sponsorship is now ${plan}.${manual ? ' We bill the difference.' : ' Stripe charges the difference for this term.'}${
+            r.droppedChange ? ` The change to ${r.droppedChange} that was waiting for your renewal no longer applies.` : ''
+          }`
         : r.timing === 'renewal'
           ? `Change scheduled for ${r.from ? longDate(r.from) : 'your next renewal'}. From then, your sponsorship is ${plan}.`
           : 'Your current plan stays.',
@@ -1192,7 +1198,8 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
   const [busy, setBusy] = useState(false);
   /** A recurring offer where they cover the processing fee: they agree to it here, before Stripe. */
   const feeOffer = pendingNow && ctx.me.offer?.quote.interval && ctx.me.offer.quote.feeChoice === 'pass_through' ? ctx.me.offer.quote : null;
-  const [acceptFee, setAcceptFee] = useState(false);
+  const [acceptedFeeId, setAcceptedFeeId] = useState<string | null>(null);
+  const acceptFee = !!feeOffer && acceptedFeeId === feeOffer.id;
   const sig = useSignature(ctx, s);
   const errs = useErrors();
   const result = useResult();
@@ -1231,7 +1238,11 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
     errs.setServer(null);
     result.set(null);
     const plan = bundle ? {} : { tier, cycle, eventId: cycle === 'once' ? eventId : undefined };
-    const r = await call<{ checkoutUrl: string }>('/api/sponsorship/start', { json: { ...details, ...plan, ...sig.payload, ...(feeOffer ? { acceptFee } : {}) } }, ctx);
+    const r = await call<{ checkoutUrl: string }>(
+      '/api/sponsorship/start',
+      { json: { ...details, ...plan, ...sig.payload, ...(feeOffer ? { acceptFee, quoteId: feeOffer.id } : {}) } },
+      ctx,
+    );
     if (!r) return;
     if (!r.ok) {
       setBusy(false);
@@ -1329,7 +1340,7 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
             <Checkbox
               label={`I agree to pay the card processing fee of ${feeOffer.surcharge} ${feeOffer.per}, a separate line on every renewal (${feeOffer.total} ${feeOffer.per} in total).`}
               checked={acceptFee}
-              onChange={(e) => setAcceptFee((e.target as HTMLInputElement).checked)}
+              onChange={(e) => setAcceptedFeeId((e.target as HTMLInputElement).checked ? feeOffer.id : null)}
             />
           )}
         </fieldset>

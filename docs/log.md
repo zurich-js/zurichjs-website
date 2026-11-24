@@ -2,11 +2,18 @@
 
 ## 2026-11-24
 
+- Recurring [fee offers](/domains/sponsorship/fees.md) queue an invitation for either fee choice and record the sponsor’s confirmation against the specific quote and subscription item.
+
 - **Update**: [Processing fees](/domains/sponsorship/fees.md) apply to recurring sponsorships: a recurring quote per interval, agreed with a tick before Checkout or confirmed on a running sponsorship, carried as its own line on every renewal; switching back to "ZurichJS covers the fees" applies at once; plan changes wait while a fee is in force.
   The board previews one-time sponsorship offers, reviews unmatched card payments and reconciles actual Stripe fees. [Processing fees](/domains/sponsorship/fees.md)
 
 - **Added**: [Processing fees](/domains/sponsorship/fees.md). Every board payment link freezes a quote in rappen; the board can choose "Sponsor covers the fees" once a card tariff is entered and the owner set `SPONSOR_FEE_POLICY_VERSION`. The surcharge is its own Stripe line, the sponsor sees base, fee and total first, and stale or mismatched payments are flagged.
 - **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state and page link from Sanity, even when the rest of the account fails to load. Whether a covered meetup has happened is decided on its current Sanity date, and a row stays when that date cannot be checked ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+- **Update**: a signed copy, a bank-transfer receipt and an overdue payment's email and note are saved in the same write as what owes them; the board's end says Stripe stopped only once it has; a delivered notice the database could not record is not sent again for five minutes (at least once, never claimed as exactly once); a failure for an old subscription, or one handled while the same invoice is paid, no longer marks a paid sponsor overdue; sponsoring again gets its own welcome; a partial dispute keeps the disputed amount apart from the card payment ([Sponsorship](/domains/sponsorship/overview.md)).
+- **Update**: a payment link is recorded before Stripe is asked (with Stripe's idempotency key), so a link whose answer or save was lost, or that lost to a second request, is switched off by the retry or the daily check ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+- **Update**: every sponsorship email and Slack note is a notice written with the change that owes it and sent by the request or, failing that, the daily check; first payments, retries and out-of-order Stripe events no longer lose or repeat them. Bank-transfer reminders are caught up once when a day is missed. Sponsoring again needs a new full signature and validates before changing anything; a terminated sponsorship needs the board. Refunds and disputes are recorded and flagged without changing the sponsorship ([Sponsorship](/domains/sponsorship/overview.md), [Stripe](/systems/stripe.md)).
+
+- **Update**: adding a sponsor (invite or import, one-time bundles included) is one store write with its meetups and starting status; a Stripe payment page is forgotten only once Stripe confirms it is closed, the board's end and a recorded bank transfer finish on retry, and the daily check closes what an ended sponsorship still has open in Stripe ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 
 ## 2026-11-19
 

@@ -13,7 +13,7 @@
  * list price, or monthly/quarterly/yearly). A sponsorship we set up keeps our plan, meetups and
  * price unless they choose another plan here (not for bundles we priced).
  */
-import { DuplicateContact, type Sponsor } from '@zurichjs/sponsorship';
+import { DuplicateContact, canRestart, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { feeStore } from '../../../server/sponsor-fees.ts';
 import { CONTACT_EMAIL, fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
@@ -21,6 +21,7 @@ import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 import { sponsorView } from '../../../server/sponsor.ts';
 import { parseDetails, parsePlan, parseSignature } from '../../../server/sponsor-input.ts';
 import { resolveSigner, startSponsorship } from '../../../server/sponsor-lifecycle.ts';
+import { checkPrices } from '../../../server/sponsor-stripe.ts';
 import { upcomingMeetups } from '../../../server/sponsor-meetups.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 
@@ -47,6 +48,7 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
       if (!body) return fail(400, 'Send the form as JSON.');
       const feeOffer = offer?.interval && offer.feeChoice === 'pass_through' ? offer : null;
       if (feeOffer && body.acceptFee !== true) return fail(400, 'Tick the box to agree to the processing fee, or write to us.', { field: 'acceptFee' });
+      if ((feeOffer || body.quoteId !== undefined) && feeOffer?.id !== body.quoteId) return fail(409, 'The offer changed. Reload to review the current fee.');
       const sig = parseSignature(body);
       if (!sig.ok) return fail(400, sig.error, { field: sig.field });
       const actor = { kind: 'sponsor', id: user.id } as const;
@@ -113,6 +115,10 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
       } else {
         s = sponsor;
         if (s.status === 'ended') {
+          // Sponsoring again: everything is checked before the ended record changes, so a refusal leaves it as it was.
+          if (!canRestart(s, 'sponsor')) return fail(409, `ZurichJS ended this sponsorship. Write to ${CONTACT_EMAIL} to sponsor again.`);
+          if (!(await resolveSigner(s, contact, sig.value, user.email, lifecycle))) return needSignature();
+          await checkPrices(plan.value, lifecycle.stripe);
           s = await store.transition(s.id, { from: 'ended', to: 'pending', actor });
           s = await store.update(s.id, { startedAt: null, paidUntil: null, pricePerMeetup: null }, actor);
           await store.linkStripe(s.id, { subscriptionId: null, checkoutSessionId: null, paymentLinkId: null, paymentLinkUrl: null }, actor);

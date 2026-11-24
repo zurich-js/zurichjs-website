@@ -31,13 +31,17 @@ export function SponsorFees({ id, pending, onSignedOut }: { id: string; pending:
   const path = `/api/membership/admin/sponsors/${encodeURIComponent(id)}/fees`;
 
   useEffect(() => {
+    let current = true;
     void api<State>(path).then(({ status, body }) => {
+      if (!current) return;
       if (status === 401) return onSignedOut();
       if (status !== 200) return setError(body.error ?? 'Could not load the fees.');
       setData(body);
     });
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per sponsor
-  }, []);
+    return () => {
+      current = false;
+    };
+  }, [path, onSignedOut]);
 
   const save = async () => {
     setBusy(true);
@@ -51,9 +55,7 @@ export function SponsorFees({ id, pending, onSignedOut }: { id: string; pending:
     setDone(
       pending
         ? 'Offer saved. They see it on their sponsorship page and agree to it before paying.'
-        : choice === 'absorb'
-          ? 'ZurichJS covers the fees from the next renewal.'
-          : 'Sent to confirm. Nothing changes until they confirm it on their sponsorship page.',
+        : 'The invitation is queued. Their current fee applies until they confirm the offer.',
     );
   };
 
@@ -71,7 +73,7 @@ export function SponsorFees({ id, pending, onSignedOut }: { id: string; pending:
               <FeeChoiceField gate={data.gate} value={choice} onChange={setChoice} />
               <div>
                 <Button variant="secondary" disabled={busy} onClick={() => void save()}>
-                  {busy ? 'Saving…' : pending ? 'Save the offer' : choice === 'absorb' ? 'ZurichJS covers the fees' : 'Send to confirm'}
+                  {busy ? 'Saving…' : pending ? 'Save the offer' : 'Send to confirm'}
                 </Button>
               </div>
             </>

@@ -20,6 +20,7 @@ import { AGREEMENT, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { json, methodNotAllowed } from '../../../server/http.ts';
 import { agreementView, contactView, documentView, logoView, sponsorView } from '../../../server/sponsor.ts';
+import { offerCover } from '../../../server/sponsor-lifecycle.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 import { pendingChange } from '../../../server/sponsor-stripe.ts';
 import { feeStore, quoteView } from '../../../server/sponsor-fees.ts';
@@ -45,32 +46,37 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
           sponsor: null,
           invitation: invitation ? { company: invitation.sponsor.companyName, tierName: tierInfo(invitation.sponsor.tier).name } : null,
         });
-      const [contacts, agreements, logos, documents, meetups, pending] = await Promise.all([
+      const [contacts, agreements, logos, documents, meetups, pending, cover] = await Promise.all([
         store.contacts(s.id),
         store.agreements(s.id),
         store.logos(s.id),
         store.documents(s.id),
         store.meetups(s.id),
         changeOf(s, deps, env),
+        offerCover(s, store),
       ]);
       // Waiting for payment: the offer the board froze (fees.ts), so they see base, fee and total first.
       const fees = deps.fees ?? feeStore(env);
       const [quote, inForce] = await Promise.all([fees.openQuote(s.id, 'sponsorship', null), s.cycle === 'once' ? null : fees.acceptedQuote(s.id)]);
-      const toConfirm = s.status !== 'pending' && quote?.interval && quote.feeChoice === 'pass_through' ? quote : null;
+      const toConfirm = s.status !== 'pending' && quote?.interval ? quote : null;
       const mine = agreements.find((a) => a.signerEmail === user.email);
       return json(200, {
         ...base,
         contact: contactView(contact),
-        sponsor: sponsorView(s, meetups, documents.length > 0),
+        // What covers the current offer decides how they sign: an ended or restarted one signs again in full.
+        sponsor: sponsorView(s, meetups, cover.contracts.length > 0),
         contacts: contacts.map(contactView),
         agreements: agreements.map(agreementView),
         logos: logos.slice(0, 5).map(logoView),
         contracts: documents.map(documentView),
         pendingChange: pending,
-        signedCurrent: agreements.some((a) => a.version === AGREEMENT.version) || documents.length > 0,
+        signedCurrent: cover.agreements.some((a) => a.version === AGREEMENT.version) || cover.contracts.length > 0,
         signer: mine ? { name: mine.signerName, title: mine.signerTitle } : null,
         invitation: null,
-        offer: quote ? { quote: quoteView(quote), payUrl: quote.linkState === 'live' ? quote.linkUrl : null, preparing: quote.linkState !== 'live' } : null,
+        offer:
+          s.status === 'pending' && quote
+            ? { quote: quoteView(quote), payUrl: quote.linkState === 'live' ? quote.linkUrl : null, preparing: !quote.interval && quote.linkState !== 'live' }
+            : null,
         fees: { inForce: inForce ? quoteView(inForce) : null, toConfirm: toConfirm ? quoteView(toConfirm) : null },
       });
     },

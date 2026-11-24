@@ -41,12 +41,18 @@ export class TransitionError extends Error {
 
 export const canTransition = (from: Status, to: Status, actor: ActorKind) => TRANSITIONS[from][to]?.includes(actor) ?? false;
 
-export function checkTransition(s: Pick<Sponsor, 'status'>, to: Status, actor: ActorKind, reason?: EndedReason): { from: Status; to: Status; endedReason: EndedReason | null } {
+export function checkTransition(
+  s: Pick<Sponsor, 'status'> & Partial<Pick<Sponsor, 'endedReason'>>,
+  to: Status,
+  actor: ActorKind,
+  reason?: EndedReason,
+): { from: Status; to: Status; endedReason: EndedReason | null } {
   const from = s.status;
   const actors = TRANSITIONS[from][to];
   if (!actors) throw new TransitionError(`A sponsorship that is ${label(from)} cannot become ${label(to)}.`, 'not_allowed');
   if (!actors.includes(actor))
     throw new TransitionError(`Only ${actors.map(actorLabel).join(' or ')} can change a sponsorship from ${label(from)} to ${label(to)}.`, 'wrong_actor');
+  if (!canRestart(s, actor) && to === 'pending') throw new TransitionError('ZurichJS ended this sponsorship. Write to hello@zurichjs.com to sponsor again.', 'wrong_actor');
   if (to === 'ended') {
     if (!reason) throw new TransitionError('Say why the sponsorship ends.', 'reason_required');
     if (!REASONS_BY_ACTOR[actor].includes(reason)) throw new TransitionError(`${actorLabel(actor)} cannot end a sponsorship as ${reason}.`, 'reason_not_allowed');
@@ -55,6 +61,12 @@ export function checkTransition(s: Pick<Sponsor, 'status'>, to: Status, actor: A
   if (reason) throw new TransitionError('Only an ending has a reason.', 'reason_not_allowed');
   return { from, to, endedReason: null };
 }
+
+/**
+ * Sponsoring again after it ended. The board ended it outright (`terminated`, for example a code of
+ * conduct breach): only the board can start it again, after a review; the sponsor cannot alone.
+ */
+export const canRestart = (s: Partial<Pick<Sponsor, 'status' | 'endedReason'>>, actor: ActorKind) => s.status !== 'ended' || actor !== 'sponsor' || s.endedReason !== 'terminated';
 
 /** Running: the sponsor gets the tier's benefits. */
 export const isRunning = (s: Status) => s === 'active' || s === 'past_due' || s === 'ending';

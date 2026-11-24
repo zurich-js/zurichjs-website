@@ -3,7 +3,7 @@ type: System
 title: Stripe
 description: How the site talks to Stripe for donations, memberships and sponsorships, the one shared webhook and how it routes events, the move off the old endpoints, and the settings every part shares.
 tags: [stripe, payments, webhook]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Stripe
@@ -18,7 +18,7 @@ Three parts of the site take payments through one Stripe account: [donations](/d
 
 ## The one webhook
 
-`/api/stripe/webhook` (`apps/web/src/pages/api/stripe/webhook.ts`, logic in `apps/web/src/server/stripe-webhook.ts`): one endpoint in Stripe, one signing secret (`STRIPE_WEBHOOK_SECRET`), every event the site handles (`STRIPE_WEBHOOK_EVENTS`: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`, `customer.subscription.updated`, `customer.subscription.deleted`).
+`/api/stripe/webhook` (`apps/web/src/pages/api/stripe/webhook.ts`, logic in `apps/web/src/server/stripe-webhook.ts`): one endpoint in Stripe, one signing secret (`STRIPE_WEBHOOK_SECRET`), every event the site handles (`STRIPE_WEBHOOK_EVENTS`: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `invoice.payment_action_required`, `customer.subscription.updated`, `customer.subscription.deleted`, `charge.refunded`, `charge.dispute.created`). The last two are for sponsorships (recorded and flagged, [Sponsorship](/domains/sponsorship/overview.md)); an endpoint created before them must have them added in Stripe (a production change, the owner).
 
 - **Routing:** each part (memberships, sponsorships, donations) receives every event and skips the ones that are not its own, by the `source` metadata.
 - **Order and retries:** memberships and sponsorships record the events they handled, so a retry after one of them failed (answered 500) only redoes the part that failed. Donations keep no record, so they run last and only when the others succeeded, so a retry cannot post twice.

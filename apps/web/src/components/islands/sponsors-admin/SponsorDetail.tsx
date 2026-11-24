@@ -756,6 +756,16 @@ function eventText(e: SponsorEvent): string {
     }
     case 'contact_removed':
       return 'Contact removed.';
+    case 'invoice_paid':
+      return 'Card payment received.';
+    case 'charge_refunded':
+    case 'charge_disputed': {
+      // Stripe amounts are in cents.
+      const cents = (k: string) => (typeof p[k] === 'number' ? chf((p[k] as number) / 100) : 'an amount');
+      return e.type === 'charge_refunded'
+        ? `Refunded in Stripe: ${cents('refunded')} of a ${cents('amount')} card payment. Nothing changed here.`
+        : `${typeof p.disputed === 'number' ? `${cents('disputed')} of a ${cents('amount')} card payment` : `Card payment of ${cents('amount')}`} disputed in Stripe${str('reason') ? ` (${str('reason').replace(/_/g, ' ')})` : ''}. Nothing changed here.`;
+    }
     default: {
       const t = e.type.replace(/_/g, ' ');
       return `${t.charAt(0).toUpperCase()}${t.slice(1)}.`;
@@ -831,7 +841,7 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<FieldError>(null);
-  const [done, setDone] = useState('');
+  const [done, setDone] = useState<{ text: string; kind: 'done' | 'note' } | null>(null);
   const set = <K extends keyof typeof f>(k: K, v: string) => setF((x) => ({ ...x, [k]: v }));
   const err = (field: string) => (error?.field === field ? error.message : undefined);
   const text = (k: 'companyName' | 'legalName' | 'vatId' | 'website' | 'partnerId', label: ComponentChildren, hint?: string) => (
@@ -840,7 +850,7 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
 
   return (
     <Block id="h-edit" title="Details and notes">
-      {done && <Notice kind="done">{done}</Notice>}
+      {done && <Notice kind={done.kind}>{done.text}</Notice>}
       {!open ? (
         <Button
           variant="secondary"
@@ -850,7 +860,7 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
           onClick={() => {
             setF(initial());
             setError(null);
-            setDone('');
+            setDone(null);
             setOpen(true);
           }}
         >
@@ -865,12 +875,12 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             if (busy) return;
             setBusy(true);
             setError(null);
-            const { status, body } = await post(`${BASE}/${id}`, { ...f, partnerId: f.partnerId.trim() || null });
+            const { status, body } = await post<{ warning?: string }>(`${BASE}/${id}`, { ...f, partnerId: f.partnerId.trim() || null });
             setBusy(false);
             if (status === 401) return onSignedOut();
             if (status !== 200) return setError({ field: body.field, message: body.error ?? 'Could not save the details.' });
             setOpen(false);
-            setDone('Details saved.');
+            setDone(body.warning ? { text: body.warning, kind: 'note' } : { text: 'Details saved.', kind: 'done' });
             onChanged();
           }}
         >

@@ -73,7 +73,7 @@ export const handleSponsorPayments = (request: Request, id: string, deps: Sponso
         if (s.cycle === 'once' && s.status === 'pending') {
           await withdrawOffer(s, fees, store, lifecycle.stripe);
           const today = zurichDay(deps.now === undefined ? new Date() : new Date(deps.now));
-          await startOnce((await store.get(s.id)) ?? s, BOARD, today, lifecycle, fees);
+          await startOnce((await store.get(s.id)) ?? s, { session: sessionId }, BOARD.id, today, lifecycle);
         }
         await reconcileFee(decided, fees, lifecycle.stripe).catch(() => false);
       }

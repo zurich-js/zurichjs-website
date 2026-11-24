@@ -6,18 +6,17 @@
  * Not paying yet (pending): a new offer, frozen as a quote for the current plan. "Sponsor covers the
  * fees" adds a recurring fee line at Checkout once the sponsor ticked that they agree; an open
  * Checkout page is closed so it cannot be paid without it.
- * Running by card: "Sponsor covers the fees" waits for the sponsor to confirm on their page (`url`
- * goes there) and applies from the next renewal. "ZurichJS covers the fees" removes the fee line
- * from the next renewal at once: it only lowers what they pay. Nothing is refunded or prorated.
+ * A running sponsor confirms either fee choice before its next renewal.
  * One-time sponsorships use the payment link; bank-transfer ones pay no card fees.
  */
 import { fee, isFeeChoice, isRecurring, quoteFigures, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../../server/http.ts';
-import { accountUrl, note, who } from '../../../../../../server/sponsor.ts';
+import { accountUrl } from '../../../../../../server/sponsor.ts';
 import { sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
 import { INTERVAL_OF, currentGate, feeStore, gateView, quoteView } from '../../../../../../server/sponsor-fees.ts';
-import { closeCheckout, removeSurchargeItem } from '../../../../../../server/sponsor-stripe.ts';
+import { emailNotice, sendNotices } from '../../../../../../server/sponsor-notices.ts';
+import { closeCheckout } from '../../../../../../server/sponsor-stripe.ts';
 
 export const prerender = false;
 
@@ -55,28 +54,37 @@ export const handleSponsorFees = (request: Request, id: string, deps: SponsorAdm
       if (!isFeeChoice(body.feeChoice)) return fail(400, 'Choose who covers the fees.', { field: 'feeChoice' });
       const cycle = s.cycle as Exclude<Sponsor['cycle'], 'once'>;
       const figures = quoteFigures(fee(s.tier, cycle) * 100, body.feeChoice, await currentGate(fees, env));
-      const { quote } = await fees.createQuote({
-        ...figures,
-        interval: INTERVAL_OF[cycle],
-        sponsorId: s.id,
-        subject: 'sponsorship',
-        subjectId: null,
-        purpose: `Sponsorship, ${cycle}`,
-        createdBy: 'board',
+      const url = `${accountUrl(origin)}?change=fees`;
+      const invitation = emailNotice('', 'sponsor-change-request', {
+        kind: 'fees',
+        newPlan: null,
+        lastDay: null,
+        url,
+        message:
+          figures.feeChoice === 'absorb'
+            ? 'ZurichJS offers to cover card processing fees from your next renewal.'
+            : 'Review the processing fee and total for each renewal on your sponsorship page.',
       });
+      const { quote } = await fees.createQuote(
+        {
+          ...figures,
+          interval: INTERVAL_OF[cycle],
+          sponsorId: s.id,
+          subject: 'sponsorship',
+          subjectId: null,
+          purpose: `Sponsorship, ${cycle}`,
+          createdBy: 'board',
+        },
+        s.status === 'pending' ? {} : { invitation: invitation.body },
+      );
 
       if (s.status === 'pending') {
         await closeCheckout(s, store, lifecycle.stripe);
         return answer();
       }
-      if (quote.feeChoice === 'absorb') {
-        const removed = await removeSurchargeItem(s.stripeSubscriptionId!, lifecycle.stripe);
-        await fees.acceptQuote(quote.id, 'board', null);
-        if (removed) await note(`:receipt: ${who(s)} no longer pays a processing fee, from the next renewal.`, lifecycle);
-        return answer();
-      }
-      await note(`:receipt: A processing fee for ${who(s)} waits for them to confirm it on their sponsorship page.`, lifecycle);
-      return answer({ url: `${accountUrl(origin)}?change=fees` });
+      await store.queueNotices(s.id, [{ ...invitation, key: `fee-invitation:${quote.id}` }]);
+      await sendNotices(lifecycle, { sponsorId: s.id });
+      return answer({ url });
     },
     'change who covers the fees',
   );

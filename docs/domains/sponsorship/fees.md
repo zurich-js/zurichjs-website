@@ -44,11 +44,9 @@ The board previews the amount, surcharge, total and estimated net before creatin
 A recurring quote names its interval (month, quarter or year) and is worked out for the sponsorship's current plan. It is **accepted** once the sponsor agreed, and stays in force for every renewal until a newer accepted quote supersedes it (one in force per sponsorship).
 
 - **Not started yet:** the board saves an offer; any open Checkout page is closed. The account page shows the amount, the fee and the total per period, and the start form has an unticked box "I agree to pay the card processing fee of … a separate line on every renewal". Starting is refused without the tick, or with another plan than the offer's. Checkout then carries the fee as its own recurring line, and the webhook records the acceptance (contact, time) when the subscription starts.
-- **Running by card:** "Sponsor covers the fees" waits for the sponsor: the account page shows "Processing fee to confirm", and the board can copy the link to it. Confirming adds the fee line to the subscription from the next renewal (no proration, nothing charged now). "ZurichJS covers the fees" removes the line from the next renewal at once, because it only lowers the price.
-- **Renewals and receipts** carry the fee line automatically. The webhook reads the plan from the line with a sponsorship lookup key and the term from the latest period, so the fee line changes neither.
+- **Running by card:** the board offers either fee choice. The offer queues a change invitation. The sponsor confirms the displayed quote ID. Stripe updates the identified processing fee item without proration. A retry verifies the item against its quote before recording acceptance. An unrecognised subscription line requires board reconciliation.
+- **Renewals and receipts** carry the fee as its own line. The sponsorship price identifies the base plan and its billing period.
 - **A plan change while a fee is in force** is refused with a plain message, for the sponsor and the board: how a surcharge follows a new plan is an owner decision. An offer not paid yet no longer applies after a plan change; the board sends a new one.
-
-## Not built yet
 
 ## Draft surcharge policy (for the owner to review, not approved)
 

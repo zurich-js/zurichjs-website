@@ -87,6 +87,7 @@ export class DuplicateTariff extends Error {
 }
 
 export interface FeeStore {
+  claimRecurring(id: string, contact: string): Promise<boolean>;
   /**
    * The sponsor agreed to an open recurring quote: it becomes the one in force (any earlier accepted
    * quote for the same thing is superseded). `ref` is the surcharge's subscription item, if any.
@@ -104,7 +105,10 @@ export interface FeeStore {
    * and its link, if any, is marked for closing. With `reuse`, an open quote with the same figures
    * whose link was never published is returned instead (a retry after a failure half-way).
    */
-  createQuote(q: NewQuote, opts?: { reuse?: boolean; requestId?: string }): Promise<{ quote: Quote; superseded: Quote | null; reused: boolean }>;
+  createQuote(
+    q: NewQuote,
+    opts?: { reuse?: boolean; requestId?: string; invitation?: Record<string, unknown> },
+  ): Promise<{ quote: Quote; superseded: Quote | null; reused: boolean }>;
   quote(id: string): Promise<Quote | null>;
   openQuote(sponsorId: string, subject: QuoteSubject, subjectId: string | null): Promise<Quote | null>;
   /** The quote that owns (or owned) this Stripe payment link. */
@@ -170,6 +174,7 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
   const tariffs: Tariff[] = [];
   const quotes: Quote[] = [];
   const payments: QuotePayment[] = [];
+  const applying = new Map<string, string>();
   const requests = new Map<string, Quote>();
   let n = 0;
   const copy = <T extends object>(x: T | undefined) => (x ? { ...x } : null);
@@ -199,6 +204,7 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
       if (o.reuse && open && (open.linkState === 'none' || open.linkState === 'creating') && sameFigures(open, input))
         return { quote: { ...open }, superseded: null, reused: true };
       if (open?.linkState === 'creating') throw new Error('Payment link creation is in progress. Retry the same offer first.');
+      if (open && applying.has(open.id)) throw new Error('The sponsor is confirming this offer.');
       if (open) retire(open, 'superseded');
       const quote: Quote = {
         ...input,
@@ -251,11 +257,19 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
     async voidQuote(id) {
       const q = quotes.find((x) => x.id === id && x.status === 'open');
       if (!q) return null;
+      if (applying.has(id)) return null;
       retire(q, 'void');
       return { ...q };
     },
+    async claimRecurring(id, contact) {
+      const q = quotes.find((x) => x.id === id);
+      if (!q?.interval || q.status !== 'open' || (applying.has(id) && applying.get(id) !== contact)) return false;
+      applying.set(id, contact);
+      return true;
+    },
     async acceptQuote(id, by, ref) {
       const q = quotes.find((x) => x.id === id);
+      if (applying.has(id) && applying.get(id) !== by) return null;
       if (!q || !q.interval || (q.status !== 'open' && q.status !== 'accepted')) return null;
       if (q.status === 'accepted') return { ...q };
       for (const o of quotes) if (o.status === 'accepted' && same(o, q.sponsorId, q.subject, q.subjectId)) o.status = 'superseded';
@@ -397,7 +411,10 @@ export function postgresFeeStore(db: Queryable): FeeStore {
       }
     },
     async createQuote(n, o = {}) {
-      const result = (await one('select * from freeze_payment_quote($1::jsonb, $2)', [JSON.stringify({ ...n, requestId: o.requestId }), o.reuse === true]))!;
+      const result = (await one('select * from freeze_payment_quote($1::jsonb, $2)', [
+        JSON.stringify({ ...n, requestId: o.requestId, invitation: o.invitation }),
+        o.reuse === true,
+      ]))!;
       return {
         quote: quoteOf(result.current_quote as Record<string, unknown>),
         superseded: result.previous_quote ? quoteOf(result.previous_quote as Record<string, unknown>) : null,
@@ -456,31 +473,23 @@ export function postgresFeeStore(db: Queryable): FeeStore {
       if (!UUID.test(id)) return null;
       const r = await one(
         `update payment_quotes set status = 'void', link_state = case when link_state in ('live', 'creating') then 'closing' else link_state end
-         where id = $1 and status = 'open' returning *`,
+         where id = $1 and status = 'open' and applying_by is null returning *`,
         [id],
       );
       return r ? quoteOf(r) : null;
     },
+    async claimRecurring(id, contact) {
+      if (!UUID.test(id)) return false;
+      return !!(await one(
+        `update payment_quotes set applying_by = $2 where id = $1 and subject='sponsorship' and interval is not null
+        and status='open' and (applying_by is null or applying_by = $2) returning id`,
+        [id, contact],
+      ));
+    },
     async acceptQuote(id, by, ref) {
       if (!UUID.test(id)) return null;
-      const current = (await q('select * from payment_quotes where id = $1', [id]))[0];
-      if (!current || !current.interval) return null;
-      if (current.status === 'accepted') return quoteOf(current);
-      if (current.status !== 'open') return null;
-      // Supersede the quote in force, then accept this one; the partial unique index keeps one in force.
-      await q(
-        `update payment_quotes set status = 'superseded'
-         where sponsor_id = $1 and subject = $2 and coalesce(subject_id, '') = coalesce($3, '') and status = 'accepted'`,
-        [current.sponsor_id, current.subject, current.subject_id],
-      );
-      const r = (
-        await q(`update payment_quotes set status = 'accepted', accepted_at = now(), accepted_by = $2, stripe_ref = $3 where id = $1 and status = 'open' returning *`, [
-          id,
-          by,
-          ref,
-        ])
-      )[0];
-      return r ? quoteOf(r) : null;
+      const row = await one('select * from confirm_recurring_quote($1,$2,$3)', [id, by, ref]);
+      return row ? quoteOf(row) : null;
     },
     acceptedQuote: async (sponsorId) => {
       if (!UUID.test(sponsorId)) return null;

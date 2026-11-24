@@ -71,8 +71,8 @@ export async function contactFor(user: AuthUser, store: SponsorStore): Promise<{
   return { contact: await store.linkContact(byEmail.id, user.id), invitation: null };
 }
 
-export function lifecycleDeps(env: Env, store: SponsorStore, origin: string, deps: Pick<SponsorRouteDeps, 'fetch' | 'slack' | 'log' | 'now'>): LifecycleDeps {
-  return { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log, now: deps.now, stripe: { env, fetch: deps.fetch, now: deps.now } };
+export function lifecycleDeps(env: Env, store: SponsorStore, origin: string, deps: Pick<SponsorRouteDeps, 'fetch' | 'slack' | 'log' | 'now' | 'fees'>): LifecycleDeps {
+  return { env, store, origin, fetch: deps.fetch, slack: deps.slack, log: deps.log, now: deps.now, fees: deps.fees, stripe: { env, fetch: deps.fetch, now: deps.now } };
 }
 
 /** Errors every sponsorship route answers the same way. Returns null for anything unexpected. */

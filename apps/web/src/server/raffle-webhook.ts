@@ -13,6 +13,8 @@ import { eligibility, type RaffleStore } from '@zurichjs/raffle';
 import { chfMinor, type FeeStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { fail, json, type Env } from './http.ts';
+import { raffleTransaction } from './raffle-transaction.ts';
+import { reconcileFee } from './sponsor-offers.ts';
 import { MembershipUnavailable } from './membership-db.ts';
 import type { MembershipSlack } from './membership-slack.ts';
 import { RAFFLE_SOURCE, closeRafflePaymentLink, raffleStore } from './raffle.ts';
@@ -57,9 +59,22 @@ export async function processRaffleEvent(event: StripeEvent, deps: RaffleWebhook
 
   try {
     if (await raffles.stripeEventSeen(event.id)) return json(200, { ok: true, duplicate: true });
-    const r = meta?.source === RAFFLE_SOURCE && meta.raffleId ? await raffles.get(meta.raffleId) : paymentLink ? await raffles.byPaymentLink(paymentLink) : null;
+    const historic = paymentLink ? await fees.quoteByLink(paymentLink) : null;
+    let r = meta?.source === RAFFLE_SOURCE && meta.raffleId ? await raffles.get(meta.raffleId) : paymentLink ? await raffles.byPaymentLink(paymentLink) : null;
+    if (!r && historic?.subject === 'raffle' && historic.subjectId) r = await raffles.get(historic.subjectId);
     if (!r) {
-      if (meta?.source === RAFFLE_SOURCE) log(`[raffle] checkout ${String(o.id)}: no raffle ${meta.raffleId ?? ''}; skipped`);
+      if (meta?.source === RAFFLE_SOURCE && o.payment_status === 'paid') {
+        if (typeof o.id !== 'string' || typeof o.amount_total !== 'number' || typeof o.currency !== 'string') throw new Error('Incomplete raffle receipt.');
+        await raffles.unmatched({
+          sessionId: o.id,
+          linkId: paymentLink,
+          quoteRef: meta.quoteId ?? null,
+          raffleRef: meta.raffleId ?? null,
+          amountMinor: o.amount_total,
+          currency: o.currency,
+        });
+        await note('A raffle payment could not be matched. Review the receipt in the board raffle list.', notify);
+      }
       return json(200, { ok: true, skipped: true });
     }
     if (o.payment_status !== 'paid') {
@@ -72,26 +87,44 @@ export async function processRaffleEvent(event: StripeEvent, deps: RaffleWebhook
     const company = s ? `*${slackText(s.companyName)}*` : 'A sponsor';
     const link = adminUrl(siteOrigin(env), r.sponsorId);
 
-    let current = r.funding === 'unpaid' ? await raffles.setFunding(r.id, { from: 'unpaid', to: 'paid', actor, payload: { session: String(o.id) } }) : r;
-    // A retry after a failure part-way must not count the payment twice.
-    const ref = String(o.id).slice(0, 200);
-    if (!(await raffles.ledger(r.id)).some((e) => e.kind === 'payment' && e.reference === ref))
-      await raffles.addLedger(r.id, { kind: 'payment', amountMinor: paid, note: 'Card payment (Stripe)', reference: ref }, actor);
-
-    const quoteId = meta?.quoteId ?? r.quoteId;
-    const q = quoteId ? await fees.markQuotePaid(quoteId, String(o.id)) : null;
-    const quoteMatches = !!q && q.quote.totalMinor === paid && (q.was === 'open' || (q.was === 'paid' && q.quote.stripeRef === String(o.id)));
-    if (!quoteMatches) {
-      current = await raffles.flag(r.id, 'amount_mismatch', actor, { paid, quote: q?.quote.totalMinor ?? null, was: q?.was ?? null });
-      await note(
-        `:rotating_light: ${company} paid ${chfMinor(paid)} for a raffle whose current offer is ${q ? chfMinor(q.quote.totalMinor) : 'unknown'}. Recorded; check it. ${link}`,
-        notify,
-      );
-    }
+    if (typeof o.id !== 'string' || typeof o.amount_total !== 'number' || typeof o.currency !== 'string') throw new Error('Incomplete raffle receipt.');
+    const ref = o.id;
+    const currency = o.currency;
+    const matchedRaffle = r;
+    const { current, payment } = await raffleTransaction(env, r.id, deps, async ({ raffles, fees }) => {
+      let current = (await raffles.get(matchedRaffle.id))!;
+      const quoteId = meta?.quoteId ?? historic?.id ?? current.quoteId;
+      const wrongOffer = quoteId !== current.quoteId || !quoteId || (meta?.sponsorId && meta.sponsorId !== current.sponsorId) || current.acceptedVersion !== current.termsVersion;
+      const { payment } = await fees.settlePayment({
+        reviewReason: wrongOffer ? 'This payment does not name the accepted raffle offer.' : undefined,
+        quoteId,
+        sponsorId: current.sponsorId,
+        subject: 'raffle',
+        subjectId: current.id,
+        currency,
+        amountMinor: paid,
+        sessionId: ref,
+        paymentIntentId: typeof o.payment_intent === 'string' ? o.payment_intent : null,
+        paymentLinkId: paymentLink,
+      });
+      const seen = (await raffles.ledger(current.id)).some((e) => e.kind === 'payment' && e.reference === ref);
+      if (!seen) {
+        await raffles.addLedger(current.id, { kind: 'payment', amountMinor: paid, note: `Card payment (${currency.toUpperCase()})`, reference: ref }, actor);
+        if (current.funding === 'unpaid') current = await raffles.setFunding(current.id, { from: 'unpaid', to: 'paid', actor, payload: { session: ref } });
+      }
+      if (payment.outcome !== 'matched' || quoteId !== current.quoteId || (meta?.sponsorId && meta.sponsorId !== current.sponsorId))
+        current = await raffles.flag(current.id, 'amount_mismatch', actor, { session: ref, paid });
+      return { current, payment };
+    });
+    if (payment.feeMinor === null && payment.paymentIntentId) await reconcileFee(payment, fees, { env, fetch: deps.fetch }).catch(() => false);
     // Eligibility again at payment: a late payment is kept and flagged, never refused.
     const ok = s ? eligibility(s, zurichDay(deps.now ? new Date(deps.now) : new Date())).ok : false;
     if (!ok) {
-      current = await raffles.flag(r.id, 'late_payment', actor, { status: s?.status ?? null });
+      await raffles.flag(r.id, 'late_payment', actor, { status: s?.status ?? null });
+      if (['offered', 'ready', 'open', 'closed', 'drawn'].includes(current.stage)) {
+        await raffles.moveStage(r.id, { from: current.stage, to: 'on_hold', actor, reason: 'The sponsorship is no longer eligible.' });
+        await raffles.flag(r.id, 'refund_review', actor);
+      }
       await note(
         `:rotating_light: ${company} paid a raffle after their sponsorship stopped being eligible (${s?.status ?? 'unknown'}). Recorded; the board decides. ${link}`,
         notify,

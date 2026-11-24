@@ -21,7 +21,9 @@ import { RaffleRuleError, type Flag, type Raffle } from '@zurichjs/raffle';
 import { francsToMinor, isFeeChoice, quoteFigures } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../server/http.ts';
-import { adminRaffleView, assertEligible, closeRafflePaymentLink, raffleStore, termsGate } from '../../../../../server/raffle.ts';
+import { reconcileFee } from '../../../../../server/sponsor-offers.ts';
+import { raffleTransaction } from '../../../../../server/raffle-transaction.ts';
+import { adminRaffleView, requireHost, assertEligible, closeRafflePaymentLink, raffleStore, termsGate } from '../../../../../server/raffle.ts';
 import { BOARD, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../server/sponsor-admin.ts';
 import { currentGate, feeStore } from '../../../../../server/sponsor-fees.ts';
 
@@ -43,7 +45,10 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
       const body = (await readJsonObject(request)) ?? {};
       const now = deps.now === undefined ? new Date() : new Date(deps.now);
       const answer = async (x: Raffle) =>
-        json(200, { ok: true, raffle: adminRaffleView(x, x.quoteId ? await fees.quote(x.quoteId) : null, await raffles.ledger(x.id), await raffles.events(x.id)) });
+        json(200, {
+          ok: true,
+          raffle: adminRaffleView(x, x.quoteId ? await fees.quote(x.quoteId) : null, await raffles.ledger(x.id), await raffles.events(x.id), await fees.payments(x.sponsorId)),
+        });
       const stop = async (to: 'on_hold' | 'cancelled', reason: string) => {
         if (!reason) return fail(400, 'Give a reason; the sponsor sees it.', { field: 'reason' });
         let out = await raffles.moveStage(r.id, { from: r.stage, to, actor: BOARD, reason });
@@ -58,12 +63,19 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
       };
 
       switch (body.action) {
+        case 'reconcile': {
+          for (const p of await fees.payments(r.sponsorId))
+            if (p.subject === 'raffle' && p.subjectId === r.id && p.feeMinor === null) await reconcileFee(p, fees, lifecycle.stripe);
+          return answer(r);
+        }
         case 'offer': {
           const gate = termsGate(env);
           if (!gate.open) throw new RaffleRuleError(gate.reason, 'gate');
           const s = await store.get(r.sponsorId);
           if (!s) return fail(404, 'No such sponsor.');
           assertEligible(s, now);
+          if (!['proposed', 'on_hold'].includes(r.stage) || r.funding !== 'unpaid') throw new RaffleRuleError('Only an unpaid proposal or held offer may be offered.');
+          await requireHost(r.eventId, env, deps, now);
           if (r.fulfilment === 'in_kind') return answer(await raffles.offer(r.id, { from: r.stage, amountMinor: null, quoteId: null, termsVersion: gate.version, actor: BOARD }));
           const amount = money(body.amountChf);
           if (amount === null || amount < 100 || amount > 1_000_000) return fail(400, 'Enter the amount in francs, from 1 to 10’000.', { field: 'amountChf' });
@@ -72,15 +84,21 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           const figures = quoteFigures(amount, choice, await currentGate(fees, env));
           await closeRafflePaymentLink(r, lifecycle.stripe);
           if (r.paymentLinkId) await raffles.linkPayment(r.id, null, BOARD);
-          const { quote } = await fees.createQuote({
-            ...figures,
-            sponsorId: r.sponsorId,
-            subject: 'raffle',
-            subjectId: r.id,
-            purpose: `Raffle add-on: ${r.prize}, ${r.eventTitle}`.slice(0, 300),
-            createdBy: 'board',
-          });
-          return answer(await raffles.offer(r.id, { from: r.stage, amountMinor: amount, quoteId: quote.id, termsVersion: gate.version, actor: BOARD }));
+          return answer(
+            await raffleTransaction(env, r.id, deps, async ({ raffles, fees }) => {
+              const latest = await raffles.get(r.id);
+              if (latest?.stage !== r.stage || latest.funding !== 'unpaid') throw new RaffleRuleError('This offer has changed.');
+              const { quote } = await fees.createQuote({
+                ...figures,
+                sponsorId: r.sponsorId,
+                subject: 'raffle',
+                subjectId: r.id,
+                purpose: `Raffle add-on: ${r.prize}, ${r.eventTitle}`.slice(0, 300),
+                createdBy: 'board',
+              });
+              return raffles.offer(r.id, { from: r.stage, amountMinor: amount, quoteId: quote.id, termsVersion: gate.version, actor: BOARD });
+            }),
+          );
         }
         case 'decline': {
           const reason = text(body.reason, 1000);
@@ -115,6 +133,9 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           return stop('cancelled', text(body.reason, 1000));
         case 'resume': {
           if (r.stage !== 'on_hold') throw new RaffleRuleError('Only a raffle on hold can go ahead again.');
+          const ledger = await raffles.ledger(r.id);
+          if (!ledger.some((e) => e.kind === (r.fulfilment === 'in_kind' ? 'in_kind_received' : 'prize_purchase')))
+            throw new RaffleRuleError('Record the prize receipt or delivery before resuming.');
           const to = r.acceptedVersion && (r.funding === 'paid' || r.funding === 'in_kind') ? 'ready' : 'offered';
           if (to === 'offered') throw new RaffleRuleError('Send a new offer instead: it was not accepted and paid yet.');
           return answer(await raffles.moveStage(r.id, { from: 'on_hold', to, actor: BOARD }));
@@ -127,10 +148,17 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           const reference = text(body.reference, 200);
           if (amount === null || amount < 1) return fail(400, 'Enter the refunded amount in francs.', { field: 'amountChf' });
           if (!reference) return fail(400, 'Give the Stripe refund id or bank reference.', { field: 'reference' });
-          await raffles.addLedger(r.id, { kind: 'refund', amountMinor: amount, note: 'Refund', reference }, BOARD);
-          let out = await raffles.setFunding(r.id, { from: 'refund_pending', to: 'refunded', actor: BOARD });
-          out = await raffles.clearFlag(r.id, 'refund_review', BOARD);
-          return answer(out);
+          return answer(
+            await raffleTransaction(env, r.id, deps, async ({ raffles }) => {
+              const current = (await raffles.get(r.id))!;
+              const prior = (await raffles.ledger(r.id)).find((e) => e.kind === 'refund' && e.reference === reference);
+              if (prior && prior.amountMinor === amount) return current;
+              if (prior || current.funding !== 'refund_pending') throw new RaffleRuleError('Check the existing refund before recording this one.');
+              await raffles.setFunding(r.id, { from: 'refund_pending', to: 'refunded', actor: BOARD });
+              await raffles.addLedger(r.id, { kind: 'refund', amountMinor: amount, note: 'Refund', reference }, BOARD);
+              return raffles.clearFlag(r.id, 'refund_review', BOARD);
+            }),
+          );
         }
         case 'clear_flag':
           if (!FLAGS.includes(body.flag as Flag)) return fail(400, 'Unknown flag.', { field: 'flag' });

@@ -4,7 +4,7 @@
  * refunds, and the flags that need a decision. Every amount comes from the server. The rules are in
  * /api/membership/admin/raffles/[id].
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, useRef, useCallback } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -40,17 +40,25 @@ type Form = 'offer' | 'decline' | 'ledger' | 'in_kind' | 'hold' | 'cancel' | 're
 export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => void }) {
   const [data, setData] = useState<{ raffles: AdminRaffleView[]; terms: Terms; fees: Gate } | null>(null);
   const [error, setError] = useState('');
-  const load = async () => {
+  const signedOut = useRef(onSignedOut);
+  signedOut.current = onSignedOut;
+  const revision = useRef({ value: 0 });
+  const load = useCallback(async () => {
+    const at = ++revision.current.value;
     const { status, body } = await api<{ raffles: AdminRaffleView[]; terms: Terms; fees: Gate }>(`/api/membership/admin/raffles?sponsorId=${encodeURIComponent(id)}`);
-    if (status === 401) return onSignedOut();
+    if (at !== revision.current.value) return;
+    if (status === 401) return signedOut.current();
     if (status !== 200) return setError(body.error ?? 'Could not load the raffles.');
     setError('');
     setData(body);
-  };
+  }, [id]);
   useEffect(() => {
+    const request = revision.current;
     void load();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per sponsor
-  }, []);
+    return () => {
+      request.value++;
+    };
+  }, [load]);
 
   return (
     <Block id="h-raffles" title="Raffle add-ons" intro="Paid apart from the sponsorship. ZurichJS runs the raffle; entrant data never appears here or in Slack.">
@@ -150,6 +158,16 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
         </p>
       )}
       <p class="m-0 text-compact text-ink-2">{SETTLEMENT[r.settlement.state](r.settlement)}</p>
+      {r.payments?.map((p) => (
+        <p key={p.session}>
+          {p.session}. {p.review ?? 'Payment matched.'} {p.fee ? `Stripe fee ${p.fee}. Net ${p.net}.` : 'Stripe fee pending.'}
+        </p>
+      ))}
+      {r.payments?.some((p) => !p.fee) && (
+        <Button variant="secondary" disabled={!!busy} onClick={() => void act('reconcile', {}, 'Checked actual fees.')}>
+          Check actual fees
+        </Button>
+      )}
       {r.ledger.length > 0 && (
         <ul class="m-0 flex list-none flex-col gap-1 p-0 text-compact text-ink-2">
           {r.ledger.map((e) => (

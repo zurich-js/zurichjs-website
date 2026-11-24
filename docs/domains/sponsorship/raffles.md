@@ -69,6 +69,12 @@ Open for the owner: underspend, overspend and shipping costs; refunds and deduct
 - [Sponsorship](/domains/sponsorship/overview.md), [Processing fees](/domains/sponsorship/fees.md), [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)
 - [Stripe](/systems/stripe.md), [Environment variables](/systems/operations/environment.md)
 
+## Payment review and holds
+
+The sponsor accepts the displayed quote and agreement version. The board rechecks the published host before offering the raffle. Checkout receipts and refund references are unique. A receipt, the funding change and the ledger entry commit together. An unmatched raffle receipt is available in the board raffle API. The board can read back the actual Stripe fee after settlement.
+
+The daily sponsorship check compares outstanding funded raffles with their host and sponsorship. A cancelled or postponed host, an ended sponsorship or the end of the paid term puts the raffle on hold. The board resolves the flags, confirms prize readiness and decides any refund separately.
+
 # Related specs
 
 None.

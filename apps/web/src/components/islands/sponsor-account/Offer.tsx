@@ -10,6 +10,8 @@ import type { QuoteView } from '../../../server/sponsor-fees.ts';
 export interface OfferView {
   quote: QuoteView;
   payUrl: string | null;
+  /** Its payment link is not published yet. */
+  preparing: boolean;
 }
 
 export function Offer({ offer, contactEmail }: { offer: OfferView; contactEmail: string }) {
@@ -49,7 +51,9 @@ export function Offer({ offer, contactEmail }: { offer: OfferView; contactEmail:
           </a>
         </div>
       ) : (
-        <p class="m-0 text-compact text-ink-2">We send you the payment link. Questions: {contactEmail}.</p>
+        <p class="m-0 text-compact text-ink-2">
+          {offer.preparing ? 'We are preparing the payment link for this offer. It shows here once it is ready.' : 'We send you the payment link.'} Questions: {contactEmail}.
+        </p>
       )}
     </section>
   );

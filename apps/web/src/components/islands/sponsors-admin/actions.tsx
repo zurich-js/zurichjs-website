@@ -17,7 +17,7 @@ import { lastDay, longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, optional } from '../forms/shared.tsx';
-import { FeeChoiceField, useFeeGate, type QuoteView } from './fees.tsx';
+import { FeeChoiceField, OfferPreview, useFeeGate, usePreview, type QuoteView } from './fees.tsx';
 import { BASE, DATE, MeetupPicker, Notice, addMonths, francs, inputChecked, inputValue, listPrice, today, useMeetups, type FieldError } from './shared.tsx';
 
 export type ActionKey = 'suggest' | 'plan' | 'bundle' | 'contract' | 'link' | 'payment' | 'end';
@@ -375,7 +375,9 @@ function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [feeChoice, setFeeChoice] = useState<FeeChoice>('absorb');
+  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
   const gate = useFeeGate(onSignedOut);
+  const { preview, error: previewError } = usePreview(id, feeChoice, onSignedOut);
   return (
     <Panel
       title={s.paymentLinkUrl ? 'New payment link' : 'Create payment link'}
@@ -386,10 +388,10 @@ function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
         noValidate
         onSubmit={async (e) => {
           e.preventDefault();
-          if (busy) return;
+          if (busy || !preview) return;
           setBusy(true);
           setError('');
-          const { status, body } = await post<{ url?: string; quote?: QuoteView }>(`${BASE}/${id}/payment-link`, { feeChoice });
+          const { status, body } = await post<{ url?: string; quote?: QuoteView }>(`${BASE}/${id}/payment-link`, { feeChoice, expectTotalMinor: preview.totalMinor, requestId });
           setBusy(false);
           if (status === 401) return onSignedOut();
           if (status !== 200 || !body.url) return setError(body.error ?? 'Could not create the payment link.');
@@ -401,7 +403,15 @@ function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
           });
         }}
       >
-        <FeeChoiceField gate={gate} value={feeChoice} onChange={setFeeChoice} />
+        <FeeChoiceField
+          gate={gate}
+          value={feeChoice}
+          onChange={(choice) => {
+            setFeeChoice(choice);
+            setRequestId(crypto.randomUUID());
+          }}
+        />
+        <OfferPreview preview={preview} error={previewError} />
         {error && <Notice kind="error">{error}</Notice>}
         <Buttons busy={busy} label={s.paymentLinkUrl ? 'Create a new link' : 'Create the link'} busyLabel="Creating…" onCancel={onCancel} />
       </form>

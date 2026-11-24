@@ -102,6 +102,16 @@ export function quoteFigures(baseMinor: number, choice: FeeChoice, gate: FeeGate
   };
 }
 
+/**
+ * What the board's tariff says a card payment of `totalMinor` costs, rounded up to the rappen: an
+ * estimate to preview an offer, never a figure a sponsor pays. Stripe reports the actual fee later.
+ */
+export function estimatedFee(totalMinor: number, tariff: Pick<Tariff, 'ratePpm' | 'fixedMinor'>): number {
+  whole(totalMinor, MAX_BASE_MINOR * 2, 'The total');
+  const variable = (BigInt(totalMinor) * BigInt(tariff.ratePpm) + BigInt(PPM - 1)) / BigInt(PPM);
+  return Number(variable) + tariff.fixedMinor;
+}
+
 /** "CHF 1’546.07": quotes always show rappen. */
 export const chfMinor = (minor: number) => {
   const sign = minor < 0 ? '-' : '';

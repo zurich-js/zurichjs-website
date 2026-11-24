@@ -36,6 +36,14 @@ export interface StripeLinks {
   paymentLinkUrl?: string | null;
 }
 
+/** Compare-and-set for `linkStripe`: the value the caller expects in the column now. */
+export interface StripeExpect {
+  paymentLinkId?: string | null;
+  checkoutSessionId?: string | null;
+  /** The status it must still have (a payment link is kept only while the sponsorship is unpaid). */
+  status?: Status;
+}
+
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
 export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename' | 'uploadedBy'>;
 export type NewDocument = Pick<SponsorDocument, 'blobKey' | 'filename' | 'bytes' | 'signedOn' | 'uploadedBy'>;
@@ -54,6 +62,8 @@ export interface SponsorStore {
   create(s: NewSponsor, contact: NewContact, actor: Actor): Promise<{ sponsor: Sponsor; contact: Contact }>;
   update(id: string, patch: SponsorPatch, actor: Actor): Promise<Sponsor>;
   linkStripe(id: string, links: StripeLinks, actor: Actor): Promise<Sponsor>;
+  /** `linkStripe` only while the `expect` columns still hold those values (two requests at once): null otherwise. */
+  linkStripeIf(id: string, expect: StripeExpect, links: StripeLinks, actor: Actor): Promise<Sponsor | null>;
   transition(id: string, input: TransitionInput): Promise<Sponsor>;
 
   /** The meetups the sponsorship covers now, by date (rows taken off are left out). */
@@ -128,8 +138,17 @@ export function transitionFields(s: Sponsor, to: Status, endedReason: EndedReaso
   };
 }
 
-const byDate = (a: SponsorMeetup, b: SponsorMeetup) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId);
 const plain = ({ eventId, title, date }: SponsorMeetup): SponsorMeetup => ({ eventId, title, date });
+
+const STRIPE_FIELD = {
+  customerId: 'stripeCustomerId',
+  subscriptionId: 'stripeSubscriptionId',
+  checkoutSessionId: 'checkoutSessionId',
+  paymentLinkId: 'paymentLinkId',
+  paymentLinkUrl: 'paymentLinkUrl',
+} as const satisfies Record<keyof StripeLinks, keyof Sponsor>;
+
+const byDate = (a: SponsorMeetup, b: SponsorMeetup) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId);
 
 /** In-memory store with the same rules as the database. */
 export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { all(): Sponsor[] } {
@@ -178,6 +197,15 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     rows.set(m.eventId, { ...m, confirmedAt: fresh ? now() : r.confirmedAt, confirmedBy: fresh ? actor.kind : r.confirmedBy, removedAt: null, removedBy: null });
   };
 
+  const linkStripe = (s: Sponsor, links: StripeLinks, actor: Actor) => {
+    record(s.id, 'stripe_linked', actor, { payload: { ...links } });
+    const set = Object.fromEntries(
+      Object.entries(links)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [STRIPE_FIELD[k as keyof StripeLinks], v]),
+    );
+    return save({ ...s, ...set });
+  };
   return {
     all: () => [...sponsors.values()].map((s) => ({ ...s })),
     get: async (sid) => (sponsors.has(sid) ? { ...sponsors.get(sid)! } : null),
@@ -221,22 +249,11 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       record(sid, 'updated', actor, { payload: { fields: Object.keys(patch) } });
       return save({ ...s, ...patch });
     },
-    async linkStripe(sid, links, actor) {
+    linkStripe: async (sid, links, actor) => linkStripe(must(sid), links, actor),
+    async linkStripeIf(sid, expect, links, actor) {
       const s = must(sid);
-      record(sid, 'stripe_linked', actor, { payload: { ...links } });
-      const column = {
-        customerId: 'stripeCustomerId',
-        subscriptionId: 'stripeSubscriptionId',
-        checkoutSessionId: 'checkoutSessionId',
-        paymentLinkId: 'paymentLinkId',
-        paymentLinkUrl: 'paymentLinkUrl',
-      } as const;
-      const set = Object.fromEntries(
-        Object.entries(links)
-          .filter(([, v]) => v !== undefined)
-          .map(([k, v]) => [column[k as keyof StripeLinks], v]),
-      );
-      return save({ ...s, ...set });
+      if ((Object.keys(expect) as (keyof StripeExpect)[]).some((k) => expect[k] !== undefined && s[k] !== expect[k])) return null;
+      return linkStripe(s, links, actor);
     },
     async transition(sid, input) {
       const s = must(sid);

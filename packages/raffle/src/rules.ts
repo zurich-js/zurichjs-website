@@ -52,7 +52,7 @@ export interface Sponsorship {
 export function eligibility(s: Sponsorship, today: string): { ok: true } | { ok: false; reason: string } {
   if (s.status === 'active') return { ok: true };
   if (s.status === 'ending') {
-    const last = s.endsAt ?? s.paidUntil;
+    const last = [s.endsAt, s.paidUntil].filter((d): d is string => !!d).sort()[0];
     return last && today < last ? { ok: true } : { ok: false, reason: 'The sponsorship’s paid term is over.' };
   }
   const reasons: Record<Exclude<Sponsorship['status'], 'active' | 'ending'>, string> = {

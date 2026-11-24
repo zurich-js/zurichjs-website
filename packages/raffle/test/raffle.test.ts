@@ -122,6 +122,10 @@ d('raffle store on Postgres', () => {
     const contactId = pgdb.sql(`insert into sponsor_contacts (sponsor_id, email, name, role) values ('${sponsorId}', 'ana@acme.ch', 'Ana', 'primary') returning id`).trim();
     const store = postgresRaffleStore(pool);
     const id = await lifecycle(store, sponsorId, contactId);
+    const receipt = { kind: 'payment' as const, amountMinor: 100, note: 'Local race fixture', reference: 'cs_parallel' };
+    const writes = await Promise.allSettled([store.addLedger(id, receipt, stripe), store.addLedger(id, receipt, stripe)]);
+    expect(writes.filter((w) => w.status === 'fulfilled')).toHaveLength(1);
+    expect((await store.ledger(id)).filter((e) => e.reference === receipt.reference)).toHaveLength(1);
     expect(await store.bySponsor(sponsorId)).toHaveLength(1);
     expect(pgdb.fails(`update raffle_ledger set amount_minor = 1 where raffle_id = '${id}'`)).toMatch(/append-only/);
     expect(pgdb.fails(`delete from raffle_events where raffle_id = '${id}'`)).toMatch(/append-only/);

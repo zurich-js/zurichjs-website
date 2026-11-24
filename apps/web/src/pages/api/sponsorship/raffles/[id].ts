@@ -9,7 +9,8 @@
 import { RaffleRuleError } from '@zurichjs/raffle';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../../server/http.ts';
-import { assertEligible, closeRafflePaymentLink, createRafflePaymentLink, raffleStore, raffleView, termsGate } from '../../../../server/raffle.ts';
+import { raffleTransaction } from '../../../../server/raffle-transaction.ts';
+import { assertEligible, requireHost, closeRafflePaymentLink, createRafflePaymentLink, raffleStore, raffleView, termsGate } from '../../../../server/raffle.ts';
 import { note, slackText } from '../../../../server/sponsor.ts';
 import { feeStore } from '../../../../server/sponsor-fees.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../../server/sponsor-route.ts';
@@ -45,12 +46,37 @@ export const handleRaffleAnswer = (request: Request, id: string, deps: SponsorRo
         throw new RaffleRuleError('The raffle terms changed since this offer. We will send you a new offer.');
       assertEligible(s, deps.now?.() ?? new Date());
 
-      let out = await raffles.accept(r.id, { version: r.termsVersion, contactId: contact.id, actor });
+      if ((body.quoteId ?? null) !== r.quoteId) throw new RaffleRuleError('The offer changed. Review the new amount before accepting.');
+      await requireHost(r.eventId, env, deps, deps.now?.() ?? new Date());
+      const version = r.termsVersion;
+      let out = await raffleTransaction(env, r.id, deps, async ({ raffles }) => {
+        const current = await raffles.get(id);
+        if (current?.quoteId !== r.quoteId || current.stage !== 'offered') throw new RaffleRuleError('The offer changed.');
+        return raffles.accept(r.id, { version, contactId: contact.id, actor });
+      });
       if (out.fulfilment === 'zurichjs' && out.funding === 'unpaid' && !out.paymentLinkUrl) {
         const quote = out.quoteId ? await fees.quote(out.quoteId) : null;
         if (!quote || quote.status !== 'open') throw new RaffleRuleError('This offer has no open price. We will send you a new offer.');
+        if (!(await fees.linkCreating(quote.id))) throw new RaffleRuleError('The offer changed.');
         const link = await createRafflePaymentLink(out, quote, origin, lifecycle.stripe);
-        out = await raffles.linkPayment(out.id, link, actor);
+        try {
+          out = await raffleTransaction(env, id, deps, async ({ raffles, fees }) => {
+            const current = await raffles.get(id);
+            if (
+              current?.stage !== 'offered' ||
+              current.quoteId !== quote.id ||
+              current.funding !== 'unpaid' ||
+              current.acceptedVersion !== version ||
+              !(await fees.attachLink(quote.id, link.id, link.url))
+            )
+              throw new RaffleRuleError('The offer changed.');
+            return raffles.linkPayment(id, link, actor);
+          });
+        } catch (err) {
+          await fees.orphanLink(quote.id, link.id);
+          await closeRafflePaymentLink({ ...r, paymentLinkId: link.id }, lifecycle.stripe);
+          throw err;
+        }
       }
       await note(`:handshake: *${slackText(s.companyName)}* accepted the raffle terms for ${slackText(r.eventTitle)}.`, lifecycle);
       return json(200, { ok: true, raffle: raffleView(out, out.quoteId ? await fees.quote(out.quoteId) : null) });

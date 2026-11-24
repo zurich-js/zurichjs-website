@@ -93,6 +93,27 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
   const missed = async (id: string) => ((await get(id)) ? conflict() : new RaffleNotFound());
 
   return {
+    unmatched: async (p) => {
+      await q('insert into raffle_unmatched_payments(session_id,link_id,quote_ref,raffle_ref,amount_minor,currency) values($1,$2,$3,$4,$5,$6) on conflict(session_id) do nothing', [
+        p.sessionId,
+        p.linkId,
+        p.quoteRef,
+        p.raffleRef,
+        p.amountMinor,
+        p.currency,
+      ]);
+    },
+    unmatchedPayments: async () =>
+      (await q('select * from raffle_unmatched_payments order by recorded_at desc')).map((r) => ({
+        sessionId: String(r.session_id),
+        linkId: r.link_id as string | null,
+        quoteRef: r.quote_ref as string | null,
+        raffleRef: r.raffle_ref as string | null,
+        amountMinor: Number(r.amount_minor),
+        currency: String(r.currency),
+      })),
+    outstanding: async () =>
+      (await q("select * from raffles where funding in ('paid','in_kind') and stage in ('offered','ready','open','closed','drawn') order by id")).map(raffleOf),
     async create(n, actor) {
       const rows = await q(
         `with s as (insert into raffles (sponsor_id, event_id, event_title, event_date, prize, quantity, budget_minor, fulfilment)

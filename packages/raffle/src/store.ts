@@ -17,7 +17,18 @@ export interface OfferInput {
 
 export type NewLedgerEntry = Pick<LedgerEntry, 'kind' | 'amountMinor' | 'note' | 'reference'>;
 
+export interface UnmatchedPayment {
+  sessionId: string;
+  linkId: string | null;
+  quoteRef: string | null;
+  raffleRef: string | null;
+  amountMinor: number;
+  currency: string;
+}
 export interface RaffleStore {
+  unmatched(payment: UnmatchedPayment): Promise<void>;
+  unmatchedPayments(): Promise<UnmatchedPayment[]>;
+  outstanding(): Promise<Raffle[]>;
   create(r: NewRaffle, actor: Actor): Promise<Raffle>;
   get(id: string): Promise<Raffle | null>;
   /** Newest first. */
@@ -56,12 +67,14 @@ export const conflict = () => new RaffleRuleError('The raffle changed in the mea
 export function readyBlocker(r: Raffle): string | null {
   if (r.funding !== 'paid' && r.funding !== 'in_kind') return 'It is not paid yet (or the in-kind prize has not arrived).';
   if (!r.acceptedVersion || r.acceptedVersion !== r.termsVersion) return 'The sponsor has not accepted the raffle terms of this offer.';
+  if (r.flags.length) return 'Resolve the outstanding review before continuing.';
   return null;
 }
 
 export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore {
   const now = () => (opts.now ?? (() => new Date()))().toISOString();
   const raffles = new Map<string, Raffle>();
+  const unmatched = new Map<string, UnmatchedPayment>();
   const ledger: LedgerEntry[] = [];
   const log: RaffleEvent[] = [];
   const seen = new Set<string>();
@@ -81,6 +94,12 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
   const copy = (r: Raffle | undefined) => (r ? { ...r, flags: [...r.flags] } : null);
 
   return {
+    unmatched: async (p) => {
+      if (!unmatched.has(p.sessionId)) unmatched.set(p.sessionId, { ...p });
+    },
+    unmatchedPayments: async () => [...unmatched.values()],
+    outstanding: async () =>
+      [...raffles.values()].filter((r) => ['paid', 'in_kind'].includes(r.funding) && ['offered', 'ready', 'open', 'closed', 'drawn'].includes(r.stage)).map((r) => copy(r)!),
     async create(input, actor) {
       const at = now();
       const r: Raffle = {
@@ -169,6 +188,7 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     },
     async addLedger(id, e, actor) {
       must(id);
+      if ((e.kind === 'refund' || e.kind === 'payment') && e.reference && ledger.some((x) => x.kind === e.kind && x.reference === e.reference)) throw conflict();
       const entry: LedgerEntry = { ...e, id: String(ledger.length + 1), raffleId: id, actor, at: now() };
       ledger.push(entry);
       record(id, 'ledger_added', actor, { kind: e.kind, amountMinor: e.amountMinor });

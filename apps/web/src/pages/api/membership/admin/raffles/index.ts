@@ -19,11 +19,18 @@ export const handleAdminRaffles = (request: Request, deps: SponsorAdminDeps = {}
       const fees = deps.fees ?? feeStore(env);
       const sponsorId = new URL(request.url).searchParams.get('sponsorId');
       const list = sponsorId ? await raffles.bySponsor(sponsorId) : await raffles.list();
+      const payments = sponsorId ? await fees.payments(sponsorId) : [];
       const views = await Promise.all(
-        list.map(async (r) => adminRaffleView(r, r.quoteId ? await fees.quote(r.quoteId) : null, await raffles.ledger(r.id), await raffles.events(r.id))),
+        list.map(async (r) => adminRaffleView(r, r.quoteId ? await fees.quote(r.quoteId) : null, await raffles.ledger(r.id), await raffles.events(r.id), payments)),
       );
       const gate = termsGate(env);
-      return json(200, { ok: true, raffles: views, terms: gate.open ? { open: true, version: gate.version } : gate, fees: gateView(await currentGate(fees, env)) });
+      return json(200, {
+        ok: true,
+        unmatchedPayments: sponsorId ? undefined : await raffles.unmatchedPayments(),
+        raffles: views,
+        terms: gate.open ? { open: true, version: gate.version } : gate,
+        fees: gateView(await currentGate(fees, env)),
+      });
     },
     'load the raffles',
   );

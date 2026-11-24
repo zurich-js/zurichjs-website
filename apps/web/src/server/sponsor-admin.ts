@@ -15,7 +15,18 @@
  *   end         outright (terminated, or an invitation withdrawn); logged
  *   to do       what needs someone: see `attention`
  */
-import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore, type SponsorSummary } from '@zurichjs/sponsorship';
+import {
+  DuplicateContact,
+  isCycle,
+  isRunning,
+  isTier,
+  type Contact,
+  type NewSponsor,
+  type Sponsor,
+  type SponsorMeetup,
+  type SponsorStore,
+  type SponsorSummary,
+} from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
@@ -158,16 +169,28 @@ export async function resolveMeetups(eventIds: string[], meetups: () => Promise<
   return out.map((m) => ({ eventId: m!.id, title: m!.title, date: m!.date }));
 }
 
-/** Emails the invitation (new) or the "now online" note (imported) to these contacts. */
-export async function sendInvitation(s: Sponsor, contacts: Contact[], message: string | null, deps: LifecycleDeps, meetups?: SponsorMeetup[]): Promise<number> {
+/**
+ * Emails the invitation (not started), the "now online" note (imported, paid by bank transfer) or,
+ * for a sponsorship that already runs, access to its page. `requestId` marks a resend the board
+ * asked for: each click is its own email (a double click is still one), where the automatic
+ * invitation is one per plan and day.
+ */
+export async function sendInvitation(
+  s: Sponsor,
+  contacts: Contact[],
+  message: string | null,
+  deps: LifecycleDeps,
+  opts: { meetups?: SponsorMeetup[]; requestId?: string } = {},
+): Promise<number> {
   const day = zurichDay(deps.now?.() ?? new Date());
-  const existing = s.source === 'imported' && s.paidUntil && s.cycle !== 'once' ? longDate(lastDay(s.paidUntil)) : null;
+  const existing = s.source === 'imported' && s.paymentMode === 'manual' && s.paidUntil && s.cycle !== 'once' ? longDate(lastDay(s.paidUntil)) : null;
+  const access = isRunning(s.status) && !existing;
   const contractOnFile = (await deps.store.documents(s.id)).length > 0;
-  return emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing, contractOnFile }), {
+  return emailSponsor(s, 'sponsor-invite', (base) => ({ ...base, message, existingPaidThrough: existing, contractOnFile, access }), {
     ...deps,
     contacts,
-    meetups,
-    key: `sponsor-invite:${s.id}:${s.tier}-${s.cycle}:${day}`,
+    meetups: opts.meetups,
+    key: opts.requestId ? `sponsor-invite-resend:${s.id}:${opts.requestId}` : `sponsor-invite:${s.id}:${s.tier}-${s.cycle}:${day}`,
   });
 }
 
@@ -214,7 +237,7 @@ export async function createSponsor(
   const { sponsor, contact } = created;
   let emailed = 0;
   try {
-    if (input.sendEmail) emailed = await sendInvitation(sponsor, [contact], input.message, deps, meetups);
+    if (input.sendEmail) emailed = await sendInvitation(sponsor, [contact], input.message, deps, { meetups });
   } catch (cause) {
     console.error(`[sponsorship-admin] invitation for ${sponsor.id} not sent`, cause);
   }
@@ -240,14 +263,15 @@ export async function changeInvitedPlan(s: Sponsor, plan: { tier: Sponsor['tier'
 
 /* ------------------------------------------------------------------ what needs someone */
 
-export type Attention = 'payment_overdue' | 'manual_overdue' | 'manual_due_soon' | 'invite_waiting' | 'new_logo' | 'meetup_passed_unpaid';
+export type Attention = 'payment_overdue' | 'manual_overdue' | 'manual_due_soon' | 'invite_waiting' | 'checkout_abandoned' | 'new_logo' | 'meetup_passed_unpaid';
 
 export const ATTENTION_LABEL: Record<Attention, string> = {
   payment_overdue: 'Payment overdue',
   manual_overdue: 'Bank transfer overdue',
   manual_due_soon: 'Bank transfer due soon',
   invite_waiting: 'Invitation not answered',
-  new_logo: 'New logo for Sanity',
+  checkout_abandoned: 'Started online, not paid',
+  new_logo: 'New logo for the partner record',
   meetup_passed_unpaid: 'Meetup passed, unpaid',
 };
 
@@ -265,9 +289,9 @@ export function attention(s: Sponsor, facts: Pick<SponsorSummary, 'meetups' | 'l
   }
   if (s.status === 'pending') {
     if (s.cycle === 'once' && facts.meetups.some((m) => m.date < today)) out.push('meetup_passed_unpaid');
-    if (days(s.createdAt.slice(0, 10), today) >= 7) out.push('invite_waiting');
+    if (days(s.createdAt.slice(0, 10), today) >= 7) out.push(s.source === 'self_serve' ? 'checkout_abandoned' : 'invite_waiting');
   }
-  if (s.status !== 'ended') {
+  if (isRunning(s.status)) {
     const logo = facts.latestLogo;
     // A logo the board uploaded itself needs no reminder.
     if (logo && logo.uploadedBy !== 'board' && days(logo.uploadedAt.slice(0, 10), today) <= 14) out.push('new_logo');

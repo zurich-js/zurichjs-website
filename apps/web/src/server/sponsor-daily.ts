@@ -98,7 +98,7 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
             `${key}:slack`,
             reason === 'withdrawn'
               ? `:hourglass: ${who(s)} was never paid and a meetup it covered is over; the sponsorship is closed. ${adminUrl(deps.origin, s.id)}`
-              : `:checkered_flag: ${who(s)} ${reason === 'completed' ? 'is complete (its meetups are over)' : 'has ended as agreed'}. Mark them as a past sponsor in Sanity.`,
+              : `:checkered_flag: ${who(s)} ${reason === 'completed' ? 'is complete (its meetups are over)' : 'has ended as agreed'}. The site lists them as a past sponsor from the next build.`,
           ),
         ],
       });

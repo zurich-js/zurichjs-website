@@ -238,7 +238,7 @@ function ActionNeeded({
   const resend = async () => {
     setBusy(true);
     setError('');
-    const { status, body } = await post<{ emailed?: number }>(`${BASE}/${id}/invite`, {});
+    const { status, body } = await post<{ emailed?: number }>(`${BASE}/${id}/invite`, { requestId: crypto.randomUUID() });
     setBusy(false);
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not send the invitation.');
@@ -279,9 +279,11 @@ function ActionNeeded({
             </Button>
           ),
         };
+      case 'checkout_abandoned':
+        return { text: `Started online on ${longDate(s.createdAt)} and not paid yet. They can finish on their sponsorship page; nothing to send.`, action: null };
       case 'new_logo':
         return {
-          text: 'They uploaded a new logo. Add it to their partner document in Sanity.',
+          text: 'They uploaded a new logo. Add it to their partner record.',
           action: (
             <Button variant="primary" grow onClick={toLogos}>
               See the logo
@@ -431,17 +433,19 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
   const [done, setDone] = useState('');
   const err = (field: string) => (error?.field === field ? error.message : undefined);
   const ended = s.status === 'ended';
+  // A running sponsorship sends access to its page, not an invitation to pay.
+  const running = s.status === 'active' || s.status === 'past_due' || s.status === 'ending';
 
   const resend = async (c: Contact) => {
     setBusy(true);
     setError(null);
-    const { status, body } = await post<{ emailed?: number }>(`${BASE}/${id}/invite`, { contactId: c.id, message: message || undefined });
+    const { status, body } = await post<{ emailed?: number }>(`${BASE}/${id}/invite`, { contactId: c.id, message: message || undefined, requestId: crypto.randomUUID() });
     setBusy(false);
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError({ field: 'message', message: body.error ?? 'Could not send the invitation.' });
     setInviting(null);
     setMessage('');
-    setDone(body.emailed ? `Invitation emailed to ${c.email}.` : `The invitation to ${c.email} was not sent. Try again later.`);
+    setDone(body.emailed ? `${running ? 'Sign-in link' : 'Invitation'} emailed to ${c.email}.` : `Nothing was sent to ${c.email}. Try again later.`);
   };
   const remove = async (c: Contact) => {
     setBusy(true);
@@ -464,14 +468,15 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
               <span class="flex flex-wrap items-center gap-2">
                 <span class="text-body font-bold">{c.name}</span>
                 <Tag>{ROLE_LABEL[c.role]}</Tag>
-                {c.pending && <Tag tone="black">Not joined yet</Tag>}
               </span>
               <span class="text-compact break-all">{c.email}</span>
-              <span class="text-meta text-grey-text">{c.hasAccount ? 'Has signed in' : 'Not signed in yet'}</span>
+              <span class="text-meta text-grey-text">
+                {c.pending ? 'Added by a colleague. Waiting for them to sign in and accept.' : c.hasAccount ? 'Has signed in' : 'Not signed in yet'}
+              </span>
             </div>
             {inviting !== c.id && removing !== c.id && (
               <div class="flex flex-wrap gap-x-5 gap-y-2">
-                {!ended && !c.hasAccount && <TextButton onClick={() => setInviting(c.id)}>Resend invitation</TextButton>}
+                {!ended && !c.hasAccount && !c.pending && <TextButton onClick={() => setInviting(c.id)}>{running ? 'Email sign-in link' : 'Resend invitation'}</TextButton>}
                 {contacts.length > 1 && <TextButton onClick={() => setRemoving(c.id)}>Remove</TextButton>}
               </div>
             )}
@@ -533,7 +538,11 @@ function Contacts({ contacts, sponsor: s, id, onChanged, onSignedOut }: Ctx & { 
               if (status !== 200 || !body.contact) return setError({ field: body.field, message: body.error ?? 'Could not add the contact.' });
               setAdding(false);
               setF({ name: '', email: '', role: 'other' });
-              setDone(`${body.contact.name} added. Resend the invitation so they know how to sign in.`);
+              setDone(
+                running
+                  ? `${body.contact.name} added. They get no email yet: use Email sign-in link to send them one.`
+                  : `${body.contact.name} added. Resend the invitation so they know how to sign in.`,
+              );
               onChanged();
             }}
           >
@@ -617,7 +626,7 @@ function Logos({ logos, ended, id, onChanged, onSignedOut }: Ctx & { logos: Logo
   };
 
   return (
-    <Block id="h-logos" title="Logos" intro="Newest first. The newest one is shown on the sponsor's page. Add it to their partner document in Sanity.">
+    <Block id="h-logos" title="Logos" intro="Newest first. The sponsor's page shows the newest one. Add it to their partner record so the site shows it.">
       {logos.length === 0 && <p class="m-0 text-compact text-ink-2">None uploaded yet.</p>}
       {!ended && (
         <form class={cardClass('outline', 'lg', 'max-w-form')} noValidate onSubmit={upload}>

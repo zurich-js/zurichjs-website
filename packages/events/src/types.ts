@@ -193,6 +193,11 @@ export interface Partner {
   /** Only an organiser marks a partner current; everyone else is a past supporter. */
   current: boolean;
   /**
+   * A current sponsor through one-time sponsorships only: the ids of the meetups it sponsors. It is
+   * thanked on those events, never as a season sponsor on the others.
+   */
+  coverage?: string[];
+  /**
    * Withdrawn from promotion by the owner: never in partner lists, logo walls,
    * the home page, upcoming event pages, Tonight or generated content. The
    * record stays only so a past event can still name it as its host or supporter.

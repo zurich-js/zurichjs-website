@@ -10,11 +10,16 @@
  *   a running sponsorship without a partner     -> listed by company name, without a logo
  *   no sponsorship linked to a partner          -> the partner list stands as it is
  *
+ * A one-time sponsorship (a sponsor of one or more meetups) is current for its paid term like any
+ * other, but it is thanked on the meetups it sponsors, not as a season sponsor of every meetup: the
+ * partner gets `coverage` (those meetups' ids) and those events list it as a sponsor. How long a
+ * one-time sponsor stays listed beyond that is an open owner question; it is not invented here.
+ *
  * A sponsor is linked by its `partnerId` (the admin area's "Partner id"), which equals the partner's
  * `id`. Names are never used to link. This file is pure: the database is read by the caller
  * (apps/web/src/server/sponsor-public.ts) and handed in, so the content package stays dependency-free.
  */
-import type { Partner, SponsorTier } from '@zurichjs/events';
+import type { Event, Partner, SponsorTier } from '@zurichjs/events';
 import { isDelisted } from './partners.ts';
 
 /** What the public site needs from a row of the `sponsors` table. */
@@ -25,6 +30,10 @@ export interface SponsorshipRow {
   tier: string;
   status: string;
   partnerId: string | null;
+  /** `once` for a one-time sponsorship. */
+  cycle?: string;
+  /** A one-time sponsorship's meetups (event ids). */
+  eventIds?: string[];
 }
 
 /** Reads the sponsorships for a build; null when no database is configured. */
@@ -42,6 +51,8 @@ const norm = (s: string) =>
     .replace(/^-|-$/g, '');
 const tierOf = (r: SponsorshipRow) => (TIERS as string[]).indexOf(r.tier);
 const highest = (rows: SponsorshipRow[]) => [...rows].sort((a, b) => tierOf(a) - tierOf(b))[0]!;
+/** Running only through one-time sponsorships: the meetups they cover; otherwise undefined (a season sponsor). */
+const coverageOf = (running: SponsorshipRow[]) => (running.every((r) => r.cycle === 'once') ? [...new Set(running.flatMap((r) => r.eventIds ?? []))] : undefined);
 const webUrl = (s: string | null) => {
   try {
     const u = new URL(s ?? '');
@@ -55,7 +66,7 @@ const webUrl = (s: string | null) => {
  * The partner list with the sponsorships applied. `notes` says what a person should look at
  * (a sponsor shown without a logo, a sponsor left out); the build logs them.
  */
-export function applySponsorships(partners: Partner[], rows: SponsorshipRow[]): { partners: Partner[]; notes: string[] } {
+export function applySponsorships(partners: Partner[], rows: SponsorshipRow[], events: Event[] = []): { partners: Partner[]; events: Event[]; notes: string[] } {
   const notes: string[] = [];
   const valid = rows.filter((r) => tierOf(r) >= 0);
   const key = (r: SponsorshipRow) => r.partnerId?.trim() || null;
@@ -68,7 +79,14 @@ export function applySponsorships(partners: Partner[], rows: SponsorshipRow[]): 
     if (mine.length === 0 || isDelisted(p)) return p;
     const running = mine.filter((r) => RUNNING.includes(r.status));
     if (running.length > 0) {
-      return { ...p, kinds: p.kinds.includes('sponsor') ? p.kinds : ['sponsor', ...p.kinds], tier: highest(running).tier as SponsorTier, current: true };
+      const coverage = coverageOf(running);
+      return {
+        ...p,
+        kinds: p.kinds.includes('sponsor') ? p.kinds : ['sponsor', ...p.kinds],
+        tier: highest(running).tier as SponsorTier,
+        current: true,
+        ...(coverage ? { coverage } : {}),
+      };
     }
     if (!mine.some((r) => r.status === 'ended')) return p;
     // Ended: no tier any more. A partner who is also a host or another kind keeps its own current flag.
@@ -95,9 +113,17 @@ export function applySponsorships(partners: Partner[], rows: SponsorshipRow[]): 
         `"${r.companyName}" has a running sponsorship that is not linked to its partner record: set its Partner id in /admin/sponsors. The partner list is shown unchanged.`,
       );
     } else {
-      out.push({ id, name: r.companyName, url: webUrl(r.website), kinds: ['sponsor'], tier: r.tier as SponsorTier, current: true });
+      const coverage = coverageOf(group);
+      out.push({ id, name: r.companyName, url: webUrl(r.website), kinds: ['sponsor'], tier: r.tier as SponsorTier, current: true, ...(coverage ? { coverage } : {}) });
       notes.push(`"${r.companyName}" has a running sponsorship and no partner record: shown by name, without a logo.`);
     }
   }
-  return { partners: out, notes };
+  // The meetups a one-time sponsor covers thank it as a sponsor.
+  const sponsorsOf = new Map<string, string[]>();
+  for (const p of out) for (const e of p.coverage ?? []) sponsorsOf.set(e, [...(sponsorsOf.get(e) ?? []), p.id]);
+  const withCoverage = events.map((e) => {
+    const ids = (sponsorsOf.get(e.id) ?? []).filter((id) => !(e.supporters ?? []).some((s) => s.partnerId === id));
+    return ids.length ? { ...e, supporters: [...(e.supporters ?? []), ...ids.map((partnerId) => ({ partnerId, role: 'sponsor' as const }))] } : e;
+  });
+  return { partners: out, events: withCoverage, notes };
 }

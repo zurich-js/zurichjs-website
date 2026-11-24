@@ -1,0 +1,182 @@
+[
+  {
+    "file": "account-raffles-390.png",
+    "caption": "Sponsor account with raffle add-ons: an offer with fee and total, a declined proposal with the board’s reason, an in-kind raffle ready (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-1440.png",
+    "caption": "Sponsor account with raffle add-ons: an offer with fee and total, a declined proposal with the board’s reason, an in-kind raffle ready (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-375.png",
+    "caption": "Sponsor account with raffle add-ons: an offer with fee and total, a declined proposal with the board’s reason, an in-kind raffle ready (375px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-1280.png",
+    "caption": "Sponsor account with raffle add-ons: an offer with fee and total, a declined proposal with the board’s reason, an in-kind raffle ready (1280px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-offer-390.png",
+    "caption": "Offer: prize amount, processing fee, total; terms checkbox names the approved version (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-offer-1440.png",
+    "caption": "Offer: prize amount, processing fee, total; terms checkbox names the approved version (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-accepted-390.png",
+    "caption": "Accepted: pay button for the frozen total (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-accepted-1440.png",
+    "caption": "Accepted: pay button for the frozen total (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-empty-390.png",
+    "caption": "No raffles yet: propose (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-empty-1440.png",
+    "caption": "No raffles yet: propose (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-form-invalid-390.png",
+    "caption": "Propose form with a server validation error (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-form-invalid-1440.png",
+    "caption": "Propose form with a server validation error (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-ineligible-390.png",
+    "caption": "Payment overdue: not eligible, the reason in words, no form (390px, MOCK: sponsorship past_due)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-ineligible-1440.png",
+    "caption": "Payment overdue: not eligible, the reason in words, no form (1440px, MOCK: sponsorship past_due)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-error-390.png",
+    "caption": "Raffles failed to load: error and Try again (390px, MOCK: raffles answered 502)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-error-1440.png",
+    "caption": "Raffles failed to load: error and Try again (1440px, MOCK: raffles answered 502)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-loading-390.png",
+    "caption": "Loading (390px, MOCK: raffles held for 10s)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-raffles-loading-1440.png",
+    "caption": "Loading (1440px, MOCK: raffles held for 10s)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-390.png",
+    "caption": "Board: a proposal, a paid ready raffle with gift accounting (underspend for the board to decide), a cancelled one flagged for late payment and a refund decision (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-1440.png",
+    "caption": "Board: a proposal, a paid ready raffle with gift accounting (underspend for the board to decide), a cancelled one flagged for late payment and a refund decision (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-375.png",
+    "caption": "Board: a proposal, a paid ready raffle with gift accounting (underspend for the board to decide), a cancelled one flagged for late payment and a refund decision (375px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-1280.png",
+    "caption": "Board: a proposal, a paid ready raffle with gift accounting (underspend for the board to decide), a cancelled one flagged for late payment and a refund decision (1280px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-terms-closed-390.png",
+    "caption": "Raffle terms not approved: proposals wait, no offer button (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-terms-closed-1440.png",
+    "caption": "Raffle terms not approved: proposals wait, no offer button (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-offer-form-390.png",
+    "caption": "Make an offer: amount and who covers the fees (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-raffles-offer-form-1440.png",
+    "caption": "Make an offer: amount and who covers the fees (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "flow-sponsor-proposes.mp4",
+    "caption": "Sponsor proposes a raffle: validation, then sent (MOCK API)"
+  },
+  {
+    "file": "flow-sponsor-proposes.gif",
+    "caption": "Sponsor proposes a raffle: validation, then sent (MOCK API)"
+  },
+  {
+    "file": "flow-sponsor-accepts.mp4",
+    "caption": "Sponsor accepts the raffle terms of an offer and gets the pay button (MOCK API)"
+  },
+  {
+    "file": "flow-sponsor-accepts.gif",
+    "caption": "Sponsor accepts the raffle terms of an offer and gets the pay button (MOCK API)"
+  },
+  {
+    "file": "flow-board-offers.mp4",
+    "caption": "Board makes an offer where the sponsor covers the fees (MOCK API)"
+  },
+  {
+    "file": "flow-board-offers.gif",
+    "caption": "Board makes an offer where the sponsor covers the fees (MOCK API)"
+  }
+]

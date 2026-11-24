@@ -6,7 +6,7 @@
  * resignations, inviting people who asked to join, adding members who paid manually
  * (cash/bank), and CSV export.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Notice } from '@zurichjs/design/islands/Notice';
@@ -56,9 +56,9 @@ const SECTIONS: { key: AdminSection; label: string; href: string }[] = [
 ];
 
 export default function MembershipAdmin({ section = 'memberships' }: { section?: AdminSection }) {
-  const [state, setState] = useState<'loading' | 'signed-out' | 'ready' | 'unreachable'>('loading');
+  const [state, setState] = useState<'loading' | 'signed-out' | 'ready' | 'unreachable' | 'sign-out-failed'>('loading');
 
-  // Only an answer from the site says "signed out"; an outage or a platform error page is its own state.
+  // Signed in or out only on the session route's own answer.
   const checkSession = () => {
     setState('loading');
     void api<{ signedIn?: boolean }>('/api/membership/admin/session').then(({ status, body }) =>
@@ -76,9 +76,15 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
     );
   if (state === 'signed-out') return <SignIn onSignedIn={() => setState('ready')} />;
   const signOut = async () => {
-    await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
-    setState('signed-out');
+    const { status, body } = await api('/api/membership/admin/logout', { method: 'POST', body: '{}' });
+    setState(status === 200 && body.ok === true ? 'signed-out' : 'sign-out-failed');
   };
+  if (state === 'sign-out-failed')
+    return (
+      <LoadFailed onRetry={() => void signOut()} title="We couldn’t sign you out.">
+        The site did not confirm it, so this browser may still be signed in. Try again before you leave it, or close the browser.
+      </LoadFailed>
+    );
   return (
     <div class="flex flex-col gap-8">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -112,9 +118,9 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         setError('');
         const { status, body } = await api('/api/membership/admin/login', { method: 'POST', body: JSON.stringify({ password }) });
         setBusy(false);
-        if (status === 200) return onSignedIn();
-        // A wrong password or the lockout comes back as a sentence; anything else did not reach a verdict.
-        setError(status === 0 ? UNREACHABLE : (body.error ?? 'We couldn’t complete sign-in. Try again in a moment.'));
+        if (status === 200 && body.ok === true) return onSignedIn();
+        // A wrong password or the lockout has the route's sentence; a server error or no answer is no verdict.
+        setError(status === 0 ? UNREACHABLE : (status < 500 && body.error) || 'We couldn’t complete sign-in. Try again in a moment.');
       }}
     >
       <Heading size="subsection">Sign in</Heading>
@@ -140,15 +146,18 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
   const [status, setStatus] = useState<'' | Status>('');
   const [members, setMembers] = useState<AdminMember[] | null>(null);
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  /** The last list stopped at the limit: of how many members in all, when it was not filtered. */
+  /** Set when the shown list stopped at the limit; `total` is every member when that list was unfiltered. */
   const [truncated, setTruncated] = useState<{ total: number | null } | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
   const [panel, setPanel] = useState<'invite' | 'add' | null>(null);
+  const seq = useRef(0);
 
   const load = async (query = q, filter = status) => {
+    const n = ++seq.current;
     const params = new URLSearchParams({ ...(query ? { q: query } : {}), ...(filter ? { status: filter } : {}) });
     const { status: code, body } = await api<{ members: AdminMember[]; truncated?: boolean; counts: Record<string, number> | null }>(`/api/membership/admin/members?${params}`);
+    if (n !== seq.current) return;
     if (code === 401) return onSignedOut();
     if (code !== 200) return setError(body.error ?? 'Could not load the members.');
     setError('');
@@ -341,7 +350,7 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
         </div>
       )}
 
-      {selected && <MemberDetail id={selected} onClose={() => setSelected(null)} onChanged={() => void load()} onSignedOut={onSignedOut} />}
+      {selected && <MemberDetail key={selected} id={selected} onClose={() => setSelected(null)} onChanged={() => void load()} onSignedOut={onSignedOut} />}
     </div>
   );
 }
@@ -351,9 +360,12 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const seq = useRef(0);
 
   const load = async () => {
+    const n = ++seq.current;
     const { status, body } = await api<Detail>(`/api/membership/admin/members/${id}`);
+    if (n !== seq.current) return;
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not load the member.');
     setD(body);

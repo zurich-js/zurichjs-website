@@ -122,7 +122,6 @@ d('membership database', () => {
       expect((await store.search({ q: '%' })).map((m) => m.email)).toEqual(['grace@zeta.ch']);
       expect((await store.search({ status: 'active' })).map((m) => m.email)).toEqual(['ada@example.com']);
       expect((await store.search({})).map((m) => m.email)).toEqual(['grace@zeta.ch', 'ada@example.com']);
-      // Counts cover every row, whatever a search returns.
       const counts = await store.statusCounts();
       expect(Object.values(counts).reduce((n, c) => n + c, 0)).toBe((await store.search({ limit: 1000 })).length);
       expect(counts.active).toBe(1);

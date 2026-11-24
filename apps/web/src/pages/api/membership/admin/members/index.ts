@@ -26,7 +26,7 @@ export const handleAdminMembers = (request: Request, deps: AdminDeps = {}) =>
       const q = url.searchParams.get('q')?.trim().slice(0, 200) || undefined;
       const status = STATUSES.find((s) => s === url.searchParams.get('status'));
       const found = await store.search({ q, status, limit: LIST_LIMIT + 1 });
-      // Totals for the overview, over every member, only when the list is not filtered.
+      // Every member, counted in its own query: a write in between can make it disagree with the list.
       const all = q || status ? null : await store.statusCounts();
       const counts = all && {
         members: STATUSES.filter(isMember).reduce((n, s) => n + (all[s] ?? 0), 0),

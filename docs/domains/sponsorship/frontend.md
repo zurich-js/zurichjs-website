@@ -25,7 +25,7 @@ The sponsorship agreement, approved by the owner on 18th November 2026. Its vers
 
 ## `/admin/sponsors` (noindex)
 
-For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)), with the same handling when the site does not answer. "Needs you" lists what needs the board. The list shows the newest 500 and says so when more match; the counts on the status filter cover every sponsorship.
+For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)), with the same handling when the site does not answer. "Needs you" lists what needs the board. The list shows the newest 500 and says so when more match, worded for the search or filter of the list it shows; the counts on the status filter cover every sponsorship.
 
 **Day to day:**
 

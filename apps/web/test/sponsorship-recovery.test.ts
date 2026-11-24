@@ -297,7 +297,7 @@ describe('sponsorship board actions that fail half-way', () => {
     expect(await store.get(sponsor.id)).toMatchObject({ status: 'active', paidUntil: '2027-11-18' });
     expect((await store.events(sponsor.id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
     expect(w.emails.filter((e) => /payment/i.test(e.subject))).toHaveLength(1);
-    expect((await handleRecordPayment(asAdmin('/x', body), sponsor.id, deps())).status).toBe(200);
+    expect(await answer(await handleRecordPayment(asAdmin('/x', body), sponsor.id, deps()))).toMatchObject({ status: 200, body: { alreadyRecorded: true } });
     expect((await handleRecordPayment(asAdmin('/x', { ...body, amount: 4000 }), sponsor.id, deps())).status).toBe(409);
     expect((await store.events(sponsor.id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
   });

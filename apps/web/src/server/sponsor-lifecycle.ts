@@ -436,7 +436,7 @@ export interface RecordedPayment {
  * sponsorships paid that way or not started yet; card sponsorships are paid in Stripe. Moves paid
  * through on, starts a sponsorship that had not started, emails the sponsor a confirmation.
  */
-export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
+export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<{ sponsor: Sponsor; alreadyRecorded: boolean }> {
   const events = await deps.store.events(s.id);
   const offerStart = events.findLastIndex((e) => e.fromStatus === 'ended' && e.toStatus === 'pending');
   const onDate = events.slice(offerStart + 1).filter((e) => e.payload.paidUntil === p.paidUntil);
@@ -444,7 +444,7 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
   const sameTransfer = (payload: Record<string, unknown>) => (payload.amount ?? null) === p.amount && (payload.reference ?? null) === p.reference;
   if (completed) {
     if (!sameTransfer(completed.payload)) throw new SponsorshipError('A transfer with different details was recorded for this date. Check the payment history.', 409, 'paidUntil');
-    return s;
+    return { sponsor: s, alreadyRecorded: true };
   }
   if (s.status === 'ended' || s.status === 'ending') throw new SponsorshipError('This sponsorship has ended or is ending; record nothing more.', 409, 'paidUntil');
   if (s.stripeSubscriptionId) throw new SponsorshipError('This sponsorship pays by card in Stripe. See the payment there.', 409, 'paidUntil');
@@ -482,7 +482,7 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
     },
   );
   await deliver(s, deps);
-  return updated;
+  return { sponsor: updated, alreadyRecorded: false };
 }
 
 /* ------------------------------------------------------------------ one-time bundles */

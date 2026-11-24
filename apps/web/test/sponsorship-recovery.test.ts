@@ -184,6 +184,51 @@ describe('sponsorship board actions that fail half-way', () => {
     expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
   });
 
+  describe('a payment link Stripe made is never lost', () => {
+    const daily = () => dailyCheck(lifecycleDeps(env, store, 'https://zurichjs.com', { fetch: w.f, slack: w.slack, now: () => NOW, log: () => {} }));
+    const attempts = (id: string) => store.unsettledLinkAttempts({ sponsorId: id, limit: 10 });
+
+    it("Stripe's answer lost: the retry asks again with the same key, gets the same link and switches it off", async () => {
+      const id = await pendingBundle();
+      w.loseNext('POST', /^payment_links$/);
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect(w.activeLinks.size).toBe(1);
+      expect(await attempts(id)).toMatchObject([{ state: 'open', linkId: null }]);
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(200);
+      expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
+      expect(await attempts(id)).toEqual([]);
+    });
+
+    it('saving the link failed: the daily check switches it off, also for a sponsorship nobody retried', async () => {
+      const id = await pendingBundle();
+      fs.failNext('linkStripeIf');
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect(w.activeLinks.size).toBe(1);
+      expect(await daily()).toMatchObject({ linksClosed: 1 });
+      expect(w.activeLinks.size).toBe(0);
+      expect(await daily()).toMatchObject({ linksClosed: 0 });
+    });
+
+    it('the losing request of two could not switch its link off: the daily check does, and keeps the saved one', async () => {
+      const id = await pendingBundle();
+      w.failNext('POST', /^payment_links\/plink_/);
+      const replies = await Promise.all([1, 2].map(() => handlePaymentLink(asAdmin('/x', {}), id, deps())));
+      expect(replies.map((r) => r.status).sort()).toEqual([200, 502]);
+      expect(w.activeLinks.size).toBe(2);
+      expect(await daily()).toMatchObject({ linksClosed: 1 });
+      expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
+    });
+
+    it('Stripe refused the request outright: nothing to switch off, the attempt is settled', async () => {
+      const id = await pendingBundle();
+      w.failNext('POST', /^payment_links$/, 2, 400);
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      expect(await daily()).toMatchObject({ linksClosed: 1 });
+      expect(await attempts(id)).toEqual([]);
+      expect(w.activeLinks.size).toBe(0);
+    });
+  });
+
   it('a payment link is refused for a bundle with a meetup that is over', async () => {
     const id = await pendingBundle([{ id: 'event-nov', title: 'ZurichJS Meetup November', date: '2026-11-11' }, MEETUPS[0]!]);
     expect(await answer(await handlePaymentLink(asAdmin('/x', {}), id, deps()))).toMatchObject({ status: 409, body: { error: expect.stringContaining('already over') } });

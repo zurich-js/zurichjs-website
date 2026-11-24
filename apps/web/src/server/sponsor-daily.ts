@@ -8,6 +8,8 @@
  *   - the board is reminded 30 and 7 days before, and on the day, a sponsorship paid by bank
  *     transfer runs out (nothing changes by itself: a person records the payment or agrees the end)
  *   - an ended sponsorship that still points at Stripe (a close that failed) is closed again
+ *   - a payment link a request left behind (its answer or the next write lost, or a second
+ *     request saved its own) is switched off, whatever the sponsorship's status
  *
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
  */
@@ -15,16 +17,17 @@ import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/spons
 import { lastDay, longDate } from './dates.ts';
 import { adminUrl, emailSponsor, note, who, zurichDay } from './sponsor.ts';
 import { closeStripe, leftInStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { recoverPaymentLinks } from './sponsor-stripe.ts';
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
 
 const daysBetween = (from: string, to: string) => Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
 
-export async function dailyCheck(deps: LifecycleDeps): Promise<{ completed: number; ended: number; closed: number; reminded: number; stripeClosed: number }> {
+export async function dailyCheck(deps: LifecycleDeps): Promise<{ completed: number; ended: number; closed: number; reminded: number; stripeClosed: number; linksClosed: number }> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
-  const out = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0 };
+  const out = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, linksClosed: 0 };
 
   /** A Stripe failure here is retried tomorrow (the ids are kept), and never stops the other sponsors. */
   const closeLater = (s: Sponsor) =>
@@ -75,5 +78,6 @@ export async function dailyCheck(deps: LifecycleDeps): Promise<{ completed: numb
       }
     }
   }
+  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log })).closed;
   return out;
 }

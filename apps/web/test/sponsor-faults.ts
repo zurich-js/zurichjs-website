@@ -4,6 +4,9 @@
  * and an in-memory store whose next n calls of one method throw (a database or network error).
  * Resend is modelled as documented (resend.com/docs/dashboard/emails/idempotency-keys): the same
  * key with the same body replays the first answer and sends nothing; a different body is a 409.
+ * Stripe's idempotency keys the same way (docs.stripe.com/api/idempotent_requests): a POST with a
+ * key seen before replays its first answer (a different body is a 400). `loseNext` makes Stripe do
+ * the call and then lose the answer (a timeout after Stripe acted).
  * From the sponsorship audit's harness (24th November 2026).
  */
 import { createHmac } from 'node:crypto';
@@ -44,6 +47,8 @@ export function world() {
   const activeLinks = new Set<string>();
   const openSessions = new Set<string>();
   const failures: { method: string; re: RegExp; n: number; status: number }[] = [];
+  const losses: { method: string; re: RegExp; n: number }[] = [];
+  const stripeIdem = new Map<string, { body: string; status: number; text: string }>();
   let n = 0;
 
   const f = (async (url: string, init: RequestInit = {}) => {
@@ -71,6 +76,23 @@ export function world() {
       failure.n--;
       return new Response(JSON.stringify({ error: { message: 'Injected failure (api_connection_error)' } }), { status: failure.status });
     }
+    const key = method === 'POST' ? ((init.headers as Record<string, string> | undefined)?.['idempotency-key'] ?? null) : null;
+    const seen = key ? stripeIdem.get(key) : undefined;
+    if (seen)
+      return seen.body === String(init.body ?? '')
+        ? new Response(seen.text, { status: seen.status, headers: { 'idempotent-replayed': 'true' } })
+        : new Response(JSON.stringify({ error: { message: 'Keys for idempotent requests can only be used with the same parameters' } }), { status: 400 });
+    const res = stripe(method, path, params);
+    if (key) stripeIdem.set(key, { body: String(init.body ?? ''), status: res.status, text: await res.clone().text() });
+    const loss = losses.find((x) => x.n > 0 && x.method === method && x.re.test(path));
+    if (loss) {
+      loss.n--;
+      throw new Error('Injected failure: the answer was lost after Stripe acted (timeout)');
+    }
+    return res;
+  }) as unknown as typeof fetch;
+
+  function stripe(method: string, path: string, params: URLSearchParams): Response {
     const ok = (b: unknown) => new Response(JSON.stringify(b));
     const subscription = (id: string) => ({
       id,
@@ -113,8 +135,8 @@ export function world() {
       return ok(subscription(id));
     }
     if (path === 'subscription_schedules') return ok({ id: 'sub_sched_1', phases: [] });
-    throw new Error(`unexpected ${method} ${url}`);
-  }) as unknown as typeof fetch;
+    throw new Error(`unexpected ${method} ${path}`);
+  }
 
   const slackPosts: string[] = [];
   const slack: MembershipSlack = {
@@ -141,6 +163,7 @@ export function world() {
     activeLinks,
     openSessions,
     failNext: (method: string, re: RegExp, count = 1, status = 500) => failures.push({ method, re, n: count, status }),
+    loseNext: (method: string, re: RegExp, count = 1) => losses.push({ method, re, n: count }),
   };
 }
 

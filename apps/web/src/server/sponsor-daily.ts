@@ -85,7 +85,9 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
     }
   };
 
+  const room = () => !deps.deadline || deps.deadline.remaining() > 16_000;
   for (const s of all) {
+    if (!room()) break;
     if (s.status === 'ended') {
       if (leftInStripe(s) && (await closeLater(s))) out.stripeClosed++;
     } else if (s.cycle === 'once' && s.status === 'active' && s.paidUntil && s.paidUntil <= today) {
@@ -108,7 +110,7 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
       ]);
     }
   }
-  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: () => !deps.deadline || deps.deadline.remaining() > 16_000 })).closed;
-  out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
+  if (room()) out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
+  if (room()) out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: room })).closed;
   return out;
 }

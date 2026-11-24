@@ -142,6 +142,7 @@ const attemptOf = (r: Row): LinkAttempt => ({
   linkId: (r.link_id as string | null) ?? null,
   state: r.state as LinkAttempt['state'],
   createdAt: iso(r.created_at)!,
+  ageMs: Number(r.age_ms),
 });
 
 export function postgresStore(db: Queryable): SponsorStore {
@@ -436,8 +437,9 @@ export function postgresStore(db: Queryable): SponsorStore {
     async queueNotices(sponsorId, list, event) {
       if (!event) return list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0;
       const rows = await q(
-        `with e as (insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, $3, $4, $5, $6::jsonb) returning sponsor_id),
-              n as (${INSERT_NOTICES('e.sponsor_id', '$2', 'e, ')} returning id)
+        `with n as (${INSERT_NOTICES('$1::uuid', '$2')} returning id),
+              e as (insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload)
+                    select $1, $3, $4, $5, $6::jsonb where exists (select 1 from n) or $2::jsonb = '[]'::jsonb)
          select (select count(*) from n)::int as added`,
         [sponsorId, noticeRows(list), event.type, event.actor.kind, event.actor.id, JSON.stringify(event.payload ?? {})],
       );
@@ -470,7 +472,7 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
       const [r] = await q(
         `insert into sponsor_payment_link_attempts (sponsor_id, request, key)
-        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *`,
+        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms`,
         [sponsorId, request, key],
       );
       if (!r) throw new TransitionError('This sponsorship has ended.', 'conflict');
@@ -495,7 +497,7 @@ export function postgresStore(db: Queryable): SponsorStore {
         ? []
         : (
             await q(
-              `select * from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
+              `select *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
            order by updated_at, created_at, key limit $2`,
               [sponsorId ?? null, Math.min(Math.max(limit, 1), 1000)],
             )

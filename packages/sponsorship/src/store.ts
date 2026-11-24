@@ -109,11 +109,8 @@ export interface SponsorStore {
   /** Newest first. */
   documents(sponsorId: string): Promise<SponsorDocument[]>;
 
-  /**
-   * Payment links (sponsor_payment_link_attempts): recorded before Stripe is asked, so a link
-   * Stripe made is switched off even when its answer or the next write was lost.
-   */
-  beginLinkAttempt(sponsorId: string, request: string): Promise<LinkAttempt>;
+  /** Persist the request before its first POST. */
+  beginLinkAttempt(sponsorId: string, request: string, key?: string): Promise<LinkAttempt>;
   /** Stripe answered with this link. It becomes the sponsor's with `linkStripeIf(…, { attempt: key }, …)`. */
   linkAttemptCreated(key: string, linkId: string): Promise<void>;
   /** Marks a link that was not kept for switching off (`closing`). False once it is kept or closed. */
@@ -367,9 +364,9 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .filter((d) => d.sponsorId === sid)
         .reverse()
         .map((d) => ({ ...d })),
-    async beginLinkAttempt(sid, request) {
-      must(sid);
-      const a: LinkAttempt = { key: crypto.randomUUID(), sponsorId: sid, request, linkId: null, state: 'open', createdAt: now() };
+    async beginLinkAttempt(sid, request, key = crypto.randomUUID()) {
+      if (must(sid).status === 'ended') throw conflict();
+      const a: LinkAttempt = { key, sponsorId: sid, request, linkId: null, state: 'open', createdAt: now() };
       linkAttempts.push(a);
       return { ...a };
     },

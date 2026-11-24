@@ -421,9 +421,14 @@ export function postgresStore(db: Queryable): SponsorStore {
     documents: async (sponsorId) =>
       UUID.test(sponsorId) ? (await q('select * from sponsor_documents where sponsor_id = $1 order by uploaded_at desc', [sponsorId])).map((r) => camel<SponsorDocument>(r)) : [],
 
-    async beginLinkAttempt(sponsorId, request) {
+    async beginLinkAttempt(sponsorId, request, key = crypto.randomUUID()) {
       if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
-      const r = (await q('insert into sponsor_payment_link_attempts (sponsor_id, request) values ($1, $2) returning *', [sponsorId, request]))[0]!;
+      const [r] = await q(
+        `insert into sponsor_payment_link_attempts (sponsor_id, request, key)
+        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *`,
+        [sponsorId, request, key],
+      );
+      if (!r) throw new TransitionError('This sponsorship has ended.', 'conflict');
       return attemptOf(r);
     },
     async linkAttemptCreated(key, linkId) {
@@ -446,7 +451,7 @@ export function postgresStore(db: Queryable): SponsorStore {
         : (
             await q(
               `select * from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
-           order by created_at, key limit $2`,
+           order by updated_at, created_at, key limit $2`,
               [sponsorId ?? null, Math.min(Math.max(limit, 1), 1000)],
             )
           ).map(attemptOf),

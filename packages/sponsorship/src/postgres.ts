@@ -382,18 +382,21 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!rows[0]) throw new NotFound('contact');
     },
 
-    async acceptAgreement(sponsorId, a, actor) {
-      const rows = await audited(
-        `insert into sponsor_agreements (sponsor_id, version, signer_name, signer_title, signer_email, context, summary)
-         values ($1, $2, $3, $4, $5, $6, $7) returning *, sponsor_id as sponsor_ref`,
-        [sponsorId, a.version, a.signerName, a.signerTitle, normaliseEmail(a.signerEmail), a.context, a.summary],
-        'agreement_accepted',
-        actor,
-        { version: a.version, context: a.context },
-      );
-      const { sponsorRef: _, ...ag } = camel<Agreement & { sponsorRef: string }>(rows[0]!);
-      return ag;
-    },
+    acceptAgreement: (sponsorId, a, actor, notices) =>
+      tx(async (t) => {
+        const rows = await auditedOn(t)(
+          `insert into sponsor_agreements (sponsor_id, version, signer_name, signer_title, signer_email, context, summary)
+           values ($1, $2, $3, $4, $5, $6, $7) returning *, sponsor_id as sponsor_ref`,
+          [sponsorId, a.version, a.signerName, a.signerTitle, normaliseEmail(a.signerEmail), a.context, a.summary],
+          'agreement_accepted',
+          actor,
+          { version: a.version, context: a.context },
+        );
+        const { sponsorRef: _, ...ag } = camel<Agreement & { sponsorRef: string }>(rows[0]!);
+        const owed = notices?.(ag) ?? [];
+        if (owed.length) await t(INSERT_NOTICES('$1::uuid', '$2'), [sponsorId, noticeRows(owed)]);
+        return ag;
+      }),
     agreements: async (sponsorId) => (await q('select * from sponsor_agreements where sponsor_id = $1 order by accepted_at desc', [sponsorId])).map((r) => camel<Agreement>(r)),
 
     async addLogo(sponsorId, l, actor) {
@@ -430,7 +433,16 @@ export function postgresStore(db: Queryable): SponsorStore {
     documents: async (sponsorId) =>
       UUID.test(sponsorId) ? (await q('select * from sponsor_documents where sponsor_id = $1 order by uploaded_at desc', [sponsorId])).map((r) => camel<SponsorDocument>(r)) : [],
 
-    queueNotices: async (sponsorId, list) => (list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0),
+    async queueNotices(sponsorId, list, event) {
+      if (!event) return list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0;
+      const rows = await q(
+        `with e as (insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, $3, $4, $5, $6::jsonb) returning sponsor_id),
+              n as (${INSERT_NOTICES('e.sponsor_id', '$2', 'e, ')} returning id)
+         select (select count(*) from n)::int as added`,
+        [sponsorId, noticeRows(list), event.type, event.actor.kind, event.actor.id, JSON.stringify(event.payload ?? {})],
+      );
+      return Number(rows[0]?.added ?? 0);
+    },
     claimNotices: async ({ sponsorId, limit }) =>
       (
         await q(
@@ -496,5 +508,55 @@ export function postgresStore(db: Queryable): SponsorStore {
         JSON.stringify(payload),
       ]);
     },
+    paidInvoice: (sponsorId, p, actor, { clearOverdue }) =>
+      tx(async (t) => {
+        // The sponsor row is locked first: overdueInvoice for the same sponsor waits, then sees this payment.
+        const s = (await t('select * from sponsors where id = $1 for update', [sponsorId]))[0];
+        if (!s) throw new NotFound('sponsor');
+        await t(`insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, 'invoice_paid', $2, $3, $4::jsonb)`, [
+          sponsorId,
+          actor.kind,
+          actor.id,
+          JSON.stringify({ invoice: p.invoice, ...(p.created ? { created: p.created } : {}) }),
+        ]);
+        if (!clearOverdue || s.status !== 'past_due') return sponsorOf(s);
+        const rows = await auditedOn(t)(
+          `update sponsors set status = 'active' where id = $1 and status = 'past_due' returning *, id as sponsor_ref`,
+          [sponsorId],
+          'status_changed',
+          actor,
+          { invoice: p.invoice },
+          "'past_due'",
+          "'active'",
+        );
+        return sponsorOf(rows[0]!);
+      }),
+    overdueInvoice: (sponsorId, p, actor, notices) =>
+      tx(async (t) => {
+        // Locked first, as in paidInvoice, so a payment for this invoice is either seen here or comes after.
+        const row = (await t('select * from sponsors where id = $1 for update', [sponsorId]))[0];
+        if (!row) throw new NotFound('sponsor');
+        const s = sponsorOf(row);
+        const paid = await t(
+          `select 1 from sponsor_events where sponsor_id = $1 and payload->>'invoice' = $2
+             and (type = 'invoice_paid' or (type = 'status_changed' and to_status = 'active')) limit 1`,
+          [sponsorId, p.invoice],
+        );
+        if (paid.length) return { sponsor: s, outcome: 'paid' as const };
+        if (p.subscriptionId && s.stripeSubscriptionId && s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: s, outcome: 'stale' as const };
+        if (!['active', 'past_due', 'ending'].includes(s.status)) return { sponsor: s, outcome: 'not_running' as const };
+        if (notices.length) await t(INSERT_NOTICES('$1::uuid', '$2'), [sponsorId, noticeRows(notices)]);
+        if (s.status !== 'active') return { sponsor: s, outcome: 'overdue' as const };
+        const rows = await auditedOn(t)(
+          `update sponsors set status = 'past_due' where id = $1 and status = 'active' returning *, id as sponsor_ref`,
+          [sponsorId],
+          'status_changed',
+          actor,
+          { invoice: p.invoice, ...p.payload },
+          "'active'",
+          "'past_due'",
+        );
+        return { sponsor: sponsorOf(rows[0]!), outcome: 'overdue' as const };
+      }),
   };
 }

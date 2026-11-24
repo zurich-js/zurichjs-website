@@ -30,6 +30,7 @@ import {
   type Contact,
   type Cycle,
   type EndedReason,
+  type NewNotice,
   type Sponsor,
   type SponsorDocument,
   type SponsorMeetup,
@@ -106,13 +107,17 @@ const nowIso = (deps: LifecycleDeps) => (deps.now?.() ?? new Date()).toISOString
 const summary = (s: Pick<Sponsor, 'tier' | 'cycle' | 'paymentMode'>) =>
   `${tierInfo(s.tier).name}, ${cycleInfo(s.cycle).label.toLowerCase()}, ${{ card: 'by card', manual: 'by bank transfer' }[s.paymentMode]}`;
 
-/** Records the acceptance (start or change). A contract on file stands in for the start. */
-async function sign(s: Sponsor, signer: Signer, context: 'start' | 'change', actor: Actor, deps: LifecycleDeps, what: string) {
+/**
+ * Records the acceptance (start or change). A contract on file stands in for the start. With
+ * `notices`, what the signature owes is written in the same step (the signed copy of a start).
+ */
+async function sign(s: Sponsor, signer: Signer, context: 'start' | 'change', actor: Actor, deps: LifecycleDeps, what: string, notices?: (saved: Agreement) => NewNotice[]) {
   if (signer.kind === 'contract' && context === 'start') return null;
   return deps.store.acceptAgreement(
     s.id,
     { version: AGREEMENT.version, signerName: signer.name, signerTitle: signer.title, signerEmail: signer.email, context, summary: what.slice(0, 300) },
     actor,
+    notices,
   );
 }
 
@@ -173,10 +178,9 @@ export async function startSponsorship(s: Sponsor, signer: Signer, actor: Actor,
   const contacts = await deps.store.contacts(s.id);
   const sponsor = s.paymentMode === 'card' || switching ? s : await deps.store.update(s.id, { paymentMode: 'card' }, actor);
   const what = s.cycle === 'once' ? `${tierInfo(s.tier).name}, ${bundleLabel(s.tier, meetups.length, s.pricePerMeetup)}, by card` : summary({ ...sponsor, paymentMode: 'card' });
-  const agreement = signer.kind === 'full' ? await sign(sponsor, signer, 'start', actor, deps, what) : null;
-  // The signed copy is owed once the agreement is saved, whatever happens with Stripe after it.
-  if (agreement)
-    await deps.store.queueNotices(sponsor.id, [
+  // The signed copy is written with the agreement, so it is owed whatever happens with Stripe after it.
+  if (signer.kind === 'full')
+    await sign(sponsor, signer, 'start', actor, deps, what, (agreement) => [
       emailNotice(`sponsor-agreement:${agreement.id}`, 'sponsor-agreement', {
         signerName: signer.name,
         signerTitle: signer.title,
@@ -322,9 +326,6 @@ export async function undoEnd(s: Sponsor, actor: Actor, deps: LifecycleDeps): Pr
   return back;
 }
 
-/** Stripe pages or a subscription an ended sponsorship still points at: a close that failed half-way. */
-export const leftInStripe = (s: Sponsor) => !!(s.stripeSubscriptionId || s.checkoutSessionId || s.paymentLinkId);
-
 /**
  * After any end: Stripe stops and nothing points at it any more (a later restart starts clean).
  * Each id is forgotten only once Stripe confirms, so after a failure it is safe to run again.
@@ -343,16 +344,19 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
  * emails and posts as the first attempt would have.
  */
 export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'terminated' | 'withdrawn'>, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
-  // The email and note are written with the end, so a request that fails at Stripe still owes them:
-  // they are sent once Stripe is closed, by this request, its retry or the daily check.
+  // The email and note are written with the end, so a request that fails at Stripe still owes them.
+  // They say Stripe stopped ("Nothing more is charged"), so they wait until it has: they are sent
+  // by this request, its retry or the daily check, once nothing is left open in Stripe.
   const key = `sponsor-ended:${s.id}:${reason}`;
+  const afterStripe = { after: 'stripe-closed' } as const;
   const notices = [
-    ...(reason === 'terminated' ? [emailNotice(key, 'sponsor-ended', { reason })] : []),
+    ...(reason === 'terminated' ? [emailNotice(key, 'sponsor-ended', { reason }, undefined, afterStripe)] : []),
     slackNotice(
       `${key}:slack`,
       reason === 'withdrawn'
         ? `:no_entry: Invitation to ${who(s)} withdrawn.`
         : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. Mark them as a past sponsor in Sanity.`,
+      afterStripe,
     ),
   ];
   let ended = s;
@@ -450,16 +454,25 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
   let updated = resume ? s : await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
-  await deps.store.log(s.id, 'payment_recorded', actor, { paidUntil: p.paidUntil, ...(p.amount ? { amount: p.amount } : {}), ...(p.reference ? { reference: p.reference } : {}) });
   const paidThrough = longDate(lastDay(p.paidUntil));
   const key = `sponsor-payment-recorded:${s.id}:${p.paidUntil}`;
-  await deps.store.queueNotices(s.id, [
-    emailNotice(key, 'sponsor-payment-recorded', { amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }, 'billing'),
-    slackNotice(
-      `${key}:slack`,
-      `:moneybag: Payment recorded for ${who(updated)}${p.amount ? `: ${chf(p.amount)}` : ''}, paid through ${paidThrough}. They were emailed a confirmation.`,
-    ),
-  ]);
+  // The receipt and the note are written with the mark that the payment is recorded: a failure
+  // before or in this write is resumed by the same form again, and nothing after it can lose them.
+  await deps.store.queueNotices(
+    s.id,
+    [
+      emailNotice(key, 'sponsor-payment-recorded', { amount: p.amount ? chf(p.amount) : null, paidThrough, reference: p.reference }, 'billing'),
+      slackNotice(
+        `${key}:slack`,
+        `:moneybag: Payment recorded for ${who(updated)}${p.amount ? `: ${chf(p.amount)}` : ''}, paid through ${paidThrough}. They were emailed a confirmation.`,
+      ),
+    ],
+    {
+      type: 'payment_recorded',
+      actor,
+      payload: { paidUntil: p.paidUntil, ...(p.amount ? { amount: p.amount } : {}), ...(p.reference ? { reference: p.reference } : {}) },
+    },
+  );
   await deliver(s, deps);
   return updated;
 }

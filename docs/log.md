@@ -2,6 +2,7 @@
 
 ## 2026-11-24
 
+- **Update**: a signed copy, a bank-transfer receipt and an overdue payment's email and note are saved in the same write as what owes them; the board's end says Stripe stopped only once it has; a delivered notice the database could not record is not sent again for five minutes (at least once, never claimed as exactly once); a failure for an old subscription, or one handled while the same invoice is paid, no longer marks a paid sponsor overdue; sponsoring again gets its own welcome; a partial dispute keeps the disputed amount apart from the card payment ([Sponsorship](/domains/sponsorship/overview.md)).
 - **Update**: a payment link is recorded before Stripe is asked (with Stripe's idempotency key), so a link whose answer or save was lost, or that lost to a second request, is switched off by the retry or the daily check ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 - **Update**: every sponsorship email and Slack note is a notice written with the change that owes it and sent by the request or, failing that, the daily check; first payments, retries and out-of-order Stripe events no longer lose or repeat them. Bank-transfer reminders are caught up once when a day is missed. Sponsoring again needs a new full signature and validates before changing anything; a terminated sponsorship needs the board. Refunds and disputes are recorded and flagged without changing the sponsorship ([Sponsorship](/domains/sponsorship/overview.md), [Stripe](/systems/stripe.md)).
 

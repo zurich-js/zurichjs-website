@@ -25,7 +25,7 @@
  * a sponsorship that has ended, or a second payment for a one-time one, changes nothing and is
  * flagged in Slack.
  */
-import { TransitionError, fromLookupKey, isRecurring, label, type NewNotice, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { TransitionError, fromLookupKey, isRecurring, label, paymentEvidence, type NewNotice, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { longDate } from './dates.ts';
 import { fail, json, type Env } from './http.ts';
@@ -131,14 +131,23 @@ async function moveTo(
 
 const isStale = (s: Sponsor, subscriptionId: string) => !!s.stripeSubscriptionId && s.stripeSubscriptionId !== subscriptionId;
 
-/** The activation a payment made (its invoice or Checkout session), if this sponsorship has one. */
+/**
+ * The activation of the sponsorship as it is offered now (its invoice or Checkout session): the
+ * last pending to active, and none when it was started again after that (sponsoring again).
+ */
 async function activation(store: SponsorStore, sponsorId: string) {
-  return (await store.events(sponsorId)).find((e) => e.type === 'status_changed' && e.fromStatus === 'pending' && e.toStatus === 'active');
+  const events = await store.events(sponsorId);
+  const i = events.findLastIndex((e) => e.type === 'status_changed' && e.fromStatus === 'pending' && e.toStatus === 'active');
+  const restarted = events.findLastIndex((e) => e.type === 'status_changed' && e.fromStatus === 'ended' && e.toStatus === 'pending');
+  return i > restarted ? events[i] : undefined;
 }
 
-/** This invoice was paid already (a failure event that arrives after the payment changes nothing). */
+/**
+ * This invoice was paid already: a failure that arrives after the payment changes nothing. A quick
+ * look before the change; overdueInvoice decides again in the same step as the change.
+ */
 async function invoicePaid(store: SponsorStore, sponsorId: string, invoiceId: string) {
-  return (await store.events(sponsorId)).some((e) => (e.type === 'invoice_paid' || e.type === 'status_changed') && e.payload.invoice === invoiceId);
+  return (await store.events(sponsorId)).some((e) => paymentEvidence(e, invoiceId));
 }
 
 /** A payment Stripe created after this event (an older "past due" arriving last changes nothing). */
@@ -147,17 +156,21 @@ async function paidSince(store: SponsorStore, sponsorId: string, created: number
   return (await store.events(sponsorId)).some((e) => e.type === 'invoice_paid' && typeof e.payload.created === 'number' && e.payload.created > created);
 }
 
-/** What a first payment owes: the welcome to every confirmed contact, one Slack note with what to deliver. */
-async function welcomeNotices(s: Sponsor, term: string | null, nextPayment: string | null, deps: NotifyDeps): Promise<NewNotice[]> {
+/**
+ * What a first payment owes: the welcome to every confirmed contact, one Slack note with what to
+ * deliver. Keyed by the payment that activates it (`ref`: its invoice or Checkout session), so each
+ * term after sponsoring again has its own welcome, and the same payment twice has one.
+ */
+async function welcomeNotices(s: Sponsor, ref: string, term: string | null, nextPayment: string | null, deps: NotifyDeps): Promise<NewNotice[]> {
   const meetups = s.cycle === 'once' ? await deps.store.meetups(s.id) : [];
   const needsLogo = !(await deps.store.logos(s.id)).length;
   const deliver = tierBenefits(s.tier)
     .map((b) => `• ${b}`)
     .join('\n');
   return [
-    emailNotice(`sponsor-welcome:${s.id}`, 'sponsor-welcome', { term, nextPayment, needsLogo }),
+    emailNotice(`sponsor-welcome:${s.id}:${ref}`, 'sponsor-welcome', { term, nextPayment, needsLogo }),
     slackNotice(
-      `sponsor-welcome:${s.id}:slack`,
+      `sponsor-welcome:${s.id}:${ref}:slack`,
       `:tada: New sponsor: ${who(s)}, ${sponsorFee(s, meetups)}${meetups.length ? ` (${meetups.map((m) => slackText(`${m.title}, ${longDate(m.date)}`)).join('; ')})` : ''}.${needsLogo ? ' No logo yet.' : ''} Add them to Sanity as a current sponsor.${deliver ? `\n*To deliver:*\n${deliver}` : ''}\n${adminUrl(deps.origin, s.id)}`,
     ),
   ];
@@ -175,7 +188,7 @@ async function startOnce(s: Sponsor, paid: { session?: string; invoice?: string 
   if (s.status === 'pending') {
     const meetups = await deps.store.meetups(s.id);
     const m = await deps.store.update(s.id, { startedAt: today, paidUntil: afterLastMeetup(meetups) }, { kind: 'stripe', id: eventId });
-    const r = await moveTo(deps.store, m, 'active', eventId, { payload: paid, notices: await welcomeNotices(m, null, null, deps) });
+    const r = await moveTo(deps.store, m, 'active', eventId, { payload: paid, notices: await welcomeNotices(m, ref, null, null, deps) });
     s = r.sponsor;
   } else if (paid.session) {
     const first = (await activation(deps.store, s.id))?.payload ?? {};
@@ -264,12 +277,14 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
           break;
         }
         if (isStale(s, src.subscription)) break;
-        // Recorded first, so a failure or "past due" for this payment that arrives later changes nothing.
-        await store.log(s.id, 'invoice_paid', actor, { invoice: inv.id, ...(event.created ? { created: event.created } : {}) });
         // Only a new term moves paid through on: a proration for an upgrade is not one. Paying it
         // still clears "payment overdue" once Stripe has the subscription paid up.
         const newTerm = !inv.billing_reason || inv.billing_reason === 'subscription_create' || inv.billing_reason === 'subscription_cycle';
         const period = termOf(inv);
+        // Recorded first, and a new term clears "payment overdue" in the same step: a failure for this
+        // invoice handled at the same moment is decided wholly before or after it, and one arriving
+        // later changes nothing.
+        s = await store.paidInvoice(s.id, { invoice: inv.id, ...(event.created ? { created: event.created } : {}) }, actor, { clearOverdue: newTerm && !!period });
         if (!period || !newTerm) {
           if (s.status === 'past_due' && (await subscriptionPaidUp(src.subscription, stripeDeps))) await moveTo(store, s, 'active', event.id, { payload: { invoice: inv.id } });
           break;
@@ -294,10 +309,9 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if (s.status === 'pending')
           await moveTo(store, s, 'active', event.id, {
             payload: { invoice: inv.id },
-            notices: await welcomeNotices(s, term, isRecurring(s.cycle) ? longDate(paidUntil) : null, notify),
+            notices: await welcomeNotices(s, inv.id, term, isRecurring(s.cycle) ? longDate(paidUntil) : null, notify),
           });
         else if (!first) {
-          if (s.status === 'past_due') await moveTo(store, s, 'active', event.id, { payload: { invoice: inv.id } });
           await store.queueNotices(s.id, [slackNotice(`sponsor-paid:${inv.id}`, `:repeat: Paid: ${who(s)}, ${term}.`)]);
         }
         break;
@@ -308,17 +322,20 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const inv = o as unknown as Invoice;
         const src = sourceOf(inv);
         if (!src || src.metadata.source !== SPONSOR_SOURCE) break;
-        let s = await sponsorOf(store, { sponsorId: src.metadata.sponsorId, subscriptionId: src.subscription });
+        const s = await sponsorOf(store, { sponsorId: src.metadata.sponsorId, subscriptionId: src.subscription });
         // Someone still in Checkout fixes the card there; only running sponsorships concern us.
         if (!s || !(s.status === 'active' || s.status === 'past_due' || s.status === 'ending')) break;
+        // A failure for a subscription this sponsorship no longer holds (it was started again since).
+        if (src.subscription && isStale(s, src.subscription)) break;
         touched = s.id;
         // Stripe does not promise the order of events: a failed attempt reported after the payment.
         if (await invoicePaid(store, s.id, inv.id)) break;
-        if (s.status === 'active') s = (await moveTo(store, s, 'past_due', event.id, { payload: { invoice: inv.id, event: event.type } })).sponsor;
         const problem = event.type === 'invoice.payment_action_required' ? 'confirm' : 'declined';
         const nextAttempt = inv.next_payment_attempt ? longDate(zurichDayOf(inv.next_payment_attempt)) : null;
         const key = `sponsor-payment:${inv.id}:${inv.attempt_count ?? 0}:${problem}`;
-        await store.queueNotices(s.id, [
+        // Decided again in one step with the change (a payment for this invoice handled at the same
+        // moment wins), and the email and note are written with "payment overdue".
+        await store.overdueInvoice(s.id, { invoice: inv.id, subscriptionId: src.subscription, payload: { event: event.type } }, actor, [
           emailNotice(key, 'sponsor-payment-problem', { problem, payUrl: safeStripeUrl(inv.hosted_invoice_url), nextAttempt }, 'billing'),
           slackNotice(
             `${key}:slack`,
@@ -394,10 +411,11 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if (!s || !charge) break;
         touched = s.id;
         const dispute = refund ? null : (o as unknown as Dispute);
+        // `amount` is the card payment (charge); a dispute's own amount, which can be less, is `disputed`.
         await store.log(s.id, refund ? 'charge_refunded' : 'charge_disputed', actor, {
           charge: charge.id,
           amount: charge.amount ?? null,
-          ...(refund ? { refunded: charge.amount_refunded ?? null } : { dispute: dispute!.id, reason: dispute!.reason ?? null }),
+          ...(refund ? { refunded: charge.amount_refunded ?? null } : { dispute: dispute!.id, disputed: dispute!.amount ?? null, reason: dispute!.reason ?? null }),
         });
         const still = `Nothing changed on the site: the sponsorship is ${label(s.status)}. End or change it by hand if it should not continue.`;
         await store.queueNotices(s.id, [

@@ -332,6 +332,9 @@ export async function recoverPaymentLinks(
   return out;
 }
 
+/** Stripe pages or a subscription a sponsorship still points at (after an end: a close that failed half-way). */
+export const leftInStripe = (s: Sponsor) => !!(s.stripeSubscriptionId || s.checkoutSessionId || s.paymentLinkId);
+
 /**
  * Switches off the sponsor's payment link (paid, replaced or withdrawn). The id is forgotten only
  * once Stripe confirms; a failure throws and keeps it, so a retry switches it off.

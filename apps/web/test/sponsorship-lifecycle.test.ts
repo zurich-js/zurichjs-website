@@ -12,7 +12,8 @@ import { handleStart } from '../src/pages/api/sponsorship/start.ts';
 import { handleSponsorMe } from '../src/pages/api/sponsorship/me.ts';
 import { handleStripeWebhook } from '../src/pages/api/stripe/webhook.ts';
 import { dailyCheck } from '../src/server/sponsor-daily.ts';
-import { boardEnd, endSponsorship } from '../src/server/sponsor-lifecycle.ts';
+import { boardEnd, endSponsorship, recordPayment } from '../src/server/sponsor-lifecycle.ts';
+import { sendNotices, slackNotice } from '../src/server/sponsor-notices.ts';
 import { lifecycleDeps } from '../src/server/sponsor-route.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
 import { MEETUPS, NOW, env, faulty, newSponsor, post, stripeEvent, unix, world } from './sponsor-faults.ts';
@@ -259,6 +260,152 @@ describe('sponsorship lifecycle', () => {
       expect(notes(/5 days left/)).toHaveLength(1);
       expect(await dailyCheck(lifecycle())).toMatchObject({ reminded: 0 });
       expect(notes(/:calendar:/)).toHaveLength(1);
+    });
+  });
+
+  describe('what a change owes is saved with it (independent review, 24th November 2026)', () => {
+    it('termination: neither the email nor the note says Stripe stopped until it has', async () => {
+      const id = await running();
+      w.failNext('DELETE', /^subscriptions\/sub_acme$/, 2);
+      await expect(boardEnd((await store.get(id))!, 'terminated', BOARD, lifecycle())).rejects.toThrow();
+      expect(await dailyCheck(lifecycle())).toMatchObject({ stripeClosed: 0, notices: { sent: 0, waiting: 2 } });
+      expect(w.live.has('sub_acme')).toBe(true);
+      expect(notes(/Stripe stopped/)).toHaveLength(0);
+      expect(subjects().filter((t) => /has ended/.test(t))).toHaveLength(0);
+      expect(await dailyCheck(lifecycle())).toMatchObject({ stripeClosed: 1, notices: { sent: 2, waiting: 0 } });
+      expect(notes(/Stripe stopped/)).toHaveLength(1);
+      expect(subjects().filter((t) => /has ended/.test(t))).toHaveLength(1);
+    });
+
+    it('a bank transfer: when the write that marks it recorded fails, the same form again records it once and sends one receipt', async () => {
+      const id = await sponsor({ paymentMode: 'manual' });
+      const pay = async () => recordPayment((await store.get(id))!, { paidUntil: '2027-11-18', amount: 3000, reference: null }, BOARD, lifecycle());
+      fs.failNext('queueNotices');
+      await expect(pay()).rejects.toThrow();
+      expect((await store.events(id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(0);
+      await pay();
+      await expect(pay()).rejects.toThrow(/already paid through/);
+      expect((await store.events(id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
+      expect(subjects().filter((t) => /Payment received/.test(t))).toHaveLength(1);
+      expect(notes(/Payment recorded/)).toHaveLength(1);
+    });
+
+    it('a signature and its signed copy are one write: a failed write signs nothing, a saved one always sends the copy', async () => {
+      const id = await sponsor();
+      const start = (body: Record<string, unknown>) => handleStart(post('/api/sponsorship/start', { tier: 'friend', cycle: 'quarterly', ...body }), user());
+      fs.failNext('acceptAgreement');
+      expect((await start(full)).status).toBe(502);
+      expect(await store.agreements(id)).toHaveLength(0);
+      expect((await start({ confirm: true, agreementVersion: AGREEMENT.version })).status).toBe(400);
+      // Saved, then Stripe fails: the copy is still owed and sent.
+      w.failNext('POST', /^checkout\/sessions$/);
+      expect((await start(full)).status).toBe(502);
+      await dailyCheck(lifecycle());
+      expect(await store.agreements(id)).toHaveLength(1);
+      expect(subjects().filter((t) => /Your copy/.test(t))).toHaveLength(1);
+    });
+
+    it('a failure for the subscription a sponsorship held before it started again changes nothing', async () => {
+      const id = await ended('cancelled');
+      await handleStart(post('/api/sponsorship/start', { ...full, tier: 'friend', cycle: 'quarterly' }), user());
+      const fresh = invoice('in_new', id);
+      fresh.parent.subscription_details.subscription = 'sub_new';
+      await hook(stripeEvent('evt_new', 'invoice.paid', fresh));
+      expect((await hook(stripeEvent('evt_old_failure', 'invoice.payment_failed', invoice('in_old', id)))).status).toBe(200);
+      expect(await store.get(id)).toMatchObject({ status: 'active', stripeSubscriptionId: 'sub_new' });
+      expect(notes(/Payment failed/)).toHaveLength(0);
+    });
+
+    it('a failure handled while the same invoice is paid: the payment wins, in either order', async () => {
+      const id = await running();
+      const row = invoice('in_crossed', id, { reason: 'subscription_cycle' });
+      // The payment lands between the failure's first look and its change.
+      const inner = store;
+      store = {
+        ...inner,
+        overdueInvoice: async (...args) => {
+          await hook(stripeEvent('evt_paid_meanwhile', 'invoice.paid', row));
+          return inner.overdueInvoice(...args);
+        },
+      };
+      expect((await hook(stripeEvent('evt_failed', 'invoice.payment_failed', row))).status).toBe(200);
+      store = inner;
+      expect(await store.get(id)).toMatchObject({ status: 'active' });
+      expect(notes(/Payment failed/)).toHaveLength(0);
+      // The other order: overdue first, then the payment clears it.
+      const next = invoice('in_next', id, { reason: 'subscription_cycle', start: '2027-02-18T00:00:00Z', end: '2027-05-18T00:00:00Z' });
+      await hook(stripeEvent('evt_failed_2', 'invoice.payment_failed', next));
+      expect(await store.get(id)).toMatchObject({ status: 'past_due' });
+      await hook(stripeEvent('evt_paid_2', 'invoice.paid', next));
+      expect(await store.get(id)).toMatchObject({ status: 'active', paidUntil: '2027-05-18' });
+    });
+
+    it('"payment overdue" and its email and note are one write: a failed write is retried by Stripe and sends both once', async () => {
+      const id = await running();
+      const decline = (n: string) => hook(stripeEvent(`evt_declined_${n}`, 'invoice.payment_failed', invoice('in_problem', id)));
+      fs.failNext('overdueInvoice');
+      expect((await decline('a')).status).toBe(500);
+      expect(await store.get(id)).toMatchObject({ status: 'active' });
+      expect((await decline('a')).status).toBe(200);
+      // Stripe sends the same failure again (another event id): nothing more.
+      expect((await decline('b')).status).toBe(200);
+      await dailyCheck(lifecycle());
+      expect(await store.get(id)).toMatchObject({ status: 'past_due' });
+      expect(subjects().filter((t) => /did not go through/.test(t))).toHaveLength(1);
+      expect(notes(/Payment failed/)).toHaveLength(1);
+    });
+
+    it('each first payment after sponsoring again has its own welcome; the same payment twice has one', async () => {
+      const id = await sponsor();
+      await hook(stripeEvent('evt_first', 'invoice.paid', invoice('in_first', id)));
+      await store.transition(id, { from: 'active', to: 'ended', actor: BOARD, reason: 'cancelled' });
+      await store.linkStripe(id, { subscriptionId: null }, BOARD);
+      await handleStart(post('/api/sponsorship/start', { ...full, tier: 'friend', cycle: 'quarterly' }), user());
+      const fresh = invoice('in_new', id);
+      fresh.parent.subscription_details.subscription = 'sub_new';
+      await hook(stripeEvent('evt_new', 'invoice.paid', fresh));
+      await hook(stripeEvent('evt_new_again', 'invoice.paid', fresh));
+      expect(subjects().filter((t) => t === WELCOME)).toHaveLength(2);
+      expect(notes(/New sponsor/)).toHaveLength(2);
+      expect(notes(/:repeat: Paid/)).toHaveLength(0);
+    });
+
+    it('a partial dispute keeps the disputed amount apart from the card payment', async () => {
+      await running();
+      await hook(stripeEvent('evt_partial', 'charge.dispute.created', { id: 'dp_partial', charge: 'ch_2', amount: 10000, reason: 'duplicate' }));
+      const s = (await store.search({ q: 'Acme' }))[0]!;
+      expect((await store.events(s.id)).find((e) => e.type === 'charge_disputed')?.payload).toMatchObject({ amount: 84000, disputed: 10000 });
+    });
+  });
+
+  describe('Slack accepted a note but the database could not record it', () => {
+    let clock: Date;
+    beforeEach(() => {
+      clock = NOW;
+      fs = faulty(memoryStore({ now: () => clock }));
+      store = fs.store;
+    });
+    const send = () => sendNotices({ env, store, origin: 'https://zurichjs.com', fetch: w.f, slack: w.slack, log: () => {} });
+
+    it('one failed write is retried at once: delivered and recorded, never sent twice', async () => {
+      const id = await running();
+      await store.queueNotices(id, [slackNotice('ack-1', 'Fixture delivery')]);
+      fs.failNext('noticeDone');
+      expect(await send()).toMatchObject({ sent: 1, unrecorded: 0 });
+      expect(await send()).toMatchObject({ sent: 0 });
+      expect(notes(/Fixture delivery/)).toHaveLength(1);
+    });
+
+    it('still failing: the claim is kept, nobody sends it for five minutes, then it is sent again (at least once)', async () => {
+      const id = await running();
+      await store.queueNotices(id, [slackNotice('ack-2', 'Fixture delivery')]);
+      fs.failNext('noticeDone', 2);
+      expect(await send()).toMatchObject({ sent: 0, failed: 0, unrecorded: 1 });
+      expect(await send()).toMatchObject({ sent: 0 });
+      expect(notes(/Fixture delivery/)).toHaveLength(1);
+      clock = new Date(NOW.getTime() + 6 * 60_000);
+      expect(await send()).toMatchObject({ sent: 1 });
+      expect(notes(/Fixture delivery/)).toHaveLength(2);
     });
   });
 });

@@ -7,7 +7,8 @@
  *     contact, sponsor | null, contacts, agreements, logos, contracts, pendingChange,
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
- *     invitation: { company, tierName } | null (a colleague added this email; accept or decline)
+ *     invitation: { company, tierName } | null (a colleague added this email; accept or decline),
+ *     offer: { quote, payUrl } | null (pending: the board's open offer, with base, fee and total)
  *   }
  *   401 · 503 · 502
  *
@@ -19,6 +20,7 @@ import { json, methodNotAllowed } from '../../../server/http.ts';
 import { agreementView, contactView, documentView, logoView, sponsorView } from '../../../server/sponsor.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 import { pendingChange } from '../../../server/sponsor-stripe.ts';
+import { feeStore, quoteView } from '../../../server/sponsor-fees.ts';
 import { tierInfo } from '@zurichjs/sponsorship';
 
 export const prerender = false;
@@ -49,6 +51,8 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         store.meetups(s.id),
         changeOf(s, deps, env),
       ]);
+      // Waiting for payment: the offer the board froze (fees.ts), so they see base, fee and total first.
+      const quote = s.status === 'pending' ? await (deps.fees ?? feeStore(env)).openQuote(s.id, 'sponsorship', null) : null;
       const mine = agreements.find((a) => a.signerEmail === user.email);
       return json(200, {
         ...base,
@@ -62,6 +66,7 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         signedCurrent: agreements.some((a) => a.version === AGREEMENT.version) || documents.length > 0,
         signer: mine ? { name: mine.signerName, title: mine.signerTitle } : null,
         invitation: null,
+        offer: quote ? { quote: quoteView(quote), payUrl: s.paymentLinkUrl } : null,
       });
     },
     'load your sponsorship',

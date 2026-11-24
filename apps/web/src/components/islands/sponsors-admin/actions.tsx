@@ -12,11 +12,12 @@ import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, FileField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
 import { cardClass } from '@zurichjs/design/recipes';
-import { RECURRING, TIERS, bundleLabel, changeTiming, chf, cycleInfo, fee, feeLabel, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
+import { RECURRING, TIERS, bundleLabel, type FeeChoice, changeTiming, chf, cycleInfo, fee, feeLabel, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import { api, post } from '../admin-api.ts';
 import { SubmitButton, optional } from '../forms/shared.tsx';
+import { FeeChoiceField, useFeeGate, type QuoteView } from './fees.tsx';
 import { BASE, DATE, MeetupPicker, Notice, addMonths, francs, inputChecked, inputValue, listPrice, today, useMeetups, type FieldError } from './shared.tsx';
 
 export type ActionKey = 'suggest' | 'plan' | 'bundle' | 'contract' | 'link' | 'payment' | 'end';
@@ -373,6 +374,8 @@ function AttachContract({ id, onDone, onCancel, onSignedOut }: Props) {
 function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [feeChoice, setFeeChoice] = useState<FeeChoice>('absorb');
+  const gate = useFeeGate(onSignedOut);
   return (
     <Panel
       title={s.paymentLinkUrl ? 'New payment link' : 'Create payment link'}
@@ -386,13 +389,19 @@ function PaymentLink({ id, sponsor: s, onDone, onCancel, onSignedOut }: Props) {
           if (busy) return;
           setBusy(true);
           setError('');
-          const { status, body } = await post<{ url?: string }>(`${BASE}/${id}/payment-link`, {});
+          const { status, body } = await post<{ url?: string; quote?: QuoteView }>(`${BASE}/${id}/payment-link`, { feeChoice });
           setBusy(false);
           if (status === 401) return onSignedOut();
           if (status !== 200 || !body.url) return setError(body.error ?? 'Could not create the payment link.');
-          onDone({ text: 'Payment link created.', url: body.url, urlLabel: 'Payment link' });
+          const q = body.quote;
+          onDone({
+            text: q ? `Payment link created for ${q.surcharge ? `${q.base} plus a processing fee of ${q.surcharge}: ${q.total}` : q.total}.` : 'Payment link created.',
+            url: body.url,
+            urlLabel: 'Payment link',
+          });
         }}
       >
+        <FeeChoiceField gate={gate} value={feeChoice} onChange={setFeeChoice} />
         {error && <Notice kind="error">{error}</Notice>}
         <Buttons busy={busy} label={s.paymentLinkUrl ? 'Create a new link' : 'Create the link'} busyLabel="Creating…" onCancel={onCancel} />
       </form>

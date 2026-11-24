@@ -14,6 +14,7 @@
  */
 import { DuplicateContact, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
+import { feeStore } from '../../../server/sponsor-fees.ts';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 import { sponsorView } from '../../../server/sponsor.ts';
@@ -31,6 +32,10 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
     deps,
     async ({ user, contact, sponsor, invitation, store, env, lifecycle }) => {
       if (invitation) return fail(409, `A colleague added you to ${invitation.sponsor.companyName}'s sponsorship. Accept or decline that first.`);
+      // The board sent an offer where the sponsor covers the fees: it is paid through its link, so
+      // the total they agreed to is the total they pay.
+      if (sponsor?.status === 'pending' && (await (deps.fees ?? feeStore(env)).openQuote(sponsor.id, 'sponsorship', null))?.feeChoice === 'pass_through')
+        return fail(409, 'Pay with the payment link we sent you: it includes the processing fee you agreed to.');
       const body = await readJsonObject(request);
       if (!body) return fail(400, 'Send the form as JSON.');
       const sig = parseSignature(body);

@@ -10,7 +10,7 @@
  * someone else's email to a sponsorship they did not ask to join. A contact already linked to
  * another account is never taken over.
  */
-import type { Contact, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
+import type { Contact, FeeStore, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
 import { TransitionError } from '@zurichjs/sponsorship';
 import { sameOrigin } from './admin-auth.ts';
 import { sessionUser, siteOrigin, type AuthUser } from './auth.ts';
@@ -34,6 +34,8 @@ export interface SponsorRouteDeps {
   logos?: LogoStore;
   /** Upcoming meetups for one-time sponsorships (Sanity). */
   meetups?: () => Promise<Meetup[]>;
+  /** Payment quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
 }
 
 export interface Meetup {

@@ -29,7 +29,9 @@ import {
   type SponsorMeetup,
   type SponsorStore,
   type Tier,
+  type Quote,
 } from '@zurichjs/sponsorship';
+import { SURCHARGE_NAME } from './sponsor-fees.ts';
 import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
@@ -213,7 +215,7 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
  * A payment link for a one-time sponsorship the board agreed with a signed contract: one card
  * payment for the meetups, usable once, then switched off by the webhook. Replaces any earlier link.
  */
-export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], store: SponsorStore, origin: string, deps: StripeDeps): Promise<string> {
+export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], store: SponsorStore, origin: string, deps: StripeDeps, quote?: Quote): Promise<string> {
   if (isRecurring(s.cycle)) throw new Error('Payment links are for one-time sponsorships.');
   await closePaymentLink(s, store, deps);
   const item = await onceLineItem(s, meetups, deps);
@@ -229,22 +231,38 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
           )
         ).id;
   const what = `Sponsorship of ${meetupList(meetups) || 'one meetup'}`.slice(0, 500);
+  // The quote (fees.ts) is the record of what they pay; a surcharge is its own line, so the payment
+  // page and the receipt show base, fee and total apart.
+  const metadata = { ...meta(s), ...(quote ? { quoteId: quote.id } : {}) };
+  const surcharge = quote?.surchargeMinor ? await surchargePrice(quote, deps) : null;
   const link = await api<{ id: string; url: string }>(
     deps,
     'POST',
     'payment_links',
     stripeForm({
-      line_items: [{ price, quantity: item.quantity }],
-      metadata: meta(s),
+      line_items: [{ price, quantity: item.quantity }, ...(surcharge ? [{ price: surcharge, quantity: 1 }] : [])],
+      metadata,
       payment_method_types: ['card'],
-      payment_intent_data: { metadata: meta(s), description: what },
-      invoice_creation: { enabled: true, invoice_data: { metadata: meta(s), description: what } },
+      payment_intent_data: { metadata, description: what },
+      invoice_creation: { enabled: true, invoice_data: { metadata, description: what } },
       restrictions: { completed_sessions: { limit: 1 } },
       after_completion: { type: 'redirect', redirect: { url: `${new URL('/partners/account', origin).toString()}?checkout=done` } },
     }),
   );
   await store.linkStripe(s.id, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
   return link.url;
+}
+
+/** A one-off Stripe price for a quote's surcharge, named so the sponsor sees what it is for. */
+export async function surchargePrice(quote: Quote, deps: StripeDeps): Promise<string> {
+  const p = await api<{ id: string }>(
+    deps,
+    'POST',
+    'prices',
+    stripeForm({ currency: 'chf', unit_amount: quote.surchargeMinor, product_data: { name: SURCHARGE_NAME }, metadata: { source: SPONSOR_SOURCE, quoteId: quote.id } }),
+    `sponsor-surcharge:${quote.id}`,
+  );
+  return p.id;
 }
 
 /** Switches off the sponsor's payment link (paid, replaced or withdrawn). */

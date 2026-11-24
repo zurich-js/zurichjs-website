@@ -27,6 +27,7 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 | `/api/sponsorship/contacts`, `/api/sponsorship/contacts/[id]` | colleagues                                                                                                                                           |
 | `/api/sponsorship/contracts/[id]`                             | download an attached contract                                                                                                                        |
 | `/api/membership/admin/sponsors/*`                            | the board's API: list, one sponsor, invite, plan, suggest a change, end, record a payment, bundle, payment link, contacts, contracts, logos, meetups |
+| `/api/membership/admin/fees`                                  | the fee gate and the card tariffs; add a tariff version ([Processing fees](/domains/sponsorship/fees.md))                                            |
 | `/api/membership/admin/sponsors/[id]/coverage`                | the covered meetups of a recurring sponsorship and their history; add an upcoming meetup or take one off                                             |
 
 - **Sign-in** is the members' email link (Better Auth, `/api/auth/[...all]`).
@@ -39,7 +40,7 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 
 - **Calls:** `apps/web/src/server/sponsor-stripe.ts`. Checkout sessions and subscriptions carry `source: zurichjs.com/partners`.
 - **Objects:** `pnpm sponsorship:stripe-setup` (`tools/sponsorship-stripe-setup.ts`) is a dry run; `--apply` creates one product per tier and 16 prices (lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`). `--portal` adds a sponsor-only billing portal configuration (`STRIPE_SPONSOR_PORTAL_CONFIG`); without it the sponsors reuse the members' (`STRIPE_MEMBER_PORTAL_CONFIG`). The portal changes the card and shows receipts; it never changes plans or cancels.
-- **Bundles** use `price_data` or a custom price on the tier's product, paid through a single-use payment link.
+- **Bundles** use `price_data` or a custom price on the tier's product, paid through a single-use payment link. A surcharge the sponsor covers is a second line, "Payment processing fee", and the link carries `quoteId` ([Processing fees](/domains/sponsorship/fees.md)).
 - **Webhook:** sponsorship events arrive on the site's one webhook, `/api/stripe/webhook` ([Stripe](/systems/stripe.md)); there is no separate endpoint. `apps/web/src/server/sponsor-webhook.ts` handles them with its own idempotency table. Only `subscription_create` and `subscription_cycle` invoices move the paid-through date; a proration invoice does not. A second live subscription for the same sponsor (an old Checkout tab) is cancelled and flagged in Slack.
 
 ## Setup (owner, once)

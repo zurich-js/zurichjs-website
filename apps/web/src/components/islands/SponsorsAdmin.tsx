@@ -17,6 +17,7 @@ import { shortDate } from '../../server/dates.ts';
 import { api } from './admin-api.ts';
 import { TextButton } from './forms/shared.tsx';
 import { AddSponsor } from './sponsors-admin/AddSponsor.tsx';
+import { FeeSettings } from './sponsors-admin/fees.tsx';
 import { SponsorDetail } from './sponsors-admin/SponsorDetail.tsx';
 import { AttentionBadge, BASE, Notice, PAGE, STATUSES, STATUS_LABEL, StatusBadge, focusHeading, follow, inputValue, type Row } from './sponsors-admin/shared.tsx';
 
@@ -111,19 +112,22 @@ export function SponsorsAdmin({ onSignedOut }: { onSignedOut: () => void }) {
       />
     );
   return (
-    <SponsorList
-      focus={moved}
-      q={q}
-      onQ={setQ}
-      status={status}
-      onStatus={setStatus}
-      rows={rows}
-      counts={counts}
-      labels={labels}
-      error={error}
-      onOpen={(id) => go({ kind: 'detail', id })}
-      onAdd={(mode) => go({ kind: 'add', mode })}
-    />
+    <div class="flex flex-col gap-section">
+      <SponsorList
+        focus={moved}
+        q={q}
+        onQ={setQ}
+        status={status}
+        onStatus={setStatus}
+        rows={rows}
+        counts={counts}
+        labels={labels}
+        error={error}
+        onOpen={(id) => go({ kind: 'detail', id })}
+        onAdd={(mode) => go({ kind: 'add', mode })}
+      />
+      <FeeSettings onSignedOut={onSignedOut} />
+    </div>
   );
 }
 

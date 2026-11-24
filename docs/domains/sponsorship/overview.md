@@ -49,7 +49,7 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 2. **Sign and pay** on `/partners/account`, with the same email sign-in as members: billing details, plan, and the agreement (name, role). Card opens Stripe Checkout; opening it again closes the earlier page, so it can never be paid twice. A sponsor with a contract on file skips signing. A bank-transfer sponsor moving to card is not charged before their paid period ends (`trial_end`).
 3. **Active** with the first payment (from the webhook, at the tier Stripe actually charged), or when the board records a transfer. The welcome email goes out once, with the benefits; the board gets a Slack note with what to deliver.
 4. **Self-serve** ([Sponsorship frontend](/domains/sponsorship/frontend.md)): tier and billing changes, ending and taking it back, the Stripe portal, details, logo, colleagues.
-5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). Once paid, the meetups can still move; their number and price cannot.
+5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). Each link freezes a quote, and the board chooses who covers the card fees ([Processing fees](/domains/sponsorship/fees.md)). Once paid, the meetups can still move; their number and price cannot.
 6. **Ends:** at the end of the paid period (Stripe `cancel_at_period_end`, or the daily check for bank-transfer ones), after the last meetup (one-time), when Stripe gives up on payment (lapsed), or outright by the board (terminated, or withdrawn before it started). The daily check also closes unpaid one-time sponsorships whose meetup has passed.
 
 ## Covered meetups
@@ -139,7 +139,7 @@ The schedule is set only in the function's source (`export const config`). `apps
 
 ## Related concepts
 
-- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md)
+- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Processing fees](/domains/sponsorship/fees.md)
 - [Partners and sponsorship](/domains/partners/overview.md) (the public list and `/partners`), [Membership](/domains/membership/overview.md) (sign-in, database and admin password are shared)
 - Systems: [Stripe](/systems/stripe.md), [Web app](/systems/web.md), [Environment variables](/systems/operations/environment.md), [Slack content agent](/systems/slack-agent.md)
 

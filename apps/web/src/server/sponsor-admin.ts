@@ -15,7 +15,18 @@
  *   end         outright (terminated, or an invitation withdrawn); logged
  *   to do       what needs someone: see `attention`
  */
-import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore } from '@zurichjs/sponsorship';
+import {
+  DuplicateContact,
+  FeeGateClosed,
+  isCycle,
+  isTier,
+  type Contact,
+  type FeeStore,
+  type NewSponsor,
+  type Sponsor,
+  type SponsorMeetup,
+  type SponsorStore,
+} from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
@@ -39,6 +50,8 @@ export interface SponsorAdminDeps {
   now?: number;
   logos?: LogoStore;
   meetups?: () => Promise<Meetup[]>;
+  /** Tariffs and quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
 }
 
 export interface SponsorAdminCtx {
@@ -63,6 +76,7 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
   } catch (cause) {
     const known = knownFailure(cause);
     if (known) return known;
+    if (cause instanceof FeeGateClosed) return fail(409, cause.message, { field: 'feeChoice' });
     if (cause instanceof MembershipUnavailable || cause instanceof StripeUnavailable) return fail(503, `Not configured: ${(cause as Error).message}`);
     console.error(`[sponsorship-admin] ${what} failed`, cause);
     return fail(502, `Could not ${what}. Try again; details are in the function log.`);

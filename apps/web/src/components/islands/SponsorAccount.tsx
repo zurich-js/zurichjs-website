@@ -27,6 +27,7 @@ import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
 import { CoveredMeetups } from './sponsor-account/CoveredMeetups.tsx';
+import { Offer, type OfferView } from './sponsor-account/Offer.tsx';
 
 type ContactView = ReturnType<typeof contactView>;
 type AgreementView = ReturnType<typeof agreementView>;
@@ -55,6 +56,8 @@ interface Me {
   signedCurrent?: boolean;
   signer?: { name: string; title: string } | null;
   invitation?: { company: string; tierName: string } | null;
+  /** Waiting for payment: the board's open offer, with base, fee and total. */
+  offer?: OfferView | null;
 }
 
 interface Meetup {
@@ -676,7 +679,9 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       {link && <LinkedChange ctx={ctx} s={s} link={link} />}
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
       <CoveredMeetups once={!recurring} contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
-      {s.status === 'pending' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
+      {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
+      {/* An offer where they cover the fees is paid through its link only (the server refuses Checkout). */}
+      {s.status === 'pending' && ctx.me.offer?.quote.feeChoice !== 'pass_through' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}
       {s.status !== 'ended' && <LogoSection ctx={ctx} s={s} />}

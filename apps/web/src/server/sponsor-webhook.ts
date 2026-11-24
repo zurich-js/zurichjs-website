@@ -18,7 +18,7 @@
  * idempotency keys. An event is marked handled only after it worked. A payment for a sponsorship
  * that has ended changes nothing and is flagged in Slack.
  */
-import { TransitionError, fromLookupKey, isRecurring, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { TransitionError, chfMinor, fromLookupKey, type FeeStore, isRecurring, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { longDate } from './dates.ts';
 import { fail, json, type Env } from './http.ts';
@@ -40,6 +40,7 @@ import {
   zurichDayOf,
   type NotifyDeps,
 } from './sponsor.ts';
+import { feeStore } from './sponsor-fees.ts';
 import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription } from './sponsor-stripe.ts';
 import type { StripeEvent } from './stripe-webhook.ts';
 
@@ -71,6 +72,8 @@ export interface SponsorWebhookDeps {
   slack?: MembershipSlack;
   now?: number;
   log?: (m: string) => void;
+  /** Payment quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
 }
 
 const safeStripeUrl = (url: string | null | undefined) => (url?.startsWith('https://invoice.stripe.com/') ? url : null);
@@ -141,6 +144,38 @@ async function startOnce(s: Sponsor, eventId: string, today: string, deps: Notif
   }
 }
 
+/**
+ * Records the quote a payment paid (fees.ts): the one in the session's metadata, else the sponsor's
+ * open sponsorship quote when it came through their payment link. A stale quote or a total that
+ * differs is recorded and flagged for the board, never dropped. Payments made before quotes existed
+ * have none: nothing to record.
+ */
+async function recordQuote(
+  s: Sponsor,
+  session: Record<string, unknown>,
+  quoteId: string | null,
+  paymentLink: string | null,
+  deps: NotifyDeps,
+  feeStoreOf: () => FeeStore,
+  log: (m: string) => void,
+) {
+  let fees: FeeStore;
+  try {
+    fees = feeStoreOf();
+  } catch (cause) {
+    if (cause instanceof MembershipUnavailable) return log('[sponsorship] no database for quotes; payment quote not recorded');
+    throw cause;
+  }
+  const id = quoteId ?? (paymentLink ? (await fees.openQuote(s.id, 'sponsorship', null))?.id : null);
+  if (!id) return;
+  const r = await fees.markQuotePaid(id, String(session.id));
+  if (!r || r.quote.sponsorId !== s.id) return anomaly(s, `A payment for ${who(s)} names a quote that is not theirs. Check it in Stripe.`, deps);
+  const paid = typeof session.amount_total === 'number' ? session.amount_total : null;
+  if (r.was === 'superseded' || r.was === 'void')
+    await anomaly(s, `${who(s)} paid an earlier offer (${chfMinor(r.quote.totalMinor)}) that was replaced. It is recorded; check what they owe.`, deps);
+  if (paid !== null && paid !== r.quote.totalMinor) await anomaly(s, `${who(s)} paid ${chfMinor(paid)} for a quote of ${chfMinor(r.quote.totalMinor)}. Check it in Stripe.`, deps);
+}
+
 const anomaly = (s: Sponsor, text: string, deps: NotifyDeps) => note(`:rotating_light: ${text} ${adminUrl(deps.origin, s.id)}`, deps);
 
 /** One verified Stripe event for sponsorships; events that are not a sponsor's are skipped. */
@@ -172,6 +207,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         if (!s) break;
         if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
         if (o.mode === 'payment') {
+          if (o.payment_status === 'paid') await recordQuote(s, o, meta?.quoteId ?? null, paymentLink, notify, () => deps.fees ?? feeStore(env), log);
           if (o.payment_status === 'paid' && s.cycle === 'once') await startOnce(s, event.id, today, notify);
           break;
         }

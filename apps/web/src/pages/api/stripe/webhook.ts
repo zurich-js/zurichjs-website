@@ -7,7 +7,7 @@
  *   POST (signed by Stripe) → 200 · 400 bad signature or JSON · 503 not configured · 500 retry
  */
 import type { MemberStore } from '@zurichjs/membership';
-import type { SponsorStore } from '@zurichjs/sponsorship';
+import type { FeeStore, SponsorStore } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { methodNotAllowed, type Env } from '../../../server/http.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
@@ -22,6 +22,7 @@ export interface StripeWebhookDeps {
   env?: Env;
   memberStore?: MemberStore;
   sponsorStore?: SponsorStore;
+  fees?: FeeStore;
   fetch?: typeof fetch;
   slack?: MembershipSlack;
   now?: number;
@@ -36,7 +37,7 @@ export async function handleStripeWebhook(request: Request, deps: StripeWebhookD
   const shared = { env, fetch: deps.fetch, slack: deps.slack, now: deps.now, log: deps.log };
   return dispatchStripeEvent(read.event, [
     (e) => processMembershipEvent(e, { ...shared, store: deps.memberStore, signature: deps.signature }),
-    (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore }),
+    (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore, fees: deps.fees }),
     (e) => processDonationEvent(e, shared),
   ]);
 }

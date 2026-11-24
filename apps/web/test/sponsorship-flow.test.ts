@@ -9,7 +9,7 @@
  */
 import { createHmac } from 'node:crypto';
 import { memoryStore as memoryMembers } from '@zurichjs/membership';
-import { AGREEMENT, memoryStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
+import { AGREEMENT, memoryFeeStore, memoryStore, type FeeStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handleAddSponsor, handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { handleAdminSponsor } from '../src/pages/api/membership/admin/sponsors/[id]/index.ts';
@@ -18,6 +18,7 @@ import { handleBundle } from '../src/pages/api/membership/admin/sponsors/[id]/bu
 import { handleAttachContract } from '../src/pages/api/membership/admin/sponsors/[id]/contracts/index.ts';
 import { handleAdminLogoUpload } from '../src/pages/api/membership/admin/sponsors/[id]/logos/index.ts';
 import { handlePaymentLink } from '../src/pages/api/membership/admin/sponsors/[id]/payment-link.ts';
+import { handleFees } from '../src/pages/api/membership/admin/fees.ts';
 import { handleRecordPayment } from '../src/pages/api/membership/admin/sponsors/[id]/payment.ts';
 import { handleSuggest } from '../src/pages/api/membership/admin/sponsors/[id]/suggest.ts';
 import { handleUndoEnd } from '../src/pages/api/sponsorship/end/undo.ts';
@@ -180,16 +181,18 @@ function base(over: Partial<NewSponsor> = {}): NewSponsor {
 
 describe('sponsorship flow', () => {
   let store: SponsorStore;
+  let fees: FeeStore;
   let w: ReturnType<typeof world>;
-  const user = (u = grace) => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => u, now: () => NOW });
-  const adminDeps = () => ({ env, store, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
+  const user = (u = grace) => ({ env, store, fees, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, session: async () => u, now: () => NOW });
+  const adminDeps = (e: Record<string, string> = env) => ({ env: e, store, fees, fetch: w.f, slack: w.slack, logos: w.logos, meetups: async () => MEETUPS, now: NOW.getTime() });
   // Sponsor events arrive on the site's one webhook, next to memberships and donations.
   const webhook = (req: Request) =>
-    handleStripeWebhook(req, { env, sponsorStore: store, memberStore: memoryMembers({ now: () => NOW }), fetch: w.f, slack: w.slack, now: NOW.getTime() });
+    handleStripeWebhook(req, { env, sponsorStore: store, fees, memberStore: memoryMembers({ now: () => NOW }), fetch: w.f, slack: w.slack, now: NOW.getTime() });
   const me = async (u = grace) => (await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), user(u))).json() as Promise<Record<string, any>>;
 
   beforeEach(() => {
     store = memoryStore({ now: () => NOW });
+    fees = memoryFeeStore({ now: () => NOW });
     w = world();
     resetRateLimits();
   });
@@ -394,6 +397,115 @@ describe('sponsorship flow', () => {
     expect((await handleBundle(asAdmin('/x', { eventIds: ['event-jan'] }), sponsor.id, adminDeps())).status).toBe(409);
     const moved = await handleBundle(asAdmin('/x', { eventIds: ['event-jan', 'event-dec'] }), sponsor.id, adminDeps());
     expect(moved.status).toBe(200);
+  });
+
+  it('freezes a quote on every payment link; the sponsor covers the fees only once a tariff and an approved policy exist', async () => {
+    const { sponsor: s } = await store.create(
+      base({ companyName: 'Globex', tier: 'builder', cycle: 'once', pricePerMeetup: 500 }),
+      { email: 'hank@globex.com', name: 'Hank', role: 'primary' },
+      { kind: 'board', id: 'admin' },
+    );
+    await store.setMeetups(
+      s.id,
+      MEETUPS.map((m) => ({ eventId: m.id, title: m.title, date: m.date })),
+      { kind: 'board', id: 'admin' },
+    );
+    await store.addDocument(s.id, { blobKey: 'k', filename: 'c.pdf', bytes: 10, signedOn: null, uploadedBy: 'board' }, { kind: 'board', id: 'admin' });
+    const link = (body: unknown, e: Record<string, string> = env) => handlePaymentLink(post('/x', body, { authorization: `Bearer ${ADMIN}` }), s.id, adminDeps(e));
+    const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'surcharge-2026-12' };
+
+    // Default: ZurichJS covers the fees. The quote is still the record of what they pay.
+    const absorbed = (await (await link({})).json()) as Record<string, any>;
+    expect(absorbed.quote).toMatchObject({ feeChoice: 'absorb', base: 'CHF 1’000.00', surcharge: null, total: 'CHF 1’000.00', status: 'open' });
+
+    // Pass-through is refused without a tariff, and without the owner's policy version.
+    const closed = await link({ feeChoice: 'pass_through' }, policy);
+    expect(closed.status).toBe(409);
+    expect(((await closed.json()) as { error: string }).error).toMatch(/No card tariff/);
+    const gate = (await (await handleFees(asAdmin('/api/membership/admin/fees'), adminDeps())).json()) as Record<string, any>;
+    expect(gate.gate).toMatchObject({ open: false });
+    expect((await handleFees(asAdmin('/api/membership/admin/fees', { version: 't-1', ratePercent: '12', fixedChf: '0.30' }), adminDeps())).status).toBe(400);
+    expect((await handleFees(asAdmin('/api/membership/admin/fees', { version: 't-1', ratePercent: '2.9', fixedChf: '0.30', note: 'Stripe CH card' }), adminDeps())).status).toBe(
+      200,
+    );
+    expect((await handleFees(asAdmin('/api/membership/admin/fees', { version: 't-1', ratePercent: '3', fixedChf: '0.30' }), adminDeps())).status).toBe(409);
+    expect((await link({ feeChoice: 'pass_through' })).status).toBe(409);
+    expect(((await (await handleFees(asAdmin('/api/membership/admin/fees'), adminDeps(policy))).json()) as Record<string, any>).gate).toMatchObject({
+      open: true,
+      policyVersion: 'surcharge-2026-12',
+      tariff: { version: 't-1', rateLabel: '2.9%', fixedLabel: 'CHF 0.30' },
+    });
+
+    w.calls.length = 0;
+    const passed = (await (await link({ feeChoice: 'pass_through' }, policy)).json()) as Record<string, any>;
+    // (100'000 + 30) / 0.971 = 103'017.5… → 103'018
+    expect(passed.quote).toMatchObject({
+      feeChoice: 'pass_through',
+      base: 'CHF 1’000.00',
+      surcharge: 'CHF 30.18',
+      total: 'CHF 1’030.18',
+      tariffVersion: 't-1',
+      policyVersion: 'surcharge-2026-12',
+    });
+    const surcharge = w.calls.find((c) => c.path === 'prices' && c.params.get('product_data[name]'))!;
+    expect(surcharge.params.get('unit_amount')).toBe('3018');
+    expect(surcharge.params.get('product_data[name]')).toBe('Payment processing fee');
+    const created = w.calls.find((c) => c.path === 'payment_links')!;
+    expect(created.params.get('line_items[1][quantity]')).toBe('1');
+    expect(created.params.get('metadata[quoteId]')).toBe(passed.quote.id);
+    // The earlier link was switched off and its quote superseded.
+    expect(w.calls.some((c) => c.path === 'payment_links/plink_1' && c.params.get('active') === 'false')).toBe(true);
+    expect((await fees.quotes(s.id)).map((q) => q.status)).toEqual(['open', 'superseded']);
+
+    // The sponsor sees the offer before paying, and pays it only through its link.
+    const hank = { id: 'user-hank', email: 'hank@globex.com' };
+    expect((await me(hank)).offer).toMatchObject({
+      payUrl: 'https://buy.stripe.com/test_1',
+      quote: { surcharge: 'CHF 30.18', total: 'CHF 1’030.18', feeChoiceLabel: 'Sponsor covers the fees' },
+    });
+    const own = await handleStart(post('/api/sponsorship/start', { confirm: true }), user(hank));
+    expect(own.status).toBe(409);
+    expect(((await own.json()) as { error: string }).error).toMatch(/payment link we sent/);
+
+    // Paid with a total that differs from the quote: recorded and flagged, the sponsorship still starts.
+    await webhook(
+      stripeEvent('evt_q1', 'checkout.session.completed', {
+        id: 'cs_q1',
+        mode: 'payment',
+        payment_status: 'paid',
+        payment_link: 'plink_1',
+        amount_total: 100_000,
+        metadata: { quoteId: passed.quote.id },
+      }),
+    );
+    expect(await fees.quote(passed.quote.id)).toMatchObject({ status: 'paid', stripeRef: 'cs_q1' });
+    expect(w.slackPosts.join('\n')).toContain('paid CHF 1’000.00 for a quote of CHF 1’030.18');
+    expect(await store.get(s.id)).toMatchObject({ status: 'active' });
+    // A duplicate delivery changes nothing.
+    await webhook(
+      stripeEvent('evt_q1', 'checkout.session.completed', {
+        id: 'cs_q1',
+        mode: 'payment',
+        payment_status: 'paid',
+        payment_link: 'plink_1',
+        amount_total: 100_000,
+        metadata: { quoteId: passed.quote.id },
+      }),
+    );
+    expect(w.slackPosts.filter((p) => p.includes('for a quote of')).length).toBe(1);
+    // The old, superseded quote paid through a stale page is recorded too, and flagged.
+    const stale = (await fees.quotes(s.id)).find((q) => q.status === 'superseded')!;
+    await webhook(
+      stripeEvent('evt_q2', 'checkout.session.completed', {
+        id: 'cs_q2',
+        mode: 'payment',
+        payment_status: 'paid',
+        amount_total: 100_000,
+        metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: stale.id },
+      }),
+    );
+    expect(await fees.quote(stale.id)).toMatchObject({ status: 'paid' });
+    expect(w.slackPosts.join('\n')).toContain('paid an earlier offer');
   });
 
   it('starts a self-serve one-meetup sponsorship by card, and refuses past meetups and unknown ones', async () => {

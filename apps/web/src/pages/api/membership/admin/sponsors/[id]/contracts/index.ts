@@ -20,6 +20,7 @@ export const handleAttachContract = (request: Request, id: string, deps: Sponsor
     async ({ store, lifecycle }) => {
       const s = await store.get(id);
       if (!s) return fail(404, 'No such sponsor.');
+      if (s.status === 'ended') return fail(409, 'This sponsorship has ended.');
       const form = await request.formData().catch(() => null);
       const file = form?.get('file');
       if (!file || typeof file === 'string') return fail(400, 'Choose the signed contract (PDF).', { field: 'file' });

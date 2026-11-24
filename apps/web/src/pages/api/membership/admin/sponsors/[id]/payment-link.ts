@@ -6,7 +6,7 @@
  */
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed } from '../../../../../../server/http.ts';
-import { note, who } from '../../../../../../server/sponsor.ts';
+import { note, who, zurichDay } from '../../../../../../server/sponsor.ts';
 import { sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
 import { createPaymentLink } from '../../../../../../server/sponsor-stripe.ts';
 
@@ -24,6 +24,8 @@ export const handlePaymentLink = (request: Request, id: string, deps: SponsorAdm
       if (!(await store.documents(s.id)).length) return fail(409, 'Attach the signed contract first: without it they sign and pay on their sponsorship page.');
       const meetups = await store.meetups(s.id);
       if (!meetups.length) return fail(409, 'Choose the meetups first.');
+      const today = zurichDay(deps.now === undefined ? new Date() : new Date(deps.now));
+      if (meetups.some((m) => m.date < today)) return fail(409, 'A meetup of this sponsorship is already over. Move it under Meetups and price first.');
       const url = await createPaymentLink(s, meetups, store, origin, lifecycle.stripe);
       await note(`:link: Payment link created for ${who(s)}.`, lifecycle);
       return json(200, { ok: true, url });

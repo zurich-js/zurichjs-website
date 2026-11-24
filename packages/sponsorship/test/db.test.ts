@@ -120,6 +120,37 @@ d('sponsorship database', () => {
     expect((await store.events(s.id)).at(-1)).toMatchObject({ type: 'payment_recorded', payload: { amount: 840 } });
   });
 
+  it('creates a running import with its meetups, and moves a contact nobody accepted, in one statement', async () => {
+    const { sponsor: globex } = await store.create({ ...acme, companyName: 'Globex' }, { email: 'hank@globex.com', name: 'Hank', role: 'primary' }, board);
+    const pat = await store.addContact(globex.id, { email: 'pat@initech.com', name: 'Pat', role: 'other', addedBy: 'sponsor' }, sponsorActor);
+    const { sponsor, contact } = await store.create(
+      { ...acme, companyName: 'Initech', cycle: 'once', status: 'active', source: 'imported', paymentMode: 'manual', startedAt: '2026-11-01', paidUntil: '2026-12-10' },
+      { email: 'pat@initech.com', name: 'Pat Doe', role: 'primary', addedBy: 'board' },
+      board,
+      { meetups: [{ eventId: 'e1', title: 'December', date: '2026-12-09' }], claimUnconfirmed: true },
+    );
+    expect(sponsor).toMatchObject({ status: 'active', paidUntil: '2026-12-10' });
+    expect(contact).toMatchObject({ id: pat.id, sponsorId: sponsor.id, addedBy: 'board' });
+    expect((await store.contacts(globex.id)).map((c) => c.email)).toEqual(['hank@globex.com']);
+    expect(await store.meetups(sponsor.id)).toEqual([{ eventId: 'e1', title: 'December', date: '2026-12-09' }]);
+    expect((await store.events(sponsor.id)).map((e) => e.type).sort()).toEqual(['created', 'meetups_set']);
+    expect((await store.events(globex.id)).at(-1)).toMatchObject({ type: 'contact_removed', payload: { contactId: pat.id, movedTo: sponsor.id } });
+    // A contact someone accepted (or the board added) is never moved.
+    await expect(
+      store.create({ ...acme, companyName: 'Other' }, { email: 'hank@globex.com', name: 'Hank', role: 'primary' }, board, { claimUnconfirmed: true }),
+    ).rejects.toBeInstanceOf(DuplicateContact);
+    expect(await store.search({ q: 'Other' })).toHaveLength(0);
+  });
+
+  it('writes a Stripe link only while the expected value is still there', async () => {
+    const s = (await store.search({ q: 'Globex' }))[0]!;
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: 'plink_a', paymentLinkUrl: 'https://buy.stripe.com/a' }, stripe)).toMatchObject({
+      paymentLinkId: 'plink_a',
+    });
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: 'plink_b', paymentLinkUrl: 'https://buy.stripe.com/b' }, stripe)).toBeNull();
+    expect(await store.linkStripeIf(s.id, { paymentLinkId: 'plink_a' }, { paymentLinkId: null, paymentLinkUrl: null }, stripe)).toMatchObject({ paymentLinkId: null });
+  });
+
   it('keeps the audit log append-only', () => {
     expect(pgdb.fails('delete from sponsor_events')).toMatch(/append-only/);
   });

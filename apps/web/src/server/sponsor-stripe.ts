@@ -149,11 +149,22 @@ async function onceLineItem(s: Sponsor, meetups: SponsorMeetup[], deps: StripeDe
   };
 }
 
-/** Closes the sponsor's last Checkout session, so an old tab can never be paid as well. */
+/**
+ * Stripe's answer when the page is already gone: no such object, or a session that is no longer
+ * open (expired or paid). Anything else (an outage, a timeout) leaves the page payable.
+ */
+const alreadyClosed = (e: unknown) => /HTTP 404|No such|status (of|in) \W*open\W* can be expired|is not open|already (been )?expired/i.test((e as Error).message ?? '');
+
+/**
+ * Closes the sponsor's last Checkout session, so an old tab can never be paid as well. The id is
+ * forgotten only once Stripe confirms; a failure throws and keeps it, so a retry closes it.
+ */
 export async function closeCheckout(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.checkoutSessionId) return;
-  await api(deps, 'POST', `checkout/sessions/${encodeURIComponent(s.checkoutSessionId)}/expire`).catch(() => undefined);
-  await store.linkStripe(s.id, { checkoutSessionId: null }, { kind: 'stripe', id: s.checkoutSessionId });
+  await api(deps, 'POST', `checkout/sessions/${encodeURIComponent(s.checkoutSessionId)}/expire`).catch((e: unknown) => {
+    if (!alreadyClosed(e)) throw e;
+  });
+  await store.linkStripeIf(s.id, { checkoutSessionId: s.checkoutSessionId }, { checkoutSessionId: null }, { kind: 'stripe', id: s.checkoutSessionId });
 }
 
 /** Checks the prices exist before anything is signed or created (a fresh account would fail half-way otherwise). */
@@ -243,15 +254,30 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
       after_completion: { type: 'redirect', redirect: { url: `${new URL('/partners/account', origin).toString()}?checkout=done` } },
     }),
   );
-  await store.linkStripe(s.id, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
+  // Two requests at once (two tabs, two organisers): only the first link is kept; ours is switched off.
+  const saved = await store.linkStripeIf(s.id, { paymentLinkId: null }, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
+  if (!saved) {
+    await deactivateLink(link.id, deps);
+    throw new PaymentLinkRace();
+  }
   return link.url;
 }
 
-/** Switches off the sponsor's payment link (paid, replaced or withdrawn). */
+export class PaymentLinkRace extends Error {}
+
+const deactivateLink = (id: string, deps: StripeDeps) =>
+  api(deps, 'POST', `payment_links/${encodeURIComponent(id)}`, stripeForm({ active: false })).catch((e: unknown) => {
+    if (!alreadyClosed(e)) throw e;
+  });
+
+/**
+ * Switches off the sponsor's payment link (paid, replaced or withdrawn). The id is forgotten only
+ * once Stripe confirms; a failure throws and keeps it, so a retry switches it off.
+ */
 export async function closePaymentLink(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.paymentLinkId) return;
-  await api(deps, 'POST', `payment_links/${encodeURIComponent(s.paymentLinkId)}`, stripeForm({ active: false })).catch(() => undefined);
-  await store.linkStripe(s.id, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
+  await deactivateLink(s.paymentLinkId, deps);
+  await store.linkStripeIf(s.id, { paymentLinkId: s.paymentLinkId }, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
 }
 
 /** The billing portal: STRIPE_SPONSOR_PORTAL_CONFIG, else the members' configuration (same rules). */

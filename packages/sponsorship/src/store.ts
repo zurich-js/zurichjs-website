@@ -21,6 +21,23 @@ export interface StripeLinks {
   paymentLinkUrl?: string | null;
 }
 
+/** What `create` writes with the sponsor, in the same statement. */
+export interface CreateOptions {
+  /** One-time sponsorships: the meetups it covers. */
+  meetups?: SponsorMeetup[];
+  /**
+   * The email belongs to a contact a colleague added elsewhere and nobody accepted: move that
+   * contact here instead of refusing (the board inviting someone). Any other holder is a DuplicateContact.
+   */
+  claimUnconfirmed?: boolean;
+}
+
+/** Compare-and-set for `linkStripe`: the value the caller expects in the column now. */
+export interface StripeExpect {
+  paymentLinkId?: string | null;
+  checkoutSessionId?: string | null;
+}
+
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
 export type NewLogo = Pick<Logo, 'blobKey' | 'contentType' | 'bytes' | 'filename' | 'uploadedBy'>;
 export type NewDocument = Pick<SponsorDocument, 'blobKey' | 'filename' | 'bytes' | 'signedOn' | 'uploadedBy'>;
@@ -35,10 +52,15 @@ export interface SponsorStore {
   byPaymentLink(id: string): Promise<Sponsor | null>;
   /** Newest first; `q` matches the company or legal name only (never contact details). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Sponsor[]>;
-  /** A sponsor with its first contact. Fails with DuplicateContact when the email belongs to a sponsor already. */
-  create(s: NewSponsor, contact: NewContact, actor: Actor): Promise<{ sponsor: Sponsor; contact: Contact }>;
+  /**
+   * A sponsor with its first contact (and its meetups), all or nothing. Fails with DuplicateContact
+   * when the email belongs to a sponsor already.
+   */
+  create(s: NewSponsor, contact: NewContact, actor: Actor, opts?: CreateOptions): Promise<{ sponsor: Sponsor; contact: Contact }>;
   update(id: string, patch: SponsorPatch, actor: Actor): Promise<Sponsor>;
   linkStripe(id: string, links: StripeLinks, actor: Actor): Promise<Sponsor>;
+  /** `linkStripe` only while the `expect` columns still hold those values (two requests at once): null otherwise. */
+  linkStripeIf(id: string, expect: StripeExpect, links: StripeLinks, actor: Actor): Promise<Sponsor | null>;
   transition(id: string, input: TransitionInput): Promise<Sponsor>;
 
   /** The meetups of a one-time sponsorship, by date. */
@@ -104,6 +126,14 @@ export function transitionFields(s: Sponsor, to: Status, endedReason: EndedReaso
   };
 }
 
+const STRIPE_FIELD = {
+  customerId: 'stripeCustomerId',
+  subscriptionId: 'stripeSubscriptionId',
+  checkoutSessionId: 'checkoutSessionId',
+  paymentLinkId: 'paymentLinkId',
+  paymentLinkUrl: 'paymentLinkUrl',
+} as const satisfies Record<keyof StripeLinks, keyof Sponsor>;
+
 const byDate = (a: SponsorMeetup, b: SponsorMeetup) => a.date.localeCompare(b.date) || a.eventId.localeCompare(b.eventId);
 
 /** In-memory store with the same rules as the database. */
@@ -132,6 +162,15 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     sponsors.set(s.id, saved);
     return { ...saved };
   };
+  const linkStripe = (s: Sponsor, links: StripeLinks, actor: Actor) => {
+    record(s.id, 'stripe_linked', actor, { payload: { ...links } });
+    const set = Object.fromEntries(
+      Object.entries(links)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [STRIPE_FIELD[k as keyof StripeLinks], v]),
+    );
+    return save({ ...s, ...set });
+  };
   const emailTaken = (email: string) => [...contacts.values()].some((c) => c.email === email);
   const findBy = async (pred: (s: Sponsor) => boolean) => {
     const s = [...sponsors.values()].find(pred);
@@ -151,9 +190,11 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .slice(0, limit)
         .map((s) => ({ ...s }));
     },
-    async create(input, c, actor) {
+    async create(input, c, actor, opts = {}) {
       const email = normaliseEmail(c.email);
-      if (emailTaken(email)) throw new DuplicateContact(email);
+      const held = [...contacts.values()].find((x) => x.email === email);
+      const movable = !!opts.claimUnconfirmed && !!held && held.addedBy === 'sponsor' && !held.userId;
+      if (held && !movable) throw new DuplicateContact(email);
       const at = now();
       const s: Sponsor = {
         ...input,
@@ -171,32 +212,30 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         updatedAt: at,
       };
       sponsors.set(s.id, s);
-      const contact: Contact = { id: id('c'), sponsorId: s.id, email, name: c.name, role: c.role, userId: null, addedBy: c.addedBy ?? 'board', createdAt: at };
+      const contact: Contact = movable
+        ? { ...held!, sponsorId: s.id, name: c.name, role: c.role, addedBy: c.addedBy ?? 'board' }
+        : { id: id('c'), sponsorId: s.id, email, name: c.name, role: c.role, userId: null, addedBy: c.addedBy ?? 'board', createdAt: at };
       contacts.set(contact.id, contact);
       record(s.id, 'created', actor, { toStatus: s.status, payload: { source: s.source } });
+      if (movable) record(held!.sponsorId, 'contact_removed', actor, { payload: { contactId: held!.id, movedTo: s.id } });
+      const list = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, { ...m }])).values()].sort(byDate);
+      if (list.length) {
+        meetups.set(s.id, list);
+        record(s.id, 'meetups_set', actor, { payload: { events: list.map((m) => m.eventId) } });
+      }
       return { sponsor: { ...s }, contact: { ...contact } };
     },
     async update(sid, patch, actor) {
       const s = must(sid);
+      if (!Object.keys(patch).length) return { ...s };
       record(sid, 'updated', actor, { payload: { fields: Object.keys(patch) } });
       return save({ ...s, ...patch });
     },
-    async linkStripe(sid, links, actor) {
+    linkStripe: async (sid, links, actor) => linkStripe(must(sid), links, actor),
+    async linkStripeIf(sid, expect, links, actor) {
       const s = must(sid);
-      record(sid, 'stripe_linked', actor, { payload: { ...links } });
-      const column = {
-        customerId: 'stripeCustomerId',
-        subscriptionId: 'stripeSubscriptionId',
-        checkoutSessionId: 'checkoutSessionId',
-        paymentLinkId: 'paymentLinkId',
-        paymentLinkUrl: 'paymentLinkUrl',
-      } as const;
-      const set = Object.fromEntries(
-        Object.entries(links)
-          .filter(([, v]) => v !== undefined)
-          .map(([k, v]) => [column[k as keyof StripeLinks], v]),
-      );
-      return save({ ...s, ...set });
+      if ((Object.keys(expect) as (keyof StripeExpect)[]).some((k) => expect[k] !== undefined && s[k] !== expect[k])) return null;
+      return linkStripe(s, links, actor);
     },
     async transition(sid, input) {
       const s = must(sid);

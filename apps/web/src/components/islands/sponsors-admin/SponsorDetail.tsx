@@ -868,12 +868,12 @@ function EditDetails({ sponsor: s, id, onChanged, onSignedOut }: Ctx & { sponsor
             if (busy) return;
             setBusy(true);
             setError(null);
-            const { status, body } = await post(`${BASE}/${id}`, { ...f, partnerId: f.partnerId.trim() || null });
+            const { status, body } = await post<{ warning?: string }>(`${BASE}/${id}`, { ...f, partnerId: f.partnerId.trim() || null });
             setBusy(false);
             if (status === 401) return onSignedOut();
             if (status !== 200) return setError({ field: body.field, message: body.error ?? 'Could not save the details.' });
             setOpen(false);
-            setDone('Details saved.');
+            setDone(body.warning ?? 'Details saved.');
             onChanged();
           }}
         >

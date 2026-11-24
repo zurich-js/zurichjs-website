@@ -3,7 +3,7 @@ type: Domain
 title: Sponsorship
 description: Self-serve paid sponsorships: tiers and fees, billing and one-time bundles, the agreement, tier changes, the status machine, how sponsorships start and end, and how a running sponsorship sets a sponsor's tier on the public site.
 tags: [sponsorship, stripe, postgres]
-timestamp: "2026-11-19T00:00:00Z"
+timestamp: "2026-11-24T00:00:00Z"
 ---
 
 # Sponsorship
@@ -45,11 +45,11 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 
 ## How a sponsorship runs
 
-1. **Invite:** in the admin area, the board enters company, contact, tier and billing (or meetups and a price per meetup for a bundle). A `pending` sponsorship is created and the contact gets an email listing the tier's benefits. **Import** instead records an existing sponsorship paid by bank transfer, `active` until a paid-until date; the contact gets a "your sponsorship is now online" email. Companies can also start on their own at `/partners/account`; pending ones they start are hidden from the Slack bot until they pay.
+1. **Invite:** in the admin area, the board enters company, contact, tier and billing (or meetups and a price per meetup for a bundle). A `pending` sponsorship is created and the contact gets an email listing the tier's benefits. **Import** instead records an existing sponsorship paid by bank transfer, `active` until a paid-until date; the contact gets a "your sponsorship is now online" email. The sponsor, its contact, its meetups and its starting status are saved in one write, so a failure leaves nothing behind and the same form can be sent again; a failed email after that is reported as "no email sent", not as an error. Inviting an email that a colleague added to another sponsorship and nobody accepted moves that contact to the new sponsor. Companies can also start on their own at `/partners/account`; pending ones they start are hidden from the Slack bot until they pay.
 2. **Sign and pay** on `/partners/account`, with the same email sign-in as members: billing details, plan, and the agreement (name, role). Card opens Stripe Checkout; opening it again closes the earlier page, so it can never be paid twice. A sponsor with a contract on file skips signing. A bank-transfer sponsor moving to card is not charged before their paid period ends (`trial_end`).
 3. **Active** with the first payment (from the webhook, at the tier Stripe actually charged), or when the board records a transfer. The welcome email goes out once, with the benefits; the board gets a Slack note with what to deliver.
 4. **Self-serve** ([Sponsorship frontend](/domains/sponsorship/frontend.md)): tier and billing changes, ending and taking it back, the Stripe portal, details, logo, colleagues.
-5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). Once paid, the meetups can still move; their number and price cannot.
+5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). A link is refused while a meetup of the bundle is over. Once paid, the meetups can still move; their number and price cannot.
 6. **Ends:** at the end of the paid period (Stripe `cancel_at_period_end`, or the daily check for bank-transfer ones), after the last meetup (one-time), when Stripe gives up on payment (lapsed), or outright by the board (terminated, or withdrawn before it started). The daily check also closes unpaid one-time sponsorships whose meetup has passed.
 
 ## Status machine
@@ -105,6 +105,12 @@ The same Neon database as memberships ([Membership](/domains/membership/overview
 - **Emails** (`packages/emails/src/sponsors.ts`, sent with Resend): invite, agreement copy, welcome, payment problem, change to confirm, change, ending, resumed, ended, payment recorded. Every email names the tier's benefits.
 - **Slack:** notes in `SLACK_SPONSORSHIP_CHANNEL_ID`, else the membership channel, else the agent's. The organisers' bot can answer questions about sponsors (`apps/web/src/server/sponsor-agent.ts`: read only, company-level facts, names marked as data) ([Slack content agent](/systems/slack-agent.md)).
 
+## Payment pages are closed before they are forgotten
+
+A sponsor has at most one payable Stripe page: one Checkout session or one payment link. Every change that replaces or ends one (a new Checkout, a new link, an invited plan or bundle that changes, a recorded bank transfer, any end) switches the old page off in Stripe first, and forgets its id only once Stripe confirms, or answers that the page is already gone (no such page, or no longer open). Any other Stripe failure fails the request before the change is saved, or, for an end that was already saved, keeps the id: the same request again finishes the job (the board's end cancels the subscription, then emails and posts as the first try would have), and the daily check closes what an ended sponsorship still has open. Two payment links created at the same moment keep the first; the second is switched off and answered with 409.
+
+A bank transfer recorded with the same date again after a failure half-way finishes the recording (activation, the log line, the confirmation) instead of being refused as already paid.
+
 ## The daily check
 
 `apps/web/netlify/functions/sponsorship-daily.mts`, at 07:15 UTC (`apps/web/src/server/sponsor-daily.ts`), in Zurich days:
@@ -113,6 +119,7 @@ The same Neon database as memberships ([Membership](/domains/membership/overview
 - an unpaid one-time sponsorship is closed (withdrawn) once one of its meetups has passed, and its payment page is switched off
 - a bank-transfer sponsorship that was agreed to end ends on its last day
 - the board is reminded in Slack 30 and 7 days before, and on the day, a bank-transfer sponsorship runs out; nothing changes by itself, a person records the payment or agrees the end
+- an ended sponsorship that still points at a Stripe subscription, Checkout session or payment link (a close that failed) is closed again; a Stripe failure is retried the next day and never stops the other sponsors
 
 Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
 

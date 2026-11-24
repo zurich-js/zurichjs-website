@@ -5,7 +5,7 @@
  * transaction (it works on a pg.Pool). Status changes are compare-and-set.
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeLinks } from './store.ts';
+import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
 import type { Actor, Agreement, Contact, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch } from './types.ts';
 
 export interface Queryable {
@@ -128,6 +128,25 @@ export function postgresStore(db: Queryable): SponsorStore {
     return s;
   };
 
+  /** With `expect`: only while those columns hold those values (null matches null); undefined otherwise. */
+  async function linkStripe(id: string, links: StripeLinks, actor: Actor, expect?: StripeExpect): Promise<Sponsor | undefined> {
+    const entries = setters(STRIPE_COLUMNS, links);
+    if (!entries.length) return must(id);
+    const checks = expect ? setters(STRIPE_COLUMNS, expect) : [];
+    const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
+    const where = checks.map(([k], i) => ` and ${STRIPE_COLUMNS[k]} is not distinct from $${entries.length + 2 + i}`).join('');
+    const rows = await audited(
+      `update sponsors set ${sets} where id = $1${where} returning *, id as sponsor_ref`,
+      [id, ...entries.map(([, v]) => v), ...checks.map(([, v]) => v)],
+      'stripe_linked',
+      actor,
+      Object.fromEntries(entries),
+    );
+    if (rows[0]) return sponsorOf(rows[0]);
+    if (expect) return undefined;
+    throw new NotFound('sponsor');
+  }
+
   return {
     get: (id) => one('id', id),
     byStripeSubscription: (id) => one('stripe_subscription_id', id),
@@ -143,16 +162,28 @@ export function postgresStore(db: Queryable): SponsorStore {
       );
       return rows.map(sponsorOf);
     },
-    async create(s, c, actor) {
+    async create(s, c, actor, opts = {}) {
+      const meetups = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, m])).values()];
+      // One statement: the sponsor, its contact (moved from a colleague's unaccepted invitation, or
+      // new), its meetups and the audit rows. `ins` reads `moved`, so it runs after it.
       const rows = await q(
         `with s as (
            insert into sponsors (company_name, legal_name, billing_address, vat_id, website, tier, cycle, payment_mode, status, source,
                                  started_at, paid_until, price_per_meetup, notes)
            values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) returning *),
-         c as (insert into sponsor_contacts (sponsor_id, email, name, role, added_by) select id, $15, $16, $17, $18 from s
-               returning id as contact_id, email as contact_email, added_by as contact_added_by, created_at as contact_created_at),
+         moved as (update sponsor_contacts c set sponsor_id = (select id from s), name = $16, role = $17, added_by = $18
+                   from sponsor_contacts old
+                   where $21::boolean and old.id = c.id and c.email = $15 and c.added_by = 'sponsor' and c.user_id is null
+                   returning c.id as contact_id, c.email as contact_email, c.added_by as contact_added_by, c.created_at as contact_created_at, old.sponsor_id as moved_from),
+         ins as (insert into sponsor_contacts (sponsor_id, email, name, role, added_by) select id, $15, $16, $17, $18 from s where not exists (select 1 from moved)
+                 returning id as contact_id, email as contact_email, added_by as contact_added_by, created_at as contact_created_at),
+         c as (select contact_id, contact_email, contact_added_by, contact_created_at from moved union all select * from ins),
+         m as (insert into sponsor_meetups (sponsor_id, event_id, title, date)
+               select s.id, x.event_id, x.title, x.date::date from s, jsonb_to_recordset($22::jsonb) as x(event_id text, title text, date text)),
          e as (insert into sponsor_events (sponsor_id, type, to_status, actor_kind, actor_id, payload)
-               select id, 'created', status, $19, $20, jsonb_build_object('source', source) from s)
+               select id, 'created', status, $19, $20, jsonb_build_object('source', source) from s
+               union all select id, 'meetups_set', null, $19, $20, jsonb_build_object('events', $23::jsonb) from s where jsonb_array_length($22::jsonb) > 0
+               union all select moved_from, 'contact_removed', null, $19, $20, jsonb_build_object('contactId', contact_id, 'movedTo', (select id from s)) from moved)
          select * from s, c`,
         [
           s.companyName,
@@ -175,6 +206,9 @@ export function postgresStore(db: Queryable): SponsorStore {
           c.addedBy ?? 'board',
           actor.kind,
           actor.id,
+          !!opts.claimUnconfirmed,
+          JSON.stringify(meetups.map((m) => ({ event_id: m.eventId, title: m.title, date: m.date }))),
+          JSON.stringify(meetups.map((m) => m.eventId)),
         ],
       );
       const r = rows[0]!;
@@ -203,20 +237,8 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!rows[0]) throw new NotFound('sponsor');
       return sponsorOf(rows[0]);
     },
-    async linkStripe(id, links, actor) {
-      const entries = setters(STRIPE_COLUMNS, links);
-      if (!entries.length) return must(id);
-      const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
-      const rows = await audited(
-        `update sponsors set ${sets} where id = $1 returning *, id as sponsor_ref`,
-        [id, ...entries.map(([, v]) => v)],
-        'stripe_linked',
-        actor,
-        Object.fromEntries(entries),
-      );
-      if (!rows[0]) throw new NotFound('sponsor');
-      return sponsorOf(rows[0]);
-    },
+    linkStripe: async (id, links, actor) => (await linkStripe(id, links, actor))!,
+    linkStripeIf: async (id, expect, links, actor) => (await linkStripe(id, links, actor, expect)) ?? null,
     async transition(id, input) {
       const current = await must(id);
       if (input.from && current.status !== input.from) throw new TransitionError('The sponsorship changed in the meantime. Look again.', 'conflict');

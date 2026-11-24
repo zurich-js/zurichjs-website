@@ -1,5 +1,9 @@
 # Knowledge updates
 
+## 2026-11-24
+
+- **Update**: adding a sponsor (invite or import, one-time bundles included) is one store write with its meetups and starting status; a Stripe payment page is forgotten only once Stripe confirms it is closed, the board's end and a recorded bank transfer finish on retry, and the daily check closes what an ended sponsorship still has open in Stripe ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+
 ## 2026-11-19
 
 - **Update**: a running sponsorship in the database now sets a partner's tier and current status on the public site, linked by the sponsor's partner id; an ended one makes the partner a past sponsor, and a running sponsor without a partner record is listed by name. It is read at build time, a build without the database shows the partner list alone, and a sponsorship change queues a rebuild ([Sponsorship](/domains/sponsorship/overview.md), [Partners](/domains/partners/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).

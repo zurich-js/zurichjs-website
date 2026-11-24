@@ -100,7 +100,8 @@ export interface SponsorStore {
   linkContact(contactId: string, userId: string): Promise<Contact>;
   removeContact(contactId: string, actor: Actor): Promise<void>;
 
-  acceptAgreement(sponsorId: string, a: NewAgreement, actor: Actor): Promise<Agreement>;
+  /** With `notices`: what the signature owes (its signed copy), written in the same step from the saved agreement. */
+  acceptAgreement(sponsorId: string, a: NewAgreement, actor: Actor, notices?: (saved: Agreement) => NewNotice[]): Promise<Agreement>;
   /** Newest first. */
   agreements(sponsorId: string): Promise<Agreement[]>;
 
@@ -114,8 +115,12 @@ export interface SponsorStore {
   /** Newest first. */
   documents(sponsorId: string): Promise<SponsorDocument[]>;
 
-  /** Queues notices; a key already queued is kept as it is. Returns how many were new. */
-  queueNotices(sponsorId: string, notices: NewNotice[]): Promise<number>;
+  /**
+   * Queues notices; a key already queued is kept as it is. Returns how many were new. With
+   * `event`, that audit row is appended in the same write: the step it marks done (a payment
+   * recorded) and what it owes are saved together or not at all.
+   */
+  queueNotices(sponsorId: string, notices: NewNotice[], event?: { type: string; actor: Actor; payload?: Record<string, unknown> }): Promise<number>;
   /**
    * Unsent notices, oldest first (of one sponsor, or all), claimed for the caller: another sender
    * does not get them until they are done or the claim is five minutes old.
@@ -143,7 +148,31 @@ export interface SponsorStore {
   events(sponsorId: string): Promise<SponsorEvent[]>;
   /** Appends a note to the audit log (e.g. a payment the board recorded, a change link sent). */
   log(sponsorId: string, type: string, actor: Actor, payload?: Record<string, unknown>): Promise<void>;
+  /**
+   * A paid invoice: `invoice_paid`, and with `clearOverdue` an overdue payment (past_due) made
+   * active again, in one step. A failure for the same invoice (`overdueInvoice`) is decided
+   * wholly before or wholly after it.
+   */
+  paidInvoice(sponsorId: string, p: { invoice: string; created?: number }, actor: Actor, opts: { clearOverdue: boolean }): Promise<Sponsor>;
+  /**
+   * A failed or unconfirmed payment for `invoice` of `subscriptionId`, in one step: nothing when
+   * the invoice was paid (`paymentEvidence`), the subscription is not the sponsorship's, or it is
+   * not running; otherwise active becomes past_due and the notices are written with it.
+   */
+  overdueInvoice(
+    sponsorId: string,
+    p: { invoice: string; subscriptionId: string | null; payload: Record<string, unknown> },
+    actor: Actor,
+    notices: NewNotice[],
+  ): Promise<{ sponsor: Sponsor; outcome: 'paid' | 'stale' | 'not_running' | 'overdue' }>;
 }
+
+/** A payment for this invoice was recorded: the event is the payment itself, or the activation it made. Never the overdue mark. */
+export const paymentEvidence = (e: Pick<SponsorEvent, 'type' | 'toStatus' | 'payload'>, invoice: string) =>
+  (e.type === 'invoice_paid' || (e.type === 'status_changed' && e.toStatus === 'active')) && e.payload.invoice === invoice;
+
+/** Statuses in which a failed card payment marks the sponsorship overdue or adds a notice. */
+const RUNNING_FOR_INVOICES: Status[] = ['active', 'past_due', 'ending'];
 
 export class DuplicateContact extends Error {
   constructor(email: string) {
@@ -356,11 +385,13 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       contacts.delete(cid);
       record(c.sponsorId, 'contact_removed', actor, { payload: { contactId: cid } });
     },
-    async acceptAgreement(sid, a, actor) {
+    async acceptAgreement(sid, a, actor, notices) {
       must(sid);
       const ag: Agreement = { ...a, id: id('a'), sponsorId: sid, acceptedAt: now() };
+      const owed = notices?.({ ...ag }) ?? [];
       agreements.push(ag);
       record(sid, 'agreement_accepted', actor, { payload: { version: a.version, context: a.context } });
+      queue(sid, owed);
       return { ...ag };
     },
     agreements: async (sid) =>
@@ -394,8 +425,9 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .filter((d) => d.sponsorId === sid)
         .reverse()
         .map((d) => ({ ...d })),
-    queueNotices: async (sid, list) => {
+    queueNotices: async (sid, list, event) => {
       must(sid);
+      if (event) record(sid, event.type, event.actor, { payload: event.payload ?? {} });
       return queue(sid, list);
     },
     claimNotices: async ({ sponsorId, limit }) => {
@@ -436,6 +468,23 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     log: async (sid, type, actor, payload = {}) => {
       must(sid);
       record(sid, type, actor, { payload });
+    },
+    async paidInvoice(sid, p, actor, { clearOverdue }) {
+      const s = must(sid);
+      record(sid, 'invoice_paid', actor, { payload: { invoice: p.invoice, ...(p.created ? { created: p.created } : {}) } });
+      if (!clearOverdue || s.status !== 'past_due') return { ...s };
+      record(sid, 'status_changed', actor, { fromStatus: 'past_due', toStatus: 'active', payload: { invoice: p.invoice } });
+      return save({ ...s, ...transitionFields(s, 'active', null, null, now()) });
+    },
+    async overdueInvoice(sid, p, actor, notices) {
+      const s = must(sid);
+      if (log.some((e) => e.sponsorId === sid && paymentEvidence(e, p.invoice))) return { sponsor: { ...s }, outcome: 'paid' };
+      if (p.subscriptionId && s.stripeSubscriptionId && s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: { ...s }, outcome: 'stale' };
+      if (!RUNNING_FOR_INVOICES.includes(s.status)) return { sponsor: { ...s }, outcome: 'not_running' };
+      queue(sid, notices);
+      if (s.status !== 'active') return { sponsor: { ...s }, outcome: 'overdue' };
+      record(sid, 'status_changed', actor, { fromStatus: 'active', toStatus: 'past_due', payload: { invoice: p.invoice, ...p.payload } });
+      return { sponsor: save({ ...s, ...transitionFields(s, 'past_due', null, null, now()) }), outcome: 'overdue' };
     },
   };
 }

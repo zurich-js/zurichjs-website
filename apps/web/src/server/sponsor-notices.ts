@@ -9,22 +9,37 @@
  *
  * An email is rendered when it is sent, from the sponsorship as it is then and the props stored
  * with the notice. Each contact's email carries the notice key as its Resend idempotency key.
+ * A notice that says Stripe stopped (`after: 'stripe-closed'`) waits until the sponsorship no longer
+ * points at anything in Stripe.
+ *
+ * Delivery is at least once. A notice is marked sent after Resend or Slack accepted it; if that
+ * write fails twice, the claim is kept rather than released, so no sender takes the notice again
+ * for five minutes. If the database still cannot record it after that, the next sender sends it
+ * again: Resend drops a repeat within 24 hours (same idempotency key), Slack has no such key and
+ * shows a second note.
  */
 import type { TemplateName, TemplateProps, SponsorProps } from '@zurichjs/emails';
 import type { NewNotice, SponsorNotice } from '@zurichjs/sponsorship';
 import { emailEach, sponsorSlack, type NotifyDeps } from './sponsor.ts';
+import { leftInStripe } from './sponsor-stripe.ts';
 
 /** The template's own props; the shared sponsor props come from the sponsorship when it is sent, unless given here (a plan not saved yet). */
 type Props<N extends TemplateName> = Omit<TemplateProps<N>, keyof SponsorProps> & Partial<SponsorProps>;
 
-type NoticeBody = { kind: 'email'; template: TemplateName; props: Record<string, unknown>; to?: 'all' | 'billing' } | { kind: 'slack'; text: string };
+/** `after: 'stripe-closed'`: only once nothing is left open in Stripe (its text says Stripe stopped). */
+type When = { after?: 'stripe-closed' };
 
-export const emailNotice = <N extends TemplateName>(key: string, template: N, props: Props<N>, to?: 'all' | 'billing'): NewNotice => ({
+type NoticeBody = ({ kind: 'email'; template: TemplateName; props: Record<string, unknown>; to?: 'all' | 'billing' } | { kind: 'slack'; text: string }) & When;
+
+export const emailNotice = <N extends TemplateName>(key: string, template: N, props: Props<N>, to?: 'all' | 'billing', when: When = {}): NewNotice => ({
   key,
-  body: { kind: 'email', template, props: props as Record<string, unknown>, ...(to ? { to } : {}) } satisfies NoticeBody,
+  body: { kind: 'email', template, props: props as Record<string, unknown>, ...(to ? { to } : {}), ...when } satisfies NoticeBody,
 });
 
-export const slackNotice = (key: string, text: string): NewNotice => ({ key, body: { kind: 'slack', text } satisfies NoticeBody });
+export const slackNotice = (key: string, text: string, when: When = {}): NewNotice => ({ key, body: { kind: 'slack', text, ...when } satisfies NoticeBody });
+
+/** Not sent yet on purpose (Stripe still open): released for a later run, not a failure. */
+class NotYet extends Error {}
 
 /** How long one notice can take when Resend or Slack is slow (their own timeouts are 15 s). */
 export const PER_NOTICE_MS = 16_000;
@@ -32,11 +47,12 @@ export const PER_NOTICE_MS = 16_000;
 /** Throws when the notice was not delivered, so it stays queued. */
 async function send(n: SponsorNotice, deps: NotifyDeps): Promise<void> {
   const body = n.body as NoticeBody;
+  const s = body.kind === 'email' || body.after ? await deps.store.get(n.sponsorId) : null;
+  if (body.after === 'stripe-closed' && s && leftInStripe(s)) throw new NotYet('waiting until Stripe is closed');
   if (body.kind === 'slack') {
     await (deps.slack ?? sponsorSlack(deps.env, deps.fetch)).post(body.text);
     return;
   }
-  const s = await deps.store.get(n.sponsorId);
   if (!s) return;
   const r = await emailEach(s, body.template, (base) => ({ ...base, ...body.props }) as TemplateProps<typeof body.template>, { ...deps, to: body.to, key: n.key });
   if (r.failed) throw new Error(`${r.failed} of ${r.sent + r.failed} emails failed`);
@@ -50,8 +66,8 @@ async function send(n: SponsorNotice, deps: NotifyDeps): Promise<void> {
 export async function sendNotices(
   deps: NotifyDeps,
   opts: { sponsorId?: string; limit?: number; budget?: { remaining(): number } } = {},
-): Promise<{ sent: number; failed: number }> {
-  const out = { sent: 0, failed: 0 };
+): Promise<{ sent: number; failed: number; waiting: number; unrecorded: number }> {
+  const out = { sent: 0, failed: 0, waiting: 0, unrecorded: 0 };
   const log = deps.log ?? console.log;
   let claimed: SponsorNotice[];
   try {
@@ -67,12 +83,22 @@ export async function sendNotices(
     }
     try {
       await send(n, deps);
-      await deps.store.noticeDone(n.id);
+    } catch (cause) {
+      if (cause instanceof NotYet) out.waiting++;
+      else {
+        out.failed++;
+        log(`[sponsorship] notice ${n.key} not sent, tried again later: ${(cause as Error).message}`);
+      }
+      await deps.store.noticeDone(n.id, (cause as Error).message).catch(() => undefined);
+      continue;
+    }
+    // Delivered: from here on it must not be released as failed, which would send it again.
+    try {
+      await deps.store.noticeDone(n.id).catch(() => deps.store.noticeDone(n.id));
       out.sent++;
     } catch (cause) {
-      out.failed++;
-      log(`[sponsorship] notice ${n.key} not sent, tried again later: ${(cause as Error).message}`);
-      await deps.store.noticeDone(n.id, (cause as Error).message).catch(() => undefined);
+      out.unrecorded++;
+      log(`[sponsorship] notice ${n.key} was delivered but not recorded; its claim is kept, so it is not sent again for five minutes: ${(cause as Error).message}`);
     }
   }
   return out;

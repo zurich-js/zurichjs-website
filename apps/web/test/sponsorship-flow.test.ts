@@ -526,7 +526,7 @@ describe('sponsorship flow', () => {
       reminded: 1,
       stripeClosed: 0,
       linksClosed: 0,
-      notices: { sent: 4, failed: 0 },
+      notices: { sent: 4, failed: 0, waiting: 0, unrecorded: 0 },
       deferred: [],
       stripeOpen: [],
     });
@@ -541,7 +541,7 @@ describe('sponsorship flow', () => {
       reminded: 0,
       stripeClosed: 0,
       linksClosed: 0,
-      notices: { sent: 0, failed: 0 },
+      notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 },
       deferred: [],
       stripeOpen: [],
     });

@@ -27,8 +27,8 @@ import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/spons
 import { lastDay, longDate } from './dates.ts';
 import { adminUrl, who, zurichDay } from './sponsor.ts';
 import { emailNotice, PER_NOTICE_MS, sendNotices, slackNotice } from './sponsor-notices.ts';
-import { closeStripe, leftInStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
-import { recoverPaymentLinks } from './sponsor-stripe.ts';
+import { closeStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { leftInStripe, recoverPaymentLinks } from './sponsor-stripe.ts';
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
@@ -48,7 +48,7 @@ export interface DailyResult {
   /** Ended sponsorships whose Stripe ids this run closed and forgot. */
   stripeClosed: number;
   linksClosed: number;
-  notices: { sent: number; failed: number };
+  notices: Awaited<ReturnType<typeof sendNotices>>;
   /** Sponsors this run did not get to (an unpaid one-time sponsorship before its meetups were read, too). */
   deferred: string[];
   /** Ended sponsors whose Stripe checkout, payment link or subscription is still open after this run. */
@@ -58,7 +58,17 @@ export interface DailyResult {
 export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number } }): Promise<DailyResult> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
-  const out: DailyResult = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, linksClosed: 0, notices: { sent: 0, failed: 0 }, deferred: [], stripeOpen: [] };
+  const out: DailyResult = {
+    completed: 0,
+    ended: 0,
+    closed: 0,
+    reminded: 0,
+    stripeClosed: 0,
+    linksClosed: 0,
+    notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 },
+    deferred: [],
+    stripeOpen: [],
+  };
   const room = () => !deps.deadline || deps.deadline.remaining() >= PER_SPONSOR_MS;
 
   /** A Stripe failure here keeps the ids for the next run, and never stops the other sponsors. */

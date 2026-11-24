@@ -174,6 +174,59 @@ d('sponsorship database', () => {
     expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'never'`)).toBe('0');
   });
 
+  it('writes a signed copy with its agreement and a receipt with its mark, in one step each', async () => {
+    const { sponsor } = await store.create({ ...acme, companyName: 'Owed' }, { email: 'o@owed.ch', name: 'O', role: 'primary' }, board);
+    const ag = await store.acceptAgreement(
+      sponsor.id,
+      { version: '2026-11-18', signerName: 'O', signerTitle: 'CEO', signerEmail: 'o@owed.ch', context: 'start', summary: 'Friend' },
+      sponsorActor,
+      (saved) => [{ key: `copy:${saved.id}`, body: { kind: 'email', at: saved.acceptedAt } }],
+    );
+    expect(pgdb.sql(`select body->>'at' from sponsor_notices where key = 'copy:${ag.id}'`)).not.toBe('');
+    // The notice key is taken already: the whole write fails, the agreement is not saved either.
+    await expect(
+      store.acceptAgreement(
+        sponsor.id,
+        { version: '2026-11-18', signerName: 'O', signerTitle: 'CEO', signerEmail: 'o@owed.ch', context: 'start', summary: 'Friend' },
+        sponsorActor,
+        () => [
+          { key: `copy:${ag.id}`, body: { bad: true } },
+          { key: 'x'.repeat(301), body: {} },
+        ],
+      ),
+    ).rejects.toThrow();
+    expect(await store.agreements(sponsor.id)).toHaveLength(1);
+    expect(await store.queueNotices(sponsor.id, [{ key: 'receipt:1', body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-01-01' } })).toBe(1);
+    await expect(
+      store.queueNotices(sponsor.id, [{ key: 'y'.repeat(301), body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-02-01' } }),
+    ).rejects.toThrow();
+    expect((await store.events(sponsor.id)).filter((e) => e.type === 'payment_recorded').map((e) => e.payload.paidUntil)).toEqual(['2027-01-01']);
+  });
+
+  it('decides a failed and a paid invoice handled at the same moment one after the other: the payment wins', async () => {
+    const { sponsor } = await store.create({ ...acme, companyName: 'Crossed', status: 'active' }, { email: 'c@crossed.ch', name: 'C', role: 'primary' }, board);
+    await store.linkStripe(sponsor.id, { subscriptionId: 'sub_crossed' }, stripe);
+    const notice = [{ key: 'overdue:in_x', body: {} }];
+    // Whichever takes the row first, the other sees it: paid first, the failure changes nothing;
+    // failed first, the payment clears "payment overdue".
+    await Promise.all([
+      store.paidInvoice(sponsor.id, { invoice: 'in_x' }, stripe, { clearOverdue: true }),
+      store.overdueInvoice(sponsor.id, { invoice: 'in_x', subscriptionId: 'sub_crossed', payload: {} }, stripe, notice),
+    ]);
+    expect((await store.get(sponsor.id))?.status).toBe('active');
+    // A failure for another subscription, or for an invoice already paid, changes nothing.
+    expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_y', subscriptionId: 'sub_old', payload: {} }, stripe, [])).outcome).toBe('stale');
+    expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_x', subscriptionId: 'sub_crossed', payload: {} }, stripe, [])).outcome).toBe('paid');
+    // A genuine failure: overdue, with its notice in the same write; the payment then clears it.
+    const r = await store.overdueInvoice(sponsor.id, { invoice: 'in_z', subscriptionId: 'sub_crossed', payload: { event: 'invoice.payment_failed' } }, stripe, [
+      { key: 'overdue:in_z', body: {} },
+    ]);
+    expect(r).toMatchObject({ outcome: 'overdue', sponsor: { status: 'past_due' } });
+    expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'overdue:in_z'`)).toBe('1');
+    expect((await store.overdueInvoice(sponsor.id, { invoice: 'in_z', subscriptionId: 'sub_crossed', payload: {} }, stripe, [])).outcome).toBe('overdue');
+    expect(await store.paidInvoice(sponsor.id, { invoice: 'in_z', created: 1 }, stripe, { clearOverdue: true })).toMatchObject({ status: 'active' });
+  });
+
   it('keeps a payment link attempt or switches it off, never both, even at the same time', async () => {
     const { sponsor: s } = await store.create({ ...acme, companyName: 'Initech', cycle: 'once' }, { email: 'ada@initech.ch', name: 'Ada', role: 'primary' }, board);
     const keep = (key: string, id: string) =>

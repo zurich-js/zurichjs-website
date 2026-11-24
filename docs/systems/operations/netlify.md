@@ -24,8 +24,8 @@ Production deploys are owner actions. Agents never deploy.
 
 Netlify stops a synchronous function (every `/api/*` route) after 60 seconds, a scheduled function after 30 seconds and a background function after 15 minutes, with no answer or log line from the code (Netlify's function configuration docs, checked 24th November 2026). The site keeps inside them:
 
-- **Database:** a connection gives up after 5 s and a query after 10 s (`DB_TIMEOUTS` in `apps/web/src/server/db-url.ts`), so a database that hangs gets the route's own 502.
-- **Outbound calls:** the sponsorship routes give all their Stripe, Resend, Slack and Sanity calls one 50 s budget, and the daily sponsorship check 25 s (`apps/web/src/server/deadline.ts`). No call starts once the budget is spent, and a call still waiting when it runs out is aborted. Membership and donation routes keep only each call's own timeout.
+- **Database:** a connection gives up after 5 s and a query after 10 s (`DB_TIMEOUTS` in `apps/web/src/server/db-url.ts`), so a database that hangs gets the route's own 502. The limits are per connection and per query, not for a route's sequence of queries.
+- **Outbound calls:** the sponsorship routes give all their Stripe, Resend, Slack and Sanity calls one 50 s budget, and the daily sponsorship check 25 s (`apps/web/src/server/deadline.ts`). No call starts once the budget is spent, and a call still waiting when it runs out is aborted with `DeadlineExceeded`. A Checkout or payment link close stopped that way keeps its saved id. Membership and donation routes keep only each call's own timeout.
 
 ## Go live (owner steps)
 

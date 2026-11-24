@@ -116,7 +116,7 @@ The same Neon database as memberships ([Membership](/domains/membership/overview
 
 Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
 
-Netlify stops scheduled functions after 30 seconds, so every outbound call shares a 25 s budget (`apps/web/src/server/deadline.ts`). The check starts no further sponsorship once less than 8 s is left, and logs the ones it did not reach as deferred; they are checked on the next run. A sponsorship ended just before a call ran out can be left without its email or Slack note, as when the call itself fails: nothing records which notes were sent, so the next run does not send them again.
+Netlify stops scheduled functions after 30 seconds, so every outbound call shares a 25 s budget (`apps/web/src/server/deadline.ts`). The check first does what it can decide from the sponsorship alone (endings, then reminders), then reads the meetups of unpaid one-time sponsorships, starting at a different one each day so slow reads cannot hold back the same ones every day. It starts no sponsorship's work once less than 8 s is left, also after a meetup read, and logs the ones it did not reach as deferred; the next run looks at them again, but a reminder whose day has passed is not sent late. When the budget stops the Stripe close of a sponsorship it has just ended, the Checkout session and payment link ids are kept and the log line names it (`stripeOpen`): switch the page off in Stripe. A sponsorship ended just before a call ran out can be left without its email or Slack note, as when the call itself fails: nothing records which notes were sent, so the next run does not send them again.
 
 ### Not verified
 

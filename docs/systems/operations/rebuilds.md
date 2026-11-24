@@ -22,7 +22,7 @@ The site is static, so content changes appear only after a rebuild.
 - **The webhook** is an Astro endpoint, so it follows the same routing as `/api/forms/*`; only the timer is a Netlify Function.
 - **Signature:** the same scheme as `@sanity/webhook`: `t=<ms>,v1=<base64url HMAC-SHA256 of "<t>.<body>">`, with a 5-minute replay window. Unsigned or stale requests get a 401.
 - **The pending state is written only after the build hook accepts the request,** so a failed hook retries on the next tick.
-- **Every write is conditional** on the Blobs entry's ETag (`apps/web/src/server/rebuild-store.ts`): the webhook, sponsorship changes and the tick never overwrite each other. A publish that arrives while the build hook call is in flight stays pending and gets a build of its own.
+- **Every write is conditional** on the Blobs entry's ETag, read with strong consistency (`apps/web/src/server/rebuild-store.ts`): when the webhook, a sponsorship change or the tick saved in between, the change is applied again to the newer state, up to five times. A publish counter tells publishes apart, so one that arrives while the build hook call is in flight stays pending and gets a build of its own. The tick merges what it saves after the hook call (fired times, the later build time), so a slow tick takes nothing back from a newer one. Two ticks that overlap can both call the hook; that needs a hook call slower than the 2-minute schedule.
 - **`/state-changes.json`** lists the start and start + 48 h times still ahead (`stateChangeTimes` in `packages/events/src/state.ts`). The scheduled function reads it from the deployed site, so the build alone decides when the next rebuild is due. Cancelled, postponed and TBC events add no times.
 
 **Where the code lives:**

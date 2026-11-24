@@ -5,7 +5,7 @@
  *   200 {
  *     ok, email,
  *     contact, sponsor | null, contacts, agreements, logos, contracts, pendingChange,
- *     pendingChangeUnknown (Stripe could not be asked, so pendingChange says nothing),
+ *     pendingChangeUnknown (Stripe could not be asked, or its schedule could not be read: pendingChange says nothing),
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
  *     invitation: { company, tierName } | null (a colleague added this email; accept or decline)
@@ -24,7 +24,7 @@ import { tierInfo } from '@zurichjs/sponsorship';
 
 export const prerender = false;
 
-/** A change waiting for the renewal, or `unknown` when Stripe could not be asked: never "none" by mistake. */
+/** A change waiting for the renewal; `unknown` when Stripe failed or answered with a schedule pendingChange cannot read. */
 const changeOf = async (s: Sponsor, deps: SponsorRouteDeps, env: Record<string, string | undefined>) => {
   if (!s.stripeSubscriptionId || !(s.status === 'active' || s.status === 'past_due')) return { change: null, unknown: false };
   try {

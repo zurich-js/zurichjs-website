@@ -270,7 +270,6 @@ describe('sponsorship flow', () => {
       from: '2027-02-18',
     });
     expect((await me()).pendingChange).toEqual({ tier: 'supporter', cycle: 'yearly', from: '2027-02-18' });
-    // Stripe not answering is not "no change scheduled": the page is told it does not know.
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const down = (async () => new Response('{"error":{"message":"down"}}', { status: 500 })) as typeof fetch;
     const blind = await (await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), { ...user(), fetch: down })).json();

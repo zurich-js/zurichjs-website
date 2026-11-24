@@ -172,6 +172,33 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await expect(page.getByLabel('Email')).toHaveCount(0);
   });
 
+  test('a request that never answers ends with Try again after 20 seconds', async ({ page }) => {
+    await page.clock.install();
+    await page.route('**/api/sponsorship/me', () => undefined);
+    await page.goto(ACCOUNT);
+    await expect(page.getByRole('status')).toHaveText('Loading your sponsorship…');
+    await page.clock.runFor(1_000);
+    await page.clock.fastForward(20_000);
+    await expect(page.getByRole('alert')).toContainText('We couldn’t reach the site.');
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+  });
+
+  test('a platform 503 page offers Try again; only the site’s own 503 says accounts are not available', async ({ page }) => {
+    let html = true;
+    await page.route('**/api/sponsorship/me', (route) =>
+      html
+        ? route.fulfill({ status: 503, contentType: 'text/html', body: '<html>Service Unavailable</html>' })
+        : route.fulfill({ status: 503, json: { ok: false, error: 'Sponsorship pages are not available yet.' } }),
+    );
+    await page.goto(ACCOUNT);
+    await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await expect(page.getByText(/not available yet/)).toHaveCount(0);
+    html = false;
+    await page.reload();
+    await expect(page.getByText(/Sponsor accounts are not available yet/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Try again' })).toHaveCount(0);
+  });
+
   test('signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox', async ({ page }) => {
     const sent: Record<string, unknown>[] = [];
     await page.route('**/api/sponsorship/me', (route) => route.fulfill({ status: 401, json: { ok: false, error: 'Sign in first.' } }));
@@ -316,6 +343,36 @@ test.describe('the sponsorship page (/partners/account)', () => {
     await page.goto(ACCOUNT);
     await expect(page.getByText('We couldn’t check for a change waiting for your renewal. Reload the page to see it.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Keep current plan' })).toHaveCount(0);
+  });
+
+  test('while the scheduled change is unknown, a change from the renewal waits for Check again', async ({ page }) => {
+    let unknown = true;
+    let plans = 0;
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: unknown }));
+    await page.route('**/api/sponsorship/plan', (route) => {
+      plans++;
+      return route.fulfill({ json: { ok: true } });
+    });
+    await page.goto(ACCOUNT);
+    const card = page.getByRole('region', { name: 'Acme AG' });
+    await card.getByRole('button', { name: 'Change tier or how often you pay' }).click();
+    const form = page.locator('#panel-change');
+    await form.getByRole('radio', { name: 'Monthly' }).check();
+    await expect(form.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+    await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+    unknown = false;
+    await form.getByRole('button', { name: 'Check again' }).click();
+    await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toBeVisible();
+    expect(plans).toBe(0);
+  });
+
+  test('a change link opened while the scheduled change is unknown cannot be confirmed yet', async ({ page }) => {
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: true }));
+    await page.goto(`${ACCOUNT}?change=friend-monthly`);
+    const linked = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    await expect(linked.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+    await expect(linked.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+    await expect(linked.getByRole('button', { name: 'Check again' })).toBeVisible();
   });
 
   test('a sponsorship that is ending can be kept: /end/undo is called and the page says it continues', async ({ page }) => {

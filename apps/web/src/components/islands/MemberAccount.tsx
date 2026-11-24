@@ -21,7 +21,7 @@ import { lastDay, longDate } from '../../server/dates.ts';
 import type { CertificateView, MemberView } from '../../server/membership.ts';
 import { CYCLES, RESIGN_NOTE_MAX, RESIGN_REASONS, TIERS, TIER_KEYS, feeLabel, type Cycle, type ResignReason, type TierKey } from '../../lib/membership.ts';
 import { ChoiceGroup, SubmitButton, optional, useFocusWhen } from './forms/shared.tsx';
-import { READ_DEADLINE_MS } from './read-deadline.ts';
+import { READ_DEADLINE_MS, timeoutSignal } from './read-deadline.ts';
 import MemberJoin, { TermsCheckbox, readChoice, startCheckout } from './MemberJoin.tsx';
 
 interface Props {
@@ -81,14 +81,15 @@ export default function MemberAccount({ contactEmail }: Props) {
   const sentRef = useFocusWhen<HTMLDivElement>(view.kind === 'sent');
 
   const load = async (n: ReturnType<typeof urlNotice>, attempt = 0): Promise<void> => {
-    const res = await fetch('/api/membership/me', { credentials: 'same-origin', signal: AbortSignal.timeout(READ_DEADLINE_MS) }).catch(() => null);
+    const res = await fetch('/api/membership/me', { credentials: 'same-origin', signal: timeoutSignal(READ_DEADLINE_MS) }).catch(() => null);
     if (!res) return setView({ kind: 'error', message: 'We couldn’t reach the site. Check your connection and reload.' });
     if (res.status === 401) {
       setSignedIn(false);
       return setView({ kind: 'signed-out', notice: n.link });
     }
-    if (res.status === 503) return setView({ kind: 'unavailable' });
-    const body = (await res.json().catch(() => ({}))) as Partial<Me> & { ok?: boolean; error?: string };
+    const body = ((await res.json().catch(() => null)) ?? {}) as Partial<Me> & { ok?: boolean; error?: string };
+    // "Not configured" is the route's own JSON 503; a platform error page is an outage, with Try again.
+    if (res.status === 503 && body.ok === false) return setView({ kind: 'unavailable' });
     if (!res.ok || !body.ok) return setView({ kind: 'error', message: body.error ?? `We couldn’t load your membership. Try again, or write to ${contactEmail}.` });
     const me = body as Me;
     setSignedIn(true);

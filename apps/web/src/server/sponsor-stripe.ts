@@ -295,15 +295,25 @@ export async function periodEnd(subscriptionId: string, deps: StripeDeps): Promi
   return end ? day(end) : null;
 }
 
-/** A plan change waiting for the renewal: { tier, cycle, from }. Null once it took effect. */
+/** Stripe answered, but with a schedule this code cannot read: what is waiting is unknown. */
+export class UnreadableSchedule extends Error {}
+
+/**
+ * A plan change waiting for the renewal: { tier, cycle, from }. Null when no schedule is attached,
+ * or once its change took effect. An attached schedule that came back unexpanded, or without the
+ * plan and date this site writes (scheduleChange), throws UnreadableSchedule.
+ */
 export async function pendingChange(subscriptionId: string, deps: StripeDeps): Promise<{ tier: Tier; cycle: Cycle; from: string } | null> {
   const s = await getSub(subscriptionId, deps, true);
-  const sched = typeof s.schedule === 'object' ? s.schedule : null;
-  const plan = fromLookupKey(sched?.metadata?.plan);
-  const from = sched?.phases?.[0]?.end_date;
-  if (!sched || !plan || !from) return null;
+  if (!s.schedule) return null;
+  if (typeof s.schedule === 'string') throw new UnreadableSchedule(`schedule ${s.schedule} of ${subscriptionId} came back unexpanded`);
+  const sched = s.schedule;
   // After the switch the schedule stays attached for one more term: not "waiting" any more.
-  if (from <= nowUnix(deps) || sched.metadata?.plan === s.items?.data?.[0]?.price?.lookup_key) return null;
+  if (sched.metadata?.plan && sched.metadata.plan === s.items?.data?.[0]?.price?.lookup_key) return null;
+  const plan = fromLookupKey(sched.metadata?.plan);
+  const from = sched.phases?.[0]?.end_date;
+  if (!plan || !from) throw new UnreadableSchedule(`schedule ${sched.id} of ${subscriptionId} has no readable plan or first phase`);
+  if (from <= nowUnix(deps)) return null;
   return { ...plan, from: day(from) };
 }
 

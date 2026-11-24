@@ -55,6 +55,10 @@ export function svgProblem(raw: string): string | null {
   if (/[\s/"']on[a-z]+\s*=/i.test(svg)) return 'event handlers';
   if (/javascript:|vbscript:|data:|@import|expression\s*\(/i.test(svg)) return 'scripts or embedded data';
   if (/url\(\s*["']?\s*(?!#)/i.test(svg)) return 'external references';
+  // CSS can load a file without a literal url(: an escaped one (\75 rl), image-set("…") or an escaped
+  // @import. A logo needs none of it, so CSS with an escape, image-set or an @import is refused.
+  const css = [...svg.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>|\bstyle\s*=\s*("[^"]*"|'[^']*')/gi)].map((m) => m[1] ?? m[2] ?? '').join('\n');
+  if (/\\|image-set\s*\(|@\s*(import|font-face)/i.test(css)) return 'escaped or external CSS';
   if (/(?:xlink:)?href\s*=\s*["']?\s*(?!#)[^"'\s>]/i.test(svg)) return 'links to other files';
   return null;
 }

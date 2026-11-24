@@ -170,8 +170,8 @@ async function welcomeNotices(s: Sponsor, ref: string, term: string | null, next
   return [
     emailNotice(`sponsor-welcome:${s.id}:${ref}`, 'sponsor-welcome', { term, nextPayment, needsLogo }),
     slackNotice(
-      `sponsor-welcome:${s.id}:${ref}:slack`,
-      `:tada: New sponsor: ${who(s)}, ${sponsorFee(s, meetups)}${meetups.length ? ` (${meetups.map((m) => slackText(`${m.title}, ${longDate(m.date)}`)).join('; ')})` : ''}.${needsLogo ? ' No logo yet.' : ''} Add them to Sanity as a current sponsor.${deliver ? `\n*To deliver:*\n${deliver}` : ''}\n${adminUrl(deps.origin, s.id)}`,
+      `sponsor-welcome:${s.id}:slack`,
+      `:tada: New sponsor: ${who(s)}, ${sponsorFee(s, meetups)}${meetups.length ? ` (${meetups.map((m) => slackText(`${m.title}, ${longDate(m.date)}`)).join('; ')})` : ''}.${needsLogo ? ' No logo yet.' : ''}${s.partnerId ? '' : ' Set their Partner id on their page here so the site shows them with their logo; until then it lists them by name.'}${deliver ? `\n*To deliver:*\n${deliver}` : ''}\n${adminUrl(deps.origin, s.id)}`,
     ),
   ];
 }
@@ -367,10 +367,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const key = `sponsor-change-applied:${event.id}`;
         await store.queueNotices(s.id, [
           emailNotice(key, 'sponsor-change', { timing: 'applied', from: null, previous, manual: false }),
-          slackNotice(
-            `${key}:slack`,
-            `:arrows_counterclockwise: ${before} is now ${planLabel(s)}, as scheduled at the renewal. Update the tier in Sanity if the logo size changes.`,
-          ),
+          slackNotice(`${key}:slack`, `:arrows_counterclockwise: ${before} is now ${planLabel(s)}, as scheduled at the renewal. The site shows the new tier from the next build.`),
         ]);
         break;
       }
@@ -396,7 +393,7 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
               `${key}:slack`,
               s.status === 'pending'
                 ? `:hourglass: ${who(s)} never paid; the sponsorship was closed.`
-                : `:wave: Sponsorship ended (${reason === 'cancelled' ? 'as agreed' : 'unpaid'}): ${who(s)}. Mark them as a past sponsor in Sanity.`,
+                : `:wave: Sponsorship ended (${reason === 'cancelled' ? 'as agreed' : 'unpaid'}): ${who(s)}. The site lists them as a past sponsor from the next build.`,
             ),
           ],
         });

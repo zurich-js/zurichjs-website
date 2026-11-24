@@ -64,9 +64,24 @@ export interface SponsorInviteProps extends SponsorProps {
   existingPaidThrough?: string | null;
   /** A contract signed outside the site is on file: no online signature is needed. */
   contractOnFile?: boolean;
+  /** The sponsorship already runs: this only gives the contact access to its page. */
+  access?: boolean;
 }
 
 function sponsorInvite(p: SponsorInviteProps): EmailContent {
+  if (p.access)
+    return {
+      subject: `You can now manage ${p.companyName}’s ZurichJS sponsorship`,
+      preheader: `Sign in on zurichjs.com with this email address to see ${p.companyName}’s sponsorship.`,
+      heading: `Hi ${firstName(p.contactName)}`,
+      blocks: [
+        { kind: 'p', text: `You have access to ${p.companyName}’s ZurichJS sponsorship page.` },
+        ...say(p.message),
+        plan(p, []),
+        { kind: 'p', text: 'Sign in with this email address to see the plan, download receipts, upload your logo and add colleagues.' },
+        { kind: 'button', label: 'Open your sponsorship page', url: p.accountUrl },
+      ],
+    };
   if (p.existingPaidThrough)
     return {
       subject: 'Your ZurichJS sponsorship is now online',

@@ -61,7 +61,10 @@ const partnerGroups = groupPartners(partners);
 // The conference module is a development placeholder: shown locally, or on a build that sets
 // SHOW_PREVIEW_MODULES=true (only for password-protected deploy previews), never on the public site.
 const showPreviewModules = import.meta.env.DEV || process.env.SHOW_PREVIEW_MODULES === 'true';
-const pastSupporters = [...partnerGroups.pastSponsors, ...partnerGroups.venues.filter((p) => !p.current), ...partnerGroups.pastPartners].sort((a, b) => a.name.localeCompare(b.name));
+// Once each: a past sponsor that also hosted is one supporter.
+const pastSupporters = [
+  ...new Map([...partnerGroups.pastSponsors, ...partnerGroups.venues.filter((p) => !p.current), ...partnerGroups.pastPartners].map((p) => [p.id, p])).values(),
+].sort((a, b) => a.name.localeCompare(b.name));
 ---
 
 <BaseLayout

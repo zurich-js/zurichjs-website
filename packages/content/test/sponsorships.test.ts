@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupPartners, type Partner } from '@zurichjs/events';
+import { eventThanks, groupPartners, type Event, type Partner } from '@zurichjs/events';
 import { PARTNERS, applySponsorships, loadContent, resetContentCache, withSponsorships, type SiteContent, type SponsorshipRow } from '../src/index.ts';
 
 const row = (over: Partial<SponsorshipRow> = {}): SponsorshipRow => ({
@@ -16,7 +16,7 @@ const content = (partners: Partner[] = PARTNERS) => ({ source: 'sanity', partner
 
 describe('applySponsorships', () => {
   it('without sponsorships the partner list stands', () => {
-    expect(applySponsorships(PARTNERS, [])).toEqual({ partners: PARTNERS, notes: [] });
+    expect(applySponsorships(PARTNERS, [])).toEqual({ partners: PARTNERS, events: [], notes: [] });
   });
 
   it('a running sponsorship sets the tier and current, and keeps the logo, colour, link and words', () => {
@@ -98,7 +98,7 @@ describe('applySponsorships', () => {
 
   it('an ended or pending sponsor without a partner record is not listed', () => {
     const rows = [row({ id: 'a', companyName: 'Acme AG', partnerId: null, status: 'ended' }), row({ id: 'b', companyName: 'Initech', partnerId: null, status: 'pending' })];
-    expect(applySponsorships(PARTNERS, rows)).toEqual({ partners: PARTNERS, notes: [] });
+    expect(applySponsorships(PARTNERS, rows)).toEqual({ partners: PARTNERS, events: [], notes: [] });
   });
 
   it('a sponsor named like a partner but not linked is not added a second time, and never matched by name', () => {
@@ -109,6 +109,43 @@ describe('applySponsorships', () => {
 
   it('ignores a tier it does not know', () => {
     expect(applySponsorships(PARTNERS, [row({ tier: 'platinum' })]).partners).toEqual(PARTNERS);
+  });
+});
+
+describe('one-time sponsorships', () => {
+  const ev = (id: string) => ({ id, slug: id, title: id, status: 'scheduled', supporters: [] }) as unknown as Event;
+  const once = row({ cycle: 'once', eventIds: ['event-dec'] });
+
+  it('are current for their paid term and thanked on their meetups, not as season sponsors of the others', () => {
+    const { partners, events } = applySponsorships(PARTNERS, [once], [ev('event-dec'), ev('event-jan')]);
+    expect(find(partners, 'gyff')).toMatchObject({ current: true, tier: 'builder', coverage: ['event-dec'] });
+    const [dec, jan] = events;
+    expect(dec!.supporters).toEqual([{ partnerId: 'gyff', role: 'sponsor' }]);
+    expect(eventThanks(dec!, partners, { past: false }).own.map((s) => s.partner.id)).toContain('gyff');
+    expect(eventThanks(jan!, partners, { past: false }).season.map((p) => p.id)).not.toContain('gyff');
+    expect(eventThanks(jan!, partners, { past: false }).own.map((s) => s.partner.id)).not.toContain('gyff');
+  });
+
+  it('a recurring sponsorship next to a one-time one makes a season sponsor', () => {
+    const { partners, events } = applySponsorships(PARTNERS, [once, row({ cycle: 'yearly' })], [ev('event-jan')]);
+    expect(find(partners, 'gyff').coverage).toBeUndefined();
+    expect(eventThanks(events[0]!, partners, { past: false }).season.map((p) => p.id)).toContain('gyff');
+  });
+
+  it('an unlinked one-time sponsor is listed by name on its meetup', () => {
+    const { partners, events } = applySponsorships(PARTNERS, [row({ partnerId: null, companyName: 'Umbrella', cycle: 'once', eventIds: ['event-dec'] })], [ev('event-dec')]);
+    const id = `sponsor-${once.id}`;
+    expect(find(partners, id)).toMatchObject({ name: 'Umbrella', coverage: ['event-dec'] });
+    expect(events[0]!.supporters).toEqual([{ partnerId: id, role: 'sponsor' }]);
+  });
+});
+
+describe('a sponsor that also hosted', () => {
+  it('is listed with the sponsors only while current', () => {
+    const host = { id: 'globex', name: 'Globex', kinds: ['sponsor', 'venue'], tier: 'friend', current: true } as Partner;
+    const groups = groupPartners([host]);
+    expect(groups.currentSponsors.map((p) => p.id)).toEqual(['globex']);
+    expect(groups.venues).toEqual([]);
   });
 });
 

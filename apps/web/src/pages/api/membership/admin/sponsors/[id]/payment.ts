@@ -1,7 +1,8 @@
 /**
  * Record a bank transfer received (sponsorships paid outside Stripe, or not started yet). The
  * sponsor's billing contact gets a written confirmation.
- *   POST { paidUntil: 'YYYY-MM-DD' (the first day not paid for), amount? (CHF), reference? } → 200 { ok, sponsor } · 400 · 404 · 409
+ *   POST { paidUntil: 'YYYY-MM-DD' (the first day not paid for), amount? (CHF), reference? } → 200 { ok, sponsor, confirmationTo } · 400 · 404 · 409
+ *   (`confirmationTo`: who the confirmation is emailed to; empty when nobody can get it)
  */
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject, text } from '../../../../../../server/http.ts';
@@ -25,8 +26,8 @@ export const handleRecordPayment = (request: Request, id: string, deps: SponsorA
       if (!amount.ok) return fail(400, 'Give the amount in whole francs, or leave it empty.', { field: 'amount' });
       const reference = text(body.reference, 100);
       if (reference === false) return fail(400, 'Keep the reference under 100 characters.', { field: 'reference' });
-      const result = await recordPayment(s, { paidUntil: body.paidUntil, amount: amount.value, reference: reference ?? null }, BOARD, lifecycle);
-      return json(200, { ok: true, alreadyRecorded: result.alreadyRecorded, sponsor: adminSponsorView(result.sponsor, await store.meetups(s.id)) });
+      const r = await recordPayment(s, { paidUntil: body.paidUntil, amount: amount.value, reference: reference ?? null }, BOARD, lifecycle);
+      return json(200, { ok: true, sponsor: adminSponsorView(r.sponsor, await store.meetups(s.id)), confirmationTo: r.confirmationTo });
     },
     'record the payment',
   );

@@ -23,6 +23,7 @@ import { cardClass, cx, noticeClass, type ButtonVariant } from '@zurichjs/design
 import { setSignedIn } from '@zurichjs/design/session';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content/partners';
 import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, isTier, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
+import { zurichDay } from '@zurichjs/events';
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
@@ -76,7 +77,7 @@ type View =
 
 type Fail = { error: string; field?: string };
 type Result<T> = ({ ok: true } & T) | ({ ok: false } & Fail);
-type Message = { tone: 'success' | 'danger'; text: ComponentChildren };
+type Message = { tone: 'success' | 'danger' | 'note'; text: ComponentChildren };
 
 /** What every part of the page needs. */
 interface Ctx {
@@ -142,6 +143,12 @@ function linkFor(param: string | null, s: SponsorView | null): Link | null {
   return isTier(tier) && isCycle(cycle) && cycle !== 'once' ? { kind: 'plan', tier, cycle } : null;
 }
 
+/** Why a `?change=` link does nothing now: it is ending already, or the change does not fit it. */
+const staleChange = (s: SponsorView | null, email: string) =>
+  s?.status === 'ending' && s.lastDay
+    ? `This sponsorship already ends after ${longDate(s.lastDay)}, so the link has nothing to confirm.`
+    : `This link has nothing to confirm for your sponsorship now. If something should change, write to ${email}.`;
+
 /** Field errors: the form's own checks after a failed submit, else what the server said about that field. */
 function useErrors() {
   const [tried, setTried] = useState(false);
@@ -206,7 +213,6 @@ function Mail({ email }: { email: string }) {
   );
 }
 
-/** Starting and paying wait until the owner switches online sponsorship on. */
 /** Stripe's billing portal: the card, the billing email and receipts. */
 function PortalButton({ ctx, variant = 'secondary' }: { ctx: Ctx; variant?: ButtonVariant }) {
   const [busy, setBusy] = useState(false);
@@ -431,7 +437,14 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
     }
     if (!q.decided) {
       q.decided = true;
-      if (!me.invitation) setLink(linkFor(q.change, s));
+      if (!me.invitation) {
+        const link = linkFor(q.change, s);
+        setLink(link);
+        if (q.change && !link) {
+          dropParams('change');
+          setFlash({ tone: 'note', text: staleChange(s, contactEmail) });
+        }
+      }
     }
     setView({ kind: 'ready', me });
   };
@@ -570,12 +583,25 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
             {view.slow ? 'Still waiting for Stripe' : 'Stripe is confirming your payment'}
           </Heading>
           <p role="status" class={body}>
-            {view.slow ? 'Reload in a minute; you will not be charged twice.' : 'This takes a few seconds. The page updates by itself.'}
+            {view.slow
+              ? `Stripe has not confirmed the payment yet. If you paid, it shows on your sponsorship page within a few minutes, and you are not charged twice. Questions: ${contactEmail}.`
+              : 'This takes a few seconds. The page updates by itself.'}
           </p>
           {view.slow && (
             <Actions>
-              <Button variant="primary" onClick={() => location.reload()}>
-                Reload
+              <Button
+                variant="primary"
+                onClick={() => {
+                  // Stop waiting: the page shows the sponsorship as it is now.
+                  query.current.checkout = undefined;
+                  dropParams('checkout');
+                  void load();
+                }}
+              >
+                Back to your sponsorship
+              </Button>
+              <Button variant="secondary" onClick={() => location.reload()}>
+                Check again
               </Button>
             </Actions>
           )}
@@ -1484,7 +1510,7 @@ function LogoSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
     }
     setFile(null);
     setPicker((n) => n + 1);
-    result.set({ tone: 'success', text: 'Thank you. We put your new logo on zurichjs.com and the sponsor slides.' });
+    result.set({ tone: 'success', text: 'Thank you. We received your logo. An organiser adds it to zurichjs.com and the sponsor slides.' });
     void ctx.reload();
   };
 
@@ -1494,7 +1520,9 @@ function LogoSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
         Logo
       </Heading>
       <p class={body}>
-        {latest ? 'Your latest logo. We put it on zurichjs.com and the sponsor slides.' : 'Upload your logo, and we put it on zurichjs.com and the sponsor slides.'}
+        {latest
+          ? 'Your latest logo. An organiser adds new logos to zurichjs.com and the sponsor slides.'
+          : 'Upload your logo. An organiser adds it to zurichjs.com and the sponsor slides.'}
       </p>
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         {latest && (
@@ -1509,7 +1537,7 @@ function LogoSection({ ctx, s }: { ctx: Ctx; s: SponsorView }) {
             <figcaption class="flex min-w-0 flex-col gap-1 text-compact">
               <span class="font-bold break-all">{latest.filename}</span>
               <span class="break-words text-grey-text">
-                Uploaded on {shortDate(latest.uploadedAt)} by {latest.uploadedBy === 'board' ? 'ZurichJS' : latest.uploadedBy}
+                Uploaded on {shortDate(zurichDay(latest.uploadedAt))} by {latest.uploadedBy === 'board' ? 'ZurichJS' : latest.uploadedBy}
               </span>
             </figcaption>
           </figure>
@@ -1543,6 +1571,11 @@ function Colleagues({ ctx }: { ctx: Ctx }) {
   const [form, setForm] = useState<{ name: string; email: string; role: Role }>({ name: '', email: '', role: 'billing' });
   const [busy, setBusy] = useState('');
   const [confirm, setConfirm] = useState('');
+  // The pressed Remove button is replaced by the question: keyboard focus moves to it.
+  const confirmRef = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (confirm) confirmRef.current?.focus();
+  }, [confirm]);
   const errs = useErrors();
   const result = useResult();
   const listResult = useResult();
@@ -1618,22 +1651,33 @@ function Colleagues({ ctx }: { ctx: Ctx }) {
               {!self &&
                 (confirm === c.id ? (
                   <div class="flex flex-col gap-3 md:items-end">
-                    <span class="text-compact">Remove {c.name}?</span>
+                    <span ref={confirmRef} tabIndex={-1} class="text-compact outline-hidden">
+                      Remove {c.name}?
+                    </span>
                     <Actions>
                       <Button variant="primary" disabled={!!busy} onClick={() => void remove(c)}>
                         {busy === c.id ? 'Removing…' : 'Remove'}
                       </Button>
-                      <Button variant="secondary" onClick={() => setConfirm('')}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setConfirm('');
+                          // Back to the button that opened it.
+                          requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-remove="${c.id}"] button`)?.focus());
+                        }}
+                      >
                         Cancel
                       </Button>
                     </Actions>
                   </div>
                 ) : (
-                  <Actions>
-                    <Button variant="secondary" disabled={!!busy} onClick={() => setConfirm(c.id)}>
-                      Remove
-                    </Button>
-                  </Actions>
+                  <div data-remove={c.id}>
+                    <Actions>
+                      <Button variant="secondary" disabled={!!busy} onClick={() => setConfirm(c.id)}>
+                        Remove
+                      </Button>
+                    </Actions>
+                  </div>
                 ))}
             </li>
           );
@@ -1721,7 +1765,7 @@ function Agreements({ ctx }: { ctx: Ctx }) {
                 <Tag>{CONTEXT_LABEL[a.context]}</Tag>
               </span>
               <span class="text-compact text-grey-text">
-                Signed by {a.signerName}, {a.signerTitle}, on {longDate(a.acceptedAt)}. Agreement of {longDate(a.version)}.
+                Signed by {a.signerName}, {a.signerTitle}, on {longDate(zurichDay(a.acceptedAt))}. Agreement of {longDate(a.version)}.
               </span>
             </li>
           ))}

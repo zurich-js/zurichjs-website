@@ -44,7 +44,6 @@ type Log = (m: string) => void;
  */
 export const sponsorStore = (env: Env): SponsorStore => withRebuilds(postgresStore(membershipDb(env)), queueRebuild);
 
-/** Sponsors can start and pay only once the owner switches this on (after approving the agreement). */
 export const accountUrl = (origin: string) => new URL('/partners/account', origin).toString();
 export const agreementUrl = (origin: string) => new URL(AGREEMENT.path, origin).toString();
 

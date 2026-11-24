@@ -1,7 +1,3 @@
-/**
- * The admin lists past their row limit (counts over every row, `truncated`), and the admin
- * islands' fetch helper (admin-api.ts): its deadlines, error pages and older browsers.
- */
 import { memoryStore as memberMemory, type NewMember } from '@zurichjs/membership';
 import { memoryStore as sponsorMemory } from '@zurichjs/sponsorship';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -88,7 +84,6 @@ describe('the admin fetch helper', () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
-  /** A fetch that never answers, and rejects with the reason once its signal aborts. */
   const hang = () =>
     vi.stubGlobal('fetch', (_url: string, init: RequestInit) => new Promise((_resolve, reject) => init.signal?.addEventListener('abort', () => reject(init.signal!.reason))));
 
@@ -106,6 +101,11 @@ describe('the admin fetch helper', () => {
   it('says a write answered by a platform error page may have been saved', async () => {
     vi.stubGlobal('fetch', async () => new Response('<html>504 Gateway Timeout</html>', { status: 504 }));
     expect(await api('/api/membership/admin/members/m1/resign', { method: 'POST', body: '{}' })).toEqual({ status: 504, body: { error: UNKNOWN_WRITE } });
+  });
+
+  it.each(['<html>Proxy</html>', '{}', '[]', '{"ok":false}'])('requires a positive write acknowledgement for a 200 response: %s', async (text) => {
+    vi.stubGlobal('fetch', async () => new Response(text));
+    expect(await api('/api/membership/admin/members/m1/resign', { method: 'POST', body: '{}' })).toEqual({ status: 502, body: { error: UNKNOWN_WRITE } });
   });
 
   it('keeps the route’s own sentence on a write error', async () => {

@@ -7,7 +7,7 @@
  * which is past Netlify's 60 s: by then the server has answered or been stopped. No answer is
  * status 0 with a sentence in `error`. A body that is not JSON (a platform error page) is `{}`
  * for a read, so callers fall back to their own message. A write that got no JSON answer from a
- * 5xx page gets UNKNOWN_WRITE instead, since the server may have saved before the page was sent.
+ * 5xx page gets UNKNOWN_WRITE. A 2xx write needs an explicit ok:true acknowledgement or the helper returns 502 with UNKNOWN_WRITE.
  */
 import { READ_DEADLINE_MS, timeoutSignal } from './read-deadline.ts';
 
@@ -30,6 +30,7 @@ export async function api<T>(path: string, init?: RequestInit): Promise<{ status
       headers: { ...(json ? { 'content-type': 'application/json' } : {}), ...init?.headers },
     });
     const body = parse<ApiBody<T>>(await res.text());
+    if (!read && res.ok && body?.ok !== true) return { status: 502, body: { error: UNKNOWN_WRITE } as ApiBody<T> };
     if (!read && res.status >= 500 && !body) return { status: res.status, body: { error: UNKNOWN_WRITE } as ApiBody<T> };
     return { status: res.status, body: body ?? ({} as ApiBody<T>) };
   } catch {
@@ -37,11 +38,10 @@ export async function api<T>(path: string, init?: RequestInit): Promise<{ status
   }
 }
 
-/** The JSON object in `text`, or null when it is not one. */
 const parse = <B>(text: string): B | null => {
   try {
     const value: unknown = JSON.parse(text);
-    return value && typeof value === 'object' ? (value as B) : null;
+    return value && typeof value === 'object' && !Array.isArray(value) ? (value as B) : null;
   } catch {
     return null;
   }

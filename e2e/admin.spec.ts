@@ -1,12 +1,7 @@
 import { expect, test, type Route } from '@playwright/test';
 
-/**
- * The members section of /admin (MembershipAdmin.tsx). The static server has no API, so every
- * /api call is answered here, in the shapes of apps/web/src/pages/api/membership/admin.
- */
 const ADMIN = '/admin';
 
-/** An AdminMember (apps/web/src/server/admin-views.ts). */
 const member = (id: string, name: string) => ({
   id,
   name,

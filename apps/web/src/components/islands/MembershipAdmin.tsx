@@ -119,7 +119,6 @@ function SignIn({ onSignedIn }: { onSignedIn: () => void }) {
         const { status, body } = await api('/api/membership/admin/login', { method: 'POST', body: JSON.stringify({ password }) });
         setBusy(false);
         if (status === 200 && body.ok === true) return onSignedIn();
-        // A wrong password or the lockout has the route's sentence; a server error or no answer is no verdict.
         setError(status === 0 ? UNREACHABLE : (status < 500 && body.error) || 'We couldn’t complete sign-in. Try again in a moment.');
       }}
     >
@@ -146,7 +145,6 @@ function Admin({ onSignedOut }: { onSignedOut: () => void }) {
   const [status, setStatus] = useState<'' | Status>('');
   const [members, setMembers] = useState<AdminMember[] | null>(null);
   const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  /** Set when the shown list stopped at the limit; `total` is every member when that list was unfiltered. */
   const [truncated, setTruncated] = useState<{ total: number | null } | null>(null);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState<string | null>(null);

@@ -12,23 +12,24 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 
 ## Endpoints
 
-| Route                                                         | For                                                                                                                                                  |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/api/sponsorship/me`                                         | the signed-in contact's sponsorship                                                                                                                  |
-| `/api/sponsorship/start`                                      | start a sponsorship (sign the agreement, open Stripe Checkout)                                                                                       |
-| `/api/sponsorship/invitation`                                 | accept an invitation, or a colleague's invitation to a sponsorship                                                                                   |
-| `/api/sponsorship/plan`                                       | change tier or billing, or confirm a change the board sent                                                                                           |
-| `/api/sponsorship/end`, `/api/sponsorship/end/undo`           | end at the end of the paid period, or take it back                                                                                                   |
-| `/api/sponsorship/portal`                                     | a Stripe billing portal session                                                                                                                      |
-| `/api/sponsorship/details`                                    | company and billing details (synced to Stripe)                                                                                                       |
-| `/api/sponsorship/meetups`                                    | the meetups of a one-time sponsorship                                                                                                                |
-| `/api/sponsorship/coverage`                                   | the meetups the sponsorship covers, with their state from Sanity (or the stored ones when Sanity fails)                                              |
-| `/api/sponsorship/logo`, `/api/sponsorship/logo/[id]`         | upload and read logos                                                                                                                                |
-| `/api/sponsorship/contacts`, `/api/sponsorship/contacts/[id]` | colleagues                                                                                                                                           |
-| `/api/sponsorship/contracts/[id]`                             | download an attached contract                                                                                                                        |
-| `/api/membership/admin/sponsors/*`                            | the board's API: list, one sponsor, invite, plan, suggest a change, end, record a payment, bundle, payment link, contacts, contracts, logos, meetups |
-| `/api/membership/admin/fees`                                  | the fee gate and the card tariffs; add a tariff version ([Processing fees](/domains/sponsorship/fees.md))                                            |
-| `/api/membership/admin/sponsors/[id]/coverage`                | the covered meetups of a recurring sponsorship and their history; add an upcoming meetup or take one off                                             |
+| Route                                                               | For                                                                                                                                                  |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/sponsorship/me`                                               | the signed-in contact's sponsorship                                                                                                                  |
+| `/api/sponsorship/start`                                            | start a sponsorship (sign the agreement, open Stripe Checkout)                                                                                       |
+| `/api/sponsorship/invitation`                                       | accept an invitation, or a colleague's invitation to a sponsorship                                                                                   |
+| `/api/sponsorship/plan`                                             | change tier or billing, or confirm a change the board sent                                                                                           |
+| `/api/sponsorship/end`, `/api/sponsorship/end/undo`                 | end at the end of the paid period, or take it back                                                                                                   |
+| `/api/sponsorship/portal`                                           | a Stripe billing portal session                                                                                                                      |
+| `/api/sponsorship/details`                                          | company and billing details (synced to Stripe)                                                                                                       |
+| `/api/sponsorship/meetups`                                          | the meetups of a one-time sponsorship                                                                                                                |
+| `/api/sponsorship/coverage`                                         | the meetups the sponsorship covers, with their state from Sanity (or the stored ones when Sanity fails)                                              |
+| `/api/sponsorship/logo`, `/api/sponsorship/logo/[id]`               | upload and read logos                                                                                                                                |
+| `/api/sponsorship/contacts`, `/api/sponsorship/contacts/[id]`       | colleagues                                                                                                                                           |
+| `/api/sponsorship/contracts/[id]`                                   | download an attached contract                                                                                                                        |
+| `/api/membership/admin/sponsors/*`                                  | the board's API: list, one sponsor, invite, plan, suggest a change, end, record a payment, bundle, payment link, contacts, contracts, logos, meetups |
+| `/api/membership/admin/sponsors/[id]/fees`, `/api/sponsorship/fees` | who covers the fees on a recurring sponsorship, and the sponsor's confirmation of a fee ([Processing fees](/domains/sponsorship/fees.md))            |
+| `/api/membership/admin/fees`                                        | the fee gate and the card tariffs; add a tariff version ([Processing fees](/domains/sponsorship/fees.md))                                            |
+| `/api/membership/admin/sponsors/[id]/coverage`                      | the covered meetups of a recurring sponsorship and their history; add an upcoming meetup or take one off                                             |
 
 - **Sign-in** is the members' email link (Better Auth, `/api/auth/[...all]`).
 - **The admin API** sits under `/api/membership/admin` so it shares the admin cookie's path and `ADMIN_PASSWORD` ([Membership frontend](/domains/membership/frontend.md)).

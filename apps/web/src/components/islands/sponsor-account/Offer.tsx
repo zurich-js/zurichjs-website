@@ -14,13 +14,14 @@ export interface OfferView {
 
 export function Offer({ offer, contactEmail }: { offer: OfferView; contactEmail: string }) {
   const q = offer.quote;
+  const per = (v: string) => (q.per ? `${v} ${q.per}` : v);
   const rows: [string, string][] = [
     ['For', q.purpose],
-    [q.surcharge ? 'Amount' : 'Total', q.base],
+    [q.surcharge ? 'Amount' : 'Total', per(q.base)],
     ...(q.surcharge
       ? ([
-          ['Payment processing fee', q.surcharge],
-          ['Total', q.total],
+          ['Payment processing fee', per(q.surcharge)],
+          ['Total', per(q.total)],
         ] as [string, string][])
       : []),
   ];
@@ -42,7 +43,9 @@ export function Offer({ offer, contactEmail }: { offer: OfferView; contactEmail:
           ? 'You cover the card processing fee: it is a separate line on the payment page and your receipt. The fee is our estimate; what the card company charges can differ slightly.'
           : 'ZurichJS covers the card processing fees.'}
       </p>
-      {offer.payUrl ? (
+      {q.interval && q.surcharge ? (
+        <p class="m-0 text-compact text-ink-2 text-pretty">The fee is charged with every renewal. To start, agree to it under Payment below, then continue to Stripe.</p>
+      ) : q.interval ? null : offer.payUrl ? (
         <div>
           <a class={buttonClass({ variant: 'cta' })} href={offer.payUrl} rel="noopener">
             Pay {q.total} by card

@@ -32,6 +32,7 @@ import {
   type Sponsor,
   type SponsorMeetup,
   type Tier,
+  type FeeStore,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
 import { accountUrl, afterLastMeetup, agreementUrl, emailSponsor, meetupLabel, note, planLabel, slackText, tierBenefits, who, zurichDay, type NotifyDeps } from './sponsor.ts';
@@ -48,12 +49,18 @@ import {
   startCardCheckout,
   upgradeNow,
   type StripeDeps,
+  type CheckoutFee,
 } from './sponsor-stripe.ts';
+import { feeStore } from './sponsor-fees.ts';
 
 export interface LifecycleDeps extends NotifyDeps {
   stripe: StripeDeps;
   now?: () => Date;
+  /** Payment quotes (sponsor-fees.ts); the database by default. */
+  fees?: FeeStore;
 }
+
+const feesOf = (deps: LifecycleDeps) => deps.fees ?? feeStore(deps.env);
 
 /** An expected refusal, with a sentence for the person and an HTTP status for the route. */
 export class SponsorshipError extends Error {
@@ -123,7 +130,7 @@ export async function resolveSigner(
  * Sets up card payment. From `pending` (new or invited), or a running sponsorship paid outside
  * Stripe that moves to card (charged when its paid period ends). Returns Stripe Checkout's URL.
  */
-export async function startSponsorship(s: Sponsor, signer: Signer, actor: Actor, deps: LifecycleDeps): Promise<{ checkoutUrl: string; sponsor: Sponsor }> {
+export async function startSponsorship(s: Sponsor, signer: Signer, actor: Actor, deps: LifecycleDeps, fee?: CheckoutFee): Promise<{ checkoutUrl: string; sponsor: Sponsor }> {
   const switching = s.status === 'active' && s.paymentMode === 'manual';
   if (s.status !== 'pending' && !switching) throw new SponsorshipError('Payment is already set up for this sponsorship.');
   const meetups = s.cycle === 'once' ? await deps.store.meetups(s.id) : [];
@@ -139,7 +146,7 @@ export async function startSponsorship(s: Sponsor, signer: Signer, actor: Actor,
   const sponsor = s.paymentMode === 'card' || switching ? s : await deps.store.update(s.id, { paymentMode: 'card' }, actor);
   const what = s.cycle === 'once' ? `${tierInfo(s.tier).name}, ${bundleLabel(s.tier, meetups.length, s.pricePerMeetup)}, by card` : summary({ ...sponsor, paymentMode: 'card' });
   const agreement = signer.kind === 'full' ? await sign(sponsor, signer, 'start', actor, deps, what) : null;
-  const checkoutUrl = await startCardCheckout(sponsor, contacts, meetups, deps.store, deps.origin, deps.stripe);
+  const checkoutUrl = await startCardCheckout(sponsor, contacts, meetups, deps.store, deps.origin, deps.stripe, fee);
   if (agreement)
     await emailSponsor(
       sponsor,
@@ -200,6 +207,18 @@ export async function changePlan(
     if (s.stripeSubscriptionId && (await cancelPendingChange(s.stripeSubscriptionId, deps.stripe)))
       await note(`:leftwards_arrow_with_hook: ${who(s)} keeps ${previous}; the change waiting for the renewal is cancelled.`, deps);
     return { sponsor, timing, from };
+  }
+  // A processing fee in force was worked out for the current plan: how it follows a new plan is not
+  // decided yet, so the change waits for the board (docs/domains/sponsorship/fees.md).
+  if (s.cycle !== 'once' && (await feesOf(deps).acceptedQuote(s.id))?.feeChoice === 'pass_through')
+    throw new SponsorshipError(`This sponsorship includes a processing fee worked out for its current plan. To change the plan, write to us first.`);
+  // An offer not paid yet was for the old plan: it no longer applies, the board sends a new one.
+  if (s.status === 'pending') {
+    const open = await feesOf(deps).openQuote(s.id, 'sponsorship', null);
+    if (open?.interval) {
+      await feesOf(deps).voidQuote(open.id);
+      await note(`:receipt: ${who(s)} changed the plan before paying; the processing-fee offer no longer applies. Send a new one if needed.`, deps);
+    }
   }
   if (signer && s.status !== 'pending') await sign(s, signer, 'change', actor, deps, `${summary({ ...s, ...to })} (from ${previous})`);
 

@@ -8,7 +8,11 @@ import type { QuoteFigures, Tariff } from './fees.ts';
 import type { Queryable } from './postgres.ts';
 
 export type QuoteSubject = 'sponsorship' | 'raffle';
-export type QuoteStatus = 'open' | 'paid' | 'superseded' | 'void';
+/** `accepted`: a recurring quote the sponsor agreed to, in force for every renewal until superseded. */
+export type QuoteStatus = 'open' | 'accepted' | 'paid' | 'superseded' | 'void';
+
+/** How often a recurring quote is charged; null for a one-off payment. */
+export type QuoteInterval = 'month' | 'quarter' | 'year';
 
 export interface Quote extends QuoteFigures {
   id: string;
@@ -18,14 +22,19 @@ export interface Quote extends QuoteFigures {
   subjectId: string | null;
   /** What it pays for, as the sponsor reads it ("Sponsorship of 3 meetups"). */
   purpose: string;
+  interval: QuoteInterval | null;
   status: QuoteStatus;
   createdBy: string;
   createdAt: string;
   paidAt: string | null;
+  /** A Stripe session for a payment; the subscription item of the surcharge line for a recurring quote. */
   stripeRef: string | null;
+  acceptedAt: string | null;
+  /** The contact who agreed to a recurring quote. */
+  acceptedBy: string | null;
 }
 
-export type NewQuote = QuoteFigures & Pick<Quote, 'sponsorId' | 'subject' | 'subjectId' | 'purpose' | 'createdBy'>;
+export type NewQuote = QuoteFigures & Pick<Quote, 'sponsorId' | 'subject' | 'subjectId' | 'purpose' | 'createdBy'> & { interval?: QuoteInterval | null };
 
 export class DuplicateTariff extends Error {
   constructor(version: string) {
@@ -48,6 +57,14 @@ export interface FeeStore {
   /** Records the payment. `was` is the status before: anything but `open` needs the board's attention. Null for an unknown quote. */
   markQuotePaid(id: string, stripeRef: string): Promise<{ quote: Quote; was: QuoteStatus } | null>;
   voidQuote(id: string): Promise<void>;
+  /**
+   * The sponsor agreed to an open recurring quote: it becomes the one in force (any earlier accepted
+   * quote for the same thing is superseded). `ref` is the surcharge's subscription item, if any.
+   * Accepting it again is a no-op. Null when it is not open or accepted.
+   */
+  acceptQuote(id: string, acceptedBy: string, ref: string | null): Promise<Quote | null>;
+  /** The recurring quote in force for the sponsorship, if any. */
+  acceptedQuote(sponsorId: string): Promise<Quote | null>;
 }
 
 export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
@@ -70,7 +87,17 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
       if (input.tariffVersion && !tariffs.some((t) => t.version === input.tariffVersion)) throw new Error('Unknown tariff version.');
       const open = quotes.find((q) => q.status === 'open' && same(q, input.sponsorId, input.subject, input.subjectId));
       if (open) open.status = 'superseded';
-      const quote: Quote = { ...input, id: `q_${++n}`, status: 'open', createdAt: now(), paidAt: null, stripeRef: null };
+      const quote: Quote = {
+        ...input,
+        interval: input.interval ?? null,
+        id: `q_${++n}`,
+        status: 'open',
+        createdAt: now(),
+        paidAt: null,
+        stripeRef: null,
+        acceptedAt: null,
+        acceptedBy: null,
+      };
       quotes.push(quote);
       return { quote: { ...quote }, superseded: copy(open) };
     },
@@ -92,6 +119,15 @@ export function memoryFeeStore(opts: { now?: () => Date } = {}): FeeStore {
       const q = quotes.find((x) => x.id === id);
       if (q?.status === 'open') q.status = 'void';
     },
+    async acceptQuote(id, by, ref) {
+      const q = quotes.find((x) => x.id === id);
+      if (!q || !q.interval || (q.status !== 'open' && q.status !== 'accepted')) return null;
+      if (q.status === 'accepted') return { ...q };
+      for (const o of quotes) if (o.status === 'accepted' && same(o, q.sponsorId, q.subject, q.subjectId)) o.status = 'superseded';
+      Object.assign(q, { status: 'accepted', acceptedAt: now(), acceptedBy: by, stripeRef: ref });
+      return { ...q };
+    },
+    acceptedQuote: async (sid) => copy(quotes.find((q) => q.status === 'accepted' && q.sponsorId === sid && q.subject === 'sponsorship')),
   };
 }
 
@@ -115,6 +151,7 @@ const quoteOf = (r: Record<string, unknown>): Quote => ({
   subject: r.subject as QuoteSubject,
   subjectId: (r.subject_id as string | null) ?? null,
   purpose: r.purpose as string,
+  interval: (r.interval as QuoteInterval | null) ?? null,
   currency: 'chf',
   baseMinor: Number(r.base_minor),
   surchargeMinor: Number(r.surcharge_minor),
@@ -128,6 +165,8 @@ const quoteOf = (r: Record<string, unknown>): Quote => ({
   createdAt: iso(r.created_at)!,
   paidAt: iso(r.paid_at),
   stripeRef: (r.stripe_ref as string | null) ?? null,
+  acceptedAt: iso(r.accepted_at),
+  acceptedBy: (r.accepted_by as string | null) ?? null,
 });
 
 export function postgresFeeStore(db: Queryable): FeeStore {
@@ -169,9 +208,23 @@ export function postgresFeeStore(db: Queryable): FeeStore {
         const fresh = (
           await q(
             `insert into payment_quotes (sponsor_id, subject, subject_id, purpose, base_minor, surcharge_minor, total_minor,
-                                         fee_choice, tariff_version, policy_version, formula, created_by)
-             values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) returning *`,
-            [n.sponsorId, n.subject, n.subjectId, n.purpose, n.baseMinor, n.surchargeMinor, n.totalMinor, n.feeChoice, n.tariffVersion, n.policyVersion, n.formula, n.createdBy],
+                                         fee_choice, tariff_version, policy_version, formula, created_by, interval)
+             values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) returning *`,
+            [
+              n.sponsorId,
+              n.subject,
+              n.subjectId,
+              n.purpose,
+              n.baseMinor,
+              n.surchargeMinor,
+              n.totalMinor,
+              n.feeChoice,
+              n.tariffVersion,
+              n.policyVersion,
+              n.formula,
+              n.createdBy,
+              n.interval ?? null,
+            ],
           )
         )[0]!;
         return { quote: quoteOf(fresh), superseded: old ? quoteOf(old) : null };
@@ -214,6 +267,32 @@ export function postgresFeeStore(db: Queryable): FeeStore {
     },
     async voidQuote(id) {
       if (UUID.test(id)) await q(`update payment_quotes set status = 'void' where id = $1 and status = 'open'`, [id]);
+    },
+    async acceptQuote(id, by, ref) {
+      if (!UUID.test(id)) return null;
+      const current = (await q('select * from payment_quotes where id = $1', [id]))[0];
+      if (!current || !current.interval) return null;
+      if (current.status === 'accepted') return quoteOf(current);
+      if (current.status !== 'open') return null;
+      // Supersede the quote in force, then accept this one; the partial unique index keeps one in force.
+      await q(
+        `update payment_quotes set status = 'superseded'
+         where sponsor_id = $1 and subject = $2 and coalesce(subject_id, '') = coalesce($3, '') and status = 'accepted'`,
+        [current.sponsor_id, current.subject, current.subject_id],
+      );
+      const r = (
+        await q(`update payment_quotes set status = 'accepted', accepted_at = now(), accepted_by = $2, stripe_ref = $3 where id = $1 and status = 'open' returning *`, [
+          id,
+          by,
+          ref,
+        ])
+      )[0];
+      return r ? quoteOf(r) : null;
+    },
+    acceptedQuote: async (sponsorId) => {
+      if (!UUID.test(sponsorId)) return null;
+      const r = (await q(`select * from payment_quotes where sponsor_id = $1 and subject = 'sponsorship' and status = 'accepted'`, [sponsorId]))[0];
+      return r ? quoteOf(r) : null;
     },
   };
 }

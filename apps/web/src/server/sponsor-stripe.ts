@@ -31,7 +31,7 @@ import {
   type Tier,
   type Quote,
 } from '@zurichjs/sponsorship';
-import { SURCHARGE_NAME } from './sponsor-fees.ts';
+import { SURCHARGE_NAME, stripeRecurring } from './sponsor-fees.ts';
 import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
@@ -163,8 +163,26 @@ export async function checkPrices(s: Pick<Sponsor, 'tier' | 'cycle'>, deps: Stri
   await priceFor(s.tier, s.cycle, deps);
 }
 
-/** Stripe Checkout by card: a subscription, or one payment for the meetups. Returns its URL. */
-export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups: SponsorMeetup[], store: SponsorStore, origin: string, deps: StripeDeps): Promise<string> {
+/** A recurring quote the sponsor agreed to at Checkout: its fee line is added to the subscription, and the webhook records the acceptance. */
+export interface CheckoutFee {
+  quote: Quote;
+  contactId: string;
+}
+
+/**
+ * Stripe Checkout by card: a subscription, or one payment for the meetups. Returns its URL. With a
+ * recurring quote where the sponsor covers the fees, the surcharge is its own recurring line, so
+ * every renewal and receipt shows it.
+ */
+export async function startCardCheckout(
+  s: Sponsor,
+  contacts: Contact[],
+  meetups: SponsorMeetup[],
+  store: SponsorStore,
+  origin: string,
+  deps: StripeDeps,
+  fee?: CheckoutFee,
+): Promise<string> {
   const customer = await ensureCustomer(s, contacts, store, deps);
   await closeCheckout(s, store, deps);
   const account = new URL('/partners/account', origin).toString();
@@ -173,7 +191,7 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
     success_url: `${account}?checkout=done`,
     cancel_url: `${account}?checkout=cancelled`,
     client_reference_id: s.id,
-    metadata: meta(s),
+    metadata: { ...meta(s), ...(fee ? { quoteId: fee.quote.id, acceptedBy: fee.contactId } : {}) },
     payment_method_types: ['card'],
     locale: 'en',
   };
@@ -202,7 +220,17 @@ export async function startCardCheckout(s: Sponsor, contacts: Contact[], meetups
       stripeForm({
         ...common,
         mode: 'subscription',
-        line_items: [{ price: (await priceFor(s.tier, s.cycle, deps)).id, quantity: 1 }],
+        line_items: [
+          { price: (await priceFor(s.tier, s.cycle, deps)).id, quantity: 1 },
+          ...(fee?.quote.surchargeMinor && fee.quote.interval
+            ? [
+                {
+                  price_data: { currency: 'chf', unit_amount: fee.quote.surchargeMinor, recurring: stripeRecurring(fee.quote.interval), product_data: { name: SURCHARGE_NAME } },
+                  quantity: 1,
+                },
+              ]
+            : []),
+        ],
         subscription_data: { metadata: meta(s), ...(trial ? { trial_end: trial } : {}) },
       }),
     );
@@ -304,6 +332,8 @@ interface StripeSchedule {
 const day = (unix: number) => new Date(unix * 1000).toISOString().slice(0, 10);
 const getSub = (id: string, deps: StripeDeps, expand = false) =>
   api<StripeSubscription>(deps, 'GET', `subscriptions/${encodeURIComponent(id)}`, expand ? stripeForm({ expand: ['schedule'] }) : undefined);
+/** The sponsorship's own line (a fee line has no sponsorship lookup key). */
+const baseItem = (s: StripeSubscription) => s.items?.data?.find((i) => fromLookupKey(i.price?.lookup_key)) ?? s.items?.data?.[0];
 const scheduleId = (s: StripeSubscription) => (typeof s.schedule === 'string' ? s.schedule : (s.schedule?.id ?? null));
 const nowUnix = (deps: StripeDeps) => Math.floor((deps.now ?? (() => new Date()))().getTime() / 1000);
 
@@ -339,7 +369,7 @@ export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cyc
     await cancelPendingChange(subscriptionId, deps);
     sub = await getSub(subscriptionId, deps);
   }
-  const item = sub.items?.data?.[0];
+  const item = baseItem(sub);
   if (!item) throw new Error(`Subscription ${subscriptionId} has no item.`);
   const price = (await priceFor(plan.tier, plan.cycle, deps)).id;
   if (item.price?.id === price) return;
@@ -355,7 +385,7 @@ export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cyc
 /** Switches to `plan` from the next renewal (a subscription schedule). Returns the renewal date. */
 export async function scheduleChange(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<{ from: string }> {
   const sub = await getSub(subscriptionId, deps);
-  const current = sub.items?.data?.[0]?.price?.id;
+  const current = baseItem(sub)?.price?.id;
   if (!current) throw new Error(`Subscription ${subscriptionId} has no price.`);
   const next = (await priceFor(plan.tier, plan.cycle, deps)).id;
   const existing = scheduleId(sub);
@@ -416,5 +446,58 @@ export async function cancelNow(subscriptionId: string, deps: StripeDeps): Promi
   });
 }
 
-/** The plan a subscription bills now (its price's lookup key). */
-export const planOfSubscription = (s: { items?: { data?: { price?: { lookup_key?: string | null } }[] } }) => fromLookupKey(s.items?.data?.[0]?.price?.lookup_key);
+/** The plan a subscription bills now: the item whose price has a sponsorship lookup key (a fee line has none). */
+export const planOfSubscription = (s: { items?: { data?: { price?: { lookup_key?: string | null } }[] } }) =>
+  fromLookupKey(s.items?.data?.find((i) => fromLookupKey(i.price?.lookup_key))?.price?.lookup_key);
+
+/* ------------------------------------------------------------------ the processing-fee line */
+
+/** The subscription's fee line: any item without a sponsorship lookup key. */
+export async function surchargeItem(subscriptionId: string, deps: StripeDeps): Promise<string | null> {
+  const sub = await getSub(subscriptionId, deps);
+  return sub.items?.data?.find((i) => !fromLookupKey(i.price?.lookup_key))?.id ?? null;
+}
+
+/**
+ * Adds a recurring quote's fee line to a running subscription, from the next renewal (no proration:
+ * nothing is charged now). Replaces an earlier fee line. Returns the new item's id.
+ */
+export async function setSurchargeItem(subscriptionId: string, quote: Quote, deps: StripeDeps): Promise<string> {
+  if (!quote.interval || !quote.surchargeMinor) throw new Error(`Quote ${quote.id} has no recurring fee.`);
+  await removeSurchargeItem(subscriptionId, deps);
+  const price = await api<{ id: string }>(
+    deps,
+    'POST',
+    'prices',
+    stripeForm({
+      currency: 'chf',
+      unit_amount: quote.surchargeMinor,
+      recurring: stripeRecurring(quote.interval),
+      product_data: { name: SURCHARGE_NAME },
+      metadata: { source: SPONSOR_SOURCE, quoteId: quote.id },
+    }),
+    `sponsor-surcharge-price:${quote.id}`,
+  );
+  const item = await api<{ id: string }>(
+    deps,
+    'POST',
+    'subscription_items',
+    stripeForm({ subscription: subscriptionId, price: price.id, quantity: 1, proration_behavior: 'none', metadata: { source: SPONSOR_SOURCE, quoteId: quote.id } }),
+    `sponsor-surcharge-item:${quote.id}`,
+  );
+  return item.id;
+}
+
+/** Removes the fee line from the next renewal on (nothing is refunded for the current term). */
+export async function removeSurchargeItem(subscriptionId: string, deps: StripeDeps): Promise<boolean> {
+  const id = await surchargeItem(subscriptionId, deps);
+  if (!id) return false;
+  await api(
+    deps,
+    'POST',
+    `subscriptions/${encodeURIComponent(subscriptionId)}`,
+    stripeForm({ items: [{ id, deleted: true }], proration_behavior: 'none' }),
+    `sponsor-surcharge-remove:${id}`,
+  );
+  return true;
+}

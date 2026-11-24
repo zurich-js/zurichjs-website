@@ -72,7 +72,7 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
     const store = deps.store ?? sponsorStore(env);
     const origin = siteOrigin(env);
     const now = deps.now === undefined ? undefined : () => new Date(deps.now!);
-    return await fn({ env, store, origin, lifecycle: lifecycleDeps(env, store, origin, { fetch: deps.fetch, slack: deps.slack, log: deps.log, now }) });
+    return await fn({ env, store, origin, lifecycle: lifecycleDeps(env, store, origin, { fetch: deps.fetch, slack: deps.slack, log: deps.log, now, fees: deps.fees }) });
   } catch (cause) {
     const known = knownFailure(cause);
     if (known) return known;

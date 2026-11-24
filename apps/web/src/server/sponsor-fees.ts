@@ -6,7 +6,19 @@
  * policy version the owner approved, set in the environment by the owner. Without both, every quote
  * is "ZurichJS covers the fees".
  */
-import { FEE_CHOICE_LABEL, chfMinor, feeGate, postgresFeeStore, ppmLabel, type FeeGate, type FeeStore, type Quote, type Tariff } from '@zurichjs/sponsorship';
+import {
+  FEE_CHOICE_LABEL,
+  chfMinor,
+  feeGate,
+  postgresFeeStore,
+  ppmLabel,
+  type FeeGate,
+  type FeeStore,
+  type Quote,
+  type QuoteInterval,
+  type RecurringCycle,
+  type Tariff,
+} from '@zurichjs/sponsorship';
 import type { Env } from './http.ts';
 import { membershipDb } from './membership-db.ts';
 
@@ -25,11 +37,23 @@ export const tariffView = (t: Tariff) => ({
 export const gateView = (g: FeeGate) =>
   g.open ? { open: true as const, policyVersion: g.policyVersion, tariff: tariffView(g.tariff) } : { open: false as const, reason: g.reason };
 
+/** A recurring sponsorship's billing, as a quote interval. */
+export const INTERVAL_OF: Record<RecurringCycle, QuoteInterval> = { monthly: 'month', quarterly: 'quarter', yearly: 'year' };
+
+/** "a year", for "CHF 154.51 a year". */
+export const INTERVAL_WORD: Record<QuoteInterval, string> = { month: 'a month', quarter: 'a quarter', year: 'a year' };
+
+/** Stripe's recurring fields for an interval (a quarter is three months). */
+export const stripeRecurring = (i: QuoteInterval) => (i === 'quarter' ? { interval: 'month', interval_count: 3 } : { interval: i, interval_count: 1 });
+
 /** What the sponsor and the board read: amounts already formatted, and the versions behind them. */
 export const quoteView = (q: Quote) => ({
   id: q.id,
   subject: q.subject,
   purpose: q.purpose,
+  interval: q.interval,
+  /** "a year" for a recurring quote, else null. */
+  per: q.interval ? INTERVAL_WORD[q.interval] : null,
   feeChoice: q.feeChoice,
   feeChoiceLabel: FEE_CHOICE_LABEL[q.feeChoice],
   base: chfMinor(q.baseMinor),
@@ -41,6 +65,7 @@ export const quoteView = (q: Quote) => ({
   status: q.status,
   createdAt: q.createdAt,
   paidAt: q.paidAt,
+  acceptedAt: q.acceptedAt,
 });
 
 export type QuoteView = ReturnType<typeof quoteView>;

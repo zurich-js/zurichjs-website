@@ -8,7 +8,8 @@
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
  *     invitation: { company, tierName } | null (a colleague added this email; accept or decline),
- *     offer: { quote, payUrl } | null (pending: the board's open offer, with base, fee and total)
+ *     offer: { quote, payUrl } | null (pending: the board's open offer, with base, fee and total),
+ *     fees: { inForce, toConfirm } (recurring: the processing fee in force, and one the board offered to confirm)
  *   }
  *   401 · 503 · 502
  *
@@ -52,7 +53,9 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         changeOf(s, deps, env),
       ]);
       // Waiting for payment: the offer the board froze (fees.ts), so they see base, fee and total first.
-      const quote = s.status === 'pending' ? await (deps.fees ?? feeStore(env)).openQuote(s.id, 'sponsorship', null) : null;
+      const fees = deps.fees ?? feeStore(env);
+      const [quote, inForce] = await Promise.all([fees.openQuote(s.id, 'sponsorship', null), s.cycle === 'once' ? null : fees.acceptedQuote(s.id)]);
+      const toConfirm = s.status !== 'pending' && quote?.interval && quote.feeChoice === 'pass_through' ? quote : null;
       const mine = agreements.find((a) => a.signerEmail === user.email);
       return json(200, {
         ...base,
@@ -66,7 +69,8 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         signedCurrent: agreements.some((a) => a.version === AGREEMENT.version) || documents.length > 0,
         signer: mine ? { name: mine.signerName, title: mine.signerTitle } : null,
         invitation: null,
-        offer: quote ? { quote: quoteView(quote), payUrl: s.paymentLinkUrl } : null,
+        offer: s.status === 'pending' && quote ? { quote: quoteView(quote), payUrl: quote.interval ? null : s.paymentLinkUrl } : null,
+        fees: { inForce: inForce ? quoteView(inForce) : null, toConfirm: toConfirm ? quoteView(toConfirm) : null },
       });
     },
     'load your sponsorship',

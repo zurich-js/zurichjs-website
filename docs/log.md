@@ -2,6 +2,7 @@
 
 ## 2026-11-24
 
+- **Update**: [Processing fees](/domains/sponsorship/fees.md) apply to recurring sponsorships: a recurring quote per interval, agreed with a tick before Checkout or confirmed on a running sponsorship, carried as its own line on every renewal; switching back to "ZurichJS covers the fees" applies at once; plan changes wait while a fee is in force.
 - **Added**: [Processing fees](/domains/sponsorship/fees.md). Every board payment link freezes a quote in rappen; the board can choose "Sponsor covers the fees" once a card tariff is entered and the owner set `SPONSOR_FEE_POLICY_VERSION`. The surcharge is its own Stripe line, the sponsor sees base, fee and total first, and stale or mismatched payments are flagged.
 - **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state from Sanity ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 

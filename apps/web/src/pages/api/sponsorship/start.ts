@@ -5,7 +5,8 @@
  *
  * POST /api/sponsorship/start   (session cookie)
  *   { companyName, legalName?, billingAddress?, vatId?, website?, tier, cycle, eventId? (one-time, one meetup),
- *     signerName?, signerTitle?, confirm?, agreementVersion }
+ *     signerName?, signerTitle?, confirm?, agreementVersion,
+ *     acceptFee? (true: agrees to the processing fee of the board's recurring offer, shown first) }
  *   200 { ok, checkoutUrl, sponsor } · 400 { error, field } · 409 · 401 · 429 · 503 · 502
  *
  * Someone without a sponsorship creates one and becomes its primary contact (one meetup at the
@@ -32,12 +33,14 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
     deps,
     async ({ user, contact, sponsor, invitation, store, env, lifecycle }) => {
       if (invitation) return fail(409, `A colleague added you to ${invitation.sponsor.companyName}'s sponsorship. Accept or decline that first.`);
-      // The board sent an offer where the sponsor covers the fees: it is paid through its link, so
-      // the total they agreed to is the total they pay.
-      if (sponsor?.status === 'pending' && (await (deps.fees ?? feeStore(env)).openQuote(sponsor.id, 'sponsorship', null))?.feeChoice === 'pass_through')
-        return fail(409, 'Pay with the payment link we sent you: it includes the processing fee you agreed to.');
+      // The board's open offer (fees.ts). One-time, sponsor covers the fees: paid through its link only.
+      // Recurring: Checkout carries its fee line, once the sponsor ticked that they agree to it.
+      const offer = sponsor?.status === 'pending' ? await (deps.fees ?? feeStore(env)).openQuote(sponsor.id, 'sponsorship', null) : null;
+      if (offer?.feeChoice === 'pass_through' && !offer.interval) return fail(409, 'Pay with the payment link we sent you: it includes the processing fee you agreed to.');
       const body = await readJsonObject(request);
       if (!body) return fail(400, 'Send the form as JSON.');
+      const feeOffer = offer?.interval && offer.feeChoice === 'pass_through' ? offer : null;
+      if (feeOffer && body.acceptFee !== true) return fail(400, 'Tick the box to agree to the processing fee, or write to us.', { field: 'acceptFee' });
       const sig = parseSignature(body);
       if (!sig.ok) return fail(400, sig.error, { field: sig.field });
       const actor = { kind: 'sponsor', id: user.id } as const;
@@ -61,6 +64,9 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
       if (!plan.ok) return fail(400, plan.error, { field: plan.field });
 
       let meetup = null as { eventId: string; title: string; date: string } | null;
+      // The fee was worked out for the offered plan: another plan needs a new offer.
+      if (feeOffer && sponsor && (plan.value.tier !== sponsor.tier || plan.value.cycle !== sponsor.cycle))
+        return fail(409, 'The processing fee we offered is for your current plan. Keep that plan, or write to us for a new offer.', { field: 'tier' });
       if (plan.value.cycle === 'once' && !bundle) {
         const id = typeof body.eventId === 'string' ? body.eventId : null;
         const found = (await (deps.meetups ?? (() => upcomingMeetups(env, deps.fetch)))()).find((m) => m.id === id);
@@ -110,7 +116,7 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
       if (meetup) await store.setMeetups(s.id, [meetup], actor);
       const who = await resolveSigner(s, contact, sig.value, user.email, lifecycle);
       if (!who) return needSignature();
-      const r = await startSponsorship(s, who, actor, lifecycle);
+      const r = await startSponsorship(s, who, actor, lifecycle, feeOffer && contact ? { quote: feeOffer, contactId: contact.id } : undefined);
       return json(200, { ok: true, checkoutUrl: r.checkoutUrl, sponsor: sponsorView(r.sponsor, await store.meetups(s.id)) });
     },
     'start the sponsorship',

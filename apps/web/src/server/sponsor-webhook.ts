@@ -223,6 +223,11 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
           }
         }
         if (s.stripeSubscriptionId !== subscriptionId) s = await store.linkStripe(s.id, { subscriptionId, checkoutSessionId: null }, actor);
+        // The sponsor agreed to a recurring processing fee at Checkout: that quote is now in force.
+        if (meta?.quoteId && meta.acceptedBy) {
+          const accepted = await (deps.fees ?? feeStore(env)).acceptQuote(meta.quoteId, meta.acceptedBy, subscriptionId);
+          if (!accepted) await anomaly(s, `${who(s)} started a subscription with a processing-fee offer that is no longer open. Check the fee line in Stripe.`, notify);
+        }
         if (s.paymentMode === 'manual') s = await store.update(s.id, { paymentMode: 'card' }, actor);
         break;
       }

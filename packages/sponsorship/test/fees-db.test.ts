@@ -46,9 +46,55 @@ async function quotes(fees: FeeStore, sponsorId: string) {
   return second.quote.id;
 }
 
+/** A recurring quote: accepted once, in force for renewals, superseded by the next accepted one. */
+async function recurring(fees: FeeStore, sponsorId: string) {
+  const gate = feeGate(await fees.latestTariff(), 'p-1');
+  const one = (
+    await fees.createQuote({
+      ...quoteFigures(500_000, 'pass_through', gate),
+      interval: 'year',
+      sponsorId,
+      subject: 'sponsorship',
+      subjectId: null,
+      purpose: 'Sponsorship, yearly',
+      createdBy: 'board',
+    })
+  ).quote;
+  expect(one.interval).toBe('year');
+  expect(await fees.acceptedQuote(sponsorId)).toBeNull();
+  const accepted = await fees.acceptQuote(one.id, 'contact-1', 'si_fee_1');
+  expect(accepted).toMatchObject({ status: 'accepted', acceptedBy: 'contact-1', stripeRef: 'si_fee_1', acceptedAt: expect.any(String) });
+  expect((await fees.acceptQuote(one.id, 'contact-2', 'si_other'))?.acceptedBy).toBe('contact-1');
+  const two = (
+    await fees.createQuote({
+      ...quoteFigures(500_000, 'absorb', gate),
+      interval: 'year',
+      sponsorId,
+      subject: 'sponsorship',
+      subjectId: null,
+      purpose: 'Sponsorship, yearly',
+      createdBy: 'board',
+    })
+  ).quote;
+  // A new open quote does not end the one in force; accepting it does.
+  expect((await fees.acceptedQuote(sponsorId))?.id).toBe(one.id);
+  await fees.acceptQuote(two.id, 'board', null);
+  expect((await fees.acceptedQuote(sponsorId))?.id).toBe(two.id);
+  expect((await fees.quote(one.id))?.status).toBe('superseded');
+  // A one-off quote cannot be accepted as recurring.
+  const once = (await fees.createQuote({ ...quoteFigures(100, 'absorb', gate), sponsorId, subject: 'raffle', subjectId: 'r-9', purpose: 'x', createdBy: 'board' })).quote;
+  expect(await fees.acceptQuote(once.id, 'c', null)).toBeNull();
+  return one.id;
+}
+
 describe('fee store in memory', () => {
   it('supersedes, records late payments and never loses one', async () => {
     await quotes(memoryFeeStore(), 's_1');
+  });
+  it('keeps one recurring quote in force', async () => {
+    const fees = memoryFeeStore();
+    await fees.addTariff(tariff);
+    await recurring(fees, 's_1');
   });
 });
 
@@ -87,6 +133,9 @@ d('fee store on Postgres', () => {
     );
     const fees = postgresFeeStore(pool);
     const id = await quotes(fees, sponsor.id);
+    const one = await recurring(fees, sponsor.id);
+    expect(pgdb.fails(`update payment_quotes set status = 'accepted' where id = '${one}'`)).toMatch(/only moves forward/);
+    expect(pgdb.fails(`update payment_quotes set interval = 'month' where id = '${one}'`)).toMatch(/frozen/);
     expect(pgdb.fails(`update fee_tariffs set rate_ppm = 1`)).toMatch(/append-only/);
     expect(pgdb.fails(`update payment_quotes set total_minor = 1, base_minor = 1 where id = '${id}'`)).toMatch(/frozen/);
     expect(pgdb.fails(`update payment_quotes set status = 'open', paid_at = null where id = '${id}'`)).toMatch(/only moves forward/);

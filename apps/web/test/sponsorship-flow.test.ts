@@ -19,6 +19,8 @@ import { handleAttachContract } from '../src/pages/api/membership/admin/sponsors
 import { handleAdminLogoUpload } from '../src/pages/api/membership/admin/sponsors/[id]/logos/index.ts';
 import { handlePaymentLink } from '../src/pages/api/membership/admin/sponsors/[id]/payment-link.ts';
 import { handleFees } from '../src/pages/api/membership/admin/fees.ts';
+import { handleSponsorFees } from '../src/pages/api/membership/admin/sponsors/[id]/fees.ts';
+import { handleConfirmFee } from '../src/pages/api/sponsorship/fees.ts';
 import { handleRecordPayment } from '../src/pages/api/membership/admin/sponsors/[id]/payment.ts';
 import { handleSuggest } from '../src/pages/api/membership/admin/sponsors/[id]/suggest.ts';
 import { handleUndoEnd } from '../src/pages/api/sponsorship/end/undo.ts';
@@ -61,7 +63,7 @@ const tick = { confirm: true, agreementVersion: AGREEMENT.version };
 function world() {
   const calls: { method: string; path: string; params: URLSearchParams }[] = [];
   const emails: { to: string[]; subject: string; text: string }[] = [];
-  const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[] };
+  const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[], feeItem: null as string | null };
   let sessions = 0;
   const f = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
@@ -78,7 +80,12 @@ function world() {
       id,
       cancel_at: unix('2027-02-18T00:00:00Z'),
       metadata: { source: 'zurichjs.com/partners' },
-      items: { data: [{ id: 'si_1', price: { id: `price_${sub.lookupKey}`, lookup_key: sub.lookupKey }, current_period_end: unix('2027-02-18T00:00:00Z') }] },
+      items: {
+        data: [
+          { id: 'si_1', price: { id: `price_${sub.lookupKey}`, lookup_key: sub.lookupKey }, current_period_end: unix('2027-02-18T00:00:00Z') },
+          ...(sub.feeItem ? [{ id: sub.feeItem, price: { id: 'price_fee', lookup_key: null }, current_period_end: unix('2027-02-18T00:00:00Z') }] : []),
+        ],
+      },
       schedule: sub.schedule
         ? params.has('expand[0]')
           ? { id: sub.schedule, metadata: { plan: sub.plan }, phases: [{ end_date: unix('2027-02-18T00:00:00Z') }] }
@@ -109,7 +116,12 @@ function world() {
       if (method === 'POST') sub.plan = params.get('metadata[plan]');
       return ok({ id: 'sub_sched_1', phases: [{ start_date: unix('2026-11-18T00:00:00Z'), end_date: unix('2027-02-18T00:00:00Z') }] });
     }
+    if (path === 'subscription_items') {
+      sub.feeItem = 'si_fee_1';
+      return ok({ id: 'si_fee_1' });
+    }
     if (path.startsWith('subscriptions/')) {
+      if (method === 'POST' && params.get('items[0][deleted]') === 'true' && params.get('items[0][id]') === sub.feeItem) sub.feeItem = null;
       // Stripe refuses cancel_at_period_end while a schedule manages the subscription.
       if (method === 'POST' && params.has('cancel_at_period_end') && sub.schedule)
         return new Response(JSON.stringify({ error: { message: 'The subscription is managed by the subscription schedule `sub_sched_1`.' } }), { status: 400 });
@@ -506,6 +518,86 @@ describe('sponsorship flow', () => {
     );
     expect(await fees.quote(stale.id)).toMatchObject({ status: 'paid' });
     expect(w.slackPosts.join('\n')).toContain('paid an earlier offer');
+  });
+
+  it('passes recurring fees on only with the gate open, the sponsor’s tick, and their confirmation; renewals carry the line', async () => {
+    const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'surcharge-2026-12' };
+    await fees.addTariff({ version: 't-1', method: 'card', currency: 'chf', ratePpm: 29_000, fixedMinor: 30, note: null, enteredBy: 'board' });
+    const { sponsor: s } = await store.create(base({ tier: 'friend', cycle: 'quarterly' }), { email: grace.email, name: 'Grace', role: 'primary' }, { kind: 'board', id: 'admin' });
+    const feesRoute = (body?: unknown, e: Record<string, string> = policy) =>
+      handleSponsorFees(body === undefined ? asAdmin(`/x`) : asAdmin('/x', body), s.id, adminDeps(e)).then(async (r) => ({
+        status: r.status,
+        body: (await r.json()) as Record<string, any>,
+      }));
+
+    // Gate closed without the owner's policy; with it, a pending offer for the current plan.
+    expect((await feesRoute({ feeChoice: 'pass_through' }, env)).status).toBe(409);
+    const offered = await feesRoute({ feeChoice: 'pass_through' });
+    // (84'000 + 30) / 0.971 = 86'539.6… → 86'540: CHF 25.40 a quarter on CHF 840.
+    expect(offered.body.open).toMatchObject({ interval: 'quarter', per: 'a quarter', base: 'CHF 840.00', surcharge: 'CHF 25.40', total: 'CHF 865.40' });
+    expect((await me()).offer).toMatchObject({ payUrl: null, quote: { per: 'a quarter', total: 'CHF 865.40' } });
+
+    // Starting needs the tick, and the offered plan.
+    const start = (body: Record<string, unknown>) => handleStart(post('/api/sponsorship/start', { ...full, companyName: 'Acme', ...body }), user());
+    const untick = await start({ tier: 'friend', cycle: 'quarterly' });
+    expect(untick.status).toBe(400);
+    expect(((await untick.json()) as { field: string }).field).toBe('acceptFee');
+    expect((await start({ tier: 'builder', cycle: 'quarterly', acceptFee: true })).status).toBe(409);
+    expect(await store.get(s.id)).toMatchObject({ tier: 'friend' });
+    w.calls.length = 0;
+    expect((await start({ tier: 'friend', cycle: 'quarterly', acceptFee: true })).status).toBe(200);
+    const checkout = w.calls.find((c) => c.path === 'checkout/sessions')!;
+    expect(checkout.params.get('line_items[1][price_data][unit_amount]')).toBe('2540');
+    expect(checkout.params.get('line_items[1][price_data][recurring][interval]')).toBe('month');
+    expect(checkout.params.get('line_items[1][price_data][recurring][interval_count]')).toBe('3');
+    expect(checkout.params.get('line_items[1][price_data][product_data][name]')).toBe('Payment processing fee');
+    const contact = (await store.contactByEmail(grace.email))!;
+    expect(checkout.params.get('metadata[quoteId]')).toBe(offered.body.open.id);
+    expect(checkout.params.get('metadata[acceptedBy]')).toBe(contact.id);
+
+    // Paid: the quote is in force, and a renewal with two lines still reads the plan and the term.
+    w.sub.feeItem = 'si_fee_checkout';
+    await webhook(
+      stripeEvent('evt_f1', 'checkout.session.completed', {
+        mode: 'subscription',
+        subscription: 'sub_acme',
+        customer: 'cus_acme',
+        metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: offered.body.open.id, acceptedBy: contact.id },
+      }),
+    );
+    expect(await fees.acceptedQuote(s.id)).toMatchObject({ id: offered.body.open.id, status: 'accepted', acceptedBy: contact.id, stripeRef: 'sub_acme' });
+    const twoLines = { ...paidInvoice('in_f1', s.id, '2026-11-18T00:00:00Z', '2027-02-18T00:00:00Z'), amount_paid: 86_540 };
+    twoLines.lines.data.push({ period: { start: unix('2026-11-18T00:00:00Z'), end: unix('2027-02-18T00:00:00Z') }, price: { lookup_key: null } } as never);
+    await webhook(stripeEvent('evt_f2', 'invoice.paid', twoLines));
+    expect(await store.get(s.id)).toMatchObject({ status: 'active', tier: 'friend', paidUntil: '2027-02-18' });
+    expect((await me()).fees).toMatchObject({ inForce: { surcharge: 'CHF 25.40', per: 'a quarter' }, toConfirm: null });
+
+    // A plan change while a fee is in force waits for the board.
+    const plan = await handlePlan(post('/api/sponsorship/plan', { tier: 'builder', cycle: 'quarterly', ...tick }), user());
+    expect(plan.status).toBe(409);
+    expect(((await plan.json()) as { error: string }).error).toMatch(/processing fee/);
+
+    // ZurichJS covers the fees again: the line goes from the next renewal, at once.
+    const absorbed = await feesRoute({ feeChoice: 'absorb' });
+    expect(absorbed.body.inForce).toMatchObject({ feeChoice: 'absorb' });
+    expect(w.sub.feeItem).toBeNull();
+    expect(w.calls.some((c) => c.path === 'subscriptions/sub_acme' && c.params.get('proration_behavior') === 'none')).toBe(true);
+
+    // Back to the sponsor covering them: it waits for the sponsor's confirmation.
+    const again = await feesRoute({ feeChoice: 'pass_through' });
+    expect(again.body).toMatchObject({ open: { surcharge: 'CHF 25.40' }, url: 'https://zurichjs.com/partners/account?change=fees' });
+    expect(w.sub.feeItem).toBeNull();
+    expect((await me()).fees.toConfirm).toMatchObject({ id: again.body.open.id });
+    const confirm = (body: unknown) => handleConfirmFee(post('/api/sponsorship/fees', body), user());
+    expect((await confirm({ quoteId: again.body.open.id })).status).toBe(400);
+    expect((await confirm({ quoteId: 'nope', confirm: true })).status).toBe(404);
+    const confirmed = (await (await confirm({ quoteId: again.body.open.id, confirm: true })).json()) as Record<string, any>;
+    expect(confirmed.inForce).toMatchObject({ feeChoice: 'pass_through', acceptedAt: expect.any(String) });
+    expect(w.sub.feeItem).toBe('si_fee_1');
+    const item = w.calls.find((c) => c.path === 'subscription_items')!;
+    expect(item.params.get('proration_behavior')).toBe('none');
+    expect((await fees.quotes(s.id)).map((q) => q.status)).toEqual(['accepted', 'superseded', 'superseded']);
+    expect((await confirm({ quoteId: again.body.open.id, confirm: true })).status).toBe(409);
   });
 
   it('starts a self-serve one-meetup sponsorship by card, and refuses past meetups and unknown ones', async () => {

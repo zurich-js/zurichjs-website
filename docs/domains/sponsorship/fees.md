@@ -8,11 +8,11 @@ timestamp: '2026-11-24T00:00:00Z'
 
 # Processing fees
 
-Source: `packages/sponsorship/src/fees.ts` (the arithmetic, pure), `packages/sponsorship/src/fee-store.ts` (tariffs and quotes in memory and Postgres), `apps/web/src/server/sponsor-fees.ts`, the migration `apps/web/database/migrations/20261124100000_fee_quotes.sql`, the admin route `apps/web/src/pages/api/membership/admin/fees.ts` and the payment link route `apps/web/src/pages/api/membership/admin/sponsors/[id]/payment-link.ts`.
+Source: `packages/sponsorship/src/fees.ts` (the arithmetic, pure), `packages/sponsorship/src/fee-store.ts` (tariffs and quotes in memory and Postgres), `apps/web/src/server/sponsor-fees.ts`, the migration `apps/web/database/migrations/20261124100000_fee_quotes.sql`, the admin route `apps/web/src/pages/api/membership/admin/fees.ts` the payment link route `apps/web/src/pages/api/membership/admin/sponsors/[id]/payment-link.ts`, the recurring routes `apps/web/src/pages/api/membership/admin/sponsors/[id]/fees.ts` and `apps/web/src/pages/api/sponsorship/fees.ts`, and the migration `apps/web/database/migrations/20261124120000_recurring_quotes.sql`.
 
 ## Who covers the fees
 
-For each offer the board sends, it chooses **ZurichJS covers the fees** (the default) or **Sponsor covers the fees**. Today an offer is a payment link for a one-time sponsorship. Sponsorships a sponsor starts on their own, and recurring sponsorships, are always "ZurichJS covers the fees" (see "Not built yet").
+For each offer the board sends, it chooses **ZurichJS covers the fees** (the default) or **Sponsor covers the fees**: on a one-time sponsorship's payment link, and on a recurring sponsorship (open the sponsor › Processing fees). Sponsorships a sponsor starts on their own without an offer, and those paid by bank transfer, are always "ZurichJS covers the fees".
 
 ## The fee gate
 
@@ -37,10 +37,19 @@ A quote is the one record of what a sponsor agreed to pay (`payment_quotes`).
 - **Payment:** the webhook marks the quote paid. A payment of a superseded quote (an old page), or of a total that differs from the quote, is recorded and flagged in Slack for the board. Nothing is lost and nothing else changes.
 - **The fee is an estimate:** the actual Stripe fee depends on the card. The sponsor is told so.
 
+## Recurring sponsorships
+
+A recurring quote names its interval (month, quarter or year) and is worked out for the sponsorship's current plan. It is **accepted** once the sponsor agreed, and stays in force for every renewal until a newer accepted quote supersedes it (one in force per sponsorship).
+
+- **Not started yet:** the board saves an offer; any open Checkout page is closed. The account page shows the amount, the fee and the total per period, and the start form has an unticked box "I agree to pay the card processing fee of … a separate line on every renewal". Starting is refused without the tick, or with another plan than the offer's. Checkout then carries the fee as its own recurring line, and the webhook records the acceptance (contact, time) when the subscription starts.
+- **Running by card:** "Sponsor covers the fees" waits for the sponsor: the account page shows "Processing fee to confirm", and the board can copy the link to it. Confirming adds the fee line to the subscription from the next renewal (no proration, nothing charged now). "ZurichJS covers the fees" removes the line from the next renewal at once, because it only lowers the price.
+- **Renewals and receipts** carry the fee line automatically. The webhook reads the plan from the line with a sponsorship lookup key and the term from the latest period, so the fee line changes neither.
+- **A plan change while a fee is in force** is refused with a plain message, for the sponsor and the board: how a surcharge follows a new plan is an owner decision. An offer not paid yet no longer applies after a plan change; the board sends a new one.
+
 ## Not built yet
 
-- **Recurring sponsorships with "Sponsor covers the fees":** needs the surcharge as a recurring line on the subscription, carried through tier changes and renewals, and a change link the sponsor confirms. Until then recurring sponsorships are always "ZurichJS covers the fees".
 - **The actual fee per payment** is not read back from Stripe for reconciliation.
+- **No email** announces a fee to confirm; the board sends the link.
 
 ## Draft surcharge policy (for the owner to review, not approved)
 

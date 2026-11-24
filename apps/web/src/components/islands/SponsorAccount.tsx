@@ -27,6 +27,7 @@ import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
 import { CoveredMeetups } from './sponsor-account/CoveredMeetups.tsx';
+import { Fees, type FeesView } from './sponsor-account/Fees.tsx';
 import { Offer, type OfferView } from './sponsor-account/Offer.tsx';
 
 type ContactView = ReturnType<typeof contactView>;
@@ -58,6 +59,8 @@ interface Me {
   invitation?: { company: string; tierName: string } | null;
   /** Waiting for payment: the board's open offer, with base, fee and total. */
   offer?: OfferView | null;
+  /** Recurring: the processing fee in force, and one the board offered to confirm. */
+  fees?: FeesView;
 }
 
 interface Meetup {
@@ -678,10 +681,11 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       )}
       {link && <LinkedChange ctx={ctx} s={s} link={link} />}
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
+      {recurring && s.status !== 'pending' && ctx.me.fees && <Fees fees={ctx.me.fees} onSignedOut={ctx.onSignedOut} onChanged={() => void ctx.reload()} />}
       <CoveredMeetups once={!recurring} contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
       {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
       {/* An offer where they cover the fees is paid through its link only (the server refuses Checkout). */}
-      {s.status === 'pending' && ctx.me.offer?.quote.feeChoice !== 'pass_through' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
+      {s.status === 'pending' && !(ctx.me.offer?.quote.feeChoice === 'pass_through' && !ctx.me.offer.quote.interval) && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}
       {s.status !== 'ended' && <LogoSection ctx={ctx} s={s} />}
@@ -1182,6 +1186,9 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
   const [eventId, setEventId] = useState(pendingNow ? (s.meetups.at(0)?.eventId ?? '') : '');
   const [meetups, setMeetups] = useState<Meetup[] | 'error' | null>(null);
   const [busy, setBusy] = useState(false);
+  /** A recurring offer where they cover the processing fee: they agree to it here, before Stripe. */
+  const feeOffer = pendingNow && ctx.me.offer?.quote.interval && ctx.me.offer.quote.feeChoice === 'pass_through' ? ctx.me.offer.quote : null;
+  const [acceptFee, setAcceptFee] = useState(false);
   const sig = useSignature(ctx, s);
   const errs = useErrors();
   const result = useResult();
@@ -1220,7 +1227,7 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
     errs.setServer(null);
     result.set(null);
     const plan = bundle ? {} : { tier, cycle, eventId: cycle === 'once' ? eventId : undefined };
-    const r = await call<{ checkoutUrl: string }>('/api/sponsorship/start', { json: { ...details, ...plan, ...sig.payload } }, ctx);
+    const r = await call<{ checkoutUrl: string }>('/api/sponsorship/start', { json: { ...details, ...plan, ...sig.payload, ...(feeOffer ? { acceptFee } : {}) } }, ctx);
     if (!r) return;
     if (!r.ok) {
       setBusy(false);
@@ -1314,6 +1321,13 @@ function StartForm({ ctx, s, cancelled, focus, onCancel }: { ctx: Ctx; s: Sponso
         <fieldset class={fieldset}>
           <legend class={legend}>Payment</legend>
           <p class={body}>You pay by card on Stripe’s secure page.</p>
+          {feeOffer && (
+            <Checkbox
+              label={`I agree to pay the card processing fee of ${feeOffer.surcharge} ${feeOffer.per}, a separate line on every renewal (${feeOffer.total} ${feeOffer.per} in total).`}
+              checked={acceptFee}
+              onChange={(e) => setAcceptFee((e.target as HTMLInputElement).checked)}
+            />
+          )}
         </fieldset>
 
         <Signature sig={sig} ctx={ctx} company={company} errorOf={errorOf} />

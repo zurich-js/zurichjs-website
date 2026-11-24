@@ -147,6 +147,13 @@ describe('covered meetups', () => {
     };
     const r = await handleAdminCoverage(post(path(s.id), { action: 'remove', eventId: 'event-dec' }), s.id, admin(down));
     expect(r.status).toBe(503);
+    const absent = await handleAdminCoverage(
+      post(path(s.id), { action: 'remove', eventId: 'event-dec' }),
+      s.id,
+      admin(async () => []),
+    );
+    expect(absent.status).toBe(503);
+
     expect(await store.meetups(s.id)).toHaveLength(1);
     const history = (await (await handleAdminCoverage(get(path(s.id)), s.id, admin(down))).json()) as Record<string, any>;
     expect(history).toMatchObject({ ok: true, checked: false });

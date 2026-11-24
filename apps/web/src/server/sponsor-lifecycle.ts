@@ -35,6 +35,8 @@ import {
   type FeeStore,
 } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
+import { MembershipUnavailable } from './membership-db.ts';
+import { withdrawOffer } from './sponsor-offers.ts';
 import { accountUrl, afterLastMeetup, agreementUrl, emailSponsor, meetupLabel, note, planLabel, slackText, tierBenefits, who, zurichDay, type NotifyDeps } from './sponsor.ts';
 import {
   cancelAtPeriodEnd,
@@ -60,7 +62,21 @@ export interface LifecycleDeps extends NotifyDeps {
   fees?: FeeStore;
 }
 
-const feesOf = (deps: LifecycleDeps) => deps.fees ?? feeStore(deps.env);
+/** The fee store, or null where there is no database (the in-memory tests without one). */
+const feesOf = (deps: LifecycleDeps): FeeStore | null => {
+  try {
+    return deps.fees ?? feeStore(deps.env);
+  } catch (cause) {
+    if (cause instanceof MembershipUnavailable) return null;
+    throw cause;
+  }
+};
+
+/** The board's open offer no longer stands: void its quote and switch its link off. */
+async function endOffer(s: Sponsor, deps: LifecycleDeps) {
+  const fees = feesOf(deps);
+  if (fees) await withdrawOffer(s, fees, deps.store, deps.stripe);
+}
 
 /** An expected refusal, with a sentence for the person and an HTTP status for the route. */
 export class SponsorshipError extends Error {
@@ -210,13 +226,13 @@ export async function changePlan(
   }
   // A processing fee in force was worked out for the current plan: how it follows a new plan is not
   // decided yet, so the change waits for the board (docs/domains/sponsorship/fees.md).
-  if (s.cycle !== 'once' && (await feesOf(deps).acceptedQuote(s.id))?.feeChoice === 'pass_through')
+  if (s.cycle !== 'once' && (await feesOf(deps)?.acceptedQuote(s.id))?.feeChoice === 'pass_through')
     throw new SponsorshipError(`This sponsorship includes a processing fee worked out for its current plan. To change the plan, write to us first.`);
   // An offer not paid yet was for the old plan: it no longer applies, the board sends a new one.
   if (s.status === 'pending') {
-    const open = await feesOf(deps).openQuote(s.id, 'sponsorship', null);
+    const open = await feesOf(deps)?.openQuote(s.id, 'sponsorship', null);
     if (open?.interval) {
-      await feesOf(deps).voidQuote(open.id);
+      await feesOf(deps)?.voidQuote(open.id);
       await note(`:receipt: ${who(s)} changed the plan before paying; the processing-fee offer no longer applies. Send a new one if needed.`, deps);
     }
   }
@@ -283,6 +299,7 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
   if (s.stripeSubscriptionId) await cancelNow(s.stripeSubscriptionId, deps.stripe);
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
+  await endOffer(s, deps);
   if (s.stripeSubscriptionId) await deps.store.linkStripe(s.id, { subscriptionId: null }, { kind: 'stripe', id: s.stripeSubscriptionId });
 }
 
@@ -376,6 +393,7 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
   if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
+  await endOffer(s, deps);
   let updated = await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
@@ -410,6 +428,8 @@ export async function setBundle(s: Sponsor, meetups: SponsorMeetup[], pricePerMe
     if (pricePerMeetup !== s.pricePerMeetup) updated = await deps.store.update(s.id, { pricePerMeetup }, actor);
     await closeCheckout(s, deps.store, deps.stripe);
     if (s.paymentLinkId) await closePaymentLink(s, deps.store, deps.stripe);
+    // The offer was for the old bundle: withdrawn, so the sponsor is never sent to a link that is off.
+    await endOffer(s, deps);
   } else {
     updated = await deps.store.update(s.id, { paidUntil: afterLastMeetup(meetups) }, actor);
   }

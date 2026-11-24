@@ -34,8 +34,10 @@ A quote is the one record of what a sponsor agreed to pay (`payment_quotes`).
 - **A new link is a new quote:** it switches the old link off first and supersedes its quote. There is one open quote per sponsorship.
 - **Stripe:** the surcharge is its own line, "Payment processing fee", so the payment page and the receipt show base, fee and total apart. The link and its payment carry `quoteId` in their metadata.
 - **The sponsor sees the offer first:** while the sponsorship waits for payment, `/partners/account` shows what it is for, the amount, the fee and the total, with a button to the link. An offer where the sponsor covers the fees is paid through its link only: starting Checkout on the account page is refused, so the total they agreed to is the total they pay.
-- **Payment:** the webhook marks the quote paid. A payment of a superseded quote (an old page), or of a total that differs from the quote, is recorded and flagged in Slack for the board. Nothing is lost and nothing else changes.
-- **The fee is an estimate:** the actual Stripe fee depends on the card. The sponsor is told so.
+
+## Payments
+
+The board previews the amount, surcharge, total and estimated net before creating the link. Each Stripe session has its own receipt. Only a payment matching the sponsor, subject, link, currency and frozen total pays the open quote. Other payments wait for a decision under **Card payments** on the sponsor's board page. The board can apply a reviewed payment to a pending one-time sponsorship or record how it was settled. Refunds are handled in Stripe. **Check actual fees with Stripe** reads the balance transaction and records the actual fee and net separately from the original estimate.
 
 ## Recurring sponsorships
 
@@ -47,9 +49,6 @@ A recurring quote names its interval (month, quarter or year) and is worked out 
 - **A plan change while a fee is in force** is refused with a plain message, for the sponsor and the board: how a surcharge follows a new plan is an owner decision. An offer not paid yet no longer applies after a plan change; the board sends a new one.
 
 ## Not built yet
-
-- **The actual fee per payment** is not read back from Stripe for reconciliation.
-- **No email** announces a fee to confirm; the board sends the link.
 
 ## Draft surcharge policy (for the owner to review, not approved)
 

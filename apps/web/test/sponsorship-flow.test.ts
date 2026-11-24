@@ -17,6 +17,7 @@ import { handleBoardEnd } from '../src/pages/api/membership/admin/sponsors/[id]/
 import { handleBundle } from '../src/pages/api/membership/admin/sponsors/[id]/bundle.ts';
 import { handleAttachContract } from '../src/pages/api/membership/admin/sponsors/[id]/contracts/index.ts';
 import { handleAdminLogoUpload } from '../src/pages/api/membership/admin/sponsors/[id]/logos/index.ts';
+import { handleSponsorPayments } from '../src/pages/api/membership/admin/sponsors/[id]/payments.ts';
 import { handlePaymentLink } from '../src/pages/api/membership/admin/sponsors/[id]/payment-link.ts';
 import { handleFees } from '../src/pages/api/membership/admin/fees.ts';
 import { handleSponsorFees } from '../src/pages/api/membership/admin/sponsors/[id]/fees.ts';
@@ -64,6 +65,7 @@ function world() {
   const calls: { method: string; path: string; params: URLSearchParams }[] = [];
   const emails: { to: string[]; subject: string; text: string }[] = [];
   const sub = { lookupKey: 'sponsor_friend_quarterly', schedule: null as string | null, plan: null as string | null, live: [] as string[], feeItem: null as string | null };
+  const links = new Map<string, number>();
   let sessions = 0;
   const f = (async (url: string, init: RequestInit = {}) => {
     if (url === 'https://api.resend.com/emails') {
@@ -99,7 +101,12 @@ function world() {
     if (path.startsWith('customers/')) return ok({ id: path.split('/')[1] });
     if (path === 'checkout/sessions') return ok({ id: `cs_test_${++sessions}`, url: `https://checkout.stripe.com/c/pay/cs_test_${sessions}` });
     if (/^checkout\/sessions\/cs_test_\d+\/expire$/.test(path)) return ok({ status: 'expired' });
-    if (path === 'payment_links') return ok({ id: 'plink_1', url: 'https://buy.stripe.com/test_1' });
+    if (path === 'payment_links') {
+      const key = new Headers(init.headers).get('idempotency-key')!;
+      const n = links.get(key) ?? links.size + 1;
+      links.set(key, n);
+      return ok({ id: `plink_${n}`, url: `https://buy.stripe.com/test_${n}` });
+    }
     if (path.startsWith('payment_links/')) return ok({ id: path.split('/')[1], active: false });
     if (path === 'billing_portal/sessions') return ok({ url: 'https://billing.stripe.com/p/session/1' });
     if (path === 'subscriptions' && method === 'GET') return ok({ data: sub.live.map((id) => ({ id, status: 'active', metadata: { source: 'zurichjs.com/partners' } })) });
@@ -386,7 +393,9 @@ describe('sponsorship flow', () => {
     );
     expect(await attached.json()).toMatchObject({ contract: { filename: 'contract.pdf', signedOn: '2026-11-15' } });
 
-    const link = await (await handlePaymentLink(post('/x', {}, { authorization: `Bearer ${ADMIN}` }), sponsor.id, adminDeps())).json();
+    const link = await (
+      await handlePaymentLink(post('/x', { expectTotalMinor: 100000, requestId: crypto.randomUUID() }, { authorization: `Bearer ${ADMIN}` }), sponsor.id, adminDeps())
+    ).json();
     expect(link).toMatchObject({ url: 'https://buy.stripe.com/test_1' });
     const price = w.calls.find((c) => c.method === 'POST' && c.path === 'prices')!;
     expect(price.params.get('unit_amount')).toBe('50000');
@@ -399,7 +408,18 @@ describe('sponsorship flow', () => {
     const hank = { id: 'user-hank', email: 'hank@globex.com' };
     expect(await me(hank)).toMatchObject({ signedCurrent: true, sponsor: { hasContract: true } });
 
-    await webhook(stripeEvent('evt_l', 'checkout.session.completed', { mode: 'payment', payment_status: 'paid', payment_link: 'plink_1', customer: 'cus_globex', metadata: {} }));
+    await webhook(
+      stripeEvent('evt_l', 'checkout.session.completed', {
+        mode: 'payment',
+        payment_status: 'paid',
+        id: 'cs_globex',
+        currency: 'chf',
+        amount_total: 100000,
+        payment_link: 'plink_1',
+        customer: 'cus_globex',
+        metadata: {},
+      }),
+    );
     expect(await store.get(sponsor.id)).toMatchObject({ status: 'active', paidUntil: '2027-01-14', stripeCustomerId: 'cus_globex', paymentLinkId: null });
     expect(w.calls.some((c) => c.path === 'payment_links/plink_1' && c.params.get('active') === 'false')).toBe(true);
     const welcome = w.emails.find((e) => e.subject === 'Welcome, Globex: your ZurichJS sponsorship is active')!;
@@ -423,11 +443,20 @@ describe('sponsorship flow', () => {
       { kind: 'board', id: 'admin' },
     );
     await store.addDocument(s.id, { blobKey: 'k', filename: 'c.pdf', bytes: 10, signedOn: null, uploadedBy: 'board' }, { kind: 'board', id: 'admin' });
-    const link = (body: unknown, e: Record<string, string> = env) => handlePaymentLink(post('/x', body, { authorization: `Bearer ${ADMIN}` }), s.id, adminDeps(e));
+    const link = (body: Record<string, unknown>, e: Record<string, string> = env) =>
+      handlePaymentLink(
+        post('/x', { requestId: crypto.randomUUID(), expectTotalMinor: body.feeChoice === 'pass_through' ? 103018 : 100000, ...body }, { authorization: `Bearer ${ADMIN}` }),
+        s.id,
+        adminDeps(e),
+      );
     const policy = { ...env, SPONSOR_FEE_POLICY_VERSION: 'surcharge-2026-12' };
 
     // Default: ZurichJS covers the fees. The quote is still the record of what they pay.
-    const absorbed = (await (await link({})).json()) as Record<string, any>;
+    const requestId = crypto.randomUUID();
+    const [one, two] = await Promise.all([link({ requestId }), link({ requestId })]);
+    const absorbed = await one.json();
+    expect(await two.json()).toMatchObject({ url: absorbed.url, quote: { id: absorbed.quote.id } });
+    expect(await (await link({ requestId })).json()).toMatchObject({ url: absorbed.url, quote: { id: absorbed.quote.id } });
     expect(absorbed.quote).toMatchObject({ feeChoice: 'absorb', base: 'CHF 1’000.00', surcharge: null, total: 'CHF 1’000.00', status: 'open' });
 
     // Pass-through is refused without a tariff, and without the owner's policy version.
@@ -472,39 +501,41 @@ describe('sponsorship flow', () => {
     // The sponsor sees the offer before paying, and pays it only through its link.
     const hank = { id: 'user-hank', email: 'hank@globex.com' };
     expect((await me(hank)).offer).toMatchObject({
-      payUrl: 'https://buy.stripe.com/test_1',
+      payUrl: 'https://buy.stripe.com/test_2',
       quote: { surcharge: 'CHF 30.18', total: 'CHF 1’030.18', feeChoiceLabel: 'Sponsor covers the fees' },
     });
     const own = await handleStart(post('/api/sponsorship/start', { confirm: true }), user(hank));
     expect(own.status).toBe(409);
-    expect(((await own.json()) as { error: string }).error).toMatch(/payment link we sent/);
+    expect(((await own.json()) as { error: string }).error).toMatch(/payment link/);
 
-    // Paid with a total that differs from the quote: recorded and flagged, the sponsorship still starts.
+    // A different total leaves the offer open and the sponsor pending until the board decides.
     await webhook(
       stripeEvent('evt_q1', 'checkout.session.completed', {
         id: 'cs_q1',
         mode: 'payment',
         payment_status: 'paid',
-        payment_link: 'plink_1',
+        payment_link: 'plink_2',
+        currency: 'chf',
         amount_total: 100_000,
         metadata: { quoteId: passed.quote.id },
       }),
     );
-    expect(await fees.quote(passed.quote.id)).toMatchObject({ status: 'paid', stripeRef: 'cs_q1' });
-    expect(w.slackPosts.join('\n')).toContain('paid CHF 1’000.00 for a quote of CHF 1’030.18');
-    expect(await store.get(s.id)).toMatchObject({ status: 'active' });
+    expect(await fees.quote(passed.quote.id)).toMatchObject({ status: 'open', stripeRef: null });
+    expect(w.slackPosts.join('\n')).toContain('needs a decision');
+    expect(await store.get(s.id)).toMatchObject({ status: 'pending' });
     // A duplicate delivery changes nothing.
     await webhook(
       stripeEvent('evt_q1', 'checkout.session.completed', {
         id: 'cs_q1',
         mode: 'payment',
         payment_status: 'paid',
-        payment_link: 'plink_1',
+        payment_link: 'plink_2',
+        currency: 'chf',
         amount_total: 100_000,
         metadata: { quoteId: passed.quote.id },
       }),
     );
-    expect(w.slackPosts.filter((p) => p.includes('for a quote of')).length).toBe(1);
+    expect(w.slackPosts.filter((p) => p.includes('needs a decision')).length).toBe(1);
     // The old, superseded quote paid through a stale page is recorded too, and flagged.
     const stale = (await fees.quotes(s.id)).find((q) => q.status === 'superseded')!;
     await webhook(
@@ -513,11 +544,22 @@ describe('sponsorship flow', () => {
         mode: 'payment',
         payment_status: 'paid',
         amount_total: 100_000,
+        currency: 'chf',
+        payment_link: 'plink_1',
         metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: stale.id },
       }),
     );
-    expect(await fees.quote(stale.id)).toMatchObject({ status: 'paid' });
-    expect(w.slackPosts.join('\n')).toContain('paid an earlier offer');
+    await webhook(
+      stripeEvent('evt_receipt', 'invoice.paid', { id: 'in_receipt', amount_paid: 100000, metadata: { source: 'zurichjs.com/partners', sponsorId: s.id, quoteId: stale.id } }),
+    );
+    expect(await store.get(s.id)).toMatchObject({ status: 'pending' });
+    expect(await fees.quote(stale.id)).toMatchObject({ status: 'superseded' });
+    expect(await fees.payment('cs_q2')).toMatchObject({ outcome: 'review' });
+    const board = await handleSponsorPayments(asAdmin('/x', { action: 'dismiss', sessionId: 'cs_q2', note: 'Settled separately in the fixture' }), s.id, adminDeps());
+    expect(await board.json()).toMatchObject({ payments: expect.arrayContaining([expect.objectContaining({ sessionId: 'cs_q2', resolution: 'dismissed' })]) });
+    expect(await store.get(s.id)).toMatchObject({ status: 'pending' });
+    expect((await handleSponsorPayments(asAdmin('/x', { action: 'accept', sessionId: 'cs_q1' }), s.id, adminDeps())).status).toBe(200);
+    expect(await store.get(s.id)).toMatchObject({ status: 'active' });
   });
 
   it('passes recurring fees on only with the gate open, the sponsor’s tick, and their confirmation; renewals carry the line', async () => {
@@ -611,7 +653,16 @@ describe('sponsorship flow', () => {
 
     // Checkout and the receipt arrive at once: one welcome.
     await Promise.all([
-      webhook(stripeEvent('evt_c', 'checkout.session.completed', { mode: 'payment', payment_status: 'paid', metadata: { source: 'zurichjs.com/partners', sponsorId: s.id } })),
+      webhook(
+        stripeEvent('evt_c', 'checkout.session.completed', {
+          id: 'cs_self',
+          currency: 'chf',
+          amount_total: 100000,
+          mode: 'payment',
+          payment_status: 'paid',
+          metadata: { source: 'zurichjs.com/partners', sponsorId: s.id },
+        }),
+      ),
       webhook(stripeEvent('evt_i', 'invoice.paid', { id: 'in_c', amount_paid: 100000, metadata: { source: 'zurichjs.com/partners', sponsorId: s.id } })),
     ]);
     expect(await store.get(s.id)).toMatchObject({ status: 'active', paidUntil: '2026-12-10' });

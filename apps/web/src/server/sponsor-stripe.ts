@@ -49,17 +49,35 @@ export interface StripeDeps {
 const api = <T>(deps: StripeDeps, method: 'GET' | 'POST' | 'DELETE', path: string, params?: URLSearchParams, key?: string) =>
   stripeApi<T>(deps.env, deps.fetch ?? fetch, method, path, params, key);
 
-const prices = new Map<string, { id: string; product: string }>();
+interface ListPrice {
+  id: string;
+  product: string;
+  /** Null when Stripe did not say (then it is never trusted for a quote's base). */
+  unitAmount: number | null;
+  currency: string | null;
+}
+
+const prices = new Map<string, ListPrice>();
 
 /** The active list price for a tier and cycle, with its product (cached per function instance). */
-export async function priceFor(tier: Tier, cycle: Cycle, deps: StripeDeps): Promise<{ id: string; product: string }> {
+export async function priceFor(tier: Tier, cycle: Cycle, deps: StripeDeps): Promise<ListPrice> {
   const key = priceLookupKey(tier, cycle);
   const cached = prices.get(key);
   if (cached) return cached;
-  const res = await api<{ data: { id: string; product: string | { id: string } }[] }>(deps, 'GET', 'prices', stripeForm({ lookup_keys: [key], active: true, limit: 1 }));
+  const res = await api<{ data: { id: string; product: string | { id: string }; unit_amount?: number | null; currency?: string }[] }>(
+    deps,
+    'GET',
+    'prices',
+    stripeForm({ lookup_keys: [key], active: true, limit: 1 }),
+  );
   const p = res.data[0];
   if (!p) throw new StripeUnavailable(`No active Stripe price with lookup key ${key}. Run pnpm sponsorship:stripe-setup.`);
-  const found = { id: p.id, product: typeof p.product === 'string' ? p.product : p.product.id };
+  const found = {
+    id: p.id,
+    product: typeof p.product === 'string' ? p.product : p.product.id,
+    unitAmount: typeof p.unit_amount === 'number' ? p.unit_amount : null,
+    currency: typeof p.currency === 'string' ? p.currency : null,
+  };
   prices.set(key, found);
   return found;
 }
@@ -240,35 +258,50 @@ export async function startCardCheckout(
 }
 
 /**
- * A payment link for a one-time sponsorship the board agreed with a signed contract: one card
- * payment for the meetups, usable once, then switched off by the webhook. Replaces any earlier link.
+ * The Stripe payment link for a board offer (a one-time sponsorship with a signed contract): one
+ * card payment, usable once, for exactly the quote's figures. The base is the list price when Stripe
+ * confirms it adds up to the frozen base in CHF, else an exact price made for this quote; a
+ * surcharge is its own line. Stripe's idempotency key is the quote, so a retry after a failure
+ * half-way gets the same link back instead of a second one. Nothing is saved here: the caller
+ * attaches the link to the quote (sponsor-fees.ts, publishOffer).
  */
-export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], store: SponsorStore, origin: string, deps: StripeDeps, quote?: Quote): Promise<string> {
+export async function quoteLink(s: Sponsor, meetups: SponsorMeetup[], origin: string, deps: StripeDeps, quote: Quote): Promise<{ id: string; url: string }> {
   if (isRecurring(s.cycle)) throw new Error('Payment links are for one-time sponsorships.');
-  await closePaymentLink(s, store, deps);
-  const item = await onceLineItem(s, meetups, deps);
-  const price =
-    'price' in item
-      ? item.price
-      : (
+  const quantity = Math.max(meetups.length, 1);
+  const list = await priceFor(s.tier, 'once', deps);
+  const listFits = s.pricePerMeetup === null && list.currency === 'chf' && list.unitAmount !== null && list.unitAmount * quantity === quote.baseMinor;
+  const exact = quote.baseMinor % quantity === 0 ? { unit: quote.baseMinor / quantity, quantity } : { unit: quote.baseMinor, quantity: 1 };
+  const base = listFits
+    ? { price: list.id, quantity }
+    : {
+        price: (
           await api<{ id: string }>(
             deps,
             'POST',
             'prices',
-            stripeForm({ currency: 'chf', product: item.price_data.product, unit_amount: item.price_data.unit_amount, metadata: meta(s), nickname: `${s.companyName} bundle` }),
+            stripeForm({
+              currency: 'chf',
+              product: list.product,
+              unit_amount: exact.unit,
+              metadata: { ...meta(s), quoteId: quote.id },
+              nickname: `${s.companyName} bundle`.slice(0, 200),
+            }),
+            `sponsor-base:${quote.id}`,
           )
-        ).id;
+        ).id,
+        quantity: exact.quantity,
+      };
   const what = `Sponsorship of ${meetupList(meetups) || 'one meetup'}`.slice(0, 500);
   // The quote (fees.ts) is the record of what they pay; a surcharge is its own line, so the payment
   // page and the receipt show base, fee and total apart.
-  const metadata = { ...meta(s), ...(quote ? { quoteId: quote.id } : {}) };
-  const surcharge = quote?.surchargeMinor ? await surchargePrice(quote, deps) : null;
-  const link = await api<{ id: string; url: string }>(
+  const metadata = { ...meta(s), quoteId: quote.id };
+  const surcharge = quote.surchargeMinor ? await surchargePrice(quote, deps) : null;
+  return api<{ id: string; url: string }>(
     deps,
     'POST',
     'payment_links',
     stripeForm({
-      line_items: [{ price, quantity: item.quantity }, ...(surcharge ? [{ price: surcharge, quantity: 1 }] : [])],
+      line_items: [base, ...(surcharge ? [{ price: surcharge, quantity: 1 }] : [])],
       metadata,
       payment_method_types: ['card'],
       payment_intent_data: { metadata, description: what },
@@ -276,9 +309,8 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
       restrictions: { completed_sessions: { limit: 1 } },
       after_completion: { type: 'redirect', redirect: { url: `${new URL('/partners/account', origin).toString()}?checkout=done` } },
     }),
+    `sponsor-link:${quote.id}`,
   );
-  await store.linkStripe(s.id, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
-  return link.url;
 }
 
 /** A one-off Stripe price for a quote's surcharge, named so the sponsor sees what it is for. */
@@ -293,11 +325,62 @@ export async function surchargePrice(quote: Quote, deps: StripeDeps): Promise<st
   return p.id;
 }
 
+/** Stripe's answer when the link is gone already. Anything else (an outage, a timeout) leaves it payable. */
+const linkGone = (e: unknown) => /HTTP 404|No such/i.test((e as Error).message ?? '');
+
+/** Switches a payment link off, or throws: the caller keeps it on record and tries again. */
+export const deactivateLink = (id: string, deps: StripeDeps) =>
+  api<{ active: boolean }>(deps, 'POST', `payment_links/${encodeURIComponent(id)}`, stripeForm({ active: false })).then(
+    (link) => {
+      if (link.active !== false) throw new Error('Stripe did not confirm that the payment link was closed.');
+    },
+    (e: unknown) => {
+      if (!linkGone(e)) throw e;
+    },
+  );
+
+/**
+ * Links still on at Stripe that were made for these quotes: a link Stripe made while the request
+ * that asked for it failed before saving it.
+ */
+export async function activeQuoteLinks(quoteIds: string[], deps: StripeDeps): Promise<string[]> {
+  if (!quoteIds.length) return [];
+  const ids: string[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await api<{ data: { id: string; metadata?: Record<string, string> }[]; has_more: boolean }>(
+      deps,
+      'GET',
+      'payment_links',
+      stripeForm({ active: true, limit: 100, starting_after: cursor }),
+    );
+    ids.push(...page.data.filter((l) => l.metadata?.source === SPONSOR_SOURCE && quoteIds.includes(l.metadata.quoteId ?? '')).map((l) => l.id));
+    if (!page.has_more) return ids;
+    const next = page.data.at(-1)?.id;
+    if (!next || next === cursor) throw new Error('Stripe did not return the next payment link page.');
+    cursor = next;
+  }
+}
+
+/** What the processor kept on a payment, once Stripe has settled it: null until then. */
+export async function actualFee(paymentIntentId: string, deps: StripeDeps): Promise<{ feeMinor: number; netMinor: number } | null> {
+  const pi = await api<{ latest_charge?: { balance_transaction?: { fee?: number; net?: number; currency?: string } | string | null } | string | null }>(
+    deps,
+    'GET',
+    `payment_intents/${encodeURIComponent(paymentIntentId)}`,
+    stripeForm({ expand: ['latest_charge.balance_transaction'] }),
+  );
+  const charge = typeof pi.latest_charge === 'object' ? pi.latest_charge : null;
+  const bt = charge && typeof charge.balance_transaction === 'object' ? charge.balance_transaction : null;
+  if (!bt || typeof bt.fee !== 'number' || typeof bt.net !== 'number' || bt.currency !== 'chf') return null;
+  return { feeMinor: bt.fee, netMinor: bt.net };
+}
+
 /** Switches off the sponsor's payment link (paid, replaced or withdrawn). */
 export async function closePaymentLink(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.paymentLinkId) return;
-  await api(deps, 'POST', `payment_links/${encodeURIComponent(s.paymentLinkId)}`, stripeForm({ active: false })).catch(() => undefined);
-  await store.linkStripe(s.id, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
+  await deactivateLink(s.paymentLinkId, deps);
+  await store.linkStripeIf(s.id, { paymentLinkId: s.paymentLinkId }, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
 }
 
 /** The billing portal: STRIPE_SPONSOR_PORTAL_CONFIG, else the members' configuration (same rules). */

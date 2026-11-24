@@ -16,7 +16,7 @@
 import { DuplicateContact, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { feeStore } from '../../../server/sponsor-fees.ts';
-import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
+import { CONTACT_EMAIL, fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 import { sponsorView } from '../../../server/sponsor.ts';
 import { parseDetails, parsePlan, parseSignature } from '../../../server/sponsor-input.ts';
@@ -33,10 +33,16 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
     deps,
     async ({ user, contact, sponsor, invitation, store, env, lifecycle }) => {
       if (invitation) return fail(409, `A colleague added you to ${invitation.sponsor.companyName}'s sponsorship. Accept or decline that first.`);
-      // The board's open offer (fees.ts). One-time, sponsor covers the fees: paid through its link only.
-      // Recurring: Checkout carries its fee line, once the sponsor ticked that they agree to it.
+      // The board sent an offer: it owns the payment, so it is paid through its link only and never
+      // a second page as well. Its total is the total they pay.
       const offer = sponsor?.status === 'pending' ? await (deps.fees ?? feeStore(env)).openQuote(sponsor.id, 'sponsorship', null) : null;
-      if (offer?.feeChoice === 'pass_through' && !offer.interval) return fail(409, 'Pay with the payment link we sent you: it includes the processing fee you agreed to.');
+      if (offer && !offer.interval)
+        return fail(
+          409,
+          offer.linkState === 'live'
+            ? 'Pay with the payment link of our offer: it is on this page and in our email.'
+            : `We are preparing the payment link for our offer. It shows on this page once it is ready. Questions: ${CONTACT_EMAIL}.`,
+        );
       const body = await readJsonObject(request);
       if (!body) return fail(400, 'Send the form as JSON.');
       const feeOffer = offer?.interval && offer.feeChoice === 'pass_through' ? offer : null;

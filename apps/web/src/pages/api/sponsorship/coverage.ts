@@ -1,8 +1,10 @@
 /**
  * The meetups the signed-in contact's sponsorship covers, for the dashboard on /partners/account.
- * Loaded on its own, so a billing problem never hides them.
+ * Loaded on its own, and also shown when /api/sponsorship/me fails, so a billing problem never hides them.
  *
- * GET (session cookie) → 200 { ok, meetups: [{ eventId, title, date, state }], checked } · 401 · 404 (no sponsorship) · 503 · 502
+ * GET (session cookie) → 200 { ok, once, meetups: [{ eventId, title, date, state, url }], checked } · 401 · 404 (no sponsorship) · 503 · 502
+ *   once: a one-time sponsorship (its meetups are chosen in its plan)
+ *   url: the public meetup page, or null when Sanity was not reached or no longer lists it
  *   state: upcoming · past · cancelled · moved (postponed) · unknown (no longer published)
  *   checked: false when Sanity could not be reached (stored title and date, state from the date)
  */
@@ -20,7 +22,7 @@ export const handleCoverage = (request: Request, deps: SponsorRouteDeps & { live
     async ({ sponsor, store, env }) => {
       if (!sponsor) return fail(404, 'No sponsorship for this email.');
       const r = await coveredMeetups(await store.meetups(sponsor.id), deps.live ?? sanityMeetups(env, deps.fetch), deps.now?.());
-      return json(200, { ok: true, ...r });
+      return json(200, { ok: true, once: sponsor.cycle === 'once', ...r });
     },
     'load your meetups',
   );

@@ -501,15 +501,19 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
       </p>
     );
 
+  // The covered meetups load on their own, so they still show when the sponsorship could not be loaded.
   if (view.kind === 'error')
     return (
-      <div class="flex max-w-form flex-col gap-4">
-        <Notice tone="danger" live title={view.message} />
-        <Actions>
-          <Button variant="secondary" onClick={() => location.reload()}>
-            Try again
-          </Button>
-        </Actions>
+      <div class="flex flex-col gap-6">
+        <div class="flex max-w-form flex-col gap-4">
+          <Notice tone="danger" live title={view.message} />
+          <Actions>
+            <Button variant="secondary" onClick={() => location.reload()}>
+              Try again
+            </Button>
+          </Actions>
+        </div>
+        <CoveredMeetups contactEmail={contactEmail} onSignedOut={signedOut} />
       </div>
     );
 
@@ -682,10 +686,10 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       {link && <LinkedChange ctx={ctx} s={s} link={link} />}
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
       {recurring && s.status !== 'pending' && ctx.me.fees && <Fees fees={ctx.me.fees} onSignedOut={ctx.onSignedOut} onChanged={() => void ctx.reload()} />}
-      <CoveredMeetups once={!recurring} contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
+      <CoveredMeetups contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
       {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
-      {/* An offer where they cover the fees is paid through its link only (the server refuses Checkout). */}
-      {s.status === 'pending' && !(ctx.me.offer?.quote.feeChoice === 'pass_through' && !ctx.me.offer.quote.interval) && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
+      {/* The board's offer is paid through its link only (the server refuses a second payment page). */}
+      {s.status === 'pending' && (!ctx.me.offer || ctx.me.offer.quote.interval) && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}
       {s.status !== 'ended' && <LogoSection ctx={ctx} s={s} />}

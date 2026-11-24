@@ -1,9 +1,9 @@
 /**
  * The meetups a recurring sponsorship covers, in the board's view of a sponsor. Only meetups
  * confirmed here show on the sponsor's dashboard. Taking one off keeps it in the history below;
- * a meetup that has happened cannot be taken off.
+ * a meetup that has happened (on its current date in Sanity, as the sponsor sees it) cannot be taken off.
  */
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { SelectField } from '@zurichjs/design/islands/Field';
 import { Tag } from '@zurichjs/design/islands/Tag';
@@ -11,45 +11,52 @@ import { longDate } from '../../../server/dates.ts';
 import type { AdminSponsorView } from '../../../server/sponsor.ts';
 import type { coverageHistoryView } from '../../../server/sponsor-coverage.ts';
 import { api, post } from '../admin-api.ts';
-import { BASE, Block, Notice, inputValue, today, useMeetups } from './shared.tsx';
+import { BASE, Block, Notice, inputValue, useMeetups } from './shared.tsx';
 
 type Row = ReturnType<typeof coverageHistoryView>[number];
 
 export function Coverage({ id, sponsor: s, onSignedOut }: { id: string; sponsor: AdminSponsorView; onSignedOut: () => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [locked, setLocked] = useState<string | null>(null);
+  const [checked, setChecked] = useState(true);
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
   const [pick, setPick] = useState('');
   const [busy, setBusy] = useState('');
   const { meetups, error: meetupsError } = useMeetups(true, onSignedOut);
 
-  const load = async () => {
-    const { status, body } = await api<{ coverage: Row[]; locked: string | null }>(`${BASE}/${id}/coverage`);
-    if (status === 401) return onSignedOut();
-    if (status !== 200) return setError(body.error ?? 'Could not load the covered meetups.');
-    setRows(body.coverage);
-    setLocked(body.locked);
-  };
+  const signedOut = useRef(onSignedOut);
+  signedOut.current = onSignedOut;
+
   useEffect(() => {
-    void load();
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per sponsor
-  }, []);
+    let current = true;
+    void api<{ coverage: Row[]; checked: boolean; locked: string | null }>(`${BASE}/${id}/coverage`).then(({ status, body }) => {
+      if (!current) return;
+      if (status === 401) return signedOut.current();
+      if (status !== 200) return setError(body.error ?? 'Could not load the covered meetups.');
+      setRows(body.coverage);
+      setChecked(body.checked);
+      setLocked(body.locked);
+    });
+    return () => {
+      current = false;
+    };
+  }, [id]);
 
   const change = async (action: 'add' | 'remove', eventId: string, title: string) => {
     setBusy(`${action}:${eventId}`);
     setError('');
     setDone('');
-    const { status, body } = await post<{ coverage: Row[] }>(`${BASE}/${id}/coverage`, { action, eventId });
+    const { status, body } = await post<{ coverage: Row[]; checked: boolean }>(`${BASE}/${id}/coverage`, { action, eventId });
     setBusy('');
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not change the covered meetups.');
     setRows(body.coverage);
+    setChecked(body.checked);
     setPick('');
     setDone(action === 'add' ? `${title} is now covered.` : `${title} was taken off. It stays in the history.`);
   };
 
-  const day = today();
   const covered = (rows ?? []).filter((r) => !r.removedAt);
   const removed = (rows ?? []).filter((r) => r.removedAt);
   const choices = (meetups ?? []).filter((m) => !covered.some((r) => r.eventId === m.id));
@@ -63,19 +70,22 @@ export function Coverage({ id, sponsor: s, onSignedOut }: { id: string; sponsor:
     >
       {!rows && !error && <p class="m-0 text-compact text-ink-2">Loading the covered meetups…</p>}
       {rows && covered.length === 0 && <p class="m-0 text-compact text-ink-2">No meetup is confirmed yet.</p>}
+      {rows && covered.length > 0 && !checked && (
+        <p class="m-0 text-compact text-ink-2">Sanity could not be reached, so dates are as last saved. Taking a meetup off waits until its current date can be checked.</p>
+      )}
       {covered.length > 0 && (
         <ul class="m-0 flex list-none flex-col gap-3 p-0">
           {covered.map((r) => (
             <li key={r.eventId} class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
               <span class="flex min-w-0 flex-col">
                 <span class="text-body font-bold break-words">{r.title}</span>
-                <span class="text-compact text-ink-2">{longDate(r.date)}</span>
+                <span class="text-compact text-ink-2">{longDate(r.current?.date ?? r.date)}</span>
               </span>
-              {r.date < day ? (
+              {r.current?.state === 'past' ? (
                 <Tag>Happened</Tag>
               ) : (
                 !locked && (
-                  <Button variant="secondary" disabled={!!busy} onClick={() => void change('remove', r.eventId, r.title)}>
+                  <Button variant="secondary" disabled={!!busy || !checked} onClick={() => void change('remove', r.eventId, r.title)}>
                     {busy === `remove:${r.eventId}` ? 'Taking off…' : 'Take off'}
                   </Button>
                 )

@@ -1,0 +1,367 @@
+[
+  {
+    "file": "plan-form-unknown-schedule-320.png",
+    "path": "/partners/account",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Check again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-unknown-schedule-375.png",
+    "path": "/partners/account",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Check again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-unknown-schedule-390.png",
+    "path": "/partners/account",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Check again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-unknown-schedule-1280.png",
+    "path": "/partners/account",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Check again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-unknown-schedule-1440.png",
+    "path": "/partners/account",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Check again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-after-check-again-320.png",
+    "path": "/partners/account",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-after-check-again-375.png",
+    "path": "/partners/account",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-after-check-again-390.png",
+    "path": "/partners/account",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-after-check-again-1280.png",
+    "path": "/partners/account",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "plan-form-after-check-again-1440.png",
+    "path": "/partners/account",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "change-link-unknown-schedule-320.png",
+    "path": "/partners/account?change=friend-monthly",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "change-link-unknown-schedule-375.png",
+    "path": "/partners/account?change=friend-monthly",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "change-link-unknown-schedule-390.png",
+    "path": "/partners/account?change=friend-monthly",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "change-link-unknown-schedule-1280.png",
+    "path": "/partners/account?change=friend-monthly",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "change-link-unknown-schedule-1440.png",
+    "path": "/partners/account?change=friend-monthly",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-platform-503-320.png",
+    "path": "/partners/account",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-platform-503-375.png",
+    "path": "/partners/account",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-platform-503-390.png",
+    "path": "/partners/account",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-platform-503-1280.png",
+    "path": "/partners/account",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-platform-503-1440.png",
+    "path": "/partners/account",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-not-configured-503-320.png",
+    "path": "/partners/account",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-not-configured-503-375.png",
+    "path": "/partners/account",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-not-configured-503-390.png",
+    "path": "/partners/account",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-not-configured-503-1280.png",
+    "path": "/partners/account",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-not-configured-503-1440.png",
+    "path": "/partners/account",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "member-platform-503-320.png",
+    "path": "/membership/account",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "member-platform-503-375.png",
+    "path": "/membership/account",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "member-platform-503-390.png",
+    "path": "/membership/account",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "member-platform-503-1280.png",
+    "path": "/membership/account",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "member-platform-503-1440.png",
+    "path": "/membership/account",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-no-answer-20s-320.png",
+    "path": "/partners/account",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-no-answer-20s-375.png",
+    "path": "/partners/account",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-no-answer-20s-390.png",
+    "path": "/partners/account",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-no-answer-20s-1280.png",
+    "path": "/partners/account",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "sponsor-no-answer-20s-1440.png",
+    "path": "/partners/account",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  }
+]

@@ -1,0 +1,150 @@
+
+Running 4 tests using 4 workers
+
+[1/4] [mobile] › e2e/admin.spec.ts:57:1 › a late answer for the member opened first does not replace the member opened since
+[2/4] [desktop] › e2e/admin.spec.ts:57:1 › a late answer for the member opened first does not replace the member opened since
+[3/4] [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again
+[4/4] [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again
+  1) [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "We couldn’t sign you out."
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      48 |   await page.goto(ADMIN);
+      49 |   await page.getByRole('button', { name: 'Sign out' }).click();
+    > 50 |   await expect(page.getByRole('alert')).toContainText('We couldn’t sign you out.');
+         |                                         ^
+      51 |   await expect(page.getByLabel('Password')).toHaveCount(0);
+      52 |   await expect(page.getByText(ADA.email)).toHaveCount(0);
+      53 |   await page.getByRole('button', { name: 'Try again' }).click();
+        at ./e2e/admin.spec.ts:50:41
+
+    Error Context: test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  2) [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "We couldn’t sign you out."
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      48 |   await page.goto(ADMIN);
+      49 |   await page.getByRole('button', { name: 'Sign out' }).click();
+    > 50 |   await expect(page.getByRole('alert')).toContainText('We couldn’t sign you out.');
+         |                                         ^
+      51 |   await expect(page.getByLabel('Password')).toHaveCount(0);
+      52 |   await expect(page.getByText(ADA.email)).toHaveCount(0);
+      53 |   await page.getByRole('button', { name: 'Try again' }).click();
+        at ./e2e/admin.spec.ts:50:41
+
+    Error Context: test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  3) [mobile] › e2e/admin.spec.ts:57:1 › a late answer for the member opened first does not replace the member opened since 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('#h-member')
+    Expected: "Grace Hopper"
+    Received: "Ada Lovelace"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveText" locator('#h-member') with timeout 5000ms
+      - waiting for locator('#h-member')
+        14 × locator resolved to <h2 id="h-member" class="m-0 text-subsection font-bold">Ada Lovelace</h2>
+           - unexpected value "Ada Lovelace"
+
+
+      67 |   await held!.fulfill({ json: detail(ADA) });
+      68 |   await page.waitForLoadState('networkidle');
+    > 69 |   await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+         |                                           ^
+      70 | });
+      71 |
+        at ./e2e/admin.spec.ts:69:43
+
+    Error Context: test-results/admin-a-late-answer-for-th-ca471-ace-the-member-opened-since-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-late-answer-for-th-ca471-ace-the-member-opened-since-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-late-answer-for-th-ca471-ace-the-member-opened-since-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  4) [desktop] › e2e/admin.spec.ts:57:1 › a late answer for the member opened first does not replace the member opened since 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  locator('#h-member')
+    Expected: "Grace Hopper"
+    Received: "Ada Lovelace"
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveText" locator('#h-member') with timeout 5000ms
+      - waiting for locator('#h-member')
+        14 × locator resolved to <h2 id="h-member" class="m-0 text-subsection font-bold">Ada Lovelace</h2>
+           - unexpected value "Ada Lovelace"
+
+
+      67 |   await held!.fulfill({ json: detail(ADA) });
+      68 |   await page.waitForLoadState('networkidle');
+    > 69 |   await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+         |                                           ^
+      70 | });
+      71 |
+        at ./e2e/admin.spec.ts:69:43
+
+    Error Context: test-results/admin-a-late-answer-for-th-ca471-ace-the-member-opened-since-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-late-answer-for-th-ca471-ace-the-member-opened-since-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-late-answer-for-th-ca471-ace-the-member-opened-since-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  4 failed
+    [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again 
+    [mobile] › e2e/admin.spec.ts:57:1 › a late answer for the member opened first does not replace the member opened since 
+    [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again 
+    [desktop] › e2e/admin.spec.ts:57:1 › a late answer for the member opened first does not replace the member opened since 

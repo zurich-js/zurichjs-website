@@ -1,0 +1,59 @@
+
+ RUN  v4.1.12 ./wt99
+
+ ❯ apps/web/test/sponsor-pending-change.test.ts (6 tests | 2 failed) 9ms
+     × is unknown when the attached schedule comes back as an id only 3ms
+     × is unknown when the attached schedule has no plan or first phase this site wrote 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/test/sponsor-pending-change.test.ts > the scheduled change on /api/sponsorship/me > is unknown when the attached schedule comes back as an id only
+AssertionError: expected { pendingChange: null, …(1) } to deeply equal { pendingChange: null, …(1) }
+
+- Expected
++ Received
+
+  {
+    "pendingChange": null,
+-   "pendingChangeUnknown": true,
++   "pendingChangeUnknown": false,
+  }
+
+ ❯ apps/web/test/sponsor-pending-change.test.ts:63:88
+     61|   it('is unknown when the attached schedule comes back as an id only',…
+     62|     quiet();
+     63|     expect(await answer(() => Response.json({ ...current, schedule: 's…
+       |                                                                                        ^
+     64|   });
+     65|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  apps/web/test/sponsor-pending-change.test.ts > the scheduled change on /api/sponsorship/me > is unknown when the attached schedule has no plan or first phase this site wrote
+AssertionError: expected { pendingChange: null, …(1) } to deeply equal { pendingChange: null, …(1) }
+
+- Expected
++ Received
+
+  {
+    "pendingChange": null,
+-   "pendingChangeUnknown": true,
++   "pendingChangeUnknown": false,
+  }
+
+ ❯ apps/web/test/sponsor-pending-change.test.ts:69:73
+     67|     quiet();
+     68|     const schedule = { id: 'sub_sched_1', metadata: { plan: 'sponsor_b…
+     69|     expect(await answer(() => Response.json({ ...current, schedule }))…
+       |                                                                         ^
+     70|     expect(await answer(() => Response.json({ ...current, schedule: { …
+     71|       pendingChange: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  01:48:13
+   Duration  622ms (transform 172ms, setup 0ms, import 543ms, tests 9ms, environment 0ms)
+

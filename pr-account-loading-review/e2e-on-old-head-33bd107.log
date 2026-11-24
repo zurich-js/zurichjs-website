@@ -1,0 +1,299 @@
+
+Running 14 tests using 5 workers
+
+[1/14] [mobile] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available
+[2/14] [mobile] › e2e/member-account.spec.ts:22:1 › a request that never answers ends with Try again after 20 seconds
+[3/14] [mobile] › e2e/sponsorship.spec.ts:175:3 › the sponsorship page (/partners/account) › a request that never answers ends with Try again after 20 seconds
+[4/14] [mobile] › e2e/sponsorship.spec.ts:226:3 › the sponsorship page (/partners/account) › without accounts configured (503) the page says so and offers no form
+[5/14] [mobile] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available
+[6/14] [mobile] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet
+[7/14] [mobile] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again
+[8/14] [desktop] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available
+  1) [mobile] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Try again' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Try again' }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Try again' })
+
+
+      12 |   );
+      13 |   await page.goto(ACCOUNT);
+    > 14 |   await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+         |                                                                 ^
+      15 |   await expect(page.getByText(/not available yet/)).toHaveCount(0);
+      16 |   html = false;
+      17 |   await page.reload();
+        at ./e2e/member-account.spec.ts:14:65
+
+    Error Context: test-results/member-account-a-platform--47a96--accounts-are-not-available-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/member-account-a-platform--47a96--accounts-are-not-available-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/member-account-a-platform--47a96--accounts-are-not-available-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  2) [mobile] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Try again' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Try again' }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Try again' })
+
+
+      192 |     );
+      193 |     await page.goto(ACCOUNT);
+    > 194 |     await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+          |                                                                   ^
+      195 |     await expect(page.getByText(/not available yet/)).toHaveCount(0);
+      196 |     html = false;
+      197 |     await page.reload();
+        at ./e2e/sponsorship.spec.ts:194:67
+
+    Error Context: test-results/sponsorship-the-sponsorshi-3628a--accounts-are-not-available-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-3628a--accounts-are-not-available-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/sponsorship-the-sponsorshi-3628a--accounts-are-not-available-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  3) [mobile] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Change tier or how often you pay' }).getByText(/we couldn’t check for a change already waiting for it/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Change tier or how often you pay' }).getByText(/we couldn’t check for a change already waiting for it/) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Change tier or how often you pay' }).getByText(/we couldn’t check for a change already waiting for it/)
+
+
+      371 |     await page.goto(`${ACCOUNT}?change=friend-monthly`);
+      372 |     const linked = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    > 373 |     await expect(linked.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+          |                                                                                             ^
+      374 |     await expect(linked.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+      375 |     await expect(linked.getByRole('button', { name: 'Check again' })).toBeVisible();
+      376 |   });
+        at ./e2e/sponsorship.spec.ts:373:93
+
+    Error Context: test-results/sponsorship-the-sponsorshi-22757-own-cannot-be-confirmed-yet-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-22757-own-cannot-be-confirmed-yet-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/sponsorship-the-sponsorshi-22757-own-cannot-be-confirmed-yet-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[9/14] [desktop] › e2e/member-account.spec.ts:22:1 › a request that never answers ends with Try again after 20 seconds
+[10/14] [desktop] › e2e/sponsorship.spec.ts:175:3 › the sponsorship page (/partners/account) › a request that never answers ends with Try again after 20 seconds
+  4) [mobile] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('#panel-change').getByText(/we couldn’t check for a change already waiting for it/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('#panel-change').getByText(/we couldn’t check for a change already waiting for it/) with timeout 5000ms
+      - waiting for locator('#panel-change').getByText(/we couldn’t check for a change already waiting for it/)
+
+
+      359 |     const form = page.locator('#panel-change');
+      360 |     await form.getByRole('radio', { name: 'Monthly' }).check();
+    > 361 |     await expect(form.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+          |                                                                                           ^
+      362 |     await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+      363 |     unknown = false;
+      364 |     await form.getByRole('button', { name: 'Check again' }).click();
+        at ./e2e/sponsorship.spec.ts:361:91
+
+    Error Context: test-results/sponsorship-the-sponsorshi-b6a22-newal-waits-for-Check-again-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-b6a22-newal-waits-for-Check-again-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/sponsorship-the-sponsorshi-b6a22-newal-waits-for-Check-again-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[11/14] [desktop] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again
+[12/14] [desktop] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available
+  5) [desktop] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Try again' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Try again' }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Try again' })
+
+
+      12 |   );
+      13 |   await page.goto(ACCOUNT);
+    > 14 |   await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+         |                                                                 ^
+      15 |   await expect(page.getByText(/not available yet/)).toHaveCount(0);
+      16 |   html = false;
+      17 |   await page.reload();
+        at ./e2e/member-account.spec.ts:14:65
+
+    Error Context: test-results/member-account-a-platform--47a96--accounts-are-not-available-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/member-account-a-platform--47a96--accounts-are-not-available-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/member-account-a-platform--47a96--accounts-are-not-available-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+[13/14] [desktop] › e2e/sponsorship.spec.ts:226:3 › the sponsorship page (/partners/account) › without accounts configured (503) the page says so and offers no form
+[14/14] [desktop] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet
+  6) [desktop] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('button', { name: 'Try again' })
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('button', { name: 'Try again' }) with timeout 5000ms
+      - waiting for getByRole('button', { name: 'Try again' })
+
+
+      192 |     );
+      193 |     await page.goto(ACCOUNT);
+    > 194 |     await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
+          |                                                                   ^
+      195 |     await expect(page.getByText(/not available yet/)).toHaveCount(0);
+      196 |     html = false;
+      197 |     await page.reload();
+        at ./e2e/sponsorship.spec.ts:194:67
+
+    Error Context: test-results/sponsorship-the-sponsorshi-3628a--accounts-are-not-available-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-3628a--accounts-are-not-available-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/sponsorship-the-sponsorshi-3628a--accounts-are-not-available-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  7) [desktop] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('#panel-change').getByText(/we couldn’t check for a change already waiting for it/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" locator('#panel-change').getByText(/we couldn’t check for a change already waiting for it/) with timeout 5000ms
+      - waiting for locator('#panel-change').getByText(/we couldn’t check for a change already waiting for it/)
+
+
+      359 |     const form = page.locator('#panel-change');
+      360 |     await form.getByRole('radio', { name: 'Monthly' }).check();
+    > 361 |     await expect(form.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+          |                                                                                           ^
+      362 |     await expect(form.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+      363 |     unknown = false;
+      364 |     await form.getByRole('button', { name: 'Check again' }).click();
+        at ./e2e/sponsorship.spec.ts:361:91
+
+    Error Context: test-results/sponsorship-the-sponsorshi-b6a22-newal-waits-for-Check-again-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-b6a22-newal-waits-for-Check-again-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/sponsorship-the-sponsorshi-b6a22-newal-waits-for-Check-again-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  8) [desktop] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('region', { name: 'Change tier or how often you pay' }).getByText(/we couldn’t check for a change already waiting for it/)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('region', { name: 'Change tier or how often you pay' }).getByText(/we couldn’t check for a change already waiting for it/) with timeout 5000ms
+      - waiting for getByRole('region', { name: 'Change tier or how often you pay' }).getByText(/we couldn’t check for a change already waiting for it/)
+
+
+      371 |     await page.goto(`${ACCOUNT}?change=friend-monthly`);
+      372 |     const linked = page.getByRole('region', { name: 'Change tier or how often you pay' });
+    > 373 |     await expect(linked.getByText(/we couldn’t check for a change already waiting for it/)).toBeVisible();
+          |                                                                                             ^
+      374 |     await expect(linked.getByRole('button', { name: /Sign and change|Confirm the change/ })).toHaveCount(0);
+      375 |     await expect(linked.getByRole('button', { name: 'Check again' })).toBeVisible();
+      376 |   });
+        at ./e2e/sponsorship.spec.ts:373:93
+
+    Error Context: test-results/sponsorship-the-sponsorshi-22757-own-cannot-be-confirmed-yet-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-22757-own-cannot-be-confirmed-yet-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/sponsorship-the-sponsorshi-22757-own-cannot-be-confirmed-yet-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  8 failed
+    [mobile] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+    [mobile] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+    [mobile] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again 
+    [mobile] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet 
+    [desktop] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+    [desktop] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available 
+    [desktop] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again 
+    [desktop] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet 
+  6 passed (12.1s)

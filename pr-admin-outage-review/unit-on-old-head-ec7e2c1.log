@@ -1,0 +1,47 @@
+
+ RUN  v4.1.12 ./wt97
+
+ ❯ apps/web/test/admin-lists.test.ts (9 tests | 2 failed) 29ms
+     × gives up on a read after READ_DEADLINE_MS and on a write after WRITE_DEADLINE_MS 2ms
+     × works in a browser without AbortSignal.timeout or AbortSignal.any 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/test/admin-lists.test.ts > the admin fetch helper > gives up on a read after READ_DEADLINE_MS and on a write after WRITE_DEADLINE_MS
+AssertionError: expected null to be +0 // Object.is equality
+
+- Expected:
+0
+
++ Received:
+null
+
+ ❯ apps/web/test/admin-lists.test.ts:123:18
+    121|     void api('/api/membership/admin/invite', { method: 'POST', body: '…
+    122|     await vi.advanceTimersByTimeAsync(READ_DEADLINE_MS);
+    123|     expect(read).toBe(0);
+       |                  ^
+    124|     expect(write).toBeNull();
+    125|     await vi.advanceTimersByTimeAsync(WRITE_DEADLINE_MS - READ_DEADLIN…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  apps/web/test/admin-lists.test.ts > the admin fetch helper > works in a browser without AbortSignal.timeout or AbortSignal.any
+TypeError: AbortSignal.timeout is not a function
+ ❯ api apps/web/src/components/islands/admin-api.ts:21:53
+     19|   const json = !(init?.body instanceof FormData);
+     20|   const read = !init?.method || init.method === 'GET';
+     21|   const signals = [init?.signal, read ? AbortSignal.timeout(READ_DEADL…
+       |                                                     ^
+     22|   try {
+     23|     const res = await fetch(path, {
+ ❯ apps/web/test/admin-lists.test.ts:132:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
+   Start at  01:41:49
+   Duration  651ms (transform 177ms, setup 0ms, import 550ms, tests 29ms, environment 0ms)
+

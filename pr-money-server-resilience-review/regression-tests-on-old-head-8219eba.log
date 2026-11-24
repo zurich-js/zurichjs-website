@@ -1,0 +1,402 @@
+
+ RUN  v4.1.12 .
+
+ ❯ apps/web/test/rebuild.test.ts (13 tests | 2 failed) 23ms
+     × the one that finishes last takes back no fired time and no build time 4ms
+     × the one recorded after the decision stays pending 1ms
+ ❯ apps/web/test/rebuild-store.test.ts (4 tests | 2 failed) 6ms
+     × creates the entry only if nobody else created it first 3ms
+     × reads strongly, so a cache with an older ETag cannot use up the writes 0ms
+ ❯ apps/web/test/stripe-webhook.test.ts (9 tests | 4 failed) 21ms
+     × posts one note; a delivery while another is posting is answered 409, so Stripe retries it 3ms
+     × a claim abandoned before posting is not answered as done, and is taken over after five minutes 0ms
+     × records nothing when Slack is not configured, so a replay after setting it up posts 1ms
+     × answers 200 when the note went out but marking it posted failed, so Stripe does not post it again 0ms
+ ❯ apps/web/test/donation-events-db.test.ts (2 tests | 2 failed) 222ms
+     × one of two concurrent deliveries acquires the event; the other is told it is in progress, then posted 5ms
+     × a released claim, or one left unfinished for five minutes, is acquired again 0ms
+ ❯ apps/web/test/request-budgets.test.ts (10 tests | 7 failed) 10108ms
+     × aborts a call still waiting when the budget runs out 59ms
+     × keeps the abort signal of a Request passed without init 5ms
+     × make no Stripe call once the request budget is used up 4ms
+     × ends what is due from the row alone before reading the meetups of unpaid sponsorships 1ms
+     × starts the unpaid ones at a different sponsor each day, so slow reads cannot hold back the same one 1ms
+     × does not end an unpaid sponsorship when its meetup read left too little time to close its payment page 2ms
+     × keeps the Stripe ids and reports the sponsor when the budget cuts off its close 5003ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 17 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/test/donation-events-db.test.ts > donation event claims (database) > one of two concurrent deliveries acquires the event; the other is told it is in progress, then posted
+AssertionError: expected [ false, true ] to deeply equal [ 'acquired', 'in_progress' ]
+
+- Expected
++ Received
+
+  [
+-   "acquired",
+-   "in_progress",
++   false,
++   true,
+  ]
+
+ ❯ apps/web/test/donation-events-db.test.ts:32:27
+     30|   it('one of two concurrent deliveries acquires the event; the other i…
+     31|     const claims = await Promise.all([events.claim('evt_a', 'checkout.…
+     32|     expect(claims.sort()).toEqual(['acquired', 'in_progress']);
+       |                           ^
+     33|     await events.done('evt_a');
+     34|     await events.release('evt_a');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/17]⎯
+
+ FAIL  apps/web/test/donation-events-db.test.ts > donation event claims (database) > a released claim, or one left unfinished for five minutes, is acquired again
+AssertionError: expected true to be 'acquired' // Object.is equality
+
+- Expected:
+"acquired"
+
++ Received:
+true
+
+ ❯ apps/web/test/donation-events-db.test.ts:39:71
+     37|
+     38|   it('a released claim, or one left unfinished for five minutes, is ac…
+     39|     expect(await events.claim('evt_b', 'checkout.session.completed')).…
+       |                                                                       ^
+     40|     await events.release('evt_b');
+     41|     expect(await events.claim('evt_b', 'checkout.session.completed')).…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/17]⎯
+
+ FAIL  apps/web/test/rebuild-store.test.ts > the rebuild state store > creates the entry only if nobody else created it first
+AssertionError: expected { …(3) } to deeply equal { …(4) }
+
+- Expected
++ Received
+
+@@ -2,7 +2,6 @@
+    "fired": [
+      "2026-11-18T09:00:00.000Z",
+    ],
+    "lastPublishAt": "2026-11-18T10:00:00.000Z",
+    "pendingSince": "2026-11-18T10:00:00.000Z",
+-   "publishes": 1,
+  }
+
+ ❯ apps/web/test/rebuild-store.test.ts:58:70
+     56|       blob.etag++;
+     57|     };
+     58|     expect(await rebuildStore().update((s) => recordPublish(s, at))).t…
+       |                                                                      ^
+     59|       fired: ['2026-11-18T09:00:00.000Z'],
+     60|       pendingSince: at.toISOString(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/17]⎯
+
+ FAIL  apps/web/test/rebuild-store.test.ts > the rebuild state store > reads strongly, so a cache with an older ETag cannot use up the writes
+Error: rebuild state changed under 5 writes in a row
+ ❯ Object.update apps/web/src/server/rebuild-store.ts:24:13
+     22|         if (written.modified) return next;
+     23|       }
+     24|       throw new Error(`rebuild state changed under ${ATTEMPTS} writes …
+       |             ^
+     25|     },
+     26|   };
+ ❯ queueRebuild apps/web/src/server/sponsor-rebuild.ts:52:3
+ ❯ apps/web/test/rebuild-store.test.ts:79:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/17]⎯
+
+ FAIL  apps/web/test/rebuild.test.ts > two ticks that overlap > the one that finishes last takes back no fired time and no build time
+AssertionError: expected { …(2) } to match object { fired: [ …(2) ], …(1) }
+
+- Expected
++ Received
+
+  {
+    "fired": [
+      "2026-11-18T10:00:00.000Z",
+-     "2026-11-18T10:00:01.000Z",
+    ],
+-   "lastBuildAt": "2026-11-18T10:00:01.000Z",
++   "lastBuildAt": "2026-11-18T10:00:00.000Z",
+  }
+
+ ❯ apps/web/test/rebuild.test.ts:108:19
+    106|     release();
+    107|     await early;
+    108|     expect(get()).toMatchObject({ fired: times, lastBuildAt: plus(1_00…
+       |                   ^
+    109|     await tick({ store, changeTimes: async () => times, triggerBuild: …
+    110|     expect(hooks).toHaveLength(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/17]⎯
+
+ FAIL  apps/web/test/rebuild.test.ts > two publishes in the same millisecond > the one recorded after the decision stays pending
+AssertionError: expected { fired: [], …(1) } to match object { …(2) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "lastPublishAt": "2026-11-18T10:15:00.000Z",
+-   "pendingSince": "2026-11-18T10:15:00.000Z",
++   "fired": [],
++   "lastBuildAt": "2026-11-18T10:15:00.000Z",
+  }
+
+ ❯ apps/web/test/rebuild.test.ts:120:58
+    118|     const d = decide(seen, latest, []);
+    119|     expect(d.build).toBe(true);
+    120|     expect(settle(recordPublish(seen, latest), seen, d)).toMatchObject…
+       |                                                          ^
+    121|     expect(settle(seen, seen, d).pendingSince).toBeUndefined();
+    122|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > the fetch deadline > aborts a call still waiting when the budget runs out
+AssertionError: expected DOMException{ stack: 'TimeoutError: …' } to be an instance of DeadlineExceeded
+ ❯ apps/web/test/request-budgets.test.ts:62:79
+     60|       new Promise((_resolve, reject) => init?.signal?.addEventListener…
+     61|     const started = Date.now();
+     62|     await expect(deadline(50).fetch(hang)('https://api.stripe.com/v1/p…
+       |                                                                               ^
+     63|     expect(Date.now() - started).toBeLessThan(1_000);
+     64|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > the fetch deadline > keeps the abort signal of a Request passed without init
+AssertionError: expected { aborted: false } to deeply equal { aborted: true }
+
+- Expected
++ Received
+
+  {
+-   "aborted": true,
++   "aborted": false,
+  }
+
+ ❯ apps/web/test/request-budgets.test.ts:69:45
+     67|     const f = deadline(50_000).fetch((async (_input: RequestInfo | URL…
+     68|     const request = new Request('https://api.stripe.com/v1/prices', { …
+     69|     expect(await (await f(request)).json()).toEqual({ aborted: true });
+       |                                             ^
+     70|   });
+     71| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > sponsorship route callbacks > make no Stripe call once the request budget is used up
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "https://api.stripe.com/v1/subscriptions/sub_1?expand%5B0%5D=schedule",
+      Object {
+        "body": undefined,
+        "headers": Object {
+          "authorization": "Bearer sk_test_x",
+          "content-type": "application/x-www-form-urlencoded",
+          "stripe-version": "2025-08-27.basil",
+        },
+        "method": "GET",
+        "signal": AbortSignal {
+          Symbol(kEvents): Map {},
+          Symbol(events.maxEventTargetListeners): 0,
+          Symbol(events.maxEventTargetListenersWarned): false,
+          Symbol(kHandlers): Map {},
+          Symbol(kAborted): false,
+          Symbol(kReason): undefined,
+          Symbol(kComposite): false,
+          Symbol(kTimeout): true,
+        },
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ apps/web/test/request-budgets.test.ts:101:24
+     99|     });
+    100|     expect(res.status).toBe(200);
+    101|     expect(stripe).not.toHaveBeenCalled();
+       |                        ^
+    102|   });
+    103| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > the daily sponsorship check under a time budget > ends what is due from the row alone before reading the meetups of unpaid sponsorships
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ apps/web/test/request-budgets.test.ts:173:30
+    171|     for (const name of ['New 1', 'New 2', 'New 3']) await add(name);
+    172|     const result = await run(slow, clock);
+    173|     expect(result.completed).toBe(1);
+       |                              ^
+    174|     expect(await store.get(done.id)).toMatchObject({ status: 'ended', …
+    175|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > the daily sponsorship check under a time budget > starts the unpaid ones at a different sponsor each day, so slow reads cannot hold back the same one
+AssertionError: expected Set{ 's_5', 's_3' } to deeply equal Set{ 's_1', 's_3', 's_5' }
+
+- Expected
++ Received
+
+  Set {
+-   "s_1",
+    "s_3",
+    "s_5",
+  }
+
+ ❯ apps/web/test/request-budgets.test.ts:185:27
+    183|       expect(result.deferred).toHaveLength(1);
+    184|     }
+    185|     expect(new Set(read)).toEqual(new Set(ids));
+       |                           ^
+    186|   });
+    187|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > the daily sponsorship check under a time budget > does not end an unpaid sponsorship when its meetup read left too little time to close its payment page
+AssertionError: expected { completed: +0, ended: +0, …(3) } to match object { closed: +0, deferred: [ 's_1' ] }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "closed": 0,
+-   "deferred": [
+-     "s_1",
+-   ],
++   "closed": 1,
++   "deferred": [],
+  }
+
+ ❯ apps/web/test/request-budgets.test.ts:195:20
+    193|     const stripe = vi.fn(async () => Response.json({}));
+    194|     const result = await run(slow, clock, TODAY, { STRIPE_SECRET_KEY: …
+    195|     expect(result).toMatchObject({ closed: 0, deferred: [s.id] });
+       |                    ^
+    196|     expect(stripe).not.toHaveBeenCalled();
+    197|     expect(await store.get(s.id)).toMatchObject({ status: 'pending', c…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/17]⎯
+
+ FAIL  apps/web/test/request-budgets.test.ts > the daily sponsorship check under a time budget > keeps the Stripe ids and reports the sponsor when the budget cuts off its close
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ apps/web/test/request-budgets.test.ts:200:3
+    198|   });
+    199|
+    200|   it('keeps the Stripe ids and reports the sponsor when the budget cut…
+       |   ^
+    201|     vi.useFakeTimers({ toFake: ['setTimeout'] });
+    202|     try {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/17]⎯
+
+ FAIL  apps/web/test/stripe-webhook.test.ts > donations on the shared webhook > posts one note; a delivery while another is posting is answered 409, so Stripe retries it
+AssertionError: expected [ 200, 200 ] to deeply equal [ 200, 409 ]
+
+- Expected
++ Received
+
+  [
+    200,
+-   409,
++   200,
+  ]
+
+ ❯ apps/web/test/stripe-webhook.test.ts:90:41
+     88|     const d = { ...deps(), env, fetch, donationEvents: events };
+     89|     const [a, b] = await Promise.all([handleStripeWebhook(signed(donat…
+     90|     expect([a.status, b.status].sort()).toEqual([200, 409]);
+       |                                         ^
+     91|     const again = await handleStripeWebhook(signed(donation), d);
+     92|     expect(again.status).toBe(200);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/17]⎯
+
+ FAIL  apps/web/test/stripe-webhook.test.ts > donations on the shared webhook > a claim abandoned before posting is not answered as done, and is taken over after five minutes
+AssertionError: expected 200 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 200
+
+ ❯ apps/web/test/stripe-webhook.test.ts:104:69
+    102|     const d = { ...deps(), env, fetch, donationEvents: events };
+    103|     events.clock.now = 5 * 60_000 - 1;
+    104|     expect((await handleStripeWebhook(signed(donation), d)).status).to…
+       |                                                                     ^
+    105|     expect(posts).toHaveLength(0);
+    106|     events.clock.now = 5 * 60_000;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  apps/web/test/stripe-webhook.test.ts > donations on the shared webhook > records nothing when Slack is not configured, so a replay after setting it up posts
+AssertionError: expected { ok: true } to match object { posted: false }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "posted": false,
++   "ok": true,
+  }
+
+ ❯ apps/web/test/stripe-webhook.test.ts:128:32
+    126|     const first = await handleStripeWebhook(signed(donation), { ...dep…
+    127|     expect(first.status).toBe(200);
+    128|     expect(await first.json()).toMatchObject({ posted: false });
+       |                                ^
+    129|     expect((await handleStripeWebhook(signed(donation), { ...deps(), e…
+    130|     expect(posts).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  apps/web/test/stripe-webhook.test.ts > donations on the shared webhook > answers 200 when the note went out but marking it posted failed, so Stripe does not post it again
+AssertionError: expected 500 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 500
+
+ ❯ apps/web/test/stripe-webhook.test.ts:138:118
+    136|     const error = vi.spyOn(console, 'error').mockImplementation(() => …
+    137|     const failing = { ...events, done: async () => Promise.reject(new …
+    138|     expect((await handleStripeWebhook(signed(donation), { ...deps(), e…
+       |                                                                                                                      ^
+    139|     expect(error).toHaveBeenCalledWith(expect.stringContaining('posted…
+    140|     error.mockRestore();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+
+ Test Files  5 failed (5)
+      Tests  17 failed | 21 passed (38)
+   Start at  01:35:09
+   Duration  10.80s (transform 370ms, setup 0ms, import 1.95s, tests 10.38s, environment 0ms)
+

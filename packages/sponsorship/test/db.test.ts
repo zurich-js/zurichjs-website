@@ -174,6 +174,31 @@ d('sponsorship database', () => {
     expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'never'`)).toBe('0');
   });
 
+  it('keeps a payment link attempt or switches it off, never both, even at the same time', async () => {
+    const { sponsor: s } = await store.create({ ...acme, companyName: 'Initech', cycle: 'once' }, { email: 'ada@initech.ch', name: 'Ada', role: 'primary' }, board);
+    const keep = (key: string, id: string) =>
+      store.linkStripeIf(s.id, { paymentLinkId: null, status: 'pending', attempt: key }, { paymentLinkId: id, paymentLinkUrl: `https://buy.stripe.com/${id}` }, stripe);
+    const a = await store.beginLinkAttempt(s.id, 'line_items[0][price]=price_1');
+    const b = await store.beginLinkAttempt(s.id, 'line_items[0][price]=price_1');
+    expect(a).toMatchObject({ sponsorId: s.id, state: 'open', linkId: null });
+    await store.linkAttemptCreated(a.key, 'plink_a');
+    await store.linkAttemptCreated(b.key, 'plink_b');
+    // Kept and claimed for cleanup at the same moment: exactly one wins.
+    const [kept, claimed] = await Promise.all([keep(a.key, 'plink_a'), store.claimLinkCleanup(a.key)]);
+    expect([!!kept, claimed].filter(Boolean)).toHaveLength(1);
+    const unsettled = await store.unsettledLinkAttempts({ sponsorId: s.id, limit: 10 });
+    expect(unsettled.map((x) => x.key).sort()).toEqual((kept ? [b.key] : [a.key, b.key]).sort());
+    // A second link is never kept over the first, and a kept one is never claimed.
+    if (kept) {
+      expect(await keep(b.key, 'plink_b')).toBeNull();
+      expect(await store.claimLinkCleanup(a.key)).toBe(false);
+    }
+    expect(await store.claimLinkCleanup(b.key)).toBe(true);
+    await store.linkAttemptClosed(b.key);
+    expect(await store.unsettledLinkAttempts({ sponsorId: s.id, limit: 10 })).toHaveLength(kept ? 0 : 1);
+    expect(await store.unsettledLinkAttempts({ sponsorId: 'not-a-uuid', limit: 10 })).toEqual([]);
+  });
+
   it('keeps the audit log append-only', () => {
     expect(pgdb.fails('delete from sponsor_events')).toMatch(/append-only/);
   });

@@ -214,3 +214,18 @@ export interface SponsorEvent {
   payload: Record<string, unknown>;
   at: string;
 }
+
+/**
+ * A payment link asked of Stripe, recorded before the call (sponsor_payment_link_attempts): the
+ * exact request, sent with `key` as its idempotency key, so the same link can be asked for again
+ * and switched off when the first answer was lost.
+ */
+export interface LinkAttempt {
+  key: string;
+  sponsorId: string;
+  /** The form body sent to Stripe (the same body with the same key gets the same link back). */
+  request: string;
+  linkId: string | null;
+  state: 'open' | 'kept' | 'closing' | 'closed';
+  createdAt: string;
+}

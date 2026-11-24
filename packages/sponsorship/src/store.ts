@@ -4,6 +4,7 @@ import type {
   Agreement,
   Contact,
   EndedReason,
+  LinkAttempt,
   Logo,
   NewContact,
   NewNotice,
@@ -56,6 +57,8 @@ export interface StripeExpect {
   checkoutSessionId?: string | null;
   /** The status it must still have (a payment link is kept only while the sponsorship is unpaid). */
   status?: Status;
+  /** A payment link attempt that must still be open; the same write marks it kept (beginLinkAttempt). */
+  attempt?: string;
 }
 
 export type NewAgreement = Omit<Agreement, 'id' | 'sponsorId' | 'acceptedAt'>;
@@ -120,6 +123,19 @@ export interface SponsorStore {
   claimNotices(filter: { sponsorId?: string; limit: number }): Promise<SponsorNotice[]>;
   /** Sent; or, with an error, released for a later try. */
   noticeDone(id: string, error?: string): Promise<void>;
+  /**
+   * Payment links (sponsor_payment_link_attempts): recorded before Stripe is asked, so a link
+   * Stripe made is switched off even when its answer or the next write was lost.
+   */
+  beginLinkAttempt(sponsorId: string, request: string): Promise<LinkAttempt>;
+  /** Stripe answered with this link. It becomes the sponsor's with `linkStripeIf(…, { attempt: key }, …)`. */
+  linkAttemptCreated(key: string, linkId: string): Promise<void>;
+  /** Marks a link that was not kept for switching off (`closing`). False once it is kept or closed. */
+  claimLinkCleanup(key: string, linkId?: string): Promise<boolean>;
+  /** Stripe confirmed the link is off. */
+  linkAttemptClosed(key: string): Promise<void>;
+  /** Attempts still open or closing (of one sponsor, or all), oldest first. */
+  unsettledLinkAttempts(filter: { sponsorId?: string; limit: number }): Promise<LinkAttempt[]>;
 
   stripeEventSeen(eventId: string): Promise<boolean>;
   markStripeEvent(eventId: string, type: string): Promise<void>;
@@ -191,6 +207,12 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     return added;
   };
   const CLAIM_MS = 5 * 60_000;
+  const linkAttempts: LinkAttempt[] = [];
+  const attempt = (key: string) => {
+    const a = linkAttempts.find((x) => x.key === key);
+    if (!a) throw new NotFound('payment link attempt');
+    return a;
+  };
 
   const record = (sponsorId: string, type: string, actor: Actor, extra: Partial<SponsorEvent> = {}) =>
     log.push({ id: `e_${log.length + 1}`, sponsorId, type, fromStatus: null, toStatus: null, actor, payload: {}, at: now(), ...extra });
@@ -275,9 +297,12 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       return save({ ...s, ...patch });
     },
     linkStripe: async (sid, links, actor) => linkStripe(must(sid), links, actor),
-    async linkStripeIf(sid, expect, links, actor) {
+    async linkStripeIf(sid, { attempt: key, ...expect }, links, actor) {
       const s = must(sid);
-      if ((Object.keys(expect) as (keyof StripeExpect)[]).some((k) => expect[k] !== undefined && s[k] !== expect[k])) return null;
+      if ((Object.keys(expect) as (keyof typeof expect)[]).some((k) => expect[k] !== undefined && s[k] !== expect[k])) return null;
+      const a = key === undefined ? null : attempt(key);
+      if (a && (a.state !== 'open' || a.sponsorId !== sid)) return null;
+      if (a) Object.assign(a, { state: 'kept', linkId: links.paymentLinkId ?? a.linkId });
       return linkStripe(s, links, actor);
     },
     async transition(sid, input) {
@@ -383,6 +408,28 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       const x = notices.find((y) => y.id === nid);
       if (x) Object.assign(x, error ? { claimedAt: null, lastError: error.slice(0, 500) } : { claimedAt: null, sentAt: now(), lastError: null });
     },
+    async beginLinkAttempt(sid, request) {
+      must(sid);
+      const a: LinkAttempt = { key: crypto.randomUUID(), sponsorId: sid, request, linkId: null, state: 'open', createdAt: now() };
+      linkAttempts.push(a);
+      return { ...a };
+    },
+    linkAttemptCreated: async (key, linkId) => void (attempt(key).linkId = linkId),
+    async claimLinkCleanup(key, linkId) {
+      const a = attempt(key);
+      if (a.state !== 'open' && a.state !== 'closing') return false;
+      Object.assign(a, { state: 'closing', linkId: linkId ?? a.linkId });
+      return true;
+    },
+    async linkAttemptClosed(key) {
+      const a = attempt(key);
+      if (a.state === 'closing') a.state = 'closed';
+    },
+    unsettledLinkAttempts: async ({ sponsorId, limit }) =>
+      linkAttempts
+        .filter((a) => (a.state === 'open' || a.state === 'closing') && (!sponsorId || a.sponsorId === sponsorId))
+        .slice(0, limit)
+        .map((a) => ({ ...a })),
     stripeEventSeen: async (e) => stripeEvents.has(e),
     markStripeEvent: async (e) => void stripeEvents.add(e),
     events: async (sid) => log.filter((e) => e.sponsorId === sid).map((e) => ({ ...e })),

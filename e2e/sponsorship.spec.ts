@@ -336,7 +336,6 @@ test.describe('the board’s sponsors (/admin/sponsors)', () => {
     await page.getByRole('button', { name: 'Try again' }).click();
     await page.getByLabel('Password').fill('right-or-wrong');
     await page.getByRole('button', { name: 'Sign in' }).click();
-    // A platform error page is no verdict on the password.
     await expect(page.getByRole('alert')).toHaveText('We couldn’t complete sign-in. Try again in a moment.');
     await expect(page.getByRole('button', { name: 'Sign in' })).toBeEnabled();
 

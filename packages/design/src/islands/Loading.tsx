@@ -4,7 +4,7 @@ import { cx } from '../recipes.ts';
 import { Button } from './Button.tsx';
 import { Notice } from './Notice.tsx';
 
-/** After this long, the line says loading is slow, so nobody waits in silence. */
+/** Delay before the loading line adds that it is taking longer than usual. */
 export const SLOW_AFTER_MS = 10_000;
 
 const size = { body: 'text-body', compact: 'text-compact' } as const;

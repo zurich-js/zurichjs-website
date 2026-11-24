@@ -51,7 +51,7 @@ export function SponsorsAdmin({ onSignedOut }: { onSignedOut: () => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [counts, setCounts] = useState<Record<Status, number> | null>(null);
   const [labels, setLabels] = useState<Record<string, string>>({});
-  const [truncated, setTruncated] = useState(false);
+  const [truncated, setTruncated] = useState<{ filtered: boolean } | null>(null);
   const [error, setError] = useState('');
   const seq = useRef(0);
 
@@ -66,7 +66,7 @@ export function SponsorsAdmin({ onSignedOut }: { onSignedOut: () => void }) {
     if (code !== 200) return setError(body.error ?? 'Could not load the sponsors.');
     setError('');
     setRows(sortRows(body.sponsors));
-    setTruncated(!!body.truncated);
+    setTruncated(body.truncated ? { filtered: params.toString() !== '' } : null);
     setLabels(body.attentionLabels ?? {});
     if (body.counts) setCounts(body.counts);
   };
@@ -161,8 +161,8 @@ function SponsorList({
   status: '' | Status;
   onStatus: (s: '' | Status) => void;
   rows: Row[] | null;
-  /** More sponsorships match than the list shows. */
-  truncated: boolean;
+  /** The shown list stopped at the limit; `filtered` is whether that request had a search or status. */
+  truncated: { filtered: boolean } | null;
   counts: Record<Status, number> | null;
   labels: Record<string, string>;
   error: string;
@@ -231,7 +231,7 @@ function SponsorList({
       {error && <LoadFailed title={error} onRetry={onRetry} />}
       {!rows && !error && <Loading>Loading the sponsors…</Loading>}
       {rows && truncated && (
-        <Notice title={!filtered && total !== null ? `Showing the newest ${rows.length} of ${total} sponsorships.` : `Showing the newest ${rows.length} that match.`}>
+        <Notice title={!truncated.filtered && total !== null ? `Showing the newest ${rows.length} of ${total} sponsorships.` : `Showing the newest ${rows.length} that match.`}>
           <p class="m-0">Search or filter to find the others.</p>
         </Notice>
       )}

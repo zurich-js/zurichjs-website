@@ -3,7 +3,8 @@
  *
  * The site is static and reads the sponsorships at build time (sponsor-public.ts), so a sponsorship
  * that starts, ends, changes tier or is linked to another partner record queues a build the same
- * way a Sanity publish does: a pending entry in the `rebuild` Blobs store, built by
+ * way a Sanity publish does (as does moving the meetups a running one-time sponsorship covers): a
+ * pending entry in the `rebuild` Blobs store, built by
  * `scheduled-rebuild` once things have been quiet for two minutes. Wrapping the store catches every
  * writer (the sponsor, the board, Stripe's webhook, the daily check) in one place.
  *
@@ -49,6 +50,15 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
       const s = await store.update(id, patch, actor);
       if (patchIsPublic(patch, s)) await safely('sponsor details changed');
       return s;
+    },
+    async setMeetups(id, list, actor) {
+      // A running one-time sponsor is thanked on the meetups it covers: moving them changes those pages.
+      const before = (await store.meetups(id)).map((m) => m.eventId);
+      const saved = await store.setMeetups(id, list, actor);
+      const after = saved.map((m) => m.eventId);
+      const moved = before.length !== after.length || before.some((e) => !after.includes(e));
+      if (moved && isRunning((await store.get(id))?.status ?? 'pending')) await safely('sponsored meetups moved');
+      return saved;
     },
   };
 }

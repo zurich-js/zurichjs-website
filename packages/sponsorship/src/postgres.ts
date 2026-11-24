@@ -7,13 +7,13 @@
  * on one connection of the pool (`tx`).
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
+import { DuplicateContact, NotFound, contactRequired, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
 import type { Actor, Agreement, Contact, LinkAttempt, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
   /** A pool (pg.Pool) lends one connection for a transaction; without it the queryable is used as it is (a single client). */
-  connect?(): Promise<Queryable & { release(err?: Error): void }>;
+  connect?(): Promise<Pick<Queryable, 'query'> & { release(err?: Error | boolean): void }>;
 }
 
 type Row = Record<string, unknown>;
@@ -109,7 +109,7 @@ const noticeRows = (list: NewNotice[] = []) => JSON.stringify(list.map((x) => ({
 type Run = <R = Row>(text: string, params?: unknown[]) => Promise<R[]>;
 
 const runner =
-  (db: Queryable): Run =>
+  (db: Pick<Queryable, 'query'>): Run =>
   async <R = Row>(text: string, params: unknown[] = []) => {
     try {
       return (await db.query<R>(text, params)).rows;
@@ -377,10 +377,21 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!r) throw new NotFound('contact');
       return camel<Contact>(r);
     },
-    async removeContact(contactId, actor) {
-      const rows = await audited(`delete from sponsor_contacts where id = $1 returning sponsor_id as sponsor_ref`, [contactId], 'contact_removed', actor, { contactId });
-      if (!rows[0]) throw new NotFound('contact');
-    },
+    removeContact: (contactId, actor) =>
+      tx(async (t) => {
+        if (!UUID.test(contactId)) throw new NotFound('contact');
+        // The sponsor row is locked first, so a second removal for the same sponsor waits and then
+        // sees the contacts this one left.
+        const locked = await t('select s.id from sponsors s join sponsor_contacts c on c.sponsor_id = s.id where c.id = $1 for update of s', [contactId]);
+        if (!locked[0]) throw new NotFound('contact');
+        const all = (await t('select * from sponsor_contacts where sponsor_id = $1', [locked[0].id])).map((r) => camel<Contact>(r));
+        const refused = contactRequired(
+          all.find((c) => c.id === contactId)!,
+          all.filter((c) => c.id !== contactId),
+        );
+        if (refused) throw refused;
+        await auditedOn(t)(`delete from sponsor_contacts where id = $1 returning sponsor_id as sponsor_ref`, [contactId], 'contact_removed', actor, { contactId });
+      }),
 
     acceptAgreement: (sponsorId, a, actor, notices) =>
       tx(async (t) => {

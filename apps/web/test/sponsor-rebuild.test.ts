@@ -62,6 +62,21 @@ describe('a rebuild when a sponsorship changes what the site shows', () => {
     expect(queued).toHaveLength(3);
   });
 
+  it('queues when the meetups of a running one-time sponsorship move, not while pending or for the same list', async () => {
+    const queued: string[] = [];
+    const store = withRebuilds(memoryStore(), async (r) => void queued.push(r));
+    const dec = { eventId: 'event-dec', title: 'December', date: '2026-12-09' };
+    const jan = { eventId: 'event-jan', title: 'January', date: '2027-01-13' };
+    const { sponsor: pending } = await store.create({ ...NEW, cycle: 'once' }, { email: 'p@example.com', name: 'P', role: 'primary' }, BOARD, { meetups: [dec] });
+    await store.setMeetups(pending.id, [jan], BOARD);
+    const { sponsor: paid } = await store.create({ ...NEW, cycle: 'once', status: 'active' }, { email: 'q@example.com', name: 'Q', role: 'primary' }, BOARD, { meetups: [dec] });
+    queued.length = 0;
+    await store.setMeetups(paid.id, [dec], BOARD);
+    expect(queued).toEqual([]);
+    await store.setMeetups(paid.id, [jan], BOARD);
+    expect(queued).toEqual(['sponsored meetups moved']);
+  });
+
   it('a queue that fails never fails the change', async () => {
     const { store, id } = await setup(async () => Promise.reject(new Error('no blobs here')));
     const warn = console.warn;

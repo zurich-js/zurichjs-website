@@ -2,14 +2,18 @@
  * The sponsor store on Postgres (Neon in production; a throwaway local Postgres in tests).
  * Server-side only. Each write is one statement: a data-modifying CTE changes the row and
  * appends the audit row, so both happen or neither does, without holding a client for a
- * transaction (it works on a pg.Pool). Status changes are compare-and-set.
+ * transaction (it works on a pg.Pool). Status changes are compare-and-set. The few steps that must
+ * read before they write (a payment link kept against one being switched off) run in a transaction
+ * on one connection of the pool (`tx`).
  */
 import { checkTransition, TransitionError } from './state.ts';
 import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
-import type { Actor, Agreement, Contact, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
+import type { Actor, Agreement, Contact, LinkAttempt, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
+  /** A pool (pg.Pool) lends one connection for a transaction; without it the queryable is used as it is (a single client). */
+  connect?(): Promise<Queryable & { release(err?: Error): void }>;
 }
 
 type Row = Record<string, unknown>;
@@ -102,20 +106,26 @@ const INSERT_NOTICES = (sponsorId: string, param: string, from = '') =>
    on conflict (key) do nothing`;
 const noticeRows = (list: NewNotice[] = []) => JSON.stringify(list.map((x) => ({ key: x.key, body: x.body })));
 
-export function postgresStore(db: Queryable): SponsorStore {
-  const q = async <R = Row>(text: string, params: unknown[] = []): Promise<R[]> => {
+type Run = <R = Row>(text: string, params?: unknown[]) => Promise<R[]>;
+
+const runner =
+  (db: Queryable): Run =>
+  async <R = Row>(text: string, params: unknown[] = []) => {
     try {
       return (await db.query<R>(text, params)).rows;
     } catch (err) {
       throw mapError(err);
     }
   };
-  /**
-   * Runs `cte` (a data-modifying statement aliased `s`, exposing `sponsor_ref`) and its
-   * audit insert as one statement. `$type`, `$actor_kind`, `$actor_id`, `$payload` are
-   * appended after the caller's parameters.
-   */
-  const audited = async (cte: string, params: unknown[], type: string, actor: Actor, payload: Row = {}, from?: string, to?: string, more = '') => {
+
+/**
+ * Runs `cte` (a data-modifying statement aliased `s`, exposing `sponsor_ref`) and its
+ * audit insert as one statement. `$type`, `$actor_kind`, `$actor_id`, `$payload` are
+ * appended after the caller's parameters.
+ */
+const auditedOn =
+  (q: Run) =>
+  async (cte: string, params: unknown[], type: string, actor: Actor, payload: Row = {}, from?: string, to?: string, more = '') => {
     const n = params.length;
     const sql = `with s as (${cte}), ${AUDIT(from, to)}${more} select * from s`
       .replaceAll('$type', `$${n + 1}`)
@@ -123,6 +133,35 @@ export function postgresStore(db: Queryable): SponsorStore {
       .replaceAll('$actor_id', `$${n + 3}`)
       .replaceAll('$payload', `$${n + 4}`);
     return q(sql, [...params, type, actor.kind, actor.id, JSON.stringify(payload)]);
+  };
+
+const attemptOf = (r: Row): LinkAttempt => ({
+  key: String(r.key),
+  sponsorId: r.sponsor_id as string,
+  request: r.request as string,
+  linkId: (r.link_id as string | null) ?? null,
+  state: r.state as LinkAttempt['state'],
+  createdAt: iso(r.created_at)!,
+});
+
+export function postgresStore(db: Queryable): SponsorStore {
+  const q = runner(db);
+  const audited = auditedOn(q);
+  /** `fn` in one transaction on one connection; rolled back when it throws or answers `rollback`. */
+  const tx = async <T>(fn: (q: Run) => Promise<T>): Promise<T> => {
+    const client = db.connect ? await db.connect() : undefined;
+    const c = client ?? db;
+    try {
+      await c.query('begin');
+      const out = await fn(runner(c));
+      await c.query('commit');
+      return out;
+    } catch (err) {
+      await c.query('rollback').catch(() => undefined);
+      throw mapError(err);
+    } finally {
+      client?.release();
+    }
   };
   const one = async (where: string, value: unknown) => {
     if (where === 'id' && !UUID.test(String(value))) return null;
@@ -135,15 +174,31 @@ export function postgresStore(db: Queryable): SponsorStore {
     return s;
   };
 
-  /** With `expect`: only while those columns hold those values (null matches null); undefined otherwise. */
-  async function linkStripe(id: string, links: StripeLinks, actor: Actor, expect?: StripeExpect): Promise<Sponsor | undefined> {
+  /**
+   * With `expect`: only while those columns hold those values (null matches null); undefined
+   * otherwise. With `expect.attempt`, in a transaction that locks that payment link attempt first
+   * and marks it kept: a cleanup claiming it at the same time waits, then finds it kept.
+   */
+  async function linkStripe(id: string, links: StripeLinks, actor: Actor, expect?: StripeExpect, run: Run = q): Promise<Sponsor | undefined> {
+    if (expect?.attempt !== undefined && run === q)
+      return tx(async (t) => {
+        const open = await t("select 1 from sponsor_payment_link_attempts where key = $1 and sponsor_id = $2 and state = 'open' for update", [expect.attempt, id]);
+        if (!open.length) return undefined;
+        const s = await linkStripe(id, links, actor, expect, t);
+        if (s)
+          await t("update sponsor_payment_link_attempts set state = 'kept', link_id = coalesce($2, link_id), updated_at = now() where key = $1", [
+            expect.attempt,
+            links.paymentLinkId ?? null,
+          ]);
+        return s;
+      });
     const entries = setters(STRIPE_COLUMNS, links);
     if (!entries.length) return must(id);
     const checks = expect ? setters(STRIPE_COLUMNS, expect) : [];
     const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
     const n = entries.length + 2;
     const where = checks.map(([k], i) => ` and ${STRIPE_COLUMNS[k]} is not distinct from $${n + i}`).join('') + (expect?.status ? ` and status = $${n + checks.length}` : '');
-    const rows = await audited(
+    const rows = await auditedOn(run)(
       `update sponsors set ${sets} where id = $1${where} returning *, id as sponsor_ref`,
       [id, ...entries.map(([, v]) => v), ...checks.map(([, v]) => v), ...(expect?.status ? [expect.status] : [])],
       'stripe_linked',
@@ -327,18 +382,21 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!rows[0]) throw new NotFound('contact');
     },
 
-    async acceptAgreement(sponsorId, a, actor) {
-      const rows = await audited(
-        `insert into sponsor_agreements (sponsor_id, version, signer_name, signer_title, signer_email, context, summary)
-         values ($1, $2, $3, $4, $5, $6, $7) returning *, sponsor_id as sponsor_ref`,
-        [sponsorId, a.version, a.signerName, a.signerTitle, normaliseEmail(a.signerEmail), a.context, a.summary],
-        'agreement_accepted',
-        actor,
-        { version: a.version, context: a.context },
-      );
-      const { sponsorRef: _, ...ag } = camel<Agreement & { sponsorRef: string }>(rows[0]!);
-      return ag;
-    },
+    acceptAgreement: (sponsorId, a, actor, notices) =>
+      tx(async (t) => {
+        const rows = await auditedOn(t)(
+          `insert into sponsor_agreements (sponsor_id, version, signer_name, signer_title, signer_email, context, summary)
+           values ($1, $2, $3, $4, $5, $6, $7) returning *, sponsor_id as sponsor_ref`,
+          [sponsorId, a.version, a.signerName, a.signerTitle, normaliseEmail(a.signerEmail), a.context, a.summary],
+          'agreement_accepted',
+          actor,
+          { version: a.version, context: a.context },
+        );
+        const { sponsorRef: _, ...ag } = camel<Agreement & { sponsorRef: string }>(rows[0]!);
+        const owed = notices?.(ag) ?? [];
+        if (owed.length) await t(INSERT_NOTICES('$1::uuid', '$2'), [sponsorId, noticeRows(owed)]);
+        return ag;
+      }),
     agreements: async (sponsorId) => (await q('select * from sponsor_agreements where sponsor_id = $1 order by accepted_at desc', [sponsorId])).map((r) => camel<Agreement>(r)),
 
     async addLogo(sponsorId, l, actor) {
@@ -375,7 +433,16 @@ export function postgresStore(db: Queryable): SponsorStore {
     documents: async (sponsorId) =>
       UUID.test(sponsorId) ? (await q('select * from sponsor_documents where sponsor_id = $1 order by uploaded_at desc', [sponsorId])).map((r) => camel<SponsorDocument>(r)) : [],
 
-    queueNotices: async (sponsorId, list) => (list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0),
+    async queueNotices(sponsorId, list, event) {
+      if (!event) return list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0;
+      const rows = await q(
+        `with e as (insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, $3, $4, $5, $6::jsonb) returning sponsor_id),
+              n as (${INSERT_NOTICES('e.sponsor_id', '$2', 'e, ')} returning id)
+         select (select count(*) from n)::int as added`,
+        [sponsorId, noticeRows(list), event.type, event.actor.kind, event.actor.id, JSON.stringify(event.payload ?? {})],
+      );
+      return Number(rows[0]?.added ?? 0);
+    },
     claimNotices: async ({ sponsorId, limit }) =>
       (
         await q(
@@ -399,6 +466,36 @@ export function postgresStore(db: Queryable): SponsorStore {
         error ? [id, error] : [id],
       );
     },
+    async beginLinkAttempt(sponsorId, request) {
+      if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
+      const r = (await q('insert into sponsor_payment_link_attempts (sponsor_id, request) values ($1, $2) returning *', [sponsorId, request]))[0]!;
+      return attemptOf(r);
+    },
+    async linkAttemptCreated(key, linkId) {
+      await q('update sponsor_payment_link_attempts set link_id = $2, updated_at = now() where key = $1', [key, linkId]);
+    },
+    async claimLinkCleanup(key, linkId) {
+      const rows = await q(
+        `update sponsor_payment_link_attempts set state = 'closing', link_id = coalesce($2, link_id), updated_at = now()
+         where key = $1 and state in ('open', 'closing') returning key`,
+        [key, linkId ?? null],
+      );
+      return rows.length > 0;
+    },
+    async linkAttemptClosed(key) {
+      await q("update sponsor_payment_link_attempts set state = 'closed', updated_at = now() where key = $1 and state = 'closing'", [key]);
+    },
+    unsettledLinkAttempts: async ({ sponsorId, limit }) =>
+      sponsorId !== undefined && !UUID.test(sponsorId)
+        ? []
+        : (
+            await q(
+              `select * from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
+           order by created_at, key limit $2`,
+              [sponsorId ?? null, Math.min(Math.max(limit, 1), 1000)],
+            )
+          ).map(attemptOf),
+
     stripeEventSeen: async (id) => (await q('select 1 from sponsor_stripe_events where id = $1', [id])).length > 0,
     markStripeEvent: async (id, type) => void (await q('insert into sponsor_stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [id, type])),
     events: async (sponsorId) => (await q('select * from sponsor_events where sponsor_id = $1 order by at, id', [sponsorId])).map(eventOf),
@@ -411,5 +508,55 @@ export function postgresStore(db: Queryable): SponsorStore {
         JSON.stringify(payload),
       ]);
     },
+    paidInvoice: (sponsorId, p, actor, { clearOverdue }) =>
+      tx(async (t) => {
+        // The sponsor row is locked first: overdueInvoice for the same sponsor waits, then sees this payment.
+        const s = (await t('select * from sponsors where id = $1 for update', [sponsorId]))[0];
+        if (!s) throw new NotFound('sponsor');
+        await t(`insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, 'invoice_paid', $2, $3, $4::jsonb)`, [
+          sponsorId,
+          actor.kind,
+          actor.id,
+          JSON.stringify({ invoice: p.invoice, ...(p.created ? { created: p.created } : {}) }),
+        ]);
+        if (!clearOverdue || s.status !== 'past_due') return sponsorOf(s);
+        const rows = await auditedOn(t)(
+          `update sponsors set status = 'active' where id = $1 and status = 'past_due' returning *, id as sponsor_ref`,
+          [sponsorId],
+          'status_changed',
+          actor,
+          { invoice: p.invoice },
+          "'past_due'",
+          "'active'",
+        );
+        return sponsorOf(rows[0]!);
+      }),
+    overdueInvoice: (sponsorId, p, actor, notices) =>
+      tx(async (t) => {
+        // Locked first, as in paidInvoice, so a payment for this invoice is either seen here or comes after.
+        const row = (await t('select * from sponsors where id = $1 for update', [sponsorId]))[0];
+        if (!row) throw new NotFound('sponsor');
+        const s = sponsorOf(row);
+        const paid = await t(
+          `select 1 from sponsor_events where sponsor_id = $1 and payload->>'invoice' = $2
+             and (type = 'invoice_paid' or (type = 'status_changed' and to_status = 'active')) limit 1`,
+          [sponsorId, p.invoice],
+        );
+        if (paid.length) return { sponsor: s, outcome: 'paid' as const };
+        if (p.subscriptionId && s.stripeSubscriptionId && s.stripeSubscriptionId !== p.subscriptionId) return { sponsor: s, outcome: 'stale' as const };
+        if (!['active', 'past_due', 'ending'].includes(s.status)) return { sponsor: s, outcome: 'not_running' as const };
+        if (notices.length) await t(INSERT_NOTICES('$1::uuid', '$2'), [sponsorId, noticeRows(notices)]);
+        if (s.status !== 'active') return { sponsor: s, outcome: 'overdue' as const };
+        const rows = await auditedOn(t)(
+          `update sponsors set status = 'past_due' where id = $1 and status = 'active' returning *, id as sponsor_ref`,
+          [sponsorId],
+          'status_changed',
+          actor,
+          { invoice: p.invoice, ...p.payload },
+          "'active'",
+          "'past_due'",
+        );
+        return { sponsor: sponsorOf(rows[0]!), outcome: 'overdue' as const };
+      }),
   };
 }

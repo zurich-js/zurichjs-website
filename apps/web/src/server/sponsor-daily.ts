@@ -11,6 +11,8 @@
  *     once, never one per missed day
  *   - an ended sponsorship that still points at Stripe (a close that failed) is closed again
  *   - every notice still queued (an email or Slack note a request could not send) is sent
+ *   - a payment link a request left behind (its answer or the next write lost, or a second
+ *     request saved its own) is switched off, whatever the sponsorship's status
  *
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
  */
@@ -18,7 +20,8 @@ import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/spons
 import { lastDay, longDate } from './dates.ts';
 import { adminUrl, who, zurichDay } from './sponsor.ts';
 import { emailNotice, sendNotices, slackNotice } from './sponsor-notices.ts';
-import { closeStripe, leftInStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { closeStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { leftInStripe, recoverPaymentLinks } from './sponsor-stripe.ts';
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
@@ -32,12 +35,18 @@ const reminderDue = (left: number) => [...REMIND_DAYS].sort((a, b) => a - b).fin
  * `deadline` is the scheduled function's time budget (any `{ remaining() }`, such as deadline.ts):
  * notices still queued when it runs low are left for the next run.
  */
-export async function dailyCheck(
-  deps: LifecycleDeps & { deadline?: { remaining(): number } },
-): Promise<{ completed: number; ended: number; closed: number; reminded: number; stripeClosed: number; notices: { sent: number; failed: number } }> {
+export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number } }): Promise<{
+  completed: number;
+  ended: number;
+  closed: number;
+  reminded: number;
+  stripeClosed: number;
+  linksClosed: number;
+  notices: { sent: number; failed: number; waiting: number; unrecorded: number };
+}> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
-  const out = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, notices: { sent: 0, failed: 0 } };
+  const out = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, linksClosed: 0, notices: { sent: 0, failed: 0, waiting: 0, unrecorded: 0 } };
 
   /** A Stripe failure here is retried tomorrow (the ids are kept), and never stops the other sponsors. */
   const closeLater = (s: Sponsor) =>
@@ -99,6 +108,7 @@ export async function dailyCheck(
       ]);
     }
   }
+  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log })).closed;
   out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
   return out;
 }

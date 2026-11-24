@@ -1,0 +1,607 @@
+[
+ {
+  "scenario": "sponsor-loading",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-loading",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-loading",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-loading",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-loading",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-slow",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-slow",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-slow",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-slow",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-slow",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your sponsorship\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-failed",
+  "width": 320,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-failed",
+  "width": 375,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-failed",
+  "width": 390,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-failed",
+  "width": 1280,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-failed",
+  "width": 1440,
+  "errors": [],
+  "focus": {
+   "tag": "BUTTON",
+   "text": "Try again",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-signed-out",
+  "width": 320,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-signed-out",
+  "width": 375,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-signed-out",
+  "width": 390,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-signed-out",
+  "width": 1280,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-signed-out",
+  "width": 1440,
+  "errors": [],
+  "focus": {
+   "tag": "INPUT",
+   "text": "",
+   "outline": "solid 3px rgb(38, 139, 204)",
+   "focusVisible": true
+  },
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-plan-unknown",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-plan-unknown",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-plan-unknown",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-plan-unknown",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "sponsor-plan-unknown",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-loading",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-loading",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-loading",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-loading",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-loading",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026"
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-slow",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-slow",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-slow",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-slow",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-slow",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "status: Loading your account\u2026 This is taking longer than usual."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-failed",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-failed",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-failed",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-failed",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-failed",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [
+   "alert: We couldn\u2019t reach the site. Check your connection and reload."
+  ],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-signed-out",
+  "width": 320,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-signed-out",
+  "width": 375,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-signed-out",
+  "width": 390,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-signed-out",
+  "width": 1280,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ },
+ {
+  "scenario": "member-signed-out",
+  "width": 1440,
+  "errors": [],
+  "focus": null,
+  "overflow": false,
+  "statusRoles": [],
+  "fonts": [
+   "Figtree-ee7f791d3e36e5a9"
+  ]
+ }
+]

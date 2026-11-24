@@ -1,0 +1,38 @@
+[
+ {
+  "run": "membership-account-1.json",
+  "performance": 99,
+  "cls": 0,
+  "lcpMs": 1807
+ },
+ {
+  "run": "membership-account-2.json",
+  "performance": 99,
+  "cls": 0,
+  "lcpMs": 1808
+ },
+ {
+  "run": "membership-account-3.json",
+  "performance": 99,
+  "cls": 0,
+  "lcpMs": 1807
+ },
+ {
+  "run": "partners-account-1.json",
+  "performance": 99,
+  "cls": 0,
+  "lcpMs": 1966
+ },
+ {
+  "run": "partners-account-2.json",
+  "performance": 99,
+  "cls": 0,
+  "lcpMs": 1958
+ },
+ {
+  "run": "partners-account-3.json",
+  "performance": 99,
+  "cls": 0,
+  "lcpMs": 1955
+ }
+]

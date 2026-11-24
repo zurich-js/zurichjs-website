@@ -1,0 +1,114 @@
+[
+  {
+    "file": "account-pending-offer-390.png",
+    "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-pending-offer-1440.png",
+    "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-pending-offer-375.png",
+    "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-pending-offer-1280.png",
+    "caption": "Pending recurring offer: per-year amount, fee, total; unticked agreement in the start form (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-fee-to-confirm-390.png",
+    "caption": "Running sponsorship: fee to confirm from the next renewal (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-fee-to-confirm-1440.png",
+    "caption": "Running sponsorship: fee to confirm from the next renewal (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-fee-in-force-390.png",
+    "caption": "Fee in force: its line on every renewal (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-fee-in-force-1440.png",
+    "caption": "Fee in force: its line on every renewal (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-running-390.png",
+    "caption": "Board: running sponsorship, choose who covers the fees (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-running-1440.png",
+    "caption": "Board: running sponsorship, choose who covers the fees (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-sent-390.png",
+    "caption": "Board: sent to confirm, with the link to copy (390px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-sent-1440.png",
+    "caption": "Board: sent to confirm, with the link to copy (1440px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-sent-375.png",
+    "caption": "Board: sent to confirm, with the link to copy (375px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-sent-1280.png",
+    "caption": "Board: sent to confirm, with the link to copy (1280px, MOCK: API answered by the harness; full page)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-bank-transfer-390.png",
+    "caption": "Board: bank-transfer sponsorship, no card fees (390px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-bank-transfer-1440.png",
+    "caption": "Board: bank-transfer sponsorship, no card fees (1440px, MOCK: API answered by the harness; element capture, sticky header made static)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "flow-sponsor-confirms-fee.mp4",
+    "caption": "Sponsor confirms a processing fee from the next renewal (MOCK API)"
+  },
+  {
+    "file": "flow-sponsor-confirms-fee.gif",
+    "caption": "Sponsor confirms a processing fee from the next renewal (MOCK API)"
+  },
+  {
+    "file": "flow-board-sends-fee.mp4",
+    "caption": "Board sends a fee to confirm and gets the link (MOCK API)"
+  },
+  {
+    "file": "flow-board-sends-fee.gif",
+    "caption": "Board sends a fee to confirm and gets the link (MOCK API)"
+  }
+]

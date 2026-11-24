@@ -334,7 +334,8 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
   if (s.stripeSubscriptionId) await cancelNow(s.stripeSubscriptionId, deps.stripe);
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
-  if (s.stripeSubscriptionId) await deps.store.linkStripe(s.id, { subscriptionId: null }, { kind: 'stripe', id: s.stripeSubscriptionId });
+  if (s.stripeSubscriptionId)
+    await deps.store.linkStripeIf(s.id, { subscriptionId: s.stripeSubscriptionId }, { subscriptionId: null }, { kind: 'stripe', id: s.stripeSubscriptionId });
 }
 
 /**
@@ -436,21 +437,28 @@ export interface RecordedPayment {
  * through on, starts a sponsorship that had not started, emails the sponsor a confirmation.
  */
 export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
+  const events = await deps.store.events(s.id);
+  const offerStart = events.findLastIndex((e) => e.fromStatus === 'ended' && e.toStatus === 'pending');
+  const onDate = events.slice(offerStart + 1).filter((e) => e.payload.paidUntil === p.paidUntil);
+  const completed = onDate.findLast((e) => e.type === 'payment_recorded');
+  const sameTransfer = (payload: Record<string, unknown>) => (payload.amount ?? null) === p.amount && (payload.reference ?? null) === p.reference;
+  if (completed) {
+    if (!sameTransfer(completed.payload)) throw new SponsorshipError('A transfer with different details was recorded for this date. Check the payment history.', 409, 'paidUntil');
+    return s;
+  }
   if (s.status === 'ended' || s.status === 'ending') throw new SponsorshipError('This sponsorship has ended or is ending; record nothing more.', 409, 'paidUntil');
   if (s.stripeSubscriptionId) throw new SponsorshipError('This sponsorship pays by card in Stripe. See the payment there.', 409, 'paidUntil');
-  // The same payment again after a failure half-way: an earlier attempt started recording this date
-  // (`payment_recording`) and did not finish (`payment_recorded`). Only that is resumed; any other
-  // request for the current date is refused as before (an imported sponsorship's own date included).
-  const events = await deps.store.events(s.id);
-  const started = (type: string) => events.some((e) => e.type === type && e.payload.paidUntil === p.paidUntil);
-  const resume = s.paidUntil === p.paidUntil && started('payment_recording') && !started('payment_recorded');
+  const recording = onDate.findLast((e) => e.type === 'payment_recording');
+  const resume = s.paidUntil === p.paidUntil && !!recording;
+  if (resume && 'amount' in recording.payload && !sameTransfer(recording.payload))
+    throw new SponsorshipError('A transfer with different details is being recorded for this date. Check the payment history.', 409, 'paidUntil');
   if (!resume) {
     if (s.paidUntil && p.paidUntil <= s.paidUntil) throw new SponsorshipError(`It is already paid through ${longDate(lastDay(s.paidUntil))}. Give a later date.`, 400, 'paidUntil');
     if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
   }
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
-  if (!resume) await deps.store.log(s.id, 'payment_recording', actor, { paidUntil: p.paidUntil });
+  if (!resume) await deps.store.log(s.id, 'payment_recording', actor, { ...p });
   let updated = resume ? s : await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });
@@ -470,7 +478,7 @@ export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor
     {
       type: 'payment_recorded',
       actor,
-      payload: { paidUntil: p.paidUntil, ...(p.amount ? { amount: p.amount } : {}), ...(p.reference ? { reference: p.reference } : {}) },
+      payload: { ...p },
     },
   );
   await deliver(s, deps);

@@ -108,7 +108,7 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
       ]);
     }
   }
-  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log })).closed;
+  out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: () => !deps.deadline || deps.deadline.remaining() > 16_000 })).closed;
   out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
   return out;
 }

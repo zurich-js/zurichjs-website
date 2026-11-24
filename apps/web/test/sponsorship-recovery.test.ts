@@ -219,12 +219,33 @@ describe('sponsorship board actions that fail half-way', () => {
       expect([...w.activeLinks]).toEqual([(await store.get(id))!.paymentLinkId]);
     });
 
-    it('Stripe refused the request outright: nothing to switch off, the attempt is settled', async () => {
+    it('reconciles an expired create by its event before allowing a replacement', async () => {
+      const id = await pendingBundle();
+      w.loseNext('POST', /^payment_links$/);
+      expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
+      const [original] = w.activeLinks;
+      const [attempt] = await attempts(id);
+      expect(w.calls.find((c) => c.path === 'payment_links')?.params.get('metadata[attemptId]')).toBe(attempt!.key);
+      const late = { ...deps(), now: NOW.getTime() + 25 * 3_600_000 };
+      const retry = (events: object[]) =>
+        handlePaymentLink(asAdmin('/x', {}), id, {
+          ...late,
+          fetch: async (url, init) => (new URL(String(url)).pathname === '/v1/events' ? Response.json({ data: events, has_more: false }) : w.f(url, init)),
+        });
+      expect((await retry([])).ok).toBe(false);
+      expect(w.calls.filter((c) => c.path === 'payment_links')).toHaveLength(1);
+      expect(w.activeLinks.has(original!)).toBe(true);
+      expect((await retry([{ id: 'evt_fixture', data: { object: { id: original, metadata: { attemptId: attempt!.key, sponsorId: id } } } }])).status).toBe(200);
+      expect(w.activeLinks.has(original!)).toBe(false);
+      expect(await attempts(id)).toEqual([]);
+    });
+
+    it('an ambiguous recovery rejection keeps the attempt pending', async () => {
       const id = await pendingBundle();
       w.failNext('POST', /^payment_links$/, 2, 400);
       expect((await handlePaymentLink(asAdmin('/x', {}), id, deps())).status).toBe(502);
-      expect(await daily()).toMatchObject({ linksClosed: 1 });
-      expect(await attempts(id)).toEqual([]);
+      expect(await daily()).toMatchObject({ linksClosed: 0 });
+      expect(await attempts(id)).toHaveLength(1);
       expect(w.activeLinks.size).toBe(0);
     });
   });
@@ -276,8 +297,9 @@ describe('sponsorship board actions that fail half-way', () => {
     expect(await store.get(sponsor.id)).toMatchObject({ status: 'active', paidUntil: '2027-11-18' });
     expect((await store.events(sponsor.id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
     expect(w.emails.filter((e) => /payment/i.test(e.subject))).toHaveLength(1);
-    // Done once: the same date again is refused as before.
-    expect((await handleRecordPayment(asAdmin('/x', body), sponsor.id, deps())).status).toBe(400);
+    expect((await handleRecordPayment(asAdmin('/x', body), sponsor.id, deps())).status).toBe(200);
+    expect((await handleRecordPayment(asAdmin('/x', { ...body, amount: 4000 }), sponsor.id, deps())).status).toBe(409);
+    expect((await store.events(sponsor.id)).filter((e) => e.type === 'payment_recorded')).toHaveLength(1);
   });
 
   it('recording the date an imported sponsorship already has is refused, with no email', async () => {

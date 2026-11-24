@@ -52,7 +52,7 @@ Funding: `unpaid`, `paid`, `refund_pending`, `refunded`, or `in_kind`.
 
 ## Cancelling, holds and refunds
 
-Cancelling or pausing a raffle with money in flags it `refund_review`. The board records its decision (refund being decided), makes the refund in Stripe or by bank, and records it with its reference. Nothing is refunded by the site. A host meetup that is cancelled or moved is put on hold by the board with the `meetup_changed` flag; the site does not detect it by itself yet.
+Cancelling or pausing a raffle with money in flags it `refund_review`. The board records its decision (refund being decided), makes the refund in Stripe or by bank, and records it with its reference. Nothing is refunded by the site. The payment handler and daily check put an outstanding raffle on hold when its published host is cancelled or postponed. The board reviews the receipt and clears the flags before resuming.
 
 ## Slack and data
 

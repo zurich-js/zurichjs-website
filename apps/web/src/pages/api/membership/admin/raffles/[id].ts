@@ -62,6 +62,7 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
         return answer(out);
       };
 
+      if ((body.action === 'ready' || body.action === 'resume') && r.flags.length) throw new RaffleRuleError('Resolve the outstanding raffle review before continuing.');
       switch (body.action) {
         case 'reconcile': {
           for (const p of await fees.payments(r.sponsorId))

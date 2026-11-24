@@ -12,6 +12,7 @@ import type { FeeStore, SponsorStore } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { methodNotAllowed, type Env } from '../../../server/http.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
+import type { LiveLookup } from '../../../server/sponsor-coverage.ts';
 import { processRaffleEvent } from '../../../server/raffle-webhook.ts';
 import { processSponsorEvent } from '../../../server/sponsor-webhook.ts';
 import { dispatchStripeEvent, readStripeEvent } from '../../../server/stripe-webhook.ts';
@@ -26,6 +27,7 @@ export interface StripeWebhookDeps {
   sponsorStore?: SponsorStore;
   fees?: FeeStore;
   raffles?: RaffleStore;
+  raffleHosts?: LiveLookup;
   fetch?: typeof fetch;
   slack?: MembershipSlack;
   now?: number;
@@ -41,7 +43,7 @@ export async function handleStripeWebhook(request: Request, deps: StripeWebhookD
   return dispatchStripeEvent(read.event, [
     (e) => processMembershipEvent(e, { ...shared, store: deps.memberStore, signature: deps.signature }),
     (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore, fees: deps.fees }),
-    (e) => processRaffleEvent(e, { ...shared, raffles: deps.raffles, sponsors: deps.sponsorStore, fees: deps.fees }),
+    (e) => processRaffleEvent(e, { ...shared, raffles: deps.raffles, hosts: deps.raffleHosts, sponsors: deps.sponsorStore, fees: deps.fees }),
     (e) => processDonationEvent(e, shared),
   ]);
 }

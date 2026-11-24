@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+- [Raffle funding](/domains/sponsorship/raffles.md) keeps the receipt when the host is cancelled and holds the raffle for a board decision.
+
 - Raffle funding and ledger writes share one transaction. The daily check puts outstanding raffles on hold when the host or sponsor loses eligibility.
 - **Added**: [Raffle add-ons](/domains/sponsorship/raffles.md): an existing sponsor proposes a separately paid raffle for a meetup; the board offers it with a frozen quote under owner-approved raffle terms; the sponsor accepts and pays through its own link, handled by a raffle part of the Stripe webhook that never touches the sponsorship. Gift accounting, holds, cancellations and refund decisions are recorded states for the board.
 - The board previews one-time sponsorship offers, reviews unmatched card payments and reconciles actual Stripe fees. [Processing fees](/domains/sponsorship/fees.md)

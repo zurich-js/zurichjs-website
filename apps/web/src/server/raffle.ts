@@ -185,14 +185,14 @@ export async function closeRafflePaymentLink(r: Raffle, deps: StripeDeps): Promi
 
 export async function holdIneligibleRaffles(raffles: RaffleStore, sponsors: SponsorStore, lookup: LiveLookup, now: Date) {
   const outstanding = await raffles.outstanding();
-  const hosts = await lookup([...new Set(outstanding.map((r) => r.eventId))]);
-  const byId = new Map(hosts.map((h) => [h.id, h]));
+  const hosts = await lookup([...new Set(outstanding.map((r) => r.eventId))]).catch(() => null);
+  const byId = new Map(hosts?.map((h) => [h.id, h]));
   const actor = { kind: 'script', id: 'raffle-eligibility' } as const;
   for (const raffle of outstanding) {
     const sponsor = await sponsors.get(raffle.sponsorId);
     const host = byId.get(raffle.eventId);
     const ended = !sponsor || !eligibility(sponsor, zurichDay(now)).ok;
-    const moved = !host || host.status === 'cancelled' || host.status === 'postponed';
+    const moved = hosts !== null && (!host || host.status === 'cancelled' || host.status === 'postponed');
     if (!ended && !moved) continue;
     if (ended) await raffles.flag(raffle.id, 'late_payment', actor);
     if (moved) await raffles.flag(raffle.id, 'meetup_changed', actor);

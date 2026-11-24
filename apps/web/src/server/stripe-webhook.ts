@@ -4,10 +4,10 @@
  * donations) gets every event and skips the ones that are not its own, by the `source` metadata
  * set when the payment was created.
  *
- * Every part remembers the events it handled, so a retry after one of them failed (answered 500)
- * only redoes the part that failed. A donation event (its object carries the donation `source`)
- * goes to the donation part alone: it is never a membership or sponsorship event, so it does not
- * wait for their database.
+ * Memberships and sponsorships record the events they handled, and donations claim theirs
+ * (donation-events.ts), so a retry after one part failed (answered 500) does not redo a part that
+ * finished. A donation event (its object carries the donation `source`) goes to the donation part
+ * alone: it is never a membership or sponsorship event, so it does not wait for their database.
  */
 import { fail, json, type Env } from './http.ts';
 import { DONATION_SOURCE, verifyStripeSignature } from './stripe.ts';

@@ -2,9 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   DEBOUNCE_MS,
   MAX_WAIT_MS,
+  absorb,
   acceptPublish,
   decide,
   emptyState,
+  publishKey,
   recordPublish,
   settle,
   tick,
@@ -28,7 +30,11 @@ async function sign(secret: string, t: number, body: string) {
 
 const memoryStore = (initial: RebuildState | null = null) => {
   let s = initial;
-  const store: StateStore = { read: async () => s, update: async (change) => (s = change(s ?? emptyState())) };
+  const store: StateStore = {
+    read: async () => s,
+    publish: async (at) => void (s = recordPublish(s ?? emptyState(), at)),
+    update: async (change) => (s = change(s ?? emptyState())),
+  };
   return { store, get: () => s };
 };
 
@@ -133,6 +139,29 @@ describe('event state rebuilds', () => {
   it('forgets fired times after a week', () => {
     const d = decide({ fired: [doors] }, new Date('2026-11-26T17:31:00Z'), []);
     expect(d.next.fired).toEqual([]);
+  });
+  it('a tick that saves after its build does not bring back a fired time the decision forgot', () => {
+    const now = new Date('2026-11-26T17:31:00Z');
+    const seen = recordPublish({ fired: [doors] }, new Date(now.getTime() - MAX_WAIT_MS));
+    const d = decide(seen, now, []);
+    expect(settle(seen, seen, d).fired).toEqual([]);
+  });
+});
+
+describe('publish records (StateStore.publish)', () => {
+  const key = (at: Date, id: string) => publishKey(at, id);
+  it('are counted once each, at their own time, and forgotten once deleted', () => {
+    const a = key(t0, 'a');
+    const b = key(plus(30_000), 'b');
+    const once = absorb(emptyState(), [b, a]);
+    expect(once).toMatchObject({ pendingSince: t0.toISOString(), lastPublishAt: plus(30_000).toISOString(), publishes: 2, absorbed: [a, b] });
+    expect(absorb(once, [a, b])).toEqual(once);
+    expect(absorb(once, [b])).toMatchObject({ publishes: 2, absorbed: [b] });
+    expect(absorb(once, []).absorbed).toBeUndefined();
+  });
+  it('an older record counted late does not move the last publish back', () => {
+    const s = recordPublish(emptyState(), plus(60_000));
+    expect(absorb(s, [key(t0, 'late')])).toMatchObject({ pendingSince: plus(60_000).toISOString(), lastPublishAt: plus(60_000).toISOString(), publishes: 2 });
   });
 });
 

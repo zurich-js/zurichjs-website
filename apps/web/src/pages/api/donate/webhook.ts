@@ -47,7 +47,8 @@ function noteFor(event: StripeEvent): string | null {
  *
  * Delivery to Slack is at least once, not exactly once. When Slack takes the note but its answer
  * is lost, the claim is given back and the retry posts again. When the note went out but marking
- * it posted fails, the answer is still 200 and the log says a replay would post again.
+ * it posted fails, or another delivery took the claim over meanwhile, the answer is still 200 and
+ * the log says another delivery may post again.
  */
 export async function processDonationEvent(event: StripeEvent, deps: DonateDeps = {}): Promise<Response> {
   const env = deps.env ?? process.env;
@@ -57,26 +58,28 @@ export async function processDonationEvent(event: StripeEvent, deps: DonateDeps 
   try {
     const events = deps.events === undefined ? donationEvents(env) : deps.events;
     if (!events) log(`[donate] no database: ${event.id} is not recorded, so a redelivery posts again`);
-    else {
-      const claim = await events.claim(event.id, event.type);
-      if (claim === 'posted') return json(200, { ok: true, duplicate: true });
-      if (claim === 'in_progress') return fail(409, 'Another delivery of this event is being handled; Stripe will retry.');
-    }
+    const claim = events ? await events.claim(event.id, event.type) : null;
+    if (claim?.state === 'posted') return json(200, { ok: true, duplicate: true });
+    if (claim?.state === 'in_progress') return fail(409, 'Another delivery of this event is being handled; Stripe will retry.');
+    const token = claim?.state === 'acquired' ? claim.token : null;
+    const release = () => (events && token ? events.release(event.id, token) : undefined);
     let sent: boolean;
     try {
       ({ sent } = await postSlack(env, text, log, deps.fetch));
     } catch (cause) {
-      await events?.release(event.id);
+      await release();
       throw cause;
     }
     if (!sent) {
-      await events?.release(event.id);
+      await release();
       return json(200, { ok: true, posted: false });
     }
-    try {
-      await events?.done(event.id);
-    } catch (cause) {
-      console.error(`[donate] ${event.id} posted to Slack but not recorded as posted; a replay of it would post again`, cause);
+    if (events && token) {
+      try {
+        if (!(await events.done(event.id, token))) console.error(`[donate] ${event.id} posted to Slack after its claim was taken over; the other delivery may post again`);
+      } catch (cause) {
+        console.error(`[donate] ${event.id} posted to Slack but not recorded as posted; a replay of it would post again`, cause);
+      }
     }
     return json(200, { ok: true });
   } catch (cause) {

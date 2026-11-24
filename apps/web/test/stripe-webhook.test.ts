@@ -51,18 +51,25 @@ describe('the shared Stripe webhook', () => {
 
 /** The claims the database keeps (donation-events.ts), with a clock for the five-minute lease. */
 function memoryDonationEvents(clock = { now: 0 }): DonationEvents & { clock: typeof clock } {
-  const claims = new Map<string, { at: number; posted: boolean }>();
+  const claims = new Map<string, { at: number; token: string; posted: boolean }>();
+  let n = 0;
+  const mine = (id: string, token: string) => (claims.get(id)?.token === token ? claims.get(id)! : null);
   return {
     clock,
     async claim(id) {
       const c = claims.get(id);
-      if (c?.posted) return 'posted';
-      if (c && clock.now - c.at < 5 * 60_000) return 'in_progress';
-      claims.set(id, { at: clock.now, posted: false });
-      return 'acquired';
+      if (c?.posted) return { state: 'posted' };
+      if (c && clock.now - c.at < 5 * 60_000) return { state: 'in_progress' };
+      const token = `t${++n}`;
+      claims.set(id, { at: clock.now, token, posted: false });
+      return { state: 'acquired', token };
     },
-    done: async (id) => void (claims.get(id)!.posted = true),
-    release: async (id) => void (claims.get(id)?.posted || claims.delete(id)),
+    async done(id, token) {
+      const c = mine(id, token);
+      if (c) c.posted = true;
+      return !!c;
+    },
+    release: async (id, token) => void (mine(id, token) && !mine(id, token)!.posted && claims.delete(id)),
   };
 }
 
@@ -98,7 +105,7 @@ describe('donations on the shared webhook', () => {
   it('a claim abandoned before posting is not answered as done, and is taken over after five minutes', async () => {
     const { posts, fetch } = slack();
     const events = memoryDonationEvents();
-    expect(await events.claim(donation.id, donation.type)).toBe('acquired'); // the first delivery stops here
+    expect(await events.claim(donation.id, donation.type)).toMatchObject({ state: 'acquired' }); // the first delivery stops here
     const d = { ...deps(), env, fetch, donationEvents: events };
     events.clock.now = 5 * 60_000 - 1;
     expect((await handleStripeWebhook(signed(donation), d)).status).toBe(409);

@@ -10,7 +10,6 @@
  * Queueing never throws and never blocks a change: without Netlify Blobs (local, tests) it logs a line.
  */
 import { isRunning, type Sponsor, type SponsorPatch, type SponsorStore, type Status } from '@zurichjs/sponsorship';
-import { recordPublish } from './rebuild.ts';
 import { rebuildStore } from './rebuild-store.ts';
 
 /** The fields of a sponsor the public site shows or links by. */
@@ -55,5 +54,5 @@ export function withRebuilds(store: SponsorStore, queue: (reason: string) => Pro
 
 /** Records a pending build in the store `scheduled-rebuild` reads, as /api/rebuild does for a Sanity publish. */
 export async function queueRebuild(_reason: string, now = new Date()): Promise<void> {
-  await rebuildStore().update((s) => recordPublish(s, now));
+  await rebuildStore().publish(now);
 }

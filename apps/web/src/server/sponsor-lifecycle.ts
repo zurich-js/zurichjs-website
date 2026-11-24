@@ -343,18 +343,10 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
  * emails and posts as the first attempt would have.
  */
 export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'terminated' | 'withdrawn'>, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
-  let ended = s;
-  if (s.status === 'ended') {
-    if (s.endedReason !== reason) return s;
-  } else {
-    if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
-    if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
-    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason });
-  }
-  await closeStripe(ended, deps);
-  // Queued once Stripe is closed (the note says so); a retry queues nothing new and sends what is left.
+  // The email and note are written with the end, so a request that fails at Stripe still owes them:
+  // they are sent once Stripe is closed, by this request, its retry or the daily check.
   const key = `sponsor-ended:${s.id}:${reason}`;
-  await deps.store.queueNotices(s.id, [
+  const notices = [
     ...(reason === 'terminated' ? [emailNotice(key, 'sponsor-ended', { reason })] : []),
     slackNotice(
       `${key}:slack`,
@@ -362,7 +354,16 @@ export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'termina
         ? `:no_entry: Invitation to ${who(s)} withdrawn.`
         : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. Mark them as a past sponsor in Sanity.`,
     ),
-  ]);
+  ];
+  let ended = s;
+  if (s.status === 'ended') {
+    if (s.endedReason !== reason) return s;
+  } else {
+    if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
+    if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
+    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason, notices });
+  }
+  await closeStripe(ended, deps);
   await deliver(s, deps);
   return ended;
 }

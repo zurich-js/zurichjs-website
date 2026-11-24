@@ -112,4 +112,24 @@ describe('memory store', () => {
     expect(bundleLabel('friend', 2, 500)).toBe('CHF 1’000 for 2 meetups (CHF 500 each)');
     expect(bundleLabel('champion', 1, null)).toBe('CHF 1’000 for one meetup');
   });
+  it('summarises many sponsors as their own reads do', async () => {
+    const store = memoryStore();
+    const { sponsor: a } = await store.create({ ...acme, cycle: 'once' }, { email: 'a@acme.ch', name: 'A', role: 'primary' }, board);
+    const { sponsor: b } = await store.create({ ...acme, companyName: 'Bare' }, { email: 'b@bare.ch', name: 'B', role: 'primary' }, board);
+    await store.setMeetups(
+      a.id,
+      [
+        { eventId: 'e2', title: 'January', date: '2027-01-13' },
+        { eventId: 'e1', title: 'December', date: '2026-12-09' },
+      ],
+      board,
+    );
+    await store.addLogo(a.id, { blobKey: 'l1', contentType: 'image/png', bytes: 10, filename: 'old.png', uploadedBy: 'board' }, board);
+    await store.addLogo(a.id, { blobKey: 'l2', contentType: 'image/png', bytes: 10, filename: 'new.png', uploadedBy: 'a@acme.ch' }, sponsor);
+    await store.addDocument(a.id, { blobKey: 'd1', filename: 'contract.pdf', bytes: 10, signedOn: '2026-11-10', uploadedBy: 'board' }, board);
+    const summaries = await store.summaries([a.id, b.id]);
+    for (const id of [a.id, b.id])
+      expect(summaries.get(id)).toEqual({ meetups: await store.meetups(id), hasContract: (await store.documents(id)).length > 0, latestLogo: (await store.logos(id))[0] ?? null });
+    expect(summaries.get(a.id)?.latestLogo?.filename).toBe('new.png');
+  });
 });

@@ -30,12 +30,11 @@ export const handleAdminSponsors = (request: Request, deps: SponsorAdminDeps = {
       const found = await store.search({ q, status, limit: LIST_LIMIT + 1 });
       const sponsors = found.slice(0, LIST_LIMIT);
       const today = zurichDay(deps.now ? new Date(deps.now) : new Date());
-      const rows = await Promise.all(
-        sponsors.map(async (s) => {
-          const [meetups, documents, needs] = await Promise.all([store.meetups(s.id), store.documents(s.id), attention(s, store, today)]);
-          return { ...adminSponsorView(s, meetups, documents.length > 0), attention: needs };
-        }),
-      );
+      const summaries = await store.summaries(sponsors.map((s) => s.id));
+      const rows = sponsors.map((s) => {
+        const summary = summaries.get(s.id)!;
+        return { ...adminSponsorView(s, summary.meetups, summary.hasContract), attention: attention(s, summary, today) };
+      });
       const all = q || status ? null : await store.statusCounts();
       const counts = all && Object.fromEntries(STATUSES.map((s) => [s, all[s] ?? 0]));
       return json(200, { ok: true, sponsors: rows, truncated: found.length > LIST_LIMIT, counts, attentionLabels: ATTENTION_LABEL });

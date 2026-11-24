@@ -311,6 +311,13 @@ test.describe('the sponsorship page (/partners/account)', () => {
     expect(sent).toEqual([signed, signed]);
   });
 
+  test('when Stripe could not be asked for a scheduled change, the page says so instead of showing none', async ({ page }) => {
+    await mockMe(page, () => ({ ...me(sponsor()), pendingChangeUnknown: true }));
+    await page.goto(ACCOUNT);
+    await expect(page.getByText('We couldn’t check for a change waiting for your renewal. Reload the page to see it.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Keep current plan' })).toHaveCount(0);
+  });
+
   test('a sponsorship that is ending can be kept: /end/undo is called and the page says it continues', async ({ page }) => {
     let current = sponsor({ status: 'ending', statusLabel: 'ending', endsAt: '2027-11-02', lastDay: '2027-11-01' });
     let undone = 0;

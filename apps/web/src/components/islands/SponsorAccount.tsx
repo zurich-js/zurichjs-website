@@ -684,8 +684,8 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
       <CoveredMeetups contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
       {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
-      {/* An offer where they cover the fees is paid through its link only (the server refuses Checkout). */}
-      {s.status === 'pending' && ctx.me.offer?.quote.feeChoice !== 'pass_through' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
+      {/* The board's offer is paid through its link only (the server refuses a second payment page). */}
+      {s.status === 'pending' && !ctx.me.offer && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}
       {s.status !== 'ended' && <LogoSection ctx={ctx} s={s} />}

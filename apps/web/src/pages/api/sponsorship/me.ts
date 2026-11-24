@@ -8,7 +8,8 @@
  *     agreementVersion, signedCurrent (an agreement on the current version exists: one tick is enough),
  *     signer: { name, title } | null (this person's last signature, to prefill),
  *     invitation: { company, tierName } | null (a colleague added this email; accept or decline),
- *     offer: { quote, payUrl } | null (pending: the board's open offer, with base, fee and total)
+ *     offer: { quote, payUrl, preparing } | null (pending: the board's open offer, with base, fee and total;
+ *       payUrl only once its link is published, `preparing` while it is not)
  *   }
  *   401 · 503 · 502
  *
@@ -66,7 +67,7 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
         signedCurrent: agreements.some((a) => a.version === AGREEMENT.version) || documents.length > 0,
         signer: mine ? { name: mine.signerName, title: mine.signerTitle } : null,
         invitation: null,
-        offer: quote ? { quote: quoteView(quote), payUrl: s.paymentLinkUrl } : null,
+        offer: quote ? { quote: quoteView(quote), payUrl: quote.linkState === 'live' ? quote.linkUrl : null, preparing: quote.linkState !== 'live' } : null,
       });
     },
     'load your sponsorship',

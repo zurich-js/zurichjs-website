@@ -38,11 +38,33 @@ async function quotes(fees: FeeStore, sponsorId: string) {
   // Another thing (a raffle) has its own open quote.
   await fees.createQuote({ ...quoteFigures(50_000, 'absorb', gate), sponsorId, subject: 'raffle', subjectId: 'r-1', purpose: 'Raffle', createdBy: 'board' });
   expect((await fees.openQuote(sponsorId, 'sponsorship', null))?.id).toBe(second.quote.id);
-  // Paying the current quote; paying twice keeps the first record; a stale one is still recorded.
-  expect(await fees.markQuotePaid(second.quote.id, 'cs_1')).toMatchObject({ was: 'open', quote: { status: 'paid', stripeRef: 'cs_1' } });
-  expect(await fees.markQuotePaid(second.quote.id, 'cs_2')).toMatchObject({ was: 'paid', quote: { stripeRef: 'cs_1' } });
-  expect(await fees.markQuotePaid(first.quote.id, 'cs_3')).toMatchObject({ was: 'superseded', quote: { status: 'paid' } });
-  expect((await fees.quotes(sponsorId)).map((x) => x.status)).toEqual(['open', 'paid', 'paid']);
+  const payment = {
+    sponsorId,
+    subject: 'sponsorship' as const,
+    subjectId: null,
+    quoteId: second.quote.id,
+    currency: 'chf',
+    amountMinor: 154511,
+    paymentIntentId: null,
+    paymentLinkId: null,
+  };
+  const results = await Promise.all(['cs_1', 'cs_2'].map((sessionId) => fees.settlePayment({ ...payment, sessionId })));
+  expect(results.map((r) => r.payment.outcome).sort()).toEqual(['matched', 'review']);
+  const winner = results.find((r) => r.payment.outcome === 'matched')!.payment.sessionId;
+  expect(await fees.settlePayment({ ...payment, sessionId: winner })).toMatchObject({ fresh: false, payment: { outcome: 'matched' } });
+  expect(await fees.settlePayment({ ...payment, quoteId: first.quote.id, sessionId: 'cs_3', amountMinor: first.quote.totalMinor })).toMatchObject({
+    payment: { outcome: 'review' },
+  });
+  expect((await fees.quotes(sponsorId)).map((x) => x.status).sort()).toEqual(['open', 'paid', 'superseded']);
+  expect(await fees.payments(sponsorId)).toHaveLength(3);
+  const next = { ...quoteFigures(50000, 'absorb', gate), sponsorId, subject: 'sponsorship' as const, subjectId: null, purpose: 'One meetup', createdBy: 'board' };
+  const requestId = crypto.randomUUID();
+  const offers = await Promise.all([fees.createQuote(next, { requestId, reuse: true }), fees.createQuote(next, { requestId, reuse: true })]);
+  expect(offers[0].quote.id).toBe(offers[1].quote.id);
+  await fees.linkCreating(offers[0].quote.id);
+  await fees.attachLink(offers[0].quote.id, 'plink_probe', 'https://example.test/pay');
+  expect(await fees.createQuote(next, { requestId, reuse: true })).toMatchObject({ quote: { id: offers[0].quote.id, linkState: 'live' }, reused: true });
+
   return second.quote.id;
 }
 

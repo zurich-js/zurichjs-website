@@ -5,7 +5,7 @@
  * transaction (it works on a pg.Pool). Status changes are compare-and-set.
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeLinks } from './store.ts';
+import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
 import type { Actor, Agreement, Contact, CoverageRow, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch } from './types.ts';
 
 export interface Queryable {
@@ -145,6 +145,26 @@ export function postgresStore(db: Queryable): SponsorStore {
   const covered = async (sponsorId: string) =>
     UUID.test(sponsorId) ? (await q(`select ${MEETUP} from sponsor_meetups where sponsor_id = $1 and removed_at is null order by date, event_id`, [sponsorId])).map(meetupOf) : [];
 
+  /** With `expect`: only while those columns hold those values (null matches null); undefined otherwise. */
+  async function linkStripe(id: string, links: StripeLinks, actor: Actor, expect?: StripeExpect): Promise<Sponsor | undefined> {
+    const entries = setters(STRIPE_COLUMNS, links);
+    if (!entries.length) return must(id);
+    const checks = expect ? setters(STRIPE_COLUMNS, expect) : [];
+    const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
+    const n = entries.length + 2;
+    const where = checks.map(([k], i) => ` and ${STRIPE_COLUMNS[k]} is not distinct from $${n + i}`).join('') + (expect?.status ? ` and status = $${n + checks.length}` : '');
+    const rows = await audited(
+      `update sponsors set ${sets} where id = $1${where} returning *, id as sponsor_ref`,
+      [id, ...entries.map(([, v]) => v), ...checks.map(([, v]) => v), ...(expect?.status ? [expect.status] : [])],
+      'stripe_linked',
+      actor,
+      Object.fromEntries(entries),
+    );
+    if (rows[0]) return sponsorOf(rows[0]);
+    if (expect) return undefined;
+    throw new NotFound('sponsor');
+  }
+
   return {
     get: (id) => one('id', id),
     byStripeSubscription: (id) => one('stripe_subscription_id', id),
@@ -220,20 +240,8 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!rows[0]) throw new NotFound('sponsor');
       return sponsorOf(rows[0]);
     },
-    async linkStripe(id, links, actor) {
-      const entries = setters(STRIPE_COLUMNS, links);
-      if (!entries.length) return must(id);
-      const sets = entries.map(([k], i) => `${STRIPE_COLUMNS[k]} = $${i + 2}`).join(', ');
-      const rows = await audited(
-        `update sponsors set ${sets} where id = $1 returning *, id as sponsor_ref`,
-        [id, ...entries.map(([, v]) => v)],
-        'stripe_linked',
-        actor,
-        Object.fromEntries(entries),
-      );
-      if (!rows[0]) throw new NotFound('sponsor');
-      return sponsorOf(rows[0]);
-    },
+    linkStripe: async (id, links, actor) => (await linkStripe(id, links, actor))!,
+    linkStripeIf: async (id, expect, links, actor) => (await linkStripe(id, links, actor, expect)) ?? null,
     async transition(id, input) {
       const current = await must(id);
       if (input.from && current.status !== input.from) throw new TransitionError('The sponsorship changed in the meantime. Look again.', 'conflict');

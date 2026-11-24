@@ -18,7 +18,7 @@
  * idempotency keys. An event is marked handled only after it worked. A payment for a sponsorship
  * that has ended changes nothing and is flagged in Slack.
  */
-import { TransitionError, chfMinor, fromLookupKey, type FeeStore, isRecurring, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
+import { TransitionError, chfMinor, fromLookupKey, type Actor, type FeeStore, isRecurring, type Sponsor, type SponsorStore, type Status } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { longDate } from './dates.ts';
 import { fail, json, type Env } from './http.ts';
@@ -41,7 +41,8 @@ import {
   type NotifyDeps,
 } from './sponsor.ts';
 import { feeStore } from './sponsor-fees.ts';
-import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription } from './sponsor-stripe.ts';
+import { closeStaleLinks, reconcileFee, settleSponsorPayment } from './sponsor-offers.ts';
+import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription, type StripeDeps } from './sponsor-stripe.ts';
 import type { StripeEvent } from './stripe-webhook.ts';
 
 interface Invoice {
@@ -105,10 +106,11 @@ async function sponsorOf(store: SponsorStore, ids: { sponsorId?: string; subscri
 }
 
 /** Moves to `to` when allowed. `changed` is true only for the call that made the change. */
-async function moveTo(store: SponsorStore, s: Sponsor, to: Status, eventId: string, extra: { reason?: 'cancelled' | 'lapsed'; payload?: Record<string, unknown> } = {}) {
+async function moveTo(store: SponsorStore, s: Sponsor, to: Status, by: string | Actor, extra: { reason?: 'cancelled' | 'lapsed'; payload?: Record<string, unknown> } = {}) {
   if (s.status === to) return { sponsor: s, changed: false };
+  const actor: Actor = typeof by === 'string' ? { kind: 'stripe', id: by } : by;
   try {
-    return { sponsor: await store.transition(s.id, { from: s.status, to, actor: { kind: 'stripe', id: eventId }, reason: extra.reason, payload: extra.payload }), changed: true };
+    return { sponsor: await store.transition(s.id, { from: s.status, to, actor, reason: extra.reason, payload: extra.payload }), changed: true };
   } catch (cause) {
     if (cause instanceof TransitionError) return { sponsor: (await store.get(s.id)) ?? s, changed: false };
     throw cause;
@@ -131,50 +133,93 @@ async function welcome(s: Sponsor, term: string | null, nextPayment: string | nu
   );
 }
 
-/** A one-time sponsorship is paid: it runs until the day after its last meetup. */
-async function startOnce(s: Sponsor, eventId: string, today: string, deps: NotifyDeps) {
+/**
+ * A one-time sponsorship is paid: it runs until the day after its last meetup. `by` is the Stripe
+ * event, or the board accepting a payment it reviewed.
+ */
+export async function startOnce(s: Sponsor, by: string | Actor, today: string, deps: NotifyDeps, fees: FeeStore | null = null) {
   if (s.status === 'ended') return anomaly(s, `A one-time payment arrived for ${who(s)}, which has ended. Check it in Stripe and refund if needed.`, deps);
   if (s.status !== 'pending') return;
+  const actor: Actor = typeof by === 'string' ? { kind: 'stripe', id: by } : by;
   const meetups = await deps.store.meetups(s.id);
-  const m = await deps.store.update(s.id, { startedAt: today, paidUntil: afterLastMeetup(meetups) }, { kind: 'stripe', id: eventId });
-  const r = await moveTo(deps.store, m, 'active', eventId);
+  const m = await deps.store.update(s.id, { startedAt: today, paidUntil: afterLastMeetup(meetups) }, actor);
+  const r = await moveTo(deps.store, m, 'active', actor);
   if (r.changed) {
     await closePaymentLink(r.sponsor, deps.store, { env: deps.env, fetch: deps.fetch });
+    // Its quote is paid now; any link of an earlier offer goes off as well.
+    if (fees) await closeStaleLinks(r.sponsor, 'sponsorship', null, fees, deps.store, { env: deps.env, fetch: deps.fetch }).catch(() => undefined);
     await welcome(r.sponsor, null, null, deps);
   }
 }
 
 /**
- * Records the quote a payment paid (fees.ts): the one in the session's metadata, else the sponsor's
- * open sponsorship quote when it came through their payment link. A stale quote or a total that
- * differs is recorded and flagged for the board, never dropped. Payments made before quotes existed
- * have none: nothing to record.
+ * Records a one-time payment against the board's offer (sponsor-offers.ts) before anything starts:
+ * once per Stripe session, paying the quote only when owner, currency, amount and link match the
+ * open quote. A payment that does not match waits for the board (Slack, and the sponsor's page in
+ * the admin area) and starts nothing; the board accepts or dismisses it there. Returns whether the
+ * sponsorship may start. Without a database for quotes (the in-memory tests), it may.
  */
-async function recordQuote(
+async function settleOnce(
   s: Sponsor,
   session: Record<string, unknown>,
   quoteId: string | null,
   paymentLink: string | null,
   deps: NotifyDeps,
-  feeStoreOf: () => FeeStore,
-  log: (m: string) => void,
+  fees: FeeStore | null,
+  stripe: StripeDeps,
 ) {
-  let fees: FeeStore;
+  if (!fees) {
+    deps.log?.('[sponsorship] no database for quotes; payment not recorded against a quote');
+    return true;
+  }
+  if (
+    typeof session.id !== 'string' ||
+    !session.id ||
+    typeof session.currency !== 'string' ||
+    !/^[a-z]{3}$/.test(session.currency) ||
+    typeof session.amount_total !== 'number' ||
+    !Number.isSafeInteger(session.amount_total) ||
+    session.amount_total < 0
+  )
+    throw new Error('Incomplete Checkout payment.');
+  const r = await settleSponsorPayment(
+    s,
+    {
+      sessionId: session.id,
+      quoteId,
+      paymentLinkId: paymentLink,
+      paymentIntentId: typeof session.payment_intent === 'string' ? session.payment_intent : null,
+      currency: session.currency,
+      amountMinor: session.amount_total,
+    },
+    fees,
+  );
+  if (r.fresh && r.payment.outcome === 'review') {
+    await deps.store.log(
+      s.id,
+      'payment_review',
+      { kind: 'stripe', id: r.payment.sessionId },
+      { sessionId: r.payment.sessionId, reason: r.payment.reason, amountMinor: r.payment.amountMinor },
+    );
+    await anomaly(
+      s,
+      `A payment of ${chfMinor(r.payment.amountMinor)} from ${who(s)} needs a decision: ${r.payment.reason} Nothing started. Accept or dismiss it on their page.`,
+      deps,
+    );
+  }
+  if (r.fresh && r.payment.outcome !== 'review') await reconcileFee(r.payment, fees, stripe).catch(() => false);
+  return r.go;
+}
+
+/** The fee store, or null where there is no database. */
+const feesOf = (deps: SponsorWebhookDeps, env: Env): FeeStore | null => {
   try {
-    fees = feeStoreOf();
+    return deps.fees ?? feeStore(env);
   } catch (cause) {
-    if (cause instanceof MembershipUnavailable) return log('[sponsorship] no database for quotes; payment quote not recorded');
+    if (cause instanceof MembershipUnavailable) return null;
     throw cause;
   }
-  const id = quoteId ?? (paymentLink ? (await fees.openQuote(s.id, 'sponsorship', null))?.id : null);
-  if (!id) return;
-  const r = await fees.markQuotePaid(id, String(session.id));
-  if (!r || r.quote.sponsorId !== s.id) return anomaly(s, `A payment for ${who(s)} names a quote that is not theirs. Check it in Stripe.`, deps);
-  const paid = typeof session.amount_total === 'number' ? session.amount_total : null;
-  if (r.was === 'superseded' || r.was === 'void')
-    await anomaly(s, `${who(s)} paid an earlier offer (${chfMinor(r.quote.totalMinor)}) that was replaced. It is recorded; check what they owe.`, deps);
-  if (paid !== null && paid !== r.quote.totalMinor) await anomaly(s, `${who(s)} paid ${chfMinor(paid)} for a quote of ${chfMinor(r.quote.totalMinor)}. Check it in Stripe.`, deps);
-}
+};
 
 const anomaly = (s: Sponsor, text: string, deps: NotifyDeps) => note(`:rotating_light: ${text} ${adminUrl(deps.origin, s.id)}`, deps);
 
@@ -204,15 +249,23 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const paymentLink = typeof o.payment_link === 'string' ? o.payment_link : null;
         if (meta?.source !== SPONSOR_SOURCE && !paymentLink) break;
         let s = await sponsorOf(store, { sponsorId: meta?.source === SPONSOR_SOURCE ? meta.sponsorId : undefined, paymentLinkId: paymentLink });
+        if (!s && paymentLink) {
+          const historical = await feesOf(deps, env)?.quoteByLink(paymentLink);
+          if (historical?.subject === 'sponsorship') s = await store.get(historical.sponsorId);
+        }
         if (!s) break;
-        if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
         if (o.mode === 'payment') {
-          if (o.payment_status === 'paid') await recordQuote(s, o, meta?.quoteId ?? null, paymentLink, notify, () => deps.fees ?? feeStore(env), log);
-          if (o.payment_status === 'paid' && s.cycle === 'once') await startOnce(s, event.id, today, notify);
+          if (o.payment_status !== 'paid') break;
+          const go = await settleOnce(s, o, meta?.quoteId ?? null, paymentLink, notify, feesOf(deps, env), stripeDeps);
+          if (go && s.cycle === 'once') {
+            if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
+            await startOnce(s, event.id, today, notify, feesOf(deps, env));
+          }
           break;
         }
         const subscriptionId = typeof o.subscription === 'string' ? o.subscription : null;
         if (!subscriptionId) break;
+        if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);
         // Never two live subscriptions: an old tab paid after another payment was set up.
         if (s.stripeSubscriptionId && s.stripeSubscriptionId !== subscriptionId) {
           const live = s.stripeCustomerId ? await liveSubscriptions(s.stripeCustomerId, stripeDeps) : [];
@@ -236,11 +289,8 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
           log(`[sponsorship] invoice ${inv.id}: no sponsor; skipped`);
           break;
         }
-        if (!src.subscription) {
-          // A one-time payment's receipt (Checkout was handled above).
-          if (s.cycle === 'once') await startOnce(s, event.id, today, notify);
-          break;
-        }
+        // Only a validated Checkout session can start a one-time sponsorship.
+        if (!src.subscription) break;
         if (s.status === 'ended') {
           await anomaly(s, `A payment arrived for ${who(s)}, which has ended. Check the subscription in Stripe and refund if needed.`, notify);
           break;

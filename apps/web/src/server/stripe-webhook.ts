@@ -1,14 +1,13 @@
 /**
  * The one Stripe webhook (POST /api/stripe/webhook): one endpoint in Stripe, one signing secret
- * (STRIPE_WEBHOOK_SECRET), every event the site handles. Each part (memberships, sponsorships,
- * donations) gets every event and skips the ones that are not its own, by the `source` metadata
- * set when the payment was created.
+ * (STRIPE_WEBHOOK_SECRET), every event the site handles. The `source` metadata set when the
+ * payment was created routes each event: a donation event goes to the donation part alone, so it
+ * never waits for the membership or sponsorship database; any other event goes to memberships and
+ * sponsorships in turn, and each skips the ones that are not its own.
  *
  * Memberships and sponsorships record the events they handled, and donations claim theirs
  * (donation-events.ts), so a retry after one part failed (answered 500) does not redo a part that
- * finished. A donation event (its object carries the donation `source`) goes to the donation part
- * alone: it is never a membership or sponsorship event, so it does not wait for their database.
- */
+ * finished. */
 import { fail, json, type Env } from './http.ts';
 import { DONATION_SOURCE, verifyStripeSignature } from './stripe.ts';
 

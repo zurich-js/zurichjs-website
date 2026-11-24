@@ -2,7 +2,7 @@
 
 ## 2026-11-24
 
-- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state from Sanity ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
+- **Update**: `sponsor_meetups` records the meetups any sponsorship covers, not only one-time ones. The board confirms covered meetups for recurring sponsorships, rows taken off are kept with who and when, and the sponsor's account lists the covered meetups with their state and page link from Sanity, even when the rest of the account fails to load. Whether a covered meetup has happened is decided on its current Sanity date, and a row stays when that date cannot be checked ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 
 ## 2026-11-19
 

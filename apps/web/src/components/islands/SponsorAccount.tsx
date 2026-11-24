@@ -495,15 +495,19 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
       </p>
     );
 
+  // The covered meetups load on their own, so they still show when the sponsorship could not be loaded.
   if (view.kind === 'error')
     return (
-      <div class="flex max-w-form flex-col gap-4">
-        <Notice tone="danger" live title={view.message} />
-        <Actions>
-          <Button variant="secondary" onClick={() => location.reload()}>
-            Try again
-          </Button>
-        </Actions>
+      <div class="flex flex-col gap-6">
+        <div class="flex max-w-form flex-col gap-4">
+          <Notice tone="danger" live title={view.message} />
+          <Actions>
+            <Button variant="secondary" onClick={() => location.reload()}>
+              Try again
+            </Button>
+          </Actions>
+        </div>
+        <CoveredMeetups contactEmail={contactEmail} onSignedOut={signedOut} />
       </div>
     );
 
@@ -675,7 +679,7 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       )}
       {link && <LinkedChange ctx={ctx} s={s} link={link} />}
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
-      <CoveredMeetups once={!recurring} contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
+      <CoveredMeetups contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
       {s.status === 'pending' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}
       {s.status === 'ended' && again && <StartForm ctx={ctx} s={s} cancelled={false} focus onCancel={() => setAgain(false)} />}
       {s.status !== 'pending' && s.status !== 'ended' && <DetailsSection ctx={ctx} s={s} />}

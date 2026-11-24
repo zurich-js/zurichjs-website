@@ -11,6 +11,8 @@
  *     once, never one per missed day
  *   - an ended sponsorship that still points at Stripe (a close that failed) is closed again
  *   - every notice still queued (an email or Slack note a request could not send) is sent
+ *   - a payment link a request left behind (its answer or the next write lost, or a second
+ *     request saved its own) is switched off, whatever the sponsorship's status
  *
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
  *
@@ -26,6 +28,7 @@ import { lastDay, longDate } from './dates.ts';
 import { adminUrl, who, zurichDay } from './sponsor.ts';
 import { emailNotice, PER_NOTICE_MS, sendNotices, slackNotice } from './sponsor-notices.ts';
 import { closeStripe, leftInStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { recoverPaymentLinks } from './sponsor-stripe.ts';
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
@@ -44,6 +47,7 @@ export interface DailyResult {
   reminded: number;
   /** Ended sponsorships whose Stripe ids this run closed and forgot. */
   stripeClosed: number;
+  linksClosed: number;
   notices: { sent: number; failed: number };
   /** Sponsors this run did not get to (an unpaid one-time sponsorship before its meetups were read, too). */
   deferred: string[];
@@ -54,7 +58,7 @@ export interface DailyResult {
 export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number } }): Promise<DailyResult> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
-  const out: DailyResult = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, notices: { sent: 0, failed: 0 }, deferred: [], stripeOpen: [] };
+  const out: DailyResult = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, linksClosed: 0, notices: { sent: 0, failed: 0 }, deferred: [], stripeOpen: [] };
   const room = () => !deps.deadline || deps.deadline.remaining() >= PER_SPONSOR_MS;
 
   /** A Stripe failure here keeps the ids for the next run, and never stops the other sponsors. */
@@ -149,5 +153,6 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(
   }
   // No notice is claimed without time to send one; the rest wait for the next run.
   if (!deps.deadline || deps.deadline.remaining() >= PER_NOTICE_MS) out.notices = await sendNotices(deps, { limit: 200, budget: deps.deadline });
+  if (room()) out.linksClosed = (await recoverPaymentLinks(deps.store, { ...deps.stripe, log: deps.log }, { canStart: room })).closed;
   return out;
 }

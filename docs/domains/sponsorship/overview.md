@@ -8,7 +8,7 @@ timestamp: "2026-11-24T00:00:00Z"
 
 # Sponsorship
 
-Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `apps/web/src/server/sponsor-public.ts` and `packages/content/src/sponsorships.ts` (the public site), `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql` and `apps/web/database/migrations/20261119090000_sponsorship_round2.sql`.
+Source: `packages/sponsorship` (`@zurichjs/sponsorship`: tiers, fees and bundle labels, the status machine, the store in memory and Postgres, the agreement version), `apps/web/src/server/sponsor-*.ts`, `apps/web/src/server/sponsor.ts`, `apps/web/src/server/sponsor-public.ts` and `packages/content/src/sponsorships.ts` (the public site), `packages/emails/src/sponsors.ts`, and the migrations `apps/web/database/migrations/20261118090000_sponsorship.sql`, `apps/web/database/migrations/20261119090000_sponsorship_round2.sql` and `apps/web/database/migrations/20261124080000_sponsor_payment_link_attempts.sql`.
 
 Sponsors get the same self-serve system as [members](/domains/membership/overview.md): the board invites a company or brings an existing sponsorship onto the site, a contact signs the sponsorship agreement and pays by card, and from then on the sponsor manages tier, billing, payment details, logo and colleagues themselves. Changes the board agrees with a sponsor in conversation are sent as a link that fills the change in, and apply only once the sponsor confirms (owner, 18th November 2026).
 
@@ -112,6 +112,8 @@ The same Neon database as memberships ([Membership](/domains/membership/overview
 
 A sponsor has at most one payable Stripe page: one Checkout session or one payment link. Every change that replaces or ends one (a new Checkout, a new link, an invited plan or bundle that changes, a recorded bank transfer, any end) switches the old page off in Stripe first, and forgets its id only once Stripe confirms, or answers that the page is already gone (no such page, or no longer open). Any other Stripe failure fails the request before the change is saved, or, for an end that was already saved, keeps the id: the same request again finishes the job (the board's end cancels the subscription, then emails and posts as the first try would have), and the daily check closes what an ended sponsorship still has open. Two payment links created at the same moment keep the first; the second is switched off and answered with 409.
 
+**Payment links.** A payment link is recorded before Stripe is asked for it (`sponsor_payment_link_attempts`): the exact request, sent with the attempt's key as Stripe's idempotency key. The link becomes the sponsor's in the same write that marks the attempt kept, and only while the sponsorship is unpaid and no other link is saved. Any other attempt is switched off: by the request itself, by the board's next payment link request for that sponsor, or by the daily check, whatever the sponsorship's status. When Stripe's answer was lost, the same request with the same key gets the same link back, so it can be switched off; Stripe keeps keys for at least 24 hours and the daily check runs within that. An attempt Stripe refused outright (4xx) made no link and is settled. A daily check running while the board creates a link can switch that new link off; the board then sees the 409 and creates another.
+
 A bank transfer recorded with the same date again after a failure half-way finishes the recording (activation, the log line, the confirmation) instead of being refused as already paid.
 
 ## The daily check
@@ -124,6 +126,7 @@ A bank transfer recorded with the same date again after a failure half-way finis
 - the board is reminded in Slack 30 and 7 days before, and on the day, a bank-transfer sponsorship runs out; nothing changes by itself, a person records the payment or agrees the end. A day the check did not reach is caught up: the most urgent reminder not sent yet goes out once (five days left after a missed 30-day reminder sends the 7-day one), never one per missed day
 - every notice still queued is sent; given a time budget (`deadline`), it stops early and leaves the rest for the next run
 - an ended sponsorship that still points at a Stripe subscription, Checkout session or payment link (a close that failed) is closed again; a Stripe failure is retried the next day and never stops the other sponsors
+- a payment link attempt that was not kept (see Payment links) is switched off, for pending and running sponsorships too
 
 Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
 

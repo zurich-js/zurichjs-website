@@ -4,7 +4,7 @@
  */
 import { GUARDED_STAGES, RaffleRuleError, checkFunding, checkStage } from './rules.ts';
 import { RaffleNotFound, conflict, drawOrder, entriesHash, readyBlocker, type RaffleStore } from './store.ts';
-import type { Actor, Draw, Entry, LedgerEntry, Raffle, RaffleEvent } from './types.ts';
+import type { Actor, Consent, Draw, Entry, LedgerEntry, Raffle, RaffleEvent, Share, ShareField } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -47,6 +47,9 @@ const raffleOf = (r: Row): Raffle => ({
   rulesUrl: (r.rules_url as string | null) ?? null,
   openedAt: iso(r.opened_at),
   closesAt: iso(r.closes_at),
+  sharePurpose: (r.share_purpose as string | null) ?? null,
+  sharePrivacyUrl: (r.share_privacy_url as string | null) ?? null,
+  sharingVersion: (r.sharing_version as string | null) ?? null,
   createdAt: iso(r.created_at)!,
   updatedAt: iso(r.updated_at)!,
 });
@@ -83,6 +86,34 @@ const drawOf = (r: Row): Draw => ({
   actor: { kind: r.actor_kind as Actor['kind'], id: r.actor_id as string },
   at: iso(r.at)!,
 });
+
+const consentOf = (r: Row): Consent => ({
+  id: r.id as string,
+  entryId: r.entry_id as string,
+  raffleId: r.raffle_id as string,
+  recipientSponsorId: r.recipient_sponsor_id as string,
+  purpose: r.purpose as string,
+  version: r.version as string,
+  givenAt: iso(r.given_at)!,
+  verifiedAt: iso(r.verified_at),
+  withdrawnAt: iso(r.withdrawn_at),
+});
+
+const shareOf = (r: Row): Share => ({
+  id: r.id as string,
+  raffleId: r.raffle_id as string,
+  recipientContactId: r.recipient_contact_id as string,
+  purpose: r.purpose as string,
+  fields: r.fields as ShareField[],
+  entryIds: r.entry_ids as string[],
+  createdAt: iso(r.created_at)!,
+  expiresAt: iso(r.expires_at)!,
+  revokedAt: iso(r.revoked_at),
+});
+
+/** Consent valid now, joined to the raffle's frozen sponsor, purpose and version. */
+const VALID_CONSENT = `c.withdrawn_at is null and c.verified_at is not null and c.recipient_sponsor_id = r.sponsor_id
+  and c.purpose = r.share_purpose and c.version = r.sharing_version`;
 
 const eventOf = (r: Row): RaffleEvent => ({
   id: String(r.id),
@@ -228,14 +259,16 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     stripeEventSeen: async (id) => (await q('select 1 from raffle_stripe_events where id = $1', [id])).length > 0,
     markStripeEvent: async (id, type) => void (await q('insert into raffle_stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [id, type])),
 
-    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor }) {
+    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor, sharing }) {
       checkStage('ready', 'open', actor.kind);
       const out = await audited(
-        `update raffles set stage = 'open', rules_version = $2, rules_url = $3, closes_at = $4, opened_at = now() where id = $1 and stage = 'ready' returning *`,
-        [id, rulesVersion, rulesUrl, closesAt],
+        `update raffles set stage = 'open', rules_version = $2, rules_url = $3, closes_at = $4, opened_at = now(),
+           share_purpose = $5, share_privacy_url = $6, sharing_version = $7
+         where id = $1 and stage = 'ready' returning *`,
+        [id, rulesVersion, rulesUrl, closesAt, sharing?.purpose ?? null, sharing?.privacyUrl ?? null, sharing?.version ?? null],
         'entries_opened',
         actor,
-        { rulesVersion, closesAt },
+        { rulesVersion, closesAt, sharingVersion: sharing?.version ?? null },
       );
       if (!out) throw await missed(id);
       return out;
@@ -264,7 +297,15 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
       return r ? entryOf(r) : null;
     },
     async verifyEntry(entryId) {
-      const r = (await q('update raffle_entries set email_verified_at = coalesce(email_verified_at, now()) where id = $1 returning *', [entryId]))[0];
+      // The address is confirmed: so is a choice made on the entry form.
+      const r = (
+        await q(
+          `with e as (update raffle_entries set email_verified_at = coalesce(email_verified_at, now()) where id = $1 returning *),
+                c as (update raffle_consents set verified_at = coalesce(verified_at, now()) where entry_id = $1 and withdrawn_at is null)
+           select * from e`,
+          [entryId],
+        )
+      )[0];
       if (!r) throw new RaffleNotFound();
       return entryOf(r);
     },
@@ -333,5 +374,117 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
       return { draw: drawOf(rows[0]), entry: eligible[index]! };
     },
     draws: async (rid) => (UUID.test(rid) ? (await q('select * from raffle_draws where raffle_id = $1 order by seq', [rid])).map(drawOf) : []),
+
+    async giveConsent(entryId, { verified, at }) {
+      const e = (await q('select e.*, r.sponsor_id, r.share_purpose, r.sharing_version from raffle_entries e join raffles r on r.id = e.raffle_id where e.id = $1', [entryId]))[0];
+      if (!e) throw new RaffleNotFound();
+      if (!e.sharing_version || !e.share_purpose) throw new RaffleRuleError('This raffle does not share contacts with its sponsor.');
+      const verifiedAt = verified || e.email_verified_at ? at.toISOString() : null;
+      const rows = await q(
+        `insert into raffle_consents (entry_id, raffle_id, recipient_sponsor_id, purpose, version, given_at, verified_at)
+         values ($1, $2, $3, $4, $5, $6, $7)
+         on conflict (entry_id) where withdrawn_at is null do update set verified_at = coalesce(raffle_consents.verified_at, excluded.verified_at)
+         returning *`,
+        [entryId, e.raffle_id, e.sponsor_id, e.share_purpose, e.sharing_version, at.toISOString(), verifiedAt],
+      );
+      return consentOf(rows[0]!);
+    },
+    async withdrawConsent(entryId, at) {
+      const r = (await q('update raffle_consents set withdrawn_at = $2 where entry_id = $1 and withdrawn_at is null returning *', [entryId, at.toISOString()]))[0];
+      return r ? consentOf(r) : null;
+    },
+    consentOf: async (entryId) => {
+      if (!UUID.test(entryId)) return null;
+      const r = (await q('select * from raffle_consents where entry_id = $1 and withdrawn_at is null', [entryId]))[0];
+      return r ? consentOf(r) : null;
+    },
+    consentedEntries: async (rid) =>
+      UUID.test(rid)
+        ? (
+            await q(
+              `select e.* from raffle_entries e join raffle_consents c on c.entry_id = e.id join raffles r on r.id = e.raffle_id
+               where e.raffle_id = $1 and ${VALID_CONSENT} order by e.created_at, e.id`,
+              [rid],
+            )
+          ).map(entryOf)
+        : [],
+    async consentCounts(rid) {
+      const r = (
+        await q(
+          `select count(*) filter (where c.withdrawn_at is null)::int as given,
+                  count(*) filter (where ${VALID_CONSENT})::int as valid,
+                  count(*) filter (where c.withdrawn_at is not null)::int as withdrawn
+           from raffle_consents c join raffles r on r.id = c.raffle_id where c.raffle_id = $1`,
+          [rid],
+        )
+      )[0];
+      return { given: Number(r?.given ?? 0), valid: Number(r?.valid ?? 0), withdrawn: Number(r?.withdrawn ?? 0) };
+    },
+    async createShare(rid, { recipientContactId, fields, entryIds, expiresAt, actor }) {
+      const r = await must(rid);
+      if (!r.sharingVersion || !r.sharePurpose) throw new RaffleRuleError('This raffle does not share contacts with its sponsor.');
+      // One statement: narrow to valid consent now, record the share, append the audit row.
+      const rows = await q(
+        `with ok as (select array_agg(e.id order by e.created_at, e.id) as ids
+                     from raffle_entries e join raffle_consents c on c.entry_id = e.id join raffles r on r.id = e.raffle_id
+                     where e.raffle_id = $1 and e.id = any($2::uuid[]) and ${VALID_CONSENT}),
+              s as (insert into raffle_shares (raffle_id, recipient_contact_id, purpose, fields, entry_ids, expires_at)
+                    select $1, $3, $4, $5, ok.ids, $6 from ok where ok.ids is not null returning *),
+              a as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
+                    select $1, 'shared', $7, $8, jsonb_build_object('shareId', s.id, 'recipientContactId', s.recipient_contact_id, 'purpose', s.purpose,
+                                                                    'fields', to_jsonb(s.fields), 'entryIds', to_jsonb(s.entry_ids), 'expiresAt', s.expires_at) from s)
+         select * from s`,
+        [rid, entryIds.filter((x) => UUID.test(x)), recipientContactId, r.sharePurpose, fields, expiresAt, actor.kind, actor.id],
+      );
+      if (!rows[0]) throw new RaffleRuleError('None of the chosen entries has a valid consent now.');
+      return shareOf(rows[0]);
+    },
+    getShare: async (id) => {
+      if (!UUID.test(id)) return null;
+      const r = (await q('select * from raffle_shares where id = $1', [id]))[0];
+      return r ? shareOf(r) : null;
+    },
+    shares: async (rid) => (UUID.test(rid) ? (await q('select * from raffle_shares where raffle_id = $1 order by created_at desc', [rid])).map(shareOf) : []),
+    async revokeShare(id, actor) {
+      const rows = await q(
+        `with s as (update raffle_shares set revoked_at = coalesce(revoked_at, now()) where id = $1 returning *),
+              a as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload) select raffle_id, 'share_revoked', $2, $3, jsonb_build_object('shareId', id) from s)
+         select * from s`,
+        [id, actor.kind, actor.id],
+      );
+      if (!rows[0]) throw new RaffleNotFound();
+      return shareOf(rows[0]);
+    },
+    async readShare(id, actor, at) {
+      const s = UUID.test(id) ? (await q('select * from raffle_shares where id = $1', [id]))[0] : null;
+      if (!s) throw new RaffleNotFound();
+      const share = shareOf(s);
+      if (share.revokedAt || at.toISOString() >= share.expiresAt) throw new RaffleRuleError('This share has expired or was withdrawn.');
+      const rows = (
+        await q(
+          `select e.id, e.name, e.email from raffle_entries e join raffle_consents c on c.entry_id = e.id join raffles r on r.id = e.raffle_id
+           where e.id = any($1::uuid[]) and e.raffle_id = $2 and ${VALID_CONSENT} order by e.created_at, e.id`,
+          [share.entryIds, share.raffleId],
+        )
+      ).map((e) => ({ id: e.id as string, name: share.fields.includes('name') ? (e.name as string) : '', email: share.fields.includes('email') ? (e.email as string) : '' }));
+      await q(`insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload) values ($1, 'share_read', $2, $3, $4::jsonb)`, [
+        share.raffleId,
+        actor.kind,
+        actor.id,
+        JSON.stringify({ shareId: id, rows: rows.length }),
+      ]);
+      return { share, rows };
+    },
+    async eraseEntries(rid, actor) {
+      const rows = await q(
+        `with e as (update raffle_entries set name = 'Erased', email = 'erased-' || id || '@invalid.invalid'
+                    where raffle_id = $1 and email <> ('erased-' || id || '@invalid.invalid') returning id),
+              a as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
+                    select $1, 'entries_erased', $2, $3, jsonb_build_object('count', (select count(*) from e)))
+         select count(*)::int as n from e`,
+        [rid, actor.kind, actor.id],
+      );
+      return Number(rows[0]?.n ?? 0);
+    },
   };
 }

@@ -8,7 +8,7 @@
 import { memoryRaffleStore, type RaffleStore } from '@zurichjs/raffle';
 import { memoryFeeStore, memoryStore, type FeeStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { handleAdminRaffle } from '../src/pages/api/membership/admin/raffles/[id].ts';
+import { handleAdminRaffle } from '../src/pages/api/membership/admin/raffles/[id]/index.ts';
 import { handleEnter } from '../src/pages/api/raffle/entries.ts';
 import { handleRaffleInfo } from '../src/pages/api/raffle/info.ts';
 import { handleManage } from '../src/pages/api/raffle/manage.ts';

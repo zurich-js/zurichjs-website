@@ -6,7 +6,7 @@
  */
 import { createHash } from 'node:crypto';
 import { GUARDED_STAGES, RaffleRuleError, checkFunding, checkStage } from './rules.ts';
-import type { Actor, Draw, Entry, Flag, Funding, LedgerEntry, NewEntry, NewRaffle, Raffle, RaffleEvent, Stage } from './types.ts';
+import type { Actor, Consent, Draw, Entry, Flag, Funding, LedgerEntry, NewEntry, NewRaffle, Raffle, RaffleEvent, Share, ShareField, Stage } from './types.ts';
 
 export interface OfferInput {
   /** Base amount in rappen; null for a prize the sponsor sends (in kind). */
@@ -44,7 +44,10 @@ export interface RaffleStore {
   markStripeEvent(eventId: string, type: string): Promise<void>;
 
   /** ready → open: freezes the entrant rules version, its URL and the closing time. */
-  openEntries(id: string, input: { rulesVersion: string; rulesUrl: string; closesAt: string; actor: Actor }): Promise<Raffle>;
+  openEntries(
+    id: string,
+    input: { rulesVersion: string; rulesUrl: string; closesAt: string; actor: Actor; sharing?: { purpose: string; privacyUrl: string; version: string } | null },
+  ): Promise<Raffle>;
   /**
    * Adds an entry while entries are open and before they close (checked in the same statement).
    * One per email per raffle: a second one returns the first with `created: false`.
@@ -64,7 +67,34 @@ export interface RaffleStore {
   redraw(raffleId: string, input: { actor: Actor; reason: string; pick: (n: number) => number; afterSeq: number }): Promise<{ draw: Draw; entry: Entry }>;
   /** Oldest first. */
   draws(raffleId: string): Promise<Draw[]>;
+
+  /**
+   * The entrant lets the raffle's sponsor have their contact, for the raffle's purpose. Refused when
+   * the raffle offers no sharing. `verified`: given from the entrant's own link (proves the address).
+   */
+  giveConsent(entryId: string, input: { verified: boolean; at: Date }): Promise<Consent>;
+  /** Stops any later share. Idempotent. */
+  withdrawConsent(entryId: string, at: Date): Promise<Consent | null>;
+  /** The entry's current consent (not withdrawn), if any. */
+  consentOf(entryId: string): Promise<Consent | null>;
+  /** Entries whose consent counts now: given, verified, not withdrawn, for this raffle's sponsor, purpose and version. */
+  consentedEntries(raffleId: string): Promise<Entry[]>;
+  consentCounts(raffleId: string): Promise<{ given: number; valid: number; withdrawn: number }>;
+  /** Records a release, narrowed to `entryIds` that have valid consent now. */
+  createShare(raffleId: string, input: { recipientContactId: string; fields: ShareField[]; entryIds: string[]; expiresAt: string; actor: Actor }): Promise<Share>;
+  getShare(id: string): Promise<Share | null>;
+  /** Newest first. */
+  shares(raffleId: string): Promise<Share[]>;
+  revokeShare(id: string, actor: Actor): Promise<Share>;
+  /** The rows a read of the share returns now: its entries, narrowed again to consent valid now. Logged. */
+  readShare(id: string, actor: Actor, at: Date): Promise<{ share: Share; rows: Pick<Entry, 'id' | 'name' | 'email'>[] }>;
+  /** Removes the names and emails of a raffle's entries (retention); draws and counts stay. Returns how many. */
+  eraseEntries(raffleId: string, actor: Actor): Promise<number>;
 }
+
+/** Whether a consent counts for this raffle now. */
+export const consentValid = (c: Consent | undefined | null, r: Pick<Raffle, 'sponsorId' | 'sharePurpose' | 'sharingVersion'>) =>
+  !!c && !!c.verifiedAt && !c.withdrawnAt && c.recipientSponsorId === r.sponsorId && c.purpose === r.sharePurpose && c.version === r.sharingVersion;
 
 /** Fingerprint of the entries in a draw: SHA-256 of their ids in draw order. */
 export const entriesHash = (entries: Pick<Entry, 'id'>[]) =>
@@ -99,7 +129,10 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
   const seen = new Set<string>();
   const entries: (Entry & { tokenHash: string })[] = [];
   const draws: Draw[] = [];
+  const consents: Consent[] = [];
+  const shares: Share[] = [];
   let n = 0;
+  const active = (entryId: string) => consents.find((c) => c.entryId === entryId && !c.withdrawnAt);
   const plainEntry = ({ tokenHash: _, ...e }: Entry & { tokenHash: string }): Entry => ({ ...e });
   const record = (raffleId: string, type: string, actor: Actor, payload: Record<string, unknown> = {}) =>
     log.push({ id: String(log.length + 1), raffleId, type, actor, payload, at: now() });
@@ -137,6 +170,9 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         rulesUrl: null,
         openedAt: null,
         closesAt: null,
+        sharePurpose: null,
+        sharePrivacyUrl: null,
+        sharingVersion: null,
         createdAt: at,
         updatedAt: at,
       };
@@ -218,12 +254,22 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     events: async (id) => log.filter((e) => e.raffleId === id).map((e) => ({ ...e })),
     stripeEventSeen: async (e) => seen.has(e),
     markStripeEvent: async (e) => void seen.add(e),
-    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor }) {
+    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor, sharing }) {
       const r = must(id);
       if (r.stage !== 'ready') throw conflict();
       checkStage('ready', 'open', actor.kind);
-      record(id, 'entries_opened', actor, { rulesVersion, closesAt });
-      return save({ ...r, stage: 'open', rulesVersion, rulesUrl, closesAt, openedAt: now() });
+      record(id, 'entries_opened', actor, { rulesVersion, closesAt, sharingVersion: sharing?.version ?? null });
+      return save({
+        ...r,
+        stage: 'open',
+        rulesVersion,
+        rulesUrl,
+        closesAt,
+        openedAt: now(),
+        sharePurpose: sharing?.purpose ?? null,
+        sharePrivacyUrl: sharing?.privacyUrl ?? null,
+        sharingVersion: sharing?.version ?? null,
+      });
     },
     async addEntry(raffleId, e, at) {
       const r = must(raffleId);
@@ -243,6 +289,9 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
       const e = entries.find((x) => x.id === entryId);
       if (!e) throw new RaffleNotFound();
       e.emailVerifiedAt ??= now();
+      // A choice made on the entry form counts once the address is confirmed.
+      const c = active(entryId);
+      if (c) c.verifiedAt ??= now();
       return plainEntry(e);
     },
     entries: async (rid) =>
@@ -311,5 +360,111 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
       return { draw: { ...d }, entry: eligible[index]! };
     },
     draws: async (rid) => draws.filter((d) => d.raffleId === rid).map((d) => ({ ...d })),
+    async giveConsent(entryId, { verified, at }) {
+      const e = entries.find((x) => x.id === entryId);
+      if (!e) throw new RaffleNotFound();
+      const r = must(e.raffleId);
+      if (!r.sharingVersion || !r.sharePurpose) throw new RaffleRuleError('This raffle does not share contacts with its sponsor.');
+      const existing = active(entryId);
+      if (existing) {
+        if (verified) existing.verifiedAt ??= at.toISOString();
+        return { ...existing };
+      }
+      const c: Consent = {
+        id: `co_${++n}`,
+        entryId,
+        raffleId: r.id,
+        recipientSponsorId: r.sponsorId,
+        purpose: r.sharePurpose,
+        version: r.sharingVersion,
+        givenAt: at.toISOString(),
+        verifiedAt: verified || e.emailVerifiedAt ? at.toISOString() : null,
+        withdrawnAt: null,
+      };
+      consents.push(c);
+      return { ...c };
+    },
+    async withdrawConsent(entryId, at) {
+      const c = active(entryId);
+      if (!c) return null;
+      c.withdrawnAt = at.toISOString();
+      return { ...c };
+    },
+    consentOf: async (entryId) => {
+      const c = active(entryId);
+      return c ? { ...c } : null;
+    },
+    async consentedEntries(rid) {
+      const r = must(rid);
+      return entries
+        .filter((e) => e.raffleId === rid && consentValid(active(e.id), r))
+        .map(plainEntry)
+        .sort(drawOrder);
+    },
+    async consentCounts(rid) {
+      const r = must(rid);
+      const mine = consents.filter((c) => c.raffleId === rid);
+      return { given: mine.filter((c) => !c.withdrawnAt).length, valid: mine.filter((c) => consentValid(c, r)).length, withdrawn: mine.filter((c) => c.withdrawnAt).length };
+    },
+    async createShare(rid, { recipientContactId, fields, entryIds, expiresAt, actor }) {
+      const r = must(rid);
+      if (!r.sharingVersion || !r.sharePurpose) throw new RaffleRuleError('This raffle does not share contacts with its sponsor.');
+      const allowed = new Set(entries.filter((e) => e.raffleId === rid && consentValid(active(e.id), r)).map((e) => e.id));
+      const ids = [...new Set(entryIds)].filter((id) => allowed.has(id));
+      if (!ids.length) throw new RaffleRuleError('None of the chosen entries has a valid consent now.');
+      const s: Share = {
+        id: `sh_${++n}`,
+        raffleId: rid,
+        recipientContactId,
+        purpose: r.sharePurpose,
+        fields: [...fields],
+        entryIds: ids,
+        createdAt: now(),
+        expiresAt,
+        revokedAt: null,
+      };
+      shares.push(s);
+      record(rid, 'shared', actor, { shareId: s.id, recipientContactId, purpose: s.purpose, fields, entryIds: ids, expiresAt });
+      return { ...s, fields: [...s.fields], entryIds: [...s.entryIds] };
+    },
+    getShare: async (id) => {
+      const s = shares.find((x) => x.id === id);
+      return s ? { ...s, fields: [...s.fields], entryIds: [...s.entryIds] } : null;
+    },
+    shares: async (rid) =>
+      shares
+        .filter((s) => s.raffleId === rid)
+        .reverse()
+        .map((s) => ({ ...s, fields: [...s.fields], entryIds: [...s.entryIds] })),
+    async revokeShare(id, actor) {
+      const s = shares.find((x) => x.id === id);
+      if (!s) throw new RaffleNotFound();
+      s.revokedAt ??= now();
+      record(s.raffleId, 'share_revoked', actor, { shareId: id });
+      return { ...s, fields: [...s.fields], entryIds: [...s.entryIds] };
+    },
+    async readShare(id, actor, at) {
+      const s = shares.find((x) => x.id === id);
+      if (!s) throw new RaffleNotFound();
+      if (s.revokedAt || at.toISOString() >= s.expiresAt) throw new RaffleRuleError('This share has expired or was withdrawn.');
+      const r = must(s.raffleId);
+      const rows = entries
+        .filter((e) => s.entryIds.includes(e.id) && consentValid(active(e.id), r))
+        .sort(drawOrder)
+        .map((e) => ({ id: e.id, name: s.fields.includes('name') ? e.name : '', email: s.fields.includes('email') ? e.email : '' }));
+      record(s.raffleId, 'share_read', actor, { shareId: id, rows: rows.length });
+      return { share: { ...s, fields: [...s.fields], entryIds: [...s.entryIds] }, rows };
+    },
+    async eraseEntries(rid, actor) {
+      must(rid);
+      let count = 0;
+      for (const e of entries)
+        if (e.raffleId === rid && e.email !== `erased-${e.id}@invalid.invalid`) {
+          Object.assign(e, { name: 'Erased', email: `erased-${e.id}@invalid.invalid` });
+          count++;
+        }
+      record(rid, 'entries_erased', actor, { count });
+      return count;
+    },
   };
 }

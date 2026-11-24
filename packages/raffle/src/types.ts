@@ -74,8 +74,53 @@ export interface Raffle {
   rulesUrl: string | null;
   openedAt: string | null;
   closesAt: string | null;
+  /**
+   * Sharing with the sponsor, frozen when entries open, and only when the sharing gate was open
+   * then: the purpose entrants read, the sponsor's privacy notice, and the sharing policy version.
+   * Null: this raffle offers no sharing, ever.
+   */
+  sharePurpose: string | null;
+  sharePrivacyUrl: string | null;
+  sharingVersion: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * An entrant's choice to let the raffle's sponsor have their name and email, for the purpose shown.
+ * Separate from entering: the draw never depends on it. It counts only once the email is verified
+ * (given from the entrant's own link, or confirmed by it), and stops counting when withdrawn.
+ */
+export interface Consent {
+  id: string;
+  entryId: string;
+  raffleId: string;
+  /** The sponsor named in the box. */
+  recipientSponsorId: string;
+  purpose: string;
+  /** The sharing policy version the box was shown under. */
+  version: string;
+  givenAt: string;
+  verifiedAt: string | null;
+  withdrawnAt: string | null;
+}
+
+export type ShareField = 'name' | 'email';
+
+/**
+ * A release of entrant contacts to one sponsor contact, for a limited time. `entryIds` is what the
+ * board released (already narrowed to valid consent); each read narrows again to consent valid then.
+ */
+export interface Share {
+  id: string;
+  raffleId: string;
+  recipientContactId: string;
+  purpose: string;
+  fields: ShareField[];
+  entryIds: string[];
+  createdAt: string;
+  expiresAt: string;
+  revokedAt: string | null;
 }
 
 /**

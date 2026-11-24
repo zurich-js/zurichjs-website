@@ -15,6 +15,7 @@ import type { AdminRaffleView } from '../../../server/raffle.ts';
 import type { gateView } from '../../../server/sponsor-fees.ts';
 import { api, post } from '../admin-api.ts';
 import { FeeChoiceField } from './fees.tsx';
+import { RaffleSharing } from './RaffleSharing.tsx';
 import { Block, CopyLink, Notice, inputValue } from './shared.tsx';
 
 type Gate = ReturnType<typeof gateView>;
@@ -53,7 +54,11 @@ export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => vo
   }, []);
 
   return (
-    <Block id="h-raffles" title="Raffle add-ons" intro="Paid apart from the sponsorship. ZurichJS runs the raffle; entrant data never appears here or in Slack.">
+    <Block
+      id="h-raffles"
+      title="Raffle add-ons"
+      intro="Paid apart from the sponsorship. ZurichJS runs the raffle. Entrant names and emails show here only where the board needs them (the winner, a release), never in Slack."
+    >
       {!data && !error && <p class="m-0 text-compact text-ink-2">Loading the raffles…</p>}
       {error && <Notice kind="error">{error}</Notice>}
       {data && !data.terms.open && <p class="m-0 text-compact text-ink-2">{data.terms.reason}</p>}
@@ -201,6 +206,7 @@ function RaffleCard({
           ))}
         </ol>
       )}
+      {r.sharing && r.entries !== null && <RaffleSharing raffleId={r.id} summary={r.sharing} onSignedOut={onSignedOut} />}
       {r.reason && <p class="m-0 text-compact text-ink-2">Note to the sponsor: {r.reason}</p>}
       {actions.length > 0 && (
         <div class="flex flex-wrap gap-3">
@@ -248,7 +254,15 @@ function RaffleCard({
             if (form === 'hold') void act('hold', { reason: f.reason, meetupChanged: f.meetupChanged === 'yes' }, 'On hold.');
             if (form === 'cancel') void act('cancel', { reason: f.reason }, 'Cancelled.');
             if (form === 'refunded') void act('refunded', { amountChf: f.amountChf, reference: f.reference }, 'Refund recorded.');
-            if (form === 'open') void act('open', { closesAt: f.closesAt ? new Date(f.closesAt).toISOString() : '' }, 'Entries are open. Share the entry page.');
+            if (form === 'open')
+              void act(
+                'open',
+                {
+                  closesAt: f.closesAt ? new Date(f.closesAt).toISOString() : '',
+                  ...(f.sharePurpose || f.privacyUrl ? { sharing: { purpose: f.sharePurpose ?? '', privacyUrl: f.privacyUrl ?? '' } } : {}),
+                },
+                'Entries are open. Share the entry page.',
+              );
             if (form === 'draw') void act('draw', {}, 'Drawn. We emailed the winner; the entry page shows the claim code.');
             if (form === 'redraw') void act('redraw', { reason: f.reason }, 'Drawn again. We emailed the new winner.');
             if (form === 'fulfil') void act('fulfil', { note: f.note }, 'Recorded as delivered.');
@@ -306,7 +320,21 @@ function RaffleCard({
                 hint={`Zurich time, by the end of ${r.eventDateLabel}.`}
                 onInput={(e) => setF({ ...f, closesAt: inputValue(e) })}
               />
-              <p class="m-0 text-compact text-ink-2">Opening freezes the prize, the meetup, the closing time and the entrant rules {rules.open ? rules.version : ''}.</p>
+              {r.sharing?.gateOpen ? (
+                <>
+                  {field(
+                    'sharePurpose',
+                    'Sharing with the sponsor: purpose (optional)',
+                    'Entrants read it in the box: “… have my name and email to …”. Leave empty for no sharing.',
+                  )}
+                  {field('privacyUrl', 'The sponsor’s privacy notice (https)')}
+                </>
+              ) : (
+                <p class="m-0 text-compact text-ink-2">{r.sharing?.reason ?? 'Sharing with the sponsor is off.'}</p>
+              )}
+              <p class="m-0 text-compact text-ink-2">
+                Opening freezes the prize, the meetup, the closing time, the entrant rules {rules.open ? rules.version : ''} and any sharing.
+              </p>
             </>
           )}
           {form === 'draw' && (

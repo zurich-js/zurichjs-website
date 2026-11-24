@@ -15,8 +15,10 @@ import { longDate } from '../../../server/dates.ts';
 import type { RaffleView } from '../../../server/raffle.ts';
 import { TextButton } from '../forms/shared.tsx';
 
+type SponsorRaffle = RaffleView & { shares: { id: string; expiresAt: string; count: number }[] };
+
 interface Data {
-  raffles: RaffleView[];
+  raffles: SponsorRaffle[];
   eligible: boolean;
   reason: string | null;
   terms: { open: boolean; version?: string; url?: string };
@@ -141,7 +143,7 @@ export function Raffles({ contactEmail, onSignedOut }: { contactEmail: string; o
   );
 }
 
-function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: RaffleView; terms: Data['terms']; onSignedOut: () => void; onChanged: (text: string) => void }) {
+function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: SponsorRaffle; terms: Data['terms']; onSignedOut: () => void; onChanged: (text: string) => void }) {
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
@@ -192,9 +194,9 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: RaffleView; terms
             <dd class="m-0 text-body font-bold">{q.total}</dd>
           </div>
         </dl>
-      ) : (
+      ) : r.stage === 'proposed' ? (
         <p class={hint}>Your budget: {r.budget}. We send you an offer with the amount.</p>
-      )}
+      ) : null}
       {q?.surcharge && <p class={hint}>You cover the card processing fee: it is a separate line on the payment page and your receipt. The fee is our estimate.</p>}
       {r.funding !== 'unpaid' && r.funding !== 'in_kind' && <p class={hint}>{r.fundingLabel}.</p>}
       {r.entries !== null && (
@@ -244,6 +246,9 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: RaffleView; terms
           </a>
         </div>
       )}
+      {r.shares.map((s) => (
+        <SharedContacts key={s.id} raffleId={r.id} share={s} onSignedOut={onSignedOut} />
+      ))}
       {r.stage === 'proposed' && (
         <div>
           <TextButton onClick={() => void send({ action: 'withdraw' }, 'withdraw', 'Raffle withdrawn.')}>{busy === 'withdraw' ? 'Withdrawing…' : 'Withdraw'}</TextButton>
@@ -343,5 +348,59 @@ function Propose({ onSignedOut, onCancel, onDone }: { onSignedOut: () => void; o
         </Button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Contacts the board released to this person, read on demand. Each read is narrowed to the
+ * entrants whose permission still counts, so someone who withdrew is gone from the list.
+ */
+function SharedContacts({ raffleId, share, onSignedOut }: { raffleId: string; share: { id: string; expiresAt: string; count: number }; onSignedOut: () => void }) {
+  const [data, setData] = useState<{ purpose: string; rows: { name: string; email: string }[]; expiresAt: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const load = async () => {
+    setBusy(true);
+    setError('');
+    const r = await call<{ purpose: string; rows: { name: string; email: string }[]; expiresAt: string }>(
+      `/api/sponsorship/raffles/${encodeURIComponent(raffleId)}/share?s=${encodeURIComponent(share.id)}`,
+      undefined,
+      onSignedOut,
+    );
+    setBusy(false);
+    if (!r) return;
+    if (!r.ok) return setError(r.error);
+    setData(r.data);
+  };
+  const until = longDate(share.expiresAt.slice(0, 10));
+  return (
+    <div class="flex flex-col gap-3">
+      {!data ? (
+        <div>
+          <Button variant="secondary" disabled={busy} onClick={() => void load()}>
+            {busy ? 'Loading…' : `See the contacts we shared (until ${until})`}
+          </Button>
+        </div>
+      ) : (
+        <>
+          <p class={hint}>
+            Use these only to {data.purpose}. Each person agreed and can withdraw at any time: they then drop off this list, and you delete or stop using their data, as the
+            recipient policy says. We cannot recall copies you made. Available until {until}.
+          </p>
+          {data.rows.length ? (
+            <ul class="m-0 flex list-none flex-col gap-1 p-0 text-compact">
+              {data.rows.map((x) => (
+                <li key={x.email || x.name} class="break-words">
+                  {[x.name, x.email].filter(Boolean).join(', ')}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class={hint}>Nobody on this list has a permission that counts now.</p>
+          )}
+        </>
+      )}
+      {error && <Notice tone="danger" live title={error} />}
+    </div>
   );
 }

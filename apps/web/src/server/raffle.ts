@@ -60,6 +60,32 @@ export function rulesGate(env: Env): TermsGate {
   return { open: true, version, url };
 }
 
+/**
+ * The sharing gate: contacts reach a sponsor only when the owner configured all of it, and only for
+ * a raffle whose sponsor accepted the raffle terms version that covers sharing:
+ *   RAFFLE_SHARING_POLICY_VERSION   the approved raffle notice and recipient policy, as one version
+ *   RAFFLE_SHARING_NOTICE_URL       where entrants read it (https)
+ *   RAFFLE_RETENTION_DAYS           how long entries are kept after the raffle (1 to 3650)
+ *   RAFFLE_SHARING_TERMS_VERSION    the raffle terms version (sponsor agreement) that allows sharing
+ * Off by default; checked when entries open, on every release and on every read.
+ */
+export type SharingGate = { open: true; version: string; noticeUrl: string; retentionDays: number } | { open: false; reason: string };
+
+export function sharingGate(env: Env, r?: Pick<Raffle, 'acceptedVersion'>): SharingGate {
+  const version = env.RAFFLE_SHARING_POLICY_VERSION?.trim();
+  const noticeUrl = env.RAFFLE_SHARING_NOTICE_URL?.trim();
+  const days = Number(env.RAFFLE_RETENTION_DAYS);
+  const terms = env.RAFFLE_SHARING_TERMS_VERSION?.trim();
+  if (!version || !noticeUrl?.startsWith('https://') || !Number.isInteger(days) || days < 1 || days > 3650 || !terms)
+    return {
+      open: false,
+      reason:
+        'Sharing with sponsors is off: the raffle notice, recipient policy, retention period and sharing terms are not all approved (RAFFLE_SHARING_POLICY_VERSION, RAFFLE_SHARING_NOTICE_URL, RAFFLE_RETENTION_DAYS, RAFFLE_SHARING_TERMS_VERSION).',
+    };
+  if (r && r.acceptedVersion !== terms) return { open: false, reason: `The sponsor accepted raffle terms ${r.acceptedVersion ?? 'none'}, not ${terms}, which covers sharing.` };
+  return { open: true, version, noticeUrl, retentionDays: days };
+}
+
 /** An entrant's own link: a random token we email, kept only as its SHA-256. */
 export const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
 export function newEntryToken() {
@@ -71,7 +97,7 @@ export const manageUrl = (origin: string, token: string) => `${new URL('/raffle/
 export const entryUrl = (origin: string, id: string) => `${new URL('/raffle', origin).toString()}?r=${encodeURIComponent(id)}`;
 
 /** What anyone can see of a raffle once entries opened. No entrant data; winners by claim code only. */
-export function publicRaffleView(r: Raffle, sponsorName: string, winningCodes: string[], now: Date) {
+export function publicRaffleView(r: Raffle, sponsorName: string, winningCodes: string[], now: Date, noticeUrl: string | null = null) {
   const state =
     r.stage === 'open'
       ? r.closesAt && now.toISOString() < r.closesAt
@@ -93,6 +119,8 @@ export function publicRaffleView(r: Raffle, sponsorName: string, winningCodes: s
     closesAt: r.closesAt,
     rulesUrl: r.rulesUrl,
     winningCodes: state === 'drawn' ? winningCodes : [],
+    /** The optional box: who gets the contact, for what, and both privacy notices. Null when this raffle does not share. */
+    sharing: r.sharingVersion && r.sharePurpose && r.sharePrivacyUrl && noticeUrl ? { purpose: r.sharePurpose, sponsorPrivacyUrl: r.sharePrivacyUrl, noticeUrl } : null,
   };
 }
 
@@ -193,10 +221,10 @@ export const adminRaffleView = (
   events: events.map((e) => ({ type: e.type, actor: e.actor.kind, at: e.at, payload: e.payload })).reverse(),
 });
 
-export type AdminRaffleView = ReturnType<typeof adminRaffleView>;
+export type AdminRaffleView = ReturnType<typeof adminRaffleView> & { sharing?: SharingSummary };
 
 /** Loads everything the board's view of one raffle needs. */
-export async function loadAdminView(r: Raffle, raffles: RaffleStore, fees: FeeStore, origin: string): Promise<AdminRaffleView> {
+export async function loadAdminView(r: Raffle, raffles: RaffleStore, fees: FeeStore, origin: string, env: Env = {}): Promise<AdminRaffleView & { sharing: SharingSummary }> {
   const [quote, ledger, events, counts, draws, entries] = await Promise.all([
     r.quoteId ? fees.quote(r.quoteId) : null,
     raffles.ledger(r.id),
@@ -207,7 +235,19 @@ export async function loadAdminView(r: Raffle, raffles: RaffleStore, fees: FeeSt
   ]);
   const byId = new Map(entries.map((e) => [e.id, e]));
   const withWinners = draws.filter((d) => byId.has(d.entryId)).map((d) => ({ ...d, winner: byId.get(d.entryId)! }));
-  return adminRaffleView(r, quote, ledger, events, counts, withWinners, origin);
+  const gate = sharingGate(env, r);
+  return {
+    ...adminRaffleView(r, quote, ledger, events, counts, withWinners, origin),
+    sharing: { gateOpen: gate.open, reason: gate.open ? null : gate.reason, offered: !!r.sharingVersion, purpose: r.sharePurpose, sponsorPrivacyUrl: r.sharePrivacyUrl },
+  };
+}
+
+export interface SharingSummary {
+  gateOpen: boolean;
+  reason: string | null;
+  offered: boolean;
+  purpose: string | null;
+  sponsorPrivacyUrl: string | null;
 }
 
 /* ------------------------------------------------------------------ Stripe */

@@ -460,5 +460,5 @@ test('a raffle entry page: entering needs a name, an email and the rules; the an
   await page.getByRole('checkbox').check();
   await submit.click();
   await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
-  expect(sent).toEqual([{ raffleId: 'r-1', name: 'Kim', email: 'kim@example.com', rules: true, company: '' }]);
+  expect(sent).toEqual([{ raffleId: 'r-1', name: 'Kim', email: 'kim@example.com', rules: true, share: false, company: '' }]);
 });

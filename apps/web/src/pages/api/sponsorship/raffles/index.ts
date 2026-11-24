@@ -39,11 +39,19 @@ export const handleRaffles = (request: Request, deps: SponsorRouteDeps = {}) =>
             return last ? ((await raffles.entries(r.id)).find((e) => e.id === last.entryId)?.claimCode ?? null) : null;
           }),
         );
+        // Releases addressed to this contact, still readable: ids and dates only here.
+        const shares = await Promise.all(
+          list.map(async (r) =>
+            (await raffles.shares(r.id))
+              .filter((x) => x.recipientContactId === contact.id && !x.revokedAt && x.expiresAt > now.toISOString())
+              .map((x) => ({ id: x.id, expiresAt: x.expiresAt, count: x.entryIds.length })),
+          ),
+        );
         const e = eligibility(s, zurichDay(now));
         const gate = termsGate(env);
         return json(200, {
           ok: true,
-          raffles: list.map((r, i) => raffleView(r, quotes[i] ?? null, counts[i] ?? null, codes[i] ?? null)),
+          raffles: list.map((r, i) => ({ ...raffleView(r, quotes[i] ?? null, counts[i] ?? null, codes[i] ?? null), shares: shares[i] ?? [] })),
           eligible: e.ok,
           reason: e.ok ? null : e.reason,
           terms: gate.open ? { open: true, version: gate.version, url: gate.url } : { open: false },

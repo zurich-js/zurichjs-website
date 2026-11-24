@@ -8,7 +8,7 @@ timestamp: '2026-11-24T00:00:00Z'
 
 # Raffle add-ons
 
-Source: `packages/raffle` (`@zurichjs/raffle`: types, the stage and funding rules, eligibility, gift accounting, the store in memory and Postgres), `apps/web/src/server/raffle.ts`, `apps/web/src/server/raffle-webhook.ts`, `apps/web/src/server/raffle-route.ts`, the routes under `apps/web/src/pages/api/sponsorship/raffles`, `apps/web/src/pages/api/membership/admin/raffles` and `apps/web/src/pages/api/raffle`, the pages `apps/web/src/pages/raffle`, the entrant emails `packages/emails/src/raffles.ts`, and the migrations `apps/web/database/migrations/20261124110000_raffles.sql` and `apps/web/database/migrations/20261124130000_raffle_entries.sql`.
+Source: `packages/raffle` (`@zurichjs/raffle`: types, the stage and funding rules, eligibility, gift accounting, the store in memory and Postgres), `apps/web/src/server/raffle.ts`, `apps/web/src/server/raffle-webhook.ts`, `apps/web/src/server/raffle-route.ts`, the routes under `apps/web/src/pages/api/sponsorship/raffles`, `apps/web/src/pages/api/membership/admin/raffles` and `apps/web/src/pages/api/raffle`, the pages `apps/web/src/pages/raffle`, the entrant emails `packages/emails/src/raffles.ts`, and the migrations `apps/web/database/migrations/20261124110000_raffles.sql`, `apps/web/database/migrations/20261124130000_raffle_entries.sql` and `apps/web/database/migrations/20261124140000_raffle_sharing.sql`.
 
 ## What it is
 
@@ -69,9 +69,30 @@ Cancelling or pausing a raffle with money in flags it `refund_review`. The board
 - **Redraw:** needs a reason, which is kept with the draw, and excludes earlier winners. It follows the rules published before entries opened.
 - **The winner** is emailed privately and the board sees the winner's name and email to arrange the prize. The entry page shows the winning claim code, never a name or email. Recording the delivery marks the raffle fulfilled.
 
+## Sharing with the sponsor
+
+Off unless the owner configured all of it. Entering and the draw never depend on it.
+
+- **The sharing gate** (`RAFFLE_SHARING_POLICY_VERSION`, `RAFFLE_SHARING_NOTICE_URL`, `RAFFLE_RETENTION_DAYS`, `RAFFLE_SHARING_TERMS_VERSION`; [Environment variables](/systems/operations/environment.md)): an approved raffle notice and recipient policy as one version, where entrants read it, the retention period, and the raffle terms version that allows sharing. It is open for a raffle only if its sponsor accepted that terms version. It is checked when entries open, on every release and on every read.
+- **Per raffle:** when opening entries with the gate open, the board may give the purpose entrants read and the sponsor's privacy notice. Both are frozen with the policy version; a raffle opened without them never asks anyone.
+- **The box** on the entry form is unticked, names the sponsor and the purpose, and links the sponsor's privacy notice and our raffle notice. It is separate from the rules box. A choice made there counts only once the entrant confirms the email; one made from the entrant's own link counts at once (the link proves the address).
+- **Withdrawal** works from the entrant's own link, without an account, at any time, even with sharing switched off. It stops any later share; a new choice afterwards is a new record.
+- **Release:** the board previews the entrants whose permission counts now, selects rows, picks one confirmed sponsor contact, the fields (name, email) and 1 to 30 days, and confirms with a tick. The share is the selection narrowed to valid permission at that moment: the board narrows, never widens. Each release is logged with the recipient, purpose, fields, entry ids and expiry.
+- **Access:** only the named contact, signed in, until expiry, while the gate is open. Every read is narrowed again to permission valid at that moment, so a withdrawal before access removes the row, and is logged with its row count. One sponsor can never read another's share. Releases can be withdrawn by the board.
+- **Copies cannot be recalled.** The sponsor page says so; the recipient policy says what the sponsor must delete or stop using after a withdrawal.
+- **Retention:** once a raffle is fulfilled or cancelled and the retention period after its closing time has passed, the board can erase every entrant's name and email. Draws, counts and records stay.
+
 ## Slack and data
 
-Slack gets the company, the meetup, amounts, entry counts and the winning claim code. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, never entrants.
+Slack gets the company, the meetup, amounts, entry counts, release counts and the winning claim code. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, and entrant contacts only through a release. The organisers' bot (`apps/web/src/server/sponsor-agent.ts`) has no access to raffles; a test keeps it that way. The raffle audit log holds entry ids and counts, never names or emails.
+
+## Draft raffle notice and recipient policy (for the owner to review, not approved)
+
+> **Raffle notice.** When you enter a ZurichJS raffle we keep your name or nickname and your email to run the raffle: to send your claim code, to draw, and to contact you if you win. If you tick the optional box, we also let the sponsor named next to it have your name and email, only for the purpose written there; the sponsor's own privacy notice then applies to what they do. You can withdraw that permission at any time from the link in your entry email; we then stop sharing it, and we ask the sponsor to delete what they received. We delete raffle entries (retention period) after the raffle. Notice version: (set by the owner).
+>
+> **Recipient policy (for sponsors).** You receive entrant contacts only as each person allowed, for the purpose shown to them, through your sponsorship page, for a limited time. Use them only for that purpose. When someone withdraws, they drop off the list; you delete or stop using their data within (number) days. Do not pass the contacts on. Delete them when the purpose is done or within (retention), whichever is first. Contacts are processed (location and transfer rules, set by the owner).
+
+Open for the owner: transfers to sponsors outside Switzerland, the deletion deadline for recipients, and whether a policy change needs every sponsor to accept again.
 
 ## Draft entrant rules (for the owner to review, not approved)
 

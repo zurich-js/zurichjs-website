@@ -1,6 +1,6 @@
 /**
  * Enter a raffle: free, no account, a name or nickname and an email, and the rules accepted.
- *   POST { raffleId, name, email, rules: true, company? (honeypot, must be empty) }
+ *   POST { raffleId, name, email, rules: true, share?: boolean (the optional, unticked sharing box), company? (honeypot, must be empty) }
  *     → 200 { ok } · 400 { error, field } · 404 · 409 (entries closed) · 429
  * One entry per email per raffle. The answer is the same for a new and a repeated email, so the
  * form never tells anyone whether an address entered. The entry counts at once; the email we send
@@ -12,7 +12,7 @@ import { sendMemberEmail } from '@zurichjs/integrations';
 import type { APIRoute } from 'astro';
 import { longDate } from '../../../server/dates.ts';
 import { fail, isEmail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
-import { manageUrl, newEntryToken } from '../../../server/raffle.ts';
+import { manageUrl, newEntryToken, sharingGate } from '../../../server/raffle.ts';
 import { raffleRoute, type RaffleRouteDeps } from '../../../server/raffle-route.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 
@@ -48,6 +48,8 @@ export const handleEnter = (request: Request, deps: RaffleRouteDeps = {}) =>
       }
       if (!added) throw new Error('No free claim code after three tries.');
       if (added.created) {
+        // The sharing choice is separate from entering, and counts only once the email is confirmed.
+        if (body.share === true && r.sharingVersion && sharingGate(env, r).open) await raffles.giveConsent(added.entry.id, { verified: false, at: now });
         const s = await sponsors.get(r.sponsorId);
         const message = renderEmail('raffle-entry', {
           name,

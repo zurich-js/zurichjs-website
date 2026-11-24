@@ -19,7 +19,7 @@ export const handleAdminRaffles = (request: Request, deps: SponsorAdminDeps = {}
       const fees = deps.fees ?? feeStore(env);
       const sponsorId = new URL(request.url).searchParams.get('sponsorId');
       const list = sponsorId ? await raffles.bySponsor(sponsorId) : await raffles.list();
-      const views = await Promise.all(list.map((r) => loadAdminView(r, raffles, fees, origin)));
+      const views = await Promise.all(list.map((r) => loadAdminView(r, raffles, fees, origin, env)));
       const gate = termsGate(env);
       const rules = rulesGate(env);
       return json(200, {

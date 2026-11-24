@@ -21,7 +21,7 @@ const closing = (iso: string) =>
 
 export default function RaffleEntry({ contactEmail }: { contactEmail: string }) {
   const [load, setLoad] = useState<Load>({ kind: 'loading' });
-  const [f, setF] = useState({ name: '', email: '', rules: false });
+  const [f, setF] = useState({ name: '', email: '', rules: false, share: false });
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ field?: string; message: string } | null>(null);
@@ -62,7 +62,7 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
     const res = await fetch('/api/raffle/entries', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ raffleId: id, name: f.name, email: f.email, rules: f.rules, company }),
+      body: JSON.stringify({ raffleId: id, name: f.name, email: f.email, rules: f.rules, share: f.share, company }),
     }).catch(() => null);
     setBusy(false);
     const data = res ? ((await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; field?: string }) : null;
@@ -161,6 +161,26 @@ export default function RaffleEntry({ contactEmail }: { contactEmail: string }) 
               onChange={(e) => setF({ ...f, rules: (e.target as HTMLInputElement).checked })}
             />
             {errorOf('rules') && <p class="m-0 text-compact text-danger">{errorOf('rules')}</p>}
+            {r.sharing && (
+              <div class="flex flex-col gap-1.5">
+                <Checkbox
+                  label={`Optional: let ${r.sponsorName} have my name and email to ${r.sharing.purpose}.`}
+                  checked={f.share}
+                  onChange={(e) => setF({ ...f, share: (e.target as HTMLInputElement).checked })}
+                />
+                <p class="m-0 text-compact text-ink-2 text-pretty">
+                  It does not change your entry or the draw. It counts once you confirm your email, and you can withdraw it any time from the link we send.{' '}
+                  <a class="font-bold text-black" href={r.sharing.sponsorPrivacyUrl} target="_blank" rel="noopener">
+                    {r.sponsorName}’s privacy notice
+                  </a>
+                  ,{' '}
+                  <a class="font-bold text-black" href={r.sharing.noticeUrl} target="_blank" rel="noopener">
+                    our raffle notice
+                  </a>
+                  .
+                </p>
+              </div>
+            )}
             <Honeypot />
             {error && !['name', 'email', 'rules'].includes(error.field ?? '') && <Notice tone="danger" live title={error.message} />}
             <div>

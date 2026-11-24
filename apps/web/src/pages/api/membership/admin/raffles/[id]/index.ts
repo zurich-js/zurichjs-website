@@ -16,7 +16,9 @@
  *   refund       { decision: 'refund' }      paid → refund being decided
  *   refunded     { amountChf, reference }    the refund was made in Stripe or by bank: recorded
  *   clear_flag   { flag }
- *   open         { closesAt (ISO) }          ready → entries open, under the approved entrant rules (frozen)
+ *   open         { closesAt (ISO), sharing?: { purpose, privacyUrl } }  ready → entries open, under the approved
+ *                entrant rules; with `sharing` (only while the sharing gate is open for this raffle) entrants
+ *                get the optional box. All of it is frozen.
  *   close        open → closed (no more entries)
  *   draw         closed → drawn: one uniform random winner from all entries, once; again returns the same
  *   redraw       { reason }                  another draw without earlier winners (the rules say when)
@@ -26,14 +28,14 @@
 import { RaffleRuleError, uniformIndex, type Flag, type Raffle } from '@zurichjs/raffle';
 import { francsToMinor, isFeeChoice, quoteFigures } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../server/http.ts';
-import { assertEligible, closeRafflePaymentLink, loadAdminView, raffleStore, rulesGate, termsGate } from '../../../../../server/raffle.ts';
+import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../../server/http.ts';
+import { assertEligible, closeRafflePaymentLink, loadAdminView, raffleStore, rulesGate, sharingGate, termsGate } from '../../../../../../server/raffle.ts';
 import { renderEmail } from '@zurichjs/emails';
 import { sendMemberEmail } from '@zurichjs/integrations';
-import { longDate } from '../../../../../server/dates.ts';
-import { note, slackText } from '../../../../../server/sponsor.ts';
-import { BOARD, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../server/sponsor-admin.ts';
-import { currentGate, feeStore } from '../../../../../server/sponsor-fees.ts';
+import { longDate } from '../../../../../../server/dates.ts';
+import { note, slackText } from '../../../../../../server/sponsor.ts';
+import { BOARD, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../../server/sponsor-admin.ts';
+import { currentGate, feeStore } from '../../../../../../server/sponsor-fees.ts';
 
 export const prerender = false;
 
@@ -52,7 +54,7 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
       if (!r) return fail(404, 'No such raffle.');
       const body = (await readJsonObject(request)) ?? {};
       const now = deps.now === undefined ? new Date() : new Date(deps.now);
-      const answer = async (x: Raffle) => json(200, { ok: true, raffle: await loadAdminView(x, raffles, fees, origin) });
+      const answer = async (x: Raffle) => json(200, { ok: true, raffle: await loadAdminView(x, raffles, fees, origin, env) });
       /** The winner hears from us privately; a lost email never undoes a draw. */
       const tellWinner = async (seq: number, w: { name: string; email: string; claimCode: string }) => {
         const s = await store.get(r.sponsorId);
@@ -162,7 +164,18 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           const closes = typeof body.closesAt === 'string' ? new Date(body.closesAt) : null;
           if (!closes || Number.isNaN(closes.getTime()) || closes <= now) return fail(400, 'Choose when entries close, in the future.', { field: 'closesAt' });
           if (closes.toISOString().slice(0, 10) > r.eventDate) return fail(400, 'Entries must close by the end of the meetup day.', { field: 'closesAt' });
-          return answer(await raffles.openEntries(r.id, { rulesVersion: gate.version, rulesUrl: gate.url, closesAt: closes.toISOString(), actor: BOARD }));
+          let sharing: { purpose: string; privacyUrl: string; version: string } | null = null;
+          if (body.sharing && typeof body.sharing === 'object') {
+            const share = sharingGate(env, r);
+            if (!share.open) throw new RaffleRuleError(share.reason, 'gate');
+            const sb = body.sharing as Record<string, unknown>;
+            const purpose = text(sb.purpose, 300);
+            const privacyUrl = typeof sb.privacyUrl === 'string' && sb.privacyUrl.startsWith('https://') && sb.privacyUrl.length <= 500 ? sb.privacyUrl : '';
+            if (purpose.length < 10) return fail(400, 'Say what the sponsor will use the contacts for, in a sentence entrants read.', { field: 'purpose' });
+            if (!privacyUrl) return fail(400, 'Give the sponsor’s privacy notice (https).', { field: 'privacyUrl' });
+            sharing = { purpose, privacyUrl, version: share.version };
+          }
+          return answer(await raffles.openEntries(r.id, { rulesVersion: gate.version, rulesUrl: gate.url, closesAt: closes.toISOString(), actor: BOARD, sharing }));
         }
         case 'close': {
           const out = await raffles.moveStage(r.id, { from: 'open', to: 'closed', actor: BOARD });

@@ -55,6 +55,7 @@ export interface Raffle {
   budgetMinor: number;
   fulfilment: Fulfilment;
   stage: Stage;
+  heldFrom: Stage | null;
   funding: Funding;
   flags: Flag[];
   /** The board's offer: the base amount (rappen) and the quote frozen for it. Null before the offer and for in-kind prizes. */

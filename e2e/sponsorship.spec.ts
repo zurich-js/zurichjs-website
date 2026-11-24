@@ -470,13 +470,13 @@ test('a raffle entry page: entering needs a name, an email and the rules; the an
   await page.goto('/raffle?r=r-1');
   await expect(page.getByRole('heading', { name: 'Mechanical keyboard' })).toBeVisible();
   await expect(page.getByText('Raffle supported by Acme AG.')).toBeVisible();
-  const submit = page.locator('main form button[type=submit]');
+  const submit = page.getByRole('button', { name: 'Enter', exact: true });
   await submit.click();
   await expect(page.getByText('Accept the raffle rules to enter.', { exact: true })).toBeVisible();
   expect(sent).toEqual([]);
   expect(await axe(page)).toEqual([]);
   await page.getByLabel('Name or nickname').fill('Kim');
-  await page.getByLabel('Email').fill('kim@example.com');
+  await page.getByLabel('Email', { exact: true }).fill('kim@example.com');
   await page.getByRole('checkbox').check();
   await submit.click();
   await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();

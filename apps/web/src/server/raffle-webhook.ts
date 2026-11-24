@@ -13,6 +13,7 @@ import { eligibility, type RaffleStore } from '@zurichjs/raffle';
 import { chfMinor, type FeeStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { fail, json, type Env } from './http.ts';
+import { sanityMeetups, type LiveLookup } from './sponsor-coverage.ts';
 import { raffleTransaction } from './raffle-transaction.ts';
 import { reconcileFee } from './sponsor-offers.ts';
 import { MembershipUnavailable } from './membership-db.ts';
@@ -26,6 +27,7 @@ export interface RaffleWebhookDeps {
   env?: Env;
   raffles?: RaffleStore;
   sponsors?: SponsorStore;
+  hosts?: LiveLookup;
   fees?: FeeStore;
   fetch?: typeof fetch;
   slack?: MembershipSlack;
@@ -119,14 +121,26 @@ export async function processRaffleEvent(event: StripeEvent, deps: RaffleWebhook
     if (payment.feeMinor === null && payment.paymentIntentId) await reconcileFee(payment, fees, { env, fetch: deps.fetch }).catch(() => false);
     // Eligibility again at payment: a late payment is kept and flagged, never refused.
     const ok = s ? eligibility(s, zurichDay(deps.now ? new Date(deps.now) : new Date())).ok : false;
-    if (!ok) {
-      await raffles.flag(r.id, 'late_payment', actor, { status: s?.status ?? null });
-      if (['offered', 'ready', 'open', 'closed', 'drawn'].includes(current.stage)) {
-        await raffles.moveStage(r.id, { from: current.stage, to: 'on_hold', actor, reason: 'The sponsorship is no longer eligible.' });
-        await raffles.flag(r.id, 'refund_review', actor);
-      }
+    const hosts = await (deps.hosts ?? sanityMeetups(env, deps.fetch))([r.eventId]);
+    const host = hosts.find((h) => h.id === r.eventId);
+    const unavailable = !host || host.status === 'cancelled' || host.status === 'postponed';
+    if (!ok || unavailable) {
+      await raffleTransaction(env, matchedRaffle.id, deps, async ({ raffles }) => {
+        const held = (await raffles.get(matchedRaffle.id))!;
+        if (!ok) await raffles.flag(held.id, 'late_payment', actor, { status: s?.status ?? null });
+        if (unavailable) await raffles.flag(held.id, 'meetup_changed', actor);
+        if (['offered', 'ready', 'open', 'closed', 'drawn'].includes(held.stage)) {
+          await raffles.flag(held.id, 'refund_review', actor);
+          await raffles.moveStage(held.id, {
+            from: held.stage,
+            to: 'on_hold',
+            actor,
+            reason: unavailable ? 'The host meetup is no longer available.' : 'The sponsorship is no longer eligible.',
+          });
+        }
+      });
       await note(
-        `:rotating_light: ${company} paid a raffle after their sponsorship stopped being eligible (${s?.status ?? 'unknown'}). Recorded; the board decides. ${link}`,
+        `:rotating_light: ${company} paid a raffle ${!ok ? 'after their sponsorship stopped being eligible' : 'whose host meetup is unavailable'}. The receipt is recorded. ${link}`,
         notify,
       );
     }

@@ -124,13 +124,15 @@ function RaffleCard({
     ...(s === 'closed' ? [['draw', 'Draw the winner'] as [Form, string]] : []),
     ...(s === 'drawn' && r.claimDecision === 'expired' ? [['redraw', 'Draw again'] as [Form, string]] : []),
     ...(s === 'drawn' && r.claimDecision === 'claimed' ? [['fulfil', 'Prize delivered'] as [Form, string]] : []),
-    ...((s === 'proposed' || s === 'on_hold') && terms.open ? [['offer', s === 'on_hold' ? 'Send a new offer' : 'Make an offer'] as [Form, string]] : []),
+    ...((s === 'proposed' || (s === 'on_hold' && r.funding === 'unpaid')) && terms.open
+      ? [['offer', s === 'on_hold' ? 'Send a new offer' : 'Make an offer'] as [Form, string]]
+      : []),
     ...(s === 'proposed' ? [['decline', 'Decline'] as [Form, string]] : []),
     ...(r.fulfilment === 'in_kind' && r.funding === 'unpaid' && s === 'offered' ? [['in_kind', 'Prize arrived'] as [Form, string]] : []),
     ...(r.fulfilment === 'zurichjs' && money ? [['ledger', 'Record a cost'] as [Form, string]] : []),
     ...(s === 'offered' ? [['ready', 'Mark ready'] as ['ready', string]] : []),
     ...(s === 'on_hold' ? [['resume', 'Go ahead'] as ['resume', string]] : []),
-    ...(['offered', 'ready'].includes(s) ? [['hold', 'Put on hold'] as [Form, string]] : []),
+    ...(['offered', 'ready', 'open', 'closed', 'drawn'].includes(s) ? [['hold', 'Put on hold'] as [Form, string]] : []),
     ...(['proposed', 'offered', 'ready', 'on_hold'].includes(s) ? [['cancel', 'Cancel'] as [Form, string]] : []),
     ...(r.funding === 'paid' && r.flags.includes('refund_review') ? [['refund', 'Decide: refund'] as ['refund', string]] : []),
     ...(r.funding === 'refund_pending' ? [['refunded', 'Record the refund'] as [Form, string]] : []),

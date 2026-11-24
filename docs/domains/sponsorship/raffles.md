@@ -54,7 +54,7 @@ Funding: `unpaid`, `paid`, `refund_pending`, `refunded`, or `in_kind`.
 
 ## Cancelling, holds and refunds
 
-Cancelling or pausing a raffle with money in flags it `refund_review`. The board records its decision (refund being decided), makes the refund in Stripe or by bank, and records it with its reference. Nothing is refunded by the site. A host meetup that is cancelled or moved is put on hold by the board with the `meetup_changed` flag; the site does not detect it by itself yet.
+Cancelling or pausing a raffle with money in flags it `refund_review`. The board records its decision (refund being decided), makes the refund in Stripe or by bank, and records it with its reference. Nothing is refunded by the site. The payment handler and daily check put an outstanding raffle on hold when its published host is cancelled or postponed. The board reviews the receipt and clears the flags before resuming.
 
 ## Entering
 
@@ -94,7 +94,7 @@ Open for the owner: the reply window and redraw timing, whether the winner must 
 
 The sponsor accepts the displayed quote and agreement version. The board rechecks the published host before offering the raffle. Checkout receipts and refund references are unique. A receipt, the funding change and the ledger entry commit together. An unmatched raffle receipt is available in the board raffle API. The board can read back the actual Stripe fee after settlement.
 
-The daily sponsorship check compares outstanding funded raffles with their host and sponsorship. A cancelled or postponed host, an ended sponsorship or the end of the paid term puts the raffle on hold. The board resolves the flags, confirms prize readiness and decides any refund separately.
+The daily sponsorship check compares outstanding funded raffles with their host and sponsorship. A cancelled or postponed host, an ended sponsorship or the end of the paid term puts the raffle on hold. The board resolves the flags, confirms prize readiness and decides any refund separately. Resuming after entries opened restores the paused stage with the original cutoff, rules and draw.
 
 # Related specs
 

@@ -196,7 +196,8 @@ d('sponsorship database', () => {
       ),
     ).rejects.toThrow();
     expect(await store.agreements(sponsor.id)).toHaveLength(1);
-    expect(await store.queueNotices(sponsor.id, [{ key: 'receipt:1', body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-01-01' } })).toBe(1);
+    const finish = () => store.queueNotices(sponsor.id, [{ key: 'receipt:1', body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-01-01' } });
+    expect((await Promise.all([finish(), finish()])).sort()).toEqual([0, 1]);
     await expect(
       store.queueNotices(sponsor.id, [{ key: 'y'.repeat(301), body: {} }], { type: 'payment_recorded', actor: board, payload: { paidUntil: '2027-02-01' } }),
     ).rejects.toThrow();

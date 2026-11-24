@@ -436,8 +436,9 @@ export function postgresStore(db: Queryable): SponsorStore {
     async queueNotices(sponsorId, list, event) {
       if (!event) return list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0;
       const rows = await q(
-        `with e as (insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload) values ($1, $3, $4, $5, $6::jsonb) returning sponsor_id),
-              n as (${INSERT_NOTICES('e.sponsor_id', '$2', 'e, ')} returning id)
+        `with n as (${INSERT_NOTICES('$1::uuid', '$2')} returning id),
+              e as (insert into sponsor_events (sponsor_id, type, actor_kind, actor_id, payload)
+                    select $1, $3, $4, $5, $6::jsonb where exists (select 1 from n) or $2::jsonb = '[]'::jsonb)
          select (select count(*) from n)::int as added`,
         [sponsorId, noticeRows(list), event.type, event.actor.kind, event.actor.id, JSON.stringify(event.payload ?? {})],
       );

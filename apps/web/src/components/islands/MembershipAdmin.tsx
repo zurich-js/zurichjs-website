@@ -82,7 +82,7 @@ export default function MembershipAdmin({ section = 'memberships' }: { section?:
   if (state === 'sign-out-failed')
     return (
       <LoadFailed onRetry={() => void signOut()} title="We couldn’t sign you out.">
-        The site did not confirm it, so this browser may still be signed in. Try again before you leave it, or close the browser.
+        The site did not confirm it. This browser may still be signed in. Try again before you leave it.
       </LoadFailed>
     );
   return (
@@ -375,6 +375,9 @@ function MemberDetail({ id, onClose, onChanged, onSignedOut }: { id: string; onC
     setNotice('');
     setError('');
     void load();
+    // An answer that arrives after this member's panel closed reaches neither it nor the parent.
+    const answers = seq;
+    return () => void answers.current++;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- reload when the member changes
   }, [id]);
 

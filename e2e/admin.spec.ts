@@ -48,6 +48,8 @@ test('a sign-out the site does not confirm hides the admin area and offers Try a
   await page.goto(ADMIN);
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('alert')).toContainText('We couldn’t sign you out.');
+  await expect(page.getByRole('alert')).toContainText('This browser may still be signed in. Try again before you leave it.');
+  await expect(page.getByRole('alert')).not.toContainText('close the browser');
   await expect(page.getByLabel('Password')).toHaveCount(0);
   await expect(page.getByText(ADA.email)).toHaveCount(0);
   await page.getByRole('button', { name: 'Try again' }).click();
@@ -67,4 +69,20 @@ test('a late answer for the member opened first does not replace the member open
   await held!.fulfill({ json: detail(ADA) });
   await page.waitForLoadState('networkidle');
   await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+});
+
+test('a late 401 for the member opened first does not sign out the member opened since', async ({ page, isMobile }) => {
+  let held: Route | null = null;
+  await page.route(`**/api/membership/admin/members/${ADA.id}`, (route) => void (held = route));
+  await page.route(`**/api/membership/admin/members/${GRACE.id}`, (route) => route.fulfill({ json: detail(GRACE) }));
+  await page.goto(ADMIN);
+  const open = (name: string) => (isMobile ? page.getByRole('list', { name: 'Members' }) : page.getByRole('table')).getByRole('button', { name, exact: true }).click();
+  await open(ADA.name);
+  await expect.poll(() => held !== null).toBe(true);
+  await open(GRACE.name);
+  await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+  await held!.fulfill({ status: 401, json: { ok: false, error: 'Sign in to the admin area.' } });
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+  await expect(page.getByLabel('Password')).toHaveCount(0);
 });

@@ -916,7 +916,11 @@ function ChangePlan({
     setBusy(true);
     errs.setServer(null);
     result.set(null);
-    const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null }>('/api/sponsorship/plan', { json: { tier, cycle, ...sig.payload } }, ctx);
+    const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null; droppedChange?: string | null }>(
+      '/api/sponsorship/plan',
+      { json: { tier, cycle, ...sig.payload } },
+      ctx,
+    );
     setBusy(false);
     if (!r) return;
     if (!r.ok) {
@@ -927,7 +931,9 @@ function ChangePlan({
     }
     onDone(
       r.timing === 'now'
-        ? `Done. Your sponsorship is now ${plan}.${manual ? ' We bill the difference.' : ' Stripe charges the difference for this term.'}`
+        ? `Done. Your sponsorship is now ${plan}.${manual ? ' We bill the difference.' : ' Stripe charges the difference for this term.'}${
+            r.droppedChange ? ` The change to ${r.droppedChange} that was waiting for your renewal no longer applies.` : ''
+          }`
         : r.timing === 'renewal'
           ? `Change scheduled for ${r.from ? longDate(r.from) : 'your next renewal'}. From then, your sponsorship is ${plan}.`
           : 'Your current plan stays.',

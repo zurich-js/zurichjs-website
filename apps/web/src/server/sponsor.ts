@@ -249,33 +249,41 @@ export async function recipients(store: SponsorStore, sponsorId: string, to: 'al
   return billing.length ? billing : contacts.filter((c) => c.role === 'primary').slice(0, 1);
 }
 
+type EmailDeps = NotifyDeps & { to?: 'all' | 'billing'; key: string; contacts?: Contact[]; meetups?: SponsorMeetup[] };
+
 /**
  * Emails one template to the sponsor's confirmed contacts, each addressed by name. `extra` gets
  * the shared sponsor props for each contact. Returns how many were sent.
  */
-export async function emailSponsor<N extends TemplateName>(
+export const emailSponsor = async <N extends TemplateName>(s: Sponsor, name: N, extra: (base: SponsorProps) => TemplateProps<N>, deps: EmailDeps): Promise<number> =>
+  (await emailEach(s, name, extra, deps)).sent;
+
+/** As emailSponsor, also counting the emails that failed (a stub without RESEND_API_KEY is not a failure). */
+export async function emailEach<N extends TemplateName>(
   s: Sponsor,
   name: N,
   extra: (base: SponsorProps) => TemplateProps<N>,
-  deps: NotifyDeps & { to?: 'all' | 'billing'; key: string; contacts?: Contact[]; meetups?: SponsorMeetup[] },
-): Promise<number> {
+  deps: EmailDeps,
+): Promise<{ sent: number; failed: number }> {
   const log = deps.log ?? console.log;
   const [contacts, meetups] = await Promise.all([
     deps.contacts ? deps.contacts.filter(confirmed) : recipients(deps.store, s.id, deps.to ?? 'all'),
     deps.meetups ?? (s.cycle === 'once' ? deps.store.meetups(s.id) : []),
   ]);
   let sent = 0;
+  let failed = 0;
   for (const c of contacts) {
     const message = renderEmail(name, extra(sponsorProps(s, meetups, c, deps.origin)));
     const ok = await sendMemberEmail(deps.env, { to: c.email, ...message }, { idempotencyKey: `${deps.key}:${c.id}`, log, fetch: deps.fetch })
       .then((r) => r.sent)
       .catch((e: Error) => {
         log(`[sponsorship] ${name} email to contact ${c.id} failed: ${e.message}`);
+        failed++;
         return false;
       });
     if (ok) sent++;
   }
-  return sent;
+  return { sent, failed };
 }
 
 export const adminUrl = (origin: string, sponsorId: string) => `${new URL('/admin/sponsors', origin).toString()}?id=${sponsorId}`;

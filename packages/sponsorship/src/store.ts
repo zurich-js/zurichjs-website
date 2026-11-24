@@ -1,5 +1,21 @@
 import { checkTransition, TransitionError } from './state.ts';
-import type { Actor, Agreement, Contact, EndedReason, Logo, NewContact, NewSponsor, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch, Status } from './types.ts';
+import type {
+  Actor,
+  Agreement,
+  Contact,
+  EndedReason,
+  Logo,
+  NewContact,
+  NewNotice,
+  NewSponsor,
+  Sponsor,
+  SponsorDocument,
+  SponsorEvent,
+  SponsorMeetup,
+  SponsorNotice,
+  SponsorPatch,
+  Status,
+} from './types.ts';
 
 export interface TransitionInput {
   /** The status the caller saw: a different one now is a `conflict` (double click, retried webhook). */
@@ -10,6 +26,8 @@ export interface TransitionInput {
   /** With `to: 'ending'`: the first day without the sponsorship. */
   endsAt?: string | null;
   payload?: Record<string, unknown>;
+  /** What the change owes, written with it (a key already queued is kept as it is). */
+  notices?: NewNotice[];
 }
 
 /** Stripe links. A key that is present is written (null clears it); a missing key is kept. */
@@ -50,6 +68,7 @@ export interface SponsorStore {
   get(id: string): Promise<Sponsor | null>;
   byStripeSubscription(id: string): Promise<Sponsor | null>;
   byPaymentLink(id: string): Promise<Sponsor | null>;
+  byStripeCustomer(id: string): Promise<Sponsor | null>;
   /** Newest first; `q` matches the company or legal name only (never contact details). */
   search(filter: { q?: string; status?: Status; limit?: number }): Promise<Sponsor[]>;
   /**
@@ -89,6 +108,16 @@ export interface SponsorStore {
   getDocument(id: string): Promise<SponsorDocument | null>;
   /** Newest first. */
   documents(sponsorId: string): Promise<SponsorDocument[]>;
+
+  /** Queues notices; a key already queued is kept as it is. Returns how many were new. */
+  queueNotices(sponsorId: string, notices: NewNotice[]): Promise<number>;
+  /**
+   * Unsent notices, oldest first (of one sponsor, or all), claimed for the caller: another sender
+   * does not get them until they are done or the claim is five minutes old.
+   */
+  claimNotices(filter: { sponsorId?: string; limit: number }): Promise<SponsorNotice[]>;
+  /** Sent; or, with an error, released for a later try. */
+  noticeDone(id: string, error?: string): Promise<void>;
 
   stripeEventSeen(eventId: string): Promise<boolean>;
   markStripeEvent(eventId: string, type: string): Promise<void>;
@@ -149,6 +178,17 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
   const documents = new Map<string, SponsorDocument>();
   const log: SponsorEvent[] = [];
   const stripeEvents = new Set<string>();
+  const notices: (SponsorNotice & { claimedAt: string | null })[] = [];
+  const queue = (sponsorId: string, list: NewNotice[] = []) => {
+    let added = 0;
+    for (const x of list) {
+      if (notices.some((y) => y.key === x.key)) continue;
+      notices.push({ id: `n_${notices.length + 1}`, sponsorId, key: x.key, body: x.body, createdAt: now(), sentAt: null, attempts: 0, lastError: null, claimedAt: null });
+      added++;
+    }
+    return added;
+  };
+  const CLAIM_MS = 5 * 60_000;
 
   const record = (sponsorId: string, type: string, actor: Actor, extra: Partial<SponsorEvent> = {}) =>
     log.push({ id: `e_${log.length + 1}`, sponsorId, type, fromStatus: null, toStatus: null, actor, payload: {}, at: now(), ...extra });
@@ -182,6 +222,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     get: async (sid) => (sponsors.has(sid) ? { ...sponsors.get(sid)! } : null),
     byStripeSubscription: (sub) => findBy((x) => x.stripeSubscriptionId === sub),
     byPaymentLink: (pl) => findBy((x) => x.paymentLinkId === pl),
+    byStripeCustomer: (cus) => findBy((x) => x.stripeCustomerId === cus),
     search: async ({ q, status, limit = 200 }) => {
       const needle = q?.trim().toLowerCase();
       return [...sponsors.values()]
@@ -246,6 +287,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         toStatus: t.to,
         payload: { ...input.payload, ...(t.endedReason ? { reason: t.endedReason } : {}), ...(input.endsAt ? { endsAt: input.endsAt } : {}) },
       });
+      queue(sid, input.notices);
       return save({ ...s, ...transitionFields(s, t.to, t.endedReason, input.endsAt, now()) });
     },
     meetups: async (sid) => [...(meetups.get(sid) ?? [])].sort(byDate).map((m) => ({ ...m })),
@@ -325,6 +367,20 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .filter((d) => d.sponsorId === sid)
         .reverse()
         .map((d) => ({ ...d })),
+    queueNotices: async (sid, list) => {
+      must(sid);
+      return queue(sid, list);
+    },
+    claimNotices: async ({ sponsorId, limit }) => {
+      const at = Date.parse(now());
+      const free = notices.filter((x) => !x.sentAt && (!sponsorId || x.sponsorId === sponsorId) && (!x.claimedAt || Date.parse(x.claimedAt) < at - CLAIM_MS)).slice(0, limit);
+      for (const x of free) Object.assign(x, { claimedAt: now(), attempts: x.attempts + 1 });
+      return free.map(({ claimedAt: _, ...x }) => ({ ...x }));
+    },
+    noticeDone: async (nid, error) => {
+      const x = notices.find((y) => y.id === nid);
+      if (x) Object.assign(x, error ? { claimedAt: null, lastError: error.slice(0, 500) } : { claimedAt: null, sentAt: now(), lastError: null });
+    },
     stripeEventSeen: async (e) => stripeEvents.has(e),
     markStripeEvent: async (e) => void stripeEvents.add(e),
     events: async (sid) => log.filter((e) => e.sponsorId === sid).map((e) => ({ ...e })),

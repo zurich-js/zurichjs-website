@@ -151,6 +151,23 @@ d('sponsorship database', () => {
     expect(await store.linkStripeIf(s.id, { paymentLinkId: 'plink_a' }, { paymentLinkId: null, paymentLinkUrl: null }, stripe)).toMatchObject({ paymentLinkId: null });
   });
 
+  it('writes notices with a status change, once per key, and hands each to one sender at a time', async () => {
+    const { sponsor } = await store.create({ ...acme, companyName: 'Noticed' }, { email: 'n@noticed.ch', name: 'N', role: 'primary' }, board);
+    const notice = (key: string) => ({ key, body: { kind: 'slack', text: key } });
+    await store.transition(sponsor.id, { from: 'pending', to: 'active', actor: stripe, notices: [notice('welcome'), notice('welcome:slack')] });
+    // A refused change writes no notice.
+    await expect(store.transition(sponsor.id, { from: 'pending', to: 'active', actor: stripe, notices: [notice('never')] })).rejects.toBeInstanceOf(TransitionError);
+    expect(await store.queueNotices(sponsor.id, [notice('welcome'), notice('renewal')])).toBe(1);
+    const first = await store.claimNotices({ sponsorId: sponsor.id, limit: 10 });
+    expect(first.map((n) => n.key)).toEqual(['welcome', 'welcome:slack', 'renewal']);
+    expect(await store.claimNotices({ sponsorId: sponsor.id, limit: 10 })).toEqual([]);
+    await store.noticeDone(first[0]!.id);
+    await store.noticeDone(first[1]!.id, 'Slack 500');
+    const again = await store.claimNotices({ limit: 10 });
+    expect(again.map((n) => [n.key, n.attempts, n.lastError])).toEqual([['welcome:slack', 2, 'Slack 500']]);
+    expect(pgdb.sql(`select count(*) from sponsor_notices where key = 'never'`)).toBe('0');
+  });
+
   it('keeps the audit log append-only', () => {
     expect(pgdb.fails('delete from sponsor_events')).toMatch(/append-only/);
   });

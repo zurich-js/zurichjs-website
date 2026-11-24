@@ -315,6 +315,12 @@ const getSub = (id: string, deps: StripeDeps, expand = false) =>
 const scheduleId = (s: StripeSubscription) => (typeof s.schedule === 'string' ? s.schedule : (s.schedule?.id ?? null));
 const nowUnix = (deps: StripeDeps) => Math.floor((deps.now ?? (() => new Date()))().getTime() / 1000);
 
+/** Stripe has the subscription paid up again (nothing open, so it is active or trialing). */
+export async function subscriptionPaidUp(subscriptionId: string, deps: StripeDeps): Promise<boolean> {
+  const status = (await getSub(subscriptionId, deps)).status;
+  return status === 'active' || status === 'trialing';
+}
+
 /** The first day after the current term. */
 export async function periodEnd(subscriptionId: string, deps: StripeDeps): Promise<string | null> {
   const end = (await getSub(subscriptionId, deps)).items?.data?.[0]?.current_period_end;
@@ -340,17 +346,23 @@ export async function cancelPendingChange(subscriptionId: string, deps: StripeDe
   return true;
 }
 
-/** A higher tier on the same cycle, now: Stripe charges the prorated difference at once. */
-export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<void> {
+/**
+ * A higher tier on the same cycle, now: Stripe charges the prorated difference at once. A change
+ * that was waiting for the renewal is released first and returned, so the sponsor can be told.
+ */
+export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<{ droppedChange: { tier: Tier; cycle: Cycle } | null }> {
   let sub = await getSub(subscriptionId, deps);
+  let droppedChange: { tier: Tier; cycle: Cycle } | null = null;
   if (scheduleId(sub)) {
+    const waiting = await pendingChange(subscriptionId, deps);
+    droppedChange = waiting && { tier: waiting.tier, cycle: waiting.cycle };
     await cancelPendingChange(subscriptionId, deps);
     sub = await getSub(subscriptionId, deps);
   }
   const item = sub.items?.data?.[0];
   if (!item) throw new Error(`Subscription ${subscriptionId} has no item.`);
   const price = (await priceFor(plan.tier, plan.cycle, deps)).id;
-  if (item.price?.id === price) return;
+  if (item.price?.id === price) return { droppedChange };
   await api(
     deps,
     'POST',
@@ -358,6 +370,7 @@ export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cyc
     stripeForm({ items: [{ id: item.id, price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
     `sponsor-upgrade:${subscriptionId}:${price}`,
   );
+  return { droppedChange };
 }
 
 /** Switches to `plan` from the next renewal (a subscription schedule). Returns the renewal date. */

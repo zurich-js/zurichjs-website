@@ -46,7 +46,7 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 ## How a sponsorship runs
 
 1. **Invite:** in the admin area, the board enters company, contact, tier and billing (or meetups and a price per meetup for a bundle). A `pending` sponsorship is created and the contact gets an email listing the tier's benefits. **Import** instead records an existing sponsorship paid by bank transfer, `active` until a paid-until date; the contact gets a "your sponsorship is now online" email. The sponsor, its contact, its meetups and its starting status are saved in one write, so a failure leaves nothing behind and the same form can be sent again; a failed email after that is reported as "no email sent", not as an error. Inviting an email that a colleague added to another sponsorship and nobody accepted moves that contact to the new sponsor. Companies can also start on their own at `/partners/account`; pending ones they start are hidden from the Slack bot until they pay.
-2. **Sign and pay** on `/partners/account`, with the same email sign-in as members: billing details, plan, and the agreement (name, role). Card opens Stripe Checkout; opening it again closes the earlier page, so it can never be paid twice. A sponsor with a contract on file skips signing. A bank-transfer sponsor moving to card is not charged before their paid period ends (`trial_end`).
+2. **Sign and pay** on `/partners/account`, with the same email sign-in as members: billing details, plan, and the agreement (name, role). Card opens Stripe Checkout; opening it again closes the earlier page, so it can never be paid twice. A sponsor with a contract on file for the current offer skips signing. A bank-transfer sponsor moving to card is not charged before their paid period ends (`trial_end`).
 3. **Active** with the first payment (from the webhook, at the tier Stripe actually charged), or when the board records a transfer. The welcome email goes out once, with the benefits; the board gets a Slack note with what to deliver.
 4. **Self-serve** ([Sponsorship frontend](/domains/sponsorship/frontend.md)): tier and billing changes, ending and taking it back, the Stripe portal, details, logo, colleagues.
 5. **Bundles:** the board picks the meetups and the price per meetup, attaches the signed contract, and creates a single-use payment link (quantity = meetups, the custom price on the tier's product). A link is refused while a meetup of the bundle is over. Once paid, the meetups can still move; their number and price cannot.
@@ -68,6 +68,8 @@ Stripe prices use lookup keys `sponsor_<tier>_<monthly|quarterly|yearly|once>`. 
 | `active`             | `ended`              | the board, Stripe, the script             |
 | `past_due`           | `ended`              | the board, Stripe                         |
 | `ended`              | `pending`            | the sponsor, the board (sponsoring again) |
+
+**Sponsoring again** (`ended` to `pending`) is a new offer. Everything is checked before the ended record changes, so a refused attempt (no signature, no Stripe price) leaves it as it was. The sponsor signs the agreement again in full: an agreement signed, or a contract attached, before the sponsorship started again covered other terms, so neither counts for the new one (`offerCover` in `sponsor-lifecycle.ts`). The agreement text is unchanged. A sponsorship the board **terminated** cannot be started again by the sponsor alone: the page asks them to write to hello@zurichjs.com, and only the board can start it again, after a review. Stripe's "subscription deleted" for a subscription the sponsorship no longer holds changes nothing.
 
 **Ending reasons:** the board may give cancelled, completed, lapsed, terminated or withdrawn; Stripe cancelled or lapsed; the script cancelled, completed or withdrawn. A sponsorship is **running** (gets the tier's benefits) while `active`, `past_due` or `ending`.
 
@@ -98,11 +100,12 @@ The sponsorships database overrides the partner list for who is a current sponso
 
 ## Data and files
 
-The same Neon database as memberships ([Membership](/domains/membership/overview.md)): sponsors, meetups, contacts, agreements, logos, documents, events and handled Stripe event ids. Logos and contracts (PDF, up to 10 MB) are in the Netlify Blobs store `sponsors`.
+The same Neon database as memberships ([Membership](/domains/membership/overview.md)): sponsors, meetups, contacts, agreements, logos, documents, events handled Stripe event ids, and the notices (emails and Slack notes) still to send. Logos and contracts (PDF, up to 10 MB) are in the Netlify Blobs store `sponsors`.
 
 ## Emails and Slack
 
 - **Emails** (`packages/emails/src/sponsors.ts`, sent with Resend): invite, agreement copy, welcome, payment problem, change to confirm, change, ending, resumed, ended, payment recorded. Every email names the tier's benefits.
+- **Notices:** every email and Slack note a change owes is a notice in `sponsor_notices`, written in the same statement as the change (or right after it, for an agreement copy or a recorded payment), keyed so it exists once. The request that made the change sends it; anything it could not send (a timeout, Resend or Slack down, a function stopped by the platform) stays queued and the daily check sends it. A sender claims a notice before sending, so two senders never send it twice. An email is rendered when it is sent, from the sponsorship as it is then. So a saved change always gets its email and note, a retried request or a second delivery of a Stripe event adds nothing, and the same renewal delivered twice at once posts one note.
 - **Slack:** notes in `SLACK_SPONSORSHIP_CHANNEL_ID`, else the membership channel, else the agent's. The organisers' bot can answer questions about sponsors (`apps/web/src/server/sponsor-agent.ts`: read only, company-level facts, names marked as data) ([Slack content agent](/systems/slack-agent.md)).
 
 ## Payment pages are closed before they are forgotten
@@ -118,7 +121,8 @@ A bank transfer recorded with the same date again after a failure half-way finis
 - a one-time sponsorship ends (completed) the day after its last meetup, and the sponsor is thanked
 - an unpaid one-time sponsorship is closed (withdrawn) once one of its meetups has passed, and its payment page is switched off
 - a bank-transfer sponsorship that was agreed to end ends on its last day
-- the board is reminded in Slack 30 and 7 days before, and on the day, a bank-transfer sponsorship runs out; nothing changes by itself, a person records the payment or agrees the end
+- the board is reminded in Slack 30 and 7 days before, and on the day, a bank-transfer sponsorship runs out; nothing changes by itself, a person records the payment or agrees the end. A day the check did not reach is caught up: the most urgent reminder not sent yet goes out once (five days left after a missed 30-day reminder sends the 7-day one), never one per missed day
+- every notice still queued is sent; given a time budget (`deadline`), it stops early and leaves the rest for the next run
 - an ended sponsorship that still points at a Stripe subscription, Checkout session or payment link (a close that failed) is closed again; a Stripe failure is retried the next day and never stops the other sponsors
 
 Card sponsorships need nothing here: Stripe renews, retries and ends them through the webhook.
@@ -127,7 +131,17 @@ Card sponsorships need nothing here: Stripe renews, retries and ends them throug
 
 The schedule is set only in the function's source (`export const config`). `apps/web/netlify.toml` repeats the other scheduled functions' schedules because Netlify may not read the config from a bundled file ([Web app](/systems/web.md)), but not this one. Whether the daily check runs on Netlify was not checked.
 
+## Stripe events out of order, retries, refunds and disputes
+
+- **First payment:** a retry after a failure half-way sends the welcome and the board's "New sponsor" note once (they are notices written with the activation), never a renewal note.
+- **One-time:** the payment link is switched off by the retry if Stripe failed the first time. The invoice of the same payment changes nothing; a second card payment for a one-time sponsorship that is already paid is flagged in Slack once.
+- **Order:** every paid subscription invoice is logged (`invoice_paid`, with the event's time). A payment failure for an invoice already paid, or a "past due" older than the last payment, changes nothing. Paying an overdue upgrade invoice ends "payment overdue" once Stripe has the subscription active again; only a new term moves the paid-through date.
+- **Refunds and disputes** (`charge.refunded`, `charge.dispute.created`): logged on the sponsorship (`charge_refunded`, `charge_disputed`) and flagged in Slack, with the amount. Nothing changes on the site and no benefit is taken away: what a refund or dispute means for the sponsorship is the board's call until the owner sets a rule.
+
 ## Open questions (owner)
+
+- **Refunds and disputes:** whether a refund or a lost dispute ends the sponsorship, or takes benefits away, is not decided; the site records and flags them only.
+- **Terminated sponsors:** how the board reviews a request to sponsor again after a termination is not written down; the site only stops the sponsor from restarting alone.
 
 - **VAT:** the site and receipts say nothing about VAT. If the association is or becomes VAT registered, the prices and the Stripe tax settings change.
 - **Privacy policy:** it should name sponsor contacts (names, emails, roles) and contracts as data kept (a legal page, owner).

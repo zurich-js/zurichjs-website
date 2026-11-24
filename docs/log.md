@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+- **Update**: every sponsorship email and Slack note is a notice written with the change that owes it and sent by the request or, failing that, the daily check; first payments, retries and out-of-order Stripe events no longer lose or repeat them. Bank-transfer reminders are caught up once when a day is missed. Sponsoring again needs a new full signature and validates before changing anything; a terminated sponsorship needs the board. Refunds and disputes are recorded and flagged without changing the sponsorship ([Sponsorship](/domains/sponsorship/overview.md), [Stripe](/systems/stripe.md)).
+
 - **Update**: adding a sponsor (invite or import, one-time bundles included) is one store write with its meetups and starting status; a Stripe payment page is forgotten only once Stripe confirms it is closed, the board's end and a recorded bank transfer finish on retry, and the daily check closes what an ended sponsorship still has open in Stripe ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship payments and API](/domains/sponsorship/api.md)).
 
 ## 2026-11-19

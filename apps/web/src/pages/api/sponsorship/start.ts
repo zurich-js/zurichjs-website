@@ -12,13 +12,14 @@
  * list price, or monthly/quarterly/yearly). A sponsorship we set up keeps our plan, meetups and
  * price unless they choose another plan here (not for bundles we priced).
  */
-import { DuplicateContact, type Sponsor } from '@zurichjs/sponsorship';
+import { DuplicateContact, canRestart, type Sponsor } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
-import { fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
+import { CONTACT_EMAIL, fail, json, methodNotAllowed, readJsonObject } from '../../../server/http.ts';
 import { clientKey, rateLimited } from '../../../server/rateLimit.ts';
 import { sponsorView } from '../../../server/sponsor.ts';
 import { parseDetails, parsePlan, parseSignature } from '../../../server/sponsor-input.ts';
 import { resolveSigner, startSponsorship } from '../../../server/sponsor-lifecycle.ts';
+import { checkPrices } from '../../../server/sponsor-stripe.ts';
 import { upcomingMeetups } from '../../../server/sponsor-meetups.ts';
 import { signedInSponsor, type SponsorRouteDeps } from '../../../server/sponsor-route.ts';
 
@@ -96,6 +97,10 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
       } else {
         s = sponsor;
         if (s.status === 'ended') {
+          // Sponsoring again: everything is checked before the ended record changes, so a refusal leaves it as it was.
+          if (!canRestart(s, 'sponsor')) return fail(409, `ZurichJS ended this sponsorship. Write to ${CONTACT_EMAIL} to sponsor again.`);
+          if (!(await resolveSigner(s, contact, sig.value, user.email, lifecycle))) return needSignature();
+          await checkPrices(plan.value, lifecycle.stripe);
           s = await store.transition(s.id, { from: 'ended', to: 'pending', actor });
           s = await store.update(s.id, { startedAt: null, paidUntil: null, pricePerMeetup: null }, actor);
           await store.linkStripe(s.id, { subscriptionId: null, checkoutSessionId: null, paymentLinkId: null, paymentLinkUrl: null }, actor);

@@ -6,7 +6,7 @@
  */
 import { checkTransition, TransitionError } from './state.ts';
 import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
-import type { Actor, Agreement, Contact, Logo, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorPatch } from './types.ts';
+import type { Actor, Agreement, Contact, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -95,6 +95,13 @@ const AUDIT = (from = 'null', to = 'null') =>
   `e as (insert into sponsor_events (sponsor_id, type, from_status, to_status, actor_kind, actor_id, payload)
          select s.sponsor_ref, $type, ${from}, ${to}, $actor_kind, $actor_id, $payload::jsonb from s)`;
 
+/** Inserts notices from a jsonb array parameter for the sponsor `sponsorSql` selects; a key already there is kept. */
+const INSERT_NOTICES = (sponsorId: string, param: string, from = '') =>
+  `insert into sponsor_notices (sponsor_id, key, body)
+   select ${sponsorId}, x.key, x.body from ${from}jsonb_to_recordset(${param}::jsonb) as x(key text, body jsonb)
+   on conflict (key) do nothing`;
+const noticeRows = (list: NewNotice[] = []) => JSON.stringify(list.map((x) => ({ key: x.key, body: x.body })));
+
 export function postgresStore(db: Queryable): SponsorStore {
   const q = async <R = Row>(text: string, params: unknown[] = []): Promise<R[]> => {
     try {
@@ -108,9 +115,9 @@ export function postgresStore(db: Queryable): SponsorStore {
    * audit insert as one statement. `$type`, `$actor_kind`, `$actor_id`, `$payload` are
    * appended after the caller's parameters.
    */
-  const audited = async (cte: string, params: unknown[], type: string, actor: Actor, payload: Row = {}, from?: string, to?: string) => {
+  const audited = async (cte: string, params: unknown[], type: string, actor: Actor, payload: Row = {}, from?: string, to?: string, more = '') => {
     const n = params.length;
-    const sql = `with s as (${cte}), ${AUDIT(from, to)} select * from s`
+    const sql = `with s as (${cte}), ${AUDIT(from, to)}${more} select * from s`
       .replaceAll('$type', `$${n + 1}`)
       .replaceAll('$actor_kind', `$${n + 2}`)
       .replaceAll('$actor_id', `$${n + 3}`)
@@ -151,6 +158,7 @@ export function postgresStore(db: Queryable): SponsorStore {
     get: (id) => one('id', id),
     byStripeSubscription: (id) => one('stripe_subscription_id', id),
     byPaymentLink: (id) => one('payment_link_id', id),
+    byStripeCustomer: (id) => one('stripe_customer_id', id),
     async search({ q: text, status, limit = 200 }) {
       const needle = text?.trim() ? `%${text.trim().replace(/[\\%_]/g, (c) => `\\${c}`)}%` : null;
       const rows = await q(
@@ -249,12 +257,13 @@ export function postgresStore(db: Queryable): SponsorStore {
            end_requested_at = case when $3 = 'ending' then now() when $3 = 'ended' then end_requested_at else null end,
            ends_at = case when $3 = 'ending' then $5::date when $3 = 'ended' then ends_at else null end
          where id = $1 and status = $2 returning *, id as sponsor_ref`,
-        [id, t.from, t.to, t.endedReason, input.endsAt ?? null],
+        [id, t.from, t.to, t.endedReason, input.endsAt ?? null, noticeRows(input.notices)],
         'status_changed',
         input.actor,
         { ...input.payload, ...(t.endedReason ? { reason: t.endedReason } : {}), ...(input.endsAt ? { endsAt: input.endsAt } : {}) },
         '$2',
         '$3',
+        `, n as (${INSERT_NOTICES('s.sponsor_ref', '$6', 's, ')})`,
       );
       if (!rows[0]) throw new TransitionError('The sponsorship changed in the meantime. Look again.', 'conflict');
       return sponsorOf(rows[0]);
@@ -365,6 +374,30 @@ export function postgresStore(db: Queryable): SponsorStore {
     documents: async (sponsorId) =>
       UUID.test(sponsorId) ? (await q('select * from sponsor_documents where sponsor_id = $1 order by uploaded_at desc', [sponsorId])).map((r) => camel<SponsorDocument>(r)) : [],
 
+    queueNotices: async (sponsorId, list) => (list.length ? (await q(`${INSERT_NOTICES('$1::uuid', '$2')} returning id`, [sponsorId, noticeRows(list)])).length : 0),
+    claimNotices: async ({ sponsorId, limit }) =>
+      (
+        await q(
+          `update sponsor_notices set claimed_at = now(), attempts = attempts + 1
+           where id in (select id from sponsor_notices
+                        where sent_at is null and (claimed_at is null or claimed_at < now() - interval '5 minutes')
+                          and ($1::uuid is null or sponsor_id = $1)
+                        order by id limit $2 for update skip locked)
+           returning *`,
+          [sponsorId && UUID.test(sponsorId) ? sponsorId : null, limit],
+        )
+      )
+        .map((r) => ({ ...camel<SponsorNotice & { claimedAt?: unknown }>(r), id: String(r.id) }))
+        .map(({ claimedAt: _, ...n }) => n)
+        .sort((a, b) => Number(a.id) - Number(b.id)),
+    async noticeDone(id, error) {
+      await q(
+        error
+          ? 'update sponsor_notices set claimed_at = null, last_error = left($2, 500) where id = $1'
+          : 'update sponsor_notices set claimed_at = null, sent_at = now(), last_error = null where id = $1',
+        error ? [id, error] : [id],
+      );
+    },
     stripeEventSeen: async (id) => (await q('select 1 from sponsor_stripe_events where id = $1', [id])).length > 0,
     markStripeEvent: async (id, type) => void (await q('insert into sponsor_stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [id, type])),
     events: async (sponsorId) => (await q('select * from sponsor_events where sponsor_id = $1 order by at, id', [sponsorId])).map(eventOf),

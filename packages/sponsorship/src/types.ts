@@ -187,6 +187,23 @@ export interface Logo {
   uploadedAt: string;
 }
 
+/**
+ * Something a change owes: an email to the sponsor or a Slack note (the body says which; the web
+ * app reads it). Written with the change, sent afterwards, once per `key`.
+ */
+export interface SponsorNotice {
+  id: string;
+  sponsorId: string;
+  key: string;
+  body: Record<string, unknown>;
+  createdAt: string;
+  sentAt: string | null;
+  attempts: number;
+  lastError: string | null;
+}
+
+export type NewNotice = Pick<SponsorNotice, 'key' | 'body'>;
+
 export interface SponsorEvent {
   id: string;
   sponsorId: string;

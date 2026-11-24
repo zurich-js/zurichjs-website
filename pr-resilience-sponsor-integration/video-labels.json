@@ -1,0 +1,26 @@
+[
+  {
+    "group": "pr96",
+    "name": "payment-reload-and-retry.mp4",
+    "frames": 146,
+    "maxMeanError": 0.7682291666666666
+  },
+  {
+    "group": "pr97",
+    "name": "member-late-answer-and-unknown-write.mp4",
+    "frames": 202,
+    "maxMeanError": 0.8319791666666667
+  },
+  {
+    "group": "pr97",
+    "name": "signout-failed-then-retry.mp4",
+    "frames": 169,
+    "maxMeanError": 0.8317708333333333
+  },
+  {
+    "group": "pr99",
+    "name": "upgrade-check-and-review.mp4",
+    "frames": 77,
+    "maxMeanError": 0.7784375
+  }
+]

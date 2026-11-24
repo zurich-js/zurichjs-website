@@ -1,0 +1,182 @@
+[
+  {
+    "file": "signout-failed-320.png",
+    "path": "/admin",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Try again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "signout-failed-375.png",
+    "path": "/admin",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Try again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "signout-failed-390.png",
+    "path": "/admin",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Try again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "signout-failed-1280.png",
+    "path": "/admin",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Try again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "signout-failed-1440.png",
+    "path": "/admin",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Try again",
+      "outline": "solid 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "member-late-401-ignored-320.png",
+    "path": "/admin",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Grace Hopper",
+      "outline": "none 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "member-late-401-ignored-375.png",
+    "path": "/admin",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Grace Hopper",
+      "outline": "none 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "member-late-401-ignored-390.png",
+    "path": "/admin",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Grace Hopper",
+      "outline": "none 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "member-late-401-ignored-1280.png",
+    "path": "/admin",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Grace Hopper",
+      "outline": "none 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "member-late-401-ignored-1440.png",
+    "path": "/admin",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": {
+      "text": "Grace Hopper",
+      "outline": "none 3px"
+    },
+    "pageErrors": []
+  },
+  {
+    "file": "write-outcome-unknown-320.png",
+    "path": "/admin",
+    "width": 320,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "write-outcome-unknown-375.png",
+    "path": "/admin",
+    "width": 375,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "write-outcome-unknown-390.png",
+    "path": "/admin",
+    "width": 390,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "write-outcome-unknown-1280.png",
+    "path": "/admin",
+    "width": 1280,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  },
+  {
+    "file": "write-outcome-unknown-1440.png",
+    "path": "/admin",
+    "width": 1440,
+    "fullPage": true,
+    "overflow": false,
+    "figtree": true,
+    "focus": null,
+    "pageErrors": []
+  }
+]

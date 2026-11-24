@@ -1,0 +1,150 @@
+[
+  {
+    "file": "admin-fees-off-no-tariff-390.png",
+    "caption": "Fee settings: gate off, no tariff (default) (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-off-no-tariff-1440.png",
+    "caption": "Fee settings: gate off, no tariff (default) (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-off-policy-390.png",
+    "caption": "Fee settings: tariff entered, owner policy not set, still off (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-off-policy-1440.png",
+    "caption": "Fee settings: tariff entered, owner policy not set, still off (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-on-390.png",
+    "caption": "Sponsor list with fee settings: gate on (tariff + owner policy version) (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-on-1440.png",
+    "caption": "Sponsor list with fee settings: gate on (tariff + owner policy version) (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-on-375.png",
+    "caption": "Sponsor list with fee settings: gate on (tariff + owner policy version) (375px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-on-1280.png",
+    "caption": "Sponsor list with fee settings: gate on (tariff + owner policy version) (1280px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-invalid-390.png",
+    "caption": "Add a tariff: invalid rate refused by the server (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-fees-invalid-1440.png",
+    "caption": "Add a tariff: invalid rate refused by the server (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-link-gate-closed-390.png",
+    "caption": "Create payment link with the gate closed: ZurichJS covers the fees, reason shown (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-link-gate-closed-1440.png",
+    "caption": "Create payment link with the gate closed: ZurichJS covers the fees, reason shown (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-link-pass-through-390.png",
+    "caption": "Gate open: Sponsor covers the fees selected, tariff and policy named (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-link-pass-through-1440.png",
+    "caption": "Gate open: Sponsor covers the fees selected, tariff and policy named (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-link-created-390.png",
+    "caption": "Link created: base, fee and total from the frozen quote (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "admin-link-created-1440.png",
+    "caption": "Link created: base, fee and total from the frozen quote (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-offer-pass-through-390.png",
+    "caption": "Sponsor sees the offer with fee and total before paying; Checkout form hidden (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-offer-pass-through-1440.png",
+    "caption": "Sponsor sees the offer with fee and total before paying; Checkout form hidden (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-offer-pass-through-375.png",
+    "caption": "Sponsor sees the offer with fee and total before paying; Checkout form hidden (375px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-offer-pass-through-1280.png",
+    "caption": "Sponsor sees the offer with fee and total before paying; Checkout form hidden (1280px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-offer-absorb-390.png",
+    "caption": "Offer where ZurichJS covers the fees (390px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "account-offer-absorb-1440.png",
+    "caption": "Offer where ZurichJS covers the fees (1440px, MOCK: API answered by the harness)",
+    "figtree": true,
+    "horizontalScroll": false
+  },
+  {
+    "file": "flow-board-fee-choice.mp4",
+    "caption": "Board creates a payment link where the sponsor covers the fees (MOCK API, gate open)"
+  },
+  {
+    "file": "flow-board-fee-choice.gif",
+    "caption": "Board creates a payment link where the sponsor covers the fees (MOCK API, gate open)"
+  },
+  {
+    "file": "flow-sponsor-offer.mp4",
+    "caption": "Sponsor reads the offer: amount, processing fee, total, then the pay button (MOCK API)"
+  },
+  {
+    "file": "flow-sponsor-offer.gif",
+    "caption": "Sponsor reads the offer: amount, processing fee, total, then the pay button (MOCK API)"
+  }
+]

@@ -110,6 +110,10 @@ export async function signedInSponsor(request: Request, routeDeps: SponsorRouteD
       return fail(503, `Sponsorship pages are not available yet. Write to ${CONTACT_EMAIL}.`);
     }
     console.error(`[sponsorship] ${what} failed`, cause);
+    if (request.method !== 'GET')
+      return fail(502, `We couldn’t ${what} for certain: part of it may be saved. Reload the page to check before you try again, or write to ${CONTACT_EMAIL}.`, {
+        outcome: 'unknown',
+      });
     return fail(502, `We couldn’t ${what} right now. Try again, or write to ${CONTACT_EMAIL}.`);
   }
 }

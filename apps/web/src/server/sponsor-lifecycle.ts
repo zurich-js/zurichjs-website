@@ -344,18 +344,10 @@ export async function closeStripe(s: Sponsor, deps: LifecycleDeps): Promise<void
  * emails and posts as the first attempt would have.
  */
 export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'terminated' | 'withdrawn'>, actor: Actor, deps: LifecycleDeps): Promise<Sponsor> {
-  let ended = s;
-  if (s.status === 'ended') {
-    if (s.endedReason !== reason) return s;
-  } else {
-    if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
-    if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
-    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason });
-  }
-  await closeStripe(ended, deps);
-  // Queued once Stripe is closed (the note says so); a retry queues nothing new and sends what is left.
+  // The email and note are written with the end, so a request that fails at Stripe still owes them:
+  // they are sent once Stripe is closed, by this request, its retry or the daily check.
   const key = `sponsor-ended:${s.id}:${reason}`;
-  await deps.store.queueNotices(s.id, [
+  const notices = [
     ...(reason === 'terminated' ? [emailNotice(key, 'sponsor-ended', { reason })] : []),
     slackNotice(
       `${key}:slack`,
@@ -363,7 +355,16 @@ export async function boardEnd(s: Sponsor, reason: Extract<EndedReason, 'termina
         ? `:no_entry: Invitation to ${who(s)} withdrawn.`
         : `:no_entry: ${who(s)} ended by ZurichJS. Stripe stopped, but nothing was refunded: refund the unused part in Stripe unless it was a code of conduct breach. The site lists them as a past sponsor from the next build.`,
     ),
-  ]);
+  ];
+  let ended = s;
+  if (s.status === 'ended') {
+    if (s.endedReason !== reason) return s;
+  } else {
+    if (reason === 'withdrawn' && s.status !== 'pending') throw new SponsorshipError('Only a sponsorship that has not started can be withdrawn. End it instead.');
+    if (reason === 'terminated' && s.status === 'pending') throw new SponsorshipError('A sponsorship that has not started is withdrawn, not ended.');
+    ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor, reason, notices });
+  }
+  await closeStripe(ended, deps);
   await deliver(s, deps);
   return ended;
 }
@@ -435,14 +436,19 @@ export interface RecordedPayment {
 export async function recordPayment(s: Sponsor, p: RecordedPayment, actor: Actor, deps: LifecycleDeps): Promise<{ sponsor: Sponsor; confirmationTo: string[] }> {
   if (s.status === 'ended' || s.status === 'ending') throw new SponsorshipError('This sponsorship has ended or is ending; record nothing more.', 409, 'paidUntil');
   if (s.stripeSubscriptionId) throw new SponsorshipError('This sponsorship pays by card in Stripe. See the payment there.', 409, 'paidUntil');
-  // The same payment again after a failure half-way (its paid-through date is saved, the rest is not): finish it.
-  const resume = s.paidUntil === p.paidUntil && !(await deps.store.events(s.id)).some((e) => e.type === 'payment_recorded' && e.payload.paidUntil === p.paidUntil);
+  // The same payment again after a failure half-way: an earlier attempt started recording this date
+  // (`payment_recording`) and did not finish (`payment_recorded`). Only that is resumed; any other
+  // request for the current date is refused as before (an imported sponsorship's own date included).
+  const events = await deps.store.events(s.id);
+  const started = (type: string) => events.some((e) => e.type === type && e.payload.paidUntil === p.paidUntil);
+  const resume = s.paidUntil === p.paidUntil && started('payment_recording') && !started('payment_recorded');
   if (!resume) {
     if (s.paidUntil && p.paidUntil <= s.paidUntil) throw new SponsorshipError(`It is already paid through ${longDate(lastDay(s.paidUntil))}. Give a later date.`, 400, 'paidUntil');
     if (p.paidUntil <= today(deps)) throw new SponsorshipError('Give a date after today: the first day not paid for.', 400, 'paidUntil');
   }
   await closeCheckout(s, deps.store, deps.stripe);
   await closePaymentLink(s, deps.store, deps.stripe);
+  if (!resume) await deps.store.log(s.id, 'payment_recording', actor, { paidUntil: p.paidUntil });
   let updated = resume ? s : await deps.store.update(s.id, { paidUntil: p.paidUntil, paymentMode: 'manual', ...(s.startedAt ? {} : { startedAt: today(deps) }) }, actor);
   if (updated.status === 'pending' || updated.status === 'past_due')
     updated = await deps.store.transition(s.id, { from: updated.status, to: 'active', actor, payload: { recorded: true } });

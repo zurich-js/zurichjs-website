@@ -12,7 +12,7 @@ import { handleStart } from '../src/pages/api/sponsorship/start.ts';
 import { handleSponsorMe } from '../src/pages/api/sponsorship/me.ts';
 import { handleStripeWebhook } from '../src/pages/api/stripe/webhook.ts';
 import { dailyCheck } from '../src/server/sponsor-daily.ts';
-import { endSponsorship } from '../src/server/sponsor-lifecycle.ts';
+import { boardEnd, endSponsorship } from '../src/server/sponsor-lifecycle.ts';
 import { lifecycleDeps } from '../src/server/sponsor-route.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
 import { MEETUPS, NOW, env, faulty, newSponsor, post, stripeEvent, unix, world } from './sponsor-faults.ts';
@@ -236,6 +236,20 @@ describe('sponsorship lifecycle', () => {
       expect(await dailyCheck(lifecycle())).toMatchObject({ notices: { sent: 1, failed: 0 } });
       expect(subjects().filter((t) => /ends on/.test(t))).toHaveLength(1);
       expect(await dailyCheck(lifecycle())).toMatchObject({ notices: { sent: 0 } });
+    });
+
+    it('a termination whose Stripe call failed still emails and posts once, after the daily check closes Stripe', async () => {
+      const id = await running();
+      w.failNext('DELETE', /^subscriptions\/sub_acme$/);
+      await expect(boardEnd((await store.get(id))!, 'terminated', BOARD, lifecycle())).rejects.toThrow();
+      expect(subjects().filter((t) => /has ended/.test(t))).toHaveLength(0);
+      expect(await dailyCheck(lifecycle())).toMatchObject({ stripeClosed: 1, notices: { sent: 2, failed: 0 } });
+      expect(w.live.has('sub_acme')).toBe(false);
+      expect(subjects().filter((t) => /has ended/.test(t))).toHaveLength(1);
+      expect(notes(/ended by ZurichJS/)).toHaveLength(1);
+      // The board pressing it again changes nothing more.
+      await boardEnd((await store.get(id))!, 'terminated', BOARD, lifecycle());
+      expect(notes(/ended by ZurichJS/)).toHaveLength(1);
     });
 
     it('a bank-transfer reminder the check did not reach on its day is sent once, with the most urgent one due', async () => {

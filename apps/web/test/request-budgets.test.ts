@@ -198,6 +198,38 @@ describe('the daily sponsorship check under a time budget', () => {
     expect(await store.get(s.id)).toMatchObject({ status: 'pending', checkoutSessionId: 'cs_open', paymentLinkId: 'plink_open' });
   });
 
+  it('sends a reminder the budget deferred on the next run, once', async () => {
+    const clock = { ms: 0 };
+    const { store, add } = await slowStore(0, clock);
+    for (const name of ['Done 1', 'Done 2', 'Done 3']) await add(name, { status: 'active', paidUntil: '2026-11-20' }, '2026-11-19');
+    await add('Bank AG', { cycle: 'monthly', status: 'active', paymentMode: 'manual', source: 'imported', startedAt: '2026-10-24', paidUntil: '2026-12-24' });
+    const slowEnds: SponsorStore = { ...store, transition: async (id, input) => ((clock.ms += 7_000), store.transition(id, input)) };
+    const posts: string[] = [];
+    const runWith = (day: string) => {
+      clock.ms = 0;
+      const budget = deadline(25_000, () => clock.ms);
+      const slack = { post: async (t: string) => (posts.push(t), '1.1'), update: async () => {}, reply: async () => {}, ephemeral: async () => {} };
+      return dailyCheck({ ...lifecycleDeps({}, slowEnds, SITE, { fetch: budget.fetch(), slack, now: () => new Date(`${day}T08:00:00Z`) }), deadline: budget });
+    };
+    expect(await runWith('2026-11-24')).toMatchObject({ completed: 3, deferred: [expect.any(String)] });
+    expect(await runWith('2026-11-25')).toMatchObject({ reminded: 1 });
+    await runWith('2026-11-26');
+    expect(posts.filter((p) => p.includes(':calendar:'))).toEqual([expect.stringContaining('29 days left')]);
+  });
+
+  it('keeps the ids of a close Stripe refused, and closes them on a later run', async () => {
+    const clock = { ms: 0 };
+    const { store, slow, add } = await slowStore(0, clock);
+    const s = await add('Down AG', {}, '2026-11-10');
+    await store.linkStripe(s.id, { checkoutSessionId: 'cs_open', paymentLinkId: 'plink_open', paymentLinkUrl: 'https://buy.stripe.com/x' }, board);
+    const down = (async () => Response.json({ error: { message: 'unavailable' } }, { status: 503 })) as typeof fetch;
+    const up = (async () => Response.json({})) as typeof fetch;
+    expect(await run(slow, clock, TODAY, { STRIPE_SECRET_KEY: 'sk_test_x' }, down)).toMatchObject({ closed: 1, stripeOpen: [s.id] });
+    expect(await store.get(s.id)).toMatchObject({ status: 'ended', checkoutSessionId: 'cs_open', paymentLinkId: 'plink_open' });
+    expect(await run(slow, clock, new Date('2026-11-25T08:00:00Z'), { STRIPE_SECRET_KEY: 'sk_test_x' }, up)).toMatchObject({ stripeClosed: 1, stripeOpen: [] });
+    expect(await store.get(s.id)).toMatchObject({ checkoutSessionId: null, paymentLinkId: null });
+  });
+
   it('keeps the Stripe ids and reports the sponsor when the budget cuts off its close', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
     try {

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { FileField, SelectField, TextArea, TextField } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
+import { LoadFailed, Loading } from '@zurichjs/design/islands/Loading';
 import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass } from '@zurichjs/design/recipes';
 import { RECURRING, TIERS, chf, cycleInfo, tierInfo, type EndedReason, type SponsorEvent, type Status, type Tier } from '@zurichjs/sponsorship';
@@ -126,7 +127,17 @@ export function SponsorDetail({
     return (
       <div class="flex flex-col items-start gap-4">
         <TextButton onClick={onBack}>Back to sponsors</TextButton>
-        {error ? <Notice kind="error">{error}</Notice> : <p class="m-0 text-compact text-ink-2">Loading the sponsor…</p>}
+        {error ? (
+          <LoadFailed
+            title={error}
+            onRetry={() => {
+              setError('');
+              void load();
+            }}
+          />
+        ) : (
+          <Loading size="compact">Loading the sponsor…</Loading>
+        )}
       </div>
     );
 

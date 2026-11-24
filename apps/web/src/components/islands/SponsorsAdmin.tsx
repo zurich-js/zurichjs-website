@@ -11,6 +11,8 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { Button } from '@zurichjs/design/islands/Button';
 import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
+import { LoadFailed, Loading } from '@zurichjs/design/islands/Loading';
+import { Notice } from '@zurichjs/design/islands/Notice';
 import { cardClass } from '@zurichjs/design/recipes';
 import type { Status } from '@zurichjs/sponsorship';
 import { shortDate } from '../../server/dates.ts';
@@ -18,7 +20,7 @@ import { api } from './admin-api.ts';
 import { TextButton } from './forms/shared.tsx';
 import { AddSponsor } from './sponsors-admin/AddSponsor.tsx';
 import { SponsorDetail } from './sponsors-admin/SponsorDetail.tsx';
-import { AttentionBadge, BASE, Notice, PAGE, STATUSES, STATUS_LABEL, StatusBadge, focusHeading, follow, inputValue, type Row } from './sponsors-admin/shared.tsx';
+import { AttentionBadge, BASE, PAGE, STATUSES, STATUS_LABEL, StatusBadge, focusHeading, follow, inputValue, type Row } from './sponsors-admin/shared.tsx';
 
 type View = { kind: 'list' } | { kind: 'detail'; id: string } | { kind: 'add'; mode: 'invite' | 'import' };
 
@@ -49,18 +51,22 @@ export function SponsorsAdmin({ onSignedOut }: { onSignedOut: () => void }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [counts, setCounts] = useState<Record<Status, number> | null>(null);
   const [labels, setLabels] = useState<Record<string, string>>({});
+  const [truncated, setTruncated] = useState<{ filtered: boolean } | null>(null);
   const [error, setError] = useState('');
   const seq = useRef(0);
 
   const load = async () => {
     const n = ++seq.current;
     const params = new URLSearchParams({ ...(q.trim() ? { q: q.trim() } : {}), ...(status ? { status } : {}) });
-    const { status: code, body } = await api<{ sponsors: Row[]; counts: Record<Status, number> | null; attentionLabels: Record<string, string> }>(`${BASE}?${params}`);
+    const { status: code, body } = await api<{ sponsors: Row[]; truncated?: boolean; counts: Record<Status, number> | null; attentionLabels: Record<string, string> }>(
+      `${BASE}?${params}`,
+    );
     if (n !== seq.current) return;
     if (code === 401) return onSignedOut();
     if (code !== 200) return setError(body.error ?? 'Could not load the sponsors.');
     setError('');
     setRows(sortRows(body.sponsors));
+    setTruncated(body.truncated ? { filtered: params.toString() !== '' } : null);
     setLabels(body.attentionLabels ?? {});
     if (body.counts) setCounts(body.counts);
   };
@@ -118,9 +124,14 @@ export function SponsorsAdmin({ onSignedOut }: { onSignedOut: () => void }) {
       status={status}
       onStatus={setStatus}
       rows={rows}
+      truncated={truncated}
       counts={counts}
       labels={labels}
       error={error}
+      onRetry={() => {
+        setError('');
+        void load();
+      }}
       onOpen={(id) => go({ kind: 'detail', id })}
       onAdd={(mode) => go({ kind: 'add', mode })}
     />
@@ -136,9 +147,11 @@ function SponsorList({
   status,
   onStatus,
   rows,
+  truncated,
   counts,
   labels,
   error,
+  onRetry,
   onOpen,
   onAdd,
 }: {
@@ -148,9 +161,11 @@ function SponsorList({
   status: '' | Status;
   onStatus: (s: '' | Status) => void;
   rows: Row[] | null;
+  truncated: { filtered: boolean } | null;
   counts: Record<Status, number> | null;
   labels: Record<string, string>;
   error: string;
+  onRetry: () => void;
   onOpen: (id: string) => void;
   onAdd: (mode: 'invite' | 'import') => void;
 }) {
@@ -212,8 +227,13 @@ function SponsorList({
         />
       </form>
 
-      {error && <Notice kind="error">{error}</Notice>}
-      {!rows && !error && <p class="m-0 text-body text-ink-2">Loading the sponsors…</p>}
+      {error && <LoadFailed title={error} onRetry={onRetry} />}
+      {!rows && !error && <Loading>Loading the sponsors…</Loading>}
+      {rows && truncated && (
+        <Notice title={!truncated.filtered && total !== null ? `Showing the newest ${rows.length} of ${total} sponsorships.` : `Showing the newest ${rows.length} that match.`}>
+          <p class="m-0">Search or filter to find the others.</p>
+        </Notice>
+      )}
 
       {rows && (
         // Phones: one card per sponsor (a five-column table does not fit).

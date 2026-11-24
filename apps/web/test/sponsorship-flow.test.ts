@@ -10,7 +10,7 @@
 import { createHmac } from 'node:crypto';
 import { memoryStore as memoryMembers } from '@zurichjs/membership';
 import { AGREEMENT, memoryStore, type NewSponsor, type SponsorStore } from '@zurichjs/sponsorship';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleAddSponsor, handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/index.ts';
 import { handleAdminSponsor } from '../src/pages/api/membership/admin/sponsors/[id]/index.ts';
 import { handleBoardEnd } from '../src/pages/api/membership/admin/sponsors/[id]/end.ts';
@@ -250,11 +250,22 @@ describe('sponsorship flow', () => {
     expect((await webhook(stripeEvent('evt_1', 'invoice.paid', {}))).status).toBe(200);
     expect(w.emails).toHaveLength(sent);
 
-    // Upgrade on the same cycle, one tick: now, prorated, and the card must pay it.
-    expect(await (await handlePlan(post('/api/sponsorship/plan', { ...tick, tier: 'builder', cycle: 'quarterly' }), user())).json()).toMatchObject({
+    // The upgrade replaces the monthly renewal they reviewed on the page.
+    w.sub.schedule = 'sub_sched_1';
+    w.sub.plan = 'sponsor_friend_monthly';
+    const beforeUpgrade = w.calls.length;
+    expect(
+      await (await handlePlan(post('/api/sponsorship/plan', { ...tick, tier: 'builder', cycle: 'quarterly', replaces: 'friend-monthly@2027-02-18' }), user())).json(),
+    ).toMatchObject({
       timing: 'now',
       sponsor: { tier: 'builder' },
     });
+    expect(w.calls.slice(beforeUpgrade).map(({ method, path }) => [method, path])).toEqual([
+      ['GET', 'subscriptions/sub_acme'],
+      ['GET', 'prices'],
+      ['POST', 'subscription_schedules/sub_sched_1/release'],
+      ['POST', 'subscriptions/sub_acme'],
+    ]);
     const upgrade = w.calls.find((c) => c.params.get('proration_behavior') === 'always_invoice')!;
     expect(upgrade.params.get('payment_behavior')).toBe('error_if_incomplete');
     expect((await store.agreements(sponsor.id))[0]).toMatchObject({ context: 'change', signerName: 'Grace Hopper' });
@@ -270,6 +281,12 @@ describe('sponsorship flow', () => {
       from: '2027-02-18',
     });
     expect((await me()).pendingChange).toEqual({ tier: 'supporter', cycle: 'yearly', from: '2027-02-18' });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const down = (async () => new Response('{"error":{"message":"down"}}', { status: 500 })) as typeof fetch;
+    const blind = await (await handleSponsorMe(new Request('https://zurichjs.com/api/sponsorship/me'), { ...user(), fetch: down })).json();
+    error.mockRestore();
+    expect(blind).toMatchObject({ pendingChange: null, pendingChangeUnknown: true });
+    expect(await me()).toMatchObject({ pendingChangeUnknown: false });
 
     // We send an end to confirm: a link that fills it in. Nothing changes yet.
     const suggested = await (

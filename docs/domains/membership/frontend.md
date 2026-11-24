@@ -3,7 +3,7 @@ type: Frontend Area
 title: Membership frontend
 description: The membership pages (/membership, /membership/terms, /membership/account) and the board's admin area (/admin), with how the admin area is protected.
 tags: [membership, frontend, admin]
-timestamp: '2026-11-19T00:00:00Z'
+timestamp: '2026-11-24T00:00:00Z'
 ---
 
 # Membership frontend
@@ -23,6 +23,7 @@ The membership terms, based on the bylaws; indexed (the version of 11th November
 A static shell with a Preact island; it holds no member data in the HTML. Not in the sitemap or `llms.txt`.
 
 - **Signed out:** sign in with an emailed link.
+- **Loading:** as on the sponsor account page, the loading line says after 10 s that it is slow, and after 20 s the page shows an error instead of guessing ([Sponsorship frontend](/domains/sponsorship/frontend.md)). Only the site's own JSON 503 says member accounts are not available yet; a platform 503 page is an error with Try again.
 - **Not a member yet:** join (person or organisation, level, cycle, the terms), then Stripe Checkout. An invited person sees "Finish joining" with the level and cycle the board entered.
 - **A member:** level, status, billing, paid until, member since; certificates to download; "Manage payment" (a Stripe billing portal session); a level or cycle change from the next renewal, which shows as pending and can be taken back; resign, with optional reasons; resubscribe while resigning.
 - **Paid manually (cash/bank):** a plain note under "Signed in as" asks them to switch to automatic payment (it was a soft yellow banner until 18th November 2026).
@@ -31,7 +32,8 @@ A static shell with a Preact island; it holds no member data in the HTML. Not in
 
 For the board, behind one shared password, `ADMIN_PASSWORD` (owner, 11th November 2026). `/admin` asks for the password first, then shows Memberships; there is no content section, since Sanity is reached through the Studio directly. noindex.
 
-- **What it shows:** all members with search (name, email, organisation) and a status filter, the totals, and one member's details: terms accepted, certificates, Stripe ids, notes and the full history.
+- **What it shows:** members with search (name, email, organisation) and a status filter, the totals, and one member's details: terms accepted, certificates, Stripe ids, notes and the full history. The list shows the newest 500 (`LIST_LIMIT`, `apps/web/src/server/admin-views.ts`) and says so when more match; the totals count every member in the database, in a separate query, so a change in between can make them differ from the list by that change. Opening another member while one is loading shows only the one opened last.
+- **When the site does not answer:** a session check that fails (no connection, a platform error page) says the admin area cannot be reached, with Try again; only an answer from the site shows the sign-in form. Sign-in shows the site's own sentence for a wrong password or the lockout, and "We couldn’t complete sign-in. Try again in a moment." for a server error or an answer without `ok`, since no verdict on the password came back. Sign-out counts only the site's `{ ok: true }`: otherwise the admin area is hidden and "We couldn’t sign you out." offers Try again, since the session may still be valid. A list or member that fails to load offers Try again. Reads give up after 20 s and writes after 65 s, past Netlify's 60 s; a write that got no answer, or a platform error page instead of the site's JSON, says the change may or may not have been saved, so reload before trying again (`apps/web/src/components/islands/admin-api.ts`). The time limits use a timer, so they also work in browsers without `AbortSignal.timeout` or `AbortSignal.any`. Loading lines say after 10 s that loading is taking longer than usual (`Loading`, [Components](/systems/design-system/components.md)). A successful mutation requires the route’s JSON acknowledgement with `ok: true`. A proxy page with HTTP 200 leaves the outcome unknown.
 - **What it does:** confirm resignations (the same as the Slack button), import members (dry run first), export everyone as CSV (formulas neutralised for spreadsheets).
 - **Invite someone to join:** enter who they are and the level and cycle they asked for. They get "Your invitation to join ZurichJS" with a link to the account page. Until they pay they are listed as "Waiting for first payment" (source: invited by the board). Inviting the same email again updates the choice and resends; someone who is already a member is refused.
 - **Add a member who paid manually (cash/bank):** person or organisation, name, email, level, billing cycle and the month their paid term started; the form shows until when that covers them. Adding them records them as paid manually until the term ends (one cycle from the first of the start month), issues their certificate for that term, optionally emails it with an invitation to set up automatic payment (Stripe charges nothing before the term ends, then renews and issues the next certificate), and posts a note in the membership Slack channel. One member per email address.

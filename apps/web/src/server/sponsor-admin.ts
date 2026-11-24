@@ -15,7 +15,7 @@
  *   end         outright (terminated, or an invitation withdrawn); logged
  *   to do       what needs someone: see `attention`
  */
-import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore } from '@zurichjs/sponsorship';
+import { DuplicateContact, isCycle, isTier, type Contact, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore, type SponsorSummary } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
@@ -254,7 +254,7 @@ export const ATTENTION_LABEL: Record<Attention, string> = {
 const days = (from: string, to: string) => Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86_400_000);
 
 /** What a sponsorship needs from the board today, most urgent first. */
-export async function attention(s: Sponsor, store: SponsorStore, today: string): Promise<Attention[]> {
+export function attention(s: Sponsor, facts: Pick<SponsorSummary, 'meetups' | 'latestLogo'>, today: string): Attention[] {
   const out: Attention[] = [];
   if (s.status === 'past_due') out.push('payment_overdue');
   const manual = s.paymentMode === 'manual' && !s.stripeSubscriptionId && s.cycle !== 'once';
@@ -264,14 +264,11 @@ export async function attention(s: Sponsor, store: SponsorStore, today: string):
     else if (left <= 30) out.push('manual_due_soon');
   }
   if (s.status === 'pending') {
-    if (s.cycle === 'once') {
-      const meetups = await store.meetups(s.id);
-      if (meetups.some((m) => m.date < today)) out.push('meetup_passed_unpaid');
-    }
+    if (s.cycle === 'once' && facts.meetups.some((m) => m.date < today)) out.push('meetup_passed_unpaid');
     if (days(s.createdAt.slice(0, 10), today) >= 7) out.push('invite_waiting');
   }
   if (s.status !== 'ended') {
-    const logo = (await store.logos(s.id))[0];
+    const logo = facts.latestLogo;
     // A logo the board uploaded itself needs no reminder.
     if (logo && logo.uploadedBy !== 'board' && days(logo.uploadedAt.slice(0, 10), today) <= 14) out.push('new_logo');
   }

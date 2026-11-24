@@ -9,7 +9,7 @@
  */
 import { checkTransition, TransitionError } from './state.ts';
 import { DuplicateEmail, MemberNotFound, normaliseEmail, type MemberStore } from './store.ts';
-import type { Actor, Certificate, Member, MemberEvent, MemberPatch } from './types.ts';
+import type { Actor, Certificate, Member, MemberEvent, MemberPatch, Status } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -169,6 +169,8 @@ export function postgresStore(db: Queryable): MemberStore {
       );
       return rows.map(fromRow);
     },
+    statusCounts: async () =>
+      Object.fromEntries((await q<{ status: Status; n: number }>('select status, count(*)::int as n from members group by status')).map((r) => [r.status, r.n])),
     byStatus: async (status) => (await q<MemberRow>('select * from members where status = $1 order by created_at asc limit 500', [status])).map(fromRow),
     create: (m, actor) =>
       fn('member_create($1::jsonb, $2, $3)', [

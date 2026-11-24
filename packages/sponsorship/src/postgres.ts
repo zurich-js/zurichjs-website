@@ -5,8 +5,8 @@
  * transaction (it works on a pg.Pool). Status changes are compare-and-set.
  */
 import { checkTransition, TransitionError } from './state.ts';
-import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type StripeExpect, type StripeLinks } from './store.ts';
-import type { Actor, Agreement, Contact, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch } from './types.ts';
+import { DuplicateContact, NotFound, normaliseEmail, type SponsorStore, type SponsorSummary, type StripeExpect, type StripeLinks } from './store.ts';
+import type { Actor, Agreement, Contact, Logo, NewNotice, Sponsor, SponsorDocument, SponsorEvent, SponsorMeetup, SponsorNotice, SponsorPatch, Status } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -171,6 +171,8 @@ export function postgresStore(db: Queryable): SponsorStore {
       );
       return rows.map(sponsorOf);
     },
+    statusCounts: async () =>
+      Object.fromEntries((await q<{ status: Status; n: number }>('select status, count(*)::int as n from sponsors group by status')).map((r) => [r.status, r.n])),
     async create(s, c, actor, opts = {}) {
       const meetups = [...new Map((opts.meetups ?? []).map((m) => [m.eventId, m])).values()];
       // One statement: the sponsor, its contact (moved from a colleague's unaccepted invitation, or
@@ -274,6 +276,22 @@ export function postgresStore(db: Queryable): SponsorStore {
       UUID.test(sponsorId)
         ? (await q('select event_id, title, date from sponsor_meetups where sponsor_id = $1 order by date, event_id', [sponsorId])).map((r) => camel<SponsorMeetup>(r))
         : [],
+    async summaries(sponsorIds) {
+      const byId = new Map<string, SponsorSummary>(sponsorIds.map((id) => [id.toLowerCase(), { meetups: [], hasContract: false, latestLogo: null }]));
+      const out = new Map(sponsorIds.map((id) => [id, byId.get(id.toLowerCase())!]));
+      const ids = [...byId.keys()].filter((id) => UUID.test(id));
+      if (!ids.length) return out;
+      const [meetups, contracts, logos] = await Promise.all([
+        q('select sponsor_id, event_id, title, date from sponsor_meetups where sponsor_id = any($1::uuid[]) order by date, event_id', [ids]),
+        q('select distinct sponsor_id from sponsor_documents where sponsor_id = any($1::uuid[])', [ids]),
+        q('select distinct on (sponsor_id) * from sponsor_logos where sponsor_id = any($1::uuid[]) order by sponsor_id, uploaded_at desc', [ids]),
+      ]);
+      const of = (sponsorId: unknown) => byId.get(String(sponsorId).toLowerCase())!;
+      for (const { sponsor_id, ...m } of meetups) of(sponsor_id).meetups.push(camel<SponsorMeetup>(m));
+      for (const r of contracts) of(r.sponsor_id).hasContract = true;
+      for (const r of logos) of(r.sponsor_id).latestLogo = camel<Logo>(r);
+      return out;
+    },
     async setMeetups(sponsorId, list, actor) {
       const unique = [...new Map(list.map((m) => [m.eventId, m])).values()];
       // One statement: upsert the new list, remove only meetups not in it (the two never touch the

@@ -14,6 +14,7 @@
  */
 import type { ComponentChildren } from 'preact';
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
+import { Loading } from '@zurichjs/design/islands/Loading';
 import { Button } from '@zurichjs/design/islands/Button';
 import { Checkbox, ChipGroup, FileField, SelectField, TextArea, TextField, isEmail } from '@zurichjs/design/islands/Field';
 import { Heading } from '@zurichjs/design/islands/Heading';
@@ -22,10 +23,11 @@ import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass, cx, noticeClass, type ButtonVariant } from '@zurichjs/design/recipes';
 import { setSignedIn } from '@zurichjs/design/session';
 import { SPONSORSHIP_TIERS } from '@zurichjs/content/partners';
-import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, isTier, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
+import { AGREEMENT, CYCLES, RECURRING, TIERS, changeTiming, feeLabel, isCycle, isTier, renewalReference, tierInfo, type Cycle, type Tier } from '@zurichjs/sponsorship';
 import { longDate, shortDate } from '../../server/dates.ts';
 import type { SponsorView, agreementView, contactView, documentView, logoView } from '../../server/sponsor.ts';
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
+import { READ_DEADLINE_MS, timeoutSignal } from './read-deadline.ts';
 
 type ContactView = ReturnType<typeof contactView>;
 type AgreementView = ReturnType<typeof agreementView>;
@@ -51,6 +53,8 @@ interface Me {
   logos?: LogoView[];
   contracts?: DocumentView[];
   pendingChange?: PendingChange | null;
+  /** Stripe could not be asked for a scheduled change: `pendingChange` says nothing. */
+  pendingChangeUnknown?: boolean;
   signedCurrent?: boolean;
   signer?: { name: string; title: string } | null;
   invitation?: { company: string; tierName: string } | null;
@@ -405,14 +409,14 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
 
   const load = async (attempt = 0): Promise<void> => {
     const q = query.current;
-    const res = await fetch('/api/sponsorship/me', { credentials: 'same-origin' }).catch(() => null);
+    const res = await fetch('/api/sponsorship/me', { credentials: 'same-origin', signal: timeoutSignal(READ_DEADLINE_MS) }).catch(() => null);
     if (!res) return setView({ kind: 'error', message: 'We couldn’t reach the site. Check your connection and reload.' });
     if (res.status === 401) {
       setSignedIn(false);
       return setView({ kind: 'signed-out', notice: q.link });
     }
-    if (res.status === 503) return setView({ kind: 'unavailable' });
-    const data = (await res.json().catch(() => ({}))) as Partial<Me> & { ok?: boolean; error?: string };
+    const data = ((await res.json().catch(() => null)) ?? {}) as Partial<Me> & { ok?: boolean; error?: string };
+    if (res.status === 503 && data.ok === false) return setView({ kind: 'unavailable' });
     if (!res.ok || !data.ok) return setView({ kind: 'error', message: data.error ?? `We couldn’t load your sponsorship. Try again, or write to ${contactEmail}.` });
     const me = data as Me;
     const s = me.sponsor;
@@ -480,12 +484,7 @@ export default function SponsorAccount({ contactEmail }: { contactEmail: string 
     signedOut();
   };
 
-  if (view.kind === 'loading')
-    return (
-      <p role="status" class={body}>
-        Loading your sponsorship…
-      </p>
-    );
+  if (view.kind === 'loading') return <Loading>Loading your sponsorship…</Loading>;
 
   if (view.kind === 'unavailable')
     return (
@@ -740,6 +739,7 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
     ]);
   if (s.status === 'past_due' && s.paidThrough) rows.push(['Paid through', longDate(s.paidThrough)]);
   if (s.startedAt) rows.push(['Sponsor since', longDate(s.startedAt)]);
+  if (canChange(s) && ctx.me.pendingChangeUnknown) rows.push(['Next renewal', 'We couldn’t check for a change waiting for your renewal. Reload the page to see it.']);
   if (pending)
     rows.push([
       `From ${longDate(pending.from)}`,
@@ -749,7 +749,12 @@ function SponsorCard({ ctx, s, linkOpen, cancelled, again, onAgain }: { ctx: Ctx
           <TextButton
             disabled={!!busy}
             onClick={() =>
-              void post('/api/sponsorship/plan', 'keep', { tier: s.tier, cycle: s.cycle }, `Done. You stay on ${planName(s.tier, s.cycle)}. The scheduled change is cancelled.`)
+              void post(
+                '/api/sponsorship/plan',
+                'keep',
+                { tier: s.tier, cycle: s.cycle, replaces: renewalReference(pending) },
+                `Done. You stay on ${planName(s.tier, s.cycle)}. The scheduled change is cancelled.`,
+              )
             }
           >
             {busy === 'keep' ? 'Keeping…' : 'Keep current plan'}
@@ -890,20 +895,23 @@ function ChangePlan({
   const same = tier === s.tier && cycle === s.cycle;
   const timing = manual ? (same ? 'none' : 'now') : changeTiming({ tier: s.tier, cycle: s.cycle }, { tier, cycle });
   const scheduled = !!pending && pending.tier === tier && pending.cycle === cycle;
-  const unchanged = timing === 'none' || scheduled;
+  const unchecked = !manual && timing !== 'none' && !!ctx.me.pendingChangeUnknown;
+  const unchanged = timing === 'none' || scheduled || unchecked;
   const errorOf = (k: string) => errs.errorOf(sig.local, k);
   const plan = planName(tier, cycle);
 
   const effect =
     timing === 'none'
       ? 'This is your current plan.'
-      : scheduled && pending
-        ? `This change is already scheduled for ${longDate(pending.from)}.`
-        : timing === 'now'
-          ? manual
-            ? `${plan}. This applies as soon as you confirm, and we bill the difference.`
-            : `${plan}. This applies now, and Stripe charges only the difference for this term.`
-          : `${plan}. This applies from your next renewal${s.paidUntil ? `, on ${longDate(s.paidUntil)}` : ''}. Nothing is charged now.`;
+      : unchecked
+        ? `We couldn’t check whether you already have a change scheduled for renewal. Check again before confirming ${plan}.`
+        : scheduled && pending
+          ? `This change is already scheduled for ${longDate(pending.from)}.`
+          : timing === 'now'
+            ? manual
+              ? `${plan}. This applies as soon as you confirm, and we bill the difference.`
+              : `${plan}. This applies now, and Stripe charges only the difference for this term.`
+            : `${plan}. This applies from your next renewal${s.paidUntil ? `, on ${longDate(s.paidUntil)}` : ''}. Nothing is charged now.`;
 
   const submit = async (e: Event) => {
     e.preventDefault();
@@ -918,7 +926,7 @@ function ChangePlan({
     result.set(null);
     const r = await call<{ timing: 'none' | 'now' | 'renewal'; from: string | null; droppedChange?: string | null }>(
       '/api/sponsorship/plan',
-      { json: { tier, cycle, ...sig.payload } },
+      { json: { tier, cycle, replaces: renewalReference(pending), ...sig.payload } },
       ctx,
     );
     setBusy(false);
@@ -952,6 +960,7 @@ function ChangePlan({
       <Benefits summary={`What ${tierInfo(tier).name} includes`} items={benefitsOf(tier)} />
       <p class="m-0 text-compact font-bold" aria-live="polite">
         {effect}
+        {!unchanged && pending && ` This replaces ${planName(pending.tier, pending.cycle)}, scheduled for ${longDate(pending.from)}.`}
       </p>
       {!unchanged && <Signature sig={sig} ctx={ctx} company={s.companyName} errorOf={errorOf} />}
       <ResultNotice result={result} />
@@ -959,6 +968,11 @@ function ChangePlan({
         {!unchanged && (
           <Button type="submit" variant="primary" disabled={busy}>
             {busy ? 'Changing…' : signedLabel(sig, 'Sign and change', 'Confirm the change')}
+          </Button>
+        )}
+        {unchecked && (
+          <Button variant="primary" onClick={() => void ctx.reload()}>
+            Check again
           </Button>
         )}
         <Button variant="secondary" onClick={onCancel}>

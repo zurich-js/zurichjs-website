@@ -136,7 +136,7 @@ export interface SponsorStore {
   /**
    * Queues notices; a key already queued is kept as it is. Returns how many were new. With
    * `event`, that audit row is appended in the same write: the step it marks done (a payment
-   * recorded) and what it owes are saved together or not at all.
+   * recorded) and what it owes are saved together. Replaying the same notice keys skips the event.
    */
   queueNotices(sponsorId: string, notices: NewNotice[], event?: { type: string; actor: Actor; payload?: Record<string, unknown> }): Promise<number>;
   /**
@@ -488,8 +488,9 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .map((d) => ({ ...d })),
     queueNotices: async (sid, list, event) => {
       must(sid);
-      if (event) record(sid, event.type, event.actor, { payload: event.payload ?? {} });
-      return queue(sid, list);
+      const added = queue(sid, list);
+      if (event && (added || !list.length)) record(sid, event.type, event.actor, { payload: event.payload ?? {} });
+      return added;
     },
     claimNotices: async ({ sponsorId, limit }) => {
       const at = Date.parse(now());

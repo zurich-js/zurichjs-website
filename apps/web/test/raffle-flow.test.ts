@@ -124,6 +124,7 @@ describe('raffle add-ons', () => {
     handleStripeWebhook(req, {
       env: gated,
       sponsorStore: sponsors,
+      raffleHosts: async () => MEETUPS.map((m) => ({ ...m, datetime: m.date, status: 'published' })),
       raffles,
       fees,
       memberStore: memoryMembers({ now: () => NOW }),

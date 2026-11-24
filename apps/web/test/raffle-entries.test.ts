@@ -118,6 +118,17 @@ describe('raffle entries and the draw', () => {
     raffleId = r.id;
   });
 
+  it('resumes the paused entry stage with the original rules and cutoff', async () => {
+    await act({ action: 'ledger', kind: 'prize_purchase', amountChf: 200, note: 'Fixture receipt' });
+    await act({ action: 'open', closesAt: '2026-12-09T19:30:00Z' });
+    const open = (await raffles.get(raffleId))!;
+    expect((await act({ action: 'hold', reason: 'Check the host' })).status).toBe(200);
+    expect((await act({ action: 'resume' })).status).toBe(409);
+    await act({ action: 'clear_flag', flag: 'refund_review' });
+    expect((await act({ action: 'resume' })).status).toBe(200);
+    expect(await raffles.get(raffleId)).toMatchObject({ stage: 'open', rulesVersion: open.rulesVersion, closesAt: open.closesAt, openedAt: open.openedAt });
+  });
+
   it('retries entry mail and recovers a private link without revealing which addresses entered', async () => {
     await act({ action: 'open', closesAt: '2026-12-09T19:30:00Z' });
     const body = { raffleId, name: 'Kim', email: 'kim@example.com', rules: true };

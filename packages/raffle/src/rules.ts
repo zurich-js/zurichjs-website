@@ -9,10 +9,10 @@ const STAGE_MOVES: Partial<Record<Stage, Partial<Record<Stage, ActorKind[]>>>> =
   proposed: { offered: ['board'], declined: ['board'], cancelled: ['board', 'sponsor'] },
   offered: { ready: ['board'], proposed: ['board'], cancelled: ['board', 'sponsor'], on_hold: ['board', 'script', 'stripe'] },
   ready: { open: ['board'], cancelled: ['board'], on_hold: ['board', 'script', 'stripe'] },
-  open: { closed: ['board', 'script'], on_hold: ['board'], cancelled: ['board'] },
-  closed: { drawn: ['board'], on_hold: ['board'], cancelled: ['board'] },
-  drawn: { fulfilled: ['board'] },
-  on_hold: { offered: ['board'], ready: ['board'], cancelled: ['board'] },
+  open: { closed: ['board', 'script'], on_hold: ['board', 'script', 'stripe'], cancelled: ['board'] },
+  closed: { drawn: ['board'], on_hold: ['board', 'script', 'stripe'], cancelled: ['board'] },
+  drawn: { fulfilled: ['board'], on_hold: ['board', 'script', 'stripe'] },
+  on_hold: { offered: ['board'], ready: ['board'], open: ['board'], closed: ['board'], drawn: ['board'], cancelled: ['board'] },
 };
 
 /** Stages only the store's own methods reach: opening freezes the rules, drawing records the draw. */

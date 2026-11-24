@@ -79,6 +79,7 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
         return answer(out);
       };
 
+      if ((body.action === 'ready' || body.action === 'resume') && r.flags.length) throw new RaffleRuleError('Resolve the outstanding raffle review before continuing.');
       switch (body.action) {
         case 'reconcile': {
           for (const p of await fees.payments(r.sponsorId))
@@ -153,6 +154,10 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           const ledger = await raffles.ledger(r.id);
           if (!ledger.some((e) => e.kind === (r.fulfilment === 'in_kind' ? 'in_kind_received' : 'prize_purchase')))
             throw new RaffleRuleError('Record the prize receipt or delivery before resuming.');
+          if (r.openedAt) {
+            if (r.heldFrom !== 'open' && r.heldFrom !== 'closed' && r.heldFrom !== 'drawn') throw new RaffleRuleError('The paused stage needs review.');
+            return answer(await raffles.moveStage(r.id, { from: 'on_hold', to: r.heldFrom, actor: BOARD }));
+          }
           const to = r.acceptedVersion && (r.funding === 'paid' || r.funding === 'in_kind') ? 'ready' : 'offered';
           if (to === 'offered') throw new RaffleRuleError('Send a new offer instead: it was not accepted and paid yet.');
           return answer(await raffles.moveStage(r.id, { from: 'on_hold', to, actor: BOARD }));

@@ -46,6 +46,7 @@ const raffleOf = (r: Row): Raffle => ({
   rulesVersion: (r.rules_version as string | null) ?? null,
   rulesUrl: (r.rules_url as string | null) ?? null,
   openedAt: iso(r.opened_at),
+  heldFrom: (r.held_from as Raffle['stage']) ?? null,
   closesAt: iso(r.closes_at),
   sharePurpose: (r.share_purpose as string | null) ?? null,
   sharePrivacyUrl: (r.share_privacy_url as string | null) ?? null,
@@ -246,17 +247,27 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     async moveStage(id, { from, to, actor, reason }) {
       const r = await must(id);
       if (r.stage !== from) throw conflict();
-      if (GUARDED_STAGES.includes(to)) throw new RaffleRuleError(`Use the ${to === 'open' ? 'open entries' : 'draw'} action for that.`);
+      const restoring = from === 'on_hold' && r.openedAt !== null && r.heldFrom === to;
+      if (from === 'on_hold' && r.openedAt && !restoring && to !== 'cancelled') throw new RaffleRuleError('Resume the stage that was paused.');
+      if (!restoring && GUARDED_STAGES.includes(to)) throw new RaffleRuleError(`Use the ${to === 'open' ? 'open entries' : 'draw'} action for that.`);
       checkStage(from, to, actor.kind);
       if (to === 'ready') {
         const why = readyBlocker(r);
         if (why) throw new RaffleRuleError(why);
       }
       const keep = to === 'ready' || to === 'offered' ? null : r.reason;
-      const out = await audited(`update raffles set stage = $3, reason = $4 where id = $1 and stage = $2 returning *`, [id, from, to, reason ?? keep], 'stage_changed', actor, {
-        from,
-        to,
-      });
+      const out = await audited(
+        `update raffles set stage = $3, reason = $4, held_from = case when $3='on_hold' then stage end
+      where id = $1 and stage = $2 and ($2<>'on_hold' or opened_at is null or $3='cancelled' or held_from=$3)
+      and ($3 not in ('ready','open','closed','drawn') or $2<>'on_hold' or cardinality(flags)=0) returning *`,
+        [id, from, to, reason ?? keep],
+        'stage_changed',
+        actor,
+        {
+          from,
+          to,
+        },
+      );
       if (!out) throw conflict();
       return out;
     },

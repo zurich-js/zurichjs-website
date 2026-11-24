@@ -241,6 +241,7 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         ...input,
         id: `r_${++n}`,
         stage: 'proposed',
+        heldFrom: null,
         funding: 'unpaid',
         flags: [],
         amountMinor: null,
@@ -286,14 +287,16 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     async moveStage(id, { from, to, actor, reason }) {
       const r = must(id);
       if (r.stage !== from) throw conflict();
-      if (GUARDED_STAGES.includes(to)) throw new RaffleRuleError(`Use the ${to === 'open' ? 'open entries' : 'draw'} action for that.`);
+      const restoring = from === 'on_hold' && r.openedAt !== null && r.heldFrom === to;
+      if (from === 'on_hold' && r.openedAt && !restoring && to !== 'cancelled') throw new RaffleRuleError('Resume the stage that was paused.');
+      if (!restoring && GUARDED_STAGES.includes(to)) throw new RaffleRuleError(`Use the ${to === 'open' ? 'open entries' : 'draw'} action for that.`);
       checkStage(from, to, actor.kind);
       if (to === 'ready') {
         const why = readyBlocker(r);
         if (why) throw new RaffleRuleError(why);
       }
       record(id, 'stage_changed', actor, { from, to });
-      return save({ ...r, stage: to, reason: reason ?? (to === 'ready' || to === 'offered' ? null : r.reason) });
+      return save({ ...r, stage: to, heldFrom: to === 'on_hold' ? from : null, reason: reason ?? (to === 'ready' || to === 'offered' ? null : r.reason) });
     },
     async setFunding(id, { from, to, actor, payload = {} }) {
       const r = must(id);

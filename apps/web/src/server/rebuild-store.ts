@@ -1,8 +1,9 @@
 /**
  * The rebuild state (rebuild.ts) in Netlify Blobs, store `rebuild`, key `state`. Every writer goes
  * through here: the Sanity webhook (/api/rebuild), sponsorship changes (sponsor-rebuild.ts) and the
- * scheduled tick. Writes are conditional on the entry's ETag, so two writers never overwrite each
- * other; the loser reads again and reapplies its change.
+ * scheduled tick. Reads are strongly consistent (the client defaults to eventual, which can return
+ * an old ETag), and each write is conditional on the ETag it read; when another writer saved in
+ * between, the change is applied again to their state, up to ATTEMPTS times.
  */
 import { getStore } from '@netlify/blobs';
 import { emptyState, type RebuildState, type StateStore } from './rebuild.ts';
@@ -11,7 +12,7 @@ const KEY = 'state';
 const ATTEMPTS = 5;
 
 export function rebuildStore(): StateStore {
-  const blobs = getStore('rebuild');
+  const blobs = getStore('rebuild', { consistency: 'strong' });
   return {
     read: async () => (await blobs.get(KEY, { type: 'json' })) as RebuildState | null,
     async update(change) {

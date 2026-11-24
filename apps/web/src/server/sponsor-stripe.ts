@@ -31,6 +31,7 @@ import {
   type Tier,
 } from '@zurichjs/sponsorship';
 import { longDate } from './dates.ts';
+import { DeadlineExceeded } from './deadline.ts';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
 
@@ -149,10 +150,19 @@ async function onceLineItem(s: Sponsor, meetups: SponsorMeetup[], deps: StripeDe
   };
 }
 
+/**
+ * A close the request's time budget stopped (never sent, or cut off before Stripe answered) is
+ * thrown, and the saved id is kept: the page may still be payable. Other Stripe errors are
+ * ignored as before (a session already expired or paid answers with an error too).
+ */
+const unlessOutOfTime = (cause: unknown) => {
+  if (cause instanceof DeadlineExceeded) throw cause;
+};
+
 /** Closes the sponsor's last Checkout session, so an old tab can never be paid as well. */
 export async function closeCheckout(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.checkoutSessionId) return;
-  await api(deps, 'POST', `checkout/sessions/${encodeURIComponent(s.checkoutSessionId)}/expire`).catch(() => undefined);
+  await api(deps, 'POST', `checkout/sessions/${encodeURIComponent(s.checkoutSessionId)}/expire`).catch(unlessOutOfTime);
   await store.linkStripe(s.id, { checkoutSessionId: null }, { kind: 'stripe', id: s.checkoutSessionId });
 }
 
@@ -250,7 +260,7 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
 /** Switches off the sponsor's payment link (paid, replaced or withdrawn). */
 export async function closePaymentLink(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.paymentLinkId) return;
-  await api(deps, 'POST', `payment_links/${encodeURIComponent(s.paymentLinkId)}`, stripeForm({ active: false })).catch(() => undefined);
+  await api(deps, 'POST', `payment_links/${encodeURIComponent(s.paymentLinkId)}`, stripeForm({ active: false })).catch(unlessOutOfTime);
   await store.linkStripe(s.id, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
 }
 

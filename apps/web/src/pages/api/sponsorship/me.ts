@@ -32,7 +32,7 @@ export const handleSponsorMe = (request: Request, deps: SponsorRouteDeps = {}) =
   signedInSponsor(
     request,
     deps,
-    async ({ user, contact, sponsor: s, invitation, store, env }) => {
+    async ({ user, contact, sponsor: s, invitation, store, env, deps }) => {
       const base = { ok: true, email: user.email, agreementVersion: AGREEMENT.version };
       if (!s || !contact)
         return json(200, {

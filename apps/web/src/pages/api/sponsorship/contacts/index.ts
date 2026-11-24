@@ -21,7 +21,7 @@ export const handleAddContact = (request: Request, deps: SponsorRouteDeps = {}) 
   signedInSponsor(
     request,
     deps,
-    async ({ user, sponsor, contact, store, env }) => {
+    async ({ user, sponsor, contact, store, env, deps }) => {
       if (!sponsor || !contact) return fail(404, 'There is no sponsorship on this account yet.');
       if (rateLimited('sponsorship-contacts', `${user.id}:${clientKey(request)}`, 10, 60 * 60_000)) return fail(429, 'Too many changes. Try again in an hour.');
       const parsed = parseContact((await readJsonObject(request)) ?? {});

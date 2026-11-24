@@ -29,7 +29,7 @@ export const handleStart = (request: Request, deps: SponsorRouteDeps = {}) => {
   return signedInSponsor(
     request,
     deps,
-    async ({ user, contact, sponsor, invitation, store, env, lifecycle }) => {
+    async ({ user, contact, sponsor, invitation, store, env, lifecycle, deps }) => {
       if (invitation) return fail(409, `A colleague added you to ${invitation.sponsor.companyName}'s sponsorship. Accept or decline that first.`);
       const body = await readJsonObject(request);
       if (!body) return fail(400, 'Send the form as JSON.');

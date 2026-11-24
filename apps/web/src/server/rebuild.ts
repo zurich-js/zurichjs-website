@@ -7,9 +7,13 @@
  *   the oldest unbuilt publish is MAX_WAIT_MS old (steady publishing still gets built),
  *   and one build at each event's doors and doors + 48 h, the moments the prerendered
  *   HTML changes state (times come from the deployed site's /state-changes.json).
- * - Several writers share the state (publishes, sponsorship changes, the tick), so every
- *   write is a compare-and-set (StateStore.update): a publish recorded while the build
- *   hook is in flight stays pending.
+ * - Several writers share the state (publishes, sponsorship changes, the tick). Every write
+ *   goes through StateStore.update, which applies a change to the state as it is when
+ *   written. The tick calls the build hook between its read and its write, so what it
+ *   saves afterwards (settle) is merged into the current state: a publish counted after
+ *   its read stays pending, and fired times and the last build time are never lost.
+ *   Two ticks that overlap can both call the hook; with a 2-minute schedule that needs a
+ *   hook call slower than 2 minutes.
  *
  * Everything here is pure or takes its I/O as arguments, so it is unit-tested
  * without Netlify. The wiring lives in src/pages/api/rebuild.ts and
@@ -26,6 +30,8 @@ export interface RebuildState {
   pendingSince?: string;
   /** Most recent publish. */
   lastPublishAt?: string;
+  /** Publishes recorded so far; tells two publishes in the same millisecond apart. */
+  publishes?: number;
   /** State-change times (ISO) that already triggered a build. */
   fired: string[];
   lastBuildAt?: string;
@@ -34,14 +40,14 @@ export interface RebuildState {
 /** Netlify Blobs in production (rebuild-store.ts); an in-memory object in tests. */
 export interface StateStore {
   read(): Promise<RebuildState | null>;
-  /** Applies `change` to the latest state and saves it; retried when another writer saved in between. */
+  /** Saves `change` applied to the stored state; when another writer saved first, applies it again to theirs. */
   update(change: (s: RebuildState) => RebuildState): Promise<RebuildState>;
 }
 
 export const emptyState = (): RebuildState => ({ fired: [] });
 
 export function recordPublish(s: RebuildState, now: Date): RebuildState {
-  return { ...s, pendingSince: s.pendingSince ?? now.toISOString(), lastPublishAt: now.toISOString() };
+  return { ...s, pendingSince: s.pendingSince ?? now.toISOString(), lastPublishAt: now.toISOString(), publishes: (s.publishes ?? 0) + 1 };
 }
 
 export interface Decision {
@@ -76,17 +82,22 @@ export function decide(s: RebuildState, now: Date, changeTimes: string[]): Decis
 }
 
 /**
- * The state to save once the build hook accepted `d`, made from `current`, the state as it is now.
- * A publish that arrived after the decision (its `lastPublishAt` differs from `seen`) stays pending
- * from that publish on, so it gets a build of its own.
+ * The state to save once the build hook accepted `d`, which was decided from `seen`, merged into
+ * `current`, the state as it is now. Publishes counted after `seen` stay pending, from the time
+ * of the decision (none of them can be older). Fired times are the union, and the last build
+ * time the later one, so a tick that finishes after a newer one takes nothing back.
  */
 export function settle(current: RebuildState, seen: RebuildState, d: Decision): RebuildState {
-  const next: RebuildState = { ...current, fired: d.next.fired, lastBuildAt: d.next.lastBuildAt };
+  const latest = [current.lastBuildAt, d.next.lastBuildAt]
+    .filter((t): t is string => !!t)
+    .sort()
+    .at(-1);
+  const next: RebuildState = { ...current, fired: [...new Set([...current.fired, ...d.next.fired])], ...(latest ? { lastBuildAt: latest } : {}) };
   if (seen.pendingSince && !d.next.pendingSince) {
     delete next.pendingSince;
     delete next.lastPublishAt;
-    if (current.lastPublishAt && current.lastPublishAt !== seen.lastPublishAt) {
-      next.pendingSince = current.lastPublishAt;
+    if ((current.publishes ?? 0) > (seen.publishes ?? 0) && current.lastPublishAt) {
+      next.pendingSince = d.next.lastBuildAt ?? current.lastPublishAt;
       next.lastPublishAt = current.lastPublishAt;
     }
   }

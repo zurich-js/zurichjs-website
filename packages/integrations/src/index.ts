@@ -345,13 +345,14 @@ export async function sendMemberEmail(
 
 /**
  * Posts to Slack through an incoming webhook (SLACK_WEBHOOK_URL) or, as the production site
- * already does, through the bot API (SLACK_BOT_TOKEN + SLACK_DEFAULT_CHANNEL).
+ * already does, through the bot API (SLACK_BOT_TOKEN + SLACK_DEFAULT_CHANNEL). `sent` is false
+ * when neither is configured (a log line instead); a failed post throws.
  */
-export async function postSlack(env: Env, text: string, log: Log = console.log, fetchImpl: typeof fetch = fetch): Promise<void> {
+export async function postSlack(env: Env, text: string, log: Log = console.log, fetchImpl: typeof fetch = fetch): Promise<{ sent: boolean }> {
   if (env.SLACK_WEBHOOK_URL) {
     const res = await fetchImpl(env.SLACK_WEBHOOK_URL, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text }) });
     if (!res.ok) throw new Error(`Slack ${res.status}`);
-    return;
+    return { sent: true };
   }
   if (env.SLACK_BOT_TOKEN && env.SLACK_DEFAULT_CHANNEL) {
     const res = await fetchImpl('https://slack.com/api/chat.postMessage', {
@@ -362,9 +363,10 @@ export async function postSlack(env: Env, text: string, log: Log = console.log, 
     // The bot API answers 200 with { ok: false, error } on failure.
     const body = (await res.json().catch(() => ({ ok: false, error: `HTTP ${res.status}` }))) as { ok?: boolean; error?: string };
     if (!res.ok || !body.ok) throw new Error(`Slack ${body.error ?? res.status}`);
-    return;
+    return { sent: true };
   }
   log(`[forms] SLACK_WEBHOOK_URL (or SLACK_BOT_TOKEN + SLACK_DEFAULT_CHANNEL) missing; Slack message not sent: ${text.split('\n')[0]}`);
+  return { sent: false };
 }
 
 const summary = (data: Record<string, unknown>) =>

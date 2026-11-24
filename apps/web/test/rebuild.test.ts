@@ -6,6 +6,7 @@ import {
   decide,
   emptyState,
   recordPublish,
+  settle,
   tick,
   validSanitySignature,
   type RebuildState,
@@ -77,6 +78,47 @@ describe('a publish while the build hook call is in flight', () => {
     await tick({ store, changeTimes: async () => [], triggerBuild: async (t) => void built.push(t), now: plus(2 * DEBOUNCE_MS), log: () => {} });
     expect(built).toHaveLength(2);
     expect(get()?.pendingSince).toBeUndefined();
+  });
+});
+
+describe('two ticks that overlap', () => {
+  it('the one that finishes last takes back no fired time and no build time', async () => {
+    const { store, get } = memoryStore(emptyState());
+    const times = [t0.toISOString(), plus(1_000).toISOString()];
+    const hooks: string[] = [];
+    let release = () => {};
+    let entered = () => {};
+    const gate = new Promise<void>((r) => (release = r));
+    const waiting = new Promise<void>((r) => (entered = r));
+    const early = tick({
+      store,
+      changeTimes: async () => times,
+      triggerBuild: async (t) => {
+        hooks.push(t);
+        entered();
+        await gate;
+      },
+      now: t0,
+      log: () => {},
+    });
+    await waiting;
+    await tick({ store, changeTimes: async () => times, triggerBuild: async (t) => void hooks.push(t), now: plus(1_000), log: () => {} });
+    release();
+    await early;
+    expect(get()).toMatchObject({ fired: times, lastBuildAt: plus(1_000).toISOString() });
+    await tick({ store, changeTimes: async () => times, triggerBuild: async (t) => void hooks.push(t), now: plus(2_000), log: () => {} });
+    expect(hooks).toHaveLength(2);
+  });
+});
+
+describe('two publishes in the same millisecond', () => {
+  it('the one recorded after the decision stays pending', () => {
+    const latest = plus(MAX_WAIT_MS);
+    const seen = recordPublish(recordPublish(emptyState(), t0), latest);
+    const d = decide(seen, latest, []);
+    expect(d.build).toBe(true);
+    expect(settle(recordPublish(seen, latest), seen, d)).toMatchObject({ pendingSince: latest.toISOString(), lastPublishAt: latest.toISOString() });
+    expect(settle(seen, seen, d).pendingSince).toBeUndefined();
   });
 });
 

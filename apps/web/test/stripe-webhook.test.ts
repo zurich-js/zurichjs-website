@@ -49,15 +49,20 @@ describe('the shared Stripe webhook', () => {
   });
 });
 
-/** The claims a database would keep (donation-events.ts), for one test. */
-function memoryDonationEvents(): DonationEvents & { posted: Set<string> } {
-  const claimed = new Set<string>();
-  const posted = new Set<string>();
+/** The claims the database keeps (donation-events.ts), with a clock for the five-minute lease. */
+function memoryDonationEvents(clock = { now: 0 }): DonationEvents & { clock: typeof clock } {
+  const claims = new Map<string, { at: number; posted: boolean }>();
   return {
-    posted,
-    claim: async (id) => !claimed.has(id) && !!claimed.add(id),
-    done: async (id) => void posted.add(id),
-    release: async (id) => void (posted.has(id) || claimed.delete(id)),
+    clock,
+    async claim(id) {
+      const c = claims.get(id);
+      if (c?.posted) return 'posted';
+      if (c && clock.now - c.at < 5 * 60_000) return 'in_progress';
+      claims.set(id, { at: clock.now, posted: false });
+      return 'acquired';
+    },
+    done: async (id) => void (claims.get(id)!.posted = true),
+    release: async (id) => void (claims.get(id)?.posted || claims.delete(id)),
   };
 }
 
@@ -77,15 +82,30 @@ describe('donations on the shared webhook', () => {
   };
   const env = { STRIPE_WEBHOOK_SECRET: SECRET, SLACK_WEBHOOK_URL: 'https://hooks.slack.invalid/T/B/x' };
 
-  it('posts one note, also when Stripe delivers the event twice or at the same time', async () => {
+  it('posts one note; a delivery while another is posting is answered 409, so Stripe retries it', async () => {
     const { posts, fetch } = slack();
     const events = memoryDonationEvents();
     const d = { ...deps(), env, fetch, donationEvents: events };
     const [a, b] = await Promise.all([handleStripeWebhook(signed(donation), d), handleStripeWebhook(signed(donation), d)]);
-    expect([a.status, b.status]).toEqual([200, 200]);
-    expect((await handleStripeWebhook(signed(donation), d)).status).toBe(200);
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    const again = await handleStripeWebhook(signed(donation), d);
+    expect(again.status).toBe(200);
+    expect(await again.json()).toMatchObject({ duplicate: true });
     expect(posts).toHaveLength(1);
     expect(posts[0]).toContain('New donation on zurichjs.com: CHF 50.00, one-time.');
+  });
+
+  it('a claim abandoned before posting is not answered as done, and is taken over after five minutes', async () => {
+    const { posts, fetch } = slack();
+    const events = memoryDonationEvents();
+    expect(await events.claim(donation.id, donation.type)).toBe('acquired'); // the first delivery stops here
+    const d = { ...deps(), env, fetch, donationEvents: events };
+    events.clock.now = 5 * 60_000 - 1;
+    expect((await handleStripeWebhook(signed(donation), d)).status).toBe(409);
+    expect(posts).toHaveLength(0);
+    events.clock.now = 5 * 60_000;
+    expect((await handleStripeWebhook(signed(donation), d)).status).toBe(200);
+    expect(posts).toHaveLength(1);
   });
 
   it('answers 500 when Slack fails, and the redelivery posts the note', async () => {
@@ -98,6 +118,27 @@ describe('donations on the shared webhook', () => {
     const up = slack();
     expect((await handleStripeWebhook(signed(donation), { ...deps(), env, fetch: up.fetch, donationEvents: events })).status).toBe(200);
     expect(up.posts).toHaveLength(1);
+  });
+
+  it('records nothing when Slack is not configured, so a replay after setting it up posts', async () => {
+    const events = memoryDonationEvents();
+    const { posts, fetch } = slack();
+    const first = await handleStripeWebhook(signed(donation), { ...deps(), env: { STRIPE_WEBHOOK_SECRET: SECRET }, fetch, donationEvents: events });
+    expect(first.status).toBe(200);
+    expect(await first.json()).toMatchObject({ posted: false });
+    expect((await handleStripeWebhook(signed(donation), { ...deps(), env, fetch, donationEvents: events })).status).toBe(200);
+    expect(posts).toHaveLength(1);
+  });
+
+  it('answers 200 when the note went out but marking it posted failed, so Stripe does not post it again', async () => {
+    const { posts, fetch } = slack();
+    const events = memoryDonationEvents();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failing = { ...events, done: async () => Promise.reject(new Error('database gone')) };
+    expect((await handleStripeWebhook(signed(donation), { ...deps(), env, fetch, donationEvents: failing })).status).toBe(200);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('posted to Slack but not recorded as posted'), expect.any(Error));
+    error.mockRestore();
+    expect(posts).toHaveLength(1);
   });
 
   it('needs no membership or sponsorship database', async () => {

@@ -37,9 +37,17 @@ function noteFor(event: StripeEvent): string | null {
 }
 
 /**
- * One verified Stripe event for donations; anything else is skipped. Each event posts its note
- * once (donation-events.ts). When Slack fails, the claim is given back and the answer is 500, so
- * Stripe delivers the event again.
+ * One verified Stripe event for donations; anything else is skipped. The answers, for Stripe:
+ *
+ *   - 200 once the note is posted, or when an earlier delivery already posted it
+ *   - 409 while another delivery holds a fresh claim on the event, so Stripe delivers it again
+ *   - 500 when Slack fails, with the claim given back
+ *   - 200 with `posted: false` when Slack is not configured; nothing is recorded, so a replay
+ *     after Slack is set up posts the note
+ *
+ * Delivery to Slack is at least once, not exactly once. When Slack takes the note but its answer
+ * is lost, the claim is given back and the retry posts again. When the note went out but marking
+ * it posted fails, the answer is still 200 and the log says a replay would post again.
  */
 export async function processDonationEvent(event: StripeEvent, deps: DonateDeps = {}): Promise<Response> {
   const env = deps.env ?? process.env;
@@ -49,14 +57,27 @@ export async function processDonationEvent(event: StripeEvent, deps: DonateDeps 
   try {
     const events = deps.events === undefined ? donationEvents(env) : deps.events;
     if (!events) log(`[donate] no database: ${event.id} is not recorded, so a redelivery posts again`);
-    else if (!(await events.claim(event.id, event.type))) return json(200, { ok: true, duplicate: true });
+    else {
+      const claim = await events.claim(event.id, event.type);
+      if (claim === 'posted') return json(200, { ok: true, duplicate: true });
+      if (claim === 'in_progress') return fail(409, 'Another delivery of this event is being handled; Stripe will retry.');
+    }
+    let sent: boolean;
     try {
-      await postSlack(env, text, log, deps.fetch);
+      ({ sent } = await postSlack(env, text, log, deps.fetch));
     } catch (cause) {
       await events?.release(event.id);
       throw cause;
     }
-    await events?.done(event.id);
+    if (!sent) {
+      await events?.release(event.id);
+      return json(200, { ok: true, posted: false });
+    }
+    try {
+      await events?.done(event.id);
+    } catch (cause) {
+      console.error(`[donate] ${event.id} posted to Slack but not recorded as posted; a replay of it would post again`, cause);
+    }
     return json(200, { ok: true });
   } catch (cause) {
     console.error(`[donate] webhook ${event.type} ${event.id} failed; Stripe will retry`, cause);

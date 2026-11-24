@@ -48,7 +48,7 @@ export const handleAddSponsor = (request: Request, deps: SponsorAdminDeps = {}) 
       if (!body) return fail(400, 'Send the sponsor as JSON.');
       const parsed = parseNewSponsor(body);
       if (!parsed.ok) return fail(400, parsed.error, { field: parsed.field });
-      const r = await createSponsor(parsed.value, { ...lifecycle, meetups: deps.meetups ?? (() => upcomingMeetups(env, deps.fetch)) });
+      const r = await createSponsor(parsed.value, { ...lifecycle, meetups: deps.meetups ?? (() => upcomingMeetups(env, lifecycle.fetch)) });
       if (r.result === 'exists') return fail(409, `${r.contact.email} is already a contact of a sponsorship.`, { field: 'contactEmail', sponsorId: r.contact.sponsorId });
       return json(200, { ok: true, sponsor: adminSponsorView(r.sponsor, await store.meetups(r.sponsor.id)), emailed: r.emailed });
     },

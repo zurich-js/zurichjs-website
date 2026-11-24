@@ -1,6 +1,6 @@
 /**
  * Donation event claims (donation-events.ts) on the real migrations, in a throwaway local
- * Postgres (skips without one; TEST_DATABASE_URL may point at an empty database instead).
+ * Postgres. Skips without one; TEST_DATABASE_URL may name an empty database instead.
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -27,20 +27,20 @@ const local: Pg | null = url ? null : startPg();
     local?.stop();
   });
 
-  it('one of two concurrent deliveries claims the event, and a posted event stays claimed', async () => {
+  it('one of two concurrent deliveries acquires the event; the other is told it is in progress, then posted', async () => {
     const claims = await Promise.all([events.claim('evt_a', 'checkout.session.completed'), events.claim('evt_a', 'checkout.session.completed')]);
-    expect(claims.filter(Boolean)).toHaveLength(1);
+    expect(claims.sort()).toEqual(['acquired', 'in_progress']);
     await events.done('evt_a');
     await events.release('evt_a');
-    expect(await events.claim('evt_a', 'checkout.session.completed')).toBe(false);
+    expect(await events.claim('evt_a', 'checkout.session.completed')).toBe('posted');
   });
 
-  it('a released claim, or one left unfinished for five minutes, can be claimed again', async () => {
-    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe(true);
+  it('a released claim, or one left unfinished for five minutes, is acquired again', async () => {
+    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe('acquired');
     await events.release('evt_b');
-    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe(true);
-    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe(false);
+    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe('acquired');
+    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe('in_progress');
     await pool.query(`update donation_stripe_events set claimed_at = now() - interval '6 minutes' where id = 'evt_b'`);
-    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe(true);
+    expect(await events.claim('evt_b', 'checkout.session.completed')).toBe('acquired');
   });
 });

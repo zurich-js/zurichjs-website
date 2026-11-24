@@ -1,0 +1,43 @@
+// Expected: a delivery whose donation claim was taken over cannot release or complete the new claim.
+// Works on both the old API (claim → string, done(id), release(id)) and the token API.
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import pg from 'pg';
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import { postgresDonationEvents } from '../../../../apps/web/src/server/donation-events.ts';
+import { startPg, type Pg } from '../../../../packages/membership/test/pg.ts';
+
+const migrations = join(import.meta.dirname, '../../../../apps/web/database/migrations');
+let local: Pg | null;
+let db: pg.Pool;
+beforeAll(async () => {
+  local = startPg();
+  if (!local) throw new Error('needs local Postgres binaries');
+  db = new pg.Pool({ ...local.connection, max: 2 });
+  for (const f of readdirSync(migrations).sort()) await db.query(readFileSync(join(migrations, f), 'utf8'));
+});
+afterAll(async () => {
+  await db?.end();
+  local?.stop();
+});
+
+type Any = { claim(id: string, t: string): Promise<unknown>; done(id: string, token?: string): Promise<unknown>; release(id: string, token?: string): Promise<unknown> };
+const state = (c: unknown) => (typeof c === 'string' ? c : (c as { state: string }).state);
+const token = (c: unknown) => (typeof c === 'string' ? undefined : (c as { token?: string }).token);
+
+it('LEASE: stale release and done from the first holder leave the takeover claim in place', async () => {
+  const a = postgresDonationEvents(db) as unknown as Any;
+  const b = postgresDonationEvents(db) as unknown as Any;
+  const seen: Record<string, string> = {};
+  for (const end of ['release', 'done'] as const) {
+    const id = `evt_fixture_${end}`;
+    const first = await a.claim(id, 'fixture');
+    expect(state(first)).toBe('acquired');
+    await db.query(`update donation_stripe_events set claimed_at = now() - interval '301 seconds' where id = $1`, [id]);
+    expect(state(await b.claim(id, 'fixture'))).toBe('acquired');
+    await a[end](id, token(first));
+    seen[end] = state(await b.claim(id, 'fixture'));
+  }
+  console.log('LEASE', JSON.stringify(seen));
+  expect(seen).toEqual({ release: 'in_progress', done: 'in_progress' });
+});

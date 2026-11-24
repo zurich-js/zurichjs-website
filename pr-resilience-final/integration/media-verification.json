@@ -1,0 +1,23 @@
+[
+  {
+    "pr": 96,
+    "pngs": 10,
+    "widths": [320, 375, 390, 1280, 1440],
+    "videos": [["payment-reload-and-retry.mp4", "5.920000"]]
+  },
+  {
+    "pr": 97,
+    "pngs": 15,
+    "widths": [320, 375, 390, 1280, 1440],
+    "videos": [
+      ["signout-failed-then-retry.mp4", "6.400000"],
+      ["member-late-answer-and-unknown-write.mp4", "7.880000"]
+    ]
+  },
+  {
+    "pr": 99,
+    "pngs": 20,
+    "widths": [320, 375, 390, 1280, 1440],
+    "videos": [["upgrade-check-and-review.mp4", "3.000000"]]
+  }
+]

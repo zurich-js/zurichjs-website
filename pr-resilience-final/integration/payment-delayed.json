@@ -1,0 +1,71 @@
+{
+  "first": [
+    502,
+    {
+      "ok": false,
+      "error": "The site could not confirm whether it saved this change. Reload the page and check before trying again.",
+      "outcome": "unknown"
+    }
+  ],
+  "retry": [
+    200,
+    {
+      "ok": true,
+      "sponsor": {
+        "id": "b068c360-47e7-4ba3-aeab-f4e0cb5bc250",
+        "companyName": "Delayed",
+        "legalName": null,
+        "billingAddress": null,
+        "vatId": null,
+        "website": null,
+        "tier": "friend",
+        "tierName": "Community Friend",
+        "benefits": ["Medium logo on our site and partner list", "1 sponsor slide in rotation at meetups", "Name-drop and recognition at events", "Swag distribution at events"],
+        "cycle": "yearly",
+        "cycleLabel": "Yearly",
+        "feeLabel": "CHF 3’000 a year",
+        "pricePerMeetup": null,
+        "meetups": [],
+        "paymentMode": "manual",
+        "paymentLabel": "By bank transfer to ZurichJS",
+        "status": "active",
+        "statusLabel": "active",
+        "endedReason": null,
+        "startedAt": "2026-11-24",
+        "paidUntil": "2027-12-31",
+        "paidThrough": "2027-12-30",
+        "endsAt": null,
+        "lastDay": null,
+        "hasStripeCustomer": false,
+        "hasSubscription": false,
+        "hasContract": false,
+        "source": "invited",
+        "stripeCustomerId": null,
+        "stripeSubscriptionId": null,
+        "paymentLinkUrl": null,
+        "partnerId": null,
+        "notes": null,
+        "endRequestedAt": null,
+        "createdAt": "2026-11-24T08:08:09.333Z"
+      }
+    }
+  ],
+  "again": [
+    400,
+    {
+      "ok": false,
+      "error": "It is already paid through 30th December 2027. Give a later date.",
+      "field": "paidUntil"
+    }
+  ],
+  "partial": {
+    "status": "pending",
+    "paidUntil": "2027-12-31",
+    "recorded": 0
+  },
+  "final": {
+    "status": "active",
+    "paidUntil": "2027-12-31",
+    "events": ["created", "payment_recording", "updated", "status_changed", "payment_recorded"]
+  }
+}

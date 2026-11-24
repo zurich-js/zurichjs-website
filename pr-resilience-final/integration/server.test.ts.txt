@@ -1,0 +1,178 @@
+// Expected behaviour for the #96 review findings, against whichever tree is checked out.
+// Written to run on the old #96 head (27b6919) and on the combined head: a failure is the defect.
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
+import { decide, recordPublish, settle, tick, emptyState, type RebuildState } from '../../../../apps/web/src/server/rebuild.ts';
+import { deadline } from '../../../../apps/web/src/server/deadline.ts';
+import { dailyCheck } from '../../../../apps/web/src/server/sponsor-daily.ts';
+import { lifecycleDeps } from '../../../../apps/web/src/server/sponsor-route.ts';
+
+const b = vi.hoisted(() => ({ conflicts: false, state: null as unknown, etag: 0, others: new Map<string, unknown>() }));
+vi.mock('@netlify/blobs', () => ({
+  getStore: () => ({
+    get: async () => structuredClone(b.state),
+    getWithMetadata: async () => (b.state === null ? null : { data: structuredClone(b.state), etag: String(b.etag), metadata: {} }),
+    list: async ({ prefix }: { prefix: string }) => ({ blobs: [...b.others.keys()].filter((k) => k.startsWith(prefix)).map((key) => ({ key, etag: 'x' })), directories: [] }),
+    delete: async (k: string) => void b.others.delete(k),
+    setJSON: async (key: string, data: unknown, opts: { onlyIfMatch?: string; onlyIfNew?: boolean } = {}) => {
+      if (key !== 'state') return b.others.set(key, data) && { modified: true };
+      if (b.conflicts) return { modified: false };
+      if (opts.onlyIfNew ? b.state !== null : opts.onlyIfMatch !== String(b.etag)) return { modified: false };
+      b.state = structuredClone(data);
+      return { modified: true, etag: String(++b.etag) };
+    },
+  }),
+}));
+const { rebuildStore } = await import('../../../../apps/web/src/server/rebuild-store.ts');
+const { queueRebuild, withRebuilds } = await import('../../../../apps/web/src/server/sponsor-rebuild.ts');
+
+beforeEach(() => Object.assign(b, { conflicts: false, state: { fired: [] }, etag: 0, others: new Map() }));
+afterEach(() => vi.restoreAllMocks());
+
+const board = { kind: 'board', id: 'admin' } as const;
+const SITE = 'https://fixture.invalid';
+
+it('ENQUEUE: a sponsor change stays queued for a build when all five conditional state writes lose', async () => {
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+  b.conflicts = true;
+  const save = withRebuilds({ update: async (_id: string, p: object) => ({ status: 'active', ...p }) } as unknown as SponsorStore, queueRebuild);
+  const saved = await save.update('s', { companyName: 'Changed' }, board);
+  b.conflicts = false;
+  const seen = (await rebuildStore().read()) as RebuildState | null;
+  console.log('ENQUEUE', JSON.stringify({ saved: saved.companyName, seen }));
+  expect(saved.companyName).toBe('Changed');
+  expect(seen?.pendingSince).toBeTruthy();
+});
+
+it('PRUNE: a merged settle does not bring back fired times the decision pruned', () => {
+  const t = new Date('2026-11-24T00:00:00Z');
+  const later = new Date(+t + 900_000);
+  const old = '2025-01-01T00:00:00.000Z';
+  const s = recordPublish(recordPublish({ fired: [old] }, t), later);
+  const d = decide(s, later, []);
+  const out = settle(recordPublish(s, later), s, d);
+  console.log('PRUNE', JSON.stringify(out));
+  expect(out.pendingSince).toBe(later.toISOString());
+  expect(out.fired).toEqual([]);
+});
+
+it('TICKS: two overlapping ticks keep both fired times and the later build time, and a third builds nothing', async () => {
+  const t = new Date('2026-11-24T00:00:00Z');
+  const later = new Date(+t + 1000);
+  const times = [t.toISOString(), later.toISOString()];
+  let s = emptyState();
+  let hooks = 0;
+  const store = { read: async () => s, publish: async (at: Date) => void (s = recordPublish(s, at)), update: async (change: (x: RebuildState) => RebuildState) => (s = change(s)) };
+  const gate = Promise.withResolvers<void>();
+  const entered = Promise.withResolvers<void>();
+  const deps = { store, changeTimes: async () => times, log: () => {} };
+  const a = tick({ ...deps, now: t, triggerBuild: async () => void (hooks++, entered.resolve(), await gate.promise) });
+  await entered.promise;
+  await tick({ ...deps, now: later, triggerBuild: async () => void hooks++ });
+  gate.resolve();
+  await a;
+  await tick({ ...deps, now: later, triggerBuild: async () => void hooks++ });
+  expect(hooks).toBe(2);
+  expect(s.fired).toEqual(times);
+  expect(s.lastBuildAt).toBe(later.toISOString());
+});
+
+// ---------------------------------------------------------------- the daily check, several days
+
+const sponsorInput = (companyName: string, over: Record<string, unknown> = {}) => ({
+  companyName, legalName: null, billingAddress: null, vatId: null, website: null, tier: 'friend' as const, cycle: 'once' as const,
+  paymentMode: 'card' as const, status: 'pending' as const, source: 'invited' as const, startedAt: null, paidUntil: null, pricePerMeetup: null, notes: null, ...over,
+});
+
+function world(opts: { transitionMs?: number } = {}) {
+  const base = memoryStore();
+  const clock = { ms: 0 };
+  const store: SponsorStore = {
+    ...base,
+    transition: async (id, input) => {
+      clock.ms += opts.transitionMs ?? 0;
+      return base.transition(id, input);
+    },
+  };
+  let stripeUp = true;
+  const calls: string[] = [];
+  const posts: string[] = [];
+  const stripe = (async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+    return stripeUp ? Response.json({ id: 'ok', status: 'expired', active: false }) : Response.json({ error: { message: 'unavailable' } }, { status: 503 });
+  }) as typeof fetch;
+  const run = (day: string) => {
+    clock.ms = 0;
+    const budget = deadline(25_000, () => clock.ms);
+    return dailyCheck({
+      ...lifecycleDeps({ STRIPE_SECRET_KEY: 'sk_test_fixture' }, store, SITE, {
+        fetch: budget.fetch(stripe),
+        slack: { post: async (text: string) => void posts.push(text) ?? '1.1', update: async () => {}, reply: async () => {}, ephemeral: async () => {} },
+        now: () => new Date(`${day}T08:00:00Z`),
+        log: () => {},
+      }),
+      deadline: budget,
+    } as Parameters<typeof dailyCheck>[0]);
+  };
+  const unpaidWithPages = async (name: string) => {
+    const { sponsor: s } = await base.create(sponsorInput(name), { email: `${name.toLowerCase().replace(/\W/g, '')}@example.test`, name: 'C', role: 'primary' }, board);
+    await base.setMeetups(s.id, [{ eventId: `ev-${name}`, title: 'Meetup', date: '2026-11-10' }], board);
+    await base.linkStripe(s.id, { checkoutSessionId: 'cs_fixture', paymentLinkId: 'plink_fixture', paymentLinkUrl: 'https://buy.stripe.invalid/x' }, board);
+    return s.id;
+  };
+  return { base, store, clock, calls, posts, run, unpaidWithPages, setStripe: (up: boolean) => void (stripeUp = up) };
+}
+
+it('STRIPE_503: an ended sponsorship whose Stripe close failed keeps its ids, is retried, and is cleared once Stripe confirms', async () => {
+  const w = world();
+  const id = await w.unpaidWithPages('Down AG');
+  w.setStripe(false);
+  const one = await w.run('2026-11-24');
+  const afterOne = await w.base.get(id);
+  const callsOne = w.calls.length;
+  const two = await w.run('2026-11-25');
+  const callsTwo = w.calls.length - callsOne;
+  w.setStripe(true);
+  const three = await w.run('2026-11-26');
+  const end = await w.base.get(id);
+  console.log('STRIPE_503', JSON.stringify({ one, afterOne: [afterOne?.status, afterOne?.checkoutSessionId, afterOne?.paymentLinkId], callsOne, two, callsTwo, three, end: [end?.status, end?.checkoutSessionId, end?.paymentLinkId] }));
+  expect(one.closed).toBe(1);
+  expect(afterOne).toMatchObject({ status: 'ended', checkoutSessionId: 'cs_fixture', paymentLinkId: 'plink_fixture' });
+  expect(one.stripeOpen).toEqual([id]);
+  expect(callsTwo).toBeGreaterThan(0);
+  expect(end).toMatchObject({ status: 'ended', checkoutSessionId: null, paymentLinkId: null });
+});
+
+it('STRIPE_DEADLINE: an ending whose close the budget stopped is closed by the next run', async () => {
+  const w = world({ transitionMs: 25_000 });
+  const id = await w.unpaidWithPages('Late AG');
+  const one = await w.run('2026-11-24');
+  const callsOne = w.calls.length;
+  const two = await w.run('2026-11-25');
+  const end = await w.base.get(id);
+  console.log('STRIPE_DEADLINE', JSON.stringify({ one, callsOne, two, callsTwo: w.calls.length - callsOne, end: [end?.status, end?.checkoutSessionId, end?.paymentLinkId] }));
+  expect(one).toMatchObject({ closed: 1, stripeOpen: [id] });
+  expect(callsOne).toBe(0);
+  expect(w.calls.length - callsOne).toBeGreaterThan(0);
+  expect(end).toMatchObject({ status: 'ended', checkoutSessionId: null, paymentLinkId: null });
+});
+
+it('REMINDER: a 30-day reminder the budget deferred is sent on the next run, once', async () => {
+  const w = world({ transitionMs: 7_000 });
+  for (const n of ['One', 'Two', 'Three'])
+    await w.base.create(sponsorInput(`${n} AG`, { status: 'active', paidUntil: '2026-11-20' }), { email: `${n.toLowerCase()}@example.test`, name: 'C', role: 'primary' }, board);
+  await w.base.create(
+    sponsorInput('Bank AG', { cycle: 'monthly', status: 'active', paymentMode: 'manual', source: 'imported', startedAt: '2026-10-24', paidUntil: '2026-12-24' }),
+    { email: 'bank@example.test', name: 'C', role: 'primary' },
+    board,
+  );
+  const one = await w.run('2026-11-24');
+  const two = await w.run('2026-11-25');
+  const three = await w.run('2026-11-26');
+  const notes = w.posts.filter((p) => p.includes(':calendar:'));
+  console.log('REMINDER', JSON.stringify({ one, two, three, notes }));
+  expect(one.completed).toBe(3);
+  expect(one.deferred.length).toBe(1);
+  expect(notes).toHaveLength(1);
+  expect(notes[0]).toContain('29 days left');
+});

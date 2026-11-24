@@ -1,0 +1,97 @@
+// The board records a bank transfer while the database answers the paid-through write after 11 s
+// (pg's client gives up at 10 s, the write still commits). Expected: an explicit unknown outcome,
+// then the same request again (at once, and later) finishes the payment exactly once.
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import pg from 'pg';
+import { afterAll, beforeAll, expect, it } from 'vitest';
+import { postgresStore, type SponsorStore } from '@zurichjs/sponsorship';
+import { DB_TIMEOUTS } from '../../../../apps/web/src/server/db-url.ts';
+import { handleRecordPayment } from '../../../../apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts';
+import { startPg, type Pg } from '../../../../packages/membership/test/pg.ts';
+
+const migrations = join(import.meta.dirname, '../../../../apps/web/database/migrations');
+let local: Pg | null;
+let pool: pg.Pool;
+let store: SponsorStore;
+const board = { kind: 'board', id: 'admin' } as const;
+const origin = 'https://fixture.invalid';
+const env = { BETTER_AUTH_URL: origin, ADMIN_PASSWORD: 'local-fixture-only' };
+
+beforeAll(async () => {
+  local = startPg();
+  if (!local) throw new Error('needs local Postgres binaries');
+  const setup = new pg.Pool({ ...local.connection, max: 1 });
+  for (const f of readdirSync(migrations).sort()) await setup.query(readFileSync(join(migrations, f), 'utf8'));
+  await setup.query(`create function slow_paid_until() returns trigger language plpgsql as $$ begin perform pg_sleep(11); return new; end $$`);
+  await setup.query(`create trigger slow_paid_until before update of paid_until on sponsors for each row execute function slow_paid_until()`);
+  await setup.end();
+  pool = new pg.Pool({ ...local.connection, ...DB_TIMEOUTS, max: 4 });
+  store = postgresStore(pool);
+});
+afterAll(async () => {
+  await pool?.end();
+  local?.stop();
+});
+
+const fixture = async (name: string) =>
+  (
+    await store.create(
+      { companyName: name, legalName: null, billingAddress: null, vatId: null, website: null, tier: 'friend', cycle: 'yearly', paymentMode: 'manual', status: 'pending', source: 'invited', startedAt: null, paidUntil: null, pricePerMeetup: null, notes: null },
+      { email: `${name.toLowerCase()}@example.test`, name, role: 'primary' },
+      board,
+    )
+  ).sponsor;
+const send = (id: string) =>
+  handleRecordPayment(
+    new Request(`${origin}/api/membership/admin/sponsors/${id}/payment`, {
+      method: 'POST',
+      headers: { origin, authorization: 'Bearer local-fixture-only', 'content-type': 'application/json' },
+      body: JSON.stringify({ paidUntil: '2027-12-31', amount: 30 }),
+    }),
+    id,
+    { env, store, fetch: async () => Promise.reject(new Error('no network in this probe')) },
+  );
+const answer = async (r: Response) => [r.status, await r.json()] as const;
+const settled = async (id: string) => {
+  const events = (await store.events(id)).map((e) => e.type);
+  return { row: await store.get(id), recorded: events.filter((t) => t === 'payment_recorded').length, events };
+};
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+it('a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once', async () => {
+  const s = await fixture('Delayed');
+  const first = await answer(await send(s.id));
+  await wait(2_000);
+  const partial = await settled(s.id);
+  console.log('after 11-second commit, before retry', JSON.stringify({ status: partial.row?.status, paidUntil: partial.row?.paidUntil, recorded: partial.recorded }));
+  expect(partial.row).toMatchObject({ status: 'pending', paidUntil: '2027-12-31' });
+  expect(partial.recorded).toBe(0);
+  const retry = await answer(await send(s.id));
+  const again = await answer(await send(s.id));
+  const end = await settled(s.id);
+  writeFileSync(join(import.meta.dirname, '../logs/payment-delayed.json'), JSON.stringify({first,retry,again,partial: {status:partial.row?.status,paidUntil:partial.row?.paidUntil,recorded:partial.recorded},final:{status:end.row?.status,paidUntil:end.row?.paidUntil,events:end.events}},null,2));
+  console.log('delayed', JSON.stringify({ first, retry, again, status: end.row?.status, paidUntil: end.row?.paidUntil, events: end.events }));
+  expect(first[0]).toBe(502);
+  expect(first[1]).toMatchObject({ ok: false, outcome: 'unknown' });
+  expect(retry[0]).toBe(200);
+  expect(end.row).toMatchObject({ status: 'active', paidUntil: '2027-12-31' });
+  expect(end.recorded).toBe(1);
+  expect(again[0]).toBe(400);
+});
+
+it('a retry sent at once, while the first write is still running, then a later one, record the payment once', async () => {
+  const s = await fixture('Immediate');
+  const first = await answer(await send(s.id));
+  const immediate = await answer(await send(s.id));
+  await wait(13_000);
+  const later = await answer(await send(s.id));
+  const end = await settled(s.id);
+  writeFileSync(join(import.meta.dirname, '../logs/payment-immediate.json'), JSON.stringify({first,immediate,later,final:{status:end.row?.status,paidUntil:end.row?.paidUntil,events:end.events}},null,2));
+  console.log('immediate', JSON.stringify({ first, immediate, later, status: end.row?.status, paidUntil: end.row?.paidUntil, events: end.events }));
+  expect(first[1]).toMatchObject({ outcome: 'unknown' });
+  expect([200, 502]).toContain(immediate[0]);
+  expect([immediate[0], later[0]]).toContain(200);
+  expect(end.row).toMatchObject({ status: 'active', paidUntil: '2027-12-31' });
+  expect(end.recorded).toBe(1);
+});

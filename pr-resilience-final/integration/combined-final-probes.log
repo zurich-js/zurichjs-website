@@ -1,0 +1,91 @@
+RUN  v4.1.12 <worktree>
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > ENQUEUE: a sponsor change stays queued for a build when all five conditional state writes lose
+ENQUEUE {"saved":"Changed","seen":{"fired":[],"pendingSince":"2026-11-24T08:08:08.259Z","lastPublishAt":"2026-11-24T08:08:08.259Z","publishes":1,"absorbed":["publish/2026-11-24T08:08:08.259Z/369b7cfb-3f7a-46f5-88b2-22b1f2b4a0de"]}}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > PRUNE: a merged settle does not bring back fired times the decision pruned
+PRUNE {"fired":[],"publishes":3,"lastBuildAt":"2026-11-24T00:15:00.000Z","pendingSince":"2026-11-24T00:15:00.000Z","lastPublishAt":"2026-11-24T00:15:00.000Z"}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_503: an ended sponsorship whose Stripe close failed keeps its ids, is retried, and is cleared once Stripe confirms
+STRIPE_503 {"one":{"completed":0,"ended":0,"closed":1,"reminded":0,"stripeClosed":0,"linksClosed":0,"notices":{"sent":1,"failed":0},"deferred":[],"stripeOpen":["s_1"]},"afterOne":["ended","cs_fixture","plink_fixture"],"callsOne":1,"two":{"completed":0,"ended":0,"closed":0,"reminded":0,"stripeClosed":0,"linksClosed":0,"notices":{"sent":0,"failed":0},"deferred":[],"stripeOpen":["s_1"]},"callsTwo":1,"three":{"completed":0,"ended":0,"closed":0,"reminded":0,"stripeClosed":1,"linksClosed":0,"notices":{"sent":0,"failed":0},"deferred":[],"stripeOpen":[]},"end":["ended",null,null]}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_DEADLINE: an ending whose close the budget stopped is closed by the next run
+STRIPE_DEADLINE {"one":{"completed":0,"ended":0,"closed":1,"reminded":0,"stripeClosed":0,"linksClosed":0,"notices":{"sent":0,"failed":0},"deferred":[],"stripeOpen":["s_1"]},"callsOne":0,"two":{"completed":0,"ended":0,"closed":0,"reminded":0,"stripeClosed":1,"linksClosed":0,"notices":{"sent":1,"failed":0},"deferred":[],"stripeOpen":[]},"callsTwo":2,"end":["ended",null,null]}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > REMINDER: a 30-day reminder the budget deferred is sent on the next run, once
+REMINDER {"one":{"completed":3,"ended":0,"closed":0,"reminded":0,"stripeClosed":0,"linksClosed":0,"notices":{"sent":0,"failed":0},"deferred":["s_7"],"stripeOpen":[]},"two":{"completed":0,"ended":0,"closed":0,"reminded":1,"stripeClosed":0,"linksClosed":0,"notices":{"sent":7,"failed":0},"deferred":[],"stripeOpen":[]},"three":{"completed":0,"ended":0,"closed":0,"reminded":0,"stripeClosed":0,"linksClosed":0,"notices":{"sent":0,"failed":0},"deferred":[],"stripeOpen":[]},"notes":[":calendar: *Bank AG* (Community Friend, monthly) pays by bank transfer and is paid through 23rd December 2026 (29 days left). Record the next payment or agree the end: https://fixture.invalid/admin/sponsors?id=s_7"]}
+
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > ENQUEUE: a sponsor change stays queued for a build when all five conditional state writes lose 3ms
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > PRUNE: a merged settle does not bring back fired times the decision pruned 2ms
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > TICKS: two overlapping ticks keep both fired times and the later build time, and a third builds nothing 1ms
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_503: an ended sponsorship whose Stripe close failed keeps its ids, is retried, and is cleared once Stripe confirms 19ms
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_DEADLINE: an ending whose close the budget stopped is closed by the next run 1ms
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > REMINDER: a 30-day reminder the budget deferred is sent on the next run, once 4ms
+stdout | tmp/battle-test/resilience-final-corrections/probes/lease-db.test.ts > LEASE: stale release and done from the first holder leave the takeover claim in place
+LEASE {"release":"in_progress","done":"in_progress"}
+
+ ✓ tmp/battle-test/resilience-final-corrections/probes/lease-db.test.ts > LEASE: stale release and done from the first holder leave the takeover claim in place 11ms
+stderr | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+[sponsorship-admin] record the payment failed Error: Query read timeout
+    at <worktree>/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at <worktree>/packages/sponsorship/src/postgres.ts:129:15
+    at Object.update (<worktree>/packages/sponsorship/src/postgres.ts:314:20)
+    at recordPayment (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:460:30)
+    at <worktree>/apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts:28:23
+    at sponsorAdminRoute (<worktree>/apps/web/src/server/sponsor-admin.ts:63:12)
+    at <worktree>/tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:64:30
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+after 11-second commit, before retry {"status":"pending","paidUntil":"2027-12-31","recorded":0}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+[email] RESEND_API_KEY missing; not sent to ***@example.test: Payment received: Delayed’s ZurichJS sponsorship
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+[sponsorship] notice sponsor-payment-recorded:b068c360-47e7-4ba3-aeab-f4e0cb5bc250:2027-12-31:slack not sent, tried again later: SLACK_AGENT_BOT_TOKEN and SLACK_MEMBERSHIP_CHANNEL_ID (or SLACK_AGENT_CHANNEL_ID) are needed
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+delayed {"first":[502,{"ok":false,"error":"The site could not confirm whether it saved this change. Reload the page and check before trying again.","outcome":"unknown"}],"retry":[200,{"ok":true,"sponsor":{"id":"b068c360-47e7-4ba3-aeab-f4e0cb5bc250","companyName":"Delayed","legalName":null,"billingAddress":null,"vatId":null,"website":null,"tier":"friend","tierName":"Community Friend","benefits":["Medium logo on our site and partner list","1 sponsor slide in rotation at meetups","Name-drop and recognition at events","Swag distribution at events"],"cycle":"yearly","cycleLabel":"Yearly","feeLabel":"CHF 3’000 a year","pricePerMeetup":null,"meetups":[],"paymentMode":"manual","paymentLabel":"By bank transfer to ZurichJS","status":"active","statusLabel":"active","endedReason":null,"startedAt":"2026-11-24","paidUntil":"2027-12-31","paidThrough":"2027-12-30","endsAt":null,"lastDay":null,"hasStripeCustomer":false,"hasSubscription":false,"hasContract":false,"source":"invited","stripeCustomerId":null,"stripeSubscriptionId":null,"paymentLinkUrl":null,"partnerId":null,"notes":null,"endRequestedAt":null,"createdAt":"2026-11-24T08:08:09.333Z"}}],"again":[400,{"ok":false,"error":"It is already paid through 30th December 2027. Give a later date.","field":"paidUntil"}],"status":"active","paidUntil":"2027-12-31","events":["created","payment_recording","updated","status_changed","payment_recorded"]}
+
+ ✓ tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once 12078ms
+stderr | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+[sponsorship-admin] record the payment failed Error: Query read timeout
+    at <worktree>/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at <worktree>/packages/sponsorship/src/postgres.ts:129:15
+    at Object.update (<worktree>/packages/sponsorship/src/postgres.ts:314:20)
+    at recordPayment (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:460:30)
+    at <worktree>/apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts:28:23
+    at sponsorAdminRoute (<worktree>/apps/web/src/server/sponsor-admin.ts:63:12)
+    at <worktree>/tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:85:30
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+[sponsorship-admin] record the payment failed Error: Query read timeout
+    at <worktree>/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at <worktree>/packages/sponsorship/src/postgres.ts:129:15
+    at Object.update (<worktree>/packages/sponsorship/src/postgres.ts:314:20)
+    at recordPayment (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:460:30)
+    at <worktree>/apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts:28:23
+    at sponsorAdminRoute (<worktree>/apps/web/src/server/sponsor-admin.ts:63:12)
+    at <worktree>/tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:86:34
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+[email] RESEND_API_KEY missing; not sent to ***@example.test: Payment received: Immediate’s ZurichJS sponsorship
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+[sponsorship] notice sponsor-payment-recorded:437762d8-6b94-4ec1-a54d-6cb086acae9b:2027-12-31:slack not sent, tried again later: SLACK_AGENT_BOT_TOKEN and SLACK_MEMBERSHIP_CHANNEL_ID (or SLACK_AGENT_CHANNEL_ID) are needed
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+immediate {"first":[502,{"ok":false,"error":"The site could not confirm whether it saved this change. Reload the page and check before trying again.","outcome":"unknown"}],"immediate":[502,{"ok":false,"error":"The site could not confirm whether it saved this change. Reload the page and check before trying again.","outcome":"unknown"}],"later":[200,{"ok":true,"sponsor":{"id":"437762d8-6b94-4ec1-a54d-6cb086acae9b","companyName":"Immediate","legalName":null,"billingAddress":null,"vatId":null,"website":null,"tier":"friend","tierName":"Community Friend","benefits":["Medium logo on our site and partner list","1 sponsor slide in rotation at meetups","Name-drop and recognition at events","Swag distribution at events"],"cycle":"yearly","cycleLabel":"Yearly","feeLabel":"CHF 3’000 a year","pricePerMeetup":null,"meetups":[],"paymentMode":"manual","paymentLabel":"By bank transfer to ZurichJS","status":"active","statusLabel":"active","endedReason":null,"startedAt":"2026-11-24","paidUntil":"2027-12-31","paidThrough":"2027-12-30","endsAt":null,"lastDay":null,"hasStripeCustomer":false,"hasSubscription":false,"hasContract":false,"source":"invited","stripeCustomerId":null,"stripeSubscriptionId":null,"paymentLinkUrl":null,"partnerId":null,"notes":null,"endRequestedAt":null,"createdAt":"2026-11-24T08:08:21.407Z"}}],"status":"active","paidUntil":"2027-12-31","events":["created","payment_recording","updated","payment_recording","updated","status_changed","payment_recorded"]}
+
+ ✓ tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once 33040ms
+
+ Test Files  3 passed (3)
+      Tests  9 passed (9)
+   Start at  09:08:06
+   Duration  47.66s (transform 949ms, setup 0ms, import 2.50s, tests 47.84s, environment 0ms)

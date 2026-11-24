@@ -40,7 +40,6 @@ export interface RebuildState {
   absorbed?: string[];
 }
 
-/** Netlify Blobs in production (rebuild-store.ts); an in-memory object in tests. */
 export interface StateStore {
   read(): Promise<RebuildState | null>;
   /** Records a publish at `at`. Never conditional, so no other writer can make it fail. */

@@ -2,6 +2,8 @@
 
 ## 2026-11-24
 
+- **Correction**: the board can resubmit a partially saved bank transfer after reloading. The payment history determines whether the same date can resume ([Sponsorship frontend](/domains/sponsorship/frontend.md)).
+
 - **Update**: requests stay inside Netlify's time limits: database connections give up after 5 s and queries after 10 s, sponsorship routes share a 50 s budget for outbound calls, and the daily sponsorship check a 25 s budget, deferring what it cannot reach to the next run ([Netlify deploys](/systems/operations/netlify.md), [Sponsorship](/domains/sponsorship/overview.md), [Troubleshooting](/systems/operations/troubleshooting.md)).
 - **Update**: donation events go to the donation part alone and claim each event before posting (`donation_stripe_events`): a claim carries a token so a delivery that lost it cannot release or complete another's, a posted event is acknowledged, a delivery while another holds the claim is answered 409, a Slack failure 500, and an unconfigured Slack records nothing. Delivery is at least once ([Stripe](/systems/stripe.md), [Donations](/domains/donations/overview.md)).
 - **Update**: the daily sponsorship check does row-only work first and rotates which unpaid sponsorship it reads first; a Stripe close the budget or Stripe stops keeps its ids and the next run closes it, and a reminder it deferred is caught up. A sponsorship write that failed unexpectedly answers 502 with `outcome: "unknown"`; the same request again finishes it ([Sponsorship](/domains/sponsorship/overview.md)).

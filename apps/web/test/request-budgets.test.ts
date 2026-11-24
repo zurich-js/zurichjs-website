@@ -1,8 +1,3 @@
-/**
- * The database pool's per-query limits (db-url.ts DB_TIMEOUTS), the shared fetch deadline
- * (deadline.ts), the sponsorship routes that use it, and the daily sponsorship check's budget
- * (sponsor-daily.ts).
- */
 import net from 'node:net';
 import { memoryStore, type SponsorStore } from '@zurichjs/sponsorship';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
@@ -123,7 +118,6 @@ describe('the daily sponsorship check under a time budget', () => {
     notes: null,
     ...over,
   });
-  /** A store whose meetup reads move the clock by `readMs`, and sponsors made in the given order (the newest is listed first). */
   async function slowStore(readMs: number, clock: { ms: number }) {
     const store = memoryStore();
     const add = async (name: string, over: Record<string, unknown> = {}, meetupDate = '2027-01-13') => {

@@ -1,19 +1,3 @@
-/**
- * The membership database: Postgres on Neon (owner, 11th November 2026; it was Netlify Database,
- * which the Netlify plan does not include). The schema is in apps/web/database/migrations, applied
- * before every Netlify build by tools/db-migrate.mjs.
- *
- *   production     DATABASE_URL: the Neon production branch (pooled connection)
- *   deploy preview DATABASE_URL: the Neon preview branch; each PR uses its own database on it,
- *                  pr_<number>, created empty by tools/db-migrate.mjs, which writes its name into
- *                  db-target.json (bundled with the functions; a name, not a secret)
- *   local          MEMBERSHIP_DB_URL: the Docker Postgres (docker-compose.yml); it wins over DATABASE_URL
- *
- * One pool per function instance. Without a database URL every membership route answers 503
- * ("not available yet") instead of crashing. A connection or a query that does not answer fails
- * after DB_TIMEOUTS, and the route answers its own 502; a route that runs many queries in a row
- * has no total limit.
- */
 import pg from 'pg';
 import { postgresStore, type MemberStore, type Queryable } from '@zurichjs/membership';
 import { DB_TIMEOUTS, membershipUrl } from './db-url.ts';

@@ -49,7 +49,6 @@ describe('the shared Stripe webhook', () => {
   });
 });
 
-/** The claims the database keeps (donation-events.ts), with a clock for the five-minute lease. */
 function memoryDonationEvents(clock = { now: 0 }): DonationEvents & { clock: typeof clock } {
   const claims = new Map<string, { at: number; token: string; posted: boolean }>();
   let n = 0;
@@ -69,7 +68,7 @@ function memoryDonationEvents(clock = { now: 0 }): DonationEvents & { clock: typ
       if (c) c.posted = true;
       return !!c;
     },
-    release: async (id, token) => void (mine(id, token) && !mine(id, token)!.posted && claims.delete(id)),
+    release: async (id, token) => !!mine(id, token) && !mine(id, token)!.posted && claims.delete(id),
   };
 }
 

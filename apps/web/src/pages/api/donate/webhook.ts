@@ -24,7 +24,6 @@ interface DonationObject {
 
 type DonateDeps = { env?: Env; log?: (m: string) => void; now?: number; fetch?: typeof fetch; events?: DonationEvents | null };
 
-/** The Slack note for a donation event, or null when the event is not one the organisers hear about. */
 function noteFor(event: StripeEvent): string | null {
   const o = event.data.object as DonationObject;
   if (o.metadata?.source !== DONATION_SOURCE) return null;
@@ -62,7 +61,9 @@ export async function processDonationEvent(event: StripeEvent, deps: DonateDeps 
     if (claim?.state === 'posted') return json(200, { ok: true, duplicate: true });
     if (claim?.state === 'in_progress') return fail(409, 'Another delivery of this event is being handled; Stripe will retry.');
     const token = claim?.state === 'acquired' ? claim.token : null;
-    const release = () => (events && token ? events.release(event.id, token) : undefined);
+    const release = async () => {
+      if (events && token && !(await events.release(event.id, token))) log(`[donate] ${event.id} no longer owns the claim it tried to release`);
+    };
     let sent: boolean;
     try {
       ({ sent } = await postSlack(env, text, log, deps.fetch));

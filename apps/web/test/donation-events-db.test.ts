@@ -1,7 +1,3 @@
-/**
- * Donation event claims (donation-events.ts) on the real migrations, in a throwaway local
- * Postgres. Skips without one; TEST_DATABASE_URL may name an empty database instead.
- */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pg from 'pg';
@@ -55,8 +51,7 @@ const local: Pg | null = url ? null : startPg();
       await age(id);
       const b = token(await claim(id));
       expect(b).not.toBe(a);
-      if (end === 'done') expect(await events.done(id, a)).toBe(false);
-      else await events.release(id, a);
+      expect(await events[end](id, a)).toBe(false);
       expect((await claim(id)).state).toBe('in_progress');
       expect(await events.done(id, b)).toBe(true);
       expect((await claim(id)).state).toBe('posted');

@@ -25,7 +25,7 @@ export interface DonationEvents {
    */
   done(id: string, token: string): Promise<boolean>;
   /** Nothing went out: the next delivery acquires the event at once, unless the claim was taken over. */
-  release(id: string, token: string): Promise<void>;
+  release(id: string, token: string): Promise<boolean>;
 }
 
 /** The claim's token is its `claimed_at`, as text so no precision is lost: a takeover sets a new one. */
@@ -50,7 +50,10 @@ export function postgresDonationEvents(db: Queryable): DonationEvents {
       ]);
       return r.rows.length === 1;
     },
-    release: async (id, token) => void (await db.query('delete from donation_stripe_events where id = $1 and claimed_at = $2::timestamptz and posted_at is null', [id, token])),
+    async release(id, token) {
+      const r = await db.query('delete from donation_stripe_events where id = $1 and claimed_at = $2::timestamptz and posted_at is null returning id', [id, token]);
+      return r.rows.length === 1;
+    },
   };
 }
 

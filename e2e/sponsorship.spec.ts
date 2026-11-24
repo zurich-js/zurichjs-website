@@ -370,6 +370,41 @@ test.describe('the board’s sponsors (/admin/sponsors)', () => {
     await expect(page.getByRole('heading', { name: 'Sponsors' })).toBeVisible();
   });
 
+  test('a reloaded transfer can finish the same paid-until date after an uncertain write', async ({ page }) => {
+    await mockAdmin(page);
+    let recorded = false;
+    await page.route(`**${ADMIN_API}/${BOLT.id}`, (route) =>
+      route.fulfill({
+        json: {
+          ok: true,
+          sponsor: { ...BOLT, paidUntil: '2027-12-31', paidThrough: '2027-12-30', status: recorded ? 'active' : 'pending' },
+          attention: [],
+          contacts: [],
+          agreements: [],
+          logos: [],
+          contracts: [],
+          events: [],
+          pendingChange: null,
+        },
+      }),
+    );
+    await page.route(`**${ADMIN_API}/${BOLT.id}/payment`, (route) => {
+      expect(route.request().postDataJSON()).toEqual({ paidUntil: '2027-12-31', amount: 30 });
+      recorded = true;
+      return route.fulfill({ json: { ok: true } });
+    });
+    await page.goto(`${ADMIN}?id=${BOLT.id}`);
+    await page.getByRole('button', { name: 'Record a bank transfer' }).click();
+    await page.getByLabel('Paid until (the first day not paid for)').fill('2027-12-31');
+    await page.locator('input[name="amount"]').fill('30');
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    const confirm = page.getByRole('button', { name: 'Yes, record it' });
+    await expect(confirm).toBeVisible();
+    await confirm.click();
+    await expect(page.getByText(/Bank transfer recorded: paid through/)).toBeVisible();
+    expect(recorded).toBe(true);
+  });
+
   test('the sponsor list has no axe violations', async ({ page, isMobile }) => {
     await mockAdmin(page);
     await page.goto(ADMIN);

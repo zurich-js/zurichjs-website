@@ -29,7 +29,6 @@ import { closeStripe, leftInStripe, type LifecycleDeps } from './sponsor-lifecyc
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
-/** Budget left below which no sponsor's work is started: an ending makes a transition, Stripe closes and a Slack note. */
 export const PER_SPONSOR_MS = 8_000;
 
 const dayNumber = (day: string) => Math.floor(Date.parse(`${day}T12:00:00Z`) / 86_400_000);

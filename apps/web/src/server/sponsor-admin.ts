@@ -71,10 +71,8 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
     if (known) return known;
     if (cause instanceof MembershipUnavailable || cause instanceof StripeUnavailable) return fail(503, `Not configured: ${(cause as Error).message}`);
     console.error(`[sponsorship-admin] ${what} failed`, cause);
-    // A write that failed unexpectedly (a database answer lost after a timeout) may have saved
-    // some of its steps; the same request again finishes it.
     if (request.method !== 'GET')
-      return fail(502, `Could not ${what} for certain: part of it may be saved. Send the same again to finish it; details are in the function log.`, { outcome: 'unknown' });
+      return fail(502, 'The site could not confirm whether it saved this change. Reload the page and check before trying again.', { outcome: 'unknown' });
     return fail(502, `Could not ${what}. Try again; details are in the function log.`);
   }
 }

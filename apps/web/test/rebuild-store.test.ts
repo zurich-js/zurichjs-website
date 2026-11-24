@@ -55,7 +55,6 @@ describe('the rebuild state store', () => {
     const first = new Date('2026-11-18T10:00:00Z');
     const second = new Date('2026-11-18T10:00:30Z');
     blob.value = emptyState();
-    // Another publish is saved between this writer's read and its write.
     blob.beforeWrite = () => {
       blob.value = recordPublish(blob.value as RebuildState, first);
       blob.etag++;

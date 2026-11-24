@@ -759,6 +759,16 @@ function eventText(e: SponsorEvent): string {
     }
     case 'contact_removed':
       return 'Contact removed.';
+    case 'invoice_paid':
+      return 'Card payment received.';
+    case 'charge_refunded':
+    case 'charge_disputed': {
+      // Stripe amounts are in cents.
+      const cents = (k: string) => (typeof p[k] === 'number' ? chf((p[k] as number) / 100) : 'an amount');
+      return e.type === 'charge_refunded'
+        ? `Refunded in Stripe: ${cents('refunded')} of a ${cents('amount')} card payment. Nothing changed here.`
+        : `Card payment of ${cents('amount')} disputed in Stripe${str('reason') ? ` (${str('reason').replace(/_/g, ' ')})` : ''}. Nothing changed here.`;
+    }
     default: {
       const t = e.type.replace(/_/g, ' ');
       return `${t.charAt(0).toUpperCase()}${t.slice(1)}.`;

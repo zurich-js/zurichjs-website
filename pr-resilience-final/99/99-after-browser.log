@@ -1,0 +1,67 @@
+[WebServer] (node:58047) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 44 tests using 4 workers
+
+(node:58050) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58049) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58051) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [mobile] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available (337ms)
+  ✓   4 [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again (432ms)
+  ✓   5 [mobile] › e2e/member-account.spec.ts:22:1 › a request that never answers ends with Try again after 20 seconds (91ms)
+  ✓   7 [mobile] › e2e/sponsorship.spec.ts:175:3 › the sponsorship page (/partners/account) › a request that never answers ends with Try again after 20 seconds (100ms)
+  ✓   6 [mobile] › e2e/sponsorship.spec.ts:158:3 › the sponsorship page (/partners/account) › a slow answer says so, and a failed one offers Try again instead of a signed-out or empty page (165ms)
+  ✓   8 [mobile] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available (129ms)
+  ✓  10 [mobile] › e2e/sponsorship.spec.ts:226:3 › the sponsorship page (/partners/account) › without accounts configured (503) the page says so and offers no form (79ms)
+  ✓   9 [mobile] › e2e/sponsorship.spec.ts:202:3 › the sponsorship page (/partners/account) › signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox (222ms)
+  ✓   3 [mobile] › e2e/admin.spec.ts:59:1 › a late answer for the member opened first does not replace the member opened since (965ms)
+  ✓   2 [mobile] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since (967ms)
+  ✓  13 [mobile] › e2e/sponsorship.spec.ts:341:3 › the sponsorship page (/partners/account) › when Stripe could not be asked for a scheduled change, the page says so instead of showing none (130ms)
+  ✓  12 [mobile] › e2e/sponsorship.spec.ts:290:3 › the sponsorship page (/partners/account) › an active sponsorship: the summary, then ending it; a failed request (500) is explained and keeps the form (393ms)
+  ✓  11 [mobile] › e2e/sponsorship.spec.ts:233:3 › the sponsorship page (/partners/account) › signed in without a sponsorship: tiers show the fee of the chosen billing, and signing posts the plan to /start (469ms)
+  ✓  15 [mobile] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet (142ms)
+  ✓  14 [mobile] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again (282ms)
+  ✓  17 [mobile] › e2e/sponsorship.spec.ts:399:3 › the sponsorship page (/partners/account) › a sponsorship that is ending can be kept: /end/undo is called and the page says it continues (230ms)
+  ✓  16 [mobile] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces (297ms)
+  ✓  19 [mobile] › e2e/sponsorship.spec.ts:431:3 › the board’s sponsors (/admin/sponsors) › an outage is not a sign-out: the admin can try again, and a failed list offers the same (452ms)
+  ✓  22 [mobile] › e2e/sponsorship.spec.ts:506:1 › the sponsorship agreement: one h1, every tier with the fees of the fees module, and not indexed (100ms)
+  ✓  20 [mobile] › e2e/sponsorship.spec.ts:454:3 › the board’s sponsors (/admin/sponsors) › the list shows each sponsor’s plan and status, filters by status, and opens one sponsor (394ms)
+  ✓  18 [mobile] › e2e/sponsorship.spec.ts:422:3 › the sponsorship page (/partners/account) › the signed-in page has no axe violations (655ms)
+(node:58183) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  21 [mobile] › e2e/sponsorship.spec.ts:498:3 › the board’s sponsors (/admin/sponsors) › the sponsor list has no axe violations (568ms)
+(node:58184) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58186) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58188) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  23 [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again (310ms)
+  ✓  27 [desktop] › e2e/member-account.spec.ts:22:1 › a request that never answers ends with Try again after 20 seconds (108ms)
+  ✓  26 [desktop] › e2e/member-account.spec.ts:6:1 › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available (171ms)
+  ✓  28 [desktop] › e2e/sponsorship.spec.ts:158:3 › the sponsorship page (/partners/account) › a slow answer says so, and a failed one offers Try again instead of a signed-out or empty page (156ms)
+  ✓  30 [desktop] › e2e/sponsorship.spec.ts:175:3 › the sponsorship page (/partners/account) › a request that never answers ends with Try again after 20 seconds (93ms)
+  ✓  29 [desktop] › e2e/sponsorship.spec.ts:186:3 › the sponsorship page (/partners/account) › a platform 503 page offers Try again; only the site’s own 503 says accounts are not available (178ms)
+  ✓  32 [desktop] › e2e/sponsorship.spec.ts:226:3 › the sponsorship page (/partners/account) › without accounts configured (503) the page says so and offers no form (81ms)
+  ✓  31 [desktop] › e2e/sponsorship.spec.ts:202:3 › the sponsorship page (/partners/account) › signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox (255ms)
+  ✓  24 [desktop] › e2e/admin.spec.ts:59:1 › a late answer for the member opened first does not replace the member opened since (993ms)
+  ✓  25 [desktop] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since (902ms)
+  ✓  35 [desktop] › e2e/sponsorship.spec.ts:341:3 › the sponsorship page (/partners/account) › when Stripe could not be asked for a scheduled change, the page says so instead of showing none (161ms)
+  ✓  34 [desktop] › e2e/sponsorship.spec.ts:290:3 › the sponsorship page (/partners/account) › an active sponsorship: the summary, then ending it; a failed request (500) is explained and keeps the form (412ms)
+  ✓  33 [desktop] › e2e/sponsorship.spec.ts:233:3 › the sponsorship page (/partners/account) › signed in without a sponsorship: tiers show the fee of the chosen billing, and signing posts the plan to /start (528ms)
+  ✓  37 [desktop] › e2e/sponsorship.spec.ts:369:3 › the sponsorship page (/partners/account) › a change link opened while the scheduled change is unknown cannot be confirmed yet (151ms)
+  ✓  36 [desktop] › e2e/sponsorship.spec.ts:348:3 › the sponsorship page (/partners/account) › while the scheduled change is unknown, a change from the renewal waits for Check again (320ms)
+  ✓  38 [desktop] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces (299ms)
+  ✓  39 [desktop] › e2e/sponsorship.spec.ts:399:3 › the sponsorship page (/partners/account) › a sponsorship that is ending can be kept: /end/undo is called and the page says it continues (307ms)
+  ✓  41 [desktop] › e2e/sponsorship.spec.ts:431:3 › the board’s sponsors (/admin/sponsors) › an outage is not a sign-out: the admin can try again, and a failed list offers the same (520ms)
+  ✓  44 [desktop] › e2e/sponsorship.spec.ts:506:1 › the sponsorship agreement: one h1, every tier with the fees of the fees module, and not indexed (137ms)
+  ✓  40 [desktop] › e2e/sponsorship.spec.ts:422:3 › the sponsorship page (/partners/account) › the signed-in page has no axe violations (716ms)
+  ✓  42 [desktop] › e2e/sponsorship.spec.ts:454:3 › the board’s sponsors (/admin/sponsors) › the list shows each sponsor’s plan and status, filters by status, and opens one sponsor (460ms)
+  ✓  43 [desktop] › e2e/sponsorship.spec.ts:498:3 › the board’s sponsors (/admin/sponsors) › the sponsor list has no axe violations (660ms)
+
+  44 passed (5.4s)

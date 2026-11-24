@@ -1,0 +1,72 @@
+[WebServer] (node:54037) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 2 workers
+
+(node:54039) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:54038) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [desktop] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces (30.1s)
+  ✘  1 [mobile] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces (30.1s)
+
+
+  1) [mobile] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('region', { name: 'Change tier or how often you pay' }).getByRole('button', { name: 'Check again' })
+
+
+      388 |     await expect(form.getByRole('button', { name: 'Confirm the change' })).toHaveCount(0);
+      389 |     unknown = false;
+    > 390 |     await form.getByRole('button', { name: 'Check again' }).click();
+          |                                                             ^
+      391 |     await expect(form.getByText(/replaces Community Friend.*month.*2nd November 2027/)).toBeVisible();
+      392 |     expect(requests).toEqual([]);
+      393 |     await form.getByRole('checkbox').check();
+        at <worktree>/e2e/sponsorship.spec.ts:390:61
+
+    Error Context: test-results/sponsorship-the-sponsorshi-3228f-nfirms-the-plan-it-replaces-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-3228f-nfirms-the-plan-it-replaces-mobile/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/sponsorship-the-sponsorshi-3228f-nfirms-the-plan-it-replaces-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [desktop] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByRole('region', { name: 'Change tier or how often you pay' }).getByRole('button', { name: 'Check again' })
+
+
+      388 |     await expect(form.getByRole('button', { name: 'Confirm the change' })).toHaveCount(0);
+      389 |     unknown = false;
+    > 390 |     await form.getByRole('button', { name: 'Check again' }).click();
+          |                                                             ^
+      391 |     await expect(form.getByText(/replaces Community Friend.*month.*2nd November 2027/)).toBeVisible();
+      392 |     expect(requests).toEqual([]);
+      393 |     await form.getByRole('checkbox').check();
+        at <worktree>/e2e/sponsorship.spec.ts:390:61
+
+    Error Context: test-results/sponsorship-the-sponsorshi-3228f-nfirms-the-plan-it-replaces-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sponsorship-the-sponsorshi-3228f-nfirms-the-plan-it-replaces-desktop/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/sponsorship-the-sponsorshi-3228f-nfirms-the-plan-it-replaces-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    [mobile] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces
+    [desktop] › e2e/sponsorship.spec.ts:378:3 › the sponsorship page (/partners/account) › a linked immediate upgrade waits for a readable renewal and confirms the plan it replaces

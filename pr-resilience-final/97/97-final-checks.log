@@ -1,0 +1,237 @@
+$ oxlint .
+$ eslint apps/web/src packages/design/src
+$ oxfmt --check
+Checking formatting...
+
+All matched files use the correct format.
+Finished in 17ms on 496 files using 10 threads.
+$ knip
+$ vitest run
+
+ RUN  v4.1.12 <worktree>
+
+
+ Test Files  60 passed (60)
+      Tests  655 passed (655)
+   Start at  08:57:38
+   Duration  3.09s (transform 2.65s, setup 0ms, import 15.45s, tests 5.33s, environment 4ms)
+
+$ pnpm --filter @zurichjs/web build
+$ astro build
+08:57:44 [@astrojs/netlify] Enabling sessions with Netlify Blobs
+08:57:45 [content] Syncing content
+08:57:45 [content] Synced content
+08:57:45 [types] Generated 1.35s
+08:57:45 [build] output: "static"
+08:57:45 [build] mode: "server"
+08:57:45 [build] directory: <worktree>/apps/web/dist/
+08:57:45 [build] adapter: @astrojs/netlify
+08:57:45 [build] Collecting build info...
+08:57:45 [build] ✓ Completed in 1.56s.
+08:57:45 [build] Building server entrypoints...
+08:57:46 [assets] Copying fonts (1 file)...
+08:57:46 [vite] ✓ built in 782ms
+08:57:47 [vite] ✓ built in 575ms
+08:57:47 [vite] ✓ built in 370ms
+
+ prerendering static routes
+08:57:47   ├─ /404.html (+12ms)
+08:57:47   ├─ /about/why-zurichjs.html (+2ms)
+08:57:47   ├─ /about.html (+9ms)
+08:57:47   ├─ /admin/memberships.html (+5ms)
+08:57:47   ├─ /admin/sponsors.html (+2ms)
+08:57:47   ├─ /admin.html (+2ms)
+08:57:47   ├─ /ai-context.html (+4ms)
+08:57:47   ├─ /api/sitemap.xml.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /buy-us-a-coffee.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /cfp/form.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /cfp.html (+5ms)
+08:57:47   ├─ /cfv.html (+7ms)
+08:57:47   ├─ /checkout/success.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /community.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /conferences/tech-conferences-zurich.html (+5ms)
+08:57:47   ├─ /contact.html (+3ms)
+08:57:47   ├─ /content-redirects.txt (+1ms)
+08:57:47   ├─ /design.html (+13ms)
+08:57:47   ├─ /donate/thanks.html (+2ms)
+08:57:47   ├─ /donate.html (+4ms)
+08:57:47   ├─ /event-feedback.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /events/2026-11-forms-types.ics (+1ms)
+08:57:47   ├─ /events/2026-09-signals-streams.ics (+0ms)
+08:57:47   ├─ /events/2026-07-summer-social.ics (+0ms)
+08:57:47   ├─ /events/2026-06-edge-runtimes.ics (+0ms)
+08:57:47   ├─ /events/2026-05-testing.ics (+0ms)
+08:57:47   ├─ /events/2025-11-anniversary.ics (+0ms)
+08:57:47   ├─ /events/2025-06-nodejs-workshop.ics (+0ms)
+08:57:47   ├─ /events/2025-03-partnerships.ics (+1ms)
+08:57:47   ├─ /events/2026-11-forms-types.html (+9ms)
+08:57:47   ├─ /events/2026-09-signals-streams.html (+5ms)
+08:57:47   ├─ /events/2026-07-summer-social.html (+3ms)
+08:57:47   ├─ /events/2026-06-edge-runtimes.html (+3ms)
+08:57:47   ├─ /events/2026-05-testing.html (+3ms)
+08:57:47   ├─ /events/2025-11-anniversary.html (+3ms)
+08:57:47   ├─ /events/2025-06-nodejs-workshop.html (+5ms)
+08:57:47   ├─ /events/2025-03-partnerships.html (+3ms)
+08:57:47   ├─ /events.html (+9ms)
+08:57:47   ├─ /feedback.html (+3ms)
+08:57:47   ├─ /invite.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /llms-full.txt (+2ms)
+08:57:47   ├─ /llms.txt (+1ms)
+08:57:47   ├─ /media/2026-09-signals-streams.html (+1ms)
+08:57:47   ├─ /media/2026-06-edge-runtimes.html (+1ms)
+08:57:47   ├─ /media/2025-06-nodejs-workshop.html (+1ms)
+08:57:47   ├─ /media/2025-03-partnerships.html (+1ms)
+08:57:47   ├─ /media.html (+3ms)
+08:57:47   ├─ /media-demo.html (+0ms) (file not created, response body was empty)
+08:57:47   ├─ /meetups/ai-ml-zurich.html (+3ms)
+08:57:47   ├─ /meetups/javascript-zurich.html (+3ms)
+08:57:47   ├─ /membership/account.html (+5ms)
+08:57:47   ├─ /membership/terms.html (+2ms)
+08:57:47   ├─ /membership.html (+2ms)
+08:57:47   ├─ /og/home.png (+207ms)
+08:57:48   ├─ /og/events.png (+87ms)
+08:57:48   ├─ /og/speakers.png (+73ms)
+08:57:48   ├─ /og/cfp.png (+94ms)
+08:57:48   ├─ /og/cfv.png (+75ms)
+08:57:48   ├─ /og/contact.png (+80ms)
+08:57:48   ├─ /og/partners.png (+88ms)
+08:57:48   ├─ /og/donate.png (+111ms)
+08:57:48   ├─ /og/membership.png (+108ms)
+08:57:48   ├─ /og/about.png (+102ms)
+08:57:48   ├─ /og/why-zurichjs.png (+96ms)
+08:57:49   ├─ /og/media.png (+96ms)
+08:57:49   ├─ /og/today.png (+94ms)
+08:57:49   ├─ /og/feedback.png (+91ms)
+08:57:49   ├─ /og/waitlist-conf.png (+91ms)
+08:57:49   ├─ /og/policies.png (+103ms)
+08:57:49   ├─ /og/javascript-zurich.png (+91ms)
+08:57:49   ├─ /og/ai-ml-zurich.png (+93ms)
+08:57:49   ├─ /og/tech-conferences-zurich.png (+108ms)
+08:57:49   ├─ /og/ai-context.png (+172ms)
+08:57:50   ├─ /og/default.png (+93ms)
+08:57:50   ├─ /og/event-2026-11-forms-types.png (+95ms)
+08:57:50   ├─ /og/event-2026-09-signals-streams.png (+95ms)
+08:57:50   ├─ /og/event-2026-07-summer-social.png (+92ms)
+08:57:50   ├─ /og/event-2026-06-edge-runtimes.png (+93ms)
+08:57:50   ├─ /og/event-2026-05-testing.png (+92ms)
+08:57:50   ├─ /og/event-2025-11-anniversary.png (+93ms)
+08:57:50   ├─ /og/event-2025-06-nodejs-workshop.png (+95ms)
+08:57:50   ├─ /og/event-2025-03-partnerships.png (+91ms)
+08:57:50   ├─ /og/speaker-anna-beispiel.png (+91ms)
+08:57:50   ├─ /og/speaker-max-muster.png (+90ms)
+08:57:51   ├─ /og/speaker-lea-platzhalter.png (+92ms)
+08:57:51   ├─ /og/speaker-jonas-test.png (+89ms)
+08:57:51   ├─ /og/speaker-urs-vorlage.png (+89ms)
+08:57:51   ├─ /og/speaker-mia-entwurf.png (+90ms)
+08:57:51   ├─ /og/speaker-noah-probe.png (+91ms)
+08:57:51   ├─ /og/speaker-sara-vorlage.png (+95ms)
+08:57:51   ├─ /partners/account.html (+4ms)
+08:57:51   ├─ /partners/agreement.html (+2ms)
+08:57:51   ├─ /partners.html (+5ms)
+08:57:51   ├─ /partnerships.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /policies/privacy.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /policies/refunds.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /policies/terms.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /policies/code-of-conduct.html (+2ms)
+08:57:51   ├─ /policies/privacy-policy.html (+1ms)
+08:57:51   ├─ /policies/terms-and-conditions.html (+1ms)
+08:57:51   ├─ /policies/refund-policy.html (+1ms)
+08:57:51   ├─ /profile.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /robots.txt (+1ms)
+08:57:51   ├─ /sitemap.xml (+1ms)
+08:57:51   ├─ /speakers/profile.html (+2ms)
+08:57:51   ├─ /speakers/speaker-1b73a96c-b241-4879-b32f-58a83c0ad7f5.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-22242222-7291-4da7-a4c4-e61762cde94c.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-223959e3-4d18-4359-9a3f-8212007a9b49.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-2aabb71f-2603-48f2-a057-39ead556019e.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-38860ce5-69c3-4df4-8b7d-6b7c11f99ece.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-42f2e2db-10cc-447e-b268-9ec3418500f7.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-4c145da3-e8e5-4f25-bc41-9b6bd61315b1.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-595e9a8f-a7ba-45be-8cce-a3829856bb67.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-59a34a74-aa31-49bb-a1a1-ac45ac72ef77.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-93d79db8-d2f6-40cc-860e-1a60ab3801d0.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-9ce559a5-d2f5-4795-992b-c2649cbeaebf.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-acf9167a-47e9-4172-9677-15282a751bdd.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-c87aa1c9-125d-412f-9e49-f3059fa7f244.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-cddb34e6-4bb2-48b7-b2c7-04181bd44864.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-d2156098-d172-4981-9182-aa58e055b1b0.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-d9b3e1ab-8d7a-4034-b155-36b664493979.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-e5f675a4-995b-4b1b-bdab-e689407a92d5.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-e8e4b807-8627-4e35-81b7-6a11b2604fc3.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/speaker-f4393480-f708-44e3-a4ca-007538d0ce32.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /speakers/anna-beispiel.html (+3ms)
+08:57:51   ├─ /speakers/max-muster.html (+2ms)
+08:57:51   ├─ /speakers/lea-platzhalter.html (+1ms)
+08:57:51   ├─ /speakers/jonas-test.html (+2ms)
+08:57:51   ├─ /speakers/urs-vorlage.html (+2ms)
+08:57:51   ├─ /speakers/mia-entwurf.html (+2ms)
+08:57:51   ├─ /speakers/noah-probe.html (+1ms)
+08:57:51   ├─ /speakers/sara-vorlage.html (+2ms)
+08:57:51   ├─ /speakers.html (+4ms)
+08:57:51   ├─ /state-changes.json (+2ms)
+08:57:51   ├─ /success.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /support.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /today.html (+23ms)
+08:57:51   ├─ /tshirt.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /waitlist/conf.html (+3ms)
+08:57:51   ├─ /workshops.html (+0ms) (file not created, response body was empty)
+08:57:51   ├─ /index.html (+8ms)
+08:57:51 ✓ Completed in 3.95s.
+
+08:57:51 [build] Rearranging server assets...
+08:57:51 [build] ✓ Completed in 5.75s.
+08:57:51 [@astrojs/netlify] Emitted _redirects
+08:57:51 [@astrojs/netlify] Bundling function ../../../build/entry.mjs
+08:57:54 [build] Waiting for integration "@astrojs/netlify", hook "astro:build:done"...
+08:57:54 [@astrojs/netlify] Generated SSR Function
+08:57:54 [build] Server built in 10.54s
+08:57:54 [build] Complete!
+[WebServer] (node:66932) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 26 tests using 4 workers
+
+(node:66935) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66934) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66936) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:66933) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   3 [mobile] › e2e/admin.spec.ts:40:1 › a sign-out the site does not confirm hides the admin area and offers Try again (408ms)
+  ✓   4 [mobile] › e2e/sponsorship.spec.ts:158:3 › the sponsorship page (/partners/account) › signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox (425ms)
+  ✓   6 [mobile] › e2e/sponsorship.spec.ts:182:3 › the sponsorship page (/partners/account) › without accounts configured (503) the page says so and offers no form (121ms)
+  ✓   5 [mobile] › e2e/sponsorship.spec.ts:189:3 › the sponsorship page (/partners/account) › signed in without a sponsorship: tiers show the fee of the chosen billing, and signing posts the plan to /start (429ms)
+  ✓   7 [mobile] › e2e/sponsorship.spec.ts:246:3 › the sponsorship page (/partners/account) › an active sponsorship: the summary, then ending it; a failed request (500) is explained and keeps the form (346ms)
+  ✓   2 [mobile] › e2e/admin.spec.ts:69:1 › a late 401 for the member opened first does not sign out the member opened since (1.0s)
+  ✓   8 [mobile] › e2e/sponsorship.spec.ts:297:3 › the sponsorship page (/partners/account) › a sponsorship that is ending can be kept: /end/undo is called and the page says it continues (168ms)
+  ✓   1 [mobile] › e2e/admin.spec.ts:54:1 › a late answer for the member opened first does not replace the member opened since (1.0s)
+  ✓  10 [mobile] › e2e/sponsorship.spec.ts:352:3 › the board’s sponsors (/admin/sponsors) › the list shows each sponsor’s plan and status, filters by status, and opens one sponsor (392ms)
+  ✓   9 [mobile] › e2e/sponsorship.spec.ts:320:3 › the sponsorship page (/partners/account) › the signed-in page has no axe violations (555ms)
+  ✓  13 [mobile] › e2e/sponsorship.spec.ts:404:1 › the sponsorship agreement: one h1, every tier with the fees of the fees module, and not indexed (97ms)
+  ✓  11 [mobile] › e2e/sponsorship.spec.ts:329:3 › the board’s sponsors (/admin/sponsors) › an outage is not a sign-out: the admin can try again, and a failed list offers the same (495ms)
+  ✓  12 [mobile] › e2e/sponsorship.spec.ts:396:3 › the board’s sponsors (/admin/sponsors) › the sponsor list has no axe violations (573ms)
+(node:67041) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:67067) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:67068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:67082) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  14 [desktop] › e2e/admin.spec.ts:40:1 › a sign-out the site does not confirm hides the admin area and offers Try again (302ms)
+  ✓  18 [desktop] › e2e/sponsorship.spec.ts:182:3 › the sponsorship page (/partners/account) › without accounts configured (503) the page says so and offers no form (128ms)
+  ✓  17 [desktop] › e2e/sponsorship.spec.ts:158:3 › the sponsorship page (/partners/account) › signed out: an invalid email is caught, a valid one asks for a sign-in link and says to check the inbox (263ms)
+  ✓  19 [desktop] › e2e/sponsorship.spec.ts:189:3 › the sponsorship page (/partners/account) › signed in without a sponsorship: tiers show the fee of the chosen billing, and signing posts the plan to /start (439ms)
+  ✓  15 [desktop] › e2e/admin.spec.ts:54:1 › a late answer for the member opened first does not replace the member opened since (968ms)
+  ✓  16 [desktop] › e2e/admin.spec.ts:69:1 › a late 401 for the member opened first does not sign out the member opened since (967ms)
+  ✓  20 [desktop] › e2e/sponsorship.spec.ts:246:3 › the sponsorship page (/partners/account) › an active sponsorship: the summary, then ending it; a failed request (500) is explained and keeps the form (410ms)
+  ✓  21 [desktop] › e2e/sponsorship.spec.ts:297:3 › the sponsorship page (/partners/account) › a sponsorship that is ending can be kept: /end/undo is called and the page says it continues (296ms)
+  ✓  22 [desktop] › e2e/sponsorship.spec.ts:352:3 › the board’s sponsors (/admin/sponsors) › the list shows each sponsor’s plan and status, filters by status, and opens one sponsor (454ms)
+  ✓  26 [desktop] › e2e/sponsorship.spec.ts:404:1 › the sponsorship agreement: one h1, every tier with the fees of the fees module, and not indexed (108ms)
+  ✓  24 [desktop] › e2e/sponsorship.spec.ts:329:3 › the board’s sponsors (/admin/sponsors) › an outage is not a sign-out: the admin can try again, and a failed list offers the same (491ms)
+  ✓  23 [desktop] › e2e/sponsorship.spec.ts:320:3 › the sponsorship page (/partners/account) › the signed-in page has no axe violations (656ms)
+  ✓  25 [desktop] › e2e/sponsorship.spec.ts:396:3 › the board’s sponsors (/admin/sponsors) › the sponsor list has no axe violations (600ms)
+
+  26 passed (4.4s)

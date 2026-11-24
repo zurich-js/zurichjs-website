@@ -1,0 +1,152 @@
+Running 6 tests using 5 workers
+
+  ✓  2 [mobile] › e2e/admin.spec.ts:59:1 › a late answer for the member opened first does not replace the member opened since (1.1s)
+  ✓  5 [desktop] › e2e/admin.spec.ts:59:1 › a late answer for the member opened first does not replace the member opened since (1.1s)
+  ✘  3 [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again (5.4s)
+  ✘  4 [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again (5.4s)
+  ✘  1 [mobile] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since (6.1s)
+  ✘  6 [desktop] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since (5.9s)
+
+
+  1) [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "This browser may still be signed in. Try again before you leave it."
+    Received string:    "We couldn’t sign you out.The site did not confirm it, so this browser may still be signed in. Try again before you leave it, or close the browser."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+        14 × locator resolved to <div role="alert" class="flex gap-4 rounded-card text-black p-card-md bg-danger-soft motion-enter outline-hidden self-stretch">…</div>
+           - unexpected value "We couldn’t sign you out.The site did not confirm it, so this browser may still be signed in. Try again before you leave it, or close the browser."
+
+
+      49 |   await page.getByRole('button', { name: 'Sign out' }).click();
+      50 |   await expect(page.getByRole('alert')).toContainText('We couldn’t sign you out.');
+    > 51 |   await expect(page.getByRole('alert')).toContainText('This browser may still be signed in. Try again before you leave it.');
+         |                                         ^
+      52 |   await expect(page.getByRole('alert')).not.toContainText('close the browser');
+      53 |   await expect(page.getByLabel('Password')).toHaveCount(0);
+      54 |   await expect(page.getByText(ADA.email)).toHaveCount(0);
+        at <worktree>/e2e/admin.spec.ts:51:41
+
+    Error Context: test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [mobile] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('#h-member')
+    Expected: "Grace Hopper"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" locator('#h-member') with timeout 5000ms
+      - waiting for locator('#h-member')
+
+
+      84 |   await held!.fulfill({ status: 401, json: { ok: false, error: 'Sign in to the admin area.' } });
+      85 |   await page.waitForLoadState('networkidle');
+    > 86 |   await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+         |                                           ^
+      87 |   await expect(page.getByLabel('Password')).toHaveCount(0);
+      88 | });
+      89 |
+        at <worktree>/e2e/admin.spec.ts:86:43
+
+    Error Context: test-results/admin-a-late-401-for-the-m-f953e-out-the-member-opened-since-mobile/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-late-401-for-the-m-f953e-out-the-member-opened-since-mobile/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-late-401-for-the-m-f953e-out-the-member-opened-since-mobile/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "This browser may still be signed in. Try again before you leave it."
+    Received string:    "We couldn’t sign you out.The site did not confirm it, so this browser may still be signed in. Try again before you leave it, or close the browser."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+        14 × locator resolved to <div role="alert" class="flex gap-4 rounded-card text-black p-card-md bg-danger-soft motion-enter outline-hidden self-stretch">…</div>
+           - unexpected value "We couldn’t sign you out.The site did not confirm it, so this browser may still be signed in. Try again before you leave it, or close the browser."
+
+
+      49 |   await page.getByRole('button', { name: 'Sign out' }).click();
+      50 |   await expect(page.getByRole('alert')).toContainText('We couldn’t sign you out.');
+    > 51 |   await expect(page.getByRole('alert')).toContainText('This browser may still be signed in. Try again before you leave it.');
+         |                                         ^
+      52 |   await expect(page.getByRole('alert')).not.toContainText('close the browser');
+      53 |   await expect(page.getByLabel('Password')).toHaveCount(0);
+      54 |   await expect(page.getByText(ADA.email)).toHaveCount(0);
+        at <worktree>/e2e/admin.spec.ts:51:41
+
+    Error Context: test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-sign-out-the-site--a6266-n-area-and-offers-Try-again-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [desktop] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: locator('#h-member')
+    Expected: "Grace Hopper"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveText" locator('#h-member') with timeout 5000ms
+      - waiting for locator('#h-member')
+
+
+      84 |   await held!.fulfill({ status: 401, json: { ok: false, error: 'Sign in to the admin area.' } });
+      85 |   await page.waitForLoadState('networkidle');
+    > 86 |   await expect(page.locator('#h-member')).toHaveText(GRACE.name);
+         |                                           ^
+      87 |   await expect(page.getByLabel('Password')).toHaveCount(0);
+      88 | });
+      89 |
+        at <worktree>/e2e/admin.spec.ts:86:43
+
+    Error Context: test-results/admin-a-late-401-for-the-m-f953e-out-the-member-opened-since-desktop/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/admin-a-late-401-for-the-m-f953e-out-the-member-opened-since-desktop/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/admin-a-late-401-for-the-m-f953e-out-the-member-opened-since-desktop/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4 failed
+    [mobile] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again
+    [mobile] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since
+    [desktop] › e2e/admin.spec.ts:45:1 › a sign-out the site does not confirm hides the admin area and offers Try again
+    [desktop] › e2e/admin.spec.ts:74:1 › a late 401 for the member opened first does not sign out the member opened since
+  2 passed (7.9s)

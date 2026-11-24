@@ -1,0 +1,17 @@
+$ oxlint .
+$ eslint apps/web/src packages/design/src
+$ oxfmt --check
+Checking formatting...
+
+All matched files use the correct format.
+Finished in 17ms on 502 files using 10 threads.
+$ knip
+$ vitest run
+
+ RUN  v4.1.12 <worktree>
+
+
+ Test Files  63 passed (63)
+      Tests  707 passed (707)
+   Start at  09:07:30
+   Duration  7.85s (transform 5.61s, setup 0ms, import 36.59s, tests 16.49s, environment 9ms)

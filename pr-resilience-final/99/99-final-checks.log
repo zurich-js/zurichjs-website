@@ -1,0 +1,188 @@
+$ oxlint .
+$ eslint apps/web/src packages/design/src
+$ oxfmt --check
+Checking formatting...
+
+All matched files use the correct format.
+Finished in 36ms on 499 files using 10 threads.
+$ knip
+$ vitest run
+
+ RUN  v4.1.12 <worktree>
+
+
+ Test Files  61 passed (61)
+      Tests  664 passed (664)
+   Start at  08:59:02
+   Duration  8.20s (transform 4.99s, setup 0ms, import 43.41s, tests 14.14s, environment 11ms)
+
+$ pnpm --filter @zurichjs/web build
+$ astro build
+08:59:13 [@astrojs/netlify] Enabling sessions with Netlify Blobs
+08:59:13 [content] Syncing content
+08:59:13 [content] Synced content
+08:59:13 [types] Generated 499ms
+08:59:13 [build] output: "static"
+08:59:13 [build] mode: "server"
+08:59:13 [build] directory: <worktree>/apps/web/dist/
+08:59:13 [build] adapter: @astrojs/netlify
+08:59:13 [build] Collecting build info...
+08:59:13 [build] ✓ Completed in 541ms.
+08:59:13 [build] Building server entrypoints...
+08:59:15 [assets] Copying fonts (1 file)...
+08:59:15 [vite] ✓ built in 1.21s
+08:59:16 [vite] ✓ built in 1.08s
+08:59:16 [vite] ✓ built in 489ms
+
+ prerendering static routes
+08:59:17   ├─ /404.html (+19ms)
+08:59:17   ├─ /about/why-zurichjs.html (+6ms)
+08:59:17   ├─ /about.html (+16ms)
+08:59:17   ├─ /admin/memberships.html (+10ms)
+08:59:17   ├─ /admin/sponsors.html (+3ms)
+08:59:17   ├─ /admin.html (+4ms)
+08:59:17   ├─ /ai-context.html (+9ms)
+08:59:17   ├─ /api/sitemap.xml.html (+1ms) (file not created, response body was empty)
+08:59:17   ├─ /buy-us-a-coffee.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /cfp/form.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /cfp.html (+6ms)
+08:59:17   ├─ /cfv.html (+10ms)
+08:59:17   ├─ /checkout/success.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /community.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /conferences/tech-conferences-zurich.html (+10ms)
+08:59:17   ├─ /contact.html (+15ms)
+08:59:17   ├─ /content-redirects.txt (+2ms)
+08:59:17   ├─ /design.html (+18ms)
+08:59:17   ├─ /donate/thanks.html (+6ms)
+08:59:17   ├─ /donate.html (+5ms)
+08:59:17   ├─ /event-feedback.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /events/2026-11-forms-types.ics (+2ms)
+08:59:17   ├─ /events/2026-09-signals-streams.ics (+1ms)
+08:59:17   ├─ /events/2026-07-summer-social.ics (+1ms)
+08:59:17   ├─ /events/2026-06-edge-runtimes.ics (+1ms)
+08:59:17   ├─ /events/2026-05-testing.ics (+1ms)
+08:59:17   ├─ /events/2025-11-anniversary.ics (+1ms)
+08:59:17   ├─ /events/2025-06-nodejs-workshop.ics (+1ms)
+08:59:17   ├─ /events/2025-03-partnerships.ics (+1ms)
+08:59:17   ├─ /events/2026-11-forms-types.html (+17ms)
+08:59:17   ├─ /events/2026-09-signals-streams.html (+9ms)
+08:59:17   ├─ /events/2026-07-summer-social.html (+7ms)
+08:59:17   ├─ /events/2026-06-edge-runtimes.html (+5ms)
+08:59:17   ├─ /events/2026-05-testing.html (+6ms)
+08:59:17   ├─ /events/2025-11-anniversary.html (+4ms)
+08:59:17   ├─ /events/2025-06-nodejs-workshop.html (+5ms)
+08:59:17   ├─ /events/2025-03-partnerships.html (+5ms)
+08:59:17   ├─ /events.html (+8ms)
+08:59:17   ├─ /feedback.html (+27ms)
+08:59:17   ├─ /invite.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /llms-full.txt (+6ms)
+08:59:17   ├─ /llms.txt (+8ms)
+08:59:17   ├─ /media/2026-09-signals-streams.html (+6ms)
+08:59:17   ├─ /media/2026-06-edge-runtimes.html (+5ms)
+08:59:17   ├─ /media/2025-06-nodejs-workshop.html (+3ms)
+08:59:17   ├─ /media/2025-03-partnerships.html (+3ms)
+08:59:17   ├─ /media.html (+17ms)
+08:59:17   ├─ /media-demo.html (+0ms) (file not created, response body was empty)
+08:59:17   ├─ /meetups/ai-ml-zurich.html (+6ms)
+08:59:17   ├─ /meetups/javascript-zurich.html (+8ms)
+08:59:17   ├─ /membership/account.html (+7ms)
+08:59:17   ├─ /membership/terms.html (+3ms)
+08:59:17   ├─ /membership.html (+5ms)
+08:59:17   ├─ /og/home.png (+504ms)
+08:59:17   ├─ /og/events.png (+76ms)
+08:59:17   ├─ /og/speakers.png (+80ms)
+08:59:18   ├─ /og/cfp.png (+95ms)
+08:59:18   ├─ /og/cfv.png (+84ms)
+08:59:18   ├─ /og/contact.png (+85ms)
+08:59:18   ├─ /og/partners.png (+88ms)
+08:59:18   ├─ /og/donate.png (+82ms)
+08:59:18   ├─ /og/membership.png (+85ms)
+08:59:18   ├─ /og/about.png (+83ms)
+08:59:18   ├─ /og/why-zurichjs.png (+108ms)
+08:59:18   ├─ /og/media.png (+204ms)
+08:59:18   ├─ /og/today.png (+94ms)
+08:59:19   ├─ /og/feedback.png (+81ms)
+08:59:19   ├─ /og/waitlist-conf.png (+73ms)
+08:59:19   ├─ /og/policies.png (+73ms)
+08:59:19   ├─ /og/javascript-zurich.png (+79ms)
+08:59:19   ├─ /og/ai-ml-zurich.png (+80ms)
+08:59:19   ├─ /og/tech-conferences-zurich.png (+76ms)
+08:59:19   ├─ /og/ai-context.png (+86ms)
+08:59:19   ├─ /og/default.png (+72ms)
+08:59:19   ├─ /og/event-2026-11-forms-types.png (+73ms)
+08:59:19   ├─ /og/event-2026-09-signals-streams.png (+73ms)
+08:59:19   ├─ /og/event-2026-07-summer-social.png (+72ms)
+08:59:19   ├─ /og/event-2026-06-edge-runtimes.png (+80ms)
+08:59:19   ├─ /og/event-2026-05-testing.png (+80ms)
+08:59:20   ├─ /og/event-2025-11-anniversary.png (+78ms)
+08:59:20   ├─ /og/event-2025-06-nodejs-workshop.png (+84ms)
+08:59:20   ├─ /og/event-2025-03-partnerships.png (+99ms)
+08:59:20   ├─ /og/speaker-anna-beispiel.png (+90ms)
+08:59:20   ├─ /og/speaker-max-muster.png (+78ms)
+08:59:20   ├─ /og/speaker-lea-platzhalter.png (+80ms)
+08:59:20   ├─ /og/speaker-jonas-test.png (+75ms)
+08:59:20   ├─ /og/speaker-urs-vorlage.png (+87ms)
+08:59:20   ├─ /og/speaker-mia-entwurf.png (+119ms)
+08:59:20   ├─ /og/speaker-noah-probe.png (+98ms)
+08:59:20   ├─ /og/speaker-sara-vorlage.png (+98ms)
+08:59:21   ├─ /partners/account.html (+3ms)
+08:59:21   ├─ /partners/agreement.html (+2ms)
+08:59:21   ├─ /partners.html (+4ms)
+08:59:21   ├─ /partnerships.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /policies/privacy.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /policies/refunds.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /policies/terms.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /policies/code-of-conduct.html (+3ms)
+08:59:21   ├─ /policies/privacy-policy.html (+1ms)
+08:59:21   ├─ /policies/terms-and-conditions.html (+1ms)
+08:59:21   ├─ /policies/refund-policy.html (+1ms)
+08:59:21   ├─ /profile.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /robots.txt (+1ms)
+08:59:21   ├─ /sitemap.xml (+1ms)
+08:59:21   ├─ /speakers/profile.html (+1ms)
+08:59:21   ├─ /speakers/speaker-1b73a96c-b241-4879-b32f-58a83c0ad7f5.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-22242222-7291-4da7-a4c4-e61762cde94c.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-223959e3-4d18-4359-9a3f-8212007a9b49.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-2aabb71f-2603-48f2-a057-39ead556019e.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-38860ce5-69c3-4df4-8b7d-6b7c11f99ece.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-42f2e2db-10cc-447e-b268-9ec3418500f7.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-4c145da3-e8e5-4f25-bc41-9b6bd61315b1.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-595e9a8f-a7ba-45be-8cce-a3829856bb67.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-59a34a74-aa31-49bb-a1a1-ac45ac72ef77.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-93d79db8-d2f6-40cc-860e-1a60ab3801d0.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-9ce559a5-d2f5-4795-992b-c2649cbeaebf.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-acf9167a-47e9-4172-9677-15282a751bdd.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-c87aa1c9-125d-412f-9e49-f3059fa7f244.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-cddb34e6-4bb2-48b7-b2c7-04181bd44864.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-d2156098-d172-4981-9182-aa58e055b1b0.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-d9b3e1ab-8d7a-4034-b155-36b664493979.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-e5f675a4-995b-4b1b-bdab-e689407a92d5.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-e8e4b807-8627-4e35-81b7-6a11b2604fc3.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/speaker-f4393480-f708-44e3-a4ca-007538d0ce32.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /speakers/anna-beispiel.html (+3ms)
+08:59:21   ├─ /speakers/max-muster.html (+2ms)
+08:59:21   ├─ /speakers/lea-platzhalter.html (+2ms)
+08:59:21   ├─ /speakers/jonas-test.html (+1ms)
+08:59:21   ├─ /speakers/urs-vorlage.html (+1ms)
+08:59:21   ├─ /speakers/mia-entwurf.html (+1ms)
+08:59:21   ├─ /speakers/noah-probe.html (+1ms)
+08:59:21   ├─ /speakers/sara-vorlage.html (+1ms)
+08:59:21   ├─ /speakers.html (+2ms)
+08:59:21   ├─ /state-changes.json (+1ms)
+08:59:21   ├─ /success.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /support.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /today.html (+4ms)
+08:59:21   ├─ /tshirt.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /waitlist/conf.html (+1ms)
+08:59:21   ├─ /workshops.html (+0ms) (file not created, response body was empty)
+08:59:21   ├─ /index.html (+5ms)
+08:59:21 ✓ Completed in 4.15s.
+
+08:59:21 [build] Rearranging server assets...
+08:59:21 [build] ✓ Completed in 7.06s.
+08:59:21 [@astrojs/netlify] Emitted _redirects
+08:59:21 [@astrojs/netlify] Bundling function ../../../build/entry.mjs
+08:59:24 [build] Waiting for integration "@astrojs/netlify", hook "astro:build:done"...
+08:59:24 [@astrojs/netlify] Generated SSR Function
+08:59:24 [build] Server built in 11.01s
+08:59:24 [build] Complete!

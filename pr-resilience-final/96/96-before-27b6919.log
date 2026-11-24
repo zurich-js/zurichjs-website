@@ -1,0 +1,249 @@
+RUN  v4.1.12 <worktree>
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > ENQUEUE: a sponsor change stays queued for a build when all five conditional state writes lose
+ENQUEUE {"saved":"Changed","seen":{"fired":[]}}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > PRUNE: a merged settle does not bring back fired times the decision pruned
+PRUNE {"fired":["2025-01-01T00:00:00.000Z"],"publishes":3,"lastBuildAt":"2026-11-24T00:15:00.000Z","pendingSince":"2026-11-24T00:15:00.000Z","lastPublishAt":"2026-11-24T00:15:00.000Z"}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_503: an ended sponsorship whose Stripe close failed keeps its ids, is retried, and is cleared once Stripe confirms
+STRIPE_503 {"one":{"completed":0,"ended":0,"closed":1,"reminded":0,"deferred":[],"stripeOpen":[]},"afterOne":["ended",null,null],"callsOne":2,"two":{"completed":0,"ended":0,"closed":0,"reminded":0,"deferred":[],"stripeOpen":[]},"callsTwo":0,"three":{"completed":0,"ended":0,"closed":0,"reminded":0,"deferred":[],"stripeOpen":[]},"end":["ended",null,null]}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_DEADLINE: an ending whose close the budget stopped is closed by the next run
+STRIPE_DEADLINE {"one":{"completed":0,"ended":0,"closed":1,"reminded":0,"deferred":[],"stripeOpen":["s_1"]},"callsOne":0,"two":{"completed":0,"ended":0,"closed":0,"reminded":0,"deferred":[],"stripeOpen":[]},"callsTwo":0,"end":["ended","cs_fixture","plink_fixture"]}
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/server.test.ts > REMINDER: a 30-day reminder the budget deferred is sent on the next run, once
+REMINDER {"one":{"completed":3,"ended":0,"closed":0,"reminded":0,"deferred":["s_7"],"stripeOpen":[]},"two":{"completed":0,"ended":0,"closed":0,"reminded":0,"deferred":[],"stripeOpen":[]},"three":{"completed":0,"ended":0,"closed":0,"reminded":0,"deferred":[],"stripeOpen":[]},"notes":[]}
+
+ × tmp/battle-test/resilience-final-corrections/probes/server.test.ts > ENQUEUE: a sponsor change stays queued for a build when all five conditional state writes lose 4ms
+   → expected undefined to be truthy
+ × tmp/battle-test/resilience-final-corrections/probes/server.test.ts > PRUNE: a merged settle does not bring back fired times the decision pruned 1ms
+   → expected [ '2025-01-01T00:00:00.000Z' ] to deeply equal []
+ ✓ tmp/battle-test/resilience-final-corrections/probes/server.test.ts > TICKS: two overlapping ticks keep both fired times and the later build time, and a third builds nothing 0ms
+ × tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_503: an ended sponsorship whose Stripe close failed keeps its ids, is retried, and is cleared once Stripe confirms 12ms
+   → expected { companyName: 'Down AG', …(25) } to match object { status: 'ended', …(2) }
+(23 matching properties omitted from actual)
+ × tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_DEADLINE: an ending whose close the budget stopped is closed by the next run 0ms
+   → expected 0 to be greater than 0
+ × tmp/battle-test/resilience-final-corrections/probes/server.test.ts > REMINDER: a 30-day reminder the budget deferred is sent on the next run, once 1ms
+   → expected [] to have a length of 1 but got +0
+stdout | tmp/battle-test/resilience-final-corrections/probes/lease-db.test.ts > LEASE: stale release and done from the first holder leave the takeover claim in place
+LEASE {"release":"acquired","done":"posted"}
+
+ × tmp/battle-test/resilience-final-corrections/probes/lease-db.test.ts > LEASE: stale release and done from the first holder leave the takeover claim in place 5ms
+   → expected { release: 'acquired', done: 'posted' } to deeply equal { release: 'in_progress', …(1) }
+stderr | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+[sponsorship-admin] record the payment failed Error: Query read timeout
+    at <worktree>/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at q (<worktree>/packages/sponsorship/src/postgres.ts:101:15)
+    at Object.update (<worktree>/packages/sponsorship/src/postgres.ts:200:20)
+    at recordPayment (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:360:17)
+    at <worktree>/apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts:28:23
+    at sponsorAdminRoute (<worktree>/apps/web/src/server/sponsor-admin.ts:63:12)
+    at <worktree>/tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:64:30
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+delayed {"first":[502,{"ok":false,"error":"Could not record the payment. Try again; details are in the function log."}],"retry":[400,{"ok":false,"error":"It is already paid through 30th December 2027. Give a later date.","field":"paidUntil"}],"again":[400,{"ok":false,"error":"It is already paid through 30th December 2027. Give a later date.","field":"paidUntil"}],"status":"pending","paidUntil":"2027-12-31","events":["created","updated"]}
+
+ × tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once 12051ms
+   → expected { ok: false, …(1) } to match object { ok: false, outcome: 'unknown' }
+(1 matching property omitted from actual)
+stderr | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+[sponsorship-admin] record the payment failed Error: Query read timeout
+    at <worktree>/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at q (<worktree>/packages/sponsorship/src/postgres.ts:101:15)
+    at Object.update (<worktree>/packages/sponsorship/src/postgres.ts:200:20)
+    at recordPayment (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:360:17)
+    at <worktree>/apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts:28:23
+    at sponsorAdminRoute (<worktree>/apps/web/src/server/sponsor-admin.ts:63:12)
+    at <worktree>/tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:80:30
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+[sponsorship-admin] record the payment failed Error: Query read timeout
+    at <worktree>/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.1/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at q (<worktree>/packages/sponsorship/src/postgres.ts:101:15)
+    at Object.update (<worktree>/packages/sponsorship/src/postgres.ts:200:20)
+    at recordPayment (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:360:17)
+    at <worktree>/apps/web/src/pages/api/membership/admin/sponsors/[id]/payment.ts:28:23
+    at sponsorAdminRoute (<worktree>/apps/web/src/server/sponsor-admin.ts:63:12)
+    at <worktree>/tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:81:34
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stdout | tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+immediate {"first":[502,{"ok":false,"error":"Could not record the payment. Try again; details are in the function log."}],"immediate":[502,{"ok":false,"error":"Could not record the payment. Try again; details are in the function log."}],"later":[400,{"ok":false,"error":"It is already paid through 30th December 2027. Give a later date.","field":"paidUntil"}],"status":"pending","paidUntil":"2027-12-31","events":["created","updated","updated"]}
+
+ × tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once 33039ms
+   → expected { ok: false, …(1) } to match object { outcome: 'unknown' }
+(2 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/lease-db.test.ts > LEASE: stale release and done from the first holder leave the takeover claim in place
+AssertionError: expected { release: 'acquired', done: 'posted' } to deeply equal { release: 'in_progress', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "done": "in_progress",
+-   "release": "in_progress",
++   "done": "posted",
++   "release": "acquired",
+  }
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/lease-db.test.ts:42:16
+     40|   }
+     41|   console.log('LEASE', JSON.stringify(seen));
+     42|   expect(seen).toEqual({ release: 'in_progress', done: 'in_progress' }…
+       |                ^
+     43| });
+     44|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a payment whose write outlived the query limit says the outcome is unknown, and the same request later finishes it once
+AssertionError: expected { ok: false, …(1) } to match object { ok: false, outcome: 'unknown' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "ok": false,
+-   "outcome": "unknown",
+  }
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:71:20
+     69|   console.log('delayed', JSON.stringify({ first, retry, again, status:…
+     70|   expect(first[0]).toBe(502);
+     71|   expect(first[1]).toMatchObject({ ok: false, outcome: 'unknown' });
+       |                    ^
+     72|   expect(retry[0]).toBe(200);
+     73|   expect(end.row).toMatchObject({ status: 'active', paidUntil: '2027-1…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts > a retry sent at once, while the first write is still running, then a later one, record the payment once
+AssertionError: expected { ok: false, …(1) } to match object { outcome: 'unknown' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "outcome": "unknown",
++   "error": "Could not record the payment. Try again; details are in the function log.",
++   "ok": false,
+  }
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/payment-timeout.test.ts:86:20
+     84|   const end = await settled(s.id);
+     85|   console.log('immediate', JSON.stringify({ first, immediate, later, s…
+     86|   expect(first[1]).toMatchObject({ outcome: 'unknown' });
+       |                    ^
+     87|   expect([200, 502]).toContain(immediate[0]);
+     88|   expect([immediate[0], later[0]]).toContain(200);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/server.test.ts > ENQUEUE: a sponsor change stays queued for a build when all five conditional state writes lose
+AssertionError: expected undefined to be truthy
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/server.test.ts:44:30
+     42|   console.log('ENQUEUE', JSON.stringify({ saved: saved.companyName, se…
+     43|   expect(saved.companyName).toBe('Changed');
+     44|   expect(seen?.pendingSince).toBeTruthy();
+       |                              ^
+     45| });
+     46|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/server.test.ts > PRUNE: a merged settle does not bring back fired times the decision pruned
+AssertionError: expected [ '2025-01-01T00:00:00.000Z' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "2025-01-01T00:00:00.000Z",
++ ]
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/server.test.ts:56:21
+     54|   console.log('PRUNE', JSON.stringify(out));
+     55|   expect(out.pendingSince).toBe(later.toISOString());
+     56|   expect(out.fired).toEqual([]);
+       |                     ^
+     57| });
+     58|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_503: an ended sponsorship whose Stripe close failed keeps its ids, is retried, and is cleared once Stripe confirms
+AssertionError: expected { companyName: 'Down AG', …(25) } to match object { status: 'ended', …(2) }
+(23 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "checkoutSessionId": "cs_fixture",
+-   "paymentLinkId": "plink_fixture",
++   "checkoutSessionId": null,
++   "paymentLinkId": null,
+    "status": "ended",
+  }
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/server.test.ts:140:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/server.test.ts > STRIPE_DEADLINE: an ending whose close the budget stopped is closed by the next run
+AssertionError: expected 0 to be greater than 0
+ ❯ tmp/battle-test/resilience-final-corrections/probes/server.test.ts:156:37
+    154|   expect(one).toMatchObject({ closed: 1, stripeOpen: [id] });
+    155|   expect(callsOne).toBe(0);
+    156|   expect(w.calls.length - callsOne).toBeGreaterThan(0);
+       |                                     ^
+    157|   expect(end).toMatchObject({ status: 'ended', checkoutSessionId: null…
+    158| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tmp/battle-test/resilience-final-corrections/probes/server.test.ts > REMINDER: a 30-day reminder the budget deferred is sent on the next run, once
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tmp/battle-test/resilience-final-corrections/probes/server.test.ts:176:17
+    174|   expect(one.completed).toBe(3);
+    175|   expect(one.deferred.length).toBe(1);
+    176|   expect(notes).toHaveLength(1);
+       |                 ^
+    177|   expect(notes[0]).toContain('29 days left');
+    178| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  8 failed | 1 passed (9)
+   Start at  02:34:59
+   Duration  46.35s (transform 259ms, setup 0ms, import 1.02s, tests 46.58s, environment 0ms)

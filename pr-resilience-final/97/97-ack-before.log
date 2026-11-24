@@ -1,0 +1,91 @@
+RUN  v4.1.12 <worktree>
+
+ ❯ apps/web/test/admin-lists.test.ts (13 tests | 4 failed) 30ms
+     × requires a positive write acknowledgement for a 200 response: <html>Proxy</html> 3ms
+     × requires a positive write acknowledgement for a 200 response: {} 0ms
+     × requires a positive write acknowledgement for a 200 response: [] 0ms
+     × requires a positive write acknowledgement for a 200 response: {"ok":false} 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/test/admin-lists.test.ts > the admin fetch helper > requires a positive write acknowledgement for a 200 response: <html>Proxy</html>
+ FAIL  apps/web/test/admin-lists.test.ts > the admin fetch helper > requires a positive write acknowledgement for a 200 response: {}
+AssertionError: expected { status: 200, body: {} } to deeply equal { status: 502, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "body": {
+-     "error": "The site did not confirm this, so we don’t know whether it was saved. Reload the page to check before you try again.",
+-   },
+-   "status": 502,
++   "body": {},
++   "status": 200,
+  }
+
+ ❯ apps/web/test/admin-lists.test.ts:112:98
+    110|   it.each(['<html>Proxy</html>', '{}', '[]', '{"ok":false}'])('require…
+    111|     vi.stubGlobal('fetch', async () => new Response(text));
+    112|     expect(await api('/api/membership/admin/members/m1/resign', { meth…
+       |                                                                                                  ^
+    113|   });
+    114|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  apps/web/test/admin-lists.test.ts > the admin fetch helper > requires a positive write acknowledgement for a 200 response: []
+AssertionError: expected { status: 200, body: [] } to deeply equal { status: 502, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "body": {
+-     "error": "The site did not confirm this, so we don’t know whether it was saved. Reload the page to check before you try again.",
+-   },
+-   "status": 502,
++   "body": [],
++   "status": 200,
+  }
+
+ ❯ apps/web/test/admin-lists.test.ts:112:98
+    110|   it.each(['<html>Proxy</html>', '{}', '[]', '{"ok":false}'])('require…
+    111|     vi.stubGlobal('fetch', async () => new Response(text));
+    112|     expect(await api('/api/membership/admin/members/m1/resign', { meth…
+       |                                                                                                  ^
+    113|   });
+    114|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  apps/web/test/admin-lists.test.ts > the admin fetch helper > requires a positive write acknowledgement for a 200 response: {"ok":false}
+AssertionError: expected { status: 200, body: { ok: false } } to deeply equal { status: 502, …(1) }
+
+- Expected
++ Received
+
+  {
+    "body": {
+-     "error": "The site did not confirm this, so we don’t know whether it was saved. Reload the page to check before you try again.",
++     "ok": false,
+    },
+-   "status": 502,
++   "status": 200,
+  }
+
+ ❯ apps/web/test/admin-lists.test.ts:112:98
+    110|   it.each(['<html>Proxy</html>', '{}', '[]', '{"ok":false}'])('require…
+    111|     vi.stubGlobal('fetch', async () => new Response(text));
+    112|     expect(await api('/api/membership/admin/members/m1/resign', { meth…
+       |                                                                                                  ^
+    113|   });
+    114|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 9 passed (13)
+   Start at  08:57:22
+   Duration  568ms (transform 158ms, setup 0ms, import 477ms, tests 30ms, environment 0ms)

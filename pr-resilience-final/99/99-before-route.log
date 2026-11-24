@@ -1,0 +1,73 @@
+RUN  v4.1.12 <worktree>
+
+stderr | apps/web/test/sponsor-pending-change.test.ts > confirming a card upgrade > leaves the signature, renewal and subscription alone when 'the schedule is unreadable'
+[sponsorship] change the sponsorship failed Error: Unexpected signature
+    at Object.<anonymous> (<worktree>/apps/web/test/sponsor-pending-change.test.ts:93:95)
+    at Object.Mock [as acceptAgreement] (file://<worktree>/node_modules/.pnpm/@vitest+spy@4.1.12/node_modules/@vitest/spy/dist/index.js:332:34)
+    at sign (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:91:21)
+    at changePlan (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:204:47)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at <worktree>/apps/web/src/pages/api/sponsorship/plan.ts:39:17
+    at signedInSponsor (<worktree>/apps/web/src/server/sponsor-route.ts:91:12)
+    at <worktree>/apps/web/test/sponsor-pending-change.test.ts:88:22
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | apps/web/test/sponsor-pending-change.test.ts > confirming a card upgrade > leaves the signature, renewal and subscription alone when 'the renewal changed after the form lo…'
+[sponsorship] change the sponsorship failed Error: Unexpected signature
+    at Object.<anonymous> (<worktree>/apps/web/test/sponsor-pending-change.test.ts:93:95)
+    at Object.Mock [as acceptAgreement] (file://<worktree>/node_modules/.pnpm/@vitest+spy@4.1.12/node_modules/@vitest/spy/dist/index.js:332:34)
+    at sign (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:91:21)
+    at changePlan (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:204:47)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at <worktree>/apps/web/src/pages/api/sponsorship/plan.ts:39:17
+    at signedInSponsor (<worktree>/apps/web/src/server/sponsor-route.ts:91:12)
+    at <worktree>/apps/web/test/sponsor-pending-change.test.ts:88:22
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | apps/web/test/sponsor-pending-change.test.ts > confirming a card upgrade > leaves the signature, renewal and subscription alone when 'the target price is unavailable'
+[sponsorship] change the sponsorship failed Error: Unexpected signature
+    at Object.<anonymous> (<worktree>/apps/web/test/sponsor-pending-change.test.ts:93:95)
+    at Object.Mock [as acceptAgreement] (file://<worktree>/node_modules/.pnpm/@vitest+spy@4.1.12/node_modules/@vitest/spy/dist/index.js:332:34)
+    at sign (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:91:21)
+    at changePlan (<worktree>/apps/web/src/server/sponsor-lifecycle.ts:204:47)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at <worktree>/apps/web/src/pages/api/sponsorship/plan.ts:39:17
+    at signedInSponsor (<worktree>/apps/web/src/server/sponsor-route.ts:91:12)
+    at <worktree>/apps/web/test/sponsor-pending-change.test.ts:88:22
+    at async file://<worktree>/node_modules/.pnpm/@vitest+runner@4.1.12/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+ ❯ apps/web/test/sponsor-pending-change.test.ts (9 tests | 3 failed) 11ms
+     × leaves the signature, renewal and subscription alone when 'the schedule is unreadable' 4ms
+     × leaves the signature, renewal and subscription alone when 'the renewal changed after the form lo…' 1ms
+     × leaves the signature, renewal and subscription alone when 'the target price is unavailable' 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/test/sponsor-pending-change.test.ts > confirming a card upgrade > leaves the signature, renewal and subscription alone when 'the schedule is unreadable'
+ FAIL  apps/web/test/sponsor-pending-change.test.ts > confirming a card upgrade > leaves the signature, renewal and subscription alone when 'the renewal changed after the form lo…'
+ FAIL  apps/web/test/sponsor-pending-change.test.ts > confirming a card upgrade > leaves the signature, renewal and subscription alone when 'the target price is unavailable'
+AssertionError: expected [ 'signature' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "signature",
++ ]
+
+ ❯ apps/web/test/sponsor-pending-change.test.ts:101:20
+     99|     });
+    100|     expect(response.status).toBeGreaterThanOrEqual(400);
+    101|     expect(writes).toEqual([]);
+       |                    ^
+    102|   });
+    103| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 6 passed (9)
+   Start at  08:54:33
+   Duration  448ms (transform 130ms, setup 0ms, import 370ms, tests 11ms, environment 0ms)

@@ -135,6 +135,7 @@ const attemptOf = (r: Row): LinkAttempt => ({
   linkId: (r.link_id as string | null) ?? null,
   state: r.state as LinkAttempt['state'],
   createdAt: iso(r.created_at)!,
+  ageMs: Number(r.age_ms),
 });
 
 export function postgresStore(db: Queryable): SponsorStore {
@@ -425,7 +426,7 @@ export function postgresStore(db: Queryable): SponsorStore {
       if (!UUID.test(sponsorId)) throw new NotFound('sponsor');
       const [r] = await q(
         `insert into sponsor_payment_link_attempts (sponsor_id, request, key)
-        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *`,
+        select id, $2, $3 from sponsors where id = $1 and status <> 'ended' for share returning *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms`,
         [sponsorId, request, key],
       );
       if (!r) throw new TransitionError('This sponsorship has ended.', 'conflict');
@@ -450,7 +451,7 @@ export function postgresStore(db: Queryable): SponsorStore {
         ? []
         : (
             await q(
-              `select * from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
+              `select *, extract(epoch from clock_timestamp() - created_at) * 1000 as age_ms from sponsor_payment_link_attempts where state in ('open', 'closing') and ($1::uuid is null or sponsor_id = $1::uuid)
            order by updated_at, created_at, key limit $2`,
               [sponsorId ?? null, Math.min(Math.max(limit, 1), 1000)],
             )

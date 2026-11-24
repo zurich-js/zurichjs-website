@@ -117,7 +117,7 @@ export interface SponsorStore {
   claimLinkCleanup(key: string, linkId?: string): Promise<boolean>;
   /** Stripe confirmed the link is off. */
   linkAttemptClosed(key: string): Promise<void>;
-  /** Attempts still open or closing (of one sponsor, or all), oldest first. */
+  /** Attempts still open or closing, least recently attempted first. */
   unsettledLinkAttempts(filter: { sponsorId?: string; limit: number }): Promise<LinkAttempt[]>;
 
   stripeEventSeen(eventId: string): Promise<boolean>;
@@ -366,7 +366,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
         .map((d) => ({ ...d })),
     async beginLinkAttempt(sid, request, key = crypto.randomUUID()) {
       if (must(sid).status === 'ended') throw conflict();
-      const a: LinkAttempt = { key, sponsorId: sid, request, linkId: null, state: 'open', createdAt: now() };
+      const a: LinkAttempt = { key, sponsorId: sid, request, linkId: null, state: 'open', ageMs: 0, createdAt: now() };
       linkAttempts.push(a);
       return { ...a };
     },
@@ -375,6 +375,8 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       const a = attempt(key);
       if (a.state !== 'open' && a.state !== 'closing') return false;
       Object.assign(a, { state: 'closing', linkId: linkId ?? a.linkId });
+      linkAttempts.splice(linkAttempts.indexOf(a), 1);
+      linkAttempts.push(a);
       return true;
     },
     async linkAttemptClosed(key) {
@@ -385,7 +387,7 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
       linkAttempts
         .filter((a) => (a.state === 'open' || a.state === 'closing') && (!sponsorId || a.sponsorId === sponsorId))
         .slice(0, limit)
-        .map((a) => ({ ...a })),
+        .map((a) => ({ ...a, ageMs: Date.parse(now()) - Date.parse(a.createdAt) })),
     stripeEventSeen: async (e) => stripeEvents.has(e),
     markStripeEvent: async (e) => void stripeEvents.add(e),
     events: async (sid) => log.filter((e) => e.sponsorId === sid).map((e) => ({ ...e })),

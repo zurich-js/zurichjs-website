@@ -2,7 +2,6 @@
 import { label, levelInfo, type Member } from '@zurichjs/membership';
 import { resignationLabel } from './membership.ts';
 
-/** Rows the admin lists show at most; more are reached by searching or filtering. */
 export const LIST_LIMIT = 500;
 
 export const adminMember = (m: Member) => ({

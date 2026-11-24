@@ -161,7 +161,6 @@ function SponsorList({
   status: '' | Status;
   onStatus: (s: '' | Status) => void;
   rows: Row[] | null;
-  /** The shown list stopped at the limit; `filtered` is whether that request had a search or status. */
   truncated: { filtered: boolean } | null;
   counts: Record<Status, number> | null;
   labels: Record<string, string>;

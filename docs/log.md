@@ -6,6 +6,8 @@
 
 ## 2026-11-24
 
+- **Update**: the last confirmed primary contact of a sponsor cannot be removed (an invited primary who has not accepted does not count), checked in the store for the board and colleagues alike; moving a paid one-time sponsorship's meetups queues a rebuild; the public site leaves out a meetup taken off a sponsorship ([Sponsorship](/domains/sponsorship/overview.md), [Rebuilds](/systems/operations/rebuilds.md)).
+
 - **Update**: a one-time sponsor is thanked on the meetups it sponsors, not as a season sponsor of the others; a current sponsor that also hosted is listed once. Board notes no longer ask for Sanity edits to list or unlist a sponsor. Resending an invitation sends one email per click, a running sponsorship gets access instead of "ready to confirm", unaccepted colleagues and the last primary contact are protected, and an ended sponsorship cannot upload a logo ([Sponsorship](/domains/sponsorship/overview.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Partners](/domains/partners/overview.md)).
 
 - **Update**: every sponsorship email and Slack note is a notice written with the change that owes it and sent by the request or, failing that, the daily check; first payments, retries and out-of-order Stripe events no longer lose or repeat them. Bank-transfer reminders are caught up once when a day is missed. Sponsoring again needs a new full signature and validates before changing anything; a terminated sponsorship needs the board. Refunds and disputes are recorded and flagged without changing the sponsorship ([Sponsorship](/domains/sponsorship/overview.md), [Stripe](/systems/stripe.md)).

@@ -99,6 +99,11 @@ export interface SponsorStore {
   addContact(sponsorId: string, c: NewContact, actor: Actor): Promise<Contact>;
   /** Links a contact to the account that signed in with its email. */
   linkContact(contactId: string, userId: string): Promise<Contact>;
+  /**
+   * Removes a contact, never the sponsor's last one or its last confirmed primary contact (who gets
+   * payment emails when there is no billing contact): ContactRequired then. Checked and removed in
+   * one step, so two removals at once cannot both pass.
+   */
   removeContact(contactId: string, actor: Actor): Promise<void>;
 
   /** With `notices`: what the signature owes (its signed copy), written in the same step from the saved agreement. */
@@ -214,6 +219,25 @@ export class DuplicateContact extends Error {
   constructor(email: string) {
     super(`${email} is already a contact of a sponsor.`);
     this.name = 'DuplicateContact';
+  }
+}
+
+/** Confirmed: added by the board or the sponsor's own sign-up, or a colleague's invitation accepted. Only they get emails. */
+export const confirmedContact = (c: Pick<Contact, 'addedBy' | 'userId'>) => c.addedBy !== 'sponsor' || !!c.userId;
+
+/** Why a contact cannot be removed, from the contacts the sponsor would have left. */
+export function contactRequired(gone: Contact, rest: Contact[]): ContactRequired | null {
+  if (!rest.length) return new ContactRequired('last_contact');
+  if (gone.role === 'primary' && confirmedContact(gone) && !rest.some((c) => c.role === 'primary' && confirmedContact(c))) return new ContactRequired('last_primary');
+  return null;
+}
+
+export class ContactRequired extends Error {
+  readonly reason: 'last_contact' | 'last_primary';
+  constructor(reason: 'last_contact' | 'last_primary') {
+    super(reason === 'last_contact' ? 'A sponsor needs at least one contact.' : 'A sponsor needs a confirmed primary contact.');
+    this.name = 'ContactRequired';
+    this.reason = reason;
   }
 }
 
@@ -419,6 +443,11 @@ export function memoryStore(opts: { now?: () => Date } = {}): SponsorStore & { a
     async removeContact(cid, actor) {
       const c = contacts.get(cid);
       if (!c) throw new NotFound('contact');
+      const refused = contactRequired(
+        c,
+        [...contacts.values()].filter((x) => x.sponsorId === c.sponsorId && x.id !== cid),
+      );
+      if (refused) throw refused;
       contacts.delete(cid);
       record(c.sponsorId, 'contact_removed', actor, { payload: { contactId: cid } });
     },

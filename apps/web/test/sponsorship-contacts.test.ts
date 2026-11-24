@@ -10,10 +10,12 @@ import { handleAdminSponsors } from '../src/pages/api/membership/admin/sponsors/
 import { handleAdminRemoveContact } from '../src/pages/api/membership/admin/sponsors/[id]/contacts/[cid].ts';
 import { handleResendInvite } from '../src/pages/api/membership/admin/sponsors/[id]/invite.ts';
 import { handleRecordPayment } from '../src/pages/api/membership/admin/sponsors/[id]/payment.ts';
+import { handleRemoveContact } from '../src/pages/api/sponsorship/contacts/[id].ts';
 import { handleEnd } from '../src/pages/api/sponsorship/end.ts';
 import { handleLogoUpload } from '../src/pages/api/sponsorship/logo/index.ts';
 import { handleSponsorPortal } from '../src/pages/api/sponsorship/portal.ts';
 import { handleStripeWebhook } from '../src/pages/api/stripe/webhook.ts';
+import { recipients } from '../src/server/sponsor.ts';
 import { svgProblem } from '../src/server/sponsor-logo.ts';
 import { resetRateLimits } from '../src/server/rateLimit.ts';
 import { NOW, asAdmin, asAdminDelete, env, newSponsor, post, stripeEvent, unix, world } from './sponsor-faults.ts';
@@ -82,6 +84,25 @@ describe('sponsorship contacts and notes', () => {
     const paid = await handleRecordPayment(asAdmin('/x', { paidUntil: '2027-12-05' }), id, admin());
     expect(await paid.json()).toMatchObject({ confirmationTo: ['grace@acme.ch'] });
     expect(w.slackPosts.at(-1)).toContain('They are emailed a confirmation.');
+  });
+
+  it('a primary contact who has not accepted does not count: the confirmed one stays, for the board and for colleagues', async () => {
+    const id = await sponsor({ status: 'active' });
+    const confirmedPrimary = (await store.contactByEmail(grace.email))!;
+    await store.addContact(id, { email: 'pending@acme.ch', name: 'Pending', role: 'primary', addedBy: 'sponsor' }, BOARD);
+    const colleague = await store.addContact(id, { email: 'ada@acme.ch', name: 'Ada', role: 'other', addedBy: 'board' }, BOARD);
+    await store.linkContact(colleague.id, 'user-ada');
+    const board = await handleAdminRemoveContact(asAdminDelete('/x'), id, confirmedPrimary.id, admin());
+    expect(board.status).toBe(409);
+    expect(await board.json()).toMatchObject({ error: expect.stringContaining('confirmed primary contact') });
+    const asAda = { ...user(), session: async () => ({ id: 'user-ada', email: 'ada@acme.ch' }) };
+    const del = new Request('https://zurichjs.com/x', { method: 'DELETE', headers: { origin: 'https://zurichjs.com' } });
+    expect((await handleRemoveContact(del, confirmedPrimary.id, asAda)).status).toBe(409);
+    // Two removals at once (two board tabs): the store refuses the second.
+    const second = await store.addContact(id, { email: 'bo@acme.ch', name: 'Bo', role: 'primary', addedBy: 'board' }, BOARD);
+    const both = await Promise.all([confirmedPrimary.id, second.id].map((cid) => handleAdminRemoveContact(asAdminDelete('/x'), id, cid, admin())));
+    expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect(await recipients(store, id, 'billing')).toHaveLength(1);
   });
 
   it('a company that started online and left Checkout is not an unanswered invitation', async () => {

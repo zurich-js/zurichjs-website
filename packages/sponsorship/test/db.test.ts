@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startPg, type Pg } from '../../membership/test/pg.ts';
-import { DuplicateContact, TransitionError, postgresStore, type NewSponsor, type SponsorStore } from '../src/index.ts';
+import { ContactRequired, DuplicateContact, NotFound, TransitionError, postgresStore, type NewSponsor, type SponsorStore } from '../src/index.ts';
 
 const migrations = join(import.meta.dirname, '../../../apps/web/database/migrations');
 const db = startPg();
@@ -270,6 +270,18 @@ d('sponsorship database', () => {
     await store.linkAttemptClosed(b.key);
     expect(await store.unsettledLinkAttempts({ sponsorId: s.id, limit: 10 })).toHaveLength(kept ? 0 : 1);
     expect(await store.unsettledLinkAttempts({ sponsorId: 'not-a-uuid', limit: 10 })).toEqual([]);
+  });
+
+  it('never removes the last confirmed primary contact, even with two removals at once', async () => {
+    const { sponsor, contact } = await store.create({ ...acme, companyName: 'Primaries' }, { email: 'p1@primaries.ch', name: 'P1', role: 'primary' }, board);
+    const pending = await store.addContact(sponsor.id, { email: 'p0@primaries.ch', name: 'P0', role: 'primary', addedBy: 'sponsor' }, sponsorActor);
+    await expect(store.removeContact(contact.id, board)).rejects.toBeInstanceOf(ContactRequired);
+    const second = await store.addContact(sponsor.id, { email: 'p2@primaries.ch', name: 'P2', role: 'primary' }, board);
+    const results = await Promise.allSettled([store.removeContact(contact.id, board), store.removeContact(second.id, board)]);
+    expect(results.map((r) => r.status).sort()).toEqual(['fulfilled', 'rejected']);
+    expect((await store.contacts(sponsor.id)).filter((c) => c.role === 'primary' && c.addedBy !== 'sponsor')).toHaveLength(1);
+    await store.removeContact(pending.id, board);
+    await expect(store.removeContact('not-a-uuid', board)).rejects.toBeInstanceOf(NotFound);
   });
 
   it('keeps the audit log append-only', () => {

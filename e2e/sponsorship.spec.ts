@@ -421,3 +421,44 @@ test('the sponsorship agreement: one h1, every tier with the fees of the fees mo
   // The literal the page must show for one tier, so a change to the fees module is noticed here too.
   await expect(tiers.filter({ hasText: 'Community Champion' })).toContainText('CHF 750 a month, CHF 2’100 a quarter, CHF 7’500 a year, CHF 1’000 for one meetup.');
 });
+
+test('a raffle entry page: entering needs a name, an email and the rules; the answer never says whether the email entered before; no axe violations', async ({ page }) => {
+  const sent: Record<string, unknown>[] = [];
+  await page.route('**/api/raffle/info?*', (route) =>
+    route.fulfill({
+      json: {
+        ok: true,
+        raffle: {
+          id: 'r-1',
+          prize: 'Mechanical keyboard',
+          quantity: 1,
+          eventTitle: 'ZurichJS Meetup December',
+          eventDateLabel: '9th December 2026',
+          sponsorName: 'Acme AG',
+          state: 'open',
+          closesAt: '2026-12-09T19:30:00.000Z',
+          rulesUrl: 'https://zurichjs.com/raffle-rules',
+          winningCodes: [],
+        },
+      },
+    }),
+  );
+  await page.route('**/api/raffle/entries', async (route) => {
+    sent.push(route.request().postDataJSON());
+    await route.fulfill({ json: { ok: true } });
+  });
+  await page.goto('/raffle?r=r-1');
+  await expect(page.getByRole('heading', { name: 'Mechanical keyboard' })).toBeVisible();
+  await expect(page.getByText('Raffle supported by Acme AG.')).toBeVisible();
+  const submit = page.locator('main form button[type=submit]');
+  await submit.click();
+  await expect(page.getByText('Accept the raffle rules to enter.', { exact: true })).toBeVisible();
+  expect(sent).toEqual([]);
+  expect(await axe(page)).toEqual([]);
+  await page.getByLabel('Name or nickname').fill('Kim');
+  await page.getByLabel('Email').fill('kim@example.com');
+  await page.getByRole('checkbox').check();
+  await submit.click();
+  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+  expect(sent).toEqual([{ raffleId: 'r-1', name: 'Kim', email: 'kim@example.com', rules: true, company: '' }]);
+});

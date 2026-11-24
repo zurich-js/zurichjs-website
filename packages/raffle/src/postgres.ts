@@ -2,9 +2,9 @@
  * The raffle store on Postgres. Each write is one statement: a data-modifying CTE changes the row
  * and appends the audit row. Stage and funding changes are compare-and-set.
  */
-import { RaffleRuleError, checkFunding, checkStage } from './rules.ts';
-import { RaffleNotFound, conflict, readyBlocker, type RaffleStore } from './store.ts';
-import type { Actor, LedgerEntry, Raffle, RaffleEvent } from './types.ts';
+import { GUARDED_STAGES, RaffleRuleError, checkFunding, checkStage } from './rules.ts';
+import { RaffleNotFound, conflict, drawOrder, entriesHash, readyBlocker, type RaffleStore } from './store.ts';
+import type { Actor, Draw, Entry, LedgerEntry, Raffle, RaffleEvent } from './types.ts';
 
 export interface Queryable {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<{ rows: R[] }>;
@@ -43,6 +43,10 @@ const raffleOf = (r: Row): Raffle => ({
   paymentLinkId: (r.payment_link_id as string | null) ?? null,
   paymentLinkUrl: (r.payment_link_url as string | null) ?? null,
   reason: (r.reason as string | null) ?? null,
+  rulesVersion: (r.rules_version as string | null) ?? null,
+  rulesUrl: (r.rules_url as string | null) ?? null,
+  openedAt: iso(r.opened_at),
+  closesAt: iso(r.closes_at),
   createdAt: iso(r.created_at)!,
   updatedAt: iso(r.updated_at)!,
 });
@@ -54,6 +58,28 @@ const ledgerOf = (r: Row): LedgerEntry => ({
   amountMinor: Number(r.amount_minor),
   note: r.note as string,
   reference: (r.reference as string | null) ?? null,
+  actor: { kind: r.actor_kind as Actor['kind'], id: r.actor_id as string },
+  at: iso(r.at)!,
+});
+
+const entryOf = (r: Row): Entry => ({
+  id: r.id as string,
+  raffleId: r.raffle_id as string,
+  name: r.name as string,
+  email: r.email as string,
+  claimCode: r.claim_code as string,
+  emailVerifiedAt: iso(r.email_verified_at),
+  createdAt: iso(r.created_at)!,
+});
+
+const drawOf = (r: Row): Draw => ({
+  raffleId: r.raffle_id as string,
+  seq: Number(r.seq),
+  entryId: r.entry_id as string,
+  eligibleCount: Number(r.eligible_count),
+  entriesHash: r.entries_hash as string,
+  index: Number(r.index),
+  reason: (r.reason as string | null) ?? null,
   actor: { kind: r.actor_kind as Actor['kind'], id: r.actor_id as string },
   at: iso(r.at)!,
 });
@@ -117,6 +143,7 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     async moveStage(id, { from, to, actor, reason }) {
       const r = await must(id);
       if (r.stage !== from) throw conflict();
+      if (GUARDED_STAGES.includes(to)) throw new RaffleRuleError(`Use the ${to === 'open' ? 'open entries' : 'draw'} action for that.`);
       checkStage(from, to, actor.kind);
       if (to === 'ready') {
         const why = readyBlocker(r);
@@ -200,5 +227,111 @@ export function postgresRaffleStore(db: Queryable): RaffleStore {
     events: async (id) => (UUID.test(id) ? (await q('select * from raffle_events where raffle_id = $1 order by at, id', [id])).map(eventOf) : []),
     stripeEventSeen: async (id) => (await q('select 1 from raffle_stripe_events where id = $1', [id])).length > 0,
     markStripeEvent: async (id, type) => void (await q('insert into raffle_stripe_events (id, type) values ($1, $2) on conflict (id) do nothing', [id, type])),
+
+    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor }) {
+      checkStage('ready', 'open', actor.kind);
+      const out = await audited(
+        `update raffles set stage = 'open', rules_version = $2, rules_url = $3, closes_at = $4, opened_at = now() where id = $1 and stage = 'ready' returning *`,
+        [id, rulesVersion, rulesUrl, closesAt],
+        'entries_opened',
+        actor,
+        { rulesVersion, closesAt },
+      );
+      if (!out) throw await missed(id);
+      return out;
+    },
+    async addEntry(raffleId, e, at) {
+      if (!UUID.test(raffleId)) throw new RaffleNotFound();
+      // Open and not closed yet, in the same statement as the insert.
+      const rows = await q(
+        `insert into raffle_entries (raffle_id, name, email, claim_code, token_hash, created_at)
+         select $1, $2, $3, $4, $5, $6 from raffles where id = $1 and stage = 'open' and closes_at > $6
+         on conflict (raffle_id, email) do nothing returning *`,
+        [raffleId, e.name, e.email.toLowerCase(), e.claimCode, e.tokenHash, at.toISOString()],
+      ).catch((err: { constraint?: string }) => {
+        if (err.constraint === 'raffle_entries_raffle_id_claim_code_key') throw new RaffleRuleError('Claim code taken; try again.', 'conflict');
+        throw err;
+      });
+      if (rows[0]) return { entry: entryOf(rows[0]), created: true };
+      const existing = (await q('select * from raffle_entries where raffle_id = $1 and email = $2', [raffleId, e.email.toLowerCase()]))[0];
+      if (existing) return { entry: entryOf(existing), created: false };
+      if (!(await get(raffleId))) throw new RaffleNotFound();
+      throw new RaffleRuleError('Entries are closed.', 'conflict');
+    },
+    entryByToken: async (hash) => {
+      if (!/^[0-9a-f]{64}$/.test(hash)) return null;
+      const r = (await q('select * from raffle_entries where token_hash = $1', [hash]))[0];
+      return r ? entryOf(r) : null;
+    },
+    async verifyEntry(entryId) {
+      const r = (await q('update raffle_entries set email_verified_at = coalesce(email_verified_at, now()) where id = $1 returning *', [entryId]))[0];
+      if (!r) throw new RaffleNotFound();
+      return entryOf(r);
+    },
+    entries: async (rid) => (UUID.test(rid) ? (await q('select * from raffle_entries where raffle_id = $1 order by created_at, id', [rid])).map(entryOf) : []),
+    entryCounts: async (rid) => {
+      const r = UUID.test(rid) ? (await q('select count(*)::int as total, count(email_verified_at)::int as verified from raffle_entries where raffle_id = $1', [rid]))[0] : null;
+      return { total: Number(r?.total ?? 0), verified: Number(r?.verified ?? 0) };
+    },
+    async draw(rid, { actor, pick }) {
+      const existing = async () => {
+        const d = (await q('select * from raffle_draws where raffle_id = $1 and seq = 1', [rid]))[0];
+        if (!d) return null;
+        const e = (await q('select * from raffle_entries where id = $1', [d.entry_id]))[0]!;
+        return { draw: drawOf(d), entry: entryOf(e), repeated: true };
+      };
+      const before = await existing();
+      if (before) return before;
+      const r = await must(rid);
+      if (r.stage !== 'closed') throw new RaffleRuleError('Close the entries before drawing.', 'conflict');
+      checkStage('closed', 'drawn', actor.kind);
+      // Entries cannot change while closed, so this list is the one the draw uses.
+      const eligible = (await q('select * from raffle_entries where raffle_id = $1 order by created_at, id', [rid])).map(entryOf).sort(drawOrder);
+      if (!eligible.length) throw new RaffleRuleError('There are no entries to draw from.');
+      const index = pick(eligible.length);
+      const hash = entriesHash(eligible);
+      // One statement: closed → drawn and the draw row, or nothing (a second click got there first).
+      const rows = await q(
+        `with s as (update raffles set stage = 'drawn' where id = $1 and stage = 'closed' returning id),
+              d as (insert into raffle_draws (raffle_id, seq, entry_id, eligible_count, entries_hash, index, actor_kind, actor_id)
+                    select $1, 1, $2, $3, $4, $5, $6, $7 from s returning *),
+              e as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
+                    select raffle_id, 'drawn', actor_kind, actor_id, jsonb_build_object('seq', 1, 'eligibleCount', eligible_count, 'entriesHash', entries_hash) from d)
+         select * from d`,
+        [rid, eligible[index]!.id, eligible.length, hash, index, actor.kind, actor.id],
+      );
+      if (rows[0]) return { draw: drawOf(rows[0]), entry: eligible[index]!, repeated: false };
+      const after = await existing();
+      if (after) return after;
+      throw conflict();
+    },
+    async redraw(rid, { actor, reason, pick, afterSeq }) {
+      if (!reason.trim()) throw new RaffleRuleError('A redraw needs a reason.', 'invalid');
+      const r = await must(rid);
+      if (r.stage !== 'drawn') throw new RaffleRuleError('Only a drawn raffle can be drawn again.', 'conflict');
+      const eligible = (
+        await q(
+          'select * from raffle_entries e where raffle_id = $1 and not exists (select 1 from raffle_draws d where d.raffle_id = $1 and d.entry_id = e.id) order by created_at, id',
+          [rid],
+        )
+      )
+        .map(entryOf)
+        .sort(drawOrder);
+      if (!eligible.length) throw new RaffleRuleError('Nobody is left to draw.');
+      const index = pick(eligible.length);
+      const rows = await q(
+        `with d as (insert into raffle_draws (raffle_id, seq, entry_id, eligible_count, entries_hash, index, reason, actor_kind, actor_id)
+                    select $1, $2 + 1, $3, $4, $5, $6, $7, $8, $9
+                    where (select max(seq) from raffle_draws where raffle_id = $1) = $2
+                    on conflict (raffle_id, seq) do nothing returning *),
+              e as (insert into raffle_events (raffle_id, type, actor_kind, actor_id, payload)
+                    select raffle_id, 'redrawn', actor_kind, actor_id, jsonb_build_object('seq', seq, 'eligibleCount', eligible_count, 'entriesHash', entries_hash) from d)
+         select * from d`,
+        [rid, afterSeq, eligible[index]!.id, eligible.length, entriesHash(eligible), index, reason.trim().slice(0, 500), actor.kind, actor.id],
+      );
+      if (!rows[0]) throw conflict();
+      return { draw: drawOf(rows[0]), entry: eligible[index]! };
+    },
+    draws: async (rid) => (UUID.test(rid) ? (await q('select * from raffle_draws where raffle_id = $1 order by seq', [rid])).map(drawOf) : []),
   };
 }

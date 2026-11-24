@@ -8,9 +8,35 @@ import type { ActorKind, Funding, LedgerEntry, Raffle, Stage } from './types.ts'
 const STAGE_MOVES: Partial<Record<Stage, Partial<Record<Stage, ActorKind[]>>>> = {
   proposed: { offered: ['board'], declined: ['board'], cancelled: ['board', 'sponsor'] },
   offered: { ready: ['board'], proposed: ['board'], cancelled: ['board', 'sponsor'], on_hold: ['board', 'script', 'stripe'] },
-  ready: { cancelled: ['board'], on_hold: ['board', 'script', 'stripe'] },
+  ready: { open: ['board'], cancelled: ['board'], on_hold: ['board', 'script', 'stripe'] },
+  open: { closed: ['board', 'script'], on_hold: ['board'], cancelled: ['board'] },
+  closed: { drawn: ['board'], on_hold: ['board'], cancelled: ['board'] },
+  drawn: { fulfilled: ['board'] },
   on_hold: { offered: ['board'], ready: ['board'], cancelled: ['board'] },
 };
+
+/** Stages only the store's own methods reach: opening freezes the rules, drawing records the draw. */
+export const GUARDED_STAGES: readonly Stage[] = ['open', 'drawn'];
+
+/**
+ * A uniform random index in [0, n) from 32-bit random words, by rejection sampling, so no entry is
+ * more likely than another. `random` defaults to crypto.getRandomValues.
+ */
+export function uniformIndex(n: number, random: () => number = () => crypto.getRandomValues(new Uint32Array(1))[0]!): number {
+  if (!Number.isInteger(n) || n < 1 || n > 2 ** 31) throw new RangeError('Need at least one entry.');
+  const limit = 2 ** 32 - (2 ** 32 % n);
+  for (;;) {
+    const x = random();
+    if (x < limit) return x % n;
+  }
+}
+
+/** Claim codes: six characters without look-alikes (no 0, O, 1, I, L). */
+const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+export function claimCode(random: () => number = () => crypto.getRandomValues(new Uint32Array(1))[0]!): string {
+  return Array.from({ length: 6 }, () => CODE_ALPHABET[uniformIndex(CODE_ALPHABET.length, random)]).join('');
+}
+export const isClaimCode = (v: string) => /^[ABCDEFGHJKMNPQRSTUVWXYZ2-9]{6}$/.test(v);
 
 export class RaffleRuleError extends Error {
   readonly code: 'not_allowed' | 'conflict' | 'not_eligible' | 'gate' | 'invalid';

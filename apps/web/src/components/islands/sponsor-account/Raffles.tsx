@@ -197,6 +197,15 @@ function RaffleItem({ r, terms, onSignedOut, onChanged }: { r: RaffleView; terms
       )}
       {q?.surcharge && <p class={hint}>You cover the card processing fee: it is a separate line on the payment page and your receipt. The fee is our estimate.</p>}
       {r.funding !== 'unpaid' && r.funding !== 'in_kind' && <p class={hint}>{r.fundingLabel}.</p>}
+      {r.entries !== null && (
+        <p class={hint}>
+          {r.entries} {r.entries === 1 ? 'entry' : 'entries'}
+          {r.winningCode ? `. Winning claim code ${r.winningCode}; we contact the winner.` : '.'} We never share who entered unless each person agreed.{' '}
+          <a class="font-bold text-black" href={`/raffle?r=${encodeURIComponent(r.id)}`}>
+            Entry page
+          </a>
+        </p>
+      )}
       {r.reason && (r.stage === 'declined' || r.stage === 'cancelled' || r.stage === 'on_hold') && <p class={hint}>{r.reason}</p>}
       {waiting &&
         (termsMatch ? (

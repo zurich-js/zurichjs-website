@@ -28,7 +28,8 @@ All routes are Astro endpoints with `prerender = false`, running in the site's s
 | `/api/sponsorship/contracts/[id]`                                     | download an attached contract                                                                                                                        |
 | `/api/membership/admin/sponsors/*`                                    | the board's API: list, one sponsor, invite, plan, suggest a change, end, record a payment, bundle, payment link, contacts, contracts, logos, meetups |
 | `/api/sponsorship/raffles`, `/api/sponsorship/raffles/[id]`           | the sponsor's raffle add-ons: list, propose, accept an offer (opens its payment link), withdraw ([Raffle add-ons](/domains/sponsorship/raffles.md))  |
-| `/api/membership/admin/raffles`, `/api/membership/admin/raffles/[id]` | the board's raffle add-ons: offer, decline, costs, ready, hold, cancel, refunds, flags                                                               |
+| `/api/membership/admin/raffles`, `/api/membership/admin/raffles/[id]` | the board's raffle add-ons: offer, decline, costs, ready, hold, cancel, refunds, flags; open and close entries, draw, redraw, fulfil                 |
+| `/api/raffle/info`, `/api/raffle/entries`, `/api/raffle/manage`       | public: a raffle's page data, entering, and the entrant's own link (view, confirm the email) ([Raffle add-ons](/domains/sponsorship/raffles.md))     |
 | `/api/membership/admin/fees`                                          | the fee gate and the card tariffs; add a tariff version ([Processing fees](/domains/sponsorship/fees.md))                                            |
 | `/api/membership/admin/sponsors/[id]/coverage`                        | the covered meetups of a recurring sponsorship and their history; add an upcoming meetup or take one off                                             |
 
@@ -60,7 +61,7 @@ Whether the live Stripe objects exist.
 
 ## Tests
 
-`packages/sponsorship/test` (with a real Postgres; skipped without one), `apps/web/test/sponsorship-flow.test.ts`, `apps/web/test/sponsor-coverage.test.ts`, `apps/web/test/raffle-flow.test.ts`, `packages/raffle/test`, `apps/web/test/sponsorship-fees.test.ts`, `packages/emails/test`. The override of the public partner list: `packages/content/test/sponsorships.test.ts` (the rules and the fallback) and `apps/web/test/sponsor-rebuild.test.ts` (which changes queue a rebuild).
+`packages/sponsorship/test` (with a real Postgres; skipped without one), `apps/web/test/sponsorship-flow.test.ts`, `apps/web/test/sponsor-coverage.test.ts`, `apps/web/test/raffle-flow.test.ts`, `apps/web/test/raffle-entries.test.ts`, `packages/raffle/test`, `apps/web/test/sponsorship-fees.test.ts`, `packages/emails/test`. The override of the public partner list: `packages/content/test/sponsorships.test.ts` (the rules and the fallback) and `apps/web/test/sponsor-rebuild.test.ts` (which changes queue a rebuild).
 
 ## Related concepts
 

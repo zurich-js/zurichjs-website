@@ -1,0 +1,14 @@
+---
+/** A raffle's entry page (/raffle?r=…): enter with a name and an email, see the winning claim code. Not indexed (docs/domains/sponsorship/raffles.md). */
+import PageOpening from '@zurichjs/design/components/PageOpening.astro';
+import RaffleEntry from '~/components/islands/RaffleEntry';
+import BaseLayout from '~/layouts/BaseLayout.astro';
+import { SITE } from '~/lib/content';
+---
+
+<BaseLayout title="Raffle" description="Enter a ZurichJS meetup raffle: free, with a name and an email." noindex>
+  <PageOpening slot="opening" title="Raffle" sub="Free to enter, with a name and an email. The winner is announced by claim code." />
+  <div class="px-gut py-section">
+    <RaffleEntry client:load contactEmail={SITE.email} />
+  </div>
+</BaseLayout>

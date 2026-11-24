@@ -10,12 +10,12 @@ import { ChipGroup, TextField } from '@zurichjs/design/islands/Field';
 import { Tag } from '@zurichjs/design/islands/Tag';
 import { cardClass } from '@zurichjs/design/recipes';
 import type { FeeChoice } from '@zurichjs/sponsorship';
-import { longDate } from '../../../server/dates.ts';
+import { longDate, shortDateTime } from '../../../server/dates.ts';
 import type { AdminRaffleView } from '../../../server/raffle.ts';
 import type { gateView } from '../../../server/sponsor-fees.ts';
 import { api, post } from '../admin-api.ts';
 import { FeeChoiceField } from './fees.tsx';
-import { Block, Notice, inputValue } from './shared.tsx';
+import { Block, CopyLink, Notice, inputValue } from './shared.tsx';
 
 type Gate = ReturnType<typeof gateView>;
 type Terms = { open: true; version: string } | { open: false; reason: string };
@@ -35,13 +35,13 @@ const SETTLEMENT: Record<AdminRaffleView['settlement']['state'], (s: AdminRaffle
   balanced: (s) => `Spent ${s.spentLabel}, as offered.`,
 };
 
-type Form = 'offer' | 'decline' | 'ledger' | 'in_kind' | 'hold' | 'cancel' | 'refunded' | null;
+type Form = 'offer' | 'decline' | 'ledger' | 'in_kind' | 'hold' | 'cancel' | 'refunded' | 'open' | 'draw' | 'redraw' | 'fulfil' | null;
 
 export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => void }) {
-  const [data, setData] = useState<{ raffles: AdminRaffleView[]; terms: Terms; fees: Gate } | null>(null);
+  const [data, setData] = useState<{ raffles: AdminRaffleView[]; terms: Terms; rules: Terms; fees: Gate } | null>(null);
   const [error, setError] = useState('');
   const load = async () => {
-    const { status, body } = await api<{ raffles: AdminRaffleView[]; terms: Terms; fees: Gate }>(`/api/membership/admin/raffles?sponsorId=${encodeURIComponent(id)}`);
+    const { status, body } = await api<{ raffles: AdminRaffleView[]; terms: Terms; rules: Terms; fees: Gate }>(`/api/membership/admin/raffles?sponsorId=${encodeURIComponent(id)}`);
     if (status === 401) return onSignedOut();
     if (status !== 200) return setError(body.error ?? 'Could not load the raffles.');
     setError('');
@@ -59,13 +59,27 @@ export function Raffles({ id, onSignedOut }: { id: string; onSignedOut: () => vo
       {data && !data.terms.open && <p class="m-0 text-compact text-ink-2">{data.terms.reason}</p>}
       {data && data.raffles.length === 0 && <p class="m-0 text-compact text-ink-2">No raffle proposed yet.</p>}
       {data?.raffles.map((r) => (
-        <RaffleCard key={r.id} r={r} terms={data.terms} fees={data.fees} onSignedOut={onSignedOut} onChanged={load} />
+        <RaffleCard key={r.id} r={r} terms={data.terms} rules={data.rules} fees={data.fees} onSignedOut={onSignedOut} onChanged={load} />
       ))}
     </Block>
   );
 }
 
-function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffleView; terms: Terms; fees: Gate; onSignedOut: () => void; onChanged: () => Promise<void> }) {
+function RaffleCard({
+  r,
+  terms,
+  rules,
+  fees,
+  onSignedOut,
+  onChanged,
+}: {
+  r: AdminRaffleView;
+  terms: Terms;
+  rules: Terms;
+  fees: Gate;
+  onSignedOut: () => void;
+  onChanged: () => Promise<void>;
+}) {
   const [form, setForm] = useState<Form>(null);
   const [f, setF] = useState<Record<string, string>>({});
   const [feeChoice, setFeeChoice] = useState<FeeChoice>('absorb');
@@ -96,7 +110,16 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
   };
   const s = r.stage;
   const money = r.funding === 'paid' || r.funding === 'refund_pending';
-  const actions: [Form | 'ready' | 'refund' | 'resume', string][] = [
+  const actions: [Form | 'ready' | 'refund' | 'resume' | 'close', string][] = [
+    ...(s === 'ready' && rules.open ? [['open', 'Open entries'] as [Form, string]] : []),
+    ...(s === 'open' ? [['close', 'Close entries'] as ['close', string]] : []),
+    ...(s === 'closed' ? [['draw', 'Draw the winner'] as [Form, string]] : []),
+    ...(s === 'drawn'
+      ? ([
+          ['redraw', 'Draw again'],
+          ['fulfil', 'Prize delivered'],
+        ] as [Form, string][])
+      : []),
     ...((s === 'proposed' || s === 'on_hold') && terms.open ? [['offer', s === 'on_hold' ? 'Send a new offer' : 'Make an offer'] as [Form, string]] : []),
     ...(s === 'proposed' ? [['decline', 'Decline'] as [Form, string]] : []),
     ...(r.fulfilment === 'in_kind' && r.funding === 'unpaid' && s === 'offered' ? [['in_kind', 'Prize arrived'] as [Form, string]] : []),
@@ -160,6 +183,24 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
           ))}
         </ul>
       )}
+      {s === 'ready' && !rules.open && <p class="m-0 text-compact text-ink-2">{rules.reason}</p>}
+      {r.entries !== null && (
+        <p class="m-0 text-compact">
+          {r.entries} {r.entries === 1 ? 'entry' : 'entries'}, {r.verifiedEntries} with a confirmed email.{r.closesAt ? ` Entries close ${shortDateTime(r.closesAt)}.` : ''} Rules{' '}
+          {r.rulesVersion}.
+        </p>
+      )}
+      {r.entryUrl && s === 'open' && <CopyLink label="Entry page" url={r.entryUrl} />}
+      {r.draws.length > 0 && (
+        <ol class="m-0 flex flex-col gap-1 pl-5 text-compact">
+          {r.draws.map((d) => (
+            <li key={d.seq}>
+              {d.seq === 1 ? 'Drawn' : `Drawn again (${d.reason})`} {shortDateTime(d.at)} from {d.eligibleCount} entries: code {d.claimCode}, {d.name}, {d.email}. Entries
+              fingerprint {d.entriesHash.slice(0, 12)}.
+            </li>
+          ))}
+        </ol>
+      )}
       {r.reason && <p class="m-0 text-compact text-ink-2">Note to the sponsor: {r.reason}</p>}
       {actions.length > 0 && (
         <div class="flex flex-wrap gap-3">
@@ -175,6 +216,10 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
                 disabled={busy}
                 onClick={() => void act('refund', { decision: 'refund' }, 'Refund decided. Make it in Stripe, then record it.')}
               >
+                {label}
+              </Button>
+            ) : key === 'close' ? (
+              <Button key={key} variant="secondary" disabled={busy} onClick={() => void act('close', {}, 'Entries closed.')}>
                 {label}
               </Button>
             ) : key === 'resume' ? (
@@ -203,6 +248,10 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
             if (form === 'hold') void act('hold', { reason: f.reason, meetupChanged: f.meetupChanged === 'yes' }, 'On hold.');
             if (form === 'cancel') void act('cancel', { reason: f.reason }, 'Cancelled.');
             if (form === 'refunded') void act('refunded', { amountChf: f.amountChf, reference: f.reference }, 'Refund recorded.');
+            if (form === 'open') void act('open', { closesAt: f.closesAt ? new Date(f.closesAt).toISOString() : '' }, 'Entries are open. Share the entry page.');
+            if (form === 'draw') void act('draw', {}, 'Drawn. We emailed the winner; the entry page shows the claim code.');
+            if (form === 'redraw') void act('redraw', { reason: f.reason }, 'Drawn again. We emailed the new winner.');
+            if (form === 'fulfil') void act('fulfil', { note: f.note }, 'Recorded as delivered.');
           }}
         >
           {form === 'offer' &&
@@ -248,6 +297,25 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
               {field('reference', 'Receipt number (optional)')}
             </>
           )}
+          {form === 'open' && (
+            <>
+              <TextField
+                label="Entries close"
+                type="datetime-local"
+                value={f.closesAt ?? ''}
+                hint={`Zurich time, by the end of ${r.eventDateLabel}.`}
+                onInput={(e) => setF({ ...f, closesAt: inputValue(e) })}
+              />
+              <p class="m-0 text-compact text-ink-2">Opening freezes the prize, the meetup, the closing time and the entrant rules {rules.open ? rules.version : ''}.</p>
+            </>
+          )}
+          {form === 'draw' && (
+            <p class="m-0 text-compact">
+              One winner, chosen at random from all {r.entries ?? 0} entries, recorded with a fingerprint of the entries. It happens once: drawing again needs a reason.
+            </p>
+          )}
+          {form === 'redraw' && field('reason', 'Why draw again', 'As the published rules allow, for example no reply in time.')}
+          {form === 'fulfil' && field('note', 'How the prize reached the winner')}
           {form === 'refunded' && (
             <>
               {field('amountChf', 'Refunded (CHF)')}
@@ -256,7 +324,7 @@ function RaffleCard({ r, terms, fees, onSignedOut, onChanged }: { r: AdminRaffle
           )}
           <div class="flex flex-wrap gap-3">
             <Button type="submit" variant="primary" disabled={busy}>
-              {busy ? 'Saving…' : 'Save'}
+              {busy ? 'Saving…' : form === 'draw' ? 'Draw now' : 'Save'}
             </Button>
             <Button variant="secondary" onClick={() => setForm(null)}>
               Cancel

@@ -4,8 +4,9 @@
  * the caller says what it saw, and a different value now is a conflict (a double click, a retried
  * webhook).
  */
-import { RaffleRuleError, checkFunding, checkStage } from './rules.ts';
-import type { Actor, Flag, Funding, LedgerEntry, NewRaffle, Raffle, RaffleEvent, Stage } from './types.ts';
+import { createHash } from 'node:crypto';
+import { GUARDED_STAGES, RaffleRuleError, checkFunding, checkStage } from './rules.ts';
+import type { Actor, Draw, Entry, Flag, Funding, LedgerEntry, NewEntry, NewRaffle, Raffle, RaffleEvent, Stage } from './types.ts';
 
 export interface OfferInput {
   /** Base amount in rappen; null for a prize the sponsor sends (in kind). */
@@ -41,7 +42,38 @@ export interface RaffleStore {
   events(id: string): Promise<RaffleEvent[]>;
   stripeEventSeen(eventId: string): Promise<boolean>;
   markStripeEvent(eventId: string, type: string): Promise<void>;
+
+  /** ready → open: freezes the entrant rules version, its URL and the closing time. */
+  openEntries(id: string, input: { rulesVersion: string; rulesUrl: string; closesAt: string; actor: Actor }): Promise<Raffle>;
+  /**
+   * Adds an entry while entries are open and before they close (checked in the same statement).
+   * One per email per raffle: a second one returns the first with `created: false`.
+   */
+  addEntry(raffleId: string, e: NewEntry, now: Date): Promise<{ entry: Entry; created: boolean }>;
+  entryByToken(tokenHash: string): Promise<Entry | null>;
+  verifyEntry(entryId: string): Promise<Entry>;
+  /** Oldest first: the order the draw uses (then id). Board only. */
+  entries(raffleId: string): Promise<Entry[]>;
+  entryCounts(raffleId: string): Promise<{ total: number; verified: number }>;
+  /**
+   * closed → drawn, once: the eligible entries are frozen, `pick(n)` chooses an index, and the draw
+   * is recorded with the entries' hash. A second call returns the first draw (`repeated`).
+   */
+  draw(raffleId: string, input: { actor: Actor; pick: (n: number) => number }): Promise<{ draw: Draw; entry: Entry; repeated: boolean }>;
+  /** Another draw for a drawn raffle, without earlier winners. Needs a reason. */
+  redraw(raffleId: string, input: { actor: Actor; reason: string; pick: (n: number) => number; afterSeq: number }): Promise<{ draw: Draw; entry: Entry }>;
+  /** Oldest first. */
+  draws(raffleId: string): Promise<Draw[]>;
 }
+
+/** Fingerprint of the entries in a draw: SHA-256 of their ids in draw order. */
+export const entriesHash = (entries: Pick<Entry, 'id'>[]) =>
+  createHash('sha256')
+    .update(entries.map((e) => e.id).join('\n'))
+    .digest('hex');
+
+/** Draw order: by entry time, then id. */
+export const drawOrder = (a: Entry, b: Entry) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id);
 
 export class RaffleNotFound extends Error {
   constructor() {
@@ -65,7 +97,10 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
   const ledger: LedgerEntry[] = [];
   const log: RaffleEvent[] = [];
   const seen = new Set<string>();
+  const entries: (Entry & { tokenHash: string })[] = [];
+  const draws: Draw[] = [];
   let n = 0;
+  const plainEntry = ({ tokenHash: _, ...e }: Entry & { tokenHash: string }): Entry => ({ ...e });
   const record = (raffleId: string, type: string, actor: Actor, payload: Record<string, unknown> = {}) =>
     log.push({ id: String(log.length + 1), raffleId, type, actor, payload, at: now() });
   const must = (id: string) => {
@@ -98,6 +133,10 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
         paymentLinkId: null,
         paymentLinkUrl: null,
         reason: null,
+        rulesVersion: null,
+        rulesUrl: null,
+        openedAt: null,
+        closesAt: null,
         createdAt: at,
         updatedAt: at,
       };
@@ -121,6 +160,7 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     async moveStage(id, { from, to, actor, reason }) {
       const r = must(id);
       if (r.stage !== from) throw conflict();
+      if (GUARDED_STAGES.includes(to)) throw new RaffleRuleError(`Use the ${to === 'open' ? 'open entries' : 'draw'} action for that.`);
       checkStage(from, to, actor.kind);
       if (to === 'ready') {
         const why = readyBlocker(r);
@@ -178,5 +218,98 @@ export function memoryRaffleStore(opts: { now?: () => Date } = {}): RaffleStore 
     events: async (id) => log.filter((e) => e.raffleId === id).map((e) => ({ ...e })),
     stripeEventSeen: async (e) => seen.has(e),
     markStripeEvent: async (e) => void seen.add(e),
+    async openEntries(id, { rulesVersion, rulesUrl, closesAt, actor }) {
+      const r = must(id);
+      if (r.stage !== 'ready') throw conflict();
+      checkStage('ready', 'open', actor.kind);
+      record(id, 'entries_opened', actor, { rulesVersion, closesAt });
+      return save({ ...r, stage: 'open', rulesVersion, rulesUrl, closesAt, openedAt: now() });
+    },
+    async addEntry(raffleId, e, at) {
+      const r = must(raffleId);
+      const existing = entries.find((x) => x.raffleId === raffleId && x.email === e.email.toLowerCase());
+      if (existing) return { entry: plainEntry(existing), created: false };
+      if (r.stage !== 'open' || !r.closesAt || at.toISOString() >= r.closesAt) throw new RaffleRuleError('Entries are closed.', 'conflict');
+      if (entries.some((x) => x.raffleId === raffleId && x.claimCode === e.claimCode)) throw new RaffleRuleError('Claim code taken; try again.', 'conflict');
+      const entry = { ...e, email: e.email.toLowerCase(), id: `en_${++n}`, raffleId, emailVerifiedAt: null, createdAt: at.toISOString() };
+      entries.push(entry);
+      return { entry: plainEntry(entry), created: true };
+    },
+    entryByToken: async (hash) => {
+      const e = entries.find((x) => x.tokenHash === hash);
+      return e ? plainEntry(e) : null;
+    },
+    async verifyEntry(entryId) {
+      const e = entries.find((x) => x.id === entryId);
+      if (!e) throw new RaffleNotFound();
+      e.emailVerifiedAt ??= now();
+      return plainEntry(e);
+    },
+    entries: async (rid) =>
+      entries
+        .filter((e) => e.raffleId === rid)
+        .map(plainEntry)
+        .sort(drawOrder),
+    entryCounts: async (rid) => {
+      const mine = entries.filter((e) => e.raffleId === rid);
+      return { total: mine.length, verified: mine.filter((e) => e.emailVerifiedAt).length };
+    },
+    async draw(rid, { actor, pick }) {
+      const r = must(rid);
+      const first = draws.find((d) => d.raffleId === rid && d.seq === 1);
+      if (first) return { draw: { ...first }, entry: plainEntry(entries.find((e) => e.id === first.entryId)!), repeated: true };
+      if (r.stage !== 'closed') throw new RaffleRuleError('Close the entries before drawing.', 'conflict');
+      checkStage('closed', 'drawn', actor.kind);
+      const eligible = entries
+        .filter((e) => e.raffleId === rid)
+        .map(plainEntry)
+        .sort(drawOrder);
+      if (!eligible.length) throw new RaffleRuleError('There are no entries to draw from.');
+      const index = pick(eligible.length);
+      const d: Draw = {
+        raffleId: rid,
+        seq: 1,
+        entryId: eligible[index]!.id,
+        eligibleCount: eligible.length,
+        entriesHash: entriesHash(eligible),
+        index,
+        reason: null,
+        actor,
+        at: now(),
+      };
+      draws.push(d);
+      save({ ...r, stage: 'drawn' });
+      record(rid, 'drawn', actor, { seq: 1, eligibleCount: d.eligibleCount, entriesHash: d.entriesHash });
+      return { draw: { ...d }, entry: eligible[index]!, repeated: false };
+    },
+    async redraw(rid, { actor, reason, pick, afterSeq }) {
+      const r = must(rid);
+      if (r.stage !== 'drawn') throw new RaffleRuleError('Only a drawn raffle can be drawn again.', 'conflict');
+      if (!reason.trim()) throw new RaffleRuleError('A redraw needs a reason.', 'invalid');
+      const mine = draws.filter((d) => d.raffleId === rid);
+      if (Math.max(...mine.map((d) => d.seq)) !== afterSeq) throw conflict();
+      const winners = new Set(mine.map((d) => d.entryId));
+      const eligible = entries
+        .filter((e) => e.raffleId === rid && !winners.has(e.id))
+        .map(plainEntry)
+        .sort(drawOrder);
+      if (!eligible.length) throw new RaffleRuleError('Nobody is left to draw.');
+      const index = pick(eligible.length);
+      const d: Draw = {
+        raffleId: rid,
+        seq: afterSeq + 1,
+        entryId: eligible[index]!.id,
+        eligibleCount: eligible.length,
+        entriesHash: entriesHash(eligible),
+        index,
+        reason,
+        actor,
+        at: now(),
+      };
+      draws.push(d);
+      record(rid, 'redrawn', actor, { seq: d.seq, eligibleCount: d.eligibleCount, entriesHash: d.entriesHash });
+      return { draw: { ...d }, entry: eligible[index]! };
+    },
+    draws: async (rid) => draws.filter((d) => d.raffleId === rid).map((d) => ({ ...d })),
   };
 }

@@ -12,6 +12,7 @@ export {
   type TemplateName,
   type TemplateProps,
 } from './templates.ts';
+export type { RaffleEntryProps, RaffleWinnerProps } from './raffles.ts';
 export type {
   SponsorAgreementProps,
   SponsorChangeProps,

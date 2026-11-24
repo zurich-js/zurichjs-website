@@ -8,7 +8,7 @@ timestamp: '2026-11-24T00:00:00Z'
 
 # Raffle add-ons
 
-Source: `packages/raffle` (`@zurichjs/raffle`: types, the stage and funding rules, eligibility, gift accounting, the store in memory and Postgres), `apps/web/src/server/raffle.ts`, `apps/web/src/server/raffle-webhook.ts`, the routes under `apps/web/src/pages/api/sponsorship/raffles` and `apps/web/src/pages/api/membership/admin/raffles`, and the migration `apps/web/database/migrations/20261124110000_raffles.sql`.
+Source: `packages/raffle` (`@zurichjs/raffle`: types, the stage and funding rules, eligibility, gift accounting, the store in memory and Postgres), `apps/web/src/server/raffle.ts`, `apps/web/src/server/raffle-webhook.ts`, `apps/web/src/server/raffle-route.ts`, the routes under `apps/web/src/pages/api/sponsorship/raffles`, `apps/web/src/pages/api/membership/admin/raffles` and `apps/web/src/pages/api/raffle`, the pages `apps/web/src/pages/raffle`, the entrant emails `packages/emails/src/raffles.ts`, and the migrations `apps/web/database/migrations/20261124110000_raffles.sql` and `apps/web/database/migrations/20261124130000_raffle_entries.sql`.
 
 ## What it is
 
@@ -33,10 +33,12 @@ Two separate states, owned by one store. Paying never opens entries, and a refun
 | `proposed`              | the sponsor proposed it (meetup, prize, quantity, budget, who gets the prize)           |
 | `offered`               | the board set the amount and who covers the fees, under approved raffle terms           |
 | `ready`                 | paid (or the prize arrived in kind), terms accepted, and the prize bought or received   |
+| `open`                  | entries open, under approved entrant rules; the terms are frozen                        |
+| `closed`                | no more entries                                                                         |
+| `drawn`                 | a winner is drawn (redraws stay in this stage)                                          |
+| `fulfilled`             | the prize reached the winner                                                            |
 | `on_hold`               | the board paused it (the host meetup changed, the sponsorship ended): the board decides |
 | `declined`, `cancelled` | ended, with the board's reason shown to the sponsor                                     |
-
-Entry, draw and fulfilment stages (`open`, `closed`, `drawn`, `fulfilled`) are reserved for the entry part.
 
 Funding: `unpaid`, `paid`, `refund_pending`, `refunded`, or `in_kind`.
 
@@ -54,15 +56,34 @@ Funding: `unpaid`, `paid`, `refund_pending`, `refunded`, or `in_kind`.
 
 Cancelling or pausing a raffle with money in flags it `refund_review`. The board records its decision (refund being decided), makes the refund in Stripe or by bank, and records it with its reference. Nothing is refunded by the site. A host meetup that is cancelled or moved is put on hold by the board with the `meetup_changed` flag; the site does not detect it by itself yet.
 
+## Entering
+
+- **The entrant rules gate:** entries open only under an entrant rules version the owner approved and published (`RAFFLE_RULES_VERSION`, `RAFFLE_RULES_URL`). Opening freezes on the raffle the rules version and URL, the closing time (by the end of the meetup day), the prize and the meetup; the database refuses later changes to them.
+- **The entry page** `/raffle?r=<raffle id>` (noindex) shows the prize, the meetup, "Raffle supported by" the sponsor, the closing time and the rules. Entry is free and needs no account: a name or nickname, an email and the rules box. One entry per email per raffle, checked on the server, with rate limits per address and per connection and a honeypot. The answer is the same for a new and a repeated email, so nobody learns whether an address entered. A link alone does not prove someone was at the meetup.
+- **The entry email** has the claim code and the entrant's own link, `/raffle/manage#t=…` (the token is in the fragment and kept only as a SHA-256 hash). Opening the link shows the entry; the email counts as verified only when its owner clicks Confirm, so a mail scanner cannot confirm it. The entry counts either way.
+
+## The draw
+
+- **Once:** closing the entries freezes them; drawing is a compare-and-set from `closed` to `drawn` in one statement with the draw row. A second click returns the same winner. The winner is chosen uniformly from all entries (32-bit `crypto.getRandomValues`, rejection sampling), in entry order.
+- **Auditable:** each draw keeps its number, the eligible count, the index drawn, a SHA-256 fingerprint of the entries' ids in draw order, who drew and when. Draws are append-only.
+- **Redraw:** needs a reason, which is kept with the draw, and excludes earlier winners. It follows the rules published before entries opened.
+- **The winner** is emailed privately and the board sees the winner's name and email to arrange the prize. The entry page shows the winning claim code, never a name or email. Recording the delivery marks the raffle fulfilled.
+
 ## Slack and data
 
-Slack gets the company, the meetup and amounts only. There is no entrant data in this part.
+Slack gets the company, the meetup, amounts, entry counts and the winning claim code. Never an entrant's name or email. The sponsor sees entry counts and the winning claim code, never entrants.
+
+## Draft entrant rules (for the owner to review, not approved)
+
+> Entry is free and open to anyone; no purchase or sign-up is needed. Enter once, with a name or nickname and an email, before the closing time shown on the entry page. The winner is drawn at random from all entries after entries close, and is announced on the entry page by claim code only. ZurichJS emails the winner, who replies within (number) days to claim the prize; otherwise ZurichJS draws again. The prize cannot be exchanged for cash. ZurichJS uses the name and email only to run this raffle (the entry email, the draw and contacting the winner) and deletes them (retention period) after the raffle. The sponsor named on the page funds the prize and receives no entrant data. Rules version: (set by the owner).
+
+The current privacy policy does not describe raffle entries. These rules, or a change to the privacy policy (a legal page, owner), must say how entry data is used and kept before entries open.
 
 ## Draft raffle terms (for the owner to review, not approved)
 
 > A raffle add-on is an optional, separately paid addition to a ZurichJS sponsorship. The sponsor proposes a prize for a meetup it sponsors; ZurichJS confirms the meetup and the amount in an offer. ZurichJS runs the raffle: it buys and delivers the prize with the sponsor's payment (or receives the prize the sponsor sends), publishes the rules before entries open, draws the winner at random and contacts the winner. Entry is free and does not depend on agreeing to any marketing. ZurichJS gives the sponsor no entrant data unless a separate, approved sharing policy applies and each entrant agreed to it. If the meetup is cancelled or the raffle cannot go ahead, ZurichJS and the sponsor agree a new date or a refund. Terms version: (set by the owner).
 
-Open for the owner: underspend, overspend and shipping costs; refunds and deductions; whether every tier can buy a raffle; whether a raffle goes ahead after its sponsorship ends; whether a meetup can host more than one raffle; VAT and accounting with the treasurer.
+Open for the owner: the reply window and redraw timing, whether the winner must be at the meetup, the retention period for entries; underspend, overspend and shipping costs; refunds and deductions; whether every tier can buy a raffle; whether a raffle goes ahead after its sponsorship ends; whether a meetup can host more than one raffle; VAT and accounting with the treasurer.
 
 ## Related concepts
 

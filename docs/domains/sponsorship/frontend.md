@@ -25,6 +25,10 @@ A static shell with a Preact island; it holds no sponsor data in the HTML. Sign-
 
 The sponsorship agreement, approved by the owner on 18th November 2026. Its version is recorded with each signature.
 
+## `/raffle` and `/raffle/manage` (noindex)
+
+The entry page of a raffle (`?r=<raffle id>`) and the entrant's own link (`#t=<token>`), static shells with Preact islands (`apps/web/src/components/islands/RaffleEntry.tsx`, `apps/web/src/components/islands/RaffleManage.tsx`). No account ([Raffle add-ons](/domains/sponsorship/raffles.md)).
+
 ## `/admin/sponsors` (noindex)
 
 For the board, behind the same `ADMIN_PASSWORD` and protection as the membership admin area ([Membership frontend](/domains/membership/frontend.md)). "Needs you" lists what needs the board.
@@ -36,7 +40,7 @@ For the board, behind the same `ADMIN_PASSWORD` and protection as the membership
 - **Move a sponsor up, down or out** after talking to them: open the sponsor › **Send a change to confirm**. They get a link that fills it in; until they confirm nothing changes. Use **End outright** only when they did not agree (terminated) or an invitation never started (withdrawn).
 - **Show a sponsor on the site at their tier:** open the sponsor › Edit details › **Partner id**, and enter the id of their partner record (for example `gyff`). A running sponsorship then sets their tier on the home page, `/partners` and Tonight within a few minutes; without a partner id they are listed by name only, without a logo ([Sponsorship](/domains/sponsorship/overview.md), "On the public site").
 - **Covered meetups** (recurring sponsorships): open the sponsor › Covered meetups, choose an upcoming meetup and Add. Take off removes it from their dashboard and keeps it under "Taken off". A meetup that has happened stays.
-- **Raffle add-ons:** open the sponsor › Raffle add-ons: make an offer (amount and who covers the fees), decline, record the prize's cost or its arrival, mark it ready, put it on hold, cancel, and record refund decisions and refunds. Flags say what needs a decision.
+- **Raffle add-ons:** open the sponsor › Raffle add-ons: make an offer (amount and who covers the fees), decline, record the prize's cost or its arrival, mark it ready, put it on hold, cancel, and record refund decisions and refunds. Flags say what needs a decision. Once ready: open entries (with the closing time), copy the entry page link, close, draw the winner (one confirm step), draw again with a reason, and record the delivery. The winner's name and email show here only.
 - **Processing fees:** at the bottom of the sponsor list. It says whether "Sponsor covers the fees" is available, lists the card tariffs, and adds a new tariff version. Create payment link offers the choice once a tariff and the owner's policy version exist ([Processing fees](/domains/sponsorship/fees.md)).
 - **Bundles:** Add a sponsor with billing one-time, the meetups and a price per meetup; attach the signed contract; **Create payment link** and send it to them.
 - **Logos:** Slack says when one is uploaded; add it to the partner document in Sanity and publish ([Partners](/domains/partners/overview.md)).

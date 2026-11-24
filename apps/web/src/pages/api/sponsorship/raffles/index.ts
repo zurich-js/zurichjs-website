@@ -31,11 +31,19 @@ export const handleRaffles = (request: Request, deps: SponsorRouteDeps = {}) =>
         const fees = deps.fees ?? feeStore(env);
         const list = await raffles.bySponsor(s.id);
         const quotes = await Promise.all(list.map((r) => (r.quoteId ? fees.quote(r.quoteId) : null)));
+        // Counts and the winning claim code only: entrant data never reaches the sponsor here.
+        const counts = await Promise.all(list.map((r) => (r.openedAt ? raffles.entryCounts(r.id) : null)));
+        const codes = await Promise.all(
+          list.map(async (r) => {
+            const last = (await raffles.draws(r.id)).at(-1);
+            return last ? ((await raffles.entries(r.id)).find((e) => e.id === last.entryId)?.claimCode ?? null) : null;
+          }),
+        );
         const e = eligibility(s, zurichDay(now));
         const gate = termsGate(env);
         return json(200, {
           ok: true,
-          raffles: list.map((r, i) => raffleView(r, quotes[i] ?? null)),
+          raffles: list.map((r, i) => raffleView(r, quotes[i] ?? null, counts[i] ?? null, codes[i] ?? null)),
           eligible: e.ok,
           reason: e.ok ? null : e.reason,
           terms: gate.open ? { open: true, version: gate.version, url: gate.url } : { open: false },

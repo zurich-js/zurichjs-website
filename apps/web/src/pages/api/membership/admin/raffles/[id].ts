@@ -16,12 +16,22 @@
  *   refund       { decision: 'refund' }      paid → refund being decided
  *   refunded     { amountChf, reference }    the refund was made in Stripe or by bank: recorded
  *   clear_flag   { flag }
+ *   open         { closesAt (ISO) }          ready → entries open, under the approved entrant rules (frozen)
+ *   close        open → closed (no more entries)
+ *   draw         closed → drawn: one uniform random winner from all entries, once; again returns the same
+ *   redraw       { reason }                  another draw without earlier winners (the rules say when)
+ *   fulfil       { note }                    drawn → prize delivered
+ * The winner is emailed privately; the public page shows the claim code only. Slack gets counts.
  */
-import { RaffleRuleError, type Flag, type Raffle } from '@zurichjs/raffle';
+import { RaffleRuleError, uniformIndex, type Flag, type Raffle } from '@zurichjs/raffle';
 import { francsToMinor, isFeeChoice, quoteFigures } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { fail, json, methodNotAllowed, readJsonObject } from '../../../../../server/http.ts';
-import { adminRaffleView, assertEligible, closeRafflePaymentLink, raffleStore, termsGate } from '../../../../../server/raffle.ts';
+import { assertEligible, closeRafflePaymentLink, loadAdminView, raffleStore, rulesGate, termsGate } from '../../../../../server/raffle.ts';
+import { renderEmail } from '@zurichjs/emails';
+import { sendMemberEmail } from '@zurichjs/integrations';
+import { longDate } from '../../../../../server/dates.ts';
+import { note, slackText } from '../../../../../server/sponsor.ts';
 import { BOARD, sponsorAdminRoute, type SponsorAdminDeps } from '../../../../../server/sponsor-admin.ts';
 import { currentGate, feeStore } from '../../../../../server/sponsor-fees.ts';
 
@@ -35,15 +45,29 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
   sponsorAdminRoute(
     request,
     deps,
-    async ({ env, store, lifecycle }) => {
+    async ({ env, store, lifecycle, origin }) => {
       const raffles = deps.raffles ?? raffleStore(env);
       const fees = deps.fees ?? feeStore(env);
       const r = await raffles.get(id);
       if (!r) return fail(404, 'No such raffle.');
       const body = (await readJsonObject(request)) ?? {};
       const now = deps.now === undefined ? new Date() : new Date(deps.now);
-      const answer = async (x: Raffle) =>
-        json(200, { ok: true, raffle: adminRaffleView(x, x.quoteId ? await fees.quote(x.quoteId) : null, await raffles.ledger(x.id), await raffles.events(x.id)) });
+      const answer = async (x: Raffle) => json(200, { ok: true, raffle: await loadAdminView(x, raffles, fees, origin) });
+      /** The winner hears from us privately; a lost email never undoes a draw. */
+      const tellWinner = async (seq: number, w: { name: string; email: string; claimCode: string }) => {
+        const s = await store.get(r.sponsorId);
+        const message = renderEmail('raffle-winner', {
+          name: w.name,
+          prize: r.prize,
+          meetup: `${r.eventTitle}, ${longDate(r.eventDate)}`,
+          sponsorName: s?.companyName ?? 'a sponsor',
+          claimCode: w.claimCode,
+          rulesUrl: r.rulesUrl ?? origin,
+        });
+        await sendMemberEmail(env, { to: w.email, ...message }, { idempotencyKey: `raffle-winner:${r.id}:${seq}`, fetch: deps.fetch, log: deps.log }).catch((e: Error) =>
+          (deps.log ?? console.log)(`[raffle] winner email for ${r.id} draw ${seq} failed: ${e.message}`),
+        );
+      };
       const stop = async (to: 'on_hold' | 'cancelled', reason: string) => {
         if (!reason) return fail(400, 'Give a reason; the sponsor sees it.', { field: 'reason' });
         let out = await raffles.moveStage(r.id, { from: r.stage, to, actor: BOARD, reason });
@@ -131,6 +155,42 @@ export const handleAdminRaffle = (request: Request, id: string, deps: SponsorAdm
           let out = await raffles.setFunding(r.id, { from: 'refund_pending', to: 'refunded', actor: BOARD });
           out = await raffles.clearFlag(r.id, 'refund_review', BOARD);
           return answer(out);
+        }
+        case 'open': {
+          const gate = rulesGate(env);
+          if (!gate.open) throw new RaffleRuleError(gate.reason, 'gate');
+          const closes = typeof body.closesAt === 'string' ? new Date(body.closesAt) : null;
+          if (!closes || Number.isNaN(closes.getTime()) || closes <= now) return fail(400, 'Choose when entries close, in the future.', { field: 'closesAt' });
+          if (closes.toISOString().slice(0, 10) > r.eventDate) return fail(400, 'Entries must close by the end of the meetup day.', { field: 'closesAt' });
+          return answer(await raffles.openEntries(r.id, { rulesVersion: gate.version, rulesUrl: gate.url, closesAt: closes.toISOString(), actor: BOARD }));
+        }
+        case 'close': {
+          const out = await raffles.moveStage(r.id, { from: 'open', to: 'closed', actor: BOARD });
+          const counts = await raffles.entryCounts(r.id);
+          await note(`:ticket: Raffle entries closed for ${slackText(r.eventTitle)}: ${counts.total} ${counts.total === 1 ? 'entry' : 'entries'}.`, lifecycle);
+          return answer(out);
+        }
+        case 'draw': {
+          const d = await raffles.draw(r.id, { actor: BOARD, pick: (n) => uniformIndex(n) });
+          if (!d.repeated) {
+            await tellWinner(d.draw.seq, d.entry);
+            await note(`:tada: Raffle drawn for ${slackText(r.eventTitle)} from ${d.draw.eligibleCount} entries. Winning code ${d.entry.claimCode}.`, lifecycle);
+          }
+          return answer((await raffles.get(r.id))!);
+        }
+        case 'redraw': {
+          const reason = text(body.reason, 500);
+          if (!reason) return fail(400, 'Give the reason for drawing again; it is kept with the draw.', { field: 'reason' });
+          const seq = Math.max(0, ...(await raffles.draws(r.id)).map((x) => x.seq));
+          const d = await raffles.redraw(r.id, { actor: BOARD, reason, pick: (n) => uniformIndex(n), afterSeq: seq });
+          await tellWinner(d.draw.seq, d.entry);
+          await note(`:repeat: Raffle for ${slackText(r.eventTitle)} drawn again (${d.draw.eligibleCount} entries left). Winning code ${d.entry.claimCode}.`, lifecycle);
+          return answer((await raffles.get(r.id))!);
+        }
+        case 'fulfil': {
+          const done = text(body.note, 500);
+          if (!done) return fail(400, 'Say how the prize reached the winner.', { field: 'note' });
+          return answer(await raffles.moveStage(r.id, { from: 'drawn', to: 'fulfilled', actor: BOARD, reason: done }));
         }
         case 'clear_flag':
           if (!FLAGS.includes(body.flag as Flag)) return fail(400, 'Unknown flag.', { field: 'flag' });

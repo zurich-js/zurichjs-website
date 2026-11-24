@@ -9,7 +9,20 @@
  *
  * Slack gets counts and company names only. Nothing here holds entrant data.
  */
-import { RaffleRuleError, eligibility, postgresRaffleStore, settlement, type LedgerEntry, type Raffle, type RaffleEvent, type RaffleStore } from '@zurichjs/raffle';
+import { createHash, randomBytes } from 'node:crypto';
+import {
+  RaffleRuleError,
+  eligibility,
+  postgresRaffleStore,
+  settlement,
+  type Draw,
+  type Entry,
+  type LedgerEntry,
+  type Raffle,
+  type RaffleEvent,
+  type RaffleStore,
+} from '@zurichjs/raffle';
+import type { FeeStore } from '@zurichjs/sponsorship';
 import { chfMinor, type Quote, type Sponsor } from '@zurichjs/sponsorship';
 import { longDate } from './dates.ts';
 import type { Env } from './http.ts';
@@ -34,6 +47,59 @@ export function termsGate(env: Env): TermsGate {
     return { open: false, reason: 'The raffle terms are not approved yet (RAFFLE_TERMS_VERSION and RAFFLE_TERMS_URL). Proposals can wait as drafts.' };
   return { open: true, version, url };
 }
+
+/**
+ * The entrant rules gate: entries open only under a raffle rules version the owner approved
+ * (RAFFLE_RULES_VERSION) and published (RAFFLE_RULES_URL). The version and URL are frozen on the
+ * raffle when entries open.
+ */
+export function rulesGate(env: Env): TermsGate {
+  const version = env.RAFFLE_RULES_VERSION?.trim();
+  const url = env.RAFFLE_RULES_URL?.trim();
+  if (!version || !url?.startsWith('https://')) return { open: false, reason: 'The raffle rules for entrants are not approved yet (RAFFLE_RULES_VERSION and RAFFLE_RULES_URL).' };
+  return { open: true, version, url };
+}
+
+/** An entrant's own link: a random token we email, kept only as its SHA-256. */
+export const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
+export function newEntryToken() {
+  const token = randomBytes(32).toString('base64url');
+  return { token, hash: tokenHash(token) };
+}
+/** In the fragment, so the token never reaches a server log or a Referer header. */
+export const manageUrl = (origin: string, token: string) => `${new URL('/raffle/manage', origin).toString()}#t=${token}`;
+export const entryUrl = (origin: string, id: string) => `${new URL('/raffle', origin).toString()}?r=${encodeURIComponent(id)}`;
+
+/** What anyone can see of a raffle once entries opened. No entrant data; winners by claim code only. */
+export function publicRaffleView(r: Raffle, sponsorName: string, winningCodes: string[], now: Date) {
+  const state =
+    r.stage === 'open'
+      ? r.closesAt && now.toISOString() < r.closesAt
+        ? 'open'
+        : 'closed'
+      : r.stage === 'closed' || r.stage === 'on_hold'
+        ? 'closed'
+        : r.stage === 'cancelled'
+          ? 'cancelled'
+          : 'drawn';
+  return {
+    id: r.id,
+    prize: r.prize,
+    quantity: r.quantity,
+    eventTitle: r.eventTitle,
+    eventDateLabel: longDate(r.eventDate),
+    sponsorName,
+    state,
+    closesAt: r.closesAt,
+    rulesUrl: r.rulesUrl,
+    winningCodes: state === 'drawn' ? winningCodes : [],
+  };
+}
+
+export type PublicRaffleView = ReturnType<typeof publicRaffleView>;
+
+/** Stages the public entry page shows; earlier ones are not public. */
+export const PUBLIC_STAGES: readonly Raffle['stage'][] = ['open', 'closed', 'drawn', 'fulfilled', 'cancelled', 'on_hold'];
 
 /** Throws when the sponsorship may not buy a raffle today. */
 export function assertEligible(s: Sponsor, now: Date = new Date()): void {
@@ -62,8 +128,8 @@ export const FUNDING_LABEL: Record<Raffle['funding'], string> = {
   in_kind: 'Prize sent by you',
 };
 
-/** What the sponsor sees: their raffle, its offer and its payment. No entrant data exists here. */
-export const raffleView = (r: Raffle, quote: Quote | null) => ({
+/** What the sponsor sees: their raffle, its offer and its payment, and entry counts. Never entrant data. */
+export const raffleView = (r: Raffle, quote: Quote | null, counts: { total: number } | null = null, winningCode: string | null = null) => ({
   id: r.id,
   eventId: r.eventId,
   eventTitle: r.eventTitle,
@@ -82,13 +148,38 @@ export const raffleView = (r: Raffle, quote: Quote | null) => ({
   quote: quote ? quoteView(quote) : null,
   payUrl: r.stage === 'offered' && r.funding === 'unpaid' ? r.paymentLinkUrl : null,
   reason: r.reason,
+  entries: counts?.total ?? null,
+  closesAt: r.closesAt,
+  winningCode,
 });
 
 export type RaffleView = ReturnType<typeof raffleView>;
 
 /** The board also sees flags, the ledger, the settlement and the history. */
-export const adminRaffleView = (r: Raffle, quote: Quote | null, ledger: LedgerEntry[], events: RaffleEvent[]) => ({
-  ...raffleView(r, quote),
+export const adminRaffleView = (
+  r: Raffle,
+  quote: Quote | null,
+  ledger: LedgerEntry[],
+  events: RaffleEvent[],
+  counts: { total: number; verified: number } = { total: 0, verified: 0 },
+  draws: (Draw & { winner: Pick<Entry, 'name' | 'email' | 'claimCode'> })[] = [],
+  origin = '',
+) => ({
+  ...raffleView(r, quote, counts, draws.at(-1)?.winner.claimCode ?? null),
+  verifiedEntries: counts.verified,
+  rulesVersion: r.rulesVersion,
+  entryUrl: origin && r.openedAt ? entryUrl(origin, r.id) : null,
+  /** ZurichJS contacts the winner privately: the board sees the name and email, nobody else does. */
+  draws: draws.map((d) => ({
+    seq: d.seq,
+    claimCode: d.winner.claimCode,
+    name: d.winner.name,
+    email: d.winner.email,
+    eligibleCount: d.eligibleCount,
+    entriesHash: d.entriesHash,
+    reason: d.reason,
+    at: d.at,
+  })),
   sponsorId: r.sponsorId,
   flags: r.flags,
   amount: r.amountMinor === null ? null : chfMinor(r.amountMinor),
@@ -103,6 +194,21 @@ export const adminRaffleView = (r: Raffle, quote: Quote | null, ledger: LedgerEn
 });
 
 export type AdminRaffleView = ReturnType<typeof adminRaffleView>;
+
+/** Loads everything the board's view of one raffle needs. */
+export async function loadAdminView(r: Raffle, raffles: RaffleStore, fees: FeeStore, origin: string): Promise<AdminRaffleView> {
+  const [quote, ledger, events, counts, draws, entries] = await Promise.all([
+    r.quoteId ? fees.quote(r.quoteId) : null,
+    raffles.ledger(r.id),
+    raffles.events(r.id),
+    raffles.entryCounts(r.id),
+    raffles.draws(r.id),
+    r.stage === 'drawn' || r.stage === 'fulfilled' ? raffles.entries(r.id) : [],
+  ]);
+  const byId = new Map(entries.map((e) => [e.id, e]));
+  const withWinners = draws.filter((d) => byId.has(d.entryId)).map((d) => ({ ...d, winner: byId.get(d.entryId)! }));
+  return adminRaffleView(r, quote, ledger, events, counts, withWinners, origin);
+}
 
 /* ------------------------------------------------------------------ Stripe */
 

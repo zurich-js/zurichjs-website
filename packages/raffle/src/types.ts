@@ -69,8 +69,47 @@ export interface Raffle {
   paymentLinkUrl: string | null;
   /** The board's note for a declined, cancelled or on-hold raffle (shown to the sponsor). */
   reason: string | null;
+  /** Frozen when entries open: the entrant rules version and where entrants read it, and when entries close. */
+  rulesVersion: string | null;
+  rulesUrl: string | null;
+  openedAt: string | null;
+  closesAt: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Someone who entered. Name (or nickname) and email only; the entry counts at once. The email is
+ * verified when its owner opens the link we sent and confirms. `claimCode` is how a winner is
+ * announced in public, never by name or email.
+ */
+export interface Entry {
+  id: string;
+  raffleId: string;
+  name: string;
+  email: string;
+  claimCode: string;
+  emailVerifiedAt: string | null;
+  createdAt: string;
+}
+
+export type NewEntry = Pick<Entry, 'name' | 'email' | 'claimCode'> & { tokenHash: string };
+
+/**
+ * One draw, kept forever. `seq` 1 is the draw; a later one is a redraw, which needs a reason. The
+ * entries hash fingerprints exactly which entries were in it (sorted ids, SHA-256).
+ */
+export interface Draw {
+  raffleId: string;
+  seq: number;
+  entryId: string;
+  eligibleCount: number;
+  entriesHash: string;
+  /** The uniform random index into the eligible entries, sorted by entry time then id. */
+  index: number;
+  reason: string | null;
+  actor: Actor;
+  at: string;
 }
 
 export type NewRaffle = Pick<Raffle, 'sponsorId' | 'eventId' | 'eventTitle' | 'eventDate' | 'prize' | 'quantity' | 'budgetMinor' | 'fulfilment'>;

@@ -15,18 +15,7 @@
  *   end         outright (terminated, or an invitation withdrawn); logged
  *   to do       what needs someone: see `attention`
  */
-import {
-  DuplicateContact,
-  FeeGateClosed,
-  isCycle,
-  isTier,
-  type Contact,
-  type FeeStore,
-  type NewSponsor,
-  type Sponsor,
-  type SponsorMeetup,
-  type SponsorStore,
-} from '@zurichjs/sponsorship';
+import { DuplicateContact, isCycle, isTier, type Contact, type FeeStore, type NewSponsor, type Sponsor, type SponsorMeetup, type SponsorStore } from '@zurichjs/sponsorship';
 import { siteOrigin } from './auth.ts';
 import { adminPassword, isAdmin, sameOrigin } from './admin-auth.ts';
 import { lastDay, longDate } from './dates.ts';
@@ -40,6 +29,7 @@ import type { LogoStore } from './sponsor-logo.ts';
 import { knownFailure, lifecycleDeps, type Meetup } from './sponsor-route.ts';
 import { closeCheckout } from './sponsor-stripe.ts';
 import { StripeUnavailable } from './stripe.ts';
+import type { RaffleStore } from '@zurichjs/raffle';
 
 export interface SponsorAdminDeps {
   env?: Env;
@@ -52,6 +42,8 @@ export interface SponsorAdminDeps {
   meetups?: () => Promise<Meetup[]>;
   /** Tariffs and quotes (sponsor-fees.ts); the database by default. */
   fees?: FeeStore;
+  /** Raffle add-ons (raffle.ts); the database by default. */
+  raffles?: RaffleStore;
 }
 
 export interface SponsorAdminCtx {
@@ -76,7 +68,6 @@ export async function sponsorAdminRoute(request: Request, deps: SponsorAdminDeps
   } catch (cause) {
     const known = knownFailure(cause);
     if (known) return known;
-    if (cause instanceof FeeGateClosed) return fail(409, cause.message, { field: 'feeChoice' });
     if (cause instanceof MembershipUnavailable || cause instanceof StripeUnavailable) return fail(503, `Not configured: ${(cause as Error).message}`);
     console.error(`[sponsorship-admin] ${what} failed`, cause);
     return fail(502, `Could not ${what}. Try again; details are in the function log.`);

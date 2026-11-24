@@ -28,6 +28,7 @@ import type { SponsorView, agreementView, contactView, documentView, logoView } 
 import { TextButton, optional, useFocusFirstError, useFocusWhen } from './forms/shared.tsx';
 import { CoveredMeetups } from './sponsor-account/CoveredMeetups.tsx';
 import { Offer, type OfferView } from './sponsor-account/Offer.tsx';
+import { Raffles } from './sponsor-account/Raffles.tsx';
 
 type ContactView = ReturnType<typeof contactView>;
 type AgreementView = ReturnType<typeof agreementView>;
@@ -679,6 +680,7 @@ function Sponsorship({ ctx, s, link, cancelled }: { ctx: Ctx; s: SponsorView; li
       {link && <LinkedChange ctx={ctx} s={s} link={link} />}
       <SponsorCard ctx={ctx} s={s} linkOpen={!!link} cancelled={cancelled} again={again} onAgain={() => setAgain(true)} />
       <CoveredMeetups once={!recurring} contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />
+      {s.status !== 'pending' && <Raffles contactEmail={ctx.contactEmail} onSignedOut={ctx.onSignedOut} />}
       {s.status === 'pending' && ctx.me.offer && <Offer offer={ctx.me.offer} contactEmail={ctx.contactEmail} />}
       {/* An offer where they cover the fees is paid through its link only (the server refuses Checkout). */}
       {s.status === 'pending' && ctx.me.offer?.quote.feeChoice !== 'pass_through' && <StartForm ctx={ctx} s={s} cancelled={cancelled} />}

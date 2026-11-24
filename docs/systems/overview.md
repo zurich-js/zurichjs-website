@@ -35,6 +35,7 @@ Packages are split where a second consumer exists: the app, the Studio, the Netl
 | `@zurichjs/emails`       | Email templates in plain TypeScript, styled from the design tokens.                                                                                           | [Membership](/domains/membership/overview.md)                                  |
 | `@zurichjs/membership`   | Verein membership: levels, the status machine, the Postgres member store, CSV import.                                                                         | [Membership](/domains/membership/overview.md)                                  |
 | `@zurichjs/sponsorship`  | Sponsorship: tiers and fees, the status machine, the Postgres sponsor store (contacts, agreements, meetups, logos, contracts).                                | [Sponsorship](/domains/sponsorship/overview.md)                                |
+| `@zurichjs/raffle`       | Raffle add-ons: stages and funding, eligibility, gift accounting, the Postgres raffle store.                                                                  | [Raffle add-ons](/domains/sponsorship/raffles.md)                              |
 | `@zurichjs/config`       | Shared TypeScript configuration (`tsconfig.base.json`).                                                                                                       |                                                                                |
 
 ## Other folders
@@ -60,7 +61,8 @@ Packages are split where a second consumer exists: the app, the Studio, the Netl
 | Member data                         | `apps/web/database/migrations` (Postgres)            | `packages/membership`, the admin area, the Slack bots                                                                                                                                  |
 | Sponsorship fees                    | `packages/sponsorship/src/tiers.ts`                  | `/partners/account`, the Stripe setup script, the emails; `/partners` keeps its own copy in `packages/content/src/partners.ts`, held equal by `apps/web/test/sponsorship-fees.test.ts` |
 | Sponsor data                        | `apps/web/database/migrations` (Postgres)            | `packages/sponsorship`, the sponsor admin, the Slack bot                                                                                                                               |
-| Stripe webhook                      | `apps/web/src/server/stripe-webhook.ts`              | memberships, sponsorships, donations ([Stripe](/systems/stripe.md))                                                                                                                    |
+| Raffle add-ons                      | `packages/raffle`, `apps/web/database/migrations`    | the sponsor account, the sponsor admin, the raffle part of the Stripe webhook; never the Slack bot                                                                                     |
+| Stripe webhook                      | `apps/web/src/server/stripe-webhook.ts`              | memberships, sponsorships, raffle add-ons, donations ([Stripe](/systems/stripe.md))                                                                                                    |
 
 ## External services
 

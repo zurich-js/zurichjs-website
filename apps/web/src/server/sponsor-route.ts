@@ -12,6 +12,8 @@
  */
 import type { Contact, FeeStore, Sponsor, SponsorStore } from '@zurichjs/sponsorship';
 import { TransitionError } from '@zurichjs/sponsorship';
+import { RaffleNotFound, RaffleRuleError, type RaffleStore } from '@zurichjs/raffle';
+import { FeeGateClosed } from '@zurichjs/sponsorship';
 import { sameOrigin } from './admin-auth.ts';
 import { sessionUser, siteOrigin, type AuthUser } from './auth.ts';
 import { CONTACT_EMAIL, fail, type Env } from './http.ts';
@@ -36,6 +38,8 @@ export interface SponsorRouteDeps {
   meetups?: () => Promise<Meetup[]>;
   /** Payment quotes (sponsor-fees.ts); the database by default. */
   fees?: FeeStore;
+  /** Raffle add-ons (raffle.ts); the database by default. */
+  raffles?: RaffleStore;
 }
 
 export interface Meetup {
@@ -76,6 +80,9 @@ export function knownFailure(cause: unknown): Response | null {
   if (cause instanceof SponsorshipError) return fail(cause.status, cause.message, cause.field ? { field: cause.field } : {});
   if (cause instanceof AlreadySubscribed) return fail(409, 'Payment is already set up. Reload the page in a moment to see it.');
   if (cause instanceof TransitionError) return fail(409, cause.message);
+  if (cause instanceof RaffleNotFound) return fail(404, cause.message);
+  if (cause instanceof RaffleRuleError) return fail(cause.code === 'invalid' ? 400 : 409, cause.message);
+  if (cause instanceof FeeGateClosed) return fail(409, cause.message, { field: 'feeChoice' });
   return null;
 }
 

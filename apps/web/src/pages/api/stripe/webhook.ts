@@ -7,10 +7,12 @@
  *   POST (signed by Stripe) → 200 · 400 bad signature or JSON · 503 not configured · 500 retry
  */
 import type { MemberStore } from '@zurichjs/membership';
+import type { RaffleStore } from '@zurichjs/raffle';
 import type { FeeStore, SponsorStore } from '@zurichjs/sponsorship';
 import type { APIRoute } from 'astro';
 import { methodNotAllowed, type Env } from '../../../server/http.ts';
 import type { MembershipSlack } from '../../../server/membership-slack.ts';
+import { processRaffleEvent } from '../../../server/raffle-webhook.ts';
 import { processSponsorEvent } from '../../../server/sponsor-webhook.ts';
 import { dispatchStripeEvent, readStripeEvent } from '../../../server/stripe-webhook.ts';
 import { processDonationEvent } from '../donate/webhook.ts';
@@ -23,6 +25,7 @@ export interface StripeWebhookDeps {
   memberStore?: MemberStore;
   sponsorStore?: SponsorStore;
   fees?: FeeStore;
+  raffles?: RaffleStore;
   fetch?: typeof fetch;
   slack?: MembershipSlack;
   now?: number;
@@ -38,6 +41,7 @@ export async function handleStripeWebhook(request: Request, deps: StripeWebhookD
   return dispatchStripeEvent(read.event, [
     (e) => processMembershipEvent(e, { ...shared, store: deps.memberStore, signature: deps.signature }),
     (e) => processSponsorEvent(e, { ...shared, store: deps.sponsorStore, fees: deps.fees }),
+    (e) => processRaffleEvent(e, { ...shared, raffles: deps.raffles, sponsors: deps.sponsorStore, fees: deps.fees }),
     (e) => processDonationEvent(e, shared),
   ]);
 }

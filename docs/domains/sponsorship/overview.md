@@ -139,7 +139,7 @@ The schedule is set only in the function's source (`export const config`). `apps
 
 ## Related concepts
 
-- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Processing fees](/domains/sponsorship/fees.md)
+- [Sponsorship payments and API](/domains/sponsorship/api.md), [Sponsorship frontend](/domains/sponsorship/frontend.md), [Processing fees](/domains/sponsorship/fees.md), [Raffle add-ons](/domains/sponsorship/raffles.md)
 - [Partners and sponsorship](/domains/partners/overview.md) (the public list and `/partners`), [Membership](/domains/membership/overview.md) (sign-in, database and admin password are shared)
 - Systems: [Stripe](/systems/stripe.md), [Web app](/systems/web.md), [Environment variables](/systems/operations/environment.md), [Slack content agent](/systems/slack-agent.md)
 

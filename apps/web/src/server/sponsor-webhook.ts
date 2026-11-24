@@ -40,6 +40,7 @@ import {
   zurichDayOf,
   type NotifyDeps,
 } from './sponsor.ts';
+import { RAFFLE_SOURCE } from './raffle.ts';
 import { feeStore } from './sponsor-fees.ts';
 import { SPONSOR_SOURCE, cancelNow, closePaymentLink, liveSubscriptions, planOfSubscription } from './sponsor-stripe.ts';
 import type { StripeEvent } from './stripe-webhook.ts';
@@ -203,6 +204,8 @@ export async function processSponsorEvent(event: StripeEvent, deps: SponsorWebho
         const meta = o.metadata as Record<string, string> | undefined;
         const paymentLink = typeof o.payment_link === 'string' ? o.payment_link : null;
         if (meta?.source !== SPONSOR_SOURCE && !paymentLink) break;
+        // A raffle add-on is paid apart from the sponsorship (raffle-webhook.ts): never a sponsorship payment.
+        if (meta?.source === RAFFLE_SOURCE) break;
         let s = await sponsorOf(store, { sponsorId: meta?.source === SPONSOR_SOURCE ? meta.sponsorId : undefined, paymentLinkId: paymentLink });
         if (!s) break;
         if (typeof o.customer === 'string' && !s.stripeCustomerId) s = await store.linkStripe(s.id, { customerId: o.customer }, actor);

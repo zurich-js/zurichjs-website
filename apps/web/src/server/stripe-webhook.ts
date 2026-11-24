@@ -15,6 +15,8 @@ import { DONATION_SOURCE, verifyStripeSignature } from './stripe.ts';
 export interface StripeEvent {
   id: string;
   type: string;
+  /** When Stripe created the event (Unix seconds): events can arrive out of order. */
+  created?: number;
   data: { object: Record<string, unknown> };
 }
 
@@ -28,6 +30,8 @@ export const STRIPE_WEBHOOK_EVENTS = [
   'invoice.payment_action_required',
   'customer.subscription.updated',
   'customer.subscription.deleted',
+  'charge.refunded',
+  'charge.dispute.created',
 ] as const;
 
 /** Reads and verifies the request against the secret in `env[secretName]`: the event, or the answer to send. */

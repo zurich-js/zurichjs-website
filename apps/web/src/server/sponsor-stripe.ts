@@ -31,7 +31,6 @@ import {
   type Tier,
 } from '@zurichjs/sponsorship';
 import { longDate } from './dates.ts';
-import { DeadlineExceeded } from './deadline.ts';
 import type { Env } from './http.ts';
 import { StripeUnavailable, stripeApi, stripeForm } from './stripe.ts';
 
@@ -151,19 +150,21 @@ async function onceLineItem(s: Sponsor, meetups: SponsorMeetup[], deps: StripeDe
 }
 
 /**
- * A close the request's time budget stopped (never sent, or cut off before Stripe answered) is
- * thrown, and the saved id is kept: the page may still be payable. Other Stripe errors are
- * ignored as before (a session already expired or paid answers with an error too).
+ * Stripe's answer when the page is already gone: no such object, or a session that is no longer
+ * open (expired or paid). Anything else (an outage, a timeout) leaves the page payable.
  */
-const unlessOutOfTime = (cause: unknown) => {
-  if (cause instanceof DeadlineExceeded) throw cause;
-};
+const alreadyClosed = (e: unknown) => /HTTP 404|No such|status (of|in) \W*open\W* can be expired|is not open|already (been )?expired/i.test((e as Error).message ?? '');
 
-/** Closes the sponsor's last Checkout session, so an old tab can never be paid as well. */
+/**
+ * Closes the sponsor's last Checkout session, so an old tab can never be paid as well. The id is
+ * forgotten only once Stripe confirms; a failure throws and keeps it, so a retry closes it.
+ */
 export async function closeCheckout(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.checkoutSessionId) return;
-  await api(deps, 'POST', `checkout/sessions/${encodeURIComponent(s.checkoutSessionId)}/expire`).catch(unlessOutOfTime);
-  await store.linkStripe(s.id, { checkoutSessionId: null }, { kind: 'stripe', id: s.checkoutSessionId });
+  await api(deps, 'POST', `checkout/sessions/${encodeURIComponent(s.checkoutSessionId)}/expire`).catch((e: unknown) => {
+    if (!alreadyClosed(e)) throw e;
+  });
+  await store.linkStripeIf(s.id, { checkoutSessionId: s.checkoutSessionId }, { checkoutSessionId: null }, { kind: 'stripe', id: s.checkoutSessionId });
 }
 
 /** Checks the prices exist before anything is signed or created (a fresh account would fail half-way otherwise). */
@@ -253,15 +254,34 @@ export async function createPaymentLink(s: Sponsor, meetups: SponsorMeetup[], st
       after_completion: { type: 'redirect', redirect: { url: `${new URL('/partners/account', origin).toString()}?checkout=done` } },
     }),
   );
-  await store.linkStripe(s.id, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
+  // Kept only while no other link was saved (two tabs, two organisers) and nobody paid meanwhile (a
+  // bank transfer recorded): otherwise ours is switched off. If even that fails, it is logged for the board.
+  const saved = await store.linkStripeIf(s.id, { paymentLinkId: null, status: 'pending' }, { paymentLinkId: link.id, paymentLinkUrl: link.url }, { kind: 'stripe', id: link.id });
+  if (!saved) {
+    await deactivateLink(link.id, deps).catch(async (cause: Error) => {
+      await store.log(s.id, 'payment_link_left_open', { kind: 'stripe', id: link.id }, { paymentLinkId: link.id, error: cause.message.slice(0, 200) });
+      throw cause;
+    });
+    throw new PaymentLinkRace();
+  }
   return link.url;
 }
 
-/** Switches off the sponsor's payment link (paid, replaced or withdrawn). */
+export class PaymentLinkRace extends Error {}
+
+const deactivateLink = (id: string, deps: StripeDeps) =>
+  api(deps, 'POST', `payment_links/${encodeURIComponent(id)}`, stripeForm({ active: false })).catch((e: unknown) => {
+    if (!alreadyClosed(e)) throw e;
+  });
+
+/**
+ * Switches off the sponsor's payment link (paid, replaced or withdrawn). The id is forgotten only
+ * once Stripe confirms; a failure throws and keeps it, so a retry switches it off.
+ */
 export async function closePaymentLink(s: Sponsor, store: SponsorStore, deps: StripeDeps): Promise<void> {
   if (!s.paymentLinkId) return;
-  await api(deps, 'POST', `payment_links/${encodeURIComponent(s.paymentLinkId)}`, stripeForm({ active: false })).catch(unlessOutOfTime);
-  await store.linkStripe(s.id, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
+  await deactivateLink(s.paymentLinkId, deps);
+  await store.linkStripeIf(s.id, { paymentLinkId: s.paymentLinkId }, { paymentLinkId: null, paymentLinkUrl: null }, { kind: 'stripe', id: s.paymentLinkId });
 }
 
 /** The billing portal: STRIPE_SPONSOR_PORTAL_CONFIG, else the members' configuration (same rules). */
@@ -299,6 +319,12 @@ const getSub = (id: string, deps: StripeDeps, expand = false) =>
 const scheduleId = (s: StripeSubscription) => (typeof s.schedule === 'string' ? s.schedule : (s.schedule?.id ?? null));
 const nowUnix = (deps: StripeDeps) => Math.floor((deps.now ?? (() => new Date()))().getTime() / 1000);
 
+/** Stripe has the subscription paid up again (nothing open, so it is active or trialing). */
+export async function subscriptionPaidUp(subscriptionId: string, deps: StripeDeps): Promise<boolean> {
+  const status = (await getSub(subscriptionId, deps)).status;
+  return status === 'active' || status === 'trialing';
+}
+
 /** The first day after the current term. */
 export async function periodEnd(subscriptionId: string, deps: StripeDeps): Promise<string | null> {
   const end = (await getSub(subscriptionId, deps)).items?.data?.[0]?.current_period_end;
@@ -324,17 +350,23 @@ export async function cancelPendingChange(subscriptionId: string, deps: StripeDe
   return true;
 }
 
-/** A higher tier on the same cycle, now: Stripe charges the prorated difference at once. */
-export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<void> {
+/**
+ * A higher tier on the same cycle, now: Stripe charges the prorated difference at once. A change
+ * that was waiting for the renewal is released first and returned, so the sponsor can be told.
+ */
+export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cycle: Cycle }, deps: StripeDeps): Promise<{ droppedChange: { tier: Tier; cycle: Cycle } | null }> {
   let sub = await getSub(subscriptionId, deps);
+  let droppedChange: { tier: Tier; cycle: Cycle } | null = null;
   if (scheduleId(sub)) {
+    const waiting = await pendingChange(subscriptionId, deps);
+    droppedChange = waiting && { tier: waiting.tier, cycle: waiting.cycle };
     await cancelPendingChange(subscriptionId, deps);
     sub = await getSub(subscriptionId, deps);
   }
   const item = sub.items?.data?.[0];
   if (!item) throw new Error(`Subscription ${subscriptionId} has no item.`);
   const price = (await priceFor(plan.tier, plan.cycle, deps)).id;
-  if (item.price?.id === price) return;
+  if (item.price?.id === price) return { droppedChange };
   await api(
     deps,
     'POST',
@@ -342,6 +374,7 @@ export async function upgradeNow(subscriptionId: string, plan: { tier: Tier; cyc
     stripeForm({ items: [{ id: item.id, price }], proration_behavior: 'always_invoice', payment_behavior: 'error_if_incomplete' }),
     `sponsor-upgrade:${subscriptionId}:${price}`,
   );
+  return { droppedChange };
 }
 
 /** Switches to `plan` from the next renewal (a subscription schedule). Returns the renewal date. */

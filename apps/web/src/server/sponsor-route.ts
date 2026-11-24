@@ -21,7 +21,7 @@ import type { MembershipSlack } from './membership-slack.ts';
 import { sponsorStore } from './sponsor.ts';
 import { SponsorshipError, type LifecycleDeps } from './sponsor-lifecycle.ts';
 import type { LogoStore } from './sponsor-logo.ts';
-import { AlreadySubscribed } from './sponsor-stripe.ts';
+import { AlreadySubscribed, PaymentLinkRace } from './sponsor-stripe.ts';
 import { StripeUnavailable } from './stripe.ts';
 
 export interface SponsorRouteDeps {
@@ -74,6 +74,7 @@ export function lifecycleDeps(env: Env, store: SponsorStore, origin: string, dep
 export function knownFailure(cause: unknown): Response | null {
   if (cause instanceof SponsorshipError) return fail(cause.status, cause.message, cause.field ? { field: cause.field } : {});
   if (cause instanceof AlreadySubscribed) return fail(409, 'Payment is already set up. Reload the page in a moment to see it.');
+  if (cause instanceof PaymentLinkRace) return fail(409, 'Someone created a payment link at the same moment. Reload to see it.');
   if (cause instanceof TransitionError) return fail(409, cause.message);
   return null;
 }

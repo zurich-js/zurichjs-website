@@ -86,6 +86,7 @@ describe('sponsorship route callbacks', () => {
       logos: async () => [],
       documents: async () => [],
       meetups: async () => [],
+      events: async () => [],
     } as unknown as SponsorStore;
     const stripe = vi.fn(async () => Response.json({}));
     const res = await handleSponsorMe(new Request(`${SITE}/api/sponsorship/me`), {

@@ -247,6 +247,8 @@ export interface SponsorChangeProps extends SponsorProps {
   previous: string;
   /** Paid outside Stripe: we settle the difference ourselves. */
   manual: boolean;
+  /** "Community Friend, yearly": a change that was waiting for the renewal and no longer applies. */
+  droppedChange?: string | null;
 }
 
 function sponsorChange(p: SponsorChangeProps): EmailContent {
@@ -264,6 +266,7 @@ function sponsorChange(p: SponsorChangeProps): EmailContent {
     heading: p.timing === 'renewal' ? 'Change scheduled' : 'Sponsorship updated',
     blocks: [
       { kind: 'success', text: line },
+      ...say(p.droppedChange ? `The change to ${p.droppedChange} that was waiting for your renewal no longer applies.` : null),
       plan(p, [['Before', p.previous]]),
       ...benefits(p.tierName, p.benefits, p.timing === 'renewal' ? `From ${p.from ?? 'your next renewal'}, ${p.tierName} includes:` : `${p.tierName} includes:`),
       { kind: 'button', label: 'Open your sponsorship page', url: p.accountUrl },

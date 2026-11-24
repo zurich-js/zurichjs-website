@@ -6,24 +6,26 @@
  *     and its payment page is switched off
  *   - a sponsorship paid by bank transfer that was agreed to end, ends on its last day
  *   - the board is reminded 30 and 7 days before, and on the day, a sponsorship paid by bank
- *     transfer runs out (nothing changes by itself: a person records the payment or agrees the end)
+ *     transfer runs out (nothing changes by itself: a person records the payment or agrees the end).
+ *     A day the check did not reach is caught up: the most urgent reminder not sent yet goes out
+ *     once, never one per missed day
+ *   - an ended sponsorship that still points at Stripe (a close that failed) is closed again
+ *   - every notice still queued (an email or Slack note a request could not send) is sent
  *
  * Card sponsorships need nothing here: Stripe renews, retries and ends them (webhook).
  *
  * Netlify stops a scheduled function after 30 s. With a `deadline` (deadline.ts) the work is done
- * in this order: everything decided from the sponsor row alone (endings, then reminders), then the
- * unpaid one-time sponsorships, which need their meetups read. Those start at a different one each
- * day, so a slow first few cannot hold back the same others every day. Nothing is started with
- * less than PER_SPONSOR_MS left; what was not started is returned as `deferred` and is looked at
- * again on the next daily run, from scratch (a reminder whose day has passed is not sent late).
- * An ending whose Stripe close the budget stopped keeps its Stripe ids and is returned in
- * `stripeOpen`: its payment page may still be payable.
+ * in this order: everything decided from the sponsor row alone (endings, reminders, Stripe left
+ * open by an ended sponsorship), then the unpaid one-time sponsorships, which need their meetups
+ * read, starting at a different one each day, then the queued notices. Nothing is started with
+ * less than PER_SPONSOR_MS left; what was not started is returned as `deferred` and done by a later
+ * run, because each step is decided again from the saved rows (a reminder by its catch-up rule).
  */
 import { TransitionError, type EndedReason, type Sponsor } from '@zurichjs/sponsorship';
 import { lastDay, longDate } from './dates.ts';
-import { adminUrl, emailSponsor, note, who, zurichDay } from './sponsor.ts';
-import { DeadlineExceeded, type Deadline } from './deadline.ts';
-import { closeStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
+import { adminUrl, who, zurichDay } from './sponsor.ts';
+import { emailNotice, PER_NOTICE_MS, sendNotices, slackNotice } from './sponsor-notices.ts';
+import { closeStripe, leftInStripe, type LifecycleDeps } from './sponsor-lifecycle.ts';
 
 const SCRIPT = { kind: 'script', id: 'sponsorship-daily' } as const;
 const REMIND_DAYS = [30, 7, 0];
@@ -33,55 +35,76 @@ export const PER_SPONSOR_MS = 8_000;
 const dayNumber = (day: string) => Math.floor(Date.parse(`${day}T12:00:00Z`) / 86_400_000);
 const daysBetween = (from: string, to: string) => dayNumber(to) - dayNumber(from);
 
+/** The reminder due `left` days before a bank-transfer sponsorship runs out: the most urgent one reached. */
+const reminderDue = (left: number) => [...REMIND_DAYS].sort((a, b) => a - b).find((d) => left <= d);
+
 export interface DailyResult {
   completed: number;
   ended: number;
   closed: number;
   reminded: number;
+  /** Ended sponsorships whose Stripe ids this run closed and forgot. */
+  stripeClosed: number;
+  notices: { sent: number; failed: number };
   /** Sponsors this run did not get to (an unpaid one-time sponsorship before its meetups were read, too). */
   deferred: string[];
-  /** Ended sponsors whose Stripe checkout or payment link the budget left open. */
+  /** Ended sponsors whose Stripe checkout, payment link or subscription is still open after this run. */
   stripeOpen: string[];
 }
 
-export async function dailyCheck(deps: LifecycleDeps & { deadline?: Deadline }): Promise<DailyResult> {
+export async function dailyCheck(deps: LifecycleDeps & { deadline?: { remaining(): number } }): Promise<DailyResult> {
   const today = zurichDay(deps.now?.() ?? new Date());
   const all = await deps.store.search({ limit: 5000 });
-  const out: DailyResult = { completed: 0, ended: 0, closed: 0, reminded: 0, deferred: [], stripeOpen: [] };
+  const out: DailyResult = { completed: 0, ended: 0, closed: 0, reminded: 0, stripeClosed: 0, notices: { sent: 0, failed: 0 }, deferred: [], stripeOpen: [] };
   const room = () => !deps.deadline || deps.deadline.remaining() >= PER_SPONSOR_MS;
+
+  /** A Stripe failure here keeps the ids for the next run, and never stops the other sponsors. */
+  const closeLater = (s: Sponsor) =>
+    closeStripe(s, deps).then(
+      () => true,
+      (cause: Error) => {
+        (deps.log ?? console.log)(`[sponsorship] daily: Stripe for ${s.id} not closed, tried again tomorrow: ${cause.message}`);
+        out.stripeOpen.push(s.id);
+        return false;
+      },
+    );
 
   const end = async (s: Sponsor, reason: Extract<EndedReason, 'completed' | 'cancelled' | 'withdrawn'>) => {
     let ended: Sponsor;
     try {
-      ended = await deps.store.transition(s.id, { from: s.status, to: 'ended', actor: SCRIPT, reason });
+      // The email and the note are saved with the end, so they are sent even if this run stops after it.
+      const key = `sponsor-ended:${s.id}:${reason}`;
+      ended = await deps.store.transition(s.id, {
+        from: s.status,
+        to: 'ended',
+        actor: SCRIPT,
+        reason,
+        notices: [
+          ...(reason !== 'withdrawn' ? [emailNotice(key, 'sponsor-ended', { reason })] : []),
+          slackNotice(
+            `${key}:slack`,
+            reason === 'withdrawn'
+              ? `:hourglass: ${who(s)} was never paid and a meetup it covered is over; the sponsorship is closed. ${adminUrl(deps.origin, s.id)}`
+              : `:checkered_flag: ${who(s)} ${reason === 'completed' ? 'is complete (its meetups are over)' : 'has ended as agreed'}. Mark them as a past sponsor in Sanity.`,
+          ),
+        ],
+      });
     } catch (cause) {
       if (cause instanceof TransitionError) return false;
       throw cause;
     }
-    let stillOpen = false;
-    try {
-      await closeStripe(s, deps);
-    } catch (cause) {
-      if (!(cause instanceof DeadlineExceeded)) throw cause;
-      stillOpen = true;
-      out.stripeOpen.push(s.id);
-    }
-    const open = stillOpen ? ' Its Stripe payment page could not be switched off in time: switch it off in Stripe.' : '';
-    if (reason !== 'withdrawn') await emailSponsor(ended, 'sponsor-ended', (base) => ({ ...base, reason }), { ...deps, key: `sponsor-ended:${s.id}:${reason}` });
-    await note(
-      reason === 'withdrawn'
-        ? `:hourglass: ${who(s)} was never paid and a meetup it covered is over; the sponsorship is closed.${open} ${adminUrl(deps.origin, s.id)}`
-        : `:checkered_flag: ${who(s)} ${reason === 'completed' ? 'is complete (its meetups are over)' : 'has ended as agreed'}. Mark them as a past sponsor in Sanity.${open}`,
-      deps,
-    );
+    await closeLater(ended);
     return true;
   };
 
   const fromRow: { id: string; run: () => Promise<void> }[] = [];
   const reminders: typeof fromRow = [];
+  const leftOpen: typeof fromRow = [];
   const unpaid: Sponsor[] = [];
   for (const s of all) {
-    if (s.cycle === 'once' && s.status === 'active' && s.paidUntil && s.paidUntil <= today) {
+    if (s.status === 'ended') {
+      if (leftInStripe(s)) leftOpen.push({ id: s.id, run: async () => void ((await closeLater(s)) && out.stripeClosed++) });
+    } else if (s.cycle === 'once' && s.status === 'active' && s.paidUntil && s.paidUntil <= today) {
       fromRow.push({ id: s.id, run: async () => void ((await end(s, 'completed')) && out.completed++) });
     } else if (s.cycle === 'once' && s.status === 'pending') {
       unpaid.push(s);
@@ -89,17 +112,20 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: Deadline }):
       fromRow.push({ id: s.id, run: async () => void ((await end(s, 'cancelled')) && out.ended++) });
     } else if ((s.status === 'active' || s.status === 'past_due') && s.paymentMode === 'manual' && !s.stripeSubscriptionId && s.cycle !== 'once' && s.paidUntil) {
       const left = daysBetween(today, s.paidUntil);
-      if (REMIND_DAYS.includes(left))
-        reminders.push({
-          id: s.id,
-          run: async () => {
-            await note(
-              `:calendar: ${who(s)} pays by bank transfer and is paid through ${longDate(lastDay(s.paidUntil!))} (${left ? `${left} days left` : 'the paid period ended yesterday'}). Record the next payment or agree the end: ${adminUrl(deps.origin, s.id)}`,
-              deps,
-            );
-            out.reminded++;
-          },
-        });
+      const due = reminderDue(left);
+      if (due === undefined) continue;
+      const when = left > 0 ? `${left} days left` : left === 0 ? 'the paid period ended yesterday' : `the paid period ended ${1 - left} days ago`;
+      reminders.push({
+        id: s.id,
+        run: async () => {
+          out.reminded += await deps.store.queueNotices(s.id, [
+            slackNotice(
+              `sponsor-reminder:${s.id}:${s.paidUntil}:${due}`,
+              `:calendar: ${who(s)} pays by bank transfer and is paid through ${longDate(lastDay(s.paidUntil!))} (${when}). Record the next payment or agree the end: ${adminUrl(deps.origin, s.id)}`,
+            ),
+          ]);
+        },
+      });
     }
   }
 
@@ -114,7 +140,7 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: Deadline }):
     },
   }));
 
-  const work = [...fromRow, ...reminders, ...unpaidWork];
+  const work = [...fromRow, ...reminders, ...leftOpen, ...unpaidWork];
   for (const [i, w] of work.entries()) {
     if (!room()) {
       out.deferred.push(...work.slice(i).map((x) => x.id));
@@ -122,5 +148,8 @@ export async function dailyCheck(deps: LifecycleDeps & { deadline?: Deadline }):
     }
     await w.run();
   }
+  // Only as many notices are claimed as the time left can send; the rest wait for the next run.
+  const limit = deps.deadline ? Math.min(200, Math.floor(deps.deadline.remaining() / PER_NOTICE_MS)) : 200;
+  if (limit > 0) out.notices = await sendNotices(deps, { limit, budget: deps.deadline });
   return out;
 }
